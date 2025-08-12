@@ -1,36 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
-import { format, parse, startOfWeek, getDay, addDays, subDays, startOfDay, endOfDay, isSameDay } from 'date-fns'
-import { es, enUS } from 'date-fns/locale'
+import { useTranslations } from 'next-intl'
+import { Calendar, Clock, Target, Trophy, Settings, Plus, Search, Filter, Moon, Sun, Globe, Bell, Zap, Star, CheckCircle, Circle, Edit3, Trash2, MoreHorizontal, Play, Pause, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Slider } from '@/components/ui/slider'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Calendar as CalendarIcon, Plus, Settings, Moon, Sun, Globe, Bell, Clock, Target, Zap, Star, Crown, Palette, Volume2, VolumeX, Play, Pause, RotateCcw, ChevronLeft, ChevronRight, Filter, Search, MoreVertical, Edit, Trash2, Copy, Calendar as CalendarIconSmall, User, CreditCard, LogOut, Menu, X, Check, AlertCircle, Info, Sparkles, TrendingUp, Award, Gift, Heart, Coffee, Briefcase, Home, BookOpen, Dumbbell, Music, Camera, Gamepad2, Plane, ShoppingCart, Phone, Mail, MapPin, Clock3, Users, MessageSquare, Share2, Download, Upload, RefreshCw, Eye, EyeOff, Lock, Unlock, Shield, Wifi, WifiOff, Battery, BatteryLow, Signal, SignalLow, Bluetooth, BluetoothConnected, Headphones, Mic, MicOff, Video, VideoOff, ImageIcon, FileText, Folder, FolderOpen, Archive, Bookmark, Tag, Flag, Pin, PinOff, ThumbsUp, ThumbsDown, Smile, Frown, Meh, Angry, Laugh, Cry, Surprised, Confused, Sleepy, Sick, Cool, Nerd, Robot, Alien, Ghost, Skull, Fire, Snowflake, Sun as SunIcon, Moon as MoonIcon, Cloud, CloudRain, CloudSnow, CloudLightning, Rainbow, Umbrella, Thermometer, Wind, Compass, Mountain, Tree, Flower, Leaf, Seedling, Cactus, PalmTree, Evergreen, Deciduous, Mushroom, Shell, Paw, Feather, Bug, Butterfly, Fish, Bird, Rabbit, Turtle, Snail, Honeybee, Ladybug, Spider, Ant, Worm, Microbe, DNA, Atom, Molecule, Magnet, Zap as ZapIcon, Lightbulb, Candle, Flashlight, Lamp, Lantern, Torch, Campfire, Fireplace, Stove, Oven, Microwave, Refrigerator, Freezer, Dishwasher, WashingMachine, Dryer, Iron, Vacuum, Broom, Mop, Bucket, Soap, Towel, Toilet, Shower, Bathtub, Sink, Faucet, Pipe, Wrench, Hammer, Screwdriver, Saw, Drill, Nail, Screw, Nut, Bolt, Gear, Cog, Wheel, Tire, Car, Truck, Bus, Motorcycle, Bicycle, Scooter, Skateboard, RollerSkate, Sled, Boat, Ship, Submarine, Airplane, Helicopter, Rocket, Satellite, UFO, Train, Tram, Metro, Taxi, Ambulance, FireTruck, PoliceCar, Tractor, Bulldozer, Crane, ForkLift, Excavator, Dump, Cement, Road, Bridge, Building, House, Hut, Castle, Church, Mosque, Synagogue, Temple, Pagoda, Torii, Shrine, Statue, Monument, Fountain, Well, Tower, Lighthouse, Windmill, Factory, Warehouse, Store, Shop, Market, Bank, Hospital, School, University, Library, Museum, Theater, Cinema, Stadium, Gym, Pool, Park, Playground, Carousel, FerrisWheel, RollerCoaster, Tent, Circus, Carnival, Fair, Festival, Party, Wedding, Birthday, Christmas, Halloween, Easter, Thanksgiving, NewYear, Valentine, StPatrick, Independence, Labor, Memorial, Veterans, Presidents, MLK, Columbus, Indigenous, Earth, Environment, Recycle, Trash, Compost, Solar, Wind as WindIcon, Water, Electric, Gas, Oil, Coal, Nuclear, Renewable, Sustainable, Green, Eco, Organic, Natural, Healthy, Fresh, Clean, Pure, Safe, Secure, Protected, Private, Public, Open, Closed, Free, Paid, Premium, Pro, Basic, Standard, Advanced, Expert, Beginner, Intermediate, Easy, Hard, Simple, Complex, Fast, Slow, Quick, Instant, Delayed, Pending, Processing, Loading, Saving, Uploading, Downloading, Syncing, Connecting, Connected, Disconnected, Online, Offline, Available, Unavailable, Active, Inactive, Enabled, Disabled, On, Off, Yes, No, True, False, Good, Bad, Right, Wrong, Correct, Incorrect, Valid, Invalid, Success, Error, Warning, Info as InfoIcon, Debug, Trace, Log, Report, Analytics, Statistics, Metrics, Data, Database, Server, Cloud as CloudIcon, Network, Internet, Web, Website, App, Software, Program, Code, Script, Function, Variable, Constant, Array, Object, String, Number, Boolean, Null, Undefined, Class, Interface, Method, Property, Parameter, Argument, Return, Import, Export, Module, Package, Library, Framework, API, SDK, CLI, GUI, UI, UX, Design, Layout, Theme, Style, Color, Font, Text, ImageIcon as ImageIconIcon, Video as VideoIcon, Audio, Sound, Music as MusicIcon, Voice, Speech, Language, Translation, Dictionary, Grammar, Spell, Word, Sentence, Paragraph, Page, Book, Article, Blog, News, Magazine, Newspaper, Journal, Diary, Note, Memo, List, Todo, Task, Project, Goal, Plan, Schedule, Calendar as CalendarIconLarge, Date, Time, Hour, Minute, Second, Day, Week, Month, Year, Today, Tomorrow, Yesterday, Now, Soon, Later, Before, After, During, While, Until, Since, From, To, At, In, On, By, With, Without, For, Against, About, Around, Through, Over, Under, Above, Below, Between, Among, Inside, Outside, Near, Far, Here, There, Everywhere, Nowhere, Somewhere, Anywhere, Left, Right, Up, Down, Forward, Backward, North, South, East, West, Center, Middle, Top, Bottom, Front, Back, Side, Corner, Edge, Border, Margin, Padding, Width, Height, Length, Size, Scale, Zoom, Fit, Fill, Stretch, Shrink, Expand, Collapse, Fold, Unfold, Open as OpenIcon, Close, Show, Hide, Reveal, Conceal, Display, Render, Draw, Paint, Sketch, Doodle, Art, Craft, Create, Make, Build, Construct, Assemble, Install, Setup, Configure, Customize, Personalize, Adjust, Modify, Change, Update, Upgrade, Downgrade, Install as InstallIcon, Uninstall, Add, Remove, Delete as DeleteIcon, Insert, Append, Prepend, Replace, Substitute, Swap, Exchange, Trade, Buy, Sell, Pay, Purchase, Order, Ship, Deliver, Receive, Send, Mail as MailIcon, Email, Message, Chat, Talk, Speak, Listen, Hear, See, Look, Watch, View, Read, Write, Type, Print, Scan, Copy as CopyIcon, Paste, Cut, Undo, Redo, Save, Load, Import as ImportIcon, Export as ExportIcon, Backup, Restore, Reset, Restart, Reboot, Shutdown, Sleep, Wake, Pause as PauseIcon, Resume, Start, Stop, End, Finish, Complete, Done, Cancel, Abort, Skip, Next, Previous, First, Last, Begin, Continue, Proceed, Advance, Progress, Move, Go, Come, Stay, Wait, Hold, Keep, Store, Retrieve, Fetch, Get, Set, Put, Post, Patch, Delete as DeleteIconSmall, Head, Options, Trace as TraceIcon, Connect, Disconnect, Join, Leave, Enter, Exit, Login, Logout, Signin, Signup, Register, Subscribe, Unsubscribe, Follow, Unfollow, Like, Unlike, Love, Hate, Favorite, Unfavorite, Bookmark as BookmarkIcon, Unbookmark, Share, Unshare, Comment, Reply, Forward, Retweet, Quote, Mention, Tag as TagIcon, Untag, Block, Unblock, Mute, Unmute, Ban, Unban, Report as ReportIcon, Flag as FlagIcon, Unflag, Approve, Reject, Accept, Decline, Confirm, Deny, Allow, Forbid, Grant, Revoke, Enable, Disable as DisableIcon, Activate, Deactivate, Turn, Toggle, Switch as SwitchIcon, Flip, Rotate, Spin, Twist, Bend, Fold as FoldIcon, Unfold as UnfoldIcon, Wrap, Unwrap, Pack, Unpack, Zip, Unzip, Compress, Decompress, Encode, Decode, Encrypt, Decrypt, Hash, Verify, Validate, Authenticate, Authorize, Permission, Access, Deny as DenyIcon, Grant as GrantIcon, Role, User as UserIcon, Admin, Moderator, Guest, Member, Subscriber, Follower, Friend, Contact, Group, Team, Organization, Company, Business, Enterprise, Startup, Corporation, Agency, Firm, Studio, Lab, Workshop, Factory as FactoryIcon, Office, Store as StoreIcon, Shop as ShopIcon, Market as MarketIcon, Mall, Plaza, Square, Street, Avenue, Road as RoadIcon, Highway, Bridge as BridgeIcon, Tunnel, Intersection, Junction, Roundabout, Traffic, Light, Sign, Signal as SignalIcon, Stop as StopIcon, Yield, Merge, Turn as TurnIcon, Straight, Curve, Hill, Valley, Mountain as MountainIcon, River, Lake, Ocean, Sea, Beach, Island, Desert, Forest, Jungle, Savanna, Prairie, Tundra, Arctic, Antarctic, Equator, Tropics, Subtropics, Temperate, Polar, Climate, Weather, Season, Spring, Summer, Autumn, Winter, Rain, Snow, Sleet, Hail, Fog, Mist, Dew, Frost, Ice, Steam, Vapor, Gas as GasIcon, Liquid, Solid, Plasma, Matter, Energy, Force, Power, Strength, Weakness, Speed, Velocity, Acceleration, Momentum, Inertia, Gravity, Magnetism, Electricity, Heat, Cold, Temperature, Pressure, Density, Mass, Weight, Volume, Area, Perimeter, Diameter, Radius, Circumference, Angle, Degree, Radian, Sine, Cosine, Tangent, Logarithm, Exponential, Square, Cube, Root, Power as PowerIcon, Base, Exponent, Coefficient, Variable as VariableIcon, Constant as ConstantIcon, Equation, Formula, Expression, Function as FunctionIcon, Graph, Chart, Plot, Axis, Scale as ScaleIcon, Grid, Legend, Title, Label as LabelIcon, Caption, Heading, Subheading, Paragraph as ParagraphIcon, Sentence as SentenceIcon, Word as WordIcon, Letter, Character, Symbol, Icon, Emoji, Emoticon, Sticker, GIF, Meme, Avatar as AvatarIcon, Profile, Picture, Photo, Selfie, Portrait, Landscape, Panorama, Screenshot, Thumbnail, Preview, Gallery, Album, Collection, Playlist, Queue, History, Recent, Favorite as FavoriteIcon, Popular, Trending, Featured, Recommended, Suggested, Related, Similar, Different, Unique, Special, Rare, Common, Frequent, Occasional, Regular, Irregular, Normal, Abnormal, Typical, Atypical, Standard as StandardIcon, Custom, Default, Original, Copy as CopyIconSmall, Duplicate, Clone, Mirror, Reflection, Shadow, Silhouette, Outline, Border as BorderIcon, Frame, Background, Foreground, Layer, Overlay, Underlay, Mask, Filter as FilterIcon, Effect, Animation, Transition, Transform, Translate, Scale as ScaleIconSmall, Rotate as RotateIcon, Skew, Perspective, Matrix, Vector, Pixel, Resolution, Quality, Compression, Format, Extension, Type, Kind, Sort, Category, Class as ClassIcon, Group as GroupIcon, Set, Collection as CollectionIcon, List as ListIcon, Array as ArrayIcon, Stack, Queue as QueueIcon, Tree as TreeIcon, Graph as GraphIcon, Network as NetworkIcon, Node, Edge, Link, Connection, Relationship, Association, Dependency, Reference, Pointer, Index, Key, Value, Pair, Tuple, Record, Field, Column, Row, Table, Database as DatabaseIcon, Schema, Model, Entity, Attribute, Property as PropertyIcon, Method as MethodIcon, Function as FunctionIconSmall, Procedure, Routine, Algorithm, Logic, Condition, Loop, Iteration, Recursion, Branch, Decision, Choice, Option, Alternative, Selection, Pick, Choose, Decide, Determine, Calculate, Compute, Process, Execute, Run, Perform, Operate, Work, Function as FunctionIconLarge, Behave, Act, React, Respond, Handle, Manage, Control, Direct, Guide, Lead, Follow, Obey, Command, Order as OrderIcon, Request, Ask, Answer, Reply as ReplyIcon, Question, Query, Search as SearchIcon, Find, Locate, Discover, Explore, Investigate, Research, Study, Learn, Teach, Educate, Train, Practice, Exercise, Test, Exam, Quiz, Assessment, Evaluation, Review, Feedback, Rating, Score, Grade, Mark, Point, Credit, Reward, Prize, Award as AwardIcon, Trophy, Medal, Badge as BadgeIcon, Certificate, Diploma, Degree as DegreeIcon, Title as TitleIcon, Rank, Level, Stage, Phase, Step, Process as ProcessIcon, Procedure as ProcedureIcon, Method as MethodIconSmall, Technique, Strategy, Tactic, Approach, Way, Path, Route, Direction, Instruction, Guide as GuideIcon, Manual, Tutorial, Help, Support, Assistance, Service, Customer, Client, Patient, Student, Teacher, Instructor, Professor, Doctor, Nurse, Engineer, Developer, Designer, Artist, Writer, Author, Editor, Publisher, Journalist, Reporter, Photographer, Videographer, Filmmaker, Director, Producer, Actor, Actress, Singer, Musician, Composer, Conductor, Dancer, Choreographer, Athlete, Coach, Trainer, Manager, Leader, Boss, Employee, Worker, Staff, Team as TeamIcon, Crew, Squad, Group as GroupIconSmall, Band, Club, Society, Association as AssociationIcon, Organization as OrganizationIcon, Institution, Foundation, Charity, Nonprofit, Government, Agency as AgencyIcon, Department, Ministry, Bureau, Office as OfficeIcon, Branch, Division, Section, Unit, Component, Part, Piece, Element, Item, Object as ObjectIcon, Thing, Stuff, Material, Substance, Matter as MatterIcon, Content, Information, Data as DataIcon, Knowledge, Wisdom, Intelligence, Smart, Clever, Bright, Brilliant, Genius, Talented, Skilled, Expert as ExpertIcon, Professional, Amateur, Beginner as BeginnerIcon, Novice, Intermediate as IntermediateIcon, Advanced as AdvancedIcon, Master, Grandmaster, Champion, Winner, Loser, Player, Participant, Competitor, Opponent, Rival, Enemy, Friend as FriendIcon, Ally, Partner, Teammate, Colleague, Coworker, Neighbor, Stranger, Acquaintance, Relative, Family, Parent, Child, Sibling, Spouse, Partner as PartnerIcon, Lover, Boyfriend, Girlfriend, Husband, Wife, Son, Daughter, Father, Mother, Brother, Sister, Uncle, Aunt, Cousin, Nephew, Niece, Grandfather, Grandmother, Grandchild, Ancestor, Descendant, Generation, Age, Young, Old, Baby, Toddler, Child as ChildIcon, Teen, Adult, Senior, Elder, Elderly, Mature, Immature, Grown, Growing, Development, Growth, Evolution, Change as ChangeIcon, Transformation, Metamorphosis, Adaptation, Adjustment, Modification, Alteration, Revision, Update as UpdateIcon, Upgrade as UpgradeIcon, Improvement, Enhancement, Optimization, Refinement, Polish, Perfection, Excellence, Quality as QualityIcon, Standard as StandardIconSmall, Norm, Rule, Law, Regulation, Policy, Guideline, Principle, Value as ValueIcon, Belief, Opinion, View, Perspective, Viewpoint, Standpoint, Position, Stance, Attitude, Approach as ApproachIcon, Style as StyleIcon, Fashion, Trend, Mode, Manner, Way as WayIcon, Method as MethodIconLarge, Technique as TechniqueIcon, Skill, Ability, Capability, Capacity, Potential, Talent, Gift as GiftIcon, Strength as StrengthIcon, Weakness as WeaknessIcon, Advantage, Disadvantage, Benefit, Drawback, Pro, Con, Plus, Minus, Positive, Negative, Good as GoodIcon, Bad as BadIcon, Better, Worse, Best, Worst, Great, Terrible, Excellent, Poor, Outstanding, Mediocre, Superior, Inferior, High, Low, Top as TopIcon, Bottom as BottomIcon, Maximum, Minimum, Most, Least, More, Less, Many, Few, All, None, Some, Any, Every, Each, Both, Either, Neither, Or, And, Not, But, However, Although, Though, Despite, Regardless, Nevertheless, Nonetheless, Furthermore, Moreover, Additionally, Also, Too, As, Well, Besides, Except, Unless, If, When, Where, Why, How, What, Who, Which, Whose, Whom, That, This, These, Those, Here as HereIcon, There as ThereIcon, Everywhere as EverywhereIcon, Nowhere as NowhereIcon, Somewhere as SomewhereIcon, Anywhere as AnywhereIcon, Now as NowIcon, Then, Soon as SoonIcon, Later as LaterIcon, Early, Late, Before as BeforeIcon, After as AfterIcon, During as DuringIcon, While as WhileIcon, Until as UntilIcon, Since as SinceIcon, From as FromIcon, To as ToIcon, At as AtIcon, In as InIcon, On as OnIcon, By as ByIcon, With as WithIcon, Without as WithoutIcon, For as ForIcon, Against as AgainstIcon, About as AboutIcon, Around as AroundIcon, Through as ThroughIcon, Over as OverIcon, Under as UnderIcon, Above as AboveIcon, Below as BelowIcon, Between as BetweenIcon, Among as AmongIcon, Inside as InsideIcon, Outside as OutsideIcon, Near as NearIcon, Far as FarIcon } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
-import { useTranslations } from 'next-intl'
+import { Slider } from '@/components/ui/slider'
+import { toast } from 'sonner'
 import { WelcomeScreen } from '@/components/welcome-screen'
 import { PricingSection } from '@/components/pricing-section'
 import { WeeklyView } from '@/components/weekly-view'
 import { PomodoroTimer } from '@/components/pomodoro-timer'
-import { PayPalButton } from '@/components/paypal-button'
-import { supabase } from '@/lib/supabase'
+import { format, parse, startOfWeek, getDay, addDays, subDays, startOfDay, endOfDay, isSameDay } from 'date-fns'
+import { es, enUS } from 'date-fns/locale'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar as CalendarIcon, ImageIcon, FileText, Folder, FolderOpen, Archive, Bookmark, Tag, Flag, Pin, PinOff, ThumbsUp, ThumbsDown, Smile, Frown, Meh, Angry, Laugh, Cry, Surprised, Confused, Sleepy, Sick, Cool, Nerd, Robot, Alien, Ghost, Skull, Fire, Snowflake, Sun as SunIcon, Moon as MoonIcon, Cloud, CloudRain, CloudSnow, CloudLightning, Rainbow, Umbrella, Thermometer, Wind, Compass, Mountain, Tree, Flower, Leaf, Seedling, Cactus, PalmTree, Evergreen, Deciduous, Mushroom, Shell, Paw, Feather, Bug, Butterfly, Fish, Bird, Rabbit, Turtle, Snail, Honeybee, Ladybug, Spider, Ant, Worm, Microbe, DNA, Atom, Molecule, Magnet, Zap as ZapIcon, Lightbulb, Candle, Flashlight, Lamp, Lantern, Torch, Campfire, Fireplace, Stove, Oven, Microwave, Refrigerator, Freezer, Dishwasher, WashingMachine, Dryer, Iron, Vacuum, Broom, Mop, Bucket, Soap, Towel, Toilet, Shower, Bathtub, Sink, Faucet, Pipe, Wrench, Hammer, Screwdriver, Saw, Drill, Nail, Screw, Nut, Bolt, Gear, Cog, Wheel, Tire, Car, Truck, Bus, Motorcycle, Bicycle, Scooter, Skateboard, RollerSkate, Sled, Boat, Ship, Submarine, Airplane, Helicopter, Rocket, Satellite, UFO, Train, Tram, Metro, Taxi, Ambulance, FireTruck, PoliceCar, Tractor, Bulldozer, Crane, ForkLift, Excavator, Dump, Cement, Road, Bridge as BridgeIcon, Building, House, Hut, Castle, Church, Mosque, Synagogue, Temple, Pagoda, Torii, Shrine, Statue, Monument, Fountain, Well, Tower, Lighthouse, Windmill, Factory, Warehouse, Store, Shop, Market, Bank, Hospital, School, University, Library, Museum, Theater, Cinema, Stadium, Gym, Pool, Park, Playground, Carousel, FerrisWheel, RollerCoaster, Tent, Circus, Carnival, Fair, Festival, Party, Wedding, Birthday, Christmas, Halloween, Easter, Thanksgiving, NewYear, Valentine, StPatrick, Independence, Labor, Memorial, Veterans, Presidents, MLK, Columbus, Indigenous, Earth, Environment, Recycle, Trash, Compost, Solar, Wind as WindIcon, Water, Electric, Gas, Oil, Coal, Nuclear, Renewable, Sustainable, Green, Eco, Organic, Natural, Healthy, Fresh, Clean, Pure, Safe, Secure, Protected, Private, Public, Open, Closed, Free, Paid, Premium, Pro, Basic, Standard, Advanced, Expert, Beginner, Intermediate, Easy, Hard, Simple, Complex, Fast, Slow, Quick, Instant, Delayed, Pending, Processing, Loading, Saving, Uploading, Downloading, Syncing, Connecting, Connected, Disconnected, Online, Offline, Available, Unavailable, Active, Inactive, Enabled, Disabled, On, Off, Yes, No, True, False, Good, Bad, Right, Wrong, Correct, Incorrect, Valid, Invalid, Success, Error, Warning, Info as InfoIcon, Debug, Trace, Log, Report, Analytics, Statistics, Metrics, Data, Database, Server, Cloud as CloudIcon, Network, Internet, Web, Website, App, Software, Program, Code, Script, Function, Variable, Constant, Array, Object, String, Number, Boolean, Null, Undefined, Class, Interface, Method, Property, Parameter, Argument, Return, Import, Export, Module, Package, Library, Framework, API, SDK, CLI, GUI, UI, UX, Design, Layout, Theme, Style, Color, Font, Text, ImageIcon as ImageIconIcon, Video as VideoIcon, Audio, Sound, Music as MusicIcon, Voice, Speech, Language, Translation, Dictionary, Grammar, Spell, Word, Sentence, Paragraph, Page, Book, Article, Blog, News, Magazine, Newspaper, Journal, Diary, Note, Memo, List, Todo, Task, Project, Goal, Plan, Schedule, Calendar as CalendarIconLarge, Date, Time, Hour, Minute, Second, Day, Week, Month, Year, Today, Tomorrow, Yesterday, Now, Soon, Later, Before, After, During, While, Until, Since, From, To, At, In, On, By, With, Without, For, Against, About, Around, Through, Over, Under, Above, Below, Between, Among, Inside, Outside, Near, Far, Here, There, Everywhere, Nowhere, Somewhere, Anywhere, Left, Right, Up, Down, Forward, Backward, North, South, East, West, Center, Middle, Top, Bottom, Front, Back, Side, Corner, Edge, Border, Margin, Padding, Width, Height, Length, Size, Scale, Zoom, Fit, Fill, Stretch, Shrink, Expand, Collapse, Fold, Unfold, Open as OpenIcon, Close, Show, Hide, Reveal, Conceal, Display, Render, Draw, Paint, Sketch, Doodle, Art, Craft, Create, Make, Build, Construct, Assemble, Install, Setup, Configure, Customize, Personalize, Adjust, Modify, Change, Update as UpdateIcon, Upgrade as UpgradeIcon, Downgrade, Install as InstallIcon, Uninstall, Add, Remove, Delete as DeleteIcon, Insert, Append, Prepend, Replace, Substitute, Swap, Exchange, Trade, Buy, Sell, Pay, Purchase, Order, Ship, Deliver, Receive, Send, Mail as MailIcon, Email, Message, Chat, Talk, Speak, Listen, Hear, See, Look, Watch, View, Read, Write, Type, Print, Scan, Copy as CopyIcon, Paste, Cut, Undo, Redo, Save, Load, Import as ImportIcon, Export as ExportIcon, Backup, Restore, Reset, Restart, Reboot, Shutdown, Sleep, Wake, Pause as PauseIcon, Resume, Start, Stop, End, Finish, Complete, Done, Cancel, Abort, Skip, Next, Previous, First, Last, Begin, Continue, Proceed, Advance, Progress, Move, Go, Come, Stay, Wait, Hold, Keep, Store, Retrieve, Fetch, Get, Set, Put, Post, Patch, Delete as DeleteIconSmall, Head, Options, Trace as TraceIcon, Connect, Disconnect, Join, Leave, Enter, Exit, Login, Logout, Signin, Signup, Register, Subscribe, Unsubscribe, Follow, Unfollow, Like, Unlike, Love, Hate, Favorite, Unfavorite, Bookmark as BookmarkIcon, Unbookmark, Share, Unshare, Comment, Reply, Forward, Retweet, Quote, Mention, Tag as TagIcon, Untag, Block, Unblock, Mute, Unmute, Ban, Unban, Report as ReportIcon, Flag as FlagIcon, Unflag, Approve, Reject, Accept, Decline, Confirm, Deny, Allow, Forbid, Grant, Revoke, Enable, Disable as DisableIcon, Activate, Deactivate, Turn, Toggle, Switch as SwitchIcon, Flip, Rotate, Spin, Twist, Bend, Fold as FoldIcon, Unfold as UnfoldIcon, Wrap, Unwrap, Pack, Unpack, Zip, Unzip, Compress, Decompress, Encode, Decode, Encrypt, Decrypt, Hash, Verify, Validate, Authenticate, Authorize, Permission, Access, Deny as DenyIcon, Grant as GrantIcon, Role, User as UserIcon, Admin, Moderator, Guest, Member, Subscriber, Follower, Friend, Contact, Group, Team, Organization, Company, Business, Enterprise, Startup, Corporation, Agency, Firm, Studio, Lab, Workshop, Factory as FactoryIcon, Office, Store as StoreIcon, Shop as ShopIcon, Market as MarketIcon, Mall, Plaza, Square, Street, Avenue, Road as RoadIcon, Highway, Bridge as BridgeIcon, Tunnel, Intersection, Junction, Roundabout, Traffic, Light, Sign, Signal as SignalIcon, Stop as StopIcon, Yield, Merge, Turn as TurnIcon, Straight, Curve, Hill, Valley, Mountain as MountainIcon, River, Lake, Ocean, Sea, Beach, Island, Desert, Forest, Jungle, Savanna, Prairie, Tundra, Arctic, Antarctic, Equator, Tropics, Subtropics, Temperate, Polar, Climate, Weather, Season, Spring, Summer, Autumn, Winter, Rain, Snow, Sleet, Hail, Fog, Mist, Dew, Frost, Ice, Steam, Vapor, Gas as GasIcon, Liquid, Solid, Plasma, Matter, Energy, Force, Power, Strength, Weakness, Speed, Velocity, Acceleration, Momentum, Inertia, Gravity, Magnetism, Electricity, Heat, Cold, Temperature, Pressure, Density, Mass, Weight, Volume, Area, Perimeter, Diameter, Radius, Circumference, Angle, Degree, Radian, Sine, Cosine, Tangent, Logarithm, Exponential, Square, Cube, Root, Power as PowerIcon, Base, Exponent, Coefficient, Variable as VariableIcon, Constant as ConstantIcon, Equation, Formula, Expression, Function as FunctionIcon, Graph, Chart, Plot, Axis, Scale as ScaleIcon, Grid, Legend, Title, Label as LabelIcon, Caption, Heading, Subheading, Paragraph as ParagraphIcon, Sentence as SentenceIcon, Word as WordIcon, Letter, Character, Symbol, Icon, Emoji, Emoticon, Sticker, GIF, Meme, Avatar as AvatarIcon, Profile, Picture, Photo, Selfie, Portrait, Landscape, Panorama, Screenshot, Thumbnail, Preview, Gallery, Album, Collection, Playlist, Queue, History, Recent, Favorite as FavoriteIcon, Popular, Trending, Featured, Recommended, Suggested, Related, Similar, Different, Unique, Special, Rare, Common, Frequent, Occasional, Regular, Irregular, Normal, Abnormal, Typical, Atypical, Standard as StandardIcon, Custom, Default, Original, Copy as CopyIconSmall, Duplicate, Clone, Mirror, Reflection, Shadow, Silhouette, Outline, Border as BorderIcon, Frame, Background, Foreground, Layer, Overlay, Underlay, Mask, Filter as FilterIcon, Effect, Animation, Transition, Transform, Translate, Scale as ScaleIconSmall, Rotate as RotateIcon, Skew, Perspective, Matrix, Vector, Pixel, Resolution, Quality, Compression, Format, Extension, Type, Kind, Sort, Category, Class as ClassIcon, Group as GroupIcon, Set, Collection as CollectionIcon, List as ListIcon, Array as ArrayIcon, Stack, Queue as QueueIcon, Tree as TreeIcon, Graph as GraphIcon, Network as NetworkIcon, Node, Edge, Link, Connection, Relationship, Association, Dependency, Reference, Pointer, Index, Key, Value, Pair, Tuple, Record, Field, Column, Row, Table, Database as DatabaseIcon, Schema, Model, Entity, Attribute, Property as PropertyIcon, Method as MethodIcon, Function as FunctionIconSmall, Procedure, Routine, Algorithm, Logic, Condition, Loop, Iteration, Recursion, Branch, Decision, Choice, Option, Alternative, Selection, Pick, Choose, Decide, Determine, Calculate, Compute, Process, Execute, Run, Perform, Operate, Work, Function as FunctionIconLarge, Behave, Act, React, Respond, Handle, Manage, Control, Direct, Guide, Lead, Follow, Obey, Command, Order as OrderIcon, Request, Ask, Answer, Reply as ReplyIcon, Question, Query, Search as SearchIcon, Find, Locate, Discover, Explore, Investigate, Research, Study, Learn, Teach, Educate, Train, Practice, Exercise, Test, Exam, Quiz, Assessment, Evaluation, Review, Feedback, Rating, Score, Grade, Mark, Point, Credit, Reward, Prize, Award as AwardIcon, Trophy, Medal, Badge as BadgeIcon, Certificate, Diploma, Degree as DegreeIcon, Title as TitleIcon, Rank, Level, Stage, Phase, Step, Process as ProcessIcon, Procedure as ProcedureIcon, Method as MethodIconSmall, Technique, Strategy, Tactic, Approach, Way, Path, Route, Direction, Instruction, Guide as GuideIcon, Manual, Tutorial, Help, Support, Assistance, Service, Customer, Client, Patient, Student, Teacher, Instructor, Professor, Doctor, Nurse, Engineer, Developer, Designer, Artist, Writer, Author, Editor, Publisher, Journalist, Reporter, Photographer, Videographer, Filmmaker, Director, Producer, Actor, Actress, Singer, Musician, Composer, Conductor, Dancer, Choreographer, Athlete, Coach, Trainer, Manager, Leader, Boss, Employee, Worker, Staff, Team as TeamIcon, Crew, Squad, Group as GroupIconSmall, Band, Club, Society, Association as AssociationIcon, Organization as OrganizationIcon, Institution, Foundation, Charity, Nonprofit, Government, Agency as AgencyIcon, Department, Ministry, Bureau, Office as OfficeIcon, Branch, Division, Section, Unit, Component, Part, Piece, Element, Item, Object as ObjectIcon, Thing, Stuff, Material, Substance, Matter as MatterIcon, Content, Information, Data as DataIcon, Knowledge, Wisdom, Intelligence, Smart, Clever, Bright, Brilliant, Genius, Talented, Skilled, Expert as ExpertIcon, Professional, Amateur, Beginner as BeginnerIcon, Novice, Intermediate as IntermediateIcon, Advanced as AdvancedIcon, Master, Grandmaster, Champion, Winner, Loser, Player, Participant, Competitor, Opponent, Rival, Enemy, Friend as FriendIcon, Ally, Partner, Teammate, Colleague, Coworker, Neighbor, Stranger, Acquaintance, Relative, Family, Parent, Child, Sibling, Spouse, Partner as PartnerIcon, Lover, Boyfriend, Girlfriend, Husband, Wife, Son, Daughter, Father, Mother, Brother, Sister, Uncle, Aunt, Cousin, Nephew, Niece, Grandfather, Grandmother, Grandchild, Ancestor, Descendant, Generation, Age, Young, Old, Baby, Toddler, Child as ChildIcon, Teen, Adult, Senior, Elder, Elderly, Mature, Immature, Grown, Growing, Development, Growth, Evolution, Change as ChangeIcon, Transformation, Metamorphosis, Adaptation, Adjustment, Modification, Alteration, Revision, Update as UpdateIcon, Upgrade as UpgradeIcon, Improvement, Enhancement, Optimization, Refinement, Polish, Perfection, Excellence, Quality as QualityIcon, Standard as StandardIconSmall, Norm, Rule, Law, Regulation, Policy, Guideline, Principle, Value as ValueIcon, Belief, Opinion, View, Perspective, Viewpoint, Standpoint, Position, Stance, Attitude, Approach as ApproachIcon, Style as StyleIcon, Fashion, Trend, Mode, Manner, Way as WayIcon, Method as MethodIconLarge, Technique as TechniqueIcon, Skill, Ability, Capability, Capacity, Potential, Talent, Gift as GiftIcon, Strength as StrengthIcon, Weakness as WeaknessIcon, Advantage, Disadvantage, Benefit, Drawback, Pro, Con, Plus, Minus, Positive, Negative, Good as GoodIcon, Bad as BadIcon, Better, Worse, Best, Worst, Great, Terrible, Excellent, Poor, Outstanding, Mediocre, Superior, Inferior, High, Low, Top as TopIcon, Bottom as BottomIcon, Maximum, Minimum, Most, Least, More, Less, Many, Few, All, None, Some, Any, Every, Each, Both, Either, Neither, Or, And, Not, But, However, Although, Though, Despite, Regardless, Nevertheless, Nonetheless, Furthermore, Moreover, Additionally, Also, Too, As, Well, Besides, Except, Unless, If, When, Where, Why, How, What, Who, Which, Whose, Whom, That, This, These, Those, Here as HereIcon, There as ThereIcon, Everywhere as EverywhereIcon, Nowhere as NowhereIcon, Somewhere as SomewhereIcon, Anywhere as AnywhereIcon, Now as NowIcon, Then, Soon as SoonIcon, Later as LaterIcon, Early, Late, Before as BeforeIcon, After as AfterIcon, During as DuringIcon, While as WhileIcon, Until as UntilIcon, Since as SinceIcon, From as FromIcon, To as ToIcon, At as AtIcon, In as InIcon, On as OnIcon, By as ByIcon, With as WithIcon, Without as WithoutIcon, For as ForIcon, Against as AgainstIcon, About as AboutIcon, Around as AroundIcon, Through as ThroughIcon, Over as OverIcon, Under as UnderIcon, Above as AboveIcon, Below as BelowIcon, Between as BetweenIcon, Among as AmongIcon, Inside as InsideIcon, Outside as OutsideIcon, Near as NearIcon, Far as FarIcon } from 'lucide-react'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const locales = {
@@ -49,18 +46,19 @@ const localizer = dateFnsLocalizer({
 interface Task {
   id: string
   title: string
-  description?: string
-  date: Date
+  description: string
   completed: boolean
   priority: 'low' | 'medium' | 'high'
   category: string
+  dueDate: string
+  createdAt: string
+  pomodoroSessions: number
   estimatedTime?: number
-  actualTime?: number
-  tags: string[]
-  subtasks: SubTask[]
-  recurring?: 'daily' | 'weekly' | 'monthly'
+  date?: Date
   reminder?: Date
-  color?: string
+  tags?: string[]
+  subtasks?: SubTask[]
+  recurring?: 'daily' | 'weekly' | 'monthly'
 }
 
 interface SubTask {
@@ -93,6 +91,24 @@ interface UserPreferences {
   backgroundGradient: string
   isPremium: boolean
   premiumExpiry?: Date
+}
+
+interface UserStats {
+  tasksCompleted: number
+  totalTasks: number
+  streak: number
+  pomodoroSessions: number
+  totalFocusTime: number
+}
+
+interface Achievement {
+  id: string
+  title: string
+  description: string
+  icon: string
+  unlocked: boolean
+  progress: number
+  maxProgress: number
 }
 
 const defaultPreferences: UserPreferences = {
@@ -156,24 +172,32 @@ const soundFiles = {
 
 export default function FutureTaskApp() {
   const t = useTranslations('common')
+  const [currentView, setCurrentView] = useState('welcome')
   const [tasks, setTasks] = useState<Task[]>([])
+  const [achievements, setAchievements] = useState<Achievement[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [currentView, setCurrentView] = useState<'month' | 'week' | 'day' | 'agenda'>('month')
-  const [showTaskDialog, setShowTaskDialog] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
+  const [language, setLanguage] = useState('es')
+  const [showCompleted, setShowCompleted] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [filterPriority, setFilterPriority] = useState('all')
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    priority: 'medium' as const,
+    category: 'personal',
+    dueDate: new Date().toISOString().split('T')[0]
+  })
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences)
-  const [showWelcome, setShowWelcome] = useState(true)
-  const [showPricing, setShowPricing] = useState(false)
+  const [showTaskDialog, setShowTaskDialog] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [showPomodoro, setShowPomodoro] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterCategory, setFilterCategory] = useState<string>('all')
-  const [filterPriority, setFilterPriority] = useState<string>('all')
-  const [showCompleted, setShowCompleted] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [currentBgClass, setCurrentBgClass] = useState(preferences.backgroundGradient)
-
-  // Form states
+  const [showPricing, setShowPricing] = useState(false)
+  const [isPremium, setIsPremium] = useState(false)
+  const [pomodoroTime, setPomodoroTime] = useState(25)
+  const [breakTime, setBreakTime] = useState(5)
+  const [notifications, setNotifications] = useState(true)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const [taskTitle, setTaskTitle] = useState('')
   const [taskDescription, setTaskDescription] = useState('')
   const [taskPriority, setTaskPriority] = useState<'low' | 'medium' | 'high'>('medium')
@@ -184,8 +208,10 @@ export default function FutureTaskApp() {
   const [taskEstimatedTime, setTaskEstimatedTime] = useState(30)
   const [taskRecurring, setTaskRecurring] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none')
   const [taskReminder, setTaskReminder] = useState(false)
-
-  // Statistics
+  const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [currentBgClass, setCurrentBgClass] = useState(preferences.backgroundGradient)
   const [stats, setStats] = useState({
     totalTasks: 0,
     completedTasks: 0,
@@ -195,6 +221,117 @@ export default function FutureTaskApp() {
     focusTime: 0,
     streak: 0,
   })
+  const [showPomodoro, setShowPomodoro] = useState(false)
+
+  // Initialize sample data
+  useEffect(() => {
+    const sampleTasks: Task[] = [
+      {
+        id: '1',
+        title: 'Completar proyecto de React',
+        description: 'Finalizar la aplicación de calendario con todas las funcionalidades',
+        completed: false,
+        priority: 'high',
+        category: 'trabajo',
+        dueDate: '2024-01-15',
+        createdAt: '2024-01-10',
+        pomodoroSessions: 3
+      },
+      {
+        id: '2',
+        title: 'Ejercicio matutino',
+        description: '30 minutos de cardio y estiramientos',
+        completed: true,
+        priority: 'medium',
+        category: 'salud',
+        dueDate: '2024-01-12',
+        createdAt: '2024-01-12',
+        pomodoroSessions: 1
+      },
+      {
+        id: '3',
+        title: 'Leer capítulo del libro',
+        description: 'Continuar con "Atomic Habits"',
+        completed: false,
+        priority: 'low',
+        category: 'personal',
+        dueDate: '2024-01-13',
+        createdAt: '2024-01-11',
+        pomodoroSessions: 0
+      }
+    ]
+
+    const sampleAchievements: Achievement[] = [
+      {
+        id: '1',
+        title: 'Primera tarea',
+        description: 'Completa tu primera tarea',
+        icon: '🎯',
+        unlocked: true,
+        progress: 1,
+        maxProgress: 1
+      },
+      {
+        id: '2',
+        title: 'Racha de 7 días',
+        description: 'Completa tareas durante 7 días consecutivos',
+        icon: '🔥',
+        unlocked: false,
+        progress: 3,
+        maxProgress: 7
+      },
+      {
+        id: '3',
+        title: 'Maestro Pomodoro',
+        description: 'Completa 25 sesiones Pomodoro',
+        icon: '🍅',
+        unlocked: false,
+        progress: 4,
+        maxProgress: 25
+      }
+    ]
+
+    setTasks(sampleTasks)
+    setAchievements(sampleAchievements)
+  }, [])
+
+  useEffect(() => {
+    const savedTasks = localStorage.getItem('futuristic-tasks')
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks))
+    } else {
+      setShowWelcome(true)
+    }
+
+    const savedSettings = localStorage.getItem('futuristic-settings')
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings)
+      setIsDarkMode(settings.darkMode || false)
+      setNotifications(settings.notifications !== false)
+      setSoundEnabled(settings.soundEnabled !== false)
+      setLanguage(settings.language || 'es')
+      setTheme(settings.theme || 'blue')
+    }
+
+    const savedPremium = localStorage.getItem('futuristic-premium')
+    setIsPremium(savedPremium === 'true')
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('futuristic-tasks', JSON.stringify(tasks))
+    updateUserStats()
+  }, [tasks])
+
+  useEffect(() => {
+    const settings = {
+      darkMode: isDarkMode,
+      notifications,
+      soundEnabled,
+      language,
+      theme
+    }
+    localStorage.setItem('futuristic-settings', JSON.stringify(settings))
+  }, [isDarkMode, notifications, soundEnabled, language, theme])
 
   useEffect(() => {
     loadTasks()
@@ -316,6 +453,8 @@ export default function FutureTaskApp() {
       subtasks: [],
       recurring: taskRecurring !== 'none' ? taskRecurring : undefined,
       reminder: taskReminder ? subDays(new Date(taskDate.toDateString() + ' ' + taskTime), 1) : undefined,
+      createdAt: new Date().toISOString(),
+      pomodoroSessions: 0,
     }
 
     try {
@@ -337,6 +476,8 @@ export default function FutureTaskApp() {
         reminder: data.reminder ? new Date(data.reminder) : undefined,
         tags: data.tags || [],
         subtasks: data.subtasks || [],
+        createdAt: new Date().toISOString(),
+        pomodoroSessions: 0,
       }
 
       setTasks(prev => [createdTask, ...prev])
