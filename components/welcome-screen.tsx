@@ -3,189 +3,211 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Zap, Target, Clock, Trophy, Calendar, Star, CheckCircle, ArrowRight, Sparkles } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { CheckCircle, Calendar, Clock, Target, Zap, ArrowRight } from "lucide-react"
 
 interface WelcomeScreenProps {
-  onGetStarted: () => void
+  onComplete: () => void
 }
 
-export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
-  const [currentFeature, setCurrentFeature] = useState(0)
+export function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
+  const [currentStep, setCurrentStep] = useState(0)
+  const [userName, setUserName] = useState("")
+  const [userGoals, setUserGoals] = useState<string[]>([])
 
-  const features = [
+  const steps = [
     {
-      icon: <Target className="w-8 h-8 text-blue-500" />,
-      title: "Gestión Inteligente de Tareas",
-      description: "Organiza, prioriza y completa tus tareas con un sistema intuitivo y poderoso.",
-      color: "from-blue-500 to-cyan-500",
+      title: "Welcome to FutureTask",
+      description: "Your intelligent task management companion",
+      content: (
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto">
+            <Zap className="h-10 w-10 text-white" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-white">Get ready to supercharge your productivity!</h2>
+            <p className="text-white/70">
+              FutureTask combines advanced task management with Pomodoro technique and intelligent insights.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div className="text-center">
+              <Calendar className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+              <p className="text-sm text-white/80">Smart Calendar</p>
+            </div>
+            <div className="text-center">
+              <Clock className="h-8 w-8 text-pink-400 mx-auto mb-2" />
+              <p className="text-sm text-white/80">Pomodoro Timer</p>
+            </div>
+            <div className="text-center">
+              <Target className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+              <p className="text-sm text-white/80">Goal Tracking</p>
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
-      icon: <Clock className="w-8 h-8 text-green-500" />,
-      title: "Técnica Pomodoro Integrada",
-      description: "Mejora tu productividad con sesiones de trabajo enfocado y descansos programados.",
-      color: "from-green-500 to-emerald-500",
+      title: "Tell us about yourself",
+      description: "Let's personalize your experience",
+      content: (
+        <div className="space-y-6">
+          <div>
+            <Label htmlFor="name" className="text-white">
+              What should we call you?
+            </Label>
+            <Input
+              id="name"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="Enter your name"
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/60 mt-2"
+            />
+          </div>
+          <div>
+            <Label className="text-white">What are your main goals? (Select all that apply)</Label>
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              {[
+                "Increase productivity",
+                "Better time management",
+                "Work-life balance",
+                "Focus improvement",
+                "Goal achievement",
+                "Habit building",
+              ].map((goal) => (
+                <Button
+                  key={goal}
+                  variant={userGoals.includes(goal) ? "default" : "outline"}
+                  onClick={() => {
+                    if (userGoals.includes(goal)) {
+                      setUserGoals(userGoals.filter((g) => g !== goal))
+                    } else {
+                      setUserGoals([...userGoals, goal])
+                    }
+                  }}
+                  className={`text-left justify-start ${
+                    userGoals.includes(goal)
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                      : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  }`}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  {goal}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
-      icon: <Trophy className="w-8 h-8 text-yellow-500" />,
-      title: "Sistema de Logros",
-      description: "Mantén la motivación con logros desbloqueables y seguimiento de progreso.",
-      color: "from-yellow-500 to-orange-500",
-    },
-    {
-      icon: <Calendar className="w-8 h-8 text-purple-500" />,
-      title: "Vista Semanal Avanzada",
-      description: "Planifica tu semana con una vista de calendario completa y personalizable.",
-      color: "from-purple-500 to-pink-500",
+      title: "You're all set!",
+      description: "Ready to start your productivity journey",
+      content: (
+        <div className="text-center space-y-6">
+          <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="h-10 w-10 text-white" />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-white">Welcome aboard, {userName || "there"}! 🎉</h2>
+            <p className="text-white/70">
+              Your personalized FutureTask experience is ready. Let's start achieving your goals!
+            </p>
+          </div>
+          {userGoals.length > 0 && (
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-2">Your selected goals:</h3>
+              <div className="flex flex-wrap gap-2">
+                {userGoals.map((goal) => (
+                  <span
+                    key={goal}
+                    className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm rounded-full"
+                  >
+                    {goal}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ),
     },
   ]
 
-  const benefits = [
-    "🎯 Aumenta tu productividad hasta un 40%",
-    "⏰ Gestiona mejor tu tiempo con Pomodoro",
-    "🏆 Mantén la motivación con logros",
-    "📱 Interfaz moderna y responsive",
-    "🌙 Modo oscuro para trabajar de noche",
-    "🔔 Notificaciones inteligentes",
-  ]
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1)
+    } else {
+      onComplete()
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const canProceed = currentStep === 0 || (currentStep === 1 && userName.trim().length > 0) || currentStep === 2
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Zap className="w-8 h-8 text-white" />
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
 
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              FutureTask
-            </span>
-          </h1>
-
-          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-            Tu asistente de productividad del futuro. Organiza tus tareas, alcanza tus metas y desbloquea tu potencial
-            con herramientas inteligentes.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button
-              onClick={onGetStarted}
-              size="lg"
-              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Comenzar Ahora
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-
-            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span>Gratis para siempre</span>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto mb-16">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">10K+</div>
-              <div className="text-gray-600 dark:text-gray-400">Usuarios activos</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">1M+</div>
-              <div className="text-gray-600 dark:text-gray-400">Tareas completadas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">40%</div>
-              <div className="text-gray-600 dark:text-gray-400">Aumento productividad</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Features Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-gray-100">
-            Características Principales
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
-                onClick={() => setCurrentFeature(index)}
-              >
-                <CardHeader className="text-center pb-4">
+      <Card className="w-full max-w-2xl bg-white/10 backdrop-blur-md border-white/20">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            {steps.map((_, index) => (
+              <div key={index} className="flex items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    index <= currentStep
+                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                      : "bg-white/20 text-white/60"
+                  }`}
+                >
+                  {index < currentStep ? <CheckCircle className="h-4 w-4" /> : index + 1}
+                </div>
+                {index < steps.length - 1 && (
                   <div
-                    className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-r ${feature.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    {feature.icon}
-                  </div>
-                  <CardTitle className="text-lg mb-2">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <CardDescription className="text-sm leading-relaxed">{feature.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Benefits Section */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-900 dark:text-gray-100">
-            ¿Por qué elegir FutureTask?
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-            {benefits.map((benefit, index) => (
-              <div
-                key={index}
-                className="flex items-center space-x-3 p-4 rounded-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50"
-              >
-                <div className="text-2xl">{benefit.split(" ")[0]}</div>
-                <div className="text-gray-700 dark:text-gray-300">{benefit.substring(2)}</div>
+                    className={`w-12 h-0.5 mx-2 ${
+                      index < currentStep ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-white/20"
+                    }`}
+                  />
+                )}
               </div>
             ))}
           </div>
-        </div>
+          <CardTitle className="text-white">{steps[currentStep].title}</CardTitle>
+          <CardDescription className="text-white/70">{steps[currentStep].description}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {steps[currentStep].content}
 
-        {/* CTA Section */}
-        <div className="text-center">
-          <Card className="max-w-2xl mx-auto bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-0">
-            <CardContent className="p-8">
-              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-                ¿Listo para transformar tu productividad?
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Únete a miles de usuarios que ya han mejorado su productividad con FutureTask.
-              </p>
-              <Button
-                onClick={onGetStarted}
-                size="lg"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <Star className="w-5 h-5 mr-2" />
-                Empezar Gratis
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
+          <Separator className="bg-white/20" />
 
-              <div className="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                <div className="flex items-center">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
-                  Sin tarjeta de crédito
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
-                  Configuración en 2 minutos
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentStep === 0}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 disabled:opacity-50"
+            >
+              Previous
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white disabled:opacity-50"
+            >
+              {currentStep === steps.length - 1 ? "Get Started" : "Next"}
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -5,391 +5,265 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Play, Pause, RotateCcw, Settings, Volume2, VolumeX, Coffee, Target } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+import { Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react"
 
-interface PomodoroTimerProps {
-  onBack: () => void
+interface UserPreferences {
   pomodoroTime: number
-  breakTime: number
+  shortBreakTime: number
+  longBreakTime: number
+  autoStartBreaks: boolean
+  autoStartPomodoros: boolean
+  longBreakInterval: number
   soundEnabled: boolean
 }
 
-type TimerMode = "work" | "shortBreak" | "longBreak"
+interface PomodoroTimerProps {
+  preferences: UserPreferences
+  onClose: () => void
+  onComplete: (sessionType: "focus" | "break") => void
+}
 
-export function PomodoroTimer({ onBack, pomodoroTime, breakTime, soundEnabled }: PomodoroTimerProps) {
-  const [timeLeft, setTimeLeft] = useState(pomodoroTime * 60)
+type SessionType = "focus" | "shortBreak" | "longBreak"
+
+export function PomodoroTimer({ preferences, onClose, onComplete }: PomodoroTimerProps) {
+  const [sessionType, setSessionType] = useState<SessionType>("focus")
+  const [timeLeft, setTimeLeft] = useState(preferences.pomodoroTime * 60)
   const [isRunning, setIsRunning] = useState(false)
-  const [mode, setMode] = useState<TimerMode>("work")
-  const [completedPomodoros, setCompletedPomodoros] = useState(0)
-  const [totalPomodoros, setTotalPomodoros] = useState(0)
-  const [showSettings, setShowSettings] = useState(false)
-  const [localPomodoroTime, setLocalPomodoroTime] = useState(pomodoroTime)
-  const [localBreakTime, setLocalBreakTime] = useState(breakTime)
-  const [localSoundEnabled, setLocalSoundEnabled] = useState(soundEnabled)
-  const [autoStartBreaks, setAutoStartBreaks] = useState(false)
-  const [autoStartPomodoros, setAutoStartPomodoros] = useState(false)
-  const [longBreakInterval, setLongBreakInterval] = useState(4)
-
+  const [sessionsCompleted, setSessionsCompleted] = useState(0)
+  const [totalFocusTime, setTotalFocusTime] = useState(0)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // Initialize audio
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      audioRef.current = new Audio("/notification.mp3")
-      audioRef.current.volume = 0.5
+  const getSessionDuration = (type: SessionType) => {
+    switch (type) {
+      case "focus":
+        return preferences.pomodoroTime * 60
+      case "shortBreak":
+        return preferences.shortBreakTime * 60
+      case "longBreak":
+        return preferences.longBreakTime * 60
     }
-  }, [])
+  }
 
-  // Timer logic
-  useEffect(() => {
-    if (isRunning && timeLeft > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1)
-      }, 1000)
-    } else if (timeLeft === 0) {
-      handleTimerComplete()
+  const getSessionTitle = (type: SessionType) => {
+    switch (type) {
+      case "focus":
+        return "Focus Time"
+      case "shortBreak":
+        return "Short Break"
+      case "longBreak":
+        return "Long Break"
+    }
+  }
+
+  const getSessionIcon = (type: SessionType) => {
+    switch (type) {
+      case "focus":
+        return <Brain className="h-5 w-5" />
+      case "shortBreak":
+      case "longBreak":
+        return <Coffee className="h-5 w-5" />
+    }
+  }
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`
+  }
+
+  const startTimer = () => {
+    setIsRunning(true)
+    intervalRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          handleSessionComplete()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const pauseTimer = () => {
+    setIsRunning(false)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+  }
+
+  const resetTimer = () => {
+    setIsRunning(false)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    setTimeLeft(getSessionDuration(sessionType))
+  }
+
+  const handleSessionComplete = () => {
+    setIsRunning(false)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+
+    if (sessionType === "focus") {
+      setSessionsCompleted((prev) => prev + 1)
+      setTotalFocusTime((prev) => prev + preferences.pomodoroTime)
+      onComplete("focus")
+
+      // Determine next session type
+      const nextSessionsCompleted = sessionsCompleted + 1
+      const isLongBreak = nextSessionsCompleted % preferences.longBreakInterval === 0
+      const nextSessionType = isLongBreak ? "longBreak" : "shortBreak"
+
+      setSessionType(nextSessionType)
+      setTimeLeft(getSessionDuration(nextSessionType))
+
+      if (preferences.autoStartBreaks) {
+        setTimeout(() => startTimer(), 1000)
+      }
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
+      onComplete("break")
+      setSessionType("focus")
+      setTimeLeft(getSessionDuration("focus"))
+
+      if (preferences.autoStartPomodoros) {
+        setTimeout(() => startTimer(), 1000)
       }
     }
+  }
 
+  const switchSession = (type: SessionType) => {
+    setIsRunning(false)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    setSessionType(type)
+    setTimeLeft(getSessionDuration(type))
+  }
+
+  useEffect(() => {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isRunning, timeLeft])
+  }, [])
 
-  const handleTimerComplete = () => {
-    setIsRunning(false)
+  useEffect(() => {
+    setTimeLeft(getSessionDuration(sessionType))
+  }, [sessionType, preferences])
 
-    if (localSoundEnabled && audioRef.current) {
-      audioRef.current.play().catch(() => {
-        // Fallback if audio fails
-        console.log("Audio notification failed")
-      })
-    }
-
-    if (mode === "work") {
-      const newCompletedPomodoros = completedPomodoros + 1
-      setCompletedPomodoros(newCompletedPomodoros)
-      setTotalPomodoros(totalPomodoros + 1)
-
-      // Determine next break type
-      const isLongBreak = newCompletedPomodoros % longBreakInterval === 0
-      const nextMode = isLongBreak ? "longBreak" : "shortBreak"
-      const nextTime = isLongBreak ? localBreakTime * 3 : localBreakTime
-
-      setMode(nextMode)
-      setTimeLeft(nextTime * 60)
-
-      if (autoStartBreaks) {
-        setIsRunning(true)
-      }
-    } else {
-      setMode("work")
-      setTimeLeft(localPomodoroTime * 60)
-
-      if (autoStartPomodoros) {
-        setIsRunning(true)
-      }
-    }
-  }
-
-  const toggleTimer = () => {
-    setIsRunning(!isRunning)
-  }
-
-  const resetTimer = () => {
-    setIsRunning(false)
-    const time = mode === "work" ? localPomodoroTime : mode === "longBreak" ? localBreakTime * 3 : localBreakTime
-    setTimeLeft(time * 60)
-  }
-
-  const switchMode = (newMode: TimerMode) => {
-    setIsRunning(false)
-    setMode(newMode)
-    const time = newMode === "work" ? localPomodoroTime : newMode === "longBreak" ? localBreakTime * 3 : localBreakTime
-    setTimeLeft(time * 60)
-  }
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-  }
-
-  const getProgress = () => {
-    const totalTime =
-      mode === "work" ? localPomodoroTime * 60 : mode === "longBreak" ? localBreakTime * 3 * 60 : localBreakTime * 60
-    return ((totalTime - timeLeft) / totalTime) * 100
-  }
-
-  const getModeConfig = () => {
-    switch (mode) {
-      case "work":
-        return {
-          title: "Tiempo de Trabajo",
-          color: "from-red-500 to-orange-500",
-          bgColor: "bg-red-50 dark:bg-red-900/20",
-          icon: <Target className="w-6 h-6" />,
-        }
-      case "shortBreak":
-        return {
-          title: "Descanso Corto",
-          color: "from-green-500 to-emerald-500",
-          bgColor: "bg-green-50 dark:bg-green-900/20",
-          icon: <Coffee className="w-6 h-6" />,
-        }
-      case "longBreak":
-        return {
-          title: "Descanso Largo",
-          color: "from-blue-500 to-cyan-500",
-          bgColor: "bg-blue-50 dark:bg-blue-900/20",
-          icon: <Coffee className="w-6 h-6" />,
-        }
-    }
-  }
-
-  const modeConfig = getModeConfig()
+  const progress = ((getSessionDuration(sessionType) - timeLeft) / getSessionDuration(sessionType)) * 100
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
+    <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border-white/20">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-white flex items-center space-x-2">
+          {getSessionIcon(sessionType)}
+          <span>{getSessionTitle(sessionType)}</span>
+        </CardTitle>
+        <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20">
+          <X className="h-4 w-4" />
+        </Button>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* Session Type Selector */}
+        <div className="flex space-x-2">
+          <Button
+            variant={sessionType === "focus" ? "default" : "outline"}
+            size="sm"
+            onClick={() => switchSession("focus")}
+            className={
+              sessionType === "focus"
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+            }
+          >
+            <Brain className="h-4 w-4 mr-1" />
+            Focus
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Timer Pomodoro</h1>
-            <p className="text-gray-600 dark:text-gray-400">Mantén el foco con la técnica Pomodoro</p>
+          <Button
+            variant={sessionType === "shortBreak" ? "default" : "outline"}
+            size="sm"
+            onClick={() => switchSession("shortBreak")}
+            className={
+              sessionType === "shortBreak"
+                ? "bg-gradient-to-r from-green-500 to-blue-500 text-white"
+                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+            }
+          >
+            <Coffee className="h-4 w-4 mr-1" />
+            Short
+          </Button>
+          <Button
+            variant={sessionType === "longBreak" ? "default" : "outline"}
+            size="sm"
+            onClick={() => switchSession("longBreak")}
+            className={
+              sessionType === "longBreak"
+                ? "bg-gradient-to-r from-green-500 to-blue-500 text-white"
+                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+            }
+          >
+            <Coffee className="h-4 w-4 mr-1" />
+            Long
+          </Button>
+        </div>
+
+        {/* Timer Display */}
+        <div className="text-center space-y-4">
+          <div className="text-6xl font-bold text-white tabular-nums">{formatTime(timeLeft)}</div>
+          <Progress value={progress} className="h-2 bg-white/20" />
+        </div>
+
+        {/* Controls */}
+        <div className="flex justify-center space-x-4">
+          <Button
+            onClick={isRunning ? pauseTimer : startTimer}
+            className={`${
+              sessionType === "focus"
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                : "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+            } text-white`}
+          >
+            {isRunning ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+            {isRunning ? "Pause" : "Start"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={resetTimer}
+            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+        </div>
+
+        <Separator className="bg-white/20" />
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-white">{sessionsCompleted}</div>
+            <div className="text-sm text-white/60">Sessions</div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-white">{totalFocusTime}</div>
+            <div className="text-sm text-white/60">Minutes</div>
           </div>
         </div>
 
-        <Dialog open={showSettings} onOpenChange={setShowSettings}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Configuración
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Configuración del Timer</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label>Tiempo de trabajo: {localPomodoroTime} min</Label>
-                  <Slider
-                    value={[localPomodoroTime]}
-                    onValueChange={(value) => setLocalPomodoroTime(value[0])}
-                    max={60}
-                    min={15}
-                    step={5}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label>Tiempo de descanso: {localBreakTime} min</Label>
-                  <Slider
-                    value={[localBreakTime]}
-                    onValueChange={(value) => setLocalBreakTime(value[0])}
-                    max={30}
-                    min={5}
-                    step={5}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <Label>Descanso largo cada: {longBreakInterval} pomodoros</Label>
-                  <Slider
-                    value={[longBreakInterval]}
-                    onValueChange={(value) => setLongBreakInterval(value[0])}
-                    max={8}
-                    min={2}
-                    step={1}
-                    className="mt-2"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Sonidos de notificación</Label>
-                  <Switch checked={localSoundEnabled} onCheckedChange={setLocalSoundEnabled} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Auto-iniciar descansos</Label>
-                  <Switch checked={autoStartBreaks} onCheckedChange={setAutoStartBreaks} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Auto-iniciar pomodoros</Label>
-                  <Switch checked={autoStartPomodoros} onCheckedChange={setAutoStartPomodoros} />
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Timer Card */}
-        <div className="lg:col-span-2">
-          <Card className={`${modeConfig.bgColor} border-0 shadow-lg`}>
-            <CardHeader className="text-center pb-4">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                {modeConfig.icon}
-                <CardTitle className="text-2xl">{modeConfig.title}</CardTitle>
-              </div>
-              <div className="flex justify-center space-x-2">
-                <Button
-                  variant={mode === "work" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => switchMode("work")}
-                  disabled={isRunning}
-                >
-                  Trabajo
-                </Button>
-                <Button
-                  variant={mode === "shortBreak" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => switchMode("shortBreak")}
-                  disabled={isRunning}
-                >
-                  Descanso
-                </Button>
-                <Button
-                  variant={mode === "longBreak" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => switchMode("longBreak")}
-                  disabled={isRunning}
-                >
-                  Descanso Largo
-                </Button>
-              </div>
-            </CardHeader>
-
-            <CardContent className="text-center space-y-6">
-              {/* Timer Display */}
-              <div className="relative">
-                <div className="text-8xl md:text-9xl font-mono font-bold text-gray-900 dark:text-gray-100">
-                  {formatTime(timeLeft)}
-                </div>
-                <Progress value={getProgress()} className="mt-4 h-3" />
-              </div>
-
-              {/* Controls */}
-              <div className="flex justify-center space-x-4">
-                <Button
-                  onClick={toggleTimer}
-                  size="lg"
-                  className={`bg-gradient-to-r ${modeConfig.color} hover:opacity-90 text-white px-8`}
-                >
-                  {isRunning ? (
-                    <>
-                      <Pause className="w-5 h-5 mr-2" />
-                      Pausar
-                    </>
-                  ) : (
-                    <>
-                      <Play className="w-5 h-5 mr-2" />
-                      Iniciar
-                    </>
-                  )}
-                </Button>
-
-                <Button onClick={resetTimer} variant="outline" size="lg" disabled={isRunning}>
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  Reiniciar
-                </Button>
-
-                <Button onClick={() => setLocalSoundEnabled(!localSoundEnabled)} variant="outline" size="lg">
-                  {localSoundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stats Sidebar */}
-        <div className="space-y-6">
-          {/* Session Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Estadísticas de Hoy</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Pomodoros completados</span>
-                <Badge variant="secondary" className="text-lg px-3 py-1">
-                  {completedPomodoros}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Total de sesiones</span>
-                <Badge variant="outline" className="text-lg px-3 py-1">
-                  {totalPomodoros}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Tiempo enfocado</span>
-                <Badge variant="outline" className="text-lg px-3 py-1">
-                  {Math.floor((completedPomodoros * localPomodoroTime) / 60)}h{" "}
-                  {(completedPomodoros * localPomodoroTime) % 60}m
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Progress to Long Break */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Progreso al Descanso Largo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Progreso</span>
-                  <span>
-                    {completedPomodoros % longBreakInterval}/{longBreakInterval}
-                  </span>
-                </div>
-                <Progress
-                  value={((completedPomodoros % longBreakInterval) / longBreakInterval) * 100}
-                  className="h-2"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {longBreakInterval - (completedPomodoros % longBreakInterval)} pomodoros restantes
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Tips */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">💡 Consejos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-                <p>• Elimina todas las distracciones antes de empezar</p>
-                <p>• Durante los descansos, levántate y muévete</p>
-                <p>• Mantén una botella de agua cerca</p>
-                <p>• Usa los descansos largos para relajarte completamente</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+        {/* Next Session Info */}
+        {sessionType === "focus" && (
+          <div className="text-center">
+            <Badge className="bg-white/10 text-white/80">
+              Next: {(sessionsCompleted + 1) % preferences.longBreakInterval === 0 ? "Long Break" : "Short Break"}
+            </Badge>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

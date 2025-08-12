@@ -4,205 +4,206 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { CheckCircle, Star, Zap, Crown, ArrowLeft, Sparkles } from "lucide-react"
-import { PayPalButton } from "@/components/paypal-button"
+import { Separator } from "@/components/ui/separator"
+import { Check, Crown, Zap, ArrowLeft, Star, Sparkles } from "lucide-react"
 
 interface PricingSectionProps {
   onBack: () => void
-  onUpgrade: () => void
+  onUpgrade: (plan: "monthly" | "yearly") => void
 }
 
 export function PricingSection({ onBack, onUpgrade }: PricingSectionProps) {
-  const [isYearly, setIsYearly] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "yearly">("yearly")
 
   const plans = [
     {
       id: "free",
-      name: "Gratis",
-      description: "Perfecto para uso personal",
-      price: { monthly: 0, yearly: 0 },
+      name: "Free",
+      price: "$0",
+      period: "forever",
+      description: "Perfect for getting started",
       features: [
-        "Hasta 50 tareas",
-        "Técnica Pomodoro básica",
-        "Vista de calendario",
-        "Logros básicos",
-        "Sincronización en la nube",
-        "Soporte por email",
+        "Up to 50 tasks",
+        "Basic calendar view",
+        "Simple Pomodoro timer",
+        "Basic task categories",
+        "Mobile responsive",
       ],
-      limitations: ["Sin temas personalizados", "Sin estadísticas avanzadas", "Sin exportación de datos"],
+      limitations: ["Limited to 50 tasks", "Basic themes only", "Ads supported", "No advanced analytics"],
       popular: false,
-      color: "from-gray-500 to-gray-600",
+      current: true,
     },
     {
-      id: "premium",
-      name: "Premium",
-      description: "Para profesionales productivos",
-      price: { monthly: 9.99, yearly: 99.99 },
+      id: "monthly",
+      name: "Premium Monthly",
+      price: "$4.99",
+      period: "per month",
+      description: "Full access to all features",
       features: [
-        "Tareas ilimitadas",
-        "Pomodoro avanzado con estadísticas",
-        "Vista semanal y mensual",
-        "Todos los logros desbloqueados",
-        "Temas personalizados",
-        "Estadísticas detalladas",
-        "Exportación de datos",
-        "Plantillas de tareas",
-        "Recordatorios inteligentes",
-        "Soporte prioritario",
+        "Unlimited tasks",
+        "Advanced calendar views",
+        "Advanced Pomodoro settings",
+        "Custom categories & tags",
+        "Premium themes",
+        "Advanced analytics",
+        "Priority support",
+        "Ad-free experience",
+        "Data export",
+        "Team collaboration",
       ],
-      limitations: [],
+      popular: false,
+      current: false,
+    },
+    {
+      id: "yearly",
+      name: "Premium Yearly",
+      price: "$39.99",
+      period: "per year",
+      originalPrice: "$59.88",
+      description: "Best value - Save 33%",
+      features: [
+        "Everything in Monthly",
+        "2 months free",
+        "Priority feature requests",
+        "Beta access to new features",
+        "Advanced integrations",
+        "Custom branding",
+      ],
       popular: true,
-      color: "from-blue-500 to-purple-600",
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      description: "Para equipos y organizaciones",
-      price: { monthly: 29.99, yearly: 299.99 },
-      features: [
-        "Todo lo de Premium",
-        "Colaboración en equipo",
-        "Gestión de proyectos",
-        "Reportes avanzados",
-        "API personalizada",
-        "SSO y seguridad avanzada",
-        "Onboarding personalizado",
-        "Soporte 24/7",
-        "Integración con herramientas empresariales",
-      ],
-      limitations: [],
-      popular: false,
-      color: "from-purple-500 to-pink-600",
+      current: false,
     },
   ]
 
-  const handlePaymentSuccess = (planId: string) => {
-    console.log(`Payment successful for plan: ${planId}`)
-    onUpgrade()
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-4">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
+
+      <div className="max-w-6xl mx-auto">
         <div className="flex items-center mb-8">
-          <Button variant="ghost" onClick={onBack} className="mr-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver
+          <Button variant="ghost" onClick={onBack} className="text-white hover:bg-white/20">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
         </div>
 
-        {/* Hero Section */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Crown className="w-8 h-8 text-white" />
-            </div>
+          <div className="flex items-center justify-center mb-4">
+            <Crown className="h-8 w-8 text-yellow-400 mr-2" />
+            <h1 className="text-4xl font-bold text-white">Choose Your Plan</h1>
           </div>
-
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Desbloquea tu Potencial
-            </span>
-          </h1>
-
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
-            Elige el plan perfecto para llevar tu productividad al siguiente nivel
-          </p>
-
-          {/* Billing Toggle */}
-          <div className="flex items-center justify-center space-x-4 mb-8">
-            <span className={`text-sm ${!isYearly ? "text-gray-900 dark:text-gray-100 font-medium" : "text-gray-500"}`}>
-              Mensual
-            </span>
-            <Switch checked={isYearly} onCheckedChange={setIsYearly} />
-            <span className={`text-sm ${isYearly ? "text-gray-900 dark:text-gray-100 font-medium" : "text-gray-500"}`}>
-              Anual
-            </span>
-            {isYearly && (
-              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Ahorra 17%</Badge>
-            )}
+          <p className="text-xl text-white/80 mb-6">Unlock the full potential of FutureTask</p>
+          <div className="flex items-center justify-center space-x-4">
+            <Button
+              variant={selectedPlan === "monthly" ? "default" : "outline"}
+              onClick={() => setSelectedPlan("monthly")}
+              className={
+                selectedPlan === "monthly"
+                  ? "bg-white text-purple-600"
+                  : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+              }
+            >
+              Monthly
+            </Button>
+            <Button
+              variant={selectedPlan === "yearly" ? "default" : "outline"}
+              onClick={() => setSelectedPlan("yearly")}
+              className={
+                selectedPlan === "yearly"
+                  ? "bg-white text-purple-600"
+                  : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+              }
+            >
+              Yearly
+              <Badge className="ml-2 bg-green-500 text-white">Save 33%</Badge>
+            </Button>
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
+        <div className="grid md:grid-cols-3 gap-8">
           {plans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                plan.popular
-                  ? "border-2 border-blue-500 shadow-lg scale-105"
-                  : "border border-gray-200 dark:border-gray-700 hover:border-blue-300"
-              } ${selectedPlan === plan.id ? "ring-2 ring-blue-500" : ""}`}
+              className={`relative bg-white/10 backdrop-blur-md border-white/20 ${
+                plan.popular ? "ring-2 ring-yellow-400 scale-105" : ""
+              } ${plan.current ? "opacity-60" : ""}`}
             >
               {plan.popular && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-2 text-sm font-medium">
-                  <Star className="w-4 h-4 inline mr-1" />
-                  Más Popular
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-1">
+                    <Star className="h-3 w-3 mr-1" />
+                    Most Popular
+                  </Badge>
                 </div>
               )}
 
-              <CardHeader className={`text-center ${plan.popular ? "pt-12" : "pt-6"}`}>
-                <div
-                  className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r ${plan.color} flex items-center justify-center`}
-                >
-                  {plan.id === "free" && <Zap className="w-6 h-6 text-white" />}
-                  {plan.id === "premium" && <Star className="w-6 h-6 text-white" />}
-                  {plan.id === "enterprise" && <Crown className="w-6 h-6 text-white" />}
-                </div>
-
-                <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                <CardDescription className="mb-4">{plan.description}</CardDescription>
-
-                <div className="mb-4">
-                  <div className="text-4xl font-bold">
-                    ${isYearly ? plan.price.yearly : plan.price.monthly}
-                    {plan.price.monthly > 0 && (
-                      <span className="text-lg font-normal text-gray-500">/{isYearly ? "año" : "mes"}</span>
-                    )}
+              <CardHeader className="text-center">
+                <CardTitle className="text-white flex items-center justify-center">
+                  {plan.id === "free" && <Zap className="h-5 w-5 mr-2" />}
+                  {plan.id !== "free" && <Crown className="h-5 w-5 mr-2 text-yellow-400" />}
+                  {plan.name}
+                </CardTitle>
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-center">
+                    <span className="text-4xl font-bold text-white">{plan.price}</span>
+                    <span className="text-white/60 ml-2">/{plan.period}</span>
                   </div>
-                  {isYearly && plan.price.monthly > 0 && (
-                    <div className="text-sm text-gray-500 mt-1">
-                      ${(plan.price.yearly / 12).toFixed(2)}/mes facturado anualmente
-                    </div>
+                  {plan.originalPrice && (
+                    <div className="text-white/60 line-through text-sm">Originally {plan.originalPrice}</div>
                   )}
                 </div>
+                <CardDescription className="text-white/70">{plan.description}</CardDescription>
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="space-y-3">
                   {plan.features.map((feature, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                    <div key={index} className="flex items-center space-x-3">
+                      <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
+                      <span className="text-white/90 text-sm">{feature}</span>
                     </div>
                   ))}
                 </div>
 
+                {plan.limitations && (
+                  <>
+                    <Separator className="bg-white/20" />
+                    <div className="space-y-2">
+                      <h4 className="text-white/80 font-medium text-sm">Limitations:</h4>
+                      {plan.limitations.map((limitation, index) => (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className="h-4 w-4 border border-white/40 rounded flex-shrink-0" />
+                          <span className="text-white/60 text-sm">{limitation}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 <div className="pt-4">
-                  {plan.id === "free" ? (
-                    <Button className="w-full bg-transparent" variant="outline" onClick={onBack}>
-                      Continuar Gratis
+                  {plan.current ? (
+                    <Button disabled className="w-full bg-white/20 text-white/60">
+                      Current Plan
+                    </Button>
+                  ) : plan.id === "free" ? (
+                    <Button
+                      variant="outline"
+                      className="w-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      onClick={onBack}
+                    >
+                      Continue with Free
                     </Button>
                   ) : (
-                    <div className="space-y-3">
-                      <PayPalButton
-                        amount={isYearly ? plan.price.yearly : plan.price.monthly}
-                        planName={plan.name}
-                        onSuccess={() => handlePaymentSuccess(plan.id)}
-                        className="w-full"
-                      />
-                      <Button
-                        className={`w-full bg-gradient-to-r ${plan.color} hover:opacity-90 text-white`}
-                        onClick={() => setSelectedPlan(plan.id)}
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Elegir {plan.name}
-                      </Button>
-                    </div>
+                    <Button
+                      onClick={() => onUpgrade(plan.id as "monthly" | "yearly")}
+                      className={`w-full ${
+                        plan.popular
+                          ? "bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white"
+                          : "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                      }`}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Upgrade to {plan.name}
+                    </Button>
                   )}
                 </div>
               </CardContent>
@@ -210,47 +211,13 @@ export function PricingSection({ onBack, onUpgrade }: PricingSectionProps) {
           ))}
         </div>
 
-        {/* FAQ Section */}
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8 text-gray-900 dark:text-gray-100">Preguntas Frecuentes</h2>
-
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">¿Puedo cambiar de plan en cualquier momento?</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Sí, puedes actualizar o degradar tu plan en cualquier momento. Los cambios se aplicarán en tu próximo
-                  ciclo de facturación.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">¿Hay garantía de devolución?</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Ofrecemos una garantía de devolución de 30 días sin preguntas. Si no estás satisfecho, te devolvemos
-                  tu dinero.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-semibold mb-2">¿Mis datos están seguros?</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Absolutamente. Utilizamos encriptación de nivel empresarial y cumplimos con todas las regulaciones de
-                  privacidad internacionales.
-                </p>
-              </CardContent>
-            </Card>
+        <div className="mt-12 text-center">
+          <p className="text-white/60 text-sm mb-4">All plans include a 14-day free trial. Cancel anytime.</p>
+          <div className="flex items-center justify-center space-x-6 text-white/60 text-sm">
+            <span>✓ Secure payment</span>
+            <span>✓ No hidden fees</span>
+            <span>✓ Cancel anytime</span>
           </div>
-        </div>
-
-        {/* Contact Section */}
-        <div className="text-center mt-12">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">¿Necesitas un plan personalizado para tu empresa?</p>
-          <Button variant="outline">Contactar Ventas</Button>
         </div>
       </div>
     </div>
