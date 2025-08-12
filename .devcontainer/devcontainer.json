@@ -1,9 +1,8 @@
 {
   "name": "Node.js & TypeScript",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-18-bullseye",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "nodeGypDependencies": true,
       "version": "18"
     }
   },
@@ -13,5 +12,5 @@
     }
   },
   "postCreateCommand": "npm install -g pnpm && pnpm install",
-  "remoteUser": "node"
+  "forwardPorts": [3000]
 }
