@@ -5,18 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react"
-
-interface UserPreferences {
-  pomodoroTime: number
-  shortBreakTime: number
-  longBreakTime: number
-  autoStartBreaks: boolean
-  autoStartPomodoros: boolean
-  longBreakInterval: number
-  soundEnabled: boolean
-}
+import { Play, Pause, RotateCcw, Volume2, VolumeX, X } from "lucide-react"
+import { toast } from "sonner"
+import type { UserPreferences } from "@/types"
 
 interface PomodoroTimerProps {
   preferences: UserPreferences
@@ -31,184 +22,187 @@ export function PomodoroTimer({ preferences, onClose, onComplete }: PomodoroTime
   const [timeLeft, setTimeLeft] = useState(preferences.pomodoroTime * 60)
   const [isRunning, setIsRunning] = useState(false)
   const [sessionsCompleted, setSessionsCompleted] = useState(0)
-  const [totalFocusTime, setTotalFocusTime] = useState(0)
+  const [soundEnabled, setSoundEnabled] = useState(preferences.soundEnabled)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const getSessionDuration = (type: SessionType) => {
-    switch (type) {
-      case "focus":
-        return preferences.pomodoroTime * 60
-      case "shortBreak":
-        return preferences.shortBreakTime * 60
-      case "longBreak":
-        return preferences.longBreakTime * 60
-    }
+  const sessionDurations = {
+    focus: preferences.pomodoroTime * 60,
+    shortBreak: preferences.shortBreakTime * 60,
+    longBreak: preferences.longBreakTime * 60,
   }
 
-  const getSessionTitle = (type: SessionType) => {
-    switch (type) {
-      case "focus":
-        return "Focus Time"
-      case "shortBreak":
-        return "Short Break"
-      case "longBreak":
-        return "Long Break"
-    }
-  }
-
-  const getSessionIcon = (type: SessionType) => {
-    switch (type) {
-      case "focus":
-        return <Brain className="h-5 w-5" />
-      case "shortBreak":
-      case "longBreak":
-        return <Coffee className="h-5 w-5" />
-    }
-  }
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`
-  }
-
-  const startTimer = () => {
-    setIsRunning(true)
-    intervalRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleSessionComplete()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
-  const pauseTimer = () => {
-    setIsRunning(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-  }
-
-  const resetTimer = () => {
-    setIsRunning(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-    setTimeLeft(getSessionDuration(sessionType))
-  }
-
-  const handleSessionComplete = () => {
-    setIsRunning(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-
-    if (sessionType === "focus") {
-      setSessionsCompleted((prev) => prev + 1)
-      setTotalFocusTime((prev) => prev + preferences.pomodoroTime)
-      onComplete("focus")
-
-      // Determine next session type
-      const nextSessionsCompleted = sessionsCompleted + 1
-      const isLongBreak = nextSessionsCompleted % preferences.longBreakInterval === 0
-      const nextSessionType = isLongBreak ? "longBreak" : "shortBreak"
-
-      setSessionType(nextSessionType)
-      setTimeLeft(getSessionDuration(nextSessionType))
-
-      if (preferences.autoStartBreaks) {
-        setTimeout(() => startTimer(), 1000)
-      }
-    } else {
-      onComplete("break")
-      setSessionType("focus")
-      setTimeLeft(getSessionDuration("focus"))
-
-      if (preferences.autoStartPomodoros) {
-        setTimeout(() => startTimer(), 1000)
-      }
-    }
-  }
-
-  const switchSession = (type: SessionType) => {
-    setIsRunning(false)
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-    setSessionType(type)
-    setTimeLeft(getSessionDuration(type))
+  const sessionLabels = {
+    focus: preferences.language === "es" ? "Enfoque" : "Focus",
+    shortBreak: preferences.language === "es" ? "Descanso Corto" : "Short Break",
+    longBreak: preferences.language === "es" ? "Descanso Largo" : "Long Break",
   }
 
   useEffect(() => {
+    setTimeLeft(sessionDurations[sessionType])
+  }, [sessionType])
+
+  useEffect(() => {
+    if (isRunning && timeLeft > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleSessionComplete()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [])
+  }, [isRunning, timeLeft])
 
-  useEffect(() => {
-    setTimeLeft(getSessionDuration(sessionType))
-  }, [sessionType, preferences])
+  const handleSessionComplete = () => {
+    setIsRunning(false)
 
-  const progress = ((getSessionDuration(sessionType) - timeLeft) / getSessionDuration(sessionType)) * 100
+    if (soundEnabled) {
+      playNotificationSound()
+    }
+
+    if (sessionType === "focus") {
+      setSessionsCompleted((prev) => prev + 1)
+      const nextSession = (sessionsCompleted + 1) % preferences.longBreakInterval === 0 ? "longBreak" : "shortBreak"
+
+      toast.success(
+        preferences.language === "es"
+          ? "¡Sesión de enfoque completada! Hora del descanso."
+          : "Focus session complete! Time for a break.",
+      )
+
+      if (preferences.autoStartBreaks) {
+        setSessionType(nextSession)
+        setIsRunning(true)
+      } else {
+        setSessionType(nextSession)
+      }
+    } else {
+      toast.success(
+        preferences.language === "es" ? "¡Descanso terminado! Listo para enfocar." : "Break complete! Ready to focus.",
+      )
+
+      if (preferences.autoStartPomodoros) {
+        setSessionType("focus")
+        setIsRunning(true)
+      } else {
+        setSessionType("focus")
+      }
+    }
+
+    onComplete(sessionType)
+  }
+
+  const playNotificationSound = () => {
+    // Create a simple beep sound using Web Audio API
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+
+    oscillator.frequency.value = 800
+    oscillator.type = "sine"
+
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + 0.5)
+  }
+
+  const toggleTimer = () => {
+    setIsRunning(!isRunning)
+  }
+
+  const resetTimer = () => {
+    setIsRunning(false)
+    setTimeLeft(sessionDurations[sessionType])
+  }
+
+  const switchSession = (type: SessionType) => {
+    setIsRunning(false)
+    setSessionType(type)
+    setTimeLeft(sessionDurations[type])
+  }
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
+
+  const progress = ((sessionDurations[sessionType] - timeLeft) / sessionDurations[sessionType]) * 100
 
   return (
-    <Card className="w-full max-w-md bg-white/10 backdrop-blur-md border-white/20">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-white flex items-center space-x-2">
-          {getSessionIcon(sessionType)}
-          <span>{getSessionTitle(sessionType)}</span>
+    <Card className="w-full max-w-md mx-auto bg-white/10 backdrop-blur-md border-white/20">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-white">
+          {preferences.language === "es" ? "Temporizador Pomodoro" : "Pomodoro Timer"}
         </CardTitle>
-        <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20">
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="text-white hover:bg-white/20"
+          >
+            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
-
       <CardContent className="space-y-6">
         {/* Session Type Selector */}
         <div className="flex space-x-2">
           <Button
-            variant={sessionType === "focus" ? "default" : "outline"}
+            variant={sessionType === "focus" ? "default" : "ghost"}
             size="sm"
             onClick={() => switchSession("focus")}
-            className={
-              sessionType === "focus"
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
+            className={`flex-1 ${
+              sessionType === "focus" ? "bg-white/20 text-white" : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
           >
-            <Brain className="h-4 w-4 mr-1" />
-            Focus
+            {sessionLabels.focus}
           </Button>
           <Button
-            variant={sessionType === "shortBreak" ? "default" : "outline"}
+            variant={sessionType === "shortBreak" ? "default" : "ghost"}
             size="sm"
             onClick={() => switchSession("shortBreak")}
-            className={
+            className={`flex-1 ${
               sessionType === "shortBreak"
-                ? "bg-gradient-to-r from-green-500 to-blue-500 text-white"
-                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
+                ? "bg-white/20 text-white"
+                : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
           >
-            <Coffee className="h-4 w-4 mr-1" />
-            Short
+            {sessionLabels.shortBreak}
           </Button>
           <Button
-            variant={sessionType === "longBreak" ? "default" : "outline"}
+            variant={sessionType === "longBreak" ? "default" : "ghost"}
             size="sm"
             onClick={() => switchSession("longBreak")}
-            className={
+            className={`flex-1 ${
               sessionType === "longBreak"
-                ? "bg-gradient-to-r from-green-500 to-blue-500 text-white"
-                : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-            }
+                ? "bg-white/20 text-white"
+                : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
           >
-            <Coffee className="h-4 w-4 mr-1" />
-            Long
+            {sessionLabels.longBreak}
           </Button>
         </div>
 
@@ -216,53 +210,48 @@ export function PomodoroTimer({ preferences, onClose, onComplete }: PomodoroTime
         <div className="text-center space-y-4">
           <div className="text-6xl font-bold text-white tabular-nums">{formatTime(timeLeft)}</div>
           <Progress value={progress} className="h-2 bg-white/20" />
+          <Badge className="bg-white/20 text-white border-white/20">{sessionLabels[sessionType]}</Badge>
         </div>
 
         {/* Controls */}
         <div className="flex justify-center space-x-4">
           <Button
-            onClick={isRunning ? pauseTimer : startTimer}
-            className={`${
-              sessionType === "focus"
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                : "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
-            } text-white`}
+            onClick={toggleTimer}
+            size="lg"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
           >
-            {isRunning ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-            {isRunning ? "Pause" : "Start"}
+            {isRunning ? <Pause className="h-5 w-5 mr-2" /> : <Play className="h-5 w-5 mr-2" />}
+            {isRunning
+              ? preferences.language === "es"
+                ? "Pausar"
+                : "Pause"
+              : preferences.language === "es"
+                ? "Iniciar"
+                : "Start"}
           </Button>
           <Button
-            variant="outline"
             onClick={resetTimer}
+            variant="outline"
+            size="lg"
             className="bg-white/10 border-white/20 text-white hover:bg-white/20"
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
+            <RotateCcw className="h-5 w-5 mr-2" />
+            {preferences.language === "es" ? "Reiniciar" : "Reset"}
           </Button>
         </div>
 
-        <Separator className="bg-white/20" />
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 text-center">
-          <div className="space-y-1">
-            <div className="text-2xl font-bold text-white">{sessionsCompleted}</div>
-            <div className="text-sm text-white/60">Sessions</div>
+        {/* Session Stats */}
+        <div className="text-center space-y-2">
+          <div className="text-white/70 text-sm">
+            {preferences.language === "es" ? "Sesiones completadas:" : "Sessions completed:"}
           </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-bold text-white">{totalFocusTime}</div>
-            <div className="text-sm text-white/60">Minutes</div>
+          <div className="text-2xl font-bold text-white">{sessionsCompleted}</div>
+          <div className="text-white/60 text-xs">
+            {preferences.language === "es"
+              ? `Próximo descanso largo en ${preferences.longBreakInterval - (sessionsCompleted % preferences.longBreakInterval)} sesiones`
+              : `Next long break in ${preferences.longBreakInterval - (sessionsCompleted % preferences.longBreakInterval)} sessions`}
           </div>
         </div>
-
-        {/* Next Session Info */}
-        {sessionType === "focus" && (
-          <div className="text-center">
-            <Badge className="bg-white/10 text-white/80">
-              Next: {(sessionsCompleted + 1) % preferences.longBreakInterval === 0 ? "Long Break" : "Short Break"}
-            </Badge>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

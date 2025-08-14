@@ -1,23 +1,10 @@
 "use client"
-
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronLeft, ChevronRight, Calendar, Clock, Check, Plus } from "lucide-react"
-import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns"
-
-interface Task {
-  id: string
-  title: string
-  description: string
-  completed: boolean
-  priority: "low" | "medium" | "high"
-  category: string
-  date: Date
-  estimatedTime?: number
-}
+import { format, startOfWeek, addDays, isSameDay, isToday } from "date-fns"
+import { ChevronLeft, ChevronRight, Plus, Check, Clock, AlertCircle } from "lucide-react"
+import type { Task } from "@/types"
 
 interface WeeklyViewProps {
   tasks: Task[]
@@ -27,106 +14,103 @@ interface WeeklyViewProps {
   onTaskComplete: (taskId: string) => void
 }
 
-const priorityColors = {
-  low: "bg-green-100 text-green-800 border-green-200",
-  medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  high: "bg-red-100 text-red-800 border-red-200",
-}
-
 export function WeeklyView({ tasks, selectedDate, onDateChange, onTaskClick, onTaskComplete }: WeeklyViewProps) {
-  const [currentWeek, setCurrentWeek] = useState(startOfWeek(selectedDate))
+  const weekStart = startOfWeek(selectedDate)
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeek, i))
+  const navigateWeek = (direction: "prev" | "next") => {
+    const newDate = addDays(selectedDate, direction === "prev" ? -7 : 7)
+    onDateChange(newDate)
+  }
 
   const getTasksForDay = (date: Date) => {
     return tasks.filter((task) => isSameDay(task.date, date))
   }
 
-  const goToPreviousWeek = () => {
-    const newWeek = subWeeks(currentWeek, 1)
-    setCurrentWeek(newWeek)
-    onDateChange(newWeek)
-  }
-
-  const goToNextWeek = () => {
-    const newWeek = addWeeks(currentWeek, 1)
-    setCurrentWeek(newWeek)
-    onDateChange(newWeek)
-  }
-
-  const goToToday = () => {
-    const today = new Date()
-    const weekStart = startOfWeek(today)
-    setCurrentWeek(weekStart)
-    onDateChange(today)
+  const priorityColors = {
+    low: "bg-green-100 text-green-800 border-green-200",
+    medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    high: "bg-red-100 text-red-800 border-red-200",
   }
 
   return (
-    <Card className="bg-white/10 backdrop-blur-md border-white/20">
-      <CardContent className="p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={goToPreviousWeek} className="text-white hover:bg-white/20">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-xl font-semibold text-white">{format(currentWeek, "MMMM yyyy")}</h2>
-            <Button variant="ghost" size="sm" onClick={goToNextWeek} className="text-white hover:bg-white/20">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {/* Week Navigation */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={goToToday}
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            onClick={() => navigateWeek("prev")}
+            className="text-white hover:bg-white/20"
           >
-            <Calendar className="h-4 w-4 mr-2" />
-            Today
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <h2 className="text-2xl font-bold text-white">
+            {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigateWeek("next")}
+            className="text-white hover:bg-white/20"
+          >
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
+        <Button
+          onClick={() => onDateChange(new Date())}
+          className="bg-white/20 hover:bg-white/30 text-white border-white/20"
+        >
+          Today
+        </Button>
+      </div>
 
-        {/* Week Grid */}
-        <div className="grid grid-cols-7 gap-4">
-          {weekDays.map((day, index) => {
-            const dayTasks = getTasksForDay(day)
-            const isToday = isSameDay(day, new Date())
-            const isSelected = isSameDay(day, selectedDate)
+      {/* Week Grid */}
+      <div className="grid grid-cols-7 gap-4">
+        {weekDays.map((day, index) => {
+          const dayTasks = getTasksForDay(day)
+          const completedTasks = dayTasks.filter((task) => task.completed).length
+          const totalTasks = dayTasks.length
+          const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0
 
-            return (
-              <div key={index} className="space-y-2">
-                {/* Day Header */}
-                <div
-                  className={`text-center p-3 rounded-lg cursor-pointer transition-colors ${
-                    isSelected
-                      ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white"
-                      : isToday
-                        ? "bg-white/20 text-white"
-                        : "bg-white/10 text-white/80 hover:bg-white/20"
-                  }`}
-                  onClick={() => onDateChange(day)}
-                >
-                  <div className="text-xs font-medium">{format(day, "EEE")}</div>
-                  <div className="text-lg font-bold">{format(day, "d")}</div>
-                  {dayTasks.length > 0 && (
-                    <div className="text-xs mt-1">
-                      {dayTasks.filter((t) => t.completed).length}/{dayTasks.length}
+          return (
+            <Card
+              key={index}
+              className={`bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all min-h-[300px] ${
+                isToday(day) ? "ring-2 ring-white/40" : ""
+              }`}
+            >
+              <CardContent className="p-4">
+                <div className="text-center mb-4">
+                  <div className="text-sm text-white/60 font-medium">{format(day, "EEE")}</div>
+                  <div
+                    className={`text-2xl font-bold ${
+                      isToday(day) ? "text-white" : "text-white/80"
+                    } ${isSameDay(day, selectedDate) ? "bg-white/20 rounded-full w-10 h-10 flex items-center justify-center mx-auto" : ""}`}
+                  >
+                    {format(day, "d")}
+                  </div>
+                  {totalTasks > 0 && (
+                    <div className="mt-2">
+                      <div className="text-xs text-white/60">
+                        {completedTasks}/{totalTasks} completed
+                      </div>
+                      <div className="w-full bg-white/20 rounded-full h-1 mt-1">
+                        <div
+                          className="bg-green-400 h-1 rounded-full transition-all"
+                          style={{ width: `${completionRate}%` }}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Tasks for the day */}
-                <ScrollArea className="h-96">
-                  <div className="space-y-2">
-                    {dayTasks.map((task) => (
-                      <Card
-                        key={task.id}
-                        className={`bg-white/10 border-white/20 cursor-pointer hover:bg-white/20 transition-colors ${
-                          task.completed ? "opacity-60" : ""
-                        }`}
-                        onClick={() => onTaskClick(task)}
-                      >
-                        <CardContent className="p-3">
+                <div className="space-y-2">
+                  {dayTasks.slice(0, 4).map((task) => (
+                    <div key={task.id} onClick={() => onTaskClick(task)} className="cursor-pointer group">
+                      <Card className="bg-white/10 border-white/20 hover:bg-white/20 transition-all">
+                        <CardContent className="p-2">
                           <div className="flex items-start space-x-2">
                             <Button
                               variant="ghost"
@@ -135,33 +119,33 @@ export function WeeklyView({ tasks, selectedDate, onDateChange, onTaskClick, onT
                                 e.stopPropagation()
                                 onTaskComplete(task.id)
                               }}
-                              className="p-0 h-auto text-white hover:bg-white/20"
+                              className="p-0 h-auto text-white hover:bg-white/20 mt-0.5"
                             >
                               {task.completed ? (
                                 <div className="h-4 w-4 bg-green-500 rounded-full flex items-center justify-center">
-                                  <Check className="h-3 w-3 text-white" />
+                                  <Check className="h-2.5 w-2.5 text-white" />
                                 </div>
                               ) : (
-                                <div className="h-4 w-4 border-2 border-white/40 rounded-full" />
+                                <div className="h-4 w-4 border border-white/40 rounded-full" />
                               )}
                             </Button>
                             <div className="flex-1 min-w-0">
-                              <h4
-                                className={`text-sm font-medium text-white truncate ${
-                                  task.completed ? "line-through" : ""
+                              <div
+                                className={`text-xs font-medium text-white truncate ${
+                                  task.completed ? "line-through opacity-60" : ""
                                 }`}
                               >
                                 {task.title}
-                              </h4>
-                              {task.description && (
-                                <p className="text-xs text-white/60 truncate mt-1">{task.description}</p>
-                              )}
-                              <div className="flex items-center space-x-2 mt-2">
-                                <Badge className={`${priorityColors[task.priority]} text-xs`}>{task.priority}</Badge>
+                              </div>
+                              <div className="flex items-center space-x-1 mt-1">
+                                <Badge className={`${priorityColors[task.priority]} text-xs px-1 py-0`}>
+                                  {task.priority}
+                                </Badge>
+                                {task.priority === "high" && <AlertCircle className="h-3 w-3 text-red-400" />}
                                 {task.estimatedTime && (
-                                  <div className="flex items-center text-xs text-white/60">
+                                  <div className="flex items-center text-white/60">
                                     <Clock className="h-3 w-3 mr-1" />
-                                    {task.estimatedTime}m
+                                    <span className="text-xs">{task.estimatedTime}m</span>
                                   </div>
                                 )}
                               </div>
@@ -169,26 +153,42 @@ export function WeeklyView({ tasks, selectedDate, onDateChange, onTaskClick, onT
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                    </div>
+                  ))}
 
-                    {/* Add task button for empty days */}
-                    {dayTasks.length === 0 && (
+                  {dayTasks.length > 4 && (
+                    <div className="text-center">
                       <Button
                         variant="ghost"
-                        className="w-full h-12 border-2 border-dashed border-white/20 text-white/60 hover:bg-white/10 hover:text-white/80"
+                        size="sm"
                         onClick={() => onDateChange(day)}
+                        className="text-white/60 hover:text-white hover:bg-white/20 text-xs"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
+                        +{dayTasks.length - 4} more
+                      </Button>
+                    </div>
+                  )}
+
+                  {dayTasks.length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="text-white/40 text-xs">No tasks</div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDateChange(day)}
+                        className="text-white/60 hover:text-white hover:bg-white/20 mt-2"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
                         Add task
                       </Button>
-                    )}
-                  </div>
-                </ScrollArea>
-              </div>
-            )
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    </div>
   )
 }
