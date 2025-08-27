@@ -2,23 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Additional global styles */
-@import "../app/globals.css";
-
 @layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262.1 83.3% 57.8%;
+    --radius: 0.75rem;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer components {
   /* Custom component styles */
   .task-card {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 transition-all duration-200 hover:bg-white/20;
+    @apply glass-effect rounded-lg p-4 transition-all duration-300 hover:neon-glow;
   }
 
   .task-card.completed {
@@ -164,11 +189,37 @@
   .notification-time {
     @apply text-xs text-white/50 mt-2;
   }
+
+  .futuristic-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #581c87 50%, #0f172a 100%);
+  }
+
+  .glass-effect {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(147, 51, 234, 0.3);
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+  }
+
+  .premium-gradient {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  }
+
+  .success-gradient {
+    background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+  }
+
+  .danger-gradient {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  }
 }
 
 @layer utilities {
   /* Mobile optimizations */
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .task-card {
       @apply p-3;
     }
@@ -183,6 +234,19 @@
 
     .stat-value {
       @apply text-2xl;
+    }
+
+    .mobile-optimized {
+      font-size: 14px;
+      padding: 0.5rem;
+    }
+
+    .mobile-hidden {
+      display: none;
+    }
+
+    .mobile-full-width {
+      width: 100%;
     }
   }
 
@@ -214,6 +278,11 @@
     .notification {
       @apply border-white/50;
     }
+
+    .glass-effect {
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #ffffff;
+    }
   }
 
   /* Reduced motion */
@@ -240,7 +309,78 @@
     }
 
     .no-print {
-      @apply hidden;
+      display: none !important;
+    }
+
+    body {
+      background: white !important;
+      color: black !important;
     }
   }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce 2s infinite;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(147, 51, 234, 0.8);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
 }
