@@ -1,68 +1,31 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import "./globals.css"
-
-const inter = Inter({ subsets: ["latin"] })
+import type { Metadata } from 'next'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "FutureTask - Tu Asistente de Productividad",
-  description: "Organiza tus tareas, alcanza tus metas y desbloquea tu potencial con FutureTask.",
-  keywords: ["productividad", "tareas", "calendario", "pomodoro", "logros"],
-  authors: [{ name: "FutureTask Team" }],
-  creator: "FutureTask",
-  publisher: "FutureTask",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL("https://futuretask.vercel.app"),
-  openGraph: {
-    title: "FutureTask - Tu Asistente de Productividad",
-    description: "Organiza tus tareas, alcanza tus metas y desbloquea tu potencial con FutureTask.",
-    url: "https://futuretask.vercel.app",
-    siteName: "FutureTask",
-    locale: "es_ES",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "FutureTask - Tu Asistente de Productividad",
-    description: "Organiza tus tareas, alcanza tus metas y desbloquea tu potencial con FutureTask.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  verification: {
-    google: "google-site-verification-code",
-  },
-    generator: 'v0.app'
+  title: 'v0 App',
+  description: 'Created with v0',
+  generator: 'v0.app',
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="es" className="dark">
-      <body className={`${inter.className} min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">{children}</div>
-          <Toaster />
-        </ThemeProvider>
-      </body>
+    <html lang="en">
+      <head>
+        <style>{`
+html {
+  font-family: ${GeistSans.style.fontFamily};
+  --font-sans: ${GeistSans.variable};
+  --font-mono: ${GeistMono.variable};
+}
+        `}</style>
+      </head>
+      <body>{children}</body>
     </html>
   )
 }
