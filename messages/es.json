@@ -1,29 +1,50 @@
 {
   "common": {
-    "welcome": "Bienvenido",
+    "appName": "FutureTask",
+    "loading": "Cargando...",
+    "success": "Éxito",
+    "error": "Error",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "copy": "Copiar",
+    "search": "Buscar...",
+    "filter": "Filtrar",
+    "upgrade": "Actualizar",
+    "premium": "Premium",
+    "time": "Hora",
+    "today": "Hoy",
+    "week": "Semana",
+    "month": "Mes",
+    "enabled": "Habilitado",
+    "update": "Actualizar"
+  },
+  "navigation": {
     "tasks": "Tareas",
     "calendar": "Calendario",
     "settings": "Configuración",
-    "add": "Añadir",
-    "edit": "Editar",
-    "delete": "Eliminar",
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "loading": "Cargando...",
-    "error": "Error",
-    "success": "Éxito"
+    "goals": "Objetivos",
+    "notes": "Notas"
   },
   "tasks": {
+    "addTask": "Añadir Tarea",
+    "editTask": "Editar Tarea",
+    "createTask": "Crear Tarea",
+    "updateTask": "Actualizar Tarea",
+    "deleteTask": "Eliminar Tarea",
     "title": "Título",
     "description": "Descripción",
-    "priority": "Prioridad",
     "category": "Categoría",
-    "dueDate": "Fecha límite",
+    "priority": "Prioridad",
+    "dueDate": "Fecha Límite",
     "completed": "Completada",
-    "pending": "Pendiente",
-    "high": "Alta",
+    "todayTasks": "Tareas de Hoy",
+    "noTasks": "No se encontraron tareas",
+    "createFirst": "Crea tu primera tarea para empezar.",
+    "low": "Baja",
     "medium": "Media",
-    "low": "Baja"
+    "high": "Alta"
   },
   "categories": {
     "work": "Trabajo",
@@ -34,5 +55,47 @@
     "social": "Social",
     "creative": "Creativo",
     "home": "Hogar"
+  },
+  "settings": {
+    "general": "General",
+    "appearance": "Apariencia",
+    "notifications": "Notificaciones",
+    "account": "Cuenta",
+    "language": "Idioma",
+    "sound": "Efectos de Sonido",
+    "theme": "Tema"
+  },
+  "premium": {
+    "upgrade": "Actualizar a Premium",
+    "features": "Características Premium",
+    "goals": "Objetivos y Lista de Deseos",
+    "notes": "Notas y Blog Personal"
+  },
+  "pomodoro": {
+    "timer": "Temporizador Pomodoro",
+    "completed": "¡Sesión completada!",
+    "break": "¡Descanso completado!"
+  },
+  "auth": {
+    "signOut": "Cerrar Sesión"
+  },
+  "goals": {
+    "title": "Objetivos y Lista de Deseos",
+    "addGoal": "Añadir Objetivo",
+    "editGoal": "Editar Objetivo",
+    "noGoals": "No hay objetivos aún",
+    "createFirst": "¡Crea tu primer objetivo para empezar!"
+  },
+  "notes": {
+    "title": "Notas y Blog",
+    "addNote": "Añadir Nota",
+    "editNote": "Editar Nota",
+    "noNotes": "No hay notas aún",
+    "createFirst": "¡Crea tu primera nota para empezar!"
+  },
+  "chatbot": {
+    "title": "Asistente FutureTask",
+    "placeholder": "Pregúntame cualquier cosa...",
+    "welcome": "¡Hola! Soy tu asistente de FutureTask. ¿En qué puedo ayudarte?"
   }
 }

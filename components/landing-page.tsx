@@ -1,450 +1,343 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-  Zap,
   Calendar,
-  Trophy,
-  Clock,
-  Sparkles,
-  Star,
-  CheckCircle,
-  ArrowRight,
-  Globe,
-  Crown,
+  Timer,
   Target,
-  BarChart3,
+  Crown,
+  CheckCircle,
+  Star,
+  ArrowRight,
+  Zap,
   Shield,
   Smartphone,
+  Users,
+  TrendingUp,
+  Heart,
 } from "lucide-react"
-import { translations } from "@/constants/translations"
-import type { Language } from "@/types"
 
 interface LandingPageProps {
   onGetStarted: () => void
-  language: Language
-  onLanguageChange: (lang: Language) => void
 }
 
-export function LandingPage({ onGetStarted, language, onLanguageChange }: LandingPageProps) {
-  const [currentTestimonial, setCurrentTestimonial] = useState(0)
-  const t = translations[language]
-
+export default function LandingPage({ onGetStarted }: LandingPageProps) {
   const features = [
     {
-      icon: Calendar,
-      title: language === "es" ? "Gestión Inteligente" : "Smart Management",
+      icon: <Calendar className="h-8 w-8 text-blue-600" />,
+      title: "Gestión Inteligente de Tareas",
       description:
-        language === "es"
-          ? "Organiza tus tareas con calendarios intuitivos y vistas personalizables"
-          : "Organize your tasks with intuitive calendars and customizable views",
+        "Organiza tus tareas con categorías, prioridades y fechas límite. Sistema intuitivo y fácil de usar.",
     },
     {
-      icon: Clock,
-      title: language === "es" ? "Técnica Pomodoro" : "Pomodoro Technique",
+      icon: <Timer className="h-8 w-8 text-green-600" />,
+      title: "Temporizador Pomodoro",
       description:
-        language === "es"
-          ? "Mejora tu productividad con temporizadores integrados y seguimiento de tiempo"
-          : "Boost productivity with built-in timers and time tracking",
+        "Mejora tu productividad con la técnica Pomodoro. Sesiones personalizables y estadísticas detalladas.",
     },
     {
-      icon: Trophy,
-      title: language === "es" ? "Sistema de Logros" : "Achievement System",
-      description:
-        language === "es"
-          ? "Mantente motivado con logros desbloqueables y seguimiento de progreso"
-          : "Stay motivated with unlockable achievements and progress tracking",
+      icon: <Target className="h-8 w-8 text-purple-600" />,
+      title: "Objetivos y Metas",
+      description: "Define y alcanza tus objetivos con nuestro sistema de seguimiento de metas y logros.",
     },
     {
-      icon: BarChart3,
-      title: language === "es" ? "Análisis Avanzado" : "Advanced Analytics",
-      description:
-        language === "es"
-          ? "Obtén insights sobre tu productividad con estadísticas detalladas"
-          : "Get insights into your productivity with detailed statistics",
+      icon: <TrendingUp className="h-8 w-8 text-orange-600" />,
+      title: "Estadísticas Avanzadas",
+      description: "Analiza tu productividad con gráficos detallados y métricas de rendimiento.",
     },
     {
-      icon: Smartphone,
-      title: language === "es" ? "Multiplataforma" : "Cross-Platform",
-      description:
-        language === "es"
-          ? "Accede a tus tareas desde cualquier dispositivo, en cualquier momento"
-          : "Access your tasks from any device, anytime",
+      icon: <Smartphone className="h-8 w-8 text-pink-600" />,
+      title: "Diseño Responsivo",
+      description: "Accede desde cualquier dispositivo. Optimizado para móvil, tablet y escritorio.",
     },
     {
-      icon: Shield,
-      title: language === "es" ? "Datos Seguros" : "Secure Data",
-      description:
-        language === "es"
-          ? "Tus datos están protegidos con encriptación de nivel empresarial"
-          : "Your data is protected with enterprise-grade encryption",
+      icon: <Shield className="h-8 w-8 text-indigo-600" />,
+      title: "Datos Seguros",
+      description: "Tus datos se almacenan de forma segura y privada. Control total sobre tu información.",
     },
   ]
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: language === "es" ? "Gerente de Producto" : "Product Manager",
-      content:
-        language === "es"
-          ? "FutureTask ha transformado completamente mi flujo de trabajo. La integración del Pomodoro es perfecta."
-          : "FutureTask has completely transformed my workflow. The Pomodoro integration is perfect.",
+      name: "María González",
+      role: "Diseñadora UX",
+      content: "FuturoCalendario ha transformado mi productividad. La interfaz es hermosa y muy intuitiva.",
       rating: 5,
-      avatar: "/placeholder-user.jpg",
+      avatar: "MG",
     },
     {
-      name: "Miguel Rodriguez",
-      role: language === "es" ? "Diseñador Freelance" : "Freelance Designer",
-      content:
-        language === "es"
-          ? "La mejor app de gestión de tareas que he usado. Las estadísticas me ayudan a mantenerme enfocado."
-          : "The best task management app I've used. The analytics help me stay focused.",
+      name: "Carlos Rodríguez",
+      role: "Desarrollador",
+      content: "El temporizador Pomodoro es increíble. He mejorado mi concentración significativamente.",
       rating: 5,
-      avatar: "/placeholder-user.jpg",
+      avatar: "CR",
     },
     {
-      name: "Emma Chen",
-      role: language === "es" ? "Estudiante de Informática" : "Computer Science Student",
-      content:
-        language === "es"
-          ? "Perfecta para gestionar mis estudios. Los temas son hermosos y la interfaz es muy intuitiva."
-          : "Perfect for managing my studies. The themes are beautiful and the interface is so intuitive.",
+      name: "Ana Martín",
+      role: "Estudiante",
+      content: "Perfecto para organizar mis estudios. Los temas premium son preciosos.",
       rating: 5,
-      avatar: "/placeholder-user.jpg",
+      avatar: "AM",
     },
   ]
 
   const pricingPlans = [
     {
-      name: language === "es" ? "Gratuito" : "Free",
-      price: "€0",
-      period: language === "es" ? "/mes" : "/month",
+      name: "Gratuito",
+      price: "0€",
+      period: "siempre",
       features: [
-        language === "es" ? "Hasta 50 tareas" : "Up to 50 tasks",
-        language === "es" ? "3 temas básicos" : "3 basic themes",
-        language === "es" ? "Temporizador Pomodoro" : "Pomodoro timer",
-        language === "es" ? "Estadísticas básicas" : "Basic statistics",
+        "Hasta 50 tareas por mes",
+        "Temporizador Pomodoro básico",
+        "3 temas incluidos",
+        "Estadísticas básicas",
+        "Soporte por email",
       ],
       popular: false,
     },
     {
       name: "Premium",
-      price: "€0.99",
-      period: language === "es" ? "/mes" : "/month",
+      price: "4.99€",
+      period: "mes",
       features: [
-        language === "es" ? "Tareas ilimitadas" : "Unlimited tasks",
-        language === "es" ? "Todos los temas premium" : "All premium themes",
-        language === "es" ? "Estadísticas avanzadas" : "Advanced analytics",
-        language === "es" ? "Sin anuncios" : "Ad-free experience",
-        language === "es" ? "Soporte prioritario" : "Priority support",
+        "Tareas ilimitadas",
+        "Temporizador Pomodoro avanzado",
+        "8 temas premium exclusivos",
+        "Estadísticas avanzadas",
+        "Sistema de objetivos",
+        "Notas y blog personal",
+        "Soporte prioritario",
+        "Sin anuncios",
       ],
       popular: true,
     },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
-
-      {/* Header */}
-      <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <Zap className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-white">{t.appName}</h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onLanguageChange(language === "en" ? "es" : "en")}
-                className="text-white hover:bg-white/20"
-              >
-                <Globe className="h-4 w-4 mr-2" />
-                {language === "en" ? "🇪🇸 Español" : "🇺🇸 English"}
-              </Button>
-              <Button onClick={onGetStarted} className="bg-white/20 hover:bg-white/30 text-white border-white/20">
-                {language === "es" ? "Comenzar" : "Get Started"}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100">
       {/* Hero Section */}
-      <section className="relative z-10 py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-4xl mx-auto">
-            <Badge className="bg-white/20 text-white border-white/20 mb-6">
-              <Sparkles className="h-4 w-4 mr-2" />
-              {language === "es" ? "La Próxima Generación de Productividad" : "Next-Gen Productivity"}
-            </Badge>
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10" />
+        <div className="relative max-w-7xl mx-auto px-4 py-20">
+          <div className="text-center space-y-8">
+            <div className="flex justify-center">
+              <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2">
+                <Zap className="h-4 w-4 mr-2" />
+                Nueva versión disponible
+              </Badge>
+            </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              {language === "es" ? (
-                <>
-                  Gestiona Tareas
-                  <br />
-                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                    Como un Pro
-                  </span>
-                </>
-              ) : (
-                <>
-                  Manage Tasks
-                  <br />
-                  <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
-                    Like a Pro
-                  </span>
-                </>
-              )}
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 leading-tight">
+              Tu Futuro
+              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {" "}
+                Productivo
+              </span>
+              <br />
+              Comienza Hoy
             </h1>
 
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-              {language === "es"
-                ? "Revoluciona tu productividad con FutureTask. Calendarios inteligentes, técnica Pomodoro, logros desbloqueables y análisis avanzados en una sola aplicación."
-                : "Revolutionize your productivity with FutureTask. Smart calendars, Pomodoro technique, unlockable achievements, and advanced analytics in one app."}
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              La aplicación de productividad más avanzada y hermosa. Organiza tus tareas, mejora tu concentración y
+              alcanza tus objetivos con FuturoCalendario.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
-                size="lg"
                 onClick={onGetStarted}
-                className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-8 py-4 text-lg"
-              >
-                <Target className="h-5 w-5 mr-2" />
-                {language === "es" ? "Comenzar Gratis" : "Start Free"}
-              </Button>
-              <Button
                 size="lg"
-                variant="outline"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 px-8 py-4 text-lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-4"
               >
-                <Crown className="h-5 w-5 mr-2" />
-                {language === "es" ? "Ver Premium" : "View Premium"}
+                Comenzar Gratis
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button variant="outline" size="lg" className="text-lg px-8 py-4 bg-transparent">
+                Ver Demo
               </Button>
             </div>
 
-            <div className="flex items-center justify-center space-x-8 text-white/60">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
-                <span>{language === "es" ? "Gratis para siempre" : "Free forever"}</span>
+            <div className="flex items-center justify-center space-x-8 text-sm text-gray-500">
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Sin tarjeta de crédito
               </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
-                <span>{language === "es" ? "Sin tarjeta de crédito" : "No credit card"}</span>
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Configuración en 2 minutos
               </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-400" />
-                <span>{language === "es" ? "Configuración en 2 minutos" : "2-minute setup"}</span>
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                Cancela cuando quieras
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 bg-white/5 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+      <div className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              {language === "es" ? "Funciones Poderosas" : "Powerful Features"}
-            </h2>
-            <p className="text-xl text-white/70 max-w-2xl mx-auto">
-              {language === "es"
-                ? "Todo lo que necesitas para maximizar tu productividad y alcanzar tus objetivos."
-                : "Everything you need to maximize your productivity and achieve your goals."}
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Todo lo que necesitas para ser más productivo</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Herramientas poderosas diseñadas para ayudarte a organizar tu vida y alcanzar tus metas
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
-              return (
-                <Card
-                  key={index}
-                  className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all"
-                >
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4">
-                      <Icon className="h-6 w-6 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="p-6 hover:shadow-lg transition-shadow border-0 shadow-md">
+                <CardContent className="p-0">
+                  <div className="flex items-start space-x-4">
+                    <div className="p-3 bg-gray-50 rounded-lg">{feature.icon}</div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                      <p className="text-gray-600 leading-relaxed">{feature.description}</p>
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-white/70">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Testimonials Section */}
-      <section className="relative z-10 py-20">
-        <div className="container mx-auto px-4">
+      <div className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              {language === "es" ? "Lo Que Dicen Nuestros Usuarios" : "What Our Users Say"}
-            </h2>
-            <p className="text-xl text-white/70">
-              {language === "es"
-                ? "Miles de usuarios confían en FutureTask para su productividad diaria."
-                : "Thousands of users trust FutureTask for their daily productivity."}
-            </p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Lo que dicen nuestros usuarios</h2>
+            <p className="text-xl text-gray-600">Miles de personas ya han transformado su productividad</p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <Card className="bg-white/10 backdrop-blur-md border-white/20">
-              <CardContent className="p-8">
-                <div className="text-center">
-                  <div className="flex justify-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="p-6 border-0 shadow-lg">
+                <CardContent className="p-0">
+                  <div className="flex items-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <blockquote className="text-xl text-white mb-6 italic">
-                    "{testimonials[currentTestimonial].content}"
-                  </blockquote>
-                  <div className="flex items-center justify-center space-x-4">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={testimonials[currentTestimonial].avatar || "/placeholder.svg"} />
-                      <AvatarFallback>{testimonials[currentTestimonial].name.charAt(0)}</AvatarFallback>
-                    </Avatar>
+                  <p className="text-gray-700 mb-6 italic">"{testimonial.content}"</p>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                      {testimonial.avatar}
+                    </div>
                     <div>
-                      <div className="font-semibold text-white">{testimonials[currentTestimonial].name}</div>
-                      <div className="text-white/60">{testimonials[currentTestimonial].role}</div>
+                      <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                      <div className="text-gray-600 text-sm">{testimonial.role}</div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-center mt-6 space-x-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentTestimonial(index)}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    index === currentTestimonial ? "bg-white" : "bg-white/30"
-                  }`}
-                />
-              ))}
-            </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Pricing Section */}
-      <section className="relative z-10 py-20 bg-white/5 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+      <div className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              {language === "es" ? "Precios Simples" : "Simple Pricing"}
-            </h2>
-            <p className="text-xl text-white/70">
-              {language === "es"
-                ? "Comienza gratis, actualiza cuando estés listo."
-                : "Start free, upgrade when you're ready."}
-            </p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Planes simples y transparentes</h2>
+            <p className="text-xl text-gray-600">Elige el plan que mejor se adapte a tus necesidades</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {pricingPlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`relative bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/15 transition-all ${
-                  plan.popular ? "ring-2 ring-yellow-400" : ""
-                }`}
+                className={`p-8 relative ${plan.popular ? "border-2 border-blue-500 shadow-xl" : "border shadow-lg"}`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-                      {language === "es" ? "Más Popular" : "Most Popular"}
+                    <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1">
+                      <Crown className="h-4 w-4 mr-1" />
+                      Más Popular
                     </Badge>
                   </div>
                 )}
-                <CardContent className="p-8">
-                  <div className="text-center mb-6">
-                    <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                <CardContent className="p-0">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                     <div className="flex items-baseline justify-center">
-                      <span className="text-4xl font-bold text-white">{plan.price}</span>
-                      <span className="text-white/60 ml-1">{plan.period}</span>
+                      <span className="text-5xl font-bold text-gray-900">{plan.price}</span>
+                      <span className="text-gray-600 ml-2">/{plan.period}</span>
                     </div>
                   </div>
-                  <ul className="space-y-3 mb-8">
+
+                  <ul className="space-y-4 mb-8">
                     {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center text-white/80">
-                        <CheckCircle className="h-5 w-5 text-green-400 mr-3 flex-shrink-0" />
-                        {feature}
+                      <li key={featureIndex} className="flex items-center">
+                        <CheckCircle className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        <span className="text-gray-700">{feature}</span>
                       </li>
                     ))}
                   </ul>
+
                   <Button
                     onClick={onGetStarted}
-                    className={`w-full ${
+                    className={`w-full py-3 ${
                       plan.popular
-                        ? "bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white"
-                        : "bg-white/20 hover:bg-white/30 text-white border-white/20"
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        : "bg-gray-900 hover:bg-gray-800"
                     }`}
                   >
-                    {language === "es" ? "Comenzar" : "Get Started"}
+                    {plan.name === "Gratuito" ? "Comenzar Gratis" : "Comenzar Prueba"}
                   </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* CTA Section */}
-      <section className="relative z-10 py-20">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-4xl font-bold text-white mb-6">
-              {language === "es" ? "¿Listo para Ser Más Productivo?" : "Ready to Be More Productive?"}
-            </h2>
-            <p className="text-xl text-white/70 mb-8">
-              {language === "es"
-                ? "Únete a miles de usuarios que ya han transformado su productividad con FutureTask."
-                : "Join thousands of users who have already transformed their productivity with FutureTask."}
-            </p>
+      <div className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold text-white mb-6">¿Listo para transformar tu productividad?</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Únete a miles de usuarios que ya han mejorado su organización y productividad con FuturoCalendario
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              size="lg"
               onClick={onGetStarted}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-12 py-4 text-lg"
+              size="lg"
+              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-4"
             >
-              <Zap className="h-5 w-5 mr-2" />
-              {language === "es" ? "Comenzar Ahora - Es Gratis" : "Start Now - It's Free"}
+              Comenzar Ahora
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-4 bg-transparent"
+            >
+              <Users className="mr-2 h-5 w-5" />
+              Hablar con Ventas
             </Button>
           </div>
         </div>
-      </section>
+      </div>
 
       {/* Footer */}
-      <footer className="relative z-10 bg-white/5 backdrop-blur-sm border-t border-white/20 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between">
+      <div className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
-                <Zap className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-white font-semibold">{t.appName}</span>
+              <Calendar className="h-8 w-8 text-blue-400" />
+              <span className="text-2xl font-bold">FuturoCalendario</span>
             </div>
-            <div className="text-white/60 text-sm">
-              © 2024 FutureTask. {language === "es" ? "Todos los derechos reservados." : "All rights reserved."}
+            <div className="flex items-center space-x-6 text-gray-400">
+              <span>© 2024 FuturoCalendario. Todos los derechos reservados.</span>
+              <Heart className="h-4 w-4 text-red-400" />
             </div>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   )
 }

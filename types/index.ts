@@ -1,43 +1,64 @@
+export type Language = "en" | "es" | "fr" | "de" | "it"
+
+export type Priority = "low" | "medium" | "high" | "urgent"
+
+export type Category = "work" | "personal" | "health" | "learning" | "shopping" | "other"
+
 export interface Task {
   id: string
   title: string
-  description: string
+  description?: string
   completed: boolean
-  priority: "low" | "medium" | "high"
-  category: string
-  dueDate: string
-  createdAt: string
-  pomodoroSessions: number
+  date: string
+  priority: Priority
+  category: Category
   estimatedTime?: number
-  date: Date
-  reminder?: Date
-  tags?: string[]
+  actualTime?: number
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+  completedAt?: string
   subtasks?: SubTask[]
-  recurring?: "daily" | "weekly" | "monthly"
+  recurring?: RecurringConfig
+  reminders?: Reminder[]
+  attachments?: Attachment[]
 }
 
 export interface SubTask {
   id: string
   title: string
   completed: boolean
+  createdAt: string
 }
 
-export interface Achievement {
+export interface RecurringConfig {
+  type: "daily" | "weekly" | "monthly" | "yearly"
+  interval: number
+  endDate?: string
+  daysOfWeek?: number[]
+}
+
+export interface Reminder {
   id: string
-  title: { en: string; es: string }
-  description: { en: string; es: string }
-  icon: string
-  unlocked: boolean
-  unlockedAt?: Date
-  rarity: "common" | "rare" | "epic" | "legendary"
-  category: "tasks" | "streaks" | "pomodoro" | "special"
-  progress?: number
-  maxProgress?: number
+  time: string
+  type: "notification" | "email" | "sms"
+  sent: boolean
+}
+
+export interface Attachment {
+  id: string
+  name: string
+  url: string
+  type: string
+  size: number
 }
 
 export interface UserPreferences {
-  theme: "light" | "dark" | "system"
-  language: "en" | "es"
+  selectedTheme: string
+  backgroundGradient: string
+  isPremium: boolean
+  userName: string
+  language: Language
   notifications: boolean
   soundEnabled: boolean
   pomodoroTime: number
@@ -45,34 +66,188 @@ export interface UserPreferences {
   longBreakTime: number
   autoStartBreaks: boolean
   autoStartPomodoros: boolean
-  longBreakInterval: number
   dailyGoal: number
   weeklyGoal: number
-  backgroundGradient: string
-  isPremium: boolean
-  premiumExpiry?: Date
-  selectedTheme: string
-  userName: string
-  userGoals: string[]
-  hasSelectedPlan?: boolean
+  showWeekends: boolean
+  startWeekOnMonday: boolean
+  timeFormat: "12h" | "24h"
+  dateFormat: string
+  timezone: string
+  emailNotifications?: boolean
+  pushNotifications?: boolean
+  weeklyReports?: boolean
+  monthlyReports?: boolean
+  taskReminders?: boolean
+  achievementNotifications?: boolean
 }
 
-export interface Testimonial {
+export interface Achievement {
+  id: string
+  title: string
+  description: string
+  icon: string
+  unlockedAt: string
+  type: "task" | "streak" | "time" | "special"
+  requirement: number
+  progress: number
+  unlocked: boolean
+  rarity: "common" | "rare" | "epic" | "legendary"
+}
+
+export interface Stats {
+  dailyStreak: number
+  totalTasksCompleted: number
+  totalTimeSpent: number
+  todayTasks: number
+  weekTasks: number
+  pomodoroSessions: number
+  focusTime: number
+  streak: number
+  averageTasksPerDay?: number
+  mostProductiveHour?: number
+  favoriteCategory?: Category
+  completionRate?: number
+  weeklyStats?: WeeklyStats[]
+  monthlyStats?: MonthlyStats[]
+}
+
+export interface WeeklyStats {
+  week: string
+  tasksCompleted: number
+  timeSpent: number
+  streak: number
+}
+
+export interface MonthlyStats {
+  month: string
+  tasksCompleted: number
+  timeSpent: number
+  averageDaily: number
+}
+
+export interface TaskTemplate {
   id: string
   name: string
-  role: string
+  description: string
+  category: Category
+  priority: Priority
+  estimatedTime: number
+  subtasks: string[]
+  tags: string[]
+  isDefault: boolean
+}
+
+export interface Goal {
+  id: string
+  title: string
+  description: string
+  targetDate: string
+  progress: number
+  tasks: string[]
+  category: Category
+  priority: Priority
+  completed: boolean
+  createdAt: string
+}
+
+export interface Note {
+  id: string
+  title: string
   content: string
-  rating: number
-  avatar: string
-  verified: boolean
+  tags: string[]
+  category: string
+  createdAt: string
+  updatedAt: string
+  pinned: boolean
+  archived: boolean
 }
 
-export interface AppUser {
+export interface WishlistItem {
   id: string
-  email: string
-  name: string
-  isAuthenticated: boolean
+  title: string
+  description: string
+  priority: Priority
+  category: string
+  estimatedCost?: number
+  targetDate?: string
+  completed: boolean
+  createdAt: string
 }
 
-export type AppState = "landing" | "auth" | "plan-selection" | "welcome" | "app" | "pricing"
-export type Language = "en" | "es"
+export interface PomodoroSession {
+  id: string
+  taskId?: string
+  startTime: string
+  endTime?: string
+  duration: number
+  type: "work" | "shortBreak" | "longBreak"
+  completed: boolean
+}
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  description?: string
+  startTime: string
+  endTime: string
+  allDay: boolean
+  category: Category
+  color: string
+  recurring?: RecurringConfig
+}
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  avatar?: string
+  isAuthenticated: boolean
+  isPremium: boolean
+  hasSeenPlanSelection: boolean
+  subscriptionEndDate?: string
+  createdAt: string
+}
+
+export interface Theme {
+  id: string
+  name: string
+  gradient: string
+  primary: string
+  secondary: string
+  accent: string
+  isPremium: boolean
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  type: "info" | "success" | "warning" | "error"
+  read: boolean
+  createdAt: string
+  actionUrl?: string
+}
+
+export interface SearchFilters {
+  query: string
+  category?: Category
+  priority?: Priority
+  completed?: boolean
+  dateRange?: {
+    start: string
+    end: string
+  }
+  tags?: string[]
+}
+
+export interface ExportData {
+  tasks: Task[]
+  preferences: UserPreferences
+  achievements: Achievement[]
+  stats: Stats
+  notes?: Note[]
+  goals?: Goal[]
+  wishlist?: WishlistItem[]
+  exportedAt: string
+  version: string
+}

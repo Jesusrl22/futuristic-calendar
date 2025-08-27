@@ -1,29 +1,50 @@
 {
   "common": {
-    "welcome": "Welcome",
+    "appName": "FutureTask",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "copy": "Copy",
+    "search": "Search...",
+    "filter": "Filter",
+    "upgrade": "Upgrade",
+    "premium": "Premium",
+    "time": "Time",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "enabled": "Enabled",
+    "update": "Update"
+  },
+  "navigation": {
     "tasks": "Tasks",
     "calendar": "Calendar",
     "settings": "Settings",
-    "add": "Add",
-    "edit": "Edit",
-    "delete": "Delete",
-    "save": "Save",
-    "cancel": "Cancel",
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success"
+    "goals": "Goals",
+    "notes": "Notes"
   },
   "tasks": {
+    "addTask": "Add Task",
+    "editTask": "Edit Task",
+    "createTask": "Create Task",
+    "updateTask": "Update Task",
+    "deleteTask": "Delete Task",
     "title": "Title",
     "description": "Description",
-    "priority": "Priority",
     "category": "Category",
+    "priority": "Priority",
     "dueDate": "Due Date",
     "completed": "Completed",
-    "pending": "Pending",
-    "high": "High",
+    "todayTasks": "Today's Tasks",
+    "noTasks": "No tasks found",
+    "createFirst": "Create your first task to get started.",
+    "low": "Low",
     "medium": "Medium",
-    "low": "Low"
+    "high": "High"
   },
   "categories": {
     "work": "Work",
@@ -34,5 +55,47 @@
     "social": "Social",
     "creative": "Creative",
     "home": "Home"
+  },
+  "settings": {
+    "general": "General",
+    "appearance": "Appearance",
+    "notifications": "Notifications",
+    "account": "Account",
+    "language": "Language",
+    "sound": "Sound Effects",
+    "theme": "Theme"
+  },
+  "premium": {
+    "upgrade": "Upgrade to Premium",
+    "features": "Premium Features",
+    "goals": "Goals & Wishlist",
+    "notes": "Notes & Blog"
+  },
+  "pomodoro": {
+    "timer": "Pomodoro Timer",
+    "completed": "Session completed!",
+    "break": "Break completed!"
+  },
+  "auth": {
+    "signOut": "Sign Out"
+  },
+  "goals": {
+    "title": "Goals & Wishlist",
+    "addGoal": "Add Goal",
+    "editGoal": "Edit Goal",
+    "noGoals": "No goals yet",
+    "createFirst": "Create your first goal to get started!"
+  },
+  "notes": {
+    "title": "Notes & Blog",
+    "addNote": "Add Note",
+    "editNote": "Edit Note",
+    "noNotes": "No notes yet",
+    "createFirst": "Create your first note to get started!"
+  },
+  "chatbot": {
+    "title": "FutureTask Assistant",
+    "placeholder": "Ask me anything...",
+    "welcome": "Hi! I'm your FutureTask assistant. How can I help you?"
   }
 }
