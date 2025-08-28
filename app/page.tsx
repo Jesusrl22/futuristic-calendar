@@ -122,6 +122,9 @@ const translations = {
     streak: "Racha",
     achievements: "Logros",
     progressToday: "Progreso Hoy",
+    editTask: "Editar Tarea",
+    saveTask: "Guardar",
+    cancelEdit: "Cancelar",
 
     // Categories
     work: "Trabajo",
@@ -230,6 +233,9 @@ const translations = {
     streak: "Streak",
     achievements: "Achievements",
     progressToday: "Progress Today",
+    editTask: "Edit Task",
+    saveTask: "Save",
+    cancelEdit: "Cancel",
 
     // Categories
     work: "Work",
@@ -338,6 +344,9 @@ const translations = {
     streak: "Serie",
     achievements: "Erfolge",
     progressToday: "Fortschritt heute",
+    editTask: "Aufgabe bearbeiten",
+    saveTask: "Speichern",
+    cancelEdit: "Abbrechen",
 
     // Categories
     work: "Arbeit",
@@ -446,6 +455,9 @@ const translations = {
     streak: "Série",
     achievements: "Succès",
     progressToday: "Progrès aujourd'hui",
+    editTask: "Modifier la tâche",
+    saveTask: "Enregistrer",
+    cancelEdit: "Annuler",
 
     // Categories
     work: "Travail",
@@ -554,6 +566,9 @@ const translations = {
     streak: "Serie",
     achievements: "Risultati",
     progressToday: "Progresso oggi",
+    editTask: "Modifica compito",
+    saveTask: "Salva",
+    cancelEdit: "Annulla",
 
     // Categories
     work: "Lavoro",
@@ -858,17 +873,17 @@ const THEMES = {
 }
 
 const CATEGORY_COLORS = {
-  work: "bg-blue-500/20 border-blue-500/50 text-blue-200",
-  personal: "bg-green-500/20 border-green-500/50 text-green-200",
-  health: "bg-red-500/20 border-red-500/50 text-red-200",
-  learning: "bg-purple-500/20 border-purple-500/50 text-purple-200",
-  other: "bg-gray-500/20 border-gray-500/50 text-gray-200",
+  work: "bg-blue-500/20 border-blue-400/60 text-blue-200",
+  personal: "bg-green-500/20 border-green-400/60 text-green-200",
+  health: "bg-red-500/20 border-red-400/60 text-red-200",
+  learning: "bg-purple-500/20 border-purple-400/60 text-purple-200",
+  other: "bg-gray-500/20 border-gray-400/60 text-gray-200",
 }
 
 const PRIORITY_COLORS = {
-  low: "text-gray-300",
-  medium: "text-yellow-300",
-  high: "text-red-300",
+  low: "text-green-400",
+  medium: "text-yellow-400",
+  high: "text-red-400",
 }
 
 const RARITY_COLORS = {
@@ -902,6 +917,13 @@ export default function FutureTaskApp() {
   const [newTaskDescription, setNewTaskDescription] = useState("")
   const [newTaskCategory, setNewTaskCategory] = useState<Task["category"]>("personal")
   const [newTaskPriority, setNewTaskPriority] = useState<Task["priority"]>("medium")
+
+  // Edit task states
+  const [editingTask, setEditingTask] = useState<string | null>(null)
+  const [editTaskText, setEditTaskText] = useState("")
+  const [editTaskDescription, setEditTaskDescription] = useState("")
+  const [editTaskCategory, setEditTaskCategory] = useState<Task["category"]>("personal")
+  const [editTaskPriority, setEditTaskPriority] = useState<Task["priority"]>("medium")
 
   // Wish states
   const [newWish, setNewWish] = useState("")
@@ -1184,6 +1206,43 @@ export default function FutureTaskApp() {
 
   const deleteTask = (taskId: string) => {
     setTasks(tasks.filter((task) => task.id !== taskId))
+  }
+
+  // Edit task functions
+  const startEditTask = (task: Task) => {
+    setEditingTask(task.id)
+    setEditTaskText(task.text)
+    setEditTaskDescription(task.description || "")
+    setEditTaskCategory(task.category)
+    setEditTaskPriority(task.priority)
+  }
+
+  const saveEditTask = () => {
+    if (!editTaskText.trim() || !editingTask) return
+
+    setTasks(
+      tasks.map((task) =>
+        task.id === editingTask
+          ? {
+              ...task,
+              text: editTaskText,
+              description: editTaskDescription,
+              category: editTaskCategory,
+              priority: editTaskPriority,
+            }
+          : task,
+      ),
+    )
+
+    cancelEditTask()
+  }
+
+  const cancelEditTask = () => {
+    setEditingTask(null)
+    setEditTaskText("")
+    setEditTaskDescription("")
+    setEditTaskCategory("personal")
+    setEditTaskPriority("medium")
   }
 
   // Wish functions
@@ -2115,13 +2174,15 @@ export default function FutureTaskApp() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent
-                              className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/90 border-purple-500/30"}`}
+                              className={`${isLightMode ? "bg-white border-purple-200" : "bg-gray-800 border-purple-500/30"}`}
                             >
                               {Object.entries(THEMES).map(([key, theme]) => (
                                 <SelectItem key={key} value={key} disabled={theme.premium && !user.isPremium}>
                                   <div className="flex items-center space-x-2">
                                     <div className={`w-4 h-4 rounded bg-gradient-to-r ${theme.accent}`} />
-                                    <span>{t(theme.name)}</span>
+                                    <span className={isLightMode ? "text-gray-900" : "text-white"}>
+                                      {t(theme.name)}
+                                    </span>
                                     {theme.premium && !user.isPremium && <Crown className="w-3 h-3 text-yellow-500" />}
                                   </div>
                                 </SelectItem>
@@ -2555,37 +2616,47 @@ export default function FutureTaskApp() {
                       )}
                     </div>
 
-                    {/* Filters - Premium only */}
-                    {user.isPremium && (
-                      <div className="flex items-center space-x-2">
-                        <Select value={filterCategory} onValueChange={setFilterCategory}>
-                          <SelectTrigger
-                            className={`w-32 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent
-                            className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/90 border-purple-500/30"}`}
-                          >
-                            <SelectItem value="all">Todas</SelectItem>
-                            <SelectItem value="work">{t("work")}</SelectItem>
-                            <SelectItem value="personal">{t("personal")}</SelectItem>
-                            <SelectItem value="health">{t("health")}</SelectItem>
-                            <SelectItem value="learning">{t("learning")}</SelectItem>
-                            <SelectItem value="other">{t("other")}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    {/* Filters - Available for all users */}
+                    <div className="flex items-center space-x-2">
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger
+                          className={`w-32 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent
+                          className={`${isLightMode ? "bg-white border-purple-200" : "bg-gray-800 border-purple-500/30"}`}
+                        >
+                          <SelectItem value="all" className={isLightMode ? "text-gray-900" : "text-white"}>
+                            Todas
+                          </SelectItem>
+                          <SelectItem value="work" className={isLightMode ? "text-gray-900" : "text-white"}>
+                            {t("work")}
+                          </SelectItem>
+                          <SelectItem value="personal" className={isLightMode ? "text-gray-900" : "text-white"}>
+                            {t("personal")}
+                          </SelectItem>
+                          <SelectItem value="health" className={isLightMode ? "text-gray-900" : "text-white"}>
+                            {t("health")}
+                          </SelectItem>
+                          <SelectItem value="learning" className={isLightMode ? "text-gray-900" : "text-white"}>
+                            {t("learning")}
+                          </SelectItem>
+                          <SelectItem value="other" className={isLightMode ? "text-gray-900" : "text-white"}>
+                            {t("other")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
 
-                        <div className="flex items-center space-x-2">
-                          <Switch
-                            checked={showCompleted}
-                            onCheckedChange={setShowCompleted}
-                            className="data-[state=checked]:bg-purple-500"
-                          />
-                          <Label className={`text-sm ${mutedTextClasses}`}>Completadas</Label>
-                        </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={showCompleted}
+                          onCheckedChange={setShowCompleted}
+                          className="data-[state=checked]:bg-purple-500"
+                        />
+                        <Label className={`text-sm ${mutedTextClasses}`}>Completadas</Label>
                       </div>
-                    )}
+                    </div>
 
                     {/* Add Task Form */}
                     <div className="space-y-3">
@@ -2597,57 +2668,67 @@ export default function FutureTaskApp() {
                         onKeyPress={(e) => e.key === "Enter" && addTask()}
                       />
 
-                      {user.isPremium && (
-                        <Textarea
-                          value={newTaskDescription}
-                          onChange={(e) => setNewTaskDescription(e.target.value)}
-                          placeholder={t("description")}
-                          className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses} placeholder:text-gray-400 min-h-[60px]`}
-                        />
-                      )}
+                      <Textarea
+                        value={newTaskDescription}
+                        onChange={(e) => setNewTaskDescription(e.target.value)}
+                        placeholder={t("description")}
+                        className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses} placeholder:text-gray-400 min-h-[60px]`}
+                      />
 
                       <div className="flex space-x-2">
-                        {user.isPremium && (
-                          <>
-                            <Select
-                              value={newTaskCategory}
-                              onValueChange={(value) => setNewTaskCategory(value as Task["category"])}
-                            >
-                              <SelectTrigger
-                                className={`flex-1 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent
-                                className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/90 border-purple-500/30"}`}
-                              >
-                                <SelectItem value="work">{t("work")}</SelectItem>
-                                <SelectItem value="personal">{t("personal")}</SelectItem>
-                                <SelectItem value="health">{t("health")}</SelectItem>
-                                <SelectItem value="learning">{t("learning")}</SelectItem>
-                                <SelectItem value="other">{t("other")}</SelectItem>
-                              </SelectContent>
-                            </Select>
+                        <Select
+                          value={newTaskCategory}
+                          onValueChange={(value) => setNewTaskCategory(value as Task["category"])}
+                        >
+                          <SelectTrigger
+                            className={`flex-1 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent
+                            className={`${isLightMode ? "bg-white border-purple-200" : "bg-gray-800 border-purple-500/30"}`}
+                          >
+                            <SelectItem value="work" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("work")}
+                            </SelectItem>
+                            <SelectItem value="personal" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("personal")}
+                            </SelectItem>
+                            <SelectItem value="health" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("health")}
+                            </SelectItem>
+                            <SelectItem value="learning" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("learning")}
+                            </SelectItem>
+                            <SelectItem value="other" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("other")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
 
-                            <Select
-                              value={newTaskPriority}
-                              onValueChange={(value) => setNewTaskPriority(value as Task["priority"])}
-                            >
-                              <SelectTrigger
-                                className={`flex-1 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent
-                                className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/90 border-purple-500/30"}`}
-                              >
-                                <SelectItem value="high">{t("high")}</SelectItem>
-                                <SelectItem value="medium">{t("medium")}</SelectItem>
-                                <SelectItem value="low">{t("low")}</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </>
-                        )}
+                        <Select
+                          value={newTaskPriority}
+                          onValueChange={(value) => setNewTaskPriority(value as Task["priority"])}
+                        >
+                          <SelectTrigger
+                            className={`flex-1 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent
+                            className={`${isLightMode ? "bg-white border-purple-200" : "bg-gray-800 border-purple-500/30"}`}
+                          >
+                            <SelectItem value="high" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("high")}
+                            </SelectItem>
+                            <SelectItem value="medium" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("medium")}
+                            </SelectItem>
+                            <SelectItem value="low" className={isLightMode ? "text-gray-900" : "text-white"}>
+                              {t("low")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
 
                         <Button
                           onClick={addTask}
@@ -2669,40 +2750,170 @@ export default function FutureTaskApp() {
                               : `${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"}`
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-3 flex-1">
                             <Checkbox
                               id={`task-${task.id}`}
                               checked={task.completed}
                               onCheckedChange={() => toggleTask(task.id)}
                               className="peer data-[state=checked]:bg-green-500"
                             />
-                            <div className="peer-checked:line-through">
-                              <Label htmlFor={`task-${task.id}`} className={`font-semibold ${textClasses}`}>
-                                {task.text}
-                                {user.isPremium && (
-                                  <Badge variant="outline" className={`ml-2 ${PRIORITY_COLORS[task.priority]}`}>
-                                    {getPriorityIcon(task.priority)}
-                                  </Badge>
-                                )}
-                              </Label>
-                              {user.isPremium && task.description && (
-                                <p className={`text-sm ${mutedTextClasses}`}>{task.description}</p>
-                              )}
-                              {user.isPremium && (
-                                <Badge variant="outline" className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
-                                  {t(task.category)}
-                                </Badge>
+                            <div className="peer-checked:line-through flex-1">
+                              {editingTask === task.id ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    value={editTaskText}
+                                    onChange={(e) => setEditTaskText(e.target.value)}
+                                    className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
+                                  />
+                                  <Textarea
+                                    value={editTaskDescription}
+                                    onChange={(e) => setEditTaskDescription(e.target.value)}
+                                    placeholder={t("description")}
+                                    className={`${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses} placeholder:text-gray-400 min-h-[60px]`}
+                                  />
+                                  <div className="flex space-x-2">
+                                    <Select
+                                      value={editTaskCategory}
+                                      onValueChange={(value) => setEditTaskCategory(value as Task["category"])}
+                                    >
+                                      <SelectTrigger
+                                        className={`flex-1 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
+                                      >
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent
+                                        className={`${isLightMode ? "bg-white border-purple-200" : "bg-gray-800 border-purple-500/30"}`}
+                                      >
+                                        <SelectItem
+                                          value="work"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("work")}
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="personal"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("personal")}
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="health"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("health")}
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="learning"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("learning")}
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="other"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("other")}
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+
+                                    <Select
+                                      value={editTaskPriority}
+                                      onValueChange={(value) => setEditTaskPriority(value as Task["priority"])}
+                                    >
+                                      <SelectTrigger
+                                        className={`flex-1 ${isLightMode ? "bg-white border-purple-200" : "bg-black/30 border-purple-500/30"} ${textClasses}`}
+                                      >
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent
+                                        className={`${isLightMode ? "bg-white border-purple-200" : "bg-gray-800 border-purple-500/30"}`}
+                                      >
+                                        <SelectItem
+                                          value="high"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("high")}
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="medium"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("medium")}
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="low"
+                                          className={isLightMode ? "text-gray-900" : "text-white"}
+                                        >
+                                          {t("low")}
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="flex space-x-2">
+                                    <Button
+                                      onClick={saveEditTask}
+                                      size="sm"
+                                      className={`bg-gradient-to-r ${currentTheme.accent} hover:opacity-90`}
+                                    >
+                                      {t("saveTask")}
+                                    </Button>
+                                    <Button
+                                      onClick={cancelEditTask}
+                                      size="sm"
+                                      variant="outline"
+                                      className={`${isLightMode ? "border-gray-200" : "border-gray-600"}`}
+                                    >
+                                      {t("cancelEdit")}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex items-center space-x-2">
+                                    <Label htmlFor={`task-${task.id}`} className={`font-semibold ${textClasses}`}>
+                                      {task.text}
+                                    </Label>
+                                    <Badge
+                                      variant="outline"
+                                      className={`${PRIORITY_COLORS[task.priority]} border-current`}
+                                    >
+                                      {getPriorityIcon(task.priority)}
+                                      <span className="ml-1">{t(task.priority)}</span>
+                                    </Badge>
+                                  </div>
+                                  {task.description && (
+                                    <p className={`text-sm ${mutedTextClasses}`}>{task.description}</p>
+                                  )}
+                                  <div className="flex items-center space-x-2">
+                                    <Badge className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
+                                      {t(task.category)}
+                                    </Badge>
+                                  </div>
+                                </div>
                               )}
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteTask(task.id)}
-                            className={`${isLightMode ? "text-red-700" : "text-red-300"} hover:bg-red-500/20`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <div className="flex space-x-1">
+                            {!task.completed && editingTask !== task.id && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => startEditTask(task)}
+                                className={`${isLightMode ? "text-blue-700" : "text-blue-300"} hover:bg-blue-500/20`}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteTask(task.id)}
+                              className={`${isLightMode ? "text-red-700" : "text-red-300"} hover:bg-red-500/20`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
 
@@ -2737,7 +2948,10 @@ export default function FutureTaskApp() {
                       <div className="flex items-center justify-between">
                         <h3 className={`text-lg font-semibold ${textClasses}`}>{t("pomodoro")}</h3>
                         {!user.isPremium && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${isLightMode ? "border-orange-300 text-orange-700 bg-orange-50" : "border-orange-400/60 text-orange-300 bg-orange-500/10"}`}
+                          >
                             {t("sessionsUsed")}: {user.pomodoroSessions}/10
                           </Badge>
                         )}
