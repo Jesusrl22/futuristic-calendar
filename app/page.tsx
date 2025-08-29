@@ -118,6 +118,14 @@ const translations = {
     choosePlan: "Elige tu plan",
     startPremium: "Comenzar Premium",
     continueFreee: "Continuar gratis",
+    monthly: "Mensual",
+    yearly: "Anual",
+    monthlyPrice: "€1,99/mes",
+    yearlyPrice: "€20/año",
+    yearlyDiscount: "Ahorra €3,88",
+    billingMonthly: "Facturación mensual",
+    billingYearly: "Facturación anual (2 meses gratis)",
+    upgradeButton: "Actualizar a Premium",
   },
   en: {
     appName: "FutureTask",
@@ -160,6 +168,14 @@ const translations = {
     choosePlan: "Choose your plan",
     startPremium: "Start Premium",
     continueFreee: "Continue free",
+    monthly: "Monthly",
+    yearly: "Yearly",
+    monthlyPrice: "$1.99/month",
+    yearlyPrice: "$20/year",
+    yearlyDiscount: "Save $3.88",
+    billingMonthly: "Monthly billing",
+    billingYearly: "Yearly billing (2 months free)",
+    upgradeButton: "Upgrade to Premium",
   },
   fr: {
     appName: "FutureTask",
@@ -202,6 +218,14 @@ const translations = {
     choosePlan: "Choisissez votre plan",
     startPremium: "Commencer Premium",
     continueFreee: "Continuer gratuitement",
+    monthly: "Mensuel",
+    yearly: "Annuel",
+    monthlyPrice: "€1,99/mois",
+    yearlyPrice: "€20/an",
+    yearlyDiscount: "Économisez €3,88",
+    billingMonthly: "Facturation mensuelle",
+    billingYearly: "Facturation annuelle (2 mois gratuits)",
+    upgradeButton: "Passer à Premium",
   },
   de: {
     appName: "FutureTask",
@@ -244,6 +268,14 @@ const translations = {
     choosePlan: "Wählen Sie Ihren Plan",
     startPremium: "Premium starten",
     continueFreee: "Kostenlos fortfahren",
+    monthly: "Monatlich",
+    yearly: "Jährlich",
+    monthlyPrice: "€1,99/Monat",
+    yearlyPrice: "€20/Jahr",
+    yearlyDiscount: "Sparen Sie €3,88",
+    billingMonthly: "Monatliche Abrechnung",
+    billingYearly: "Jährliche Abrechnung (2 Monate kostenlos)",
+    upgradeButton: "Auf Premium upgraden",
   },
   it: {
     appName: "FutureTask",
@@ -286,6 +318,14 @@ const translations = {
     choosePlan: "Scegli il tuo piano",
     startPremium: "Inizia Premium",
     continueFreee: "Continua gratis",
+    monthly: "Mensile",
+    yearly: "Annuale",
+    monthlyPrice: "€1,99/mese",
+    yearlyPrice: "€20/anno",
+    yearlyDiscount: "Risparmia €3,88",
+    billingMonthly: "Fatturazione mensile",
+    billingYearly: "Fatturazione annuale (2 mesi gratis)",
+    upgradeButton: "Passa a Premium",
   },
 }
 
@@ -503,6 +543,7 @@ export default function FutureTaskApp() {
   const [profileLanguage, setProfileLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [profileTheme, setProfileTheme] = useState("default")
+  const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly")
 
   // Filter state
   const [taskFilter, setTaskFilter] = useState<"all" | "completed" | "pending">("all")
@@ -804,6 +845,25 @@ export default function FutureTaskApp() {
     return allThemes[user.theme as keyof typeof allThemes] || THEMES.free.default
   }
 
+  const getPricing = () => {
+    const isEnglish = language === "en"
+    const currency = isEnglish ? "$" : "€"
+
+    return {
+      monthly: {
+        price: `${currency}1.99`,
+        period: isEnglish ? "/month" : billingType === "monthly" ? "/mes" : "/mois",
+        full: isEnglish ? "$1.99/month" : "€1,99/mes",
+      },
+      yearly: {
+        price: `${currency}20`,
+        period: isEnglish ? "/year" : "/año",
+        full: isEnglish ? "$20/year" : "€20/año",
+        discount: isEnglish ? "Save $3.88" : "Ahorra €3,88",
+      },
+    }
+  }
+
   // Loading state
   if (!isInitialized) {
     return (
@@ -927,11 +987,53 @@ export default function FutureTaskApp() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* Billing Toggle */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-black/20 p-1 rounded-lg flex">
+                <Button
+                  onClick={() => setBillingType("monthly")}
+                  variant={billingType === "monthly" ? "default" : "ghost"}
+                  className={`px-6 py-2 ${
+                    billingType === "monthly"
+                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
+                      : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  {t("monthly")}
+                </Button>
+                <Button
+                  onClick={() => setBillingType("yearly")}
+                  variant={billingType === "yearly" ? "default" : "ghost"}
+                  className={`px-6 py-2 relative ${
+                    billingType === "yearly"
+                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
+                      : "text-gray-300 hover:text-white"
+                  }`}
+                >
+                  {t("yearly")}
+                  <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1">
+                    {language === "en" ? "Save" : "Ahorra"}
+                  </Badge>
+                </Button>
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
                   <CardTitle className={`text-xl ${getCurrentTheme().textPrimary}`}>{t("free")}</CardTitle>
-                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>€0/mes</div>
+                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
+                    {language === "en" ? "$0" : "€0"}
+                    <span className="text-lg font-normal text-gray-400">
+                      {billingType === "monthly"
+                        ? language === "en"
+                          ? "/month"
+                          : "/mes"
+                        : language === "en"
+                          ? "/year"
+                          : "/año"}
+                    </span>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -951,6 +1053,10 @@ export default function FutureTaskApp() {
                       <X className="w-5 h-5 text-red-500" />
                       <span className={getCurrentTheme().textMuted}>Notas</span>
                     </div>
+                    <div className="flex items-center space-x-3">
+                      <X className="w-5 h-5 text-red-500" />
+                      <span className={getCurrentTheme().textMuted}>Temas premium</span>
+                    </div>
                   </div>
                   <Button onClick={() => handlePremiumChoice(false)} variant="outline" className="w-full">
                     {t("continueFreee")}
@@ -958,10 +1064,37 @@ export default function FutureTaskApp() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border-purple-500/30">
+              <Card className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border-purple-500/30 relative">
+                {billingType === "yearly" && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1">
+                      {getPricing().yearly.discount}
+                    </Badge>
+                  </div>
+                )}
                 <CardHeader>
-                  <CardTitle className={`text-xl ${getCurrentTheme().textPrimary}`}>{t("premium")}</CardTitle>
-                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>€1.99/mes</div>
+                  <CardTitle className={`text-xl ${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
+                    <Crown className="w-5 h-5 text-yellow-400" />
+                    <span>{t("premium")}</span>
+                  </CardTitle>
+                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
+                    {billingType === "monthly" ? (
+                      <>
+                        {getPricing().monthly.price}
+                        <span className="text-lg font-normal text-gray-400">{getPricing().monthly.period}</span>
+                      </>
+                    ) : (
+                      <>
+                        {getPricing().yearly.price}
+                        <span className="text-lg font-normal text-gray-400">{getPricing().yearly.period}</span>
+                      </>
+                    )}
+                  </div>
+                  {billingType === "yearly" && (
+                    <p className={`text-sm ${getCurrentTheme().textMuted}`}>
+                      {language === "en" ? "2 months free!" : "¡2 meses gratis!"}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -979,15 +1112,30 @@ export default function FutureTaskApp() {
                     </div>
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Todos los temas</span>
+                      <span className={getCurrentTheme().textPrimary}>Todos los temas premium</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <span className={getCurrentTheme().textPrimary}>Soporte prioritario</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Check className="w-5 h-5 text-green-500" />
+                      <span className={getCurrentTheme().textPrimary}>Estadísticas avanzadas</span>
                     </div>
                   </div>
                   <Button
                     onClick={() => handlePremiumChoice(true)}
-                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-lg py-3"
                   >
-                    {t("startPremium")}
+                    <Crown className="w-5 h-5 mr-2" />
+                    {t("startPremium")} -{" "}
+                    {billingType === "monthly" ? getPricing().monthly.full : getPricing().yearly.full}
                   </Button>
+                  {billingType === "yearly" && (
+                    <p className={`text-center text-sm ${getCurrentTheme().textMuted}`}>
+                      💰 {getPricing().yearly.discount} • {language === "en" ? "Best value!" : "¡Mejor precio!"}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -1678,7 +1826,8 @@ export default function FutureTaskApp() {
                 className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
               >
                 <Crown className="w-5 h-5 mr-2" />
-                Actualizar a Premium - €1.99/mes
+                {t("upgradeButton")} -{" "}
+                {billingType === "monthly" ? getPricing().monthly.full : getPricing().yearly.full}
               </Button>
             </div>
           </DialogContent>
