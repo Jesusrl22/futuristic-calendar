@@ -59,7 +59,7 @@ interface User {
   id: string
   name: string
   email: string
-  language: "es" | "en"
+  language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   isPremium: boolean
   onboardingCompleted: boolean
@@ -161,6 +161,260 @@ const translations = {
     startPremium: "Start Premium",
     continueFreee: "Continue free",
   },
+  fr: {
+    appName: "FutureTask",
+    appDescription: "Votre calendrier intelligent du futur",
+    welcomeTitle: "Bienvenue sur FutureTask!",
+    login: "Se connecter",
+    register: "S'inscrire",
+    email: "Email",
+    password: "Mot de passe",
+    name: "Nom",
+    calendar: "Calendrier",
+    tasks: "Tâches",
+    wishlist: "Liste de souhaits",
+    notes: "Notes",
+    pomodoro: "Pomodoro",
+    newTask: "Nouvelle tâche...",
+    description: "Description (optionnelle)...",
+    completedToday: "Terminées aujourd'hui",
+    totalToday: "Total aujourd'hui",
+    streak: "Série",
+    achievements: "Réalisations",
+    progressToday: "Progrès aujourd'hui",
+    work: "Travail",
+    personal: "Personnel",
+    health: "Santé",
+    learning: "Apprentissage",
+    other: "Autres",
+    high: "Haute",
+    medium: "Moyenne",
+    low: "Basse",
+    profile: "Profil",
+    logout: "Se déconnecter",
+    start: "Commencer",
+    pause: "Pause",
+    reset: "Réinitialiser",
+    workSession: "Session de travail",
+    shortBreak: "Pause courte",
+    premium: "Premium",
+    free: "Gratuit",
+    choosePlan: "Choisissez votre plan",
+    startPremium: "Commencer Premium",
+    continueFreee: "Continuer gratuitement",
+  },
+  de: {
+    appName: "FutureTask",
+    appDescription: "Ihr intelligenter Kalender der Zukunft",
+    welcomeTitle: "Willkommen bei FutureTask!",
+    login: "Anmelden",
+    register: "Registrieren",
+    email: "E-Mail",
+    password: "Passwort",
+    name: "Name",
+    calendar: "Kalender",
+    tasks: "Aufgaben",
+    wishlist: "Wunschliste",
+    notes: "Notizen",
+    pomodoro: "Pomodoro",
+    newTask: "Neue Aufgabe...",
+    description: "Beschreibung (optional)...",
+    completedToday: "Heute erledigt",
+    totalToday: "Gesamt heute",
+    streak: "Serie",
+    achievements: "Erfolge",
+    progressToday: "Fortschritt heute",
+    work: "Arbeit",
+    personal: "Persönlich",
+    health: "Gesundheit",
+    learning: "Lernen",
+    other: "Andere",
+    high: "Hoch",
+    medium: "Mittel",
+    low: "Niedrig",
+    profile: "Profil",
+    logout: "Abmelden",
+    start: "Starten",
+    pause: "Pause",
+    reset: "Zurücksetzen",
+    workSession: "Arbeitssitzung",
+    shortBreak: "Kurze Pause",
+    premium: "Premium",
+    free: "Kostenlos",
+    choosePlan: "Wählen Sie Ihren Plan",
+    startPremium: "Premium starten",
+    continueFreee: "Kostenlos fortfahren",
+  },
+  it: {
+    appName: "FutureTask",
+    appDescription: "Il tuo calendario intelligente del futuro",
+    welcomeTitle: "Benvenuto su FutureTask!",
+    login: "Accedi",
+    register: "Registrati",
+    email: "Email",
+    password: "Password",
+    name: "Nome",
+    calendar: "Calendario",
+    tasks: "Attività",
+    wishlist: "Lista desideri",
+    notes: "Note",
+    pomodoro: "Pomodoro",
+    newTask: "Nuova attività...",
+    description: "Descrizione (opzionale)...",
+    completedToday: "Completate oggi",
+    totalToday: "Totale oggi",
+    streak: "Serie",
+    achievements: "Risultati",
+    progressToday: "Progresso oggi",
+    work: "Lavoro",
+    personal: "Personale",
+    health: "Salute",
+    learning: "Apprendimento",
+    other: "Altri",
+    high: "Alta",
+    medium: "Media",
+    low: "Bassa",
+    profile: "Profilo",
+    logout: "Disconnetti",
+    start: "Inizia",
+    pause: "Pausa",
+    reset: "Reimposta",
+    workSession: "Sessione di lavoro",
+    shortBreak: "Pausa breve",
+    premium: "Premium",
+    free: "Gratuito",
+    choosePlan: "Scegli il tuo piano",
+    startPremium: "Inizia Premium",
+    continueFreee: "Continua gratis",
+  },
+}
+
+// Reemplazar la constante THEMES con colores de texto dinámicos:
+const THEMES = {
+  free: {
+    default: {
+      name: "Futurista (Predeterminado)",
+      gradient: "from-slate-900 via-purple-900 to-slate-900",
+      cardBg: "bg-black/20",
+      border: "border-purple-500/20",
+      textPrimary: "text-white",
+      textSecondary: "text-gray-300",
+      textMuted: "text-gray-400",
+      textAccent: "text-purple-300",
+      placeholder: "placeholder:text-gray-400",
+      buttonText: "text-white",
+    },
+    light: {
+      name: "Claro",
+      gradient: "from-gray-100 via-white to-gray-100",
+      cardBg: "bg-white/80",
+      border: "border-gray-300/50",
+      textPrimary: "text-gray-900",
+      textSecondary: "text-gray-700",
+      textMuted: "text-gray-500",
+      textAccent: "text-purple-600",
+      placeholder: "placeholder:text-gray-400",
+      buttonText: "text-white",
+    },
+    dark: {
+      name: "Oscuro",
+      gradient: "from-gray-900 via-black to-gray-900",
+      cardBg: "bg-gray-800/80",
+      border: "border-gray-600/30",
+      textPrimary: "text-gray-100",
+      textSecondary: "text-gray-300",
+      textMuted: "text-gray-400",
+      textAccent: "text-gray-200",
+      placeholder: "placeholder:text-gray-500",
+      buttonText: "text-white",
+    },
+    ocean: {
+      name: "Océano",
+      gradient: "from-blue-900 via-cyan-900 to-blue-900",
+      cardBg: "bg-blue-900/20",
+      border: "border-cyan-500/20",
+      textPrimary: "text-cyan-100",
+      textSecondary: "text-cyan-200",
+      textMuted: "text-cyan-300",
+      textAccent: "text-cyan-300",
+      placeholder: "placeholder:text-cyan-400",
+      buttonText: "text-white",
+    },
+    forest: {
+      name: "Bosque",
+      gradient: "from-green-900 via-emerald-900 to-green-900",
+      cardBg: "bg-green-900/20",
+      border: "border-emerald-500/20",
+      textPrimary: "text-emerald-100",
+      textSecondary: "text-emerald-200",
+      textMuted: "text-emerald-300",
+      textAccent: "text-emerald-300",
+      placeholder: "placeholder:text-emerald-400",
+      buttonText: "text-white",
+    },
+  },
+  premium: {
+    neon: {
+      name: "Neón",
+      gradient: "from-pink-900 via-purple-900 to-cyan-900",
+      cardBg: "bg-black/30",
+      border: "border-pink-500/30",
+      textPrimary: "text-pink-100",
+      textSecondary: "text-pink-200",
+      textMuted: "text-pink-300",
+      textAccent: "text-pink-300",
+      placeholder: "placeholder:text-pink-400",
+      buttonText: "text-white",
+    },
+    galaxy: {
+      name: "Galaxia",
+      gradient: "from-indigo-900 via-purple-900 to-pink-900",
+      cardBg: "bg-black/40",
+      border: "border-indigo-500/30",
+      textPrimary: "text-indigo-100",
+      textSecondary: "text-indigo-200",
+      textMuted: "text-indigo-300",
+      textAccent: "text-indigo-300",
+      placeholder: "placeholder:text-indigo-400",
+      buttonText: "text-white",
+    },
+    sunset: {
+      name: "Atardecer",
+      gradient: "from-orange-900 via-red-900 to-pink-900",
+      cardBg: "bg-orange-900/20",
+      border: "border-orange-500/30",
+      textPrimary: "text-orange-100",
+      textSecondary: "text-orange-200",
+      textMuted: "text-orange-300",
+      textAccent: "text-orange-300",
+      placeholder: "placeholder:text-orange-400",
+      buttonText: "text-white",
+    },
+    aurora: {
+      name: "Aurora",
+      gradient: "from-green-900 via-blue-900 to-purple-900",
+      cardBg: "bg-green-900/20",
+      border: "border-green-400/30",
+      textPrimary: "text-green-100",
+      textSecondary: "text-green-200",
+      textMuted: "text-green-300",
+      textAccent: "text-green-300",
+      placeholder: "placeholder:text-green-400",
+      buttonText: "text-white",
+    },
+    cyberpunk: {
+      name: "Cyberpunk",
+      gradient: "from-yellow-900 via-pink-900 to-cyan-900",
+      cardBg: "bg-black/50",
+      border: "border-yellow-500/30",
+      textPrimary: "text-yellow-100",
+      textSecondary: "text-yellow-200",
+      textMuted: "text-yellow-300",
+      textAccent: "text-yellow-300",
+      placeholder: "placeholder:text-yellow-400",
+      buttonText: "text-white",
+    },
+  },
 }
 
 const DEFAULT_ACHIEVEMENTS = [
@@ -207,7 +461,7 @@ const PRIORITY_COLORS = {
 export default function FutureTaskApp() {
   // Core state
   const [user, setUser] = useState<User | null>(null)
-  const [language, setLanguage] = useState<"es" | "en">("es")
+  const [language, setLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "auth" | "premium" | "app">("welcome")
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -246,8 +500,9 @@ export default function FutureTaskApp() {
   const [profileName, setProfileName] = useState("")
   const [profileEmail, setProfileEmail] = useState("")
   const [profilePassword, setProfilePassword] = useState("")
-  const [profileLanguage, setProfileLanguage] = useState<"es" | "en">("es")
+  const [profileLanguage, setProfileLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [showPremiumModal, setShowPremiumModal] = useState(false)
+  const [profileTheme, setProfileTheme] = useState("default")
 
   // Filter state
   const [taskFilter, setTaskFilter] = useState<"all" | "completed" | "pending">("all")
@@ -513,6 +768,7 @@ export default function FutureTaskApp() {
       setProfileEmail(user.email)
       setProfilePassword("")
       setProfileLanguage(user.language)
+      setProfileTheme(user.theme)
       setShowProfileModal(true)
     }
   }
@@ -525,6 +781,7 @@ export default function FutureTaskApp() {
       name: profileName,
       email: profileEmail,
       language: profileLanguage,
+      theme: profileTheme,
     }
 
     setUser(updatedUser)
@@ -540,11 +797,18 @@ export default function FutureTaskApp() {
     localStorage.removeItem("futureTask_user")
   }
 
+  const getCurrentTheme = () => {
+    if (!user) return THEMES.free.default
+
+    const allThemes = { ...THEMES.free, ...THEMES.premium }
+    return allThemes[user.theme as keyof typeof allThemes] || THEMES.free.default
+  }
+
   // Loading state
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-lg">Cargando...</div>
+      <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} flex items-center justify-center`}>
+        <div className={`${getCurrentTheme().textPrimary} text-lg`}>Cargando...</div>
       </div>
     )
   }
@@ -552,8 +816,10 @@ export default function FutureTaskApp() {
   // Welcome Screen
   if (currentScreen === "welcome") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-black/20 backdrop-blur-xl border-purple-500/20">
+      <div
+        className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} flex items-center justify-center p-4`}
+      >
+        <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center mb-4">
               <img src="/logo.png" alt="FutureTask" className="w-10 h-10 rounded-full" />
@@ -561,7 +827,7 @@ export default function FutureTaskApp() {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {t("appName")}
             </CardTitle>
-            <CardDescription className="text-gray-300">{t("appDescription")}</CardDescription>
+            <CardDescription className={getCurrentTheme().textSecondary}>{t("appDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button
@@ -579,8 +845,10 @@ export default function FutureTaskApp() {
   // Auth Screen
   if (currentScreen === "auth") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-black/20 backdrop-blur-xl border-purple-500/20">
+      <div
+        className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} flex items-center justify-center p-4`}
+      >
+        <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {authMode === "login" ? t("login") : t("register")}
@@ -589,20 +857,20 @@ export default function FutureTaskApp() {
           <CardContent className="space-y-4">
             {authMode === "register" && (
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-gray-300">
+                <Label htmlFor="name" className={getCurrentTheme().textSecondary}>
                   {t("name")}
                 </Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-black/30 border-purple-500/30 text-white"
+                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
                   placeholder="Tu nombre"
                 />
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">
+              <Label htmlFor="email" className={getCurrentTheme().textSecondary}>
                 {t("email")}
               </Label>
               <Input
@@ -610,12 +878,12 @@ export default function FutureTaskApp() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-black/30 border-purple-500/30 text-white"
+                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
                 placeholder="tu@email.com"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">
+              <Label htmlFor="password" className={getCurrentTheme().textSecondary}>
                 {t("password")}
               </Label>
               <Input
@@ -623,7 +891,7 @@ export default function FutureTaskApp() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-black/30 border-purple-500/30 text-white"
+                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
                 placeholder="••••••••"
               />
             </div>
@@ -636,7 +904,7 @@ export default function FutureTaskApp() {
             <Button
               variant="ghost"
               onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
-              className="w-full text-purple-300"
+              className={`w-full ${getCurrentTheme().textAccent}`}
             >
               {authMode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
             </Button>
@@ -649,8 +917,10 @@ export default function FutureTaskApp() {
   // Premium Screen
   if (currentScreen === "premium") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-4xl bg-black/20 backdrop-blur-xl border-purple-500/20">
+      <div
+        className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} flex items-center justify-center p-4`}
+      >
+        <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {t("choosePlan")}
@@ -660,26 +930,26 @@ export default function FutureTaskApp() {
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
-                  <CardTitle className="text-xl text-white">{t("free")}</CardTitle>
-                  <div className="text-3xl font-bold text-white">€0/mes</div>
+                  <CardTitle className={`text-xl ${getCurrentTheme().textPrimary}`}>{t("free")}</CardTitle>
+                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>€0/mes</div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-white">Hasta 10 tareas</span>
+                      <span className={getCurrentTheme().textPrimary}>Hasta 10 tareas</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-white">Calendario básico</span>
+                      <span className={getCurrentTheme().textPrimary}>Calendario básico</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <X className="w-5 h-5 text-red-500" />
-                      <span className="text-gray-400">Lista de deseos</span>
+                      <span className={getCurrentTheme().textMuted}>Lista de deseos</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <X className="w-5 h-5 text-red-500" />
-                      <span className="text-gray-400">Notas</span>
+                      <span className={getCurrentTheme().textMuted}>Notas</span>
                     </div>
                   </div>
                   <Button onClick={() => handlePremiumChoice(false)} variant="outline" className="w-full">
@@ -690,26 +960,26 @@ export default function FutureTaskApp() {
 
               <Card className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border-purple-500/30">
                 <CardHeader>
-                  <CardTitle className="text-xl text-white">{t("premium")}</CardTitle>
-                  <div className="text-3xl font-bold text-white">€1.99/mes</div>
+                  <CardTitle className={`text-xl ${getCurrentTheme().textPrimary}`}>{t("premium")}</CardTitle>
+                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>€1.99/mes</div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-white">Tareas ilimitadas</span>
+                      <span className={getCurrentTheme().textPrimary}>Tareas ilimitadas</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-white">Lista de deseos</span>
+                      <span className={getCurrentTheme().textPrimary}>Lista de deseos</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-white">Notas ilimitadas</span>
+                      <span className={getCurrentTheme().textPrimary}>Notas ilimitadas</span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Check className="w-5 h-5 text-green-500" />
-                      <span className="text-white">Todos los temas</span>
+                      <span className={getCurrentTheme().textPrimary}>Todos los temas</span>
                     </div>
                   </div>
                   <Button
@@ -731,7 +1001,7 @@ export default function FutureTaskApp() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+    <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} p-4`}>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -748,7 +1018,7 @@ export default function FutureTaskApp() {
                   <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white">Premium</Badge>
                 )}
               </div>
-              <p className="text-gray-300">Bienvenido, {user.name}</p>
+              <p className={getCurrentTheme().textSecondary}>Bienvenido, {user.name}</p>
             </div>
           </div>
 
@@ -770,7 +1040,7 @@ export default function FutureTaskApp() {
                   {t("achievements")} ({achievements.filter((a) => a.unlocked).length})
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-black/90 backdrop-blur-xl border-purple-500/30 text-white">
+              <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
                 <DialogHeader>
                   <DialogTitle>Tus {t("achievements")}</DialogTitle>
                 </DialogHeader>
@@ -808,7 +1078,7 @@ export default function FutureTaskApp() {
 
         {/* Global Search Bar */}
         <div className="relative">
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
@@ -819,7 +1089,7 @@ export default function FutureTaskApp() {
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Buscar tareas en todos los días..."
-                    className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400 focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-lg"
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder} focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-lg`}
                   />
                 </div>
                 {searchTerm && (
@@ -846,7 +1116,7 @@ export default function FutureTaskApp() {
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                   {getGlobalSearchResults().length > 0 ? (
                     <>
-                      <h4 className="text-sm font-semibold text-purple-300 mb-3">
+                      <h4 className={`text-sm font-semibold ${getCurrentTheme().textAccent} mb-3`}>
                         📋 Resultados encontrados ({getGlobalSearchResults().length})
                       </h4>
                       {getGlobalSearchResults().map((task) => (
@@ -863,7 +1133,7 @@ export default function FutureTaskApp() {
                             <div className="flex-1">
                               <div className="flex items-center space-x-2 mb-1">
                                 <span
-                                  className={`font-semibold ${task.completed ? "line-through text-gray-400" : "text-white"}`}
+                                  className={`font-semibold ${task.completed ? `line-through ${getCurrentTheme().textMuted}` : getCurrentTheme().textPrimary}`}
                                 >
                                   {task.text}
                                 </span>
@@ -872,7 +1142,9 @@ export default function FutureTaskApp() {
                                 )}
                               </div>
                               {task.description && (
-                                <p className={`text-sm mb-2 ${task.completed ? "text-gray-500" : "text-gray-300"}`}>
+                                <p
+                                  className={`text-sm mb-2 ${task.completed ? getCurrentTheme().textMuted : getCurrentTheme().textSecondary}`}
+                                >
                                   {task.description}
                                 </p>
                               )}
@@ -902,8 +1174,8 @@ export default function FutureTaskApp() {
                       <div className="w-12 h-12 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                         <span className="text-gray-400 text-xl">🔍</span>
                       </div>
-                      <p className="text-white font-semibold">No se encontraron tareas</p>
-                      <p className="text-gray-400 text-sm">Intenta con otro término de búsqueda</p>
+                      <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No se encontraron tareas</p>
+                      <p className={`${getCurrentTheme().textMuted} text-sm`}>Intenta con otro término de búsqueda</p>
                     </div>
                   )}
                 </div>
@@ -914,49 +1186,51 @@ export default function FutureTaskApp() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="w-5 h-5 text-green-400" />
                 <div>
-                  <p className="text-sm text-gray-300">{t("completedToday")}</p>
-                  <p className="text-xl font-bold text-white">{getCompletedTasks().length}</p>
+                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
+                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getCompletedTasks().length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
                 <Target className="w-5 h-5 text-blue-400" />
                 <div>
-                  <p className="text-sm text-gray-300">{t("totalToday")}</p>
-                  <p className="text-xl font-bold text-white">{getTodayTasks().length}</p>
+                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
+                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getTodayTasks().length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
                 <Flame className="w-5 h-5 text-orange-400" />
                 <div>
-                  <p className="text-sm text-gray-300">{t("streak")}</p>
-                  <p className="text-xl font-bold text-white">0 días</p>
+                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("streak")}</p>
+                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>0 días</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
                 <Star className="w-5 h-5 text-purple-400" />
                 <div>
-                  <p className="text-sm text-gray-300">{t("progressToday")}</p>
-                  <p className="text-xl font-bold text-white">{Math.round(getTodayProgress())}%</p>
+                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</p>
+                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
+                    {Math.round(getTodayProgress())}%
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -966,9 +1240,9 @@ export default function FutureTaskApp() {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Calendar */}
-          <Card className="lg:col-span-2 bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`lg:col-span-2 ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardHeader>
-              <CardTitle className="text-white flex items-center space-x-2">
+              <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
                 <CalendarIcon className="w-5 h-5" />
                 <span>{t("calendar")}</span>
               </CardTitle>
@@ -984,7 +1258,7 @@ export default function FutureTaskApp() {
           </Card>
 
           {/* Tabs Content */}
-          <Card className="lg:col-span-2 bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`lg:col-span-2 ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
             <CardContent className="p-0">
               <Tabs value={activeTab} onValueChange={handleTabChange}>
                 <TabsList className="grid w-full grid-cols-4 bg-purple-900/20">
@@ -1009,80 +1283,86 @@ export default function FutureTaskApp() {
                 {/* Tasks Tab */}
                 <TabsContent value="tasks" className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>
                       {t("tasks")} -{" "}
                       {selectedDate.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
                     </h3>
                     <Progress value={getTodayProgress()} className="h-2" />
-                    <p className="text-sm text-gray-300">
+                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
                       {getCompletedTasks().length} de {getTodayTasks().length} completadas
                     </p>
                   </div>
 
                   {/* Filters - Now without search */}
                   <div className="space-y-3 p-4 bg-black/20 rounded-lg border border-purple-500/20">
-                    <h4 className="text-sm font-semibold text-white">⚙️ Filtros avanzados</h4>
+                    <h4 className={`text-sm font-semibold ${getCurrentTheme().textPrimary}`}>⚙️ Filtros avanzados</h4>
 
                     {/* Filter buttons - Remove the search input from here */}
                     <div className="flex flex-wrap gap-2">
                       <Select value={taskFilter} onValueChange={(value) => setTaskFilter(value as any)}>
-                        <SelectTrigger className="w-32 bg-black/30 border-purple-500/30 text-white">
+                        <SelectTrigger
+                          className={`w-32 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="all" className="text-white">
+                          <SelectItem value="all" className={getCurrentTheme().textPrimary}>
                             Todas
                           </SelectItem>
-                          <SelectItem value="pending" className="text-white">
+                          <SelectItem value="pending" className={getCurrentTheme().textPrimary}>
                             Pendientes
                           </SelectItem>
-                          <SelectItem value="completed" className="text-white">
+                          <SelectItem value="completed" className={getCurrentTheme().textPrimary}>
                             Completadas
                           </SelectItem>
                         </SelectContent>
                       </Select>
 
                       <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as any)}>
-                        <SelectTrigger className="w-32 bg-black/30 border-purple-500/30 text-white">
+                        <SelectTrigger
+                          className={`w-32 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="all" className="text-white">
+                          <SelectItem value="all" className={getCurrentTheme().textPrimary}>
                             Todas
                           </SelectItem>
-                          <SelectItem value="work" className="text-white">
+                          <SelectItem value="work" className={getCurrentTheme().textPrimary}>
                             {t("work")}
                           </SelectItem>
-                          <SelectItem value="personal" className="text-white">
+                          <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
                             {t("personal")}
                           </SelectItem>
-                          <SelectItem value="health" className="text-white">
+                          <SelectItem value="health" className={getCurrentTheme().textPrimary}>
                             {t("health")}
                           </SelectItem>
-                          <SelectItem value="learning" className="text-white">
+                          <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
                             {t("learning")}
                           </SelectItem>
-                          <SelectItem value="other" className="text-white">
+                          <SelectItem value="other" className={getCurrentTheme().textPrimary}>
                             {t("other")}
                           </SelectItem>
                         </SelectContent>
                       </Select>
 
                       <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as any)}>
-                        <SelectTrigger className="w-32 bg-black/30 border-purple-500/30 text-white">
+                        <SelectTrigger
+                          className={`w-32 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="all" className="text-white">
+                          <SelectItem value="all" className={getCurrentTheme().textPrimary}>
                             Todas
                           </SelectItem>
-                          <SelectItem value="high" className="text-white">
+                          <SelectItem value="high" className={getCurrentTheme().textPrimary}>
                             {t("high")}
                           </SelectItem>
-                          <SelectItem value="medium" className="text-white">
+                          <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
                             {t("medium")}
                           </SelectItem>
-                          <SelectItem value="low" className="text-white">
+                          <SelectItem value="low" className={getCurrentTheme().textPrimary}>
                             {t("low")}
                           </SelectItem>
                         </SelectContent>
@@ -1110,7 +1390,7 @@ export default function FutureTaskApp() {
                       value={newTask}
                       onChange={(e) => setNewTask(e.target.value)}
                       placeholder={t("newTask")}
-                      className="bg-black/30 border-purple-500/30 text-white"
+                      className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
                       onKeyPress={(e) => e.key === "Enter" && addTask()}
                     />
 
@@ -1118,7 +1398,7 @@ export default function FutureTaskApp() {
                       value={newTaskDescription}
                       onChange={(e) => setNewTaskDescription(e.target.value)}
                       placeholder={t("description")}
-                      className="bg-black/30 border-purple-500/30 text-white min-h-[60px]"
+                      className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px] ${getCurrentTheme().placeholder}`}
                     />
 
                     <div className="flex space-x-2">
@@ -1126,23 +1406,25 @@ export default function FutureTaskApp() {
                         value={newTaskCategory}
                         onValueChange={(value) => setNewTaskCategory(value as Task["category"])}
                       >
-                        <SelectTrigger className="flex-1 bg-black/30 border-purple-500/30 text-white">
+                        <SelectTrigger
+                          className={`flex-1 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="work" className="text-white">
+                          <SelectItem value="work" className={getCurrentTheme().textPrimary}>
                             {t("work")}
                           </SelectItem>
-                          <SelectItem value="personal" className="text-white">
+                          <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
                             {t("personal")}
                           </SelectItem>
-                          <SelectItem value="health" className="text-white">
+                          <SelectItem value="health" className={getCurrentTheme().textPrimary}>
                             {t("health")}
                           </SelectItem>
-                          <SelectItem value="learning" className="text-white">
+                          <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
                             {t("learning")}
                           </SelectItem>
-                          <SelectItem value="other" className="text-white">
+                          <SelectItem value="other" className={getCurrentTheme().textPrimary}>
                             {t("other")}
                           </SelectItem>
                         </SelectContent>
@@ -1152,17 +1434,19 @@ export default function FutureTaskApp() {
                         value={newTaskPriority}
                         onValueChange={(value) => setNewTaskPriority(value as Task["priority"])}
                       >
-                        <SelectTrigger className="flex-1 bg-black/30 border-purple-500/30 text-white">
+                        <SelectTrigger
+                          className={`flex-1 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="high" className="text-white">
+                          <SelectItem value="high" className={getCurrentTheme().textPrimary}>
                             {t("high")}
                           </SelectItem>
-                          <SelectItem value="medium" className="text-white">
+                          <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
                             {t("medium")}
                           </SelectItem>
-                          <SelectItem value="low" className="text-white">
+                          <SelectItem value="low" className={getCurrentTheme().textPrimary}>
                             {t("low")}
                           </SelectItem>
                         </SelectContent>
@@ -1197,12 +1481,12 @@ export default function FutureTaskApp() {
                                 <Input
                                   value={editTaskText}
                                   onChange={(e) => setEditTaskText(e.target.value)}
-                                  className="bg-black/30 border-purple-500/30 text-white"
+                                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
                                 />
                                 <Textarea
                                   value={editTaskDescription}
                                   onChange={(e) => setEditTaskDescription(e.target.value)}
-                                  className="bg-black/30 border-purple-500/30 text-white min-h-[60px]"
+                                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px]`}
                                 />
                                 <div className="flex space-x-2">
                                   <Button onClick={saveEditTask} size="sm" className="bg-green-500">
@@ -1216,12 +1500,14 @@ export default function FutureTaskApp() {
                             ) : (
                               <div className="space-y-1">
                                 <div className="flex items-center space-x-2">
-                                  <span className="font-semibold text-white">{task.text}</span>
+                                  <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>{task.text}</span>
                                   <Badge className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
                                     {t(task.priority)}
                                   </Badge>
                                 </div>
-                                {task.description && <p className="text-sm text-gray-300">{task.description}</p>}
+                                {task.description && (
+                                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{task.description}</p>
+                                )}
                                 <Badge className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
                                   {t(task.category)}
                                 </Badge>
@@ -1254,15 +1540,19 @@ export default function FutureTaskApp() {
 
                     {getFilteredTasks().length === 0 && getTodayTasks().length > 0 && (
                       <div className="p-4 rounded-lg border border-purple-500/30 text-center">
-                        <p className="text-white">No hay tareas que coincidan con los filtros</p>
-                        <p className="text-gray-300">Intenta cambiar los filtros o buscar otro término</p>
+                        <p className={`${getCurrentTheme().textPrimary} font-semibold`}>
+                          No hay tareas que coincidan con los filtros
+                        </p>
+                        <p className={`${getCurrentTheme().textSecondary}`}>
+                          Intenta cambiar los filtros o buscar otro término
+                        </p>
                       </div>
                     )}
 
                     {getTodayTasks().length === 0 && (
                       <div className="p-4 rounded-lg border border-purple-500/30 text-center">
-                        <p className="text-white">No hay tareas para este día</p>
-                        <p className="text-gray-300">¡Agrega una nueva tarea arriba!</p>
+                        <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No hay tareas para este día</p>
+                        <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva tarea arriba!</p>
                       </div>
                     )}
                   </div>
@@ -1271,9 +1561,11 @@ export default function FutureTaskApp() {
                 {/* Pomodoro Tab */}
                 <TabsContent value="pomodoro" className="p-6 space-y-4">
                   <div className="text-center space-y-6">
-                    <h3 className="text-lg font-semibold text-white">{t("pomodoro")}</h3>
+                    <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>{t("pomodoro")}</h3>
 
-                    <div className="text-6xl font-bold text-white tabular-nums">{formatTime(pomodoroTime)}</div>
+                    <div className={`text-6xl font-bold ${getCurrentTheme().textPrimary} tabular-nums`}>
+                      {formatTime(pomodoroTime)}
+                    </div>
 
                     <div className="flex justify-center space-x-2">
                       <Badge className={pomodoroType === "work" ? "bg-purple-500" : "bg-gray-500"}>
@@ -1323,16 +1615,20 @@ export default function FutureTaskApp() {
                     <TabsContent value="wishlist" className="p-6">
                       <div className="text-center py-8">
                         <Heart className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-                        <p className="text-white font-semibold mb-2">Lista de Deseos Premium</p>
-                        <p className="text-gray-300">Funcionalidad disponible para usuarios Premium</p>
+                        <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Lista de Deseos Premium</p>
+                        <p className={getCurrentTheme().textSecondary}>
+                          Funcionalidad disponible para usuarios Premium
+                        </p>
                       </div>
                     </TabsContent>
 
                     <TabsContent value="notes" className="p-6">
                       <div className="text-center py-8">
                         <StickyNote className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-                        <p className="text-white font-semibold mb-2">Notas Premium</p>
-                        <p className="text-gray-300">Funcionalidad disponible para usuarios Premium</p>
+                        <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Notas Premium</p>
+                        <p className={getCurrentTheme().textSecondary}>
+                          Funcionalidad disponible para usuarios Premium
+                        </p>
                       </div>
                     </TabsContent>
                   </>
@@ -1344,12 +1640,12 @@ export default function FutureTaskApp() {
 
         {/* Premium Modal */}
         <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-          <DialogContent className="bg-black/90 backdrop-blur-xl border-purple-500/30 text-white">
+          <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
             <DialogHeader>
               <DialogTitle className="text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                 🚀 Actualizar a Premium
               </DialogTitle>
-              <DialogDescription className="text-gray-300">
+              <DialogDescription className={getCurrentTheme().textSecondary}>
                 Desbloquea todas las funcionalidades de FutureTask
               </DialogDescription>
             </DialogHeader>
@@ -1390,30 +1686,30 @@ export default function FutureTaskApp() {
 
         {/* Profile Modal */}
         <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-          <DialogContent className="bg-black/90 backdrop-blur-xl border-purple-500/30 text-white">
+          <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
             <DialogHeader>
               <DialogTitle className="text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                 ⚙️ Configuración del Perfil
               </DialogTitle>
-              <DialogDescription className="text-gray-300">
+              <DialogDescription className={getCurrentTheme().textSecondary}>
                 Actualiza tu información personal y preferencias
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="profile-name" className="text-gray-300">
+                <Label htmlFor="profile-name" className={getCurrentTheme().textSecondary}>
                   Nombre
                 </Label>
                 <Input
                   id="profile-name"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
-                  className="bg-black/30 border-purple-500/30 text-white"
+                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="profile-email" className="text-gray-300">
+                <Label htmlFor="profile-email" className={getCurrentTheme().textSecondary}>
                   Email
                 </Label>
                 <Input
@@ -1421,12 +1717,12 @@ export default function FutureTaskApp() {
                   type="email"
                   value={profileEmail}
                   onChange={(e) => setProfileEmail(e.target.value)}
-                  className="bg-black/30 border-purple-500/30 text-white"
+                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="profile-password" className="text-gray-300">
+                <Label htmlFor="profile-password" className={getCurrentTheme().textSecondary}>
                   Nueva Contraseña (opcional)
                 </Label>
                 <Input
@@ -1435,25 +1731,66 @@ export default function FutureTaskApp() {
                   value={profilePassword}
                   onChange={(e) => setProfilePassword(e.target.value)}
                   placeholder="Dejar vacío para mantener actual"
-                  className="bg-black/30 border-purple-500/30 text-white"
+                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="profile-language" className="text-gray-300">
+                <Label htmlFor="profile-language" className={getCurrentTheme().textSecondary}>
                   Idioma
                 </Label>
-                <Select value={profileLanguage} onValueChange={(value) => setProfileLanguage(value as "es" | "en")}>
-                  <SelectTrigger className="bg-black/30 border-purple-500/30 text-white">
+                <Select
+                  value={profileLanguage}
+                  onValueChange={(value) => setProfileLanguage(value as "es" | "en" | "fr" | "de" | "it")}
+                >
+                  <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-800 border-purple-500/30">
-                    <SelectItem value="es" className="text-white">
-                      Español
+                    <SelectItem value="es" className={getCurrentTheme().textPrimary}>
+                      🇪🇸 Español
                     </SelectItem>
-                    <SelectItem value="en" className="text-white">
-                      English
+                    <SelectItem value="en" className={getCurrentTheme().textPrimary}>
+                      🇺🇸 English
                     </SelectItem>
+                    <SelectItem value="fr" className={getCurrentTheme().textPrimary}>
+                      🇫🇷 Français
+                    </SelectItem>
+                    <SelectItem value="de" className={getCurrentTheme().textPrimary}>
+                      🇩🇪 Deutsch
+                    </SelectItem>
+                    <SelectItem value="it" className={getCurrentTheme().textPrimary}>
+                      🇮🇹 Italiano
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="profile-theme" className={getCurrentTheme().textSecondary}>
+                  Tema
+                </Label>
+                <Select value={profileTheme} onValueChange={setProfileTheme}>
+                  <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-purple-500/30">
+                    <div className={`px-2 py-1 text-xs ${getCurrentTheme().textMuted} font-semibold`}>GRATUITOS</div>
+                    {Object.entries(THEMES.free).map(([key, theme]) => (
+                      <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                    {user?.isPremium && (
+                      <>
+                        <div className={`px-2 py-1 text-xs text-yellow-400 font-semibold`}>PREMIUM ⭐</div>
+                        {Object.entries(THEMES.premium).map(([key, theme]) => (
+                          <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
+                            {theme.name}
+                          </SelectItem>
+                        ))}
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
