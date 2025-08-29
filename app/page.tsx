@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import Head from "next/head"
 import {
   Plus,
   Trophy,
@@ -976,6 +977,14 @@ export default function FutureTaskApp() {
   const currentTheme = THEMES[user?.theme as keyof typeof THEMES] || THEMES.default
   const isLightMode = user?.theme?.includes("light") || false
 
+  // Dynamic page title based on language and user state
+  const getPageTitle = () => {
+    if (user) {
+      return `${t("appName")} - ${user.name}`
+    }
+    return `${t("appName")} - ${t("appDescription")}`
+  }
+
   // Pomodoro timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -1596,6 +1605,11 @@ export default function FutureTaskApp() {
   if (currentScreen === "welcome") {
     return (
       <LanguageContext.Provider value={{ language, setLanguage, t }}>
+        <Head>
+          <title>{getPageTitle()}</title>
+          <meta name="description" content={t("appDescription")} />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
         <div className={`min-h-screen ${themeClasses} flex items-center justify-center p-4`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
 
@@ -1685,6 +1699,11 @@ export default function FutureTaskApp() {
   if (currentScreen === "auth") {
     return (
       <LanguageContext.Provider value={{ language, setLanguage, t }}>
+        <Head>
+          <title>{getPageTitle()}</title>
+          <meta name="description" content={t("appDescription")} />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
         <div className={`min-h-screen ${themeClasses} flex items-center justify-center p-4`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
 
@@ -1808,6 +1827,11 @@ export default function FutureTaskApp() {
   if (currentScreen === "premium") {
     return (
       <LanguageContext.Provider value={{ language, setLanguage, t }}>
+        <Head>
+          <title>{getPageTitle()}</title>
+          <meta name="description" content={t("appDescription")} />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
         <div className={`min-h-screen ${themeClasses} flex items-center justify-center p-4`}>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
 
@@ -1979,6 +2003,11 @@ export default function FutureTaskApp() {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      <Head>
+        <title>{getPageTitle()}</title>
+        <meta name="description" content={t("appDescription")} />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <div className={`min-h-screen ${themeClasses} p-4`}>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.1),transparent)] pointer-events-none" />
 

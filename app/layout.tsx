@@ -1,35 +1,78 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: "FutureTask - Tu calendario inteligente del futuro",
+  description:
+    "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask, tu calendario inteligente del futuro.",
+  keywords: ["calendario", "tareas", "productividad", "pomodoro", "logros", "organizacion"],
+  authors: [{ name: "FutureTask Team" }],
+  creator: "FutureTask",
+  publisher: "FutureTask",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/logo.png",
+  },
+  openGraph: {
+    title: "FutureTask - Tu calendario inteligente del futuro",
+    description: "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask.",
+    url: "https://futuretask.app",
+    siteName: "FutureTask",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "FutureTask Logo",
+      },
+    ],
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FutureTask - Tu calendario inteligente del futuro",
+    description: "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask.",
+    images: ["/logo.png"],
+    creator: "@futuretask",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "google-site-verification-code",
+  },
+    generator: 'v0.app'
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
+    <html lang="es">
       <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <meta name="theme-color" content="#8b5cf6" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body>
-        {children}
-        <Analytics />
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
