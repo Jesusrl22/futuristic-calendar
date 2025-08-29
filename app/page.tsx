@@ -1180,7 +1180,7 @@ export default function FutureTaskApp() {
       text: newTask,
       description: newTaskDescription,
       completed: false,
-      date: selectedDate.toISOString().split("T")[0],
+      date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
       category: newTaskCategory,
       priority: newTaskPriority,
     }
@@ -1438,7 +1438,11 @@ export default function FutureTaskApp() {
             }
             break
           case "perfectionist":
-            const todayTasks = tasks.filter((task) => task.date === selectedDate.toISOString().split("T")[0])
+            const todayTasks = tasks.filter(
+              (task) =>
+                task.date ===
+                `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
+            )
             if (todayTasks.length > 0 && todayTasks.every((task) => task.completed)) {
               return { ...achievement, unlocked: true, unlockedAt: new Date().toISOString() }
             }
@@ -1479,7 +1483,7 @@ export default function FutureTaskApp() {
   }
 
   const getTasksForDate = (date: Date) => {
-    const dateStr = date.toISOString().split("T")[0]
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
     let dateTasks = tasks.filter((task) => task.date === dateStr)
 
     if (filterCategory !== "all") {
