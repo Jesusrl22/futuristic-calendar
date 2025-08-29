@@ -49,11 +49,9 @@ export default function AdminPanel() {
   useEffect(() => {
     // Cargar usuarios del localStorage
     const savedUsers = localStorage.getItem("futureTask_users") || "[]"
-    const savedTasks = localStorage.getItem("futureTask_tasks") || "[]"
 
     try {
       const parsedUsers = JSON.parse(savedUsers)
-      const parsedTasks = JSON.parse(savedTasks)
 
       // Si no hay usuarios guardados, crear algunos de ejemplo
       if (parsedUsers.length === 0) {
@@ -98,11 +96,42 @@ export default function AdminPanel() {
         ]
         setUsers(exampleUsers)
         localStorage.setItem("futureTask_users", JSON.stringify(exampleUsers))
+
+        // Create example tasks for users
+        exampleUsers.forEach((user) => {
+          const exampleTasks = [
+            {
+              id: `${user.id}_task_1`,
+              text: "Revisar emails",
+              completed: true,
+              date: new Date().toISOString().split("T")[0],
+              category: "work" as const,
+              priority: "medium" as const,
+            },
+            {
+              id: `${user.id}_task_2`,
+              text: "Hacer ejercicio",
+              completed: false,
+              date: new Date().toISOString().split("T")[0],
+              category: "health" as const,
+              priority: "high" as const,
+            },
+          ]
+          localStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(exampleTasks))
+        })
       } else {
         setUsers(parsedUsers)
       }
 
-      setTasks(parsedTasks)
+      // Load all user tasks for statistics
+      const allTasks: Task[] = []
+      parsedUsers.forEach((user: User) => {
+        const userTasks = localStorage.getItem(`futureTask_tasks_${user.id}`)
+        if (userTasks) {
+          allTasks.push(...JSON.parse(userTasks))
+        }
+      })
+      setTasks(allTasks)
     } catch (error) {
       console.error("Error loading data:", error)
       setUsers([])
@@ -115,11 +144,12 @@ export default function AdminPanel() {
     const stats: Record<string, UserStats> = {}
 
     users.forEach((user) => {
-      const userTasks = tasks.filter((task) => task.id.startsWith(user.id))
-      const completedTasks = userTasks.filter((task) => task.completed)
+      const userTasksData = localStorage.getItem(`futureTask_tasks_${user.id}`)
+      const userTasks = userTasksData ? JSON.parse(userTasksData) : []
+      const completedTasks = userTasks.filter((task: Task) => task.completed)
 
       // Calcular racha (simplificado)
-      const completedDates = [...new Set(completedTasks.map((t) => t.date))].sort()
+      const completedDates = [...new Set(completedTasks.map((t: Task) => t.date))].sort()
       let streak = 0
       if (completedDates.length > 0) {
         streak = completedDates.length // Simplificado para el ejemplo
@@ -134,18 +164,20 @@ export default function AdminPanel() {
     })
 
     setUserStats(stats)
-  }, [users, tasks])
-
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  }, [users])
 
   const deleteUser = (userId: string) => {
     const updatedUsers = users.filter((user) => user.id !== userId)
     setUsers(updatedUsers)
     localStorage.setItem("futureTask_users", JSON.stringify(updatedUsers))
+
+    // Delete user-specific data
+    localStorage.removeItem(`futureTask_tasks_${userId}`)
+    localStorage.removeItem(`futureTask_wishes_${userId}`)
+    localStorage.removeItem(`futureTask_notes_${userId}`)
+    localStorage.removeItem(`futureTask_templates_${userId}`)
+    localStorage.removeItem(`futureTask_achievements_${userId}`)
+
     if (selectedUser?.id === userId) {
       setSelectedUser(null)
     }
@@ -168,6 +200,12 @@ export default function AdminPanel() {
       setSelectedUser(updatedUsers.find((u) => u.id === userId) || null)
     }
   }
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   const totalUsers = users.length
   const premiumUsers = users.filter((u) => u.isPremium).length
