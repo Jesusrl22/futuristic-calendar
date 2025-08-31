@@ -584,7 +584,6 @@ export default function FutureTaskApp() {
   const [profileEmail, setProfileEmail] = useState("")
   const [profilePassword, setProfilePassword] = useState("")
   const [profileLanguage, setProfileLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
-  const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [profileTheme, setProfileTheme] = useState("default")
   const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly")
 
@@ -607,6 +606,7 @@ export default function FutureTaskApp() {
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [editNoteTitle, setEditNoteTitle] = useState("")
   const [editNoteContent, setEditNoteContent] = useState("")
+  const [showPremiumModal, setShowPremiumModal] = useState(false)
 
   const t = useCallback(
     (key: string) => {
@@ -665,21 +665,26 @@ export default function FutureTaskApp() {
 
   // También actualizar la función requestNotificationPermission (línea ~230 aproximadamente):
 
-  // Request notification permission function
+  // Mejorar la función requestNotificationPermission para que sea más robusta
   const requestNotificationPermission = async () => {
-    console.log("requestNotificationPermission called")
+    console.log("🔔 requestNotificationPermission called")
 
     if (!("Notification" in window)) {
-      console.log("Browser doesn't support notifications")
+      console.log("❌ Browser doesn't support notifications")
       alert("Este navegador no soporta notificaciones")
       setShowNotificationPrompt(false)
       return
     }
 
     try {
-      console.log("Current permission before request:", Notification.permission)
+      console.log("📋 Current permission before request:", Notification.permission)
 
-      // For older browsers, use the callback version
+      // Mostrar loading state
+      const originalText = document.activeElement?.textContent
+      if (document.activeElement) {
+        document.activeElement.textContent = "Solicitando..."
+      }
+
       let permission
       if (Notification.requestPermission.length) {
         permission = await new Promise((resolve) => {
@@ -689,12 +694,12 @@ export default function FutureTaskApp() {
         permission = await Notification.requestPermission()
       }
 
-      console.log("Permission result:", permission)
+      console.log("✅ Permission result:", permission)
       setNotificationPermission(permission)
       setShowNotificationPrompt(false)
 
       if (permission === "granted") {
-        console.log("Permission granted, showing test notification")
+        console.log("🎉 Permission granted, showing test notification")
         try {
           const notification = new Notification("¡Notificaciones activadas! 🎉", {
             body: "Ahora recibirás recordatorios de tus tareas",
@@ -704,7 +709,7 @@ export default function FutureTaskApp() {
           })
 
           notification.onclick = () => {
-            console.log("Test notification clicked")
+            console.log("👆 Test notification clicked")
             window.focus()
             notification.close()
           }
@@ -714,20 +719,77 @@ export default function FutureTaskApp() {
             notification.close()
           }, 5000)
         } catch (notifError) {
-          console.error("Error showing test notification:", notifError)
+          console.error("❌ Error showing test notification:", notifError)
         }
       } else if (permission === "denied") {
-        console.log("Permission denied")
+        console.log("🚫 Permission denied")
         alert(
           "Has denegado las notificaciones. Puedes activarlas desde la configuración del navegador (icono de candado en la barra de direcciones).",
         )
       } else {
-        console.log("Permission default/dismissed")
+        console.log("⏸️ Permission default/dismissed")
       }
     } catch (error) {
-      console.error("Error requesting notification permission:", error)
+      console.error("💥 Error requesting notification permission:", error)
       setShowNotificationPrompt(false)
       alert("Error al solicitar permisos de notificación: " + error.message)
+    }
+  }
+
+  // Agregar función para manejar clics en botones de notificación
+  const handleNotificationButtonClick = async (action: "request" | "test" | "help") => {
+    console.log(`🎯 Notification button clicked: ${action}`)
+
+    if (!("Notification" in window)) {
+      alert("Este navegador no soporta notificaciones")
+      return
+    }
+
+    switch (action) {
+      case "request":
+        await requestNotificationPermission()
+        break
+
+      case "test":
+        if (Notification.permission === "granted") {
+          try {
+            console.log("🧪 Creating test notification")
+            const notification = new Notification("🧪 Notificación de prueba", {
+              body: "¡Las notificaciones están funcionando correctamente!",
+              icon: "/favicon-32x32.png",
+              tag: "manual-test",
+              requireInteraction: false,
+            })
+
+            notification.onclick = () => {
+              console.log("👆 Manual test notification clicked")
+              window.focus()
+              notification.close()
+            }
+
+            setTimeout(() => notification.close(), 5000)
+            console.log("✅ Test notification created successfully")
+          } catch (error) {
+            console.error("❌ Error showing manual test notification:", error)
+            alert("Error mostrando notificación: " + error.message)
+          }
+        } else {
+          alert("Las notificaciones no están permitidas")
+        }
+        break
+
+      case "help":
+        alert(`🔧 Para activar las notificaciones:
+
+1. Haz clic en el icono de candado 🔒 en la barra de direcciones
+2. Busca "Notificaciones" 
+3. Cambia de "Bloquear" a "Permitir"
+4. Recarga la página
+
+O ve a la configuración del navegador:
+- Chrome: chrome://settings/content/notifications
+- Firefox: about:preferences#privacy`)
+        break
     }
   }
 
@@ -1083,6 +1145,18 @@ export default function FutureTaskApp() {
     setUser(updatedUser)
     localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
     setCurrentScreen("app")
+  }
+
+  // Agregar función para manejar mejor los errores de tareas
+  const handleTaskAction = (action: () => void, actionName: string) => {
+    try {
+      console.log(`🎯 Executing task action: ${actionName}`)
+      action()
+      console.log(`✅ Task action completed: ${actionName}`)
+    } catch (error) {
+      console.error(`❌ Error in task action ${actionName}:`, error)
+      alert(`Error al ${actionName}: ${error.message}`)
+    }
   }
 
   const addTask = () => {
@@ -1529,6 +1603,17 @@ export default function FutureTaskApp() {
   // Main App
   if (!user) return null
 
+  // Agregar función para debug de botones
+  const debugButtonClick = (buttonName: string) => {
+    console.log(`🎯 Button clicked: ${buttonName}`)
+    console.log(`📊 Current state:`, {
+      user: user?.name,
+      activeTab,
+      notificationPermission,
+      tasksCount: tasks.length,
+    })
+  }
+
   return (
     <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient}`}>
       <div className="flex h-screen">
@@ -1735,13 +1820,15 @@ export default function FutureTaskApp() {
                         </span>
                       </div>
                     </div>
+                    {/* Mejorar el botón de activar notificaciones en el indicador de estado */}
                     {notificationPermission !== "granted" && (
                       <Button
-                        onClick={() => setShowNotificationPrompt(true)}
+                        onClick={() => handleNotificationButtonClick("request")}
                         size="sm"
                         variant="outline"
-                        className="w-full mt-2 border-purple-500/30 text-purple-300 bg-transparent text-xs"
+                        className="w-full mt-2 border-purple-500/30 text-purple-300 bg-transparent text-xs hover:bg-purple-500/10 transition-all duration-200"
                       >
+                        <Bell className="w-3 h-3 mr-1" />
                         Activar notificaciones
                       </Button>
                     )}
@@ -1750,71 +1837,28 @@ export default function FutureTaskApp() {
               </div>
             )}
 
+            {/* En la sección del botón manual de notificaciones, reemplazar el onClick con: */}
             {/* Manual notification test button - mejorado */}
             {user && (
               <div className="px-4 pb-2">
                 <Button
-                  onClick={async () => {
-                    console.log("Manual notification test button clicked")
-                    console.log("Current permission:", Notification.permission)
-
-                    if (!("Notification" in window)) {
-                      alert("Este navegador no soporta notificaciones")
-                      return
-                    }
-
-                    if (Notification.permission === "default") {
-                      console.log("Requesting permission manually...")
-                      try {
-                        const permission = await Notification.requestPermission()
-                        console.log("Permission result:", permission)
-                        setNotificationPermission(permission)
-
-                        if (permission === "granted") {
-                          const notification = new Notification("🎉 ¡Notificaciones activadas!", {
-                            body: "Ahora recibirás recordatorios de tus tareas",
-                            icon: "/favicon-32x32.png",
-                            tag: "permission-granted",
-                          })
-                          setTimeout(() => notification.close(), 5000)
-                        }
-                      } catch (error) {
-                        console.error("Error requesting permission:", error)
-                        alert("Error al solicitar permisos: " + error.message)
-                      }
-                    } else if (Notification.permission === "granted") {
-                      console.log("Testing notification manually")
-                      try {
-                        const notification = new Notification("🧪 Notificación de prueba", {
-                          body: "¡Las notificaciones están funcionando correctamente!",
-                          icon: "/favicon-32x32.png",
-                          tag: "manual-test",
-                        })
-                        setTimeout(() => notification.close(), 5000)
-                      } catch (error) {
-                        console.error("Error showing manual test notification:", error)
-                        alert("Error mostrando notificación: " + error.message)
-                      }
-                    } else {
-                      console.log("Permission denied, showing instructions")
-                      alert(`🚫 Las notificaciones están bloqueadas.
-
-Para activarlas:
-1. Haz clic en el icono de candado 🔒 en la barra de direcciones
-2. Cambia "Notificaciones" de "Bloquear" a "Permitir"  
-3. Recarga la página
-
-O ve a la configuración del navegador y permite notificaciones para este sitio.`)
-                    }
-                  }}
+                  onClick={() =>
+                    handleNotificationButtonClick(
+                      notificationPermission === "default"
+                        ? "request"
+                        : notificationPermission === "granted"
+                          ? "test"
+                          : "help",
+                    )
+                  }
                   variant="outline"
                   size="sm"
-                  className={`w-full text-xs ${
+                  className={`w-full text-xs transition-all duration-200 ${
                     notificationPermission === "granted"
-                      ? "border-green-500/30 text-green-300 bg-transparent"
+                      ? "border-green-500/30 text-green-300 bg-green-500/5 hover:bg-green-500/10"
                       : notificationPermission === "denied"
-                        ? "border-red-500/30 text-red-300 bg-transparent"
-                        : "border-blue-500/30 text-blue-300 bg-transparent"
+                        ? "border-red-500/30 text-red-300 bg-red-500/5 hover:bg-red-500/10"
+                        : "border-blue-500/30 text-blue-300 bg-blue-500/5 hover:bg-blue-500/10"
                   }`}
                 >
                   <Bell className="w-3 h-3 mr-1" />
@@ -1822,7 +1866,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                     ? "🔔 Activar notificaciones"
                     : notificationPermission === "granted"
                       ? "🧪 Probar notificación"
-                      : "🚫 Notificaciones bloqueadas - Clic para ayuda"}
+                      : "🚫 Ayuda con notificaciones"}
                 </Button>
               </div>
             )}
@@ -1830,10 +1874,15 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
             {/* Navigation */}
             <div className="p-4">
               <div className="space-y-2">
+                {/* En todos los botones principales, agregar el debug: */}
+                {/* Por ejemplo, en los botones de navegación: */}
                 <Button
-                  onClick={() => handleTabChange("tasks")}
+                  onClick={() => {
+                    debugButtonClick("tasks-tab")
+                    handleTabChange("tasks")
+                  }}
                   variant={activeTab === "tasks" ? "default" : "ghost"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start transition-all duration-200 ${
                     activeTab === "tasks"
                       ? "bg-gradient-to-r from-purple-500 to-cyan-500"
                       : "text-gray-300 hover:text-white hover:bg-purple-500/20"
@@ -1843,9 +1892,12 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                   {t("tasks")}
                 </Button>
                 <Button
-                  onClick={() => handleTabChange("pomodoro")}
+                  onClick={() => {
+                    debugButtonClick("pomodoro-tab")
+                    handleTabChange("pomodoro")
+                  }}
                   variant={activeTab === "pomodoro" ? "default" : "ghost"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start transition-all duration-200 ${
                     activeTab === "pomodoro"
                       ? "bg-gradient-to-r from-purple-500 to-cyan-500"
                       : "text-gray-300 hover:text-white hover:bg-purple-500/20"
@@ -1855,9 +1907,12 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                   {t("pomodoro")}
                 </Button>
                 <Button
-                  onClick={() => handleTabChange("wishlist")}
+                  onClick={() => {
+                    debugButtonClick("wishlist-tab")
+                    handleTabChange("wishlist")
+                  }}
                   variant={activeTab === "wishlist" ? "default" : "ghost"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start transition-all duration-200 ${
                     activeTab === "wishlist"
                       ? "bg-gradient-to-r from-purple-500 to-cyan-500"
                       : "text-gray-300 hover:text-white hover:bg-purple-500/20"
@@ -1868,9 +1923,12 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                   {!user.isPremium && <Crown className="w-3 h-3 ml-auto text-yellow-400" />}
                 </Button>
                 <Button
-                  onClick={() => handleTabChange("notes")}
+                  onClick={() => {
+                    debugButtonClick("notes-tab")
+                    handleTabChange("notes")
+                  }}
                   variant={activeTab === "notes" ? "default" : "ghost"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start transition-all duration-200 ${
                     activeTab === "notes"
                       ? "bg-gradient-to-r from-purple-500 to-cyan-500"
                       : "text-gray-300 hover:text-white hover:bg-purple-500/20"
@@ -1888,7 +1946,10 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
               <div className="space-y-2">
                 {!user.isPremium && (
                   <Button
-                    onClick={() => setShowPremiumModal(true)}
+                    onClick={() => {
+                      debugButtonClick("upgrade-premium")
+                      setShowPremiumModal(true)
+                    }}
                     className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-sm"
                   >
                     <Crown className="w-4 h-4 mr-2" />
@@ -1899,6 +1960,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
+                      onClick={() => debugButtonClick("achievements")}
                       variant="outline"
                       className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
                     >
@@ -1933,7 +1995,10 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                 </Dialog>
 
                 <Button
-                  onClick={openProfileModal}
+                  onClick={() => {
+                    debugButtonClick("profile-modal")
+                    openProfileModal
+                  }}
                   variant="outline"
                   className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
                 >
@@ -1963,7 +2028,10 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                 </h1>
               </div>
               <Button
-                onClick={openProfileModal}
+                onClick={() => {
+                  debugButtonClick("profile-modal-mobile")
+                  openProfileModal()
+                }}
                 variant="outline"
                 size="sm"
                 className="border-purple-500/30 text-purple-300 bg-transparent"
@@ -2103,7 +2171,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                             onChange={(e) => setNewTask(e.target.value)}
                             placeholder={t("newTask")}
                             className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                            onKeyPress={(e) => e.key === "Enter" && addTask()}
+                            onKeyPress={(e) => e.key === "Enter" && handleTaskAction(addTask, "agregar tarea")}
                           />
 
                           <Textarea
@@ -2121,7 +2189,10 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                               placeholder={t("time")}
                               className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
                             />
-                            <Button onClick={addTask} className="bg-gradient-to-r from-purple-500 to-cyan-500">
+                            <Button
+                              onClick={() => handleTaskAction(addTask, "agregar tarea")}
+                              className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 transition-all duration-200"
+                            >
                               <Plus className="w-4 h-4 mr-2" />
                               Agregar
                             </Button>
@@ -2194,7 +2265,9 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                               <div className="flex items-center space-x-3 flex-1">
                                 <Checkbox
                                   checked={task.completed}
-                                  onCheckedChange={() => toggleTask(task.id)}
+                                  onCheckedChange={() =>
+                                    handleTaskAction(() => toggleTask(task.id), "cambiar estado de tarea")
+                                  }
                                   className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:border-green-400 border-2 border-purple-500/30 rounded-md transition-all duration-200 hover:border-purple-400"
                                 />
                                 <div className="flex-1">
@@ -2258,6 +2331,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                                   )}
                                 </div>
                               </div>
+                              {/* Mejorar el botón de eliminar tarea: */}
                               <div className="flex space-x-1">
                                 {!task.completed && editingTask !== task.id && (
                                   <Button
@@ -2272,8 +2346,14 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => deleteTask(task.id)}
-                                  className="text-red-300 hover:bg-red-500/20"
+                                  onClick={() =>
+                                    handleTaskAction(() => {
+                                      if (confirm("¿Estás seguro de que quieres eliminar esta tarea?")) {
+                                        deleteTask(task.id)
+                                      }
+                                    }, "eliminar tarea")
+                                  }
+                                  className="text-red-300 hover:bg-red-500/20 transition-all duration-200"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
@@ -2466,15 +2546,14 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                             value={newNoteTitle}
                             onChange={(e) => setNewNoteTitle(e.target.value)}
                             placeholder="Título de la nota..."
-                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                            onKeyPress={(e) => e.key === "Enter" && addNote()}
+                            className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
                           />
 
                           <Textarea
                             value={newNoteContent}
                             onChange={(e) => setNewNoteContent(e.target.value)}
                             placeholder="Contenido de la nota..."
-                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[100px] ${getCurrentTheme().placeholder}`}
+                            className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary} min-h-[120px] ${getCurrentTheme().placeholder}`}
                           />
 
                           <Button onClick={addNote} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500">
@@ -2490,7 +2569,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                               key={note.id}
                               className={`p-3 rounded-lg border transition-all ${
                                 editingNote === note.id
-                                  ? "bg-gray-900/50 border-yellow-500/30"
+                                  ? "bg-gray-800/30 border-yellow-500/30"
                                   : "bg-black/30 border-yellow-500/30"
                               }`}
                             >
@@ -2499,12 +2578,14 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                                   <Input
                                     value={editNoteTitle}
                                     onChange={(e) => setEditNoteTitle(e.target.value)}
-                                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                                    placeholder="Título de la nota..."
+                                    className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary}`}
                                   />
                                   <Textarea
                                     value={editNoteContent}
                                     onChange={(e) => setEditNoteContent(e.target.value)}
-                                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[80px]`}
+                                    placeholder="Contenido de la nota..."
+                                    className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary} min-h-[120px]`}
                                   />
                                   <div className="flex space-x-2">
                                     <Button onClick={saveEditNote} size="sm" className="bg-green-500">
@@ -2545,7 +2626,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
                                     Creado el{" "}
                                     {new Date(note.createdAt).toLocaleDateString("es-ES", {
                                       day: "numeric",
-                                      month: "short",
+                                      month: "long",
                                       year: "numeric",
                                     })}
                                   </p>
@@ -2574,7 +2655,7 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
 
       {/* Profile Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-md`}>
           <DialogHeader>
             <DialogTitle>{t("profile")}</DialogTitle>
             <DialogDescription>Administra tu cuenta y preferencias</DialogDescription>
@@ -2620,9 +2701,9 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
               </Label>
               <Select value={profileLanguage} onValueChange={(value) => setProfileLanguage(value as any)}>
                 <SelectTrigger className="col-span-3">
-                  <SelectValue />
+                  <SelectValue placeholder="Idioma" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-purple-500/30">
+                <SelectContent>
                   <SelectItem value="es">Español</SelectItem>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="fr">Français</SelectItem>
@@ -2637,33 +2718,53 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
               </Label>
               <Select value={profileTheme} onValueChange={(value) => setProfileTheme(value as any)}>
                 <SelectTrigger className="col-span-3">
-                  <SelectValue />
+                  <SelectValue placeholder="Tema" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-purple-500/30 max-h-80 overflow-y-auto">
-                  {Object.entries(THEMES.free).map(([key, theme]) => (
-                    <SelectItem key={key} value={key}>
-                      {theme.name}
-                    </SelectItem>
-                  ))}
-                  {user.isPremium &&
-                    Object.entries(THEMES.premium).map(([key, theme]) => (
-                      <SelectItem key={key} value={key}>
-                        {theme.name}
+                <SelectContent className="bg-gray-800 border-purple-500/30">
+                  <SelectItem value="default" className={getCurrentTheme().textPrimary}>
+                    Futurista (Predeterminado)
+                  </SelectItem>
+                  <SelectItem value="light" className={getCurrentTheme().textPrimary}>
+                    Claro
+                  </SelectItem>
+                  <SelectItem value="dark" className={getCurrentTheme().textPrimary}>
+                    Oscuro
+                  </SelectItem>
+                  <SelectItem value="ocean" className={getCurrentTheme().textPrimary}>
+                    Océano
+                  </SelectItem>
+                  <SelectItem value="forest" className={getCurrentTheme().textPrimary}>
+                    Bosque
+                  </SelectItem>
+                  {user.isPremium && (
+                    <>
+                      <SelectItem value="neon" className={getCurrentTheme().textPrimary}>
+                        Neón
                       </SelectItem>
-                    ))}
+                      <SelectItem value="galaxy" className={getCurrentTheme().textPrimary}>
+                        Galaxia
+                      </SelectItem>
+                      <SelectItem value="sunset" className={getCurrentTheme().textPrimary}>
+                        Atardecer
+                      </SelectItem>
+                      <SelectItem value="aurora" className={getCurrentTheme().textPrimary}>
+                        Aurora
+                      </SelectItem>
+                      <SelectItem value="cyberpunk" className={getCurrentTheme().textPrimary}>
+                        Cyberpunk
+                      </SelectItem>
+                    </>
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button type="submit" onClick={saveProfile} className="bg-gradient-to-r from-purple-500 to-cyan-500">
-              Guardar cambios
-            </Button>
             <Button type="button" variant="secondary" onClick={() => setShowProfileModal(false)}>
               Cancelar
             </Button>
-            <Button type="button" variant="destructive" onClick={logout}>
-              {t("logout")}
+            <Button type="submit" onClick={saveProfile}>
+              Guardar cambios
             </Button>
           </div>
         </DialogContent>
@@ -2671,28 +2772,25 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
 
       {/* Premium Modal */}
       <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-md`}>
           <DialogHeader>
-            <DialogTitle>{t("premium")}</DialogTitle>
+            <DialogTitle>¿Quieres acceder a más funciones?</DialogTitle>
             <DialogDescription>
-              {language === "en"
-                ? "Unlock all features and support the development of FutureTask"
-                : "Desbloquea todas las funciones y apoya el desarrollo de FutureTask"}
+              Con Premium, desbloquea la lista de deseos, notas ilimitadas y temas exclusivos.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p>
-              {language === "en"
-                ? "Upgrade to Premium to enjoy unlimited tasks, wishlist, notes, premium themes, and more!"
-                : "¡Actualiza a Premium para disfrutar de tareas ilimitadas, lista de deseos, notas, temas premium y mucho más!"}
+              ¿Te gustaría probar Premium para desbloquear todas las funciones y llevar tu productividad al siguiente
+              nivel?
             </p>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button onClick={() => setShowPremiumModal(false)} variant="secondary">
-              {t("continueFreee")}
+            <Button type="button" variant="secondary" onClick={() => setShowPremiumModal(false)}>
+              No, gracias
             </Button>
-            <Button onClick={() => handlePremiumChoice(true)} className="bg-gradient-to-r from-purple-500 to-cyan-500">
-              {t("upgradeButton")}
+            <Button type="submit" onClick={() => handlePremiumChoice(true)}>
+              ¡Sí, quiero Premium!
             </Button>
           </div>
         </DialogContent>
@@ -2700,24 +2798,20 @@ O ve a la configuración del navegador y permite notificaciones para este sitio.
 
       {/* Notification Prompt */}
       <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-md`}>
           <DialogHeader>
             <DialogTitle>{t("notificationPermission")}</DialogTitle>
             <DialogDescription>{t("notificationPermissionDesc")}</DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <p>
-              {language === "en"
-                ? "Enable notifications to receive reminders for your tasks and stay on track with your goals."
-                : "Activa las notificaciones para recibir recordatorios de tus tareas y mantenerte al día con tus objetivos."}
-            </p>
+            <p>{t("enableNotifications")}</p>
           </div>
           <div className="flex justify-end space-x-2">
-            <Button onClick={() => setShowNotificationPrompt(false)} variant="secondary">
+            <Button type="button" variant="secondary" onClick={() => setShowNotificationPrompt(false)}>
               {language === "en" ? "Maybe later" : "Quizás más tarde"}
             </Button>
-            <Button onClick={requestNotificationPermission} className="bg-gradient-to-r from-purple-500 to-cyan-500">
-              {t("enableNotifications")}
+            <Button type="submit" onClick={requestNotificationPermission}>
+              {language === "en" ? "Allow Notifications" : "Permitir Notificaciones"}
             </Button>
           </div>
         </DialogContent>
