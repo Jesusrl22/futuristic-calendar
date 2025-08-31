@@ -626,61 +626,108 @@ export default function FutureTaskApp() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
+  // En el useEffect de notificaciones (línea ~200 aproximadamente), reemplazar todo el bloque con:
+
   // Request notification permission and check status
   useEffect(() => {
-    if ("Notification" in window) {
-      setNotificationPermission(Notification.permission)
+    console.log("Checking notification support and permissions...")
 
-      // Show prompt if permission is default and user is logged in
-      if (Notification.permission === "default" && user && currentScreen === "app") {
+    if (!("Notification" in window)) {
+      console.log("This browser does not support notifications")
+      return
+    }
+
+    console.log("Current permission:", Notification.permission)
+    setNotificationPermission(Notification.permission)
+
+    // Show prompt if permission is default and user is logged in
+    if (user && currentScreen === "app") {
+      console.log("User logged in, checking if should show prompt...")
+
+      if (Notification.permission === "default") {
+        console.log("Permission is default, showing prompt in 3 seconds...")
         const timer = setTimeout(() => {
+          console.log("Showing notification prompt now")
           setShowNotificationPrompt(true)
-        }, 2000) // Show after 2 seconds
+        }, 3000)
 
-        return () => clearTimeout(timer)
+        return () => {
+          console.log("Clearing notification timer")
+          clearTimeout(timer)
+        }
+      } else {
+        console.log("Permission already granted or denied:", Notification.permission)
       }
     } else {
-      console.log("This browser does not support notifications")
+      console.log("User not logged in or not in app screen")
     }
   }, [user, currentScreen])
 
+  // También actualizar la función requestNotificationPermission (línea ~230 aproximadamente):
+
   // Request notification permission function
   const requestNotificationPermission = async () => {
+    console.log("requestNotificationPermission called")
+
     if (!("Notification" in window)) {
+      console.log("Browser doesn't support notifications")
       alert("Este navegador no soporta notificaciones")
       setShowNotificationPrompt(false)
       return
     }
 
     try {
-      console.log("Requesting notification permission...")
-      const permission = await Notification.requestPermission()
-      console.log("Permission result:", permission)
+      console.log("Current permission before request:", Notification.permission)
 
+      // For older browsers, use the callback version
+      let permission
+      if (Notification.requestPermission.length) {
+        permission = await new Promise((resolve) => {
+          Notification.requestPermission(resolve)
+        })
+      } else {
+        permission = await Notification.requestPermission()
+      }
+
+      console.log("Permission result:", permission)
       setNotificationPermission(permission)
       setShowNotificationPrompt(false)
 
       if (permission === "granted") {
         console.log("Permission granted, showing test notification")
-        // Show test notification
-        const notification = new Notification("¡Notificaciones activadas! 🎉", {
-          body: "Ahora recibirás recordatorios de tus tareas",
-          icon: "/favicon-32x32.png",
-          tag: "permission-granted",
-          requireInteraction: false,
-        })
+        try {
+          const notification = new Notification("¡Notificaciones activadas! 🎉", {
+            body: "Ahora recibirás recordatorios de tus tareas",
+            icon: "/favicon-32x32.png",
+            tag: "permission-granted",
+            requireInteraction: false,
+          })
 
-        // Auto close after 5 seconds
-        setTimeout(() => {
-          notification.close()
-        }, 5000)
+          notification.onclick = () => {
+            console.log("Test notification clicked")
+            window.focus()
+            notification.close()
+          }
+
+          // Auto close after 5 seconds
+          setTimeout(() => {
+            notification.close()
+          }, 5000)
+        } catch (notifError) {
+          console.error("Error showing test notification:", notifError)
+        }
       } else if (permission === "denied") {
-        alert("Has denegado las notificaciones. Puedes activarlas desde la configuración del navegador.")
+        console.log("Permission denied")
+        alert(
+          "Has denegado las notificaciones. Puedes activarlas desde la configuración del navegador (icono de candado en la barra de direcciones).",
+        )
+      } else {
+        console.log("Permission default/dismissed")
       }
     } catch (error) {
       console.error("Error requesting notification permission:", error)
       setShowNotificationPrompt(false)
-      alert("Error al solicitar permisos de notificación")
+      alert("Error al solicitar permisos de notificación: " + error.message)
     }
   }
 
@@ -1700,6 +1747,46 @@ export default function FutureTaskApp() {
                     )}
                   </CardContent>
                 </Card>
+              </div>
+            )}
+
+            {/* Manual notification test button - agregar después del indicador de notificaciones */}
+            {user && (
+              <div className="px-4 pb-2">
+                <Button
+                  onClick={() => {
+                    console.log("Manual notification test button clicked")
+                    if (Notification.permission === "default") {
+                      console.log("Showing notification prompt manually")
+                      setShowNotificationPrompt(true)
+                    } else if (Notification.permission === "granted") {
+                      console.log("Testing notification manually")
+                      try {
+                        const notification = new Notification("🧪 Notificación de prueba", {
+                          body: "¡Las notificaciones están funcionando correctamente!",
+                          icon: "/favicon-32x32.png",
+                          tag: "manual-test",
+                        })
+                        setTimeout(() => notification.close(), 5000)
+                      } catch (error) {
+                        console.error("Error showing manual test notification:", error)
+                        alert("Error mostrando notificación: " + error.message)
+                      }
+                    } else {
+                      alert("Las notificaciones están bloqueadas. Actívalas desde la configuración del navegador.")
+                    }
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full border-blue-500/30 text-blue-300 bg-transparent text-xs"
+                >
+                  <Bell className="w-3 h-3 mr-1" />
+                  {Notification.permission === "default"
+                    ? "Activar notificaciones"
+                    : Notification.permission === "granted"
+                      ? "Probar notificación"
+                      : "Notificaciones bloqueadas"}
+                </Button>
               </div>
             )}
 
