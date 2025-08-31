@@ -635,33 +635,52 @@ export default function FutureTaskApp() {
       if (Notification.permission === "default" && user && currentScreen === "app") {
         const timer = setTimeout(() => {
           setShowNotificationPrompt(true)
-        }, 3000) // Show after 3 seconds
+        }, 2000) // Show after 2 seconds
 
         return () => clearTimeout(timer)
       }
+    } else {
+      console.log("This browser does not support notifications")
     }
   }, [user, currentScreen])
 
   // Request notification permission function
   const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      try {
-        const permission = await Notification.requestPermission()
-        setNotificationPermission(permission)
-        setShowNotificationPrompt(false)
+    if (!("Notification" in window)) {
+      alert("Este navegador no soporta notificaciones")
+      setShowNotificationPrompt(false)
+      return
+    }
 
-        if (permission === "granted") {
-          // Show test notification
-          new Notification("¡Notificaciones activadas!", {
-            body: "Ahora recibirás recordatorios de tus tareas",
-            icon: "/favicon-32x32.png",
-            tag: "permission-granted",
-          })
-        }
-      } catch (error) {
-        console.error("Error requesting notification permission:", error)
-        setShowNotificationPrompt(false)
+    try {
+      console.log("Requesting notification permission...")
+      const permission = await Notification.requestPermission()
+      console.log("Permission result:", permission)
+
+      setNotificationPermission(permission)
+      setShowNotificationPrompt(false)
+
+      if (permission === "granted") {
+        console.log("Permission granted, showing test notification")
+        // Show test notification
+        const notification = new Notification("¡Notificaciones activadas! 🎉", {
+          body: "Ahora recibirás recordatorios de tus tareas",
+          icon: "/favicon-32x32.png",
+          tag: "permission-granted",
+          requireInteraction: false,
+        })
+
+        // Auto close after 5 seconds
+        setTimeout(() => {
+          notification.close()
+        }, 5000)
+      } else if (permission === "denied") {
+        alert("Has denegado las notificaciones. Puedes activarlas desde la configuración del navegador.")
       }
+    } catch (error) {
+      console.error("Error requesting notification permission:", error)
+      setShowNotificationPrompt(false)
+      alert("Error al solicitar permisos de notificación")
     }
   }
 
@@ -732,37 +751,53 @@ export default function FutureTaskApp() {
 
   // Check for task notifications
   useEffect(() => {
+    if (!user || !("Notification" in window)) return
+
     const checkNotifications = () => {
-      if (!user || notificationPermission !== "granted") return
+      console.log("Checking notifications, permission:", notificationPermission)
+
+      if (notificationPermission !== "granted") {
+        console.log("Notifications not granted")
+        return
+      }
 
       const now = new Date()
       const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
       const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
 
+      console.log("Current time:", currentTime, "Today:", today)
+
       tasks.forEach((task) => {
         if (!task.completed && task.date === today && task.time === currentTime && task.notificationEnabled) {
+          console.log("Showing notification for task:", task.text)
           try {
-            new Notification(t("taskReminder"), {
-              body: `⏰ ${task.text}`,
+            const notification = new Notification(`⏰ ${t("taskReminder")}`, {
+              body: task.text,
               icon: "/favicon-32x32.png",
               tag: task.id,
               requireInteraction: true,
-              actions: [
-                {
-                  action: "complete",
-                  title: "Marcar como completada",
-                },
-              ],
+              silent: false,
             })
+
+            notification.onclick = () => {
+              window.focus()
+              notification.close()
+            }
+
+            // Auto close after 10 seconds
+            setTimeout(() => {
+              notification.close()
+            }, 10000)
           } catch (error) {
-            console.error("Error showing notification:", error)
+            console.error("Error showing task notification:", error)
           }
         }
       })
     }
 
-    const interval = setInterval(checkNotifications, 60000) // Check every minute
-    checkNotifications() // Check immediately
+    // Check immediately and then every minute
+    checkNotifications()
+    const interval = setInterval(checkNotifications, 60000)
     return () => clearInterval(interval)
   }, [tasks, user, t, notificationPermission])
 
@@ -777,16 +812,31 @@ export default function FutureTaskApp() {
       setPomodoroActive(false)
 
       // Show notification when pomodoro ends
-      if (notificationPermission === "granted") {
+      if (notificationPermission === "granted" && "Notification" in window) {
         try {
-          new Notification(pomodoroType === "work" ? "¡Tiempo de descanso!" : "¡Volvamos al trabajo!", {
-            body:
-              pomodoroType === "work"
-                ? "Has completado una sesión de trabajo. Tómate un descanso."
-                : "El descanso ha terminado. Es hora de una nueva sesión.",
+          const title = pomodoroType === "work" ? "¡Tiempo de descanso! ☕" : "¡Volvamos al trabajo! 💪"
+          const body =
+            pomodoroType === "work"
+              ? "Has completado una sesión de trabajo. Tómate un descanso."
+              : "El descanso ha terminado. Es hora de una nueva sesión."
+
+          const notification = new Notification(title, {
+            body: body,
             icon: "/favicon-32x32.png",
             tag: "pomodoro-complete",
+            requireInteraction: true,
+            silent: false,
           })
+
+          notification.onclick = () => {
+            window.focus()
+            notification.close()
+          }
+
+          // Auto close after 10 seconds
+          setTimeout(() => {
+            notification.close()
+          }, 10000)
         } catch (error) {
           console.error("Error showing pomodoro notification:", error)
         }
@@ -1606,6 +1656,52 @@ export default function FutureTaskApp() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Notification Status Indicator - agregar después de los stats cards */}
+            {user && (
+              <div className="px-4 pb-2">
+                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Bell
+                          className={`w-4 h-4 ${notificationPermission === "granted" ? "text-green-400" : "text-gray-400"}`}
+                        />
+                        <span className={`text-xs ${getCurrentTheme().textSecondary}`}>Notificaciones</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            notificationPermission === "granted"
+                              ? "bg-green-400"
+                              : notificationPermission === "denied"
+                                ? "bg-red-400"
+                                : "bg-yellow-400"
+                          }`}
+                        />
+                        <span className={`text-xs ${getCurrentTheme().textPrimary}`}>
+                          {notificationPermission === "granted"
+                            ? "Activas"
+                            : notificationPermission === "denied"
+                              ? "Denegadas"
+                              : "Pendientes"}
+                        </span>
+                      </div>
+                    </div>
+                    {notificationPermission !== "granted" && (
+                      <Button
+                        onClick={() => setShowNotificationPrompt(true)}
+                        size="sm"
+                        variant="outline"
+                        className="w-full mt-2 border-purple-500/30 text-purple-300 bg-transparent text-xs"
+                      >
+                        Activar notificaciones
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Navigation */}
             <div className="p-4">
@@ -2427,6 +2523,28 @@ export default function FutureTaskApp() {
                       Ahora no
                     </Button>
                   </div>
+                  {/* Test notification button */}
+                  {notificationPermission === "granted" && (
+                    <Button
+                      onClick={() => {
+                        try {
+                          const notification = new Notification("🧪 Notificación de prueba", {
+                            body: "¡Las notificaciones están funcionando correctamente!",
+                            icon: "/favicon-32x32.png",
+                            tag: "test-notification",
+                          })
+                          setTimeout(() => notification.close(), 5000)
+                        } catch (error) {
+                          console.error("Error showing test notification:", error)
+                        }
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="border-green-600 text-green-300 text-xs mt-2 w-full"
+                    >
+                      Probar notificación
+                    </Button>
+                  )}
                 </div>
                 <Button
                   onClick={() => setShowNotificationPrompt(false)}
