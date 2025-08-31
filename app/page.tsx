@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -41,6 +40,10 @@ import {
   Edit,
   Check,
   X,
+  Bell,
+  Clock,
+  Menu,
+  Search,
 } from "lucide-react"
 
 // Types
@@ -50,9 +53,11 @@ interface Task {
   description?: string
   completed: boolean
   date: string
+  time?: string
   category: "work" | "personal" | "health" | "learning" | "other"
   priority: "low" | "medium" | "high"
   completedAt?: string
+  notificationEnabled?: boolean
 }
 
 interface User {
@@ -93,6 +98,7 @@ const translations = {
     pomodoro: "Pomodoro",
     newTask: "Nueva tarea...",
     description: "Descripción (opcional)...",
+    time: "Hora (opcional)",
     completedToday: "Completadas Hoy",
     totalToday: "Total Hoy",
     streak: "Racha",
@@ -126,6 +132,8 @@ const translations = {
     billingMonthly: "Facturación mensual",
     billingYearly: "Facturación anual (2 meses gratis)",
     upgradeButton: "Actualizar a Premium",
+    notification: "Notificación",
+    taskReminder: "Recordatorio de tarea",
   },
   en: {
     appName: "FutureTask",
@@ -143,6 +151,7 @@ const translations = {
     pomodoro: "Pomodoro",
     newTask: "New task...",
     description: "Description (optional)...",
+    time: "Time (optional)",
     completedToday: "Completed Today",
     totalToday: "Total Today",
     streak: "Streak",
@@ -176,6 +185,8 @@ const translations = {
     billingMonthly: "Monthly billing",
     billingYearly: "Yearly billing (2 months free)",
     upgradeButton: "Upgrade to Premium",
+    notification: "Notification",
+    taskReminder: "Task reminder",
   },
   fr: {
     appName: "FutureTask",
@@ -193,6 +204,7 @@ const translations = {
     pomodoro: "Pomodoro",
     newTask: "Nouvelle tâche...",
     description: "Description (optionnelle)...",
+    time: "Heure (optionnelle)",
     completedToday: "Terminées aujourd'hui",
     totalToday: "Total aujourd'hui",
     streak: "Série",
@@ -226,6 +238,8 @@ const translations = {
     billingMonthly: "Facturation mensuelle",
     billingYearly: "Facturation annuelle (2 mois gratuits)",
     upgradeButton: "Passer à Premium",
+    notification: "Notification",
+    taskReminder: "Rappel de tâche",
   },
   de: {
     appName: "FutureTask",
@@ -243,6 +257,7 @@ const translations = {
     pomodoro: "Pomodoro",
     newTask: "Neue Aufgabe...",
     description: "Beschreibung (optional)...",
+    time: "Zeit (optional)",
     completedToday: "Heute erledigt",
     totalToday: "Gesamt heute",
     streak: "Serie",
@@ -276,6 +291,8 @@ const translations = {
     billingMonthly: "Monatliche Abrechnung",
     billingYearly: "Jährliche Abrechnung (2 Monate kostenlos)",
     upgradeButton: "Auf Premium upgraden",
+    notification: "Benachrichtigung",
+    taskReminder: "Aufgabenerinnerung",
   },
   it: {
     appName: "FutureTask",
@@ -293,6 +310,7 @@ const translations = {
     pomodoro: "Pomodoro",
     newTask: "Nuova attività...",
     description: "Descrizione (opzionale)...",
+    time: "Ora (opzionale)",
     completedToday: "Completate oggi",
     totalToday: "Totale oggi",
     streak: "Serie",
@@ -326,6 +344,8 @@ const translations = {
     billingMonthly: "Fatturazione mensile",
     billingYearly: "Fatturazione annuale (2 mesi gratis)",
     upgradeButton: "Passa a Premium",
+    notification: "Notifica",
+    taskReminder: "Promemoria attività",
   },
 }
 
@@ -504,6 +524,8 @@ export default function FutureTaskApp() {
   const [language, setLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "auth" | "premium" | "app">("welcome")
   const [isInitialized, setIsInitialized] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // App state
   const [tasks, setTasks] = useState<Task[]>([])
@@ -514,6 +536,7 @@ export default function FutureTaskApp() {
   // Task form state
   const [newTask, setNewTask] = useState("")
   const [newTaskDescription, setNewTaskDescription] = useState("")
+  const [newTaskTime, setNewTaskTime] = useState("")
   const [newTaskCategory, setNewTaskCategory] = useState<Task["category"]>("personal")
   const [newTaskPriority, setNewTaskPriority] = useState<Task["priority"]>("medium")
 
@@ -521,6 +544,7 @@ export default function FutureTaskApp() {
   const [editingTask, setEditingTask] = useState<string | null>(null)
   const [editTaskText, setEditTaskText] = useState("")
   const [editTaskDescription, setEditTaskDescription] = useState("")
+  const [editTaskTime, setEditTaskTime] = useState("")
   const [editTaskCategory, setEditTaskCategory] = useState<Task["category"]>("personal")
   const [editTaskPriority, setEditTaskPriority] = useState<Task["priority"]>("medium")
 
@@ -559,6 +583,24 @@ export default function FutureTaskApp() {
     [language],
   )
 
+  // Check if mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
+  // Request notification permission
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
+    }
+  }, [])
+
   // Initialize app - runs only once
   useEffect(() => {
     if (isInitialized) return
@@ -596,6 +638,30 @@ export default function FutureTaskApp() {
       localStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(tasks))
     }
   }, [tasks, user])
+
+  // Check for task notifications
+  useEffect(() => {
+    const checkNotifications = () => {
+      if (!user || Notification.permission !== "granted") return
+
+      const now = new Date()
+      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+
+      tasks.forEach((task) => {
+        if (!task.completed && task.date === today && task.time === currentTime && task.notificationEnabled) {
+          new Notification(t("taskReminder"), {
+            body: task.text,
+            icon: "/favicon-32x32.png",
+            tag: task.id,
+          })
+        }
+      })
+    }
+
+    const interval = setInterval(checkNotifications, 60000) // Check every minute
+    return () => clearInterval(interval)
+  }, [tasks, user, t])
 
   // Pomodoro timer
   useEffect(() => {
@@ -651,6 +717,7 @@ export default function FutureTaskApp() {
     setSearchTerm("")
     setShowGlobalSearch(false)
     setActiveTab("tasks")
+    if (isMobile) setSidebarOpen(false)
   }
 
   // Modificar el handleSearch para mostrar/ocultar resultados:
@@ -679,9 +746,15 @@ export default function FutureTaskApp() {
       filtered = filtered.filter((task) => task.priority === priorityFilter)
     }
 
-    // NO incluir searchTerm aquí ya que es global
-
-    return filtered
+    // Sort by time if available
+    return filtered.sort((a, b) => {
+      if (a.time && b.time) {
+        return a.time.localeCompare(b.time)
+      }
+      if (a.time && !b.time) return -1
+      if (!a.time && b.time) return 1
+      return 0
+    })
   }
 
   const getCompletedTasks = () => getFilteredTasks().filter((task) => task.completed)
@@ -730,15 +803,18 @@ export default function FutureTaskApp() {
       id: `${user.id}_${Date.now()}`,
       text: newTask,
       description: newTaskDescription,
+      time: newTaskTime,
       completed: false,
       date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
       category: newTaskCategory,
       priority: newTaskPriority,
+      notificationEnabled: !!newTaskTime,
     }
 
     setTasks((prev) => [...prev, task])
     setNewTask("")
     setNewTaskDescription("")
+    setNewTaskTime("")
   }
 
   const toggleTask = (taskId: string) => {
@@ -763,6 +839,7 @@ export default function FutureTaskApp() {
     setEditingTask(task.id)
     setEditTaskText(task.text)
     setEditTaskDescription(task.description || "")
+    setEditTaskTime(task.time || "")
     setEditTaskCategory(task.category)
     setEditTaskPriority(task.priority)
   }
@@ -777,8 +854,10 @@ export default function FutureTaskApp() {
               ...task,
               text: editTaskText,
               description: editTaskDescription,
+              time: editTaskTime,
               category: editTaskCategory,
               priority: editTaskPriority,
+              notificationEnabled: !!editTaskTime,
             }
           : task,
       ),
@@ -787,12 +866,14 @@ export default function FutureTaskApp() {
     setEditingTask(null)
     setEditTaskText("")
     setEditTaskDescription("")
+    setEditTaskTime("")
   }
 
   const cancelEditTask = () => {
     setEditingTask(null)
     setEditTaskText("")
     setEditTaskDescription("")
+    setEditTaskTime("")
   }
 
   const handleTabChange = (value: string) => {
@@ -801,6 +882,7 @@ export default function FutureTaskApp() {
       return
     }
     setActiveTab(value)
+    if (isMobile) setSidebarOpen(false)
   }
 
   const openProfileModal = () => {
@@ -982,7 +1064,7 @@ export default function FutureTaskApp() {
       >
         <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {t("choosePlan")}
             </CardTitle>
           </CardHeader>
@@ -993,7 +1075,7 @@ export default function FutureTaskApp() {
                 <Button
                   onClick={() => setBillingType("monthly")}
                   variant={billingType === "monthly" ? "default" : "ghost"}
-                  className={`px-6 py-2 ${
+                  className={`px-4 md:px-6 py-2 text-sm md:text-base ${
                     billingType === "monthly"
                       ? "bg-gradient-to-r from-purple-500 to-cyan-500"
                       : "text-gray-300 hover:text-white"
@@ -1004,7 +1086,7 @@ export default function FutureTaskApp() {
                 <Button
                   onClick={() => setBillingType("yearly")}
                   variant={billingType === "yearly" ? "default" : "ghost"}
-                  className={`px-6 py-2 relative ${
+                  className={`px-4 md:px-6 py-2 text-sm md:text-base relative ${
                     billingType === "yearly"
                       ? "bg-gradient-to-r from-purple-500 to-cyan-500"
                       : "text-gray-300 hover:text-white"
@@ -1018,13 +1100,13 @@ export default function FutureTaskApp() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <Card className="bg-gray-800/50 border-gray-700">
                 <CardHeader>
-                  <CardTitle className={`text-xl ${getCurrentTheme().textPrimary}`}>{t("free")}</CardTitle>
-                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
+                  <CardTitle className={`text-lg md:text-xl ${getCurrentTheme().textPrimary}`}>{t("free")}</CardTitle>
+                  <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
                     {language === "en" ? "$0" : "€0"}
-                    <span className="text-lg font-normal text-gray-400">
+                    <span className="text-sm md:text-lg font-normal text-gray-400">
                       {billingType === "monthly"
                         ? language === "en"
                           ? "/month"
@@ -1038,24 +1120,24 @@ export default function FutureTaskApp() {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Hasta 10 tareas</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Hasta 10 tareas</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Calendario básico</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Calendario básico</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <X className="w-5 h-5 text-red-500" />
-                      <span className={getCurrentTheme().textMuted}>Lista de deseos</span>
+                      <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Lista de deseos</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <X className="w-5 h-5 text-red-500" />
-                      <span className={getCurrentTheme().textMuted}>Notas</span>
+                      <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Notas</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <X className="w-5 h-5 text-red-500" />
-                      <span className={getCurrentTheme().textMuted}>Temas premium</span>
+                      <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Temas premium</span>
                     </div>
                   </div>
                   <Button onClick={() => handlePremiumChoice(false)} variant="outline" className="w-full">
@@ -1073,20 +1155,26 @@ export default function FutureTaskApp() {
                   </div>
                 )}
                 <CardHeader>
-                  <CardTitle className={`text-xl ${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
-                    <Crown className="w-5 h-5 text-yellow-400" />
+                  <CardTitle
+                    className={`text-lg md:text-xl ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
+                  >
+                    <Crown className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
                     <span>{t("premium")}</span>
                   </CardTitle>
-                  <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
+                  <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
                     {billingType === "monthly" ? (
                       <>
                         {getPricing().monthly.price}
-                        <span className="text-lg font-normal text-gray-400">{getPricing().monthly.period}</span>
+                        <span className="text-sm md:text-lg font-normal text-gray-400">
+                          {getPricing().monthly.period}
+                        </span>
                       </>
                     ) : (
                       <>
                         {getPricing().yearly.price}
-                        <span className="text-lg font-normal text-gray-400">{getPricing().yearly.period}</span>
+                        <span className="text-sm md:text-lg font-normal text-gray-400">
+                          {getPricing().yearly.period}
+                        </span>
                       </>
                     )}
                   </div>
@@ -1099,40 +1187,44 @@ export default function FutureTaskApp() {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Tareas ilimitadas</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Tareas ilimitadas</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Lista de deseos</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Lista de deseos</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Notas ilimitadas</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Notas ilimitadas</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Todos los temas premium</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        Todos los temas premium
+                      </span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Soporte prioritario</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Notificaciones</span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500" />
-                      <span className={getCurrentTheme().textPrimary}>Estadísticas avanzadas</span>
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        Soporte prioritario
+                      </span>
                     </div>
                   </div>
                   <Button
                     onClick={() => handlePremiumChoice(true)}
-                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-lg py-3"
+                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-sm md:text-lg py-2 md:py-3"
                   >
-                    <Crown className="w-5 h-5 mr-2" />
+                    <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     {t("startPremium")} -{" "}
                     {billingType === "monthly" ? getPricing().monthly.full : getPricing().yearly.full}
                   </Button>
                   {billingType === "yearly" && (
-                    <p className={`text-center text-sm ${getCurrentTheme().textMuted}`}>
+                    <p className={`text-center text-xs md:text-sm ${getCurrentTheme().textMuted}`}>
                       💰 {getPricing().yearly.discount} • {language === "en" ? "Best value!" : "¡Mejor precio!"}
                     </p>
                   )}
@@ -1149,97 +1241,70 @@ export default function FutureTaskApp() {
   if (!user) return null
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} p-4`}>
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-              <img src="/logo.png" alt="FutureTask" className="w-8 h-8 rounded-full" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  {t("appName")}
-                </h1>
-                {user.isPremium && (
-                  <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white">Premium</Badge>
+    <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient}`}>
+      <div className="flex h-screen">
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="fixed top-4 left-4 z-50 bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+            size="sm"
+          >
+            <Menu className="w-4 h-4" />
+          </Button>
+        )}
+
+        {/* Sidebar */}
+        <div
+          className={`${isMobile ? "fixed inset-y-0 left-0 z-40" : "relative"} ${isMobile && !sidebarOpen ? "-translate-x-full" : "translate-x-0"} transition-transform duration-300 ease-in-out`}
+        >
+          <div
+            className={`${isMobile ? "w-80" : "w-80 xl:w-96"} h-full ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border} border-r overflow-y-auto`}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-purple-500/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                    <img src="/logo.png" alt="FutureTask" className="w-6 h-6 rounded-full" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                        {t("appName")}
+                      </h1>
+                      {user.isPremium && (
+                        <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs">
+                          Premium
+                        </Badge>
+                      )}
+                    </div>
+                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>Hola, {user.name}</p>
+                  </div>
+                </div>
+                {isMobile && (
+                  <Button
+                    onClick={() => setSidebarOpen(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 )}
               </div>
-              <p className={getCurrentTheme().textSecondary}>Bienvenido, {user.name}</p>
             </div>
-          </div>
 
-          <div className="flex items-center space-x-2">
-            {!user.isPremium && (
-              <Button
-                onClick={() => setShowPremiumModal(true)}
-                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                Upgrade Premium
-              </Button>
-            )}
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="border-purple-500/30 text-purple-300 bg-transparent">
-                  <Trophy className="w-4 h-4 mr-2" />
-                  {t("achievements")} ({achievements.filter((a) => a.unlocked).length})
-                </Button>
-              </DialogTrigger>
-              <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
-                <DialogHeader>
-                  <DialogTitle>Tus {t("achievements")}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-2">
-                  {achievements.map((achievement) => (
-                    <div
-                      key={achievement.id}
-                      className={`flex items-center space-x-3 p-3 rounded-lg ${
-                        achievement.unlocked ? "bg-purple-500/20" : "bg-gray-800/30"
-                      }`}
-                    >
-                      <div className={`p-2 rounded-full ${achievement.unlocked ? "bg-purple-500" : "bg-gray-700"}`}>
-                        {achievement.icon}
-                      </div>
-                      <div>
-                        <span className="font-semibold">{achievement.name}</span>
-                        <p className="text-sm text-gray-300">{achievement.description}</p>
-                      </div>
-                      {achievement.unlocked && <Badge className="bg-green-500">Desbloqueado</Badge>}
-                    </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-
-            <Button
-              onClick={openProfileModal}
-              variant="outline"
-              className="border-purple-500/30 text-purple-300 bg-transparent"
-            >
-              {t("profile")}
-            </Button>
-          </div>
-        </div>
-
-        {/* Global Search Bar */}
-        <div className="relative">
-          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-purple-500/20 rounded-full flex items-center justify-center">
-                  <span className="text-purple-400 text-lg">🔍</span>
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={searchTerm}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Buscar tareas en todos los días..."
-                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder} focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 text-lg`}
-                  />
-                </div>
+            {/* Global Search */}
+            <div className="p-4 relative">
+              <div className="flex items-center space-x-2">
+                <Search className="w-4 h-4 text-purple-400" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Buscar tareas..."
+                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder} focus:border-purple-400 text-sm`}
+                />
                 {searchTerm && (
                   <Button
                     onClick={() => {
@@ -1254,711 +1319,846 @@ export default function FutureTaskApp() {
                   </Button>
                 )}
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Global Search Results */}
-          {showGlobalSearch && (
-            <Card className="absolute top-full left-0 right-0 z-50 mt-2 bg-black/90 backdrop-blur-xl border-purple-500/30 shadow-2xl">
-              <CardContent className="p-4">
-                <div className="space-y-2 max-h-80 overflow-y-auto">
-                  {getGlobalSearchResults().length > 0 ? (
-                    <>
-                      <h4 className={`text-sm font-semibold ${getCurrentTheme().textAccent} mb-3`}>
-                        📋 Resultados encontrados ({getGlobalSearchResults().length})
-                      </h4>
-                      {getGlobalSearchResults().map((task) => (
-                        <div
-                          key={task.id}
-                          onClick={() => navigateToTaskDate(task.date)}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all hover:bg-purple-500/10 ${
-                            task.completed
-                              ? "bg-green-900/20 border-green-500/30 opacity-70"
-                              : "bg-black/30 border-purple-500/30"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span
-                                  className={`font-semibold ${task.completed ? `line-through ${getCurrentTheme().textMuted}` : getCurrentTheme().textPrimary}`}
-                                >
-                                  {task.text}
-                                </span>
-                                {task.completed && (
-                                  <Badge className="bg-green-500/20 text-green-300 text-xs">✓ Completada</Badge>
-                                )}
-                              </div>
-                              {task.description && (
-                                <p
-                                  className={`text-sm mb-2 ${task.completed ? getCurrentTheme().textMuted : getCurrentTheme().textSecondary}`}
-                                >
-                                  {task.description}
-                                </p>
+              {/* Search Results */}
+              {showGlobalSearch && (
+                <Card className="absolute top-full left-4 right-4 z-50 mt-2 bg-black/90 backdrop-blur-xl border-purple-500/30 shadow-2xl max-h-60 overflow-y-auto">
+                  <CardContent className="p-3">
+                    {getGlobalSearchResults().length > 0 ? (
+                      <>
+                        <h4 className={`text-xs font-semibold ${getCurrentTheme().textAccent} mb-2`}>
+                          📋 Resultados ({getGlobalSearchResults().length})
+                        </h4>
+                        {getGlobalSearchResults().map((task) => (
+                          <div
+                            key={task.id}
+                            onClick={() => navigateToTaskDate(task.date)}
+                            className={`p-2 rounded-lg border cursor-pointer transition-all hover:bg-purple-500/10 mb-2 ${
+                              task.completed
+                                ? "bg-green-900/20 border-green-500/30 opacity-70"
+                                : "bg-black/30 border-purple-500/30"
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span
+                                className={`text-sm font-semibold ${task.completed ? `line-through ${getCurrentTheme().textMuted}` : getCurrentTheme().textPrimary}`}
+                              >
+                                {task.text}
+                              </span>
+                              {task.completed && <Badge className="bg-green-500/20 text-green-300 text-xs">✓</Badge>}
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Badge className="bg-blue-500/20 text-blue-300 text-xs">
+                                📅{" "}
+                                {new Date(task.date).toLocaleDateString("es-ES", {
+                                  day: "numeric",
+                                  month: "short",
+                                })}
+                              </Badge>
+                              {task.time && (
+                                <Badge className="bg-purple-500/20 text-purple-300 text-xs">🕐 {task.time}</Badge>
                               )}
-                              <div className="flex items-center space-x-2">
-                                <Badge className="bg-blue-500/20 text-blue-300 text-xs">
-                                  📅{" "}
-                                  {new Date(task.date).toLocaleDateString("es-ES", {
-                                    weekday: "short",
-                                    day: "numeric",
-                                    month: "short",
-                                  })}
-                                </Badge>
-                                <Badge className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
-                                  {t(task.category)}
-                                </Badge>
-                                <Badge className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
-                                  {t(task.priority)}
-                                </Badge>
-                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    <div className="text-center py-6">
-                      <div className="w-12 h-12 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <span className="text-gray-400 text-xl">🔍</span>
-                      </div>
-                      <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No se encontraron tareas</p>
-                      <p className={`${getCurrentTheme().textMuted} text-sm`}>Intenta con otro término de búsqueda</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-5 h-5 text-green-400" />
-                <div>
-                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
-                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getCompletedTasks().length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-blue-400" />
-                <div>
-                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
-                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getTodayTasks().length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Flame className="w-5 h-5 text-orange-400" />
-                <div>
-                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("streak")}</p>
-                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>0 días</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <Star className="w-5 h-5 text-purple-400" />
-                <div>
-                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</p>
-                  <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
-                    {Math.round(getTodayProgress())}%
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Calendar */}
-          <Card className={`lg:col-span-2 ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardHeader>
-              <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
-                <CalendarIcon className="w-5 h-5" />
-                <span>{t("calendar")}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                className="rounded-md border-0"
-              />
-            </CardContent>
-          </Card>
-
-          {/* Tabs Content */}
-          <Card className={`lg:col-span-2 ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-            <CardContent className="p-0">
-              <Tabs value={activeTab} onValueChange={handleTabChange}>
-                <TabsList className="grid w-full grid-cols-4 bg-purple-900/20">
-                  <TabsTrigger value="tasks" className="data-[state=active]:bg-purple-500/30">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {t("tasks")}
-                  </TabsTrigger>
-                  <TabsTrigger value="pomodoro" className="data-[state=active]:bg-purple-500/30">
-                    <Timer className="w-4 h-4 mr-2" />
-                    {t("pomodoro")}
-                  </TabsTrigger>
-                  <TabsTrigger value="wishlist" className="data-[state=active]:bg-purple-500/30">
-                    <Heart className="w-4 h-4 mr-2" />
-                    {t("wishlist")}
-                  </TabsTrigger>
-                  <TabsTrigger value="notes" className="data-[state=active]:bg-purple-500/30">
-                    <StickyNote className="w-4 h-4 mr-2" />
-                    {t("notes")}
-                  </TabsTrigger>
-                </TabsList>
-
-                {/* Tasks Tab */}
-                <TabsContent value="tasks" className="p-6 space-y-4">
-                  <div className="space-y-2">
-                    <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>
-                      {t("tasks")} -{" "}
-                      {selectedDate.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
-                    </h3>
-                    <Progress value={getTodayProgress()} className="h-2" />
-                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                      {getCompletedTasks().length} de {getTodayTasks().length} completadas
-                    </p>
-                  </div>
-
-                  {/* Filters - Now without search */}
-                  <div className="space-y-3 p-4 bg-black/20 rounded-lg border border-purple-500/20">
-                    <h4 className={`text-sm font-semibold ${getCurrentTheme().textPrimary}`}>⚙️ Filtros avanzados</h4>
-
-                    {/* Filter buttons - Remove the search input from here */}
-                    <div className="flex flex-wrap gap-2">
-                      <Select value={taskFilter} onValueChange={(value) => setTaskFilter(value as any)}>
-                        <SelectTrigger
-                          className={`w-32 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                            Todas
-                          </SelectItem>
-                          <SelectItem value="pending" className={getCurrentTheme().textPrimary}>
-                            Pendientes
-                          </SelectItem>
-                          <SelectItem value="completed" className={getCurrentTheme().textPrimary}>
-                            Completadas
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as any)}>
-                        <SelectTrigger
-                          className={`w-32 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                            Todas
-                          </SelectItem>
-                          <SelectItem value="work" className={getCurrentTheme().textPrimary}>
-                            {t("work")}
-                          </SelectItem>
-                          <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
-                            {t("personal")}
-                          </SelectItem>
-                          <SelectItem value="health" className={getCurrentTheme().textPrimary}>
-                            {t("health")}
-                          </SelectItem>
-                          <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
-                            {t("learning")}
-                          </SelectItem>
-                          <SelectItem value="other" className={getCurrentTheme().textPrimary}>
-                            {t("other")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as any)}>
-                        <SelectTrigger
-                          className={`w-32 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                            Todas
-                          </SelectItem>
-                          <SelectItem value="high" className={getCurrentTheme().textPrimary}>
-                            {t("high")}
-                          </SelectItem>
-                          <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
-                            {t("medium")}
-                          </SelectItem>
-                          <SelectItem value="low" className={getCurrentTheme().textPrimary}>
-                            {t("low")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Button
-                        onClick={() => {
-                          setTaskFilter("all")
-                          setCategoryFilter("all")
-                          setPriorityFilter("all")
-                          // NO limpiar searchTerm aquí
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
-                      >
-                        🗑️ Limpiar
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Add Task Form */}
-                  <div className="space-y-3">
-                    <Input
-                      value={newTask}
-                      onChange={(e) => setNewTask(e.target.value)}
-                      placeholder={t("newTask")}
-                      className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                      onKeyPress={(e) => e.key === "Enter" && addTask()}
-                    />
-
-                    <Textarea
-                      value={newTaskDescription}
-                      onChange={(e) => setNewTaskDescription(e.target.value)}
-                      placeholder={t("description")}
-                      className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px] ${getCurrentTheme().placeholder}`}
-                    />
-
-                    <div className="flex space-x-2">
-                      <Select
-                        value={newTaskCategory}
-                        onValueChange={(value) => setNewTaskCategory(value as Task["category"])}
-                      >
-                        <SelectTrigger
-                          className={`flex-1 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="work" className={getCurrentTheme().textPrimary}>
-                            {t("work")}
-                          </SelectItem>
-                          <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
-                            {t("personal")}
-                          </SelectItem>
-                          <SelectItem value="health" className={getCurrentTheme().textPrimary}>
-                            {t("health")}
-                          </SelectItem>
-                          <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
-                            {t("learning")}
-                          </SelectItem>
-                          <SelectItem value="other" className={getCurrentTheme().textPrimary}>
-                            {t("other")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Select
-                        value={newTaskPriority}
-                        onValueChange={(value) => setNewTaskPriority(value as Task["priority"])}
-                      >
-                        <SelectTrigger
-                          className={`flex-1 bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-purple-500/30">
-                          <SelectItem value="high" className={getCurrentTheme().textPrimary}>
-                            {t("high")}
-                          </SelectItem>
-                          <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
-                            {t("medium")}
-                          </SelectItem>
-                          <SelectItem value="low" className={getCurrentTheme().textPrimary}>
-                            {t("low")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Button onClick={addTask} className="bg-gradient-to-r from-purple-500 to-cyan-500">
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Tasks List */}
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {getFilteredTasks().map((task) => (
-                      <div
-                        key={task.id}
-                        className={`flex items-start justify-between p-3 rounded-lg border transition-all ${
-                          task.completed
-                            ? "bg-green-900/20 border-green-500/30 line-through opacity-60"
-                            : "bg-black/30 border-purple-500/30"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-3 flex-1">
-                          <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={() => toggleTask(task.id)}
-                            className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:border-green-400 border-2 border-purple-500/30 rounded-md transition-all duration-200 hover:border-purple-400"
-                          />
-                          <div className="flex-1">
-                            {editingTask === task.id ? (
-                              <div className="space-y-2">
-                                <Input
-                                  value={editTaskText}
-                                  onChange={(e) => setEditTaskText(e.target.value)}
-                                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                                />
-                                <Textarea
-                                  value={editTaskDescription}
-                                  onChange={(e) => setEditTaskDescription(e.target.value)}
-                                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px]`}
-                                />
-                                <div className="flex space-x-2">
-                                  <Button onClick={saveEditTask} size="sm" className="bg-green-500">
-                                    Guardar
-                                  </Button>
-                                  <Button onClick={cancelEditTask} size="sm" variant="outline">
-                                    Cancelar
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="space-y-1">
-                                <div className="flex items-center space-x-2">
-                                  <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>{task.text}</span>
-                                  <Badge className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
-                                    {t(task.priority)}
-                                  </Badge>
-                                </div>
-                                {task.description && (
-                                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{task.description}</p>
-                                )}
-                                <Badge className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
-                                  {t(task.category)}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex space-x-1">
-                          {!task.completed && editingTask !== task.id && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => startEditTask(task)}
-                              className="text-blue-300 hover:bg-blue-500/20"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteTask(task.id)}
-                            className="text-red-300 hover:bg-red-500/20"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {getFilteredTasks().length === 0 && getTodayTasks().length > 0 && (
-                      <div className="p-4 rounded-lg border border-purple-500/30 text-center">
-                        <p className={`${getCurrentTheme().textPrimary} font-semibold`}>
-                          No hay tareas que coincidan con los filtros
-                        </p>
-                        <p className={`${getCurrentTheme().textSecondary}`}>
-                          Intenta cambiar los filtros o buscar otro término
-                        </p>
-                      </div>
-                    )}
-
-                    {getTodayTasks().length === 0 && (
-                      <div className="p-4 rounded-lg border border-purple-500/30 text-center">
-                        <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No hay tareas para este día</p>
-                        <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva tarea arriba!</p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                {/* Pomodoro Tab */}
-                <TabsContent value="pomodoro" className="p-6 space-y-4">
-                  <div className="text-center space-y-6">
-                    <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>{t("pomodoro")}</h3>
-
-                    <div className={`text-6xl font-bold ${getCurrentTheme().textPrimary} tabular-nums`}>
-                      {formatTime(pomodoroTime)}
-                    </div>
-
-                    <div className="flex justify-center space-x-2">
-                      <Badge className={pomodoroType === "work" ? "bg-purple-500" : "bg-gray-500"}>
-                        {t("workSession")}
-                      </Badge>
-                      <Badge className={pomodoroType === "shortBreak" ? "bg-green-500" : "bg-gray-500"}>
-                        {t("shortBreak")}
-                      </Badge>
-                    </div>
-
-                    <div className="flex justify-center space-x-4">
-                      <Button
-                        onClick={() => setPomodoroActive(!pomodoroActive)}
-                        className="bg-gradient-to-r from-purple-500 to-cyan-500"
-                      >
-                        {pomodoroActive ? (
-                          <>
-                            <Pause className="w-4 h-4 mr-2" />
-                            {t("pause")}
-                          </>
-                        ) : (
-                          <>
-                            <Play className="w-4 h-4 mr-2" />
-                            {t("start")}
-                          </>
-                        )}
-                      </Button>
-
-                      <Button
-                        onClick={() => {
-                          setPomodoroActive(false)
-                          setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
-                        }}
-                        variant="outline"
-                        className="border-purple-500/30"
-                      >
-                        <RotateCcw className="w-4 h-4 mr-2" />
-                        {t("reset")}
-                      </Button>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* Premium Features */}
-                {user.isPremium && (
-                  <>
-                    <TabsContent value="wishlist" className="p-6">
-                      <div className="text-center py-8">
-                        <Heart className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-                        <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Lista de Deseos Premium</p>
-                        <p className={getCurrentTheme().textSecondary}>
-                          Funcionalidad disponible para usuarios Premium
-                        </p>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="notes" className="p-6">
-                      <div className="text-center py-8">
-                        <StickyNote className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-                        <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Notas Premium</p>
-                        <p className={getCurrentTheme().textSecondary}>
-                          Funcionalidad disponible para usuarios Premium
-                        </p>
-                      </div>
-                    </TabsContent>
-                  </>
-                )}
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Premium Modal */}
-        <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-          <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
-            <DialogHeader>
-              <DialogTitle className="text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                🚀 Actualizar a Premium
-              </DialogTitle>
-              <DialogDescription className={getCurrentTheme().textSecondary}>
-                Desbloquea todas las funcionalidades de FutureTask
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid gap-3">
-                <div className="flex items-center space-x-3">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Tareas ilimitadas</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Lista de deseos</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Notas ilimitadas</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Check className="w-5 h-5 text-green-500" />
-                  <span>Todos los temas</span>
-                </div>
-              </div>
-              <Button
-                onClick={() => {
-                  const updatedUser = { ...user, isPremium: true }
-                  setUser(updatedUser)
-                  localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
-                  setShowPremiumModal(false)
-                }}
-                className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-              >
-                <Crown className="w-5 h-5 mr-2" />
-                {t("upgradeButton")} -{" "}
-                {billingType === "monthly" ? getPricing().monthly.full : getPricing().yearly.full}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Profile Modal */}
-        <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-          <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
-            <DialogHeader>
-              <DialogTitle className="text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                ⚙️ Configuración del Perfil
-              </DialogTitle>
-              <DialogDescription className={getCurrentTheme().textSecondary}>
-                Actualiza tu información personal y preferencias
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="profile-name" className={getCurrentTheme().textSecondary}>
-                  Nombre
-                </Label>
-                <Input
-                  id="profile-name"
-                  value={profileName}
-                  onChange={(e) => setProfileName(e.target.value)}
-                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="profile-email" className={getCurrentTheme().textSecondary}>
-                  Email
-                </Label>
-                <Input
-                  id="profile-email"
-                  type="email"
-                  value={profileEmail}
-                  onChange={(e) => setProfileEmail(e.target.value)}
-                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="profile-password" className={getCurrentTheme().textSecondary}>
-                  Nueva Contraseña (opcional)
-                </Label>
-                <Input
-                  id="profile-password"
-                  type="password"
-                  value={profilePassword}
-                  onChange={(e) => setProfilePassword(e.target.value)}
-                  placeholder="Dejar vacío para mantener actual"
-                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="profile-language" className={getCurrentTheme().textSecondary}>
-                  Idioma
-                </Label>
-                <Select
-                  value={profileLanguage}
-                  onValueChange={(value) => setProfileLanguage(value as "es" | "en" | "fr" | "de" | "it")}
-                >
-                  <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-purple-500/30">
-                    <SelectItem value="es" className={getCurrentTheme().textPrimary}>
-                      🇪🇸 Español
-                    </SelectItem>
-                    <SelectItem value="en" className={getCurrentTheme().textPrimary}>
-                      🇺🇸 English
-                    </SelectItem>
-                    <SelectItem value="fr" className={getCurrentTheme().textPrimary}>
-                      🇫🇷 Français
-                    </SelectItem>
-                    <SelectItem value="de" className={getCurrentTheme().textPrimary}>
-                      🇩🇪 Deutsch
-                    </SelectItem>
-                    <SelectItem value="it" className={getCurrentTheme().textPrimary}>
-                      🇮🇹 Italiano
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="profile-theme" className={getCurrentTheme().textSecondary}>
-                  Tema
-                </Label>
-                <Select value={profileTheme} onValueChange={setProfileTheme}>
-                  <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-purple-500/30">
-                    <div className={`px-2 py-1 text-xs ${getCurrentTheme().textMuted} font-semibold`}>GRATUITOS</div>
-                    {Object.entries(THEMES.free).map(([key, theme]) => (
-                      <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
-                        {theme.name}
-                      </SelectItem>
-                    ))}
-                    {user?.isPremium && (
-                      <>
-                        <div className={`px-2 py-1 text-xs text-yellow-400 font-semibold`}>PREMIUM ⭐</div>
-                        {Object.entries(THEMES.premium).map(([key, theme]) => (
-                          <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
-                            {theme.name}
-                          </SelectItem>
                         ))}
                       </>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className={`text-sm ${getCurrentTheme().textPrimary}`}>No se encontraron tareas</p>
+                      </div>
                     )}
-                  </SelectContent>
-                </Select>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Stats Cards */}
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <div>
+                        <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
+                        <p className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>
+                          {getCompletedTasks().length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center space-x-2">
+                      <Target className="w-4 h-4 text-blue-400" />
+                      <div>
+                        <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
+                        <p className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>{getTodayTasks().length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              <div className="flex space-x-3 pt-4">
+              <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</span>
+                    <span className={`text-sm font-bold ${getCurrentTheme().textPrimary}`}>
+                      {Math.round(getTodayProgress())}%
+                    </span>
+                  </div>
+                  <Progress value={getTodayProgress()} className="h-2" />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Navigation */}
+            <div className="p-4">
+              <div className="space-y-2">
                 <Button
-                  onClick={saveProfile}
-                  className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+                  onClick={() => handleTabChange("tasks")}
+                  variant={activeTab === "tasks" ? "default" : "ghost"}
+                  className={`w-full justify-start ${
+                    activeTab === "tasks"
+                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
+                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
+                  }`}
                 >
-                  Guardar Cambios
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {t("tasks")}
                 </Button>
-                <Button onClick={logout} variant="outline" className="border-red-500/30 text-red-300 bg-transparent">
-                  Cerrar Sesión
+                <Button
+                  onClick={() => handleTabChange("pomodoro")}
+                  variant={activeTab === "pomodoro" ? "default" : "ghost"}
+                  className={`w-full justify-start ${
+                    activeTab === "pomodoro"
+                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
+                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
+                  }`}
+                >
+                  <Timer className="w-4 h-4 mr-2" />
+                  {t("pomodoro")}
+                </Button>
+                <Button
+                  onClick={() => handleTabChange("wishlist")}
+                  variant={activeTab === "wishlist" ? "default" : "ghost"}
+                  className={`w-full justify-start ${
+                    activeTab === "wishlist"
+                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
+                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
+                  }`}
+                >
+                  <Heart className="w-4 h-4 mr-2" />
+                  {t("wishlist")}
+                  {!user.isPremium && <Crown className="w-3 h-3 ml-auto text-yellow-400" />}
+                </Button>
+                <Button
+                  onClick={() => handleTabChange("notes")}
+                  variant={activeTab === "notes" ? "default" : "ghost"}
+                  className={`w-full justify-start ${
+                    activeTab === "notes"
+                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
+                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
+                  }`}
+                >
+                  <StickyNote className="w-4 h-4 mr-2" />
+                  {t("notes")}
+                  {!user.isPremium && <Crown className="w-3 h-3 ml-auto text-yellow-400" />}
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            {/* Bottom Actions */}
+            <div className="p-4 mt-auto border-t border-purple-500/20">
+              <div className="space-y-2">
+                {!user.isPremium && (
+                  <Button
+                    onClick={() => setShowPremiumModal(true)}
+                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-sm"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Upgrade Premium
+                  </Button>
+                )}
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
+                    >
+                      <Trophy className="w-4 h-4 mr-2" />
+                      {t("achievements")} ({achievements.filter((a) => a.unlocked).length})
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
+                    <DialogHeader>
+                      <DialogTitle>Tus {t("achievements")}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {achievements.map((achievement) => (
+                        <div
+                          key={achievement.id}
+                          className={`flex items-center space-x-3 p-3 rounded-lg ${
+                            achievement.unlocked ? "bg-purple-500/20" : "bg-gray-800/30"
+                          }`}
+                        >
+                          <div className={`p-2 rounded-full ${achievement.unlocked ? "bg-purple-500" : "bg-gray-700"}`}>
+                            {achievement.icon}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-sm">{achievement.name}</span>
+                            <p className="text-xs text-gray-300">{achievement.description}</p>
+                          </div>
+                          {achievement.unlocked && <Badge className="bg-green-500 text-xs">Desbloqueado</Badge>}
+                        </div>
+                      ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Button
+                  onClick={openProfileModal}
+                  variant="outline"
+                  className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
+                >
+                  {t("profile")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Overlay */}
+        {isMobile && sidebarOpen && (
+          <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Bar for Mobile */}
+          {isMobile && (
+            <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                  <img src="/logo.png" alt="FutureTask" className="w-5 h-5 rounded-full" />
+                </div>
+                <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  {t("appName")}
+                </h1>
+              </div>
+              <Button
+                onClick={openProfileModal}
+                variant="outline"
+                size="sm"
+                className="border-purple-500/30 text-purple-300 bg-transparent"
+              >
+                {t("profile")}
+              </Button>
+            </div>
+          )}
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 md:p-6 space-y-6">
+              {/* Calendar and Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Calendar */}
+                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                  <CardHeader>
+                    <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2 text-lg`}>
+                      <CalendarIcon className="w-5 h-5" />
+                      <span>{t("calendar")}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      className="rounded-md border-0 w-full"
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Tab Content */}
+                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                  <CardContent className="p-0">
+                    {/* Tasks Tab */}
+                    {activeTab === "tasks" && (
+                      <div className="p-4 md:p-6 space-y-4">
+                        <div className="space-y-2">
+                          <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>
+                            {t("tasks")} -{" "}
+                            {selectedDate.toLocaleDateString("es-ES", {
+                              weekday: "long",
+                              day: "numeric",
+                              month: "long",
+                            })}
+                          </h3>
+                          <Progress value={getTodayProgress()} className="h-2" />
+                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                            {getCompletedTasks().length} de {getTodayTasks().length} completadas
+                          </p>
+                        </div>
+
+                        {/* Filters */}
+                        <div className="space-y-3 p-3 bg-black/20 rounded-lg border border-purple-500/20">
+                          <h4 className={`text-sm font-semibold ${getCurrentTheme().textPrimary}`}>⚙️ Filtros</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <Select value={taskFilter} onValueChange={(value) => setTaskFilter(value as any)}>
+                              <SelectTrigger
+                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} text-xs`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-gray-800 border-purple-500/30">
+                                <SelectItem value="all" className={getCurrentTheme().textPrimary}>
+                                  Todas
+                                </SelectItem>
+                                <SelectItem value="pending" className={getCurrentTheme().textPrimary}>
+                                  Pendientes
+                                </SelectItem>
+                                <SelectItem value="completed" className={getCurrentTheme().textPrimary}>
+                                  Completadas
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as any)}>
+                              <SelectTrigger
+                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} text-xs`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-gray-800 border-purple-500/30">
+                                <SelectItem value="all" className={getCurrentTheme().textPrimary}>
+                                  Todas
+                                </SelectItem>
+                                <SelectItem value="work" className={getCurrentTheme().textPrimary}>
+                                  {t("work")}
+                                </SelectItem>
+                                <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
+                                  {t("personal")}
+                                </SelectItem>
+                                <SelectItem value="health" className={getCurrentTheme().textPrimary}>
+                                  {t("health")}
+                                </SelectItem>
+                                <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
+                                  {t("learning")}
+                                </SelectItem>
+                                <SelectItem value="other" className={getCurrentTheme().textPrimary}>
+                                  {t("other")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as any)}>
+                              <SelectTrigger
+                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} text-xs`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-gray-800 border-purple-500/30">
+                                <SelectItem value="all" className={getCurrentTheme().textPrimary}>
+                                  Todas
+                                </SelectItem>
+                                <SelectItem value="high" className={getCurrentTheme().textPrimary}>
+                                  {t("high")}
+                                </SelectItem>
+                                <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
+                                  {t("medium")}
+                                </SelectItem>
+                                <SelectItem value="low" className={getCurrentTheme().textPrimary}>
+                                  {t("low")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Add Task Form */}
+                        <div className="space-y-3">
+                          <Input
+                            value={newTask}
+                            onChange={(e) => setNewTask(e.target.value)}
+                            placeholder={t("newTask")}
+                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
+                            onKeyPress={(e) => e.key === "Enter" && addTask()}
+                          />
+
+                          <Textarea
+                            value={newTaskDescription}
+                            onChange={(e) => setNewTaskDescription(e.target.value)}
+                            placeholder={t("description")}
+                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px] ${getCurrentTheme().placeholder}`}
+                          />
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="time"
+                              value={newTaskTime}
+                              onChange={(e) => setNewTaskTime(e.target.value)}
+                              placeholder={t("time")}
+                              className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
+                            />
+                            <Button onClick={addTask} className="bg-gradient-to-r from-purple-500 to-cyan-500">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Agregar
+                            </Button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <Select
+                              value={newTaskCategory}
+                              onValueChange={(value) => setNewTaskCategory(value as Task["category"])}
+                            >
+                              <SelectTrigger
+                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-gray-800 border-purple-500/30">
+                                <SelectItem value="work" className={getCurrentTheme().textPrimary}>
+                                  {t("work")}
+                                </SelectItem>
+                                <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
+                                  {t("personal")}
+                                </SelectItem>
+                                <SelectItem value="health" className={getCurrentTheme().textPrimary}>
+                                  {t("health")}
+                                </SelectItem>
+                                <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
+                                  {t("learning")}
+                                </SelectItem>
+                                <SelectItem value="other" className={getCurrentTheme().textPrimary}>
+                                  {t("other")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Select
+                              value={newTaskPriority}
+                              onValueChange={(value) => setNewTaskPriority(value as Task["priority"])}
+                            >
+                              <SelectTrigger
+                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-gray-800 border-purple-500/30">
+                                <SelectItem value="high" className={getCurrentTheme().textPrimary}>
+                                  {t("high")}
+                                </SelectItem>
+                                <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
+                                  {t("medium")}
+                                </SelectItem>
+                                <SelectItem value="low" className={getCurrentTheme().textPrimary}>
+                                  {t("low")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {/* Tasks List */}
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {getFilteredTasks().map((task) => (
+                            <div
+                              key={task.id}
+                              className={`flex items-start justify-between p-3 rounded-lg border transition-all ${
+                                task.completed
+                                  ? "bg-green-900/20 border-green-500/30 line-through opacity-60"
+                                  : "bg-black/30 border-purple-500/30"
+                              }`}
+                            >
+                              <div className="flex items-center space-x-3 flex-1">
+                                <Checkbox
+                                  checked={task.completed}
+                                  onCheckedChange={() => toggleTask(task.id)}
+                                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:border-green-400 border-2 border-purple-500/30 rounded-md transition-all duration-200 hover:border-purple-400"
+                                />
+                                <div className="flex-1">
+                                  {editingTask === task.id ? (
+                                    <div className="space-y-2">
+                                      <Input
+                                        value={editTaskText}
+                                        onChange={(e) => setEditTaskText(e.target.value)}
+                                        className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                                      />
+                                      <Textarea
+                                        value={editTaskDescription}
+                                        onChange={(e) => setEditTaskDescription(e.target.value)}
+                                        className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px]`}
+                                      />
+                                      <Input
+                                        type="time"
+                                        value={editTaskTime}
+                                        onChange={(e) => setEditTaskTime(e.target.value)}
+                                        className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                                      />
+                                      <div className="flex space-x-2">
+                                        <Button onClick={saveEditTask} size="sm" className="bg-green-500">
+                                          Guardar
+                                        </Button>
+                                        <Button onClick={cancelEditTask} size="sm" variant="outline">
+                                          Cancelar
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-1">
+                                      <div className="flex items-center space-x-2 flex-wrap">
+                                        <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>
+                                          {task.text}
+                                        </span>
+                                        <Badge className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
+                                          {t(task.priority)}
+                                        </Badge>
+                                        {task.time && (
+                                          <Badge className="bg-purple-500/20 text-purple-300 text-xs">
+                                            <Clock className="w-3 h-3 mr-1" />
+                                            {task.time}
+                                          </Badge>
+                                        )}
+                                        {task.notificationEnabled && (
+                                          <Badge className="bg-blue-500/20 text-blue-300 text-xs">
+                                            <Bell className="w-3 h-3" />
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      {task.description && (
+                                        <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                                          {task.description}
+                                        </p>
+                                      )}
+                                      <Badge className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
+                                        {t(task.category)}
+                                      </Badge>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex space-x-1">
+                                {!task.completed && editingTask !== task.id && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => startEditTask(task)}
+                                    className="text-blue-300 hover:bg-blue-500/20"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteTask(task.id)}
+                                  className="text-red-300 hover:bg-red-500/20"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+
+                          {getFilteredTasks().length === 0 && getTodayTasks().length > 0 && (
+                            <div className="p-4 rounded-lg border border-purple-500/30 text-center">
+                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>
+                                No hay tareas que coincidan con los filtros
+                              </p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>Intenta cambiar los filtros</p>
+                            </div>
+                          )}
+
+                          {getTodayTasks().length === 0 && (
+                            <div className="p-4 rounded-lg border border-purple-500/30 text-center">
+                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>
+                                No hay tareas para este día
+                              </p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva tarea arriba!</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pomodoro Tab */}
+                    {activeTab === "pomodoro" && (
+                      <div className="p-4 md:p-6 space-y-4">
+                        <div className="text-center space-y-6">
+                          <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>{t("pomodoro")}</h3>
+
+                          <div
+                            className={`text-4xl md:text-6xl font-bold ${getCurrentTheme().textPrimary} tabular-nums`}
+                          >
+                            {formatTime(pomodoroTime)}
+                          </div>
+
+                          <div className="flex justify-center space-x-2">
+                            <Badge className={pomodoroType === "work" ? "bg-purple-500" : "bg-gray-500"}>
+                              {t("workSession")}
+                            </Badge>
+                            <Badge className={pomodoroType === "shortBreak" ? "bg-green-500" : "bg-gray-500"}>
+                              {t("shortBreak")}
+                            </Badge>
+                          </div>
+
+                          <div className="flex justify-center space-x-4">
+                            <Button
+                              onClick={() => setPomodoroActive(!pomodoroActive)}
+                              className="bg-gradient-to-r from-purple-500 to-cyan-500"
+                            >
+                              {pomodoroActive ? (
+                                <>
+                                  <Pause className="w-4 h-4 mr-2" />
+                                  {t("pause")}
+                                </>
+                              ) : (
+                                <>
+                                  <Play className="w-4 h-4 mr-2" />
+                                  {t("start")}
+                                </>
+                              )}
+                            </Button>
+
+                            <Button
+                              onClick={() => {
+                                setPomodoroActive(false)
+                                setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
+                              }}
+                              variant="outline"
+                              className="border-purple-500/30"
+                            >
+                              <RotateCcw className="w-4 h-4 mr-2" />
+                              {t("reset")}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Premium Features */}
+                    {(activeTab === "wishlist" || activeTab === "notes") && (
+                      <div className="p-4 md:p-6">
+                        {user.isPremium ? (
+                          <div className="text-center py-8">
+                            {activeTab === "wishlist" ? (
+                              <Heart className="w-16 h-16 mx-auto mb-4 text-purple-400" />
+                            ) : (
+                              <StickyNote className="w-16 h-16 mx-auto mb-4 text-purple-400" />
+                            )}
+                            <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>
+                              {activeTab === "wishlist" ? "Lista de Deseos Premium" : "Notas Premium"}
+                            </p>
+                            <p className={getCurrentTheme().textSecondary}>
+                              Funcionalidad disponible para usuarios Premium
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
+                            <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Función Premium</p>
+                            <p className={`${getCurrentTheme().textSecondary} mb-4`}>
+                              Actualiza a Premium para acceder a esta función
+                            </p>
+                            <Button
+                              onClick={() => setShowPremiumModal(true)}
+                              className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+                            >
+                              <Crown className="w-4 h-4 mr-2" />
+                              Actualizar a Premium
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Premium Modal */}
+      <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-sm md:max-w-2xl`}>
+          <DialogHeader>
+            <DialogTitle className="text-xl md:text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              🚀 Actualizar a Premium
+            </DialogTitle>
+            <DialogDescription className={getCurrentTheme().textSecondary}>
+              Desbloquea todas las funcionalidades de FutureTask
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-3">
+              <div className="flex items-center space-x-3">
+                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                <span className="text-sm md:text-base">Tareas ilimitadas</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                <span className="text-sm md:text-base">Lista de deseos</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                <span className="text-sm md:text-base">Notas ilimitadas</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                <span className="text-sm md:text-base">Todos los temas</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                <span className="text-sm md:text-base">Notificaciones</span>
+              </div>
+            </div>
+            <Button
+              onClick={() => {
+                const updatedUser = { ...user, isPremium: true }
+                setUser(updatedUser)
+                localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+                setShowPremiumModal(false)
+              }}
+              className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+            >
+              <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+              {t("upgradeButton")} - {billingType === "monthly" ? getPricing().monthly.full : getPricing().yearly.full}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Profile Modal */}
+      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-sm md:max-w-lg`}>
+          <DialogHeader>
+            <DialogTitle className="text-xl md:text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              ⚙️ Configuración del Perfil
+            </DialogTitle>
+            <DialogDescription className={getCurrentTheme().textSecondary}>
+              Actualiza tu información personal y preferencias
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="profile-name" className={getCurrentTheme().textSecondary}>
+                Nombre
+              </Label>
+              <Input
+                id="profile-name"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-email" className={getCurrentTheme().textSecondary}>
+                Email
+              </Label>
+              <Input
+                id="profile-email"
+                type="email"
+                value={profileEmail}
+                onChange={(e) => setProfileEmail(e.target.value)}
+                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-password" className={getCurrentTheme().textSecondary}>
+                Nueva Contraseña (opcional)
+              </Label>
+              <Input
+                id="profile-password"
+                type="password"
+                value={profilePassword}
+                onChange={(e) => setProfilePassword(e.target.value)}
+                placeholder="Dejar vacío para mantener actual"
+                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-language" className={getCurrentTheme().textSecondary}>
+                Idioma
+              </Label>
+              <Select
+                value={profileLanguage}
+                onValueChange={(value) => setProfileLanguage(value as "es" | "en" | "fr" | "de" | "it")}
+              >
+                <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-purple-500/30">
+                  <SelectItem value="es" className={getCurrentTheme().textPrimary}>
+                    🇪🇸 Español
+                  </SelectItem>
+                  <SelectItem value="en" className={getCurrentTheme().textPrimary}>
+                    🇺🇸 English
+                  </SelectItem>
+                  <SelectItem value="fr" className={getCurrentTheme().textPrimary}>
+                    🇫🇷 Français
+                  </SelectItem>
+                  <SelectItem value="de" className={getCurrentTheme().textPrimary}>
+                    🇩🇪 Deutsch
+                  </SelectItem>
+                  <SelectItem value="it" className={getCurrentTheme().textPrimary}>
+                    🇮🇹 Italiano
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="profile-theme" className={getCurrentTheme().textSecondary}>
+                Tema
+              </Label>
+              <Select value={profileTheme} onValueChange={setProfileTheme}>
+                <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-purple-500/30">
+                  <div className={`px-2 py-1 text-xs ${getCurrentTheme().textMuted} font-semibold`}>GRATUITOS</div>
+                  {Object.entries(THEMES.free).map(([key, theme]) => (
+                    <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                  {user?.isPremium && (
+                    <>
+                      <div className={`px-2 py-1 text-xs text-yellow-400 font-semibold`}>PREMIUM ⭐</div>
+                      {Object.entries(THEMES.premium).map(([key, theme]) => (
+                        <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3 pt-4">
+              <Button
+                onClick={saveProfile}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+              >
+                Guardar Cambios
+              </Button>
+              <Button onClick={logout} variant="outline" className="border-red-500/30 text-red-300 bg-transparent">
+                Cerrar Sesión
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
