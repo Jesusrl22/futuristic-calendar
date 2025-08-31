@@ -1750,15 +1750,38 @@ export default function FutureTaskApp() {
               </div>
             )}
 
-            {/* Manual notification test button - agregar después del indicador de notificaciones */}
+            {/* Manual notification test button - mejorado */}
             {user && (
               <div className="px-4 pb-2">
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     console.log("Manual notification test button clicked")
+                    console.log("Current permission:", Notification.permission)
+
+                    if (!("Notification" in window)) {
+                      alert("Este navegador no soporta notificaciones")
+                      return
+                    }
+
                     if (Notification.permission === "default") {
-                      console.log("Showing notification prompt manually")
-                      setShowNotificationPrompt(true)
+                      console.log("Requesting permission manually...")
+                      try {
+                        const permission = await Notification.requestPermission()
+                        console.log("Permission result:", permission)
+                        setNotificationPermission(permission)
+
+                        if (permission === "granted") {
+                          const notification = new Notification("🎉 ¡Notificaciones activadas!", {
+                            body: "Ahora recibirás recordatorios de tus tareas",
+                            icon: "/favicon-32x32.png",
+                            tag: "permission-granted",
+                          })
+                          setTimeout(() => notification.close(), 5000)
+                        }
+                      } catch (error) {
+                        console.error("Error requesting permission:", error)
+                        alert("Error al solicitar permisos: " + error.message)
+                      }
                     } else if (Notification.permission === "granted") {
                       console.log("Testing notification manually")
                       try {
@@ -1773,19 +1796,33 @@ export default function FutureTaskApp() {
                         alert("Error mostrando notificación: " + error.message)
                       }
                     } else {
-                      alert("Las notificaciones están bloqueadas. Actívalas desde la configuración del navegador.")
+                      console.log("Permission denied, showing instructions")
+                      alert(`🚫 Las notificaciones están bloqueadas.
+
+Para activarlas:
+1. Haz clic en el icono de candado 🔒 en la barra de direcciones
+2. Cambia "Notificaciones" de "Bloquear" a "Permitir"  
+3. Recarga la página
+
+O ve a la configuración del navegador y permite notificaciones para este sitio.`)
                     }
                   }}
                   variant="outline"
                   size="sm"
-                  className="w-full border-blue-500/30 text-blue-300 bg-transparent text-xs"
+                  className={`w-full text-xs ${
+                    notificationPermission === "granted"
+                      ? "border-green-500/30 text-green-300 bg-transparent"
+                      : notificationPermission === "denied"
+                        ? "border-red-500/30 text-red-300 bg-transparent"
+                        : "border-blue-500/30 text-blue-300 bg-transparent"
+                  }`}
                 >
                   <Bell className="w-3 h-3 mr-1" />
-                  {Notification.permission === "default"
-                    ? "Activar notificaciones"
-                    : Notification.permission === "granted"
-                      ? "Probar notificación"
-                      : "Notificaciones bloqueadas"}
+                  {notificationPermission === "default"
+                    ? "🔔 Activar notificaciones"
+                    : notificationPermission === "granted"
+                      ? "🧪 Probar notificación"
+                      : "🚫 Notificaciones bloqueadas - Clic para ayuda"}
                 </Button>
               </div>
             )}
@@ -2401,7 +2438,7 @@ export default function FutureTaskApp() {
                             <div className="p-4 rounded-lg border border-pink-500/30 text-center">
                               <Heart className="w-12 h-12 mx-auto mb-3 text-pink-400" />
                               <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes deseos aún</p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega tu primer deseo arriba!</p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega un nuevo deseo arriba!</p>
                             </div>
                           )}
                         </div>
@@ -2419,7 +2456,7 @@ export default function FutureTaskApp() {
                             <span>{t("notes")}</span>
                           </h3>
                           <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                            Toma notas y guarda ideas importantes
+                            Escribe tus ideas, recordatorios y pensamientos
                           </p>
                         </div>
 
@@ -2430,6 +2467,7 @@ export default function FutureTaskApp() {
                             onChange={(e) => setNewNoteTitle(e.target.value)}
                             placeholder="Título de la nota..."
                             className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
+                            onKeyPress={(e) => e.key === "Enter" && addNote()}
                           />
 
                           <Textarea
@@ -2450,7 +2488,11 @@ export default function FutureTaskApp() {
                           {notes.map((note) => (
                             <div
                               key={note.id}
-                              className="p-3 rounded-lg border bg-black/30 border-yellow-500/30 transition-all"
+                              className={`p-3 rounded-lg border transition-all ${
+                                editingNote === note.id
+                                  ? "bg-gray-900/50 border-yellow-500/30"
+                                  : "bg-black/30 border-yellow-500/30"
+                              }`}
                             >
                               {editingNote === note.id ? (
                                 <div className="space-y-2">
@@ -2462,7 +2504,7 @@ export default function FutureTaskApp() {
                                   <Textarea
                                     value={editNoteContent}
                                     onChange={(e) => setEditNoteContent(e.target.value)}
-                                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[100px]`}
+                                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[80px]`}
                                   />
                                   <div className="flex space-x-2">
                                     <Button onClick={saveEditNote} size="sm" className="bg-green-500">
@@ -2474,23 +2516,11 @@ export default function FutureTaskApp() {
                                   </div>
                                 </div>
                               ) : (
-                                <div className="space-y-2">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
-                                      <h4 className={`font-semibold ${getCurrentTheme().textPrimary}`}>{note.title}</h4>
-                                      <p className={`text-sm ${getCurrentTheme().textSecondary} mt-1`}>
-                                        {note.content}
-                                      </p>
-                                      <p className={`text-xs ${getCurrentTheme().textMuted} mt-2`}>
-                                        {new Date(note.createdAt).toLocaleDateString("es-ES", {
-                                          day: "numeric",
-                                          month: "short",
-                                          year: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })}
-                                      </p>
-                                    </div>
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>
+                                      {note.title}
+                                    </span>
                                     <div className="flex space-x-1">
                                       <Button
                                         variant="ghost"
@@ -2510,6 +2540,15 @@ export default function FutureTaskApp() {
                                       </Button>
                                     </div>
                                   </div>
+                                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{note.content}</p>
+                                  <p className={`text-xs ${getCurrentTheme().textMuted}`}>
+                                    Creado el{" "}
+                                    {new Date(note.createdAt).toLocaleDateString("es-ES", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -2519,62 +2558,12 @@ export default function FutureTaskApp() {
                             <div className="p-4 rounded-lg border border-yellow-500/30 text-center">
                               <StickyNote className="w-12 h-12 mx-auto mb-3 text-yellow-400" />
                               <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes notas aún</p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>¡Crea tu primera nota arriba!</p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva nota arriba!</p>
                             </div>
                           )}
                         </div>
                       </div>
                     )}
-
-                    {/* Premium Required Message */}
-                    {(activeTab === "wishlist" || activeTab === "notes") && !user.isPremium && (
-                      <div className="p-4 md:p-6">
-                        <div className="text-center py-8">
-                          <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
-                          <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Función Premium</p>
-                          <p className={`${getCurrentTheme().textSecondary} mb-4`}>
-                            Actualiza a Premium para acceder a esta función
-                          </p>
-                          <Button
-                            onClick={() => setShowPremiumModal(true)}
-                            className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-                          >
-                            <Crown className="w-4 h-4 mr-2" />
-                            Actualizar a Premium
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Google AdSense Space */}
-              <div className="w-full">
-                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardContent className="p-4">
-                    <div className="text-center py-8 border-2 border-dashed border-purple-500/30 rounded-lg">
-                      <div className={`${getCurrentTheme().textMuted} text-sm`}>
-                        📢 Espacio reservado para Google AdSense
-                      </div>
-                      <div className={`${getCurrentTheme().textMuted} text-xs mt-1`}>728x90 - Leaderboard Banner</div>
-                      {/* Aquí irá el código de Google AdSense */}
-                      <div className="mt-4 text-xs text-gray-500">
-                        {/* 
-                        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXX"
-                                crossorigin="anonymous"></script>
-                        <ins className="adsbygoogle"
-                             style={{display:"block"}}
-                             data-ad-client="ca-pub-XXXXXXXXX"
-                             data-ad-slot="XXXXXXXXX"
-                             data-ad-format="auto"
-                             data-full-width-responsive="true"></ins>
-                        <script>
-                             (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
-                        */}
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -2583,242 +2572,153 @@ export default function FutureTaskApp() {
         </div>
       </div>
 
-      {/* Notification Permission Prompt */}
-      {showNotificationPrompt && (
-        <div className="fixed top-4 right-4 z-50 max-w-sm">
-          <Card className="bg-black/90 backdrop-blur-xl border-purple-500/30 shadow-2xl">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <Bell className="w-5 h-5 text-purple-400 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-white font-semibold text-sm">{t("notificationPermission")}</h4>
-                  <p className="text-gray-300 text-xs mt-1">{t("notificationPermissionDesc")}</p>
-                  <div className="flex space-x-2 mt-3">
-                    <Button
-                      onClick={requestNotificationPermission}
-                      size="sm"
-                      className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-xs"
-                    >
-                      {t("enableNotifications")}
-                    </Button>
-                    <Button
-                      onClick={() => setShowNotificationPrompt(false)}
-                      size="sm"
-                      variant="outline"
-                      className="border-gray-600 text-gray-300 text-xs"
-                    >
-                      Ahora no
-                    </Button>
-                  </div>
-                  {/* Test notification button */}
-                  {notificationPermission === "granted" && (
-                    <Button
-                      onClick={() => {
-                        try {
-                          const notification = new Notification("🧪 Notificación de prueba", {
-                            body: "¡Las notificaciones están funcionando correctamente!",
-                            icon: "/favicon-32x32.png",
-                            tag: "test-notification",
-                          })
-                          setTimeout(() => notification.close(), 5000)
-                        } catch (error) {
-                          console.error("Error showing test notification:", error)
-                        }
-                      }}
-                      size="sm"
-                      variant="outline"
-                      className="border-green-600 text-green-300 text-xs mt-2 w-full"
-                    >
-                      Probar notificación
-                    </Button>
-                  )}
-                </div>
-                <Button
-                  onClick={() => setShowNotificationPrompt(false)}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white p-1"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Premium Modal */}
-      <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-sm md:max-w-2xl`}>
+      {/* Profile Modal */}
+      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
           <DialogHeader>
-            <DialogTitle className="text-xl md:text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              🚀 Actualizar a Premium
-            </DialogTitle>
-            <DialogDescription className={getCurrentTheme().textSecondary}>
-              Desbloquea todas las funcionalidades de FutureTask
-            </DialogDescription>
+            <DialogTitle>{t("profile")}</DialogTitle>
+            <DialogDescription>Administra tu cuenta y preferencias</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid gap-3">
-              <div className="flex items-center space-x-3">
-                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                <span className="text-sm md:text-base">Tareas ilimitadas</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                <span className="text-sm md:text-base">Lista de deseos</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                <span className="text-sm md:text-base">Notas ilimitadas</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                <span className="text-sm md:text-base">Todos los temas</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                <span className="text-sm md:text-base">Notificaciones</span>
-              </div>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                {t("name")}
+              </Label>
+              <Input
+                id="name"
+                value={profileName}
+                onChange={(e) => setProfileName(e.target.value)}
+                className="col-span-3"
+              />
             </div>
-            <Button
-              onClick={() => {
-                const updatedUser = { ...user, isPremium: true }
-                setUser(updatedUser)
-                localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
-                setShowPremiumModal(false)
-              }}
-              className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-            >
-              <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-              {t("upgradeButton")} - {billingType === "monthly" ? getPricing().monthly.full : getPricing().yearly.full}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                {t("email")}
+              </Label>
+              <Input
+                id="email"
+                value={profileEmail}
+                onChange={(e) => setProfileEmail(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="password" className="text-right">
+                {t("password")}
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                value={profilePassword}
+                onChange={(e) => setProfilePassword(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="language" className="text-right">
+                Idioma
+              </Label>
+              <Select value={profileLanguage} onValueChange={(value) => setProfileLanguage(value as any)}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-purple-500/30">
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="theme" className="text-right">
+                Tema
+              </Label>
+              <Select value={profileTheme} onValueChange={(value) => setProfileTheme(value as any)}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-purple-500/30 max-h-80 overflow-y-auto">
+                  {Object.entries(THEMES.free).map(([key, theme]) => (
+                    <SelectItem key={key} value={key}>
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                  {user.isPremium &&
+                    Object.entries(THEMES.premium).map(([key, theme]) => (
+                      <SelectItem key={key} value={key}>
+                        {theme.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button type="submit" onClick={saveProfile} className="bg-gradient-to-r from-purple-500 to-cyan-500">
+              Guardar cambios
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => setShowProfileModal(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" variant="destructive" onClick={logout}>
+              {t("logout")}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Profile Modal */}
-      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-sm md:max-w-lg`}>
+      {/* Premium Modal */}
+      <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
           <DialogHeader>
-            <DialogTitle className="text-xl md:text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              ⚙️ Configuración del Perfil
-            </DialogTitle>
-            <DialogDescription className={getCurrentTheme().textSecondary}>
-              Actualiza tu información personal y preferencias
+            <DialogTitle>{t("premium")}</DialogTitle>
+            <DialogDescription>
+              {language === "en"
+                ? "Unlock all features and support the development of FutureTask"
+                : "Desbloquea todas las funciones y apoya el desarrollo de FutureTask"}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="profile-name" className={getCurrentTheme().textSecondary}>
-                Nombre
-              </Label>
-              <Input
-                id="profile-name"
-                value={profileName}
-                onChange={(e) => setProfileName(e.target.value)}
-                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-              />
-            </div>
+          <div className="py-4">
+            <p>
+              {language === "en"
+                ? "Upgrade to Premium to enjoy unlimited tasks, wishlist, notes, premium themes, and more!"
+                : "¡Actualiza a Premium para disfrutar de tareas ilimitadas, lista de deseos, notas, temas premium y mucho más!"}
+            </p>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button onClick={() => setShowPremiumModal(false)} variant="secondary">
+              {t("continueFreee")}
+            </Button>
+            <Button onClick={() => handlePremiumChoice(true)} className="bg-gradient-to-r from-purple-500 to-cyan-500">
+              {t("upgradeButton")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-            <div className="space-y-2">
-              <Label htmlFor="profile-email" className={getCurrentTheme().textSecondary}>
-                Email
-              </Label>
-              <Input
-                id="profile-email"
-                type="email"
-                value={profileEmail}
-                onChange={(e) => setProfileEmail(e.target.value)}
-                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="profile-password" className={getCurrentTheme().textSecondary}>
-                Nueva Contraseña (opcional)
-              </Label>
-              <Input
-                id="profile-password"
-                type="password"
-                value={profilePassword}
-                onChange={(e) => setProfilePassword(e.target.value)}
-                placeholder="Dejar vacío para mantener actual"
-                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="profile-language" className={getCurrentTheme().textSecondary}>
-                Idioma
-              </Label>
-              <Select
-                value={profileLanguage}
-                onValueChange={(value) => setProfileLanguage(value as "es" | "en" | "fr" | "de" | "it")}
-              >
-                <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-purple-500/30">
-                  <SelectItem value="es" className={getCurrentTheme().textPrimary}>
-                    🇪🇸 Español
-                  </SelectItem>
-                  <SelectItem value="en" className={getCurrentTheme().textPrimary}>
-                    🇺🇸 English
-                  </SelectItem>
-                  <SelectItem value="fr" className={getCurrentTheme().textPrimary}>
-                    🇫🇷 Français
-                  </SelectItem>
-                  <SelectItem value="de" className={getCurrentTheme().textPrimary}>
-                    🇩🇪 Deutsch
-                  </SelectItem>
-                  <SelectItem value="it" className={getCurrentTheme().textPrimary}>
-                    🇮🇹 Italiano
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="profile-theme" className={getCurrentTheme().textSecondary}>
-                Tema
-              </Label>
-              <Select value={profileTheme} onValueChange={setProfileTheme}>
-                <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-purple-500/30">
-                  <div className={`px-2 py-1 text-xs ${getCurrentTheme().textMuted} font-semibold`}>GRATUITOS</div>
-                  {Object.entries(THEMES.free).map(([key, theme]) => (
-                    <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
-                      {theme.name}
-                    </SelectItem>
-                  ))}
-                  {user?.isPremium && (
-                    <>
-                      <div className={`px-2 py-1 text-xs text-yellow-400 font-semibold`}>PREMIUM ⭐</div>
-                      {Object.entries(THEMES.premium).map(([key, theme]) => (
-                        <SelectItem key={key} value={key} className={getCurrentTheme().textPrimary}>
-                          {theme.name}
-                        </SelectItem>
-                      ))}
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3 pt-4">
-              <Button
-                onClick={saveProfile}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-              >
-                Guardar Cambios
-              </Button>
-              <Button onClick={logout} variant="outline" className="border-red-500/30 text-red-300 bg-transparent">
-                Cerrar Sesión
-              </Button>
-            </div>
+      {/* Notification Prompt */}
+      <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
+        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
+          <DialogHeader>
+            <DialogTitle>{t("notificationPermission")}</DialogTitle>
+            <DialogDescription>{t("notificationPermissionDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p>
+              {language === "en"
+                ? "Enable notifications to receive reminders for your tasks and stay on track with your goals."
+                : "Activa las notificaciones para recibir recordatorios de tus tareas y mantenerte al día con tus objetivos."}
+            </p>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button onClick={() => setShowNotificationPrompt(false)} variant="secondary">
+              {language === "en" ? "Maybe later" : "Quizás más tarde"}
+            </Button>
+            <Button onClick={requestNotificationPermission} className="bg-gradient-to-r from-purple-500 to-cyan-500">
+              {t("enableNotifications")}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
