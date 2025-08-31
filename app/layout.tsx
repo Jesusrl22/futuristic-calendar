@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     ],
     shortcut: "/favicon.ico",
     apple: [
-      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
   },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     siteName: "FutureTask",
     images: [
       {
-        url: "/logo.png",
+        url: "/apple-touch-icon.png",
         width: 1200,
         height: 630,
         alt: "FutureTask Logo",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FutureTask - Tu calendario inteligente del futuro",
     description: "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask.",
-    images: ["/logo.png"],
+    images: ["/apple-touch-icon.png"],
     creator: "@futuretask",
   },
   robots: {
@@ -78,8 +78,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
         <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
         <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
-        <link rel="apple-touch-icon" href="/logo.png" sizes="180x180" />
-        <link rel="apple-touch-icon" href="/favicon-32x32.png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <meta name="theme-color" content="#8b5cf6" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="mobile-web-app-capable" content="yes" />

@@ -134,6 +134,9 @@ const translations = {
     upgradeButton: "Actualizar a Premium",
     notification: "Notificación",
     taskReminder: "Recordatorio de tarea",
+    notificationPermission: "Permitir notificaciones",
+    notificationPermissionDesc: "Activa las notificaciones para recibir recordatorios de tus tareas",
+    enableNotifications: "Activar Notificaciones",
   },
   en: {
     appName: "FutureTask",
@@ -187,6 +190,9 @@ const translations = {
     upgradeButton: "Upgrade to Premium",
     notification: "Notification",
     taskReminder: "Task reminder",
+    notificationPermission: "Allow notifications",
+    notificationPermissionDesc: "Enable notifications to receive task reminders",
+    enableNotifications: "Enable Notifications",
   },
   fr: {
     appName: "FutureTask",
@@ -240,6 +246,9 @@ const translations = {
     upgradeButton: "Passer à Premium",
     notification: "Notification",
     taskReminder: "Rappel de tâche",
+    notificationPermission: "Autoriser les notifications",
+    notificationPermissionDesc: "Activez les notifications pour recevoir des rappels de tâches",
+    enableNotifications: "Activer les notifications",
   },
   de: {
     appName: "FutureTask",
@@ -293,6 +302,9 @@ const translations = {
     upgradeButton: "Auf Premium upgraden",
     notification: "Benachrichtigung",
     taskReminder: "Aufgabenerinnerung",
+    notificationPermission: "Benachrichtigungen zulassen",
+    notificationPermissionDesc: "Aktivieren Sie Benachrichtigungen für Aufgabenerinnerungen",
+    enableNotifications: "Benachrichtigungen aktivieren",
   },
   it: {
     appName: "FutureTask",
@@ -346,6 +358,9 @@ const translations = {
     upgradeButton: "Passa a Premium",
     notification: "Notifica",
     taskReminder: "Promemoria attività",
+    notificationPermission: "Consenti notifiche",
+    notificationPermissionDesc: "Abilita le notifiche per ricevere promemoria delle attività",
+    enableNotifications: "Abilita notifiche",
   },
 }
 
@@ -533,6 +548,10 @@ export default function FutureTaskApp() {
   const [activeTab, setActiveTab] = useState("tasks")
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS)
 
+  // Notification state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false)
+
   // Task form state
   const [newTask, setNewTask] = useState("")
   const [newTaskDescription, setNewTaskDescription] = useState("")
@@ -607,12 +626,44 @@ export default function FutureTaskApp() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Request notification permission
+  // Request notification permission and check status
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission()
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission)
+
+      // Show prompt if permission is default and user is logged in
+      if (Notification.permission === "default" && user && currentScreen === "app") {
+        const timer = setTimeout(() => {
+          setShowNotificationPrompt(true)
+        }, 3000) // Show after 3 seconds
+
+        return () => clearTimeout(timer)
+      }
     }
-  }, [])
+  }, [user, currentScreen])
+
+  // Request notification permission function
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window) {
+      try {
+        const permission = await Notification.requestPermission()
+        setNotificationPermission(permission)
+        setShowNotificationPrompt(false)
+
+        if (permission === "granted") {
+          // Show test notification
+          new Notification("¡Notificaciones activadas!", {
+            body: "Ahora recibirás recordatorios de tus tareas",
+            icon: "/favicon-32x32.png",
+            tag: "permission-granted",
+          })
+        }
+      } catch (error) {
+        console.error("Error requesting notification permission:", error)
+        setShowNotificationPrompt(false)
+      }
+    }
+  }
 
   // Initialize app - runs only once
   useEffect(() => {
@@ -682,7 +733,7 @@ export default function FutureTaskApp() {
   // Check for task notifications
   useEffect(() => {
     const checkNotifications = () => {
-      if (!user || Notification.permission !== "granted") return
+      if (!user || notificationPermission !== "granted") return
 
       const now = new Date()
       const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
@@ -690,18 +741,30 @@ export default function FutureTaskApp() {
 
       tasks.forEach((task) => {
         if (!task.completed && task.date === today && task.time === currentTime && task.notificationEnabled) {
-          new Notification(t("taskReminder"), {
-            body: task.text,
-            icon: "/favicon-32x32.png",
-            tag: task.id,
-          })
+          try {
+            new Notification(t("taskReminder"), {
+              body: `⏰ ${task.text}`,
+              icon: "/favicon-32x32.png",
+              tag: task.id,
+              requireInteraction: true,
+              actions: [
+                {
+                  action: "complete",
+                  title: "Marcar como completada",
+                },
+              ],
+            })
+          } catch (error) {
+            console.error("Error showing notification:", error)
+          }
         }
       })
     }
 
     const interval = setInterval(checkNotifications, 60000) // Check every minute
+    checkNotifications() // Check immediately
     return () => clearInterval(interval)
-  }, [tasks, user, t])
+  }, [tasks, user, t, notificationPermission])
 
   // Pomodoro timer
   useEffect(() => {
@@ -712,6 +775,23 @@ export default function FutureTaskApp() {
       }, 1000)
     } else if (pomodoroTime === 0) {
       setPomodoroActive(false)
+
+      // Show notification when pomodoro ends
+      if (notificationPermission === "granted") {
+        try {
+          new Notification(pomodoroType === "work" ? "¡Tiempo de descanso!" : "¡Volvamos al trabajo!", {
+            body:
+              pomodoroType === "work"
+                ? "Has completado una sesión de trabajo. Tómate un descanso."
+                : "El descanso ha terminado. Es hora de una nueva sesión.",
+            icon: "/favicon-32x32.png",
+            tag: "pomodoro-complete",
+          })
+        } catch (error) {
+          console.error("Error showing pomodoro notification:", error)
+        }
+      }
+
       if (pomodoroType === "work") {
         setPomodoroType("shortBreak")
         setPomodoroTime(5 * 60)
@@ -721,7 +801,7 @@ export default function FutureTaskApp() {
       }
     }
     return () => clearInterval(interval)
-  }, [pomodoroActive, pomodoroTime, pomodoroType])
+  }, [pomodoroActive, pomodoroTime, pomodoroType, notificationPermission])
 
   // Helper functions
   const formatTime = (seconds: number) => {
@@ -920,7 +1000,7 @@ export default function FutureTaskApp() {
       date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
       category: newTaskCategory,
       priority: newTaskPriority,
-      notificationEnabled: !!newTaskTime,
+      notificationEnabled: !!newTaskTime && notificationPermission === "granted",
     }
 
     setTasks((prev) => [...prev, task])
@@ -969,7 +1049,7 @@ export default function FutureTaskApp() {
               time: editTaskTime,
               category: editTaskCategory,
               priority: editTaskPriority,
-              notificationEnabled: !!editTaskTime,
+              notificationEnabled: !!editTaskTime && notificationPermission === "granted",
             }
           : task,
       ),
@@ -1057,22 +1137,6 @@ export default function FutureTaskApp() {
       },
     }
   }
-  ;(activeTab === "wishlist" || activeTab === "notes") && !user.isPremium && (
-    <div className="p-4 md:p-6">
-      <div className="text-center py-8">
-        <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
-        <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Función Premium</p>
-        <p className={`${getCurrentTheme().textSecondary} mb-4`}>Actualiza a Premium para acceder a esta función</p>
-        <Button
-          onClick={() => setShowPremiumModal(true)}
-          className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-        >
-          <Crown className="w-4 h-4 mr-2" />
-          Actualizar a Premium
-        </Button>
-      </div>
-    </div>
-  )
 
   // Loading state
   if (!isInitialized) {
@@ -1092,7 +1156,7 @@ export default function FutureTaskApp() {
         <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center mb-4">
-              <img src="/logo.png" alt="FutureTask" className="w-10 h-10 rounded-full" />
+              <CalendarIcon className="w-10 h-10 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {t("appName")}
@@ -1394,7 +1458,7 @@ export default function FutureTaskApp() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-                    <img src="/logo.png" alt="FutureTask" className="w-6 h-6 rounded-full" />
+                    <CalendarIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
@@ -1672,7 +1736,7 @@ export default function FutureTaskApp() {
             <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <img src="/logo.png" alt="FutureTask" className="w-5 h-5 rounded-full" />
+                  <CalendarIcon className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                   {t("appName")}
@@ -2278,6 +2342,56 @@ export default function FutureTaskApp() {
                         </div>
                       </div>
                     )}
+
+                    {/* Premium Required Message */}
+                    {(activeTab === "wishlist" || activeTab === "notes") && !user.isPremium && (
+                      <div className="p-4 md:p-6">
+                        <div className="text-center py-8">
+                          <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
+                          <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Función Premium</p>
+                          <p className={`${getCurrentTheme().textSecondary} mb-4`}>
+                            Actualiza a Premium para acceder a esta función
+                          </p>
+                          <Button
+                            onClick={() => setShowPremiumModal(true)}
+                            className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+                          >
+                            <Crown className="w-4 h-4 mr-2" />
+                            Actualizar a Premium
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Google AdSense Space */}
+              <div className="w-full">
+                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                  <CardContent className="p-4">
+                    <div className="text-center py-8 border-2 border-dashed border-purple-500/30 rounded-lg">
+                      <div className={`${getCurrentTheme().textMuted} text-sm`}>
+                        📢 Espacio reservado para Google AdSense
+                      </div>
+                      <div className={`${getCurrentTheme().textMuted} text-xs mt-1`}>728x90 - Leaderboard Banner</div>
+                      {/* Aquí irá el código de Google AdSense */}
+                      <div className="mt-4 text-xs text-gray-500">
+                        {/* 
+                        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXX"
+                                crossorigin="anonymous"></script>
+                        <ins className="adsbygoogle"
+                             style={{display:"block"}}
+                             data-ad-client="ca-pub-XXXXXXXXX"
+                             data-ad-slot="XXXXXXXXX"
+                             data-ad-format="auto"
+                             data-full-width-responsive="true"></ins>
+                        <script>
+                             (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                        */}
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -2285,6 +2399,48 @@ export default function FutureTaskApp() {
           </div>
         </div>
       </div>
+
+      {/* Notification Permission Prompt */}
+      {showNotificationPrompt && (
+        <div className="fixed top-4 right-4 z-50 max-w-sm">
+          <Card className="bg-black/90 backdrop-blur-xl border-purple-500/30 shadow-2xl">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3">
+                <Bell className="w-5 h-5 text-purple-400 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-white font-semibold text-sm">{t("notificationPermission")}</h4>
+                  <p className="text-gray-300 text-xs mt-1">{t("notificationPermissionDesc")}</p>
+                  <div className="flex space-x-2 mt-3">
+                    <Button
+                      onClick={requestNotificationPermission}
+                      size="sm"
+                      className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-xs"
+                    >
+                      {t("enableNotifications")}
+                    </Button>
+                    <Button
+                      onClick={() => setShowNotificationPrompt(false)}
+                      size="sm"
+                      variant="outline"
+                      className="border-gray-600 text-gray-300 text-xs"
+                    >
+                      Ahora no
+                    </Button>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setShowNotificationPrompt(false)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:text-white p-1"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Premium Modal */}
       <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
