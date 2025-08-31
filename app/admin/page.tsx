@@ -45,98 +45,108 @@ export default function AdminPanel() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [userStats, setUserStats] = useState<Record<string, UserStats>>({})
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Cargar usuarios del localStorage
-    const savedUsers = localStorage.getItem("futureTask_users") || "[]"
+    // Simulate loading time
+    const loadData = async () => {
+      setIsLoading(true)
 
-    try {
-      const parsedUsers = JSON.parse(savedUsers)
+      // Cargar usuarios del localStorage
+      const savedUsers = localStorage.getItem("futureTask_users") || "[]"
 
-      // Si no hay usuarios guardados, crear algunos de ejemplo
-      if (parsedUsers.length === 0) {
-        const exampleUsers: User[] = [
-          {
-            id: "1",
-            name: "Juan Pérez",
-            email: "juan@example.com",
-            password: "123456",
-            createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            theme: "default",
-            language: "es",
-            isPremium: true,
-            premiumExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            onboardingCompleted: true,
-            pomodoroSessions: 25,
-          },
-          {
-            id: "2",
-            name: "María García",
-            email: "maria@example.com",
-            password: "123456",
-            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            theme: "ocean",
-            language: "es",
-            isPremium: false,
-            onboardingCompleted: true,
-            pomodoroSessions: 8,
-          },
-          {
-            id: "3",
-            name: "John Smith",
-            email: "john@example.com",
-            password: "123456",
-            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            theme: "forest",
-            language: "en",
-            isPremium: false,
-            onboardingCompleted: false,
-            pomodoroSessions: 3,
-          },
-        ]
-        setUsers(exampleUsers)
-        localStorage.setItem("futureTask_users", JSON.stringify(exampleUsers))
+      try {
+        const parsedUsers = JSON.parse(savedUsers)
 
-        // Create example tasks for users
-        exampleUsers.forEach((user) => {
-          const exampleTasks = [
+        // Si no hay usuarios guardados, crear algunos de ejemplo
+        if (parsedUsers.length === 0) {
+          const exampleUsers: User[] = [
             {
-              id: `${user.id}_task_1`,
-              text: "Revisar emails",
-              completed: true,
-              date: new Date().toISOString().split("T")[0],
-              category: "work" as const,
-              priority: "medium" as const,
+              id: "1",
+              name: "Juan Pérez",
+              email: "juan@example.com",
+              password: "123456",
+              createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              theme: "default",
+              language: "es",
+              isPremium: true,
+              premiumExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              onboardingCompleted: true,
+              pomodoroSessions: 25,
             },
             {
-              id: `${user.id}_task_2`,
-              text: "Hacer ejercicio",
-              completed: false,
-              date: new Date().toISOString().split("T")[0],
-              category: "health" as const,
-              priority: "high" as const,
+              id: "2",
+              name: "María García",
+              email: "maria@example.com",
+              password: "123456",
+              createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+              theme: "ocean",
+              language: "es",
+              isPremium: false,
+              onboardingCompleted: true,
+              pomodoroSessions: 8,
+            },
+            {
+              id: "3",
+              name: "John Smith",
+              email: "john@example.com",
+              password: "123456",
+              createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+              theme: "forest",
+              language: "en",
+              isPremium: false,
+              onboardingCompleted: false,
+              pomodoroSessions: 3,
             },
           ]
-          localStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(exampleTasks))
-        })
-      } else {
-        setUsers(parsedUsers)
-      }
+          setUsers(exampleUsers)
+          localStorage.setItem("futureTask_users", JSON.stringify(exampleUsers))
 
-      // Load all user tasks for statistics
-      const allTasks: Task[] = []
-      parsedUsers.forEach((user: User) => {
-        const userTasks = localStorage.getItem(`futureTask_tasks_${user.id}`)
-        if (userTasks) {
-          allTasks.push(...JSON.parse(userTasks))
+          // Create example tasks for users
+          exampleUsers.forEach((user) => {
+            const exampleTasks = [
+              {
+                id: `${user.id}_task_1`,
+                text: "Revisar emails",
+                completed: true,
+                date: new Date().toISOString().split("T")[0],
+                category: "work" as const,
+                priority: "medium" as const,
+              },
+              {
+                id: `${user.id}_task_2`,
+                text: "Hacer ejercicio",
+                completed: false,
+                date: new Date().toISOString().split("T")[0],
+                category: "health" as const,
+                priority: "high" as const,
+              },
+            ]
+            localStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(exampleTasks))
+          })
+        } else {
+          setUsers(parsedUsers)
         }
-      })
-      setTasks(allTasks)
-    } catch (error) {
-      console.error("Error loading data:", error)
-      setUsers([])
-      setTasks([])
+
+        // Load all user tasks for statistics
+        const allTasks: Task[] = []
+        parsedUsers.forEach((user: User) => {
+          const userTasks = localStorage.getItem(`futureTask_tasks_${user.id}`)
+          if (userTasks) {
+            allTasks.push(...JSON.parse(userTasks))
+          }
+        })
+        setTasks(allTasks)
+      } catch (error) {
+        console.error("Error loading data:", error)
+        setUsers([])
+        setTasks([])
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [])
 
   useEffect(() => {
@@ -210,6 +220,18 @@ export default function AdminPanel() {
   const totalUsers = users.length
   const premiumUsers = users.filter((u) => u.isPremium).length
   const activeUsers = users.filter((u) => u.onboardingCompleted).length
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto"></div>
+          <div className="text-white text-lg font-semibold">Cargando Panel de Administración...</div>
+          <div className="text-gray-300 text-sm">Preparando estadísticas y datos</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">

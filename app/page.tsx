@@ -576,6 +576,19 @@ export default function FutureTaskApp() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
 
+  // Wishlist and Notes state
+  const [wishlistItems, setWishlistItems] = useState<
+    Array<{ id: string; text: string; description?: string; completed: boolean }>
+  >([])
+  const [notes, setNotes] = useState<Array<{ id: string; title: string; content: string; createdAt: string }>>([])
+  const [newWishItem, setNewWishItem] = useState("")
+  const [newWishDescription, setNewWishDescription] = useState("")
+  const [newNoteTitle, setNewNoteTitle] = useState("")
+  const [newNoteContent, setNewNoteContent] = useState("")
+  const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [editNoteTitle, setEditNoteTitle] = useState("")
+  const [editNoteContent, setEditNoteContent] = useState("")
+
   const t = useCallback(
     (key: string) => {
       return translations[language][key as keyof (typeof translations)[typeof language]] || key
@@ -619,6 +632,19 @@ export default function FutureTaskApp() {
             setTasks(JSON.parse(savedTasks))
           }
 
+          // Load wishlist and notes
+          if (parsedUser) {
+            const savedWishlist = localStorage.getItem(`futureTask_wishlist_${parsedUser.id}`)
+            if (savedWishlist) {
+              setWishlistItems(JSON.parse(savedWishlist))
+            }
+
+            const savedNotes = localStorage.getItem(`futureTask_notes_${parsedUser.id}`)
+            if (savedNotes) {
+              setNotes(JSON.parse(savedNotes))
+            }
+          }
+
           setCurrentScreen(parsedUser.onboardingCompleted ? "app" : "welcome")
         }
       } catch (error) {
@@ -638,6 +664,20 @@ export default function FutureTaskApp() {
       localStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(tasks))
     }
   }, [tasks, user])
+
+  // Save wishlist when it changes
+  useEffect(() => {
+    if (user && wishlistItems.length >= 0) {
+      localStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(wishlistItems))
+    }
+  }, [wishlistItems, user])
+
+  // Save notes when they change
+  useEffect(() => {
+    if (user && notes.length >= 0) {
+      localStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(notes))
+    }
+  }, [notes, user])
 
   // Check for task notifications
   useEffect(() => {
@@ -762,6 +802,78 @@ export default function FutureTaskApp() {
     const todayTasks = getTodayTasks()
     if (todayTasks.length === 0) return 0
     return (getCompletedTasks().length / todayTasks.length) * 100
+  }
+
+  // Wishlist functions
+  const addWishItem = () => {
+    if (!newWishItem.trim() || !user) return
+
+    const item = {
+      id: `${user.id}_wish_${Date.now()}`,
+      text: newWishItem,
+      description: newWishDescription,
+      completed: false,
+    }
+
+    setWishlistItems((prev) => [...prev, item])
+    setNewWishItem("")
+    setNewWishDescription("")
+  }
+
+  const toggleWishItem = (itemId: string) => {
+    setWishlistItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, completed: !item.completed } : item)),
+    )
+  }
+
+  const deleteWishItem = (itemId: string) => {
+    setWishlistItems((prev) => prev.filter((item) => item.id !== itemId))
+  }
+
+  // Notes functions
+  const addNote = () => {
+    if (!newNoteTitle.trim() || !user) return
+
+    const note = {
+      id: `${user.id}_note_${Date.now()}`,
+      title: newNoteTitle,
+      content: newNoteContent,
+      createdAt: new Date().toISOString(),
+    }
+
+    setNotes((prev) => [...prev, note])
+    setNewNoteTitle("")
+    setNewNoteContent("")
+  }
+
+  const startEditNote = (note: any) => {
+    setEditingNote(note.id)
+    setEditNoteTitle(note.title)
+    setEditNoteContent(note.content)
+  }
+
+  const saveEditNote = () => {
+    if (!editNoteTitle.trim() || !editingNote) return
+
+    setNotes((prev) =>
+      prev.map((note) =>
+        note.id === editingNote ? { ...note, title: editNoteTitle, content: editNoteContent } : note,
+      ),
+    )
+
+    setEditingNote(null)
+    setEditNoteTitle("")
+    setEditNoteContent("")
+  }
+
+  const cancelEditNote = () => {
+    setEditingNote(null)
+    setEditNoteTitle("")
+    setEditNoteContent("")
+  }
+
+  const deleteNote = (noteId: string) => {
+    setNotes((prev) => prev.filter((note) => note.id !== noteId))
   }
 
   // Event handlers
@@ -945,6 +1057,22 @@ export default function FutureTaskApp() {
       },
     }
   }
+  ;(activeTab === "wishlist" || activeTab === "notes") && !user.isPremium && (
+    <div className="p-4 md:p-6">
+      <div className="text-center py-8">
+        <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
+        <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Función Premium</p>
+        <p className={`${getCurrentTheme().textSecondary} mb-4`}>Actualiza a Premium para acceder a esta función</p>
+        <Button
+          onClick={() => setShowPremiumModal(true)}
+          className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+        >
+          <Crown className="w-4 h-4 mr-2" />
+          Actualizar a Premium
+        </Button>
+      </div>
+    </div>
+  )
 
   // Loading state
   if (!isInitialized) {
@@ -1568,19 +1696,23 @@ export default function FutureTaskApp() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Calendar */}
                 <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardHeader>
-                    <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2 text-lg`}>
-                      <CalendarIcon className="w-5 h-5" />
+                  <CardHeader className="pb-3">
+                    <CardTitle
+                      className={`${getCurrentTheme().textPrimary} flex items-center space-x-2 text-base md:text-lg`}
+                    >
+                      <CalendarIcon className="w-4 h-4 md:w-5 md:h-5" />
                       <span>{t("calendar")}</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
-                      className="rounded-md border-0 w-full"
-                    />
+                  <CardContent className="pt-0">
+                    <div className="scale-75 md:scale-90 origin-top">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => date && setSelectedDate(date)}
+                        className="rounded-md border-0 w-full"
+                      />
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -1941,39 +2073,209 @@ export default function FutureTaskApp() {
                       </div>
                     )}
 
-                    {/* Premium Features */}
-                    {(activeTab === "wishlist" || activeTab === "notes") && (
-                      <div className="p-4 md:p-6">
-                        {user.isPremium ? (
-                          <div className="text-center py-8">
-                            {activeTab === "wishlist" ? (
-                              <Heart className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-                            ) : (
-                              <StickyNote className="w-16 h-16 mx-auto mb-4 text-purple-400" />
-                            )}
-                            <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>
-                              {activeTab === "wishlist" ? "Lista de Deseos Premium" : "Notas Premium"}
-                            </p>
-                            <p className={getCurrentTheme().textSecondary}>
-                              Funcionalidad disponible para usuarios Premium
-                            </p>
-                          </div>
-                        ) : (
-                          <div className="text-center py-8">
-                            <Crown className="w-16 h-16 mx-auto mb-4 text-yellow-400" />
-                            <p className={`${getCurrentTheme().textPrimary} font-semibold mb-2`}>Función Premium</p>
-                            <p className={`${getCurrentTheme().textSecondary} mb-4`}>
-                              Actualiza a Premium para acceder a esta función
-                            </p>
-                            <Button
-                              onClick={() => setShowPremiumModal(true)}
-                              className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+                    {/* Wishlist Tab */}
+                    {activeTab === "wishlist" && user.isPremium && (
+                      <div className="p-4 md:p-6 space-y-4">
+                        <div className="space-y-2">
+                          <h3
+                            className={`text-lg font-semibold ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
+                          >
+                            <Heart className="w-5 h-5 text-pink-400" />
+                            <span>{t("wishlist")}</span>
+                          </h3>
+                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                            Guarda tus deseos y metas para el futuro
+                          </p>
+                        </div>
+
+                        {/* Add Wish Form */}
+                        <div className="space-y-3">
+                          <Input
+                            value={newWishItem}
+                            onChange={(e) => setNewWishItem(e.target.value)}
+                            placeholder="Nuevo deseo..."
+                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
+                            onKeyPress={(e) => e.key === "Enter" && addWishItem()}
+                          />
+
+                          <Textarea
+                            value={newWishDescription}
+                            onChange={(e) => setNewWishDescription(e.target.value)}
+                            placeholder="Descripción del deseo (opcional)..."
+                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px] ${getCurrentTheme().placeholder}`}
+                          />
+
+                          <Button onClick={addWishItem} className="w-full bg-gradient-to-r from-pink-500 to-purple-500">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Agregar Deseo
+                          </Button>
+                        </div>
+
+                        {/* Wishlist Items */}
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {wishlistItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className={`flex items-start justify-between p-3 rounded-lg border transition-all ${
+                                item.completed
+                                  ? "bg-green-900/20 border-green-500/30 line-through opacity-60"
+                                  : "bg-black/30 border-pink-500/30"
+                              }`}
                             >
-                              <Crown className="w-4 h-4 mr-2" />
-                              Actualizar a Premium
-                            </Button>
-                          </div>
-                        )}
+                              <div className="flex items-center space-x-3 flex-1">
+                                <Checkbox
+                                  checked={item.completed}
+                                  onCheckedChange={() => toggleWishItem(item.id)}
+                                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-pink-500 data-[state=checked]:to-purple-500 data-[state=checked]:border-pink-400 border-2 border-pink-500/30 rounded-md transition-all duration-200 hover:border-pink-400"
+                                />
+                                <div className="flex-1">
+                                  <div className="space-y-1">
+                                    <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>
+                                      {item.text}
+                                    </span>
+                                    {item.description && (
+                                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{item.description}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteWishItem(item.id)}
+                                className="text-red-300 hover:bg-red-500/20"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+
+                          {wishlistItems.length === 0 && (
+                            <div className="p-4 rounded-lg border border-pink-500/30 text-center">
+                              <Heart className="w-12 h-12 mx-auto mb-3 text-pink-400" />
+                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes deseos aún</p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega tu primer deseo arriba!</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notes Tab */}
+                    {activeTab === "notes" && user.isPremium && (
+                      <div className="p-4 md:p-6 space-y-4">
+                        <div className="space-y-2">
+                          <h3
+                            className={`text-lg font-semibold ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
+                          >
+                            <StickyNote className="w-5 h-5 text-yellow-400" />
+                            <span>{t("notes")}</span>
+                          </h3>
+                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                            Toma notas y guarda ideas importantes
+                          </p>
+                        </div>
+
+                        {/* Add Note Form */}
+                        <div className="space-y-3">
+                          <Input
+                            value={newNoteTitle}
+                            onChange={(e) => setNewNoteTitle(e.target.value)}
+                            placeholder="Título de la nota..."
+                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
+                          />
+
+                          <Textarea
+                            value={newNoteContent}
+                            onChange={(e) => setNewNoteContent(e.target.value)}
+                            placeholder="Contenido de la nota..."
+                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[100px] ${getCurrentTheme().placeholder}`}
+                          />
+
+                          <Button onClick={addNote} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Agregar Nota
+                          </Button>
+                        </div>
+
+                        {/* Notes List */}
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {notes.map((note) => (
+                            <div
+                              key={note.id}
+                              className="p-3 rounded-lg border bg-black/30 border-yellow-500/30 transition-all"
+                            >
+                              {editingNote === note.id ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    value={editNoteTitle}
+                                    onChange={(e) => setEditNoteTitle(e.target.value)}
+                                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                                  />
+                                  <Textarea
+                                    value={editNoteContent}
+                                    onChange={(e) => setEditNoteContent(e.target.value)}
+                                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[100px]`}
+                                  />
+                                  <div className="flex space-x-2">
+                                    <Button onClick={saveEditNote} size="sm" className="bg-green-500">
+                                      Guardar
+                                    </Button>
+                                    <Button onClick={cancelEditNote} size="sm" variant="outline">
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <h4 className={`font-semibold ${getCurrentTheme().textPrimary}`}>{note.title}</h4>
+                                      <p className={`text-sm ${getCurrentTheme().textSecondary} mt-1`}>
+                                        {note.content}
+                                      </p>
+                                      <p className={`text-xs ${getCurrentTheme().textMuted} mt-2`}>
+                                        {new Date(note.createdAt).toLocaleDateString("es-ES", {
+                                          day: "numeric",
+                                          month: "short",
+                                          year: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div className="flex space-x-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => startEditNote(note)}
+                                        className="text-blue-300 hover:bg-blue-500/20"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteNote(note.id)}
+                                        className="text-red-300 hover:bg-red-500/20"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+
+                          {notes.length === 0 && (
+                            <div className="p-4 rounded-lg border border-yellow-500/30 text-center">
+                              <StickyNote className="w-12 h-12 mx-auto mb-3 text-yellow-400" />
+                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes notas aún</p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>¡Crea tu primera nota arriba!</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </CardContent>
