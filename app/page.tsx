@@ -8,16 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
@@ -30,7 +22,6 @@ import {
   Target,
   Flame,
   Crown,
-  Heart,
   StickyNote,
   Timer,
   Play,
@@ -46,18 +37,31 @@ import {
   Search,
 } from "lucide-react"
 
+import {
+  createUser,
+  getUserByEmail,
+  updateUser,
+  getUserTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+  getUserWishlist,
+  getUserNotes,
+} from "@/lib/database"
+
 // Types
 interface Task {
   id: string
+  user_id: string
   text: string
-  description?: string
+  description?: string | null
   completed: boolean
   date: string
-  time?: string
+  time?: string | null
   category: "work" | "personal" | "health" | "learning" | "other"
   priority: "low" | "medium" | "high"
-  completedAt?: string
-  notificationEnabled?: boolean
+  completed_at?: string | null
+  notification_enabled?: boolean
 }
 
 interface User {
@@ -67,10 +71,10 @@ interface User {
   password: string
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
-  isPremium: boolean
-  onboardingCompleted: boolean
-  pomodoroSessions: number
-  createdAt: string
+  is_premium: boolean
+  onboarding_completed: boolean
+  pomodoro_sessions: number
+  created_at: string
 }
 
 interface Achievement {
@@ -676,64 +680,57 @@ export default function FutureTaskApp() {
   }
 
   // Función para verificar si el usuario existe en la base de datos
-  const verifyUserExists = (email: string, password: string): User | null => {
-    const savedUsers = localStorage.getItem("futureTask_users")
-    if (!savedUsers) return null
+  const verifyUserExists = async (email: string, password: string): Promise<User | null> => {
+    try {
+      return await getUserByEmail(email, password)
+    } catch (error) {
+      console.error("Error verifying user:", error)
+      return null
+    }
+  }
 
-    const users: User[] = JSON.parse(savedUsers)
-    return users.find((u) => u.email === email && u.password === password) || null
+  // Initialize app - runs only once
+  const initializeApp = async () => {
+    try {
+      const savedUser = localStorage.getItem("futureTask_user")
+      if (savedUser) {
+        const parsedUser = JSON.parse(savedUser)
+
+        // Verificar que el usuario aún existe en la base de datos
+        const userExists = await verifyUserExists(parsedUser.email, parsedUser.password)
+        if (!userExists) {
+          localStorage.removeItem("futureTask_user")
+          setCurrentScreen("welcome")
+          setIsInitialized(true)
+          return
+        }
+
+        setUser(userExists)
+        setLanguage(userExists.language || "es")
+
+        // Cargar datos del usuario desde Supabase
+        const [userTasks, userWishlist, userNotes] = await Promise.all([
+          getUserTasks(userExists.id),
+          getUserWishlist(userExists.id),
+          getUserNotes(userExists.id),
+        ])
+
+        setTasks(userTasks)
+        setWishlistItems(userWishlist)
+        setNotes(userNotes)
+
+        setCurrentScreen(userExists.onboarding_completed ? "app" : "welcome")
+      }
+    } catch (error) {
+      console.error("Error initializing app:", error)
+    } finally {
+      setIsInitialized(true)
+    }
   }
 
   // Initialize app - runs only once
   useEffect(() => {
     if (isInitialized) return
-
-    const initializeApp = () => {
-      try {
-        const savedUser = localStorage.getItem("futureTask_user")
-        if (savedUser) {
-          const parsedUser = JSON.parse(savedUser)
-
-          // Verificar que el usuario aún existe en la base de datos
-          const userExists = verifyUserExists(parsedUser.email, parsedUser.password)
-          if (!userExists) {
-            // Si el usuario no existe, limpiar datos locales
-            localStorage.removeItem("futureTask_user")
-            setCurrentScreen("welcome")
-            setIsInitialized(true)
-            return
-          }
-
-          setUser(parsedUser)
-          setLanguage(parsedUser.language || "es")
-
-          // Load user tasks
-          const savedTasks = localStorage.getItem(`futureTask_tasks_${parsedUser.id}`)
-          if (savedTasks) {
-            setTasks(JSON.parse(savedTasks))
-          }
-
-          // Load wishlist and notes
-          if (parsedUser) {
-            const savedWishlist = localStorage.getItem(`futureTask_wishlist_${parsedUser.id}`)
-            if (savedWishlist) {
-              setWishlistItems(JSON.parse(savedWishlist))
-            }
-
-            const savedNotes = localStorage.getItem(`futureTask_notes_${parsedUser.id}`)
-            if (savedNotes) {
-              setNotes(JSON.parse(savedNotes))
-            }
-          }
-
-          setCurrentScreen(parsedUser.onboardingCompleted ? "app" : "welcome")
-        }
-      } catch (error) {
-        console.error("Error initializing app:", error)
-      } finally {
-        setIsInitialized(true)
-      }
-    }
 
     const timer = setTimeout(initializeApp, 100)
     return () => clearTimeout(timer)
@@ -1018,75 +1015,66 @@ export default function FutureTaskApp() {
   }
 
   // Event handlers
-  const handleAuth = () => {
-    if (authMode === "login") {
-      // Verificar credenciales en la base de datos
-      const existingUser = verifyUserExists(email, password)
-      if (!existingUser) {
-        alert("Usuario o contraseña incorrectos, o el usuario no existe en la base de datos.")
-        return
+  const handleAuth = async () => {
+    try {
+      if (authMode === "login") {
+        const existingUser = await verifyUserExists(email, password)
+        if (!existingUser) {
+          alert("Usuario o contraseña incorrectos.")
+          return
+        }
+
+        setUser(existingUser)
+        localStorage.setItem("futureTask_user", JSON.stringify(existingUser))
+        setCurrentScreen(existingUser.onboarding_completed ? "app" : "premium")
+      } else {
+        // Registro
+        try {
+          const newUser = await createUser({
+            name: name,
+            email,
+            password,
+            language,
+            theme: "default",
+            is_premium: false,
+            onboarding_completed: false,
+            pomodoro_sessions: 0,
+          })
+
+          setUser(newUser)
+          localStorage.setItem("futureTask_user", JSON.stringify(newUser))
+          setCurrentScreen("premium")
+        } catch (error) {
+          alert("Error al crear usuario. Es posible que el email ya esté registrado.")
+          return
+        }
       }
 
-      setUser(existingUser)
-      localStorage.setItem("futureTask_user", JSON.stringify(existingUser))
-      setCurrentScreen(existingUser.onboardingCompleted ? "app" : "premium")
-    } else {
-      // Registro - verificar si el usuario ya existe
-      const savedUsers = localStorage.getItem("futureTask_users")
-      const users: User[] = savedUsers ? JSON.parse(savedUsers) : []
-
-      if (users.find((u) => u.email === email)) {
-        alert("Ya existe un usuario con este email.")
-        return
-      }
-
-      const newUser: User = {
-        id: Date.now().toString(),
-        name: name,
-        email,
-        password,
-        language,
-        theme: "default",
-        isPremium: false,
-        onboardingCompleted: false,
-        pomodoroSessions: 0,
-        createdAt: new Date().toISOString(),
-      }
-
-      // Agregar usuario a la base de datos
-      users.push(newUser)
-      localStorage.setItem("futureTask_users", JSON.stringify(users))
-
-      setUser(newUser)
-      localStorage.setItem("futureTask_user", JSON.stringify(newUser))
-      setCurrentScreen("premium")
+      setEmail("")
+      setPassword("")
+      setName("")
+    } catch (error) {
+      console.error("Error in auth:", error)
+      alert("Error de conexión. Intenta de nuevo.")
     }
-
-    // Reset form
-    setEmail("")
-    setPassword("")
-    setName("")
   }
 
-  const handlePremiumChoice = (isPremium: boolean) => {
+  const handlePremiumChoice = async (isPremium: boolean) => {
     if (!user) return
 
-    const updatedUser = { ...user, isPremium, onboardingCompleted: true }
-    setUser(updatedUser)
-    localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+    try {
+      const updatedUser = await updateUser(user.id, {
+        is_premium: isPremium,
+        onboarding_completed: true,
+      })
 
-    // Actualizar también en la base de datos de usuarios
-    const savedUsers = localStorage.getItem("futureTask_users")
-    if (savedUsers) {
-      const users: User[] = JSON.parse(savedUsers)
-      const userIndex = users.findIndex((u) => u.id === user.id)
-      if (userIndex !== -1) {
-        users[userIndex] = updatedUser
-        localStorage.setItem("futureTask_users", JSON.stringify(users))
-      }
+      setUser(updatedUser)
+      localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+      setCurrentScreen("app")
+    } catch (error) {
+      console.error("Error updating premium status:", error)
+      alert("Error al actualizar el plan. Intenta de nuevo.")
     }
-
-    setCurrentScreen("app")
   }
 
   // Agregar función para manejar mejor los errores de tareas
@@ -1101,43 +1089,59 @@ export default function FutureTaskApp() {
     }
   }
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!newTask.trim() || !user) return
 
-    const task: Task = {
-      id: `${user.id}_${Date.now()}`,
-      text: newTask,
-      description: newTaskDescription,
-      time: newTaskTime,
-      completed: false,
-      date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
-      category: newTaskCategory,
-      priority: newTaskPriority,
-      notificationEnabled: !!newTaskTime && notificationPermission === "granted",
+    try {
+      const taskData = {
+        user_id: user.id,
+        text: newTask,
+        description: newTaskDescription || null,
+        time: newTaskTime || null,
+        completed: false,
+        date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
+        category: newTaskCategory,
+        priority: newTaskPriority,
+        notification_enabled: !!newTaskTime && notificationPermission === "granted",
+      }
+
+      const newTaskFromDB = await createTask(taskData)
+      setTasks((prev) => [...prev, newTaskFromDB])
+
+      setNewTask("")
+      setNewTaskDescription("")
+      setNewTaskTime("")
+    } catch (error) {
+      console.error("Error adding task:", error)
+      alert("Error al agregar tarea. Intenta de nuevo.")
     }
-
-    setTasks((prev) => [...prev, task])
-    setNewTask("")
-    setNewTaskDescription("")
-    setNewTaskTime("")
   }
 
-  const toggleTask = (taskId: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              completed: !task.completed,
-              completedAt: !task.completed ? new Date().toISOString() : undefined,
-            }
-          : task,
-      ),
-    )
+  const toggleTask = async (taskId: string) => {
+    try {
+      const task = tasks.find((t) => t.id === taskId)
+      if (!task) return
+
+      const updatedTask = await updateTask(taskId, {
+        completed: !task.completed,
+        completed_at: !task.completed ? new Date().toISOString() : null,
+      })
+
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? updatedTask : t)))
+    } catch (error) {
+      console.error("Error toggling task:", error)
+      alert("Error al actualizar tarea. Intenta de nuevo.")
+    }
   }
 
-  const deleteTask = (taskId: string) => {
-    setTasks((prev) => prev.filter((task) => task.id !== taskId))
+  const deleteTaskHandler = async (taskId: string) => {
+    try {
+      await deleteTask(taskId)
+      setTasks((prev) => prev.filter((task) => task.id !== taskId))
+    } catch (error) {
+      console.error("Error deleting task:", error)
+      alert("Error al eliminar tarea. Intenta de nuevo.")
+    }
   }
 
   const startEditTask = (task: Task) => {
@@ -1201,33 +1205,25 @@ export default function FutureTaskApp() {
     }
   }
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!user) return
 
-    const updatedUser = {
-      ...user,
-      name: profileName,
-      email: profileEmail,
-      language: profileLanguage,
-      theme: profileTheme,
+    try {
+      const updatedUser = await updateUser(user.id, {
+        name: profileName,
+        email: profileEmail,
+        language: profileLanguage,
+        theme: profileTheme,
+      })
+
+      setUser(updatedUser)
+      setLanguage(profileLanguage)
+      localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+      setShowProfileModal(false)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      alert("Error al actualizar perfil. Intenta de nuevo.")
     }
-
-    setUser(updatedUser)
-    setLanguage(profileLanguage)
-    localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
-
-    // Actualizar también en la base de datos de usuarios
-    const savedUsers = localStorage.getItem("futureTask_users")
-    if (savedUsers) {
-      const users: User[] = JSON.parse(savedUsers)
-      const userIndex = users.findIndex((u) => u.id === user.id)
-      if (userIndex !== -1) {
-        users[userIndex] = updatedUser
-        localStorage.setItem("futureTask_users", JSON.stringify(users))
-      }
-    }
-
-    setShowProfileModal(false)
   }
 
   const logout = () => {
@@ -1562,46 +1558,6 @@ export default function FutureTaskApp() {
   // Main App
   if (!user) return null
 
-  // Agregar función para debug de botones
-  const showDatabase = () => {
-    const data = {
-      users: JSON.parse(localStorage.getItem("futureTask_users") || "[]"),
-      currentUser: user,
-      tasks: tasks,
-      wishlist: wishlistItems,
-      notes: notes,
-      allStorageKeys: Object.keys(localStorage).filter((key) => key.startsWith("futureTask_")),
-    }
-
-    console.log("📊 BASE DE DATOS FUTURETASK:", data)
-
-    // Mostrar en una ventana nueva para mejor visualización
-    const newWindow = window.open("", "_blank", "width=800,height=600")
-    if (newWindow) {
-      newWindow.document.write(`
-        <html>
-          <head><title>FutureTask - Base de Datos</title></head>
-          <body style="font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff;">
-            <h1>📊 Base de Datos FutureTask</h1>
-            <pre style="background: #2a2a2a; padding: 15px; border-radius: 8px; overflow: auto;">
-${JSON.stringify(data, null, 2)}
-            </pre>
-          </body>
-        </html>
-      `)
-    }
-  }
-
-  const debugButtonClick = (buttonName: string) => {
-    console.log(`🎯 Button clicked: ${buttonName}`)
-    console.log(`📊 Current state:`, {
-      user: user?.name,
-      activeTab,
-      notificationPermission,
-      tasksCount: tasks.length,
-    })
-  }
-
   return (
     <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient}`}>
       <div className="flex h-screen">
@@ -1644,1136 +1600,744 @@ ${JSON.stringify(data, null, 2)}
                     <p className={`text-sm ${getCurrentTheme().textSecondary}`}>Hola, {user.name}</p>
                   </div>
                 </div>
-                {isMobile && (
-                  <Button
-                    onClick={() => setSidebarOpen(false)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
+                <Button variant="ghost" size="icon" onClick={openProfileModal}>
+                  <Bell className="w-5 h-5" />
+                </Button>
               </div>
-            </div>
 
-            {/* Global Search */}
-            <div className="p-4 relative">
-              <div className="flex items-center space-x-2">
-                <Search className="w-4 h-4 text-purple-400" />
+              {/* Search */}
+              <div className="relative mt-4">
                 <Input
+                  type="search"
+                  placeholder={t("search")}
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Buscar tareas..."
-                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder} focus:border-purple-400 text-sm`}
+                  className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder} pl-10`}
                 />
-                {searchTerm && (
-                  <Button
-                    onClick={() => {
-                      setSearchTerm("")
-                      setShowGlobalSearch(false)
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
-
-              {/* Search Results */}
-              {showGlobalSearch && (
-                <Card className="absolute top-full left-4 right-4 z-50 mt-2 bg-black/90 backdrop-blur-xl border-purple-500/30 shadow-2xl max-h-60 overflow-y-auto">
-                  <CardContent className="p-3">
-                    {getGlobalSearchResults().length > 0 ? (
-                      <>
-                        <h4 className={`text-xs font-semibold ${getCurrentTheme().textAccent} mb-2`}>
-                          📋 Resultados ({getGlobalSearchResults().length})
-                        </h4>
-                        {getGlobalSearchResults().map((task) => (
-                          <div
-                            key={task.id}
-                            onClick={() => navigateToTaskDate(task.date)}
-                            className={`p-2 rounded-lg border cursor-pointer transition-all hover:bg-purple-500/10 mb-2 ${
-                              task.completed
-                                ? "bg-green-900/20 border-green-500/30 opacity-70"
-                                : "bg-black/30 border-purple-500/30"
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span
-                                className={`text-sm font-semibold ${task.completed ? `line-through ${getCurrentTheme().textMuted}` : getCurrentTheme().textPrimary}`}
-                              >
-                                {task.text}
-                              </span>
-                              {task.completed && <Badge className="bg-green-500/20 text-green-300 text-xs">✓</Badge>}
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Badge className="bg-blue-500/20 text-blue-300 text-xs">
-                                📅{" "}
-                                {new Date(task.date).toLocaleDateString("es-ES", {
-                                  day: "numeric",
-                                  month: "short",
-                                })}
-                              </Badge>
-                              {task.time && (
-                                <Badge className="bg-purple-500/20 text-purple-300 text-xs">🕐 {task.time}</Badge>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className={`text-sm ${getCurrentTheme().textPrimary}`}>No se encontraron tareas</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
-            {/* Stats Cards */}
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      <div>
-                        <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
-                        <p className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>
-                          {getCompletedTasks().length}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Tabs */}
+            <nav className="p-4 space-y-2">
+              <Button
+                variant={activeTab === "calendar" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleTabChange("calendar")}
+              >
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                {t("calendar")}
+              </Button>
+              <Button
+                variant={activeTab === "tasks" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleTabChange("tasks")}
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {t("tasks")}
+              </Button>
+              <Button
+                variant={activeTab === "wishlist" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleTabChange("wishlist")}
+              >
+                <Star className="w-4 h-4 mr-2" />
+                {t("wishlist")}
+              </Button>
+              <Button
+                variant={activeTab === "notes" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleTabChange("notes")}
+              >
+                <StickyNote className="w-4 h-4 mr-2" />
+                {t("notes")}
+              </Button>
+              <Button
+                variant={activeTab === "pomodoro" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleTabChange("pomodoro")}
+              >
+                <Timer className="w-4 h-4 mr-2" />
+                {t("pomodoro")}
+              </Button>
+              <Button
+                variant={activeTab === "achievements" ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => handleTabChange("achievements")}
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                {t("achievements")}
+              </Button>
+              <Button onClick={logout} variant="ghost" className="w-full justify-start">
+                <RotateCcw className="w-4 h-4 mr-2" />
+                {t("logout")}
+              </Button>
+            </nav>
+          </div>
+        </div>
 
-                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center space-x-2">
-                      <Target className="w-4 h-4 text-blue-400" />
-                      <div>
-                        <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
-                        <p className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>{getTodayTasks().length}</p>
+        {/* Main Content */}
+        <div className="flex-1 p-4 overflow-y-auto">
+          {showGlobalSearch && searchTerm.trim() ? (
+            <div>
+              <h2 className={`text-lg font-bold mb-4 ${getCurrentTheme().textPrimary}`}>
+                {t("search")} "{searchTerm}"
+              </h2>
+              {getGlobalSearchResults().length > 0 ? (
+                <ul>
+                  {getGlobalSearchResults().map((task) => (
+                    <li
+                      key={task.id}
+                      className={`mb-2 p-3 rounded-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border} cursor-pointer hover:opacity-80 transition-opacity`}
+                      onClick={() => navigateToTaskDate(task.date)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className={`${getCurrentTheme().textPrimary} font-medium`}>{task.text}</p>
+                        <Clock className="w-4 h-4 text-gray-400" />
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                        {task.description || "Sin descripción"} - {task.date}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={getCurrentTheme().textMuted}>No se encontraron resultados.</p>
+              )}
+            </div>
+          ) : activeTab === "calendar" ? (
+            <Card className={`max-w-sm mx-auto ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <CardHeader>
+                <CardTitle className={getCurrentTheme().textPrimary}>{t("calendar")}</CardTitle>
+                <CardDescription className={getCurrentTheme().textSecondary}>
+                  Selecciona un día para ver tus tareas
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border-none shadow-none"
+                />
+              </CardContent>
+            </Card>
+          ) : activeTab === "tasks" ? (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>
+                  {t("tasks")} - {selectedDate.toLocaleDateString(language)}
+                </h2>
+                <div className="space-x-2">
+                  <Select value={taskFilter} onValueChange={setTaskFilter}>
+                    <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                      <SelectValue placeholder="Filtrar" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/80 backdrop-blur-xl border-purple-500/30">
+                      <SelectItem value="all">{t("all")}</SelectItem>
+                      <SelectItem value="completed">{t("completedToday")}</SelectItem>
+                      <SelectItem value="pending">{t("pending")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                      <SelectValue placeholder="Categoría" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/80 backdrop-blur-xl border-purple-500/30">
+                      <SelectItem value="all">{t("all")}</SelectItem>
+                      <SelectItem value="work">{t("work")}</SelectItem>
+                      <SelectItem value="personal">{t("personal")}</SelectItem>
+                      <SelectItem value="health">{t("health")}</SelectItem>
+                      <SelectItem value="learning">{t("learning")}</SelectItem>
+                      <SelectItem value="other">{t("other")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                    <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                      <SelectValue placeholder="Prioridad" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black/80 backdrop-blur-xl border-purple-500/30">
+                      <SelectItem value="all">{t("all")}</SelectItem>
+                      <SelectItem value="high">{t("high")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</span>
-                    <span className={`text-sm font-bold ${getCurrentTheme().textPrimary}`}>
-                      {Math.round(getTodayProgress())}%
-                    </span>
+              {/* Task List */}
+              {getFilteredTasks().length > 0 ? (
+                <ul className="space-y-3">
+                  {getFilteredTasks().map((task) => (
+                    <li
+                      key={task.id}
+                      className={`p-4 rounded-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`task-${task.id}`}
+                            checked={task.completed}
+                            onCheckedChange={() => handleTaskAction(() => toggleTask(task.id), "toggleTask")}
+                          />
+                          <Label
+                            htmlFor={`task-${task.id}`}
+                            className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+                              task.completed ? "line-through opacity-50" : getCurrentTheme().textPrimary
+                            }`}
+                          >
+                            {task.text}
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {task.priority && <Badge className={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>}
+                          {task.time && (
+                            <Badge className="opacity-70">
+                              <Clock className="w-3 h-3 mr-1" />
+                              {task.time}
+                            </Badge>
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => startEditTask(task)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleTaskAction(() => deleteTaskHandler(task.id), "deleteTask")}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </Button>
+                        </div>
+                      </div>
+                      {task.description && (
+                        <p className={`mt-2 text-sm ${getCurrentTheme().textSecondary}`}>{task.description}</p>
+                      )}
+                      <div className="mt-2 flex items-center space-x-2">
+                        <Badge className={CATEGORY_COLORS[task.category]}>{t(task.category)}</Badge>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={getCurrentTheme().textMuted}>No hay tareas para este día.</p>
+              )}
+
+              {/* New Task Form */}
+              <Card className={`mt-6 ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardHeader>
+                  <CardTitle className={getCurrentTheme().textPrimary}>{t("newTask")}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Input
+                    type="text"
+                    placeholder={t("newTask")}
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                  />
+                  <Textarea
+                    placeholder={t("description")}
+                    value={newTaskDescription}
+                    onChange={(e) => setNewTaskDescription(e.target.value)}
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                  />
+                  <div className="flex items-center space-x-4">
+                    <Input
+                      type="time"
+                      placeholder={t("time")}
+                      value={newTaskTime}
+                      onChange={(e) => setNewTaskTime(e.target.value)}
+                      className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                    />
+                    <Select value={newTaskCategory} onValueChange={setNewTaskCategory}>
+                      <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                        <SelectValue placeholder="Categoría" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black/80 backdrop-blur-xl border-purple-500/30">
+                        <SelectItem value="work">{t("work")}</SelectItem>
+                        <SelectItem value="personal">{t("personal")}</SelectItem>
+                        <SelectItem value="health">{t("health")}</SelectItem>
+                        <SelectItem value="learning">{t("learning")}</SelectItem>
+                        <SelectItem value="other">{t("other")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
+                      <SelectTrigger className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}>
+                        <SelectValue placeholder="Prioridad" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black/80 backdrop-blur-xl border-purple-500/30">
+                        <SelectItem value="high">{t("high")}</SelectItem>
+                        <SelectItem value="medium">{t("medium")}</SelectItem>
+                        <SelectItem value="low">{t("low")}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Progress value={getTodayProgress()} className="h-2" />
+                  <Button onClick={() => handleTaskAction(addTask, "addTask")} className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Tarea
+                  </Button>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Notification Status Indicator - agregar después de los stats cards */}
-            {user && (
-              <div className="px-4 pb-2">
-                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Bell
-                          className={`w-4 h-4 ${notificationPermission === "granted" ? "text-green-400" : "text-gray-400"}`}
-                        />
-                        <span className={`text-xs ${getCurrentTheme().textSecondary}`}>Notificaciones</span>
+          ) : activeTab === "wishlist" ? (
+            <div>
+              <h2 className={`text-lg font-bold mb-4 ${getCurrentTheme().textPrimary}`}>{t("wishlist")}</h2>
+              {wishlistItems.length > 0 ? (
+                <ul className="space-y-3">
+                  {wishlistItems.map((item) => (
+                    <li
+                      key={item.id}
+                      className={`p-4 rounded-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Checkbox
+                            id={`wish-${item.id}`}
+                            checked={item.completed}
+                            onCheckedChange={() => toggleWishItem(item.id)}
+                          />
+                          <Label
+                            htmlFor={`wish-${item.id}`}
+                            className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
+                              item.completed ? "line-through opacity-50" : getCurrentTheme().textPrimary
+                            }`}
+                          >
+                            {item.text}
+                          </Label>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => deleteWishItem(item.id)}>
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </Button>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div
-                          className={`w-2 h-2 rounded-full ${
-                            notificationPermission === "granted"
-                              ? "bg-green-400"
-                              : notificationPermission === "denied"
-                                ? "bg-red-400"
-                                : "bg-yellow-400"
-                          }`}
-                        />
-                        <span className={`text-xs ${getCurrentTheme().textPrimary}`}>
-                          {notificationPermission === "granted"
-                            ? "Activas"
-                            : notificationPermission === "denied"
-                              ? "Denegadas"
-                              : "Pendientes"}
-                        </span>
-                      </div>
-                    </div>
-                    {/* Mejorar el botón de activar notificaciones en el indicador de estado */}
-                    {notificationPermission !== "granted" && (
-                      <Button
-                        onClick={requestNotificationPermission}
-                        size="sm"
-                        variant="outline"
-                        className="w-full mt-2 border-purple-500/30 text-purple-300 bg-transparent text-xs hover:bg-purple-500/10 transition-all duration-200"
-                      >
-                        <Bell className="w-3 h-3 mr-1" />
-                        Activar notificaciones
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                      {item.description && (
+                        <p className={`mt-2 text-sm ${getCurrentTheme().textSecondary}`}>{item.description}</p>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={getCurrentTheme().textMuted}>Tu lista de deseos está vacía.</p>
+              )}
 
-            {/* Navigation */}
-            <div className="p-4">
-              <div className="space-y-2">
-                <Button
-                  onClick={() => {
-                    debugButtonClick("tasks-tab")
-                    handleTabChange("tasks")
-                  }}
-                  variant={activeTab === "tasks" ? "default" : "ghost"}
-                  className={`w-full justify-start transition-all duration-200 ${
-                    activeTab === "tasks"
-                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
-                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
-                  }`}
-                >
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  {t("tasks")}
-                </Button>
-                <Button
-                  onClick={() => {
-                    debugButtonClick("pomodoro-tab")
-                    handleTabChange("pomodoro")
-                  }}
-                  variant={activeTab === "pomodoro" ? "default" : "ghost"}
-                  className={`w-full justify-start transition-all duration-200 ${
-                    activeTab === "pomodoro"
-                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
-                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
-                  }`}
-                >
-                  <Timer className="w-4 h-4 mr-2" />
-                  {t("pomodoro")}
-                </Button>
-                <Button
-                  onClick={() => {
-                    debugButtonClick("wishlist-tab")
-                    handleTabChange("wishlist")
-                  }}
-                  variant={activeTab === "wishlist" ? "default" : "ghost"}
-                  className={`w-full justify-start transition-all duration-200 ${
-                    activeTab === "wishlist"
-                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
-                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
-                  }`}
-                >
-                  <Heart className="w-4 h-4 mr-2" />
-                  {t("wishlist")}
-                  {!user.isPremium && <Crown className="w-3 h-3 ml-auto text-yellow-400" />}
-                </Button>
-                <Button
-                  onClick={() => {
-                    debugButtonClick("notes-tab")
-                    handleTabChange("notes")
-                  }}
-                  variant={activeTab === "notes" ? "default" : "ghost"}
-                  className={`w-full justify-start transition-all duration-200 ${
-                    activeTab === "notes"
-                      ? "bg-gradient-to-r from-purple-500 to-cyan-500"
-                      : "text-gray-300 hover:text-white hover:bg-purple-500/20"
-                  }`}
-                >
-                  <StickyNote className="w-4 h-4 mr-2" />
-                  {t("notes")}
-                  {!user.isPremium && <Crown className="w-3 h-3 ml-auto text-yellow-400" />}
-                </Button>
-              </div>
+              {/* New Wishlist Item Form */}
+              <Card className={`mt-6 ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardHeader>
+                  <CardTitle className={getCurrentTheme().textPrimary}>Nuevo Deseo</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="Quiero..."
+                    value={newWishItem}
+                    onChange={(e) => setNewWishItem(e.target.value)}
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                  />
+                  <Textarea
+                    placeholder="Descripción (opcional)..."
+                    value={newWishDescription}
+                    onChange={(e) => setNewWishDescription(e.target.value)}
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                  />
+                  <Button onClick={addWishItem} className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar a la Lista
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
+          ) : activeTab === "notes" ? (
+            <div>
+              <h2 className={`text-lg font-bold mb-4 ${getCurrentTheme().textPrimary}`}>{t("notes")}</h2>
+              {notes.length > 0 ? (
+                <ul className="space-y-3">
+                  {notes.map((note) => (
+                    <li
+                      key={note.id}
+                      className={`p-4 rounded-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <h3 className={`text-md font-bold ${getCurrentTheme().textPrimary}`}>{note.title}</h3>
+                        <div className="space-x-2">
+                          <Button variant="ghost" size="icon" onClick={() => startEditNote(note)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteNote(note.id)}>
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className={`mt-2 text-sm ${getCurrentTheme().textSecondary}`}>{note.content}</p>
+                      <p className={`mt-2 text-xs ${getCurrentTheme().textMuted}`}>
+                        {new Date(note.createdAt).toLocaleDateString(language)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={getCurrentTheme().textMuted}>No tienes notas.</p>
+              )}
 
-            {/* Bottom Actions */}
-            <div className="p-4 mt-auto border-t border-purple-500/20">
-              <div className="space-y-2">
-                {!user.isPremium && (
+              {/* New Note Form */}
+              <Card className={`mt-6 ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardHeader>
+                  <CardTitle className={getCurrentTheme().textPrimary}>Nueva Nota</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="Título..."
+                    value={newNoteTitle}
+                    onChange={(e) => setNewNoteTitle(e.target.value)}
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                  />
+                  <Textarea
+                    placeholder="Contenido..."
+                    value={newNoteContent}
+                    onChange={(e) => setNewNoteContent(e.target.value)}
+                    className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
+                  />
+                  <Button onClick={addNote} className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Agregar Nota
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          ) : activeTab === "pomodoro" ? (
+            <Card className={`max-w-sm mx-auto ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <CardHeader>
+                <CardTitle className={getCurrentTheme().textPrimary}>{t("pomodoro")}</CardTitle>
+                <CardDescription className={getCurrentTheme().textSecondary}>
+                  {t(pomodoroType === "work" ? "workSession" : "shortBreak")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center text-4xl font-bold">{formatTime(pomodoroTime)}</div>
+                <div className="flex justify-center space-x-4">
+                  <Button onClick={() => setPomodoroActive(!pomodoroActive)}>
+                    {pomodoroActive ? (
+                      <>
+                        <Pause className="w-4 h-4 mr-2" />
+                        {t("pause")}
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 mr-2" />
+                        {t("start")}
+                      </>
+                    )}
+                  </Button>
                   <Button
                     onClick={() => {
-                      debugButtonClick("upgrade-premium")
-                      setShowPremiumModal(true)
+                      setPomodoroActive(false)
+                      setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
                     }}
-                    className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 text-sm"
                   >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Upgrade Premium
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    {t("reset")}
                   </Button>
-                )}
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={() => debugButtonClick("achievements")}
-                      variant="outline"
-                      className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
-                    >
-                      <Trophy className="w-4 h-4 mr-2" />
-                      {t("achievements")} ({achievements.filter((a) => a.unlocked).length})
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white`}>
-                    <DialogHeader>
-                      <DialogTitle>Tus {t("achievements")}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {achievements.map((achievement) => (
-                        <div
-                          key={achievement.id}
-                          className={`flex items-center space-x-3 p-3 rounded-lg ${
-                            achievement.unlocked ? "bg-purple-500/20" : "bg-gray-800/30"
-                          }`}
-                        >
-                          <div className={`p-2 rounded-full ${achievement.unlocked ? "bg-purple-500" : "bg-gray-700"}`}>
-                            {achievement.icon}
-                          </div>
-                          <div>
-                            <span className="font-semibold text-sm">{achievement.name}</span>
-                            <p className="text-xs text-gray-300">{achievement.description}</p>
-                          </div>
-                          {achievement.unlocked && <Badge className="bg-green-500 text-xs">Desbloqueado</Badge>}
-                        </div>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                <Button
-                  onClick={showDatabase}
-                  variant="outline"
-                  className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
-                >
-                  📊 Ver Base de Datos
-                </Button>
-
-                <Button
-                  onClick={() => {
-                    debugButtonClick("profile-modal")
-                    openProfileModal()
-                  }}
-                  variant="outline"
-                  className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
-                >
-                  {t("profile")}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Overlay */}
-        {isMobile && sidebarOpen && (
-          <div className="fixed inset-0 bg-black/50 z-30" onClick={() => setSidebarOpen(false)} />
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top Bar for Mobile */}
-          {isMobile && (
-            <div className="flex items-center justify-between p-4 border-b border-purple-500/20">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <CalendarIcon className="w-5 h-5 text-white" />
                 </div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  {t("appName")}
-                </h1>
-              </div>
-              <Button
-                onClick={() => {
-                  debugButtonClick("profile-modal-mobile")
-                  openProfileModal()
-                }}
-                variant="outline"
-                size="sm"
-                className="border-purple-500/30 text-purple-300 bg-transparent"
-              >
-                {t("profile")}
-              </Button>
-            </div>
-          )}
-
-          {/* Content Area */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 md:p-6 space-y-6">
-              {/* Calendar and Content Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Calendar */}
-                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardHeader className="pb-3">
-                    <CardTitle
-                      className={`${getCurrentTheme().textPrimary} flex items-center space-x-2 text-base md:text-lg`}
-                    >
-                      <CalendarIcon className="w-4 h-4 md:w-5 md:h-5" />
-                      <span>{t("calendar")}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="scale-75 md:scale-90 origin-top">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => date && setSelectedDate(date)}
-                        className="rounded-md border-0 w-full"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Tab Content */}
-                <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                  <CardContent className="p-0">
-                    {/* Tasks Tab */}
-                    {activeTab === "tasks" && (
-                      <div className="p-4 md:p-6 space-y-4">
-                        <div className="space-y-2">
-                          <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>
-                            {t("tasks")} -{" "}
-                            {selectedDate.toLocaleDateString("es-ES", {
-                              weekday: "long",
-                              day: "numeric",
-                              month: "long",
-                            })}
-                          </h3>
-                          <Progress value={getTodayProgress()} className="h-2" />
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                            {getCompletedTasks().length} de {getTodayTasks().length} completadas
-                          </p>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="space-y-3 p-3 bg-black/20 rounded-lg border border-purple-500/20">
-                          <h4 className={`text-sm font-semibold ${getCurrentTheme().textPrimary}`}>⚙️ Filtros</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            <Select value={taskFilter} onValueChange={(value) => setTaskFilter(value as any)}>
-                              <SelectTrigger
-                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} text-xs`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-purple-500/30">
-                                <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                                  Todas
-                                </SelectItem>
-                                <SelectItem value="pending" className={getCurrentTheme().textPrimary}>
-                                  Pendientes
-                                </SelectItem>
-                                <SelectItem value="completed" className={getCurrentTheme().textPrimary}>
-                                  Completadas
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as any)}>
-                              <SelectTrigger
-                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} text-xs`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-purple-500/30">
-                                <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                                  Todas
-                                </SelectItem>
-                                <SelectItem value="work" className={getCurrentTheme().textPrimary}>
-                                  {t("work")}
-                                </SelectItem>
-                                <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
-                                  {t("personal")}
-                                </SelectItem>
-                                <SelectItem value="health" className={getCurrentTheme().textPrimary}>
-                                  {t("health")}
-                                </SelectItem>
-                                <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
-                                  {t("learning")}
-                                </SelectItem>
-                                <SelectItem value="other" className={getCurrentTheme().textPrimary}>
-                                  {t("other")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <Select value={priorityFilter} onValueChange={(value) => setPriorityFilter(value as any)}>
-                              <SelectTrigger
-                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} text-xs`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-purple-500/30">
-                                <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                                  Todas
-                                </SelectItem>
-                                <SelectItem value="high" className={getCurrentTheme().textPrimary}>
-                                  {t("high")}
-                                </SelectItem>
-                                <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
-                                  {t("medium")}
-                                </SelectItem>
-                                <SelectItem value="low" className={getCurrentTheme().textPrimary}>
-                                  {t("low")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {/* Add Task Form */}
-                        <div className="space-y-3">
-                          <Input
-                            value={newTask}
-                            onChange={(e) => setNewTask(e.target.value)}
-                            placeholder={t("newTask")}
-                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                            onKeyPress={(e) => e.key === "Enter" && handleTaskAction(addTask, "agregar tarea")}
-                          />
-
-                          <Textarea
-                            value={newTaskDescription}
-                            onChange={(e) => setNewTaskDescription(e.target.value)}
-                            placeholder={t("description")}
-                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px] ${getCurrentTheme().placeholder}`}
-                          />
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input
-                              type="time"
-                              value={newTaskTime}
-                              onChange={(e) => setNewTaskTime(e.target.value)}
-                              placeholder={t("time")}
-                              className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                            />
-                            <Button
-                              onClick={() => handleTaskAction(addTask, "agregar tarea")}
-                              className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90 transition-all duration-200"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Agregar
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <Select
-                              value={newTaskCategory}
-                              onValueChange={(value) => setNewTaskCategory(value as Task["category"])}
-                            >
-                              <SelectTrigger
-                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-purple-500/30">
-                                <SelectItem value="work" className={getCurrentTheme().textPrimary}>
-                                  {t("work")}
-                                </SelectItem>
-                                <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
-                                  {t("personal")}
-                                </SelectItem>
-                                <SelectItem value="health" className={getCurrentTheme().textPrimary}>
-                                  {t("health")}
-                                </SelectItem>
-                                <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
-                                  {t("learning")}
-                                </SelectItem>
-                                <SelectItem value="other" className={getCurrentTheme().textPrimary}>
-                                  {t("other")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-
-                            <Select
-                              value={newTaskPriority}
-                              onValueChange={(value) => setNewTaskPriority(value as Task["priority"])}
-                            >
-                              <SelectTrigger
-                                className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-gray-800 border-purple-500/30">
-                                <SelectItem value="high" className={getCurrentTheme().textPrimary}>
-                                  {t("high")}
-                                </SelectItem>
-                                <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
-                                  {t("medium")}
-                                </SelectItem>
-                                <SelectItem value="low" className={getCurrentTheme().textPrimary}>
-                                  {t("low")}
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        {/* Tasks List */}
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {getFilteredTasks().map((task) => (
-                            <div
-                              key={task.id}
-                              className={`flex items-start justify-between p-3 rounded-lg border transition-all ${
-                                task.completed
-                                  ? "bg-green-900/20 border-green-500/30 line-through opacity-60"
-                                  : "bg-black/30 border-purple-500/30"
-                              }`}
-                            >
-                              <div className="flex items-center space-x-3 flex-1">
-                                <Checkbox
-                                  checked={task.completed}
-                                  onCheckedChange={() =>
-                                    handleTaskAction(() => toggleTask(task.id), "cambiar estado de tarea")
-                                  }
-                                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500 data-[state=checked]:border-green-400 border-2 border-purple-500/30 rounded-md transition-all duration-200 hover:border-purple-400"
-                                />
-                                <div className="flex-1">
-                                  {editingTask === task.id ? (
-                                    <div className="space-y-2">
-                                      <Input
-                                        value={editTaskText}
-                                        onChange={(e) => setEditTaskText(e.target.value)}
-                                        className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                                      />
-                                      <Textarea
-                                        value={editTaskDescription}
-                                        onChange={(e) => setEditTaskDescription(e.target.value)}
-                                        className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px]`}
-                                      />
-                                      <Input
-                                        type="time"
-                                        value={editTaskTime}
-                                        onChange={(e) => setEditTaskTime(e.target.value)}
-                                        className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary}`}
-                                      />
-                                      <div className="flex space-x-2">
-                                        <Button onClick={saveEditTask} size="sm" className="bg-green-500">
-                                          Guardar
-                                        </Button>
-                                        <Button onClick={cancelEditTask} size="sm" variant="outline">
-                                          Cancelar
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-1">
-                                      <div className="flex items-center space-x-2 flex-wrap">
-                                        <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>
-                                          {task.text}
-                                        </span>
-                                        <Badge className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
-                                          {t(task.priority)}
-                                        </Badge>
-                                        {task.time && (
-                                          <Badge className="bg-purple-500/20 text-purple-300 text-xs">
-                                            <Clock className="w-3 h-3 mr-1" />
-                                            {task.time}
-                                          </Badge>
-                                        )}
-                                        {task.notificationEnabled && (
-                                          <Badge className="bg-blue-500/20 text-blue-300 text-xs">
-                                            <Bell className="w-3 h-3" />
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      {task.description && (
-                                        <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                                          {task.description}
-                                        </p>
-                                      )}
-                                      <Badge className={`text-xs ${CATEGORY_COLORS[task.category]}`}>
-                                        {t(task.category)}
-                                      </Badge>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex space-x-1">
-                                {!task.completed && editingTask !== task.id && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => startEditTask(task)}
-                                    className="text-blue-300 hover:bg-blue-500/20"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleTaskAction(() => {
-                                      if (confirm("¿Estás seguro de que quieres eliminar esta tarea?")) {
-                                        deleteTask(task.id)
-                                      }
-                                    }, "eliminar tarea")
-                                  }
-                                  className="text-red-300 hover:bg-red-500/20 transition-all duration-200"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-
-                          {getFilteredTasks().length === 0 && getTodayTasks().length > 0 && (
-                            <div className="p-4 rounded-lg border border-purple-500/30 text-center">
-                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>
-                                No hay tareas que coincidan con los filtros
-                              </p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>Intenta cambiar los filtros</p>
-                            </div>
-                          )}
-
-                          {getTodayTasks().length === 0 && (
-                            <div className="p-4 rounded-lg border border-purple-500/30 text-center">
-                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>
-                                No hay tareas para este día
-                              </p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva tarea arriba!</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Pomodoro Tab */}
-                    {activeTab === "pomodoro" && (
-                      <div className="p-4 md:p-6 space-y-4">
-                        <div className="text-center space-y-6">
-                          <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>{t("pomodoro")}</h3>
-
-                          <div
-                            className={`text-4xl md:text-6xl font-bold ${getCurrentTheme().textPrimary} tabular-nums`}
-                          >
-                            {formatTime(pomodoroTime)}
-                          </div>
-
-                          <div className="flex justify-center space-x-2">
-                            <Badge className={pomodoroType === "work" ? "bg-purple-500" : "bg-gray-500"}>
-                              {t("workSession")}
-                            </Badge>
-                            <Badge className={pomodoroType === "shortBreak" ? "bg-green-500" : "bg-gray-500"}>
-                              {t("shortBreak")}
-                            </Badge>
-                          </div>
-
-                          <div className="flex justify-center space-x-4">
-                            <Button
-                              onClick={() => setPomodoroActive(!pomodoroActive)}
-                              className="bg-gradient-to-r from-purple-500 to-cyan-500"
-                            >
-                              {pomodoroActive ? (
-                                <>
-                                  <Pause className="w-4 h-4 mr-2" />
-                                  {t("pause")}
-                                </>
-                              ) : (
-                                <>
-                                  <Play className="w-4 h-4 mr-2" />
-                                  {t("start")}
-                                </>
-                              )}
-                            </Button>
-
-                            <Button
-                              onClick={() => {
-                                setPomodoroActive(false)
-                                setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
-                              }}
-                              variant="outline"
-                              className="border-purple-500/30"
-                            >
-                              <RotateCcw className="w-4 h-4 mr-2" />
-                              {t("reset")}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Wishlist Tab */}
-                    {activeTab === "wishlist" && user.isPremium && (
-                      <div className="p-4 md:p-6 space-y-4">
-                        <div className="space-y-2">
-                          <h3
-                            className={`text-lg font-semibold ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
-                          >
-                            <Heart className="w-5 h-5 text-pink-400" />
-                            <span>{t("wishlist")}</span>
-                          </h3>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                            Guarda tus deseos y metas para el futuro
-                          </p>
-                        </div>
-
-                        {/* Add Wish Form */}
-                        <div className="space-y-3">
-                          <Input
-                            value={newWishItem}
-                            onChange={(e) => setNewWishItem(e.target.value)}
-                            placeholder="Nuevo deseo..."
-                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                            onKeyPress={(e) => e.key === "Enter" && addWishItem()}
-                          />
-
-                          <Textarea
-                            value={newWishDescription}
-                            onChange={(e) => setNewWishDescription(e.target.value)}
-                            placeholder="Descripción del deseo (opcional)..."
-                            className={`bg-black/30 border-purple-500/30 ${getCurrentTheme().textPrimary} min-h-[60px] ${getCurrentTheme().placeholder}`}
-                          />
-
-                          <Button onClick={addWishItem} className="w-full bg-gradient-to-r from-pink-500 to-purple-500">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Agregar Deseo
-                          </Button>
-                        </div>
-
-                        {/* Wishlist Items */}
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {wishlistItems.map((item) => (
-                            <div
-                              key={item.id}
-                              className={`flex items-start justify-between p-3 rounded-lg border transition-all ${
-                                item.completed
-                                  ? "bg-green-900/20 border-green-500/30 line-through opacity-60"
-                                  : "bg-black/30 border-pink-500/30"
-                              }`}
-                            >
-                              <div className="flex items-center space-x-3 flex-1">
-                                <Checkbox
-                                  checked={item.completed}
-                                  onCheckedChange={() => toggleWishItem(item.id)}
-                                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-pink-500 data-[state=checked]:to-purple-500 data-[state=checked]:border-pink-400 border-2 border-pink-500/30 rounded-md transition-all duration-200 hover:border-pink-400"
-                                />
-                                <div className="flex-1">
-                                  <div className="space-y-1">
-                                    <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>
-                                      {item.text}
-                                    </span>
-                                    {item.description && (
-                                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{item.description}</p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => deleteWishItem(item.id)}
-                                className="text-red-300 hover:bg-red-500/20"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          ))}
-
-                          {wishlistItems.length === 0 && (
-                            <div className="p-4 rounded-lg border border-pink-500/30 text-center">
-                              <Heart className="w-12 h-12 mx-auto mb-3 text-pink-400" />
-                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes deseos aún</p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva deseo arriba!</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Notes Tab */}
-                    {activeTab === "notes" && user.isPremium && (
-                      <div className="p-4 md:p-6 space-y-4">
-                        <div className="space-y-2">
-                          <h3
-                            className={`text-lg font-semibold ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
-                          >
-                            <StickyNote className="w-5 h-5 text-yellow-400" />
-                            <span>{t("notes")}</span>
-                          </h3>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                            Escribe tus ideas, recordatorios y pensamientos
-                          </p>
-                        </div>
-
-                        {/* Add Note Form */}
-                        <div className="space-y-3">
-                          <Input
-                            value={newNoteTitle}
-                            onChange={(e) => setNewNoteTitle(e.target.value)}
-                            placeholder="Título de la nota..."
-                            className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary} ${getCurrentTheme().placeholder}`}
-                          />
-
-                          <Textarea
-                            value={newNoteContent}
-                            onChange={(e) => setNewNoteContent(e.target.value)}
-                            placeholder="Contenido de la nota..."
-                            className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary} min-h-[120px] ${getCurrentTheme().placeholder}`}
-                          />
-
-                          <Button onClick={addNote} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500">
-                            <Plus className="w-4 h-4 mr-2" />
-                            Agregar Nota
-                          </Button>
-                        </div>
-
-                        {/* Notes List */}
-                        <div className="space-y-2 max-h-96 overflow-y-auto">
-                          {notes.map((note) => (
-                            <div
-                              key={note.id}
-                              className={`p-3 rounded-lg border transition-all ${
-                                editingNote === note.id
-                                  ? "bg-gray-800/30 border-yellow-500/30"
-                                  : "bg-black/30 border-yellow-500/30"
-                              }`}
-                            >
-                              {editingNote === note.id ? (
-                                <div className="space-y-2">
-                                  <Input
-                                    value={editNoteTitle}
-                                    onChange={(e) => setEditNoteTitle(e.target.value)}
-                                    placeholder="Título de la nota..."
-                                    className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary}`}
-                                  />
-                                  <Textarea
-                                    value={editNoteContent}
-                                    onChange={(e) => setEditNoteContent(e.target.value)}
-                                    placeholder="Contenido de la nota..."
-                                    className={`bg-black/30 border-yellow-500/30 ${getCurrentTheme().textPrimary} min-h-[120px]`}
-                                  />
-                                  <div className="flex space-x-2">
-                                    <Button onClick={saveEditNote} size="sm" className="bg-green-500">
-                                      Guardar
-                                    </Button>
-                                    <Button onClick={cancelEditNote} size="sm" variant="outline">
-                                      Cancelar
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className={`font-semibold ${getCurrentTheme().textPrimary}`}>
-                                      {note.title}
-                                    </span>
-                                    <div className="flex space-x-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => startEditNote(note)}
-                                        className="text-blue-300 hover:bg-blue-500/20"
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => deleteNote(note.id)}
-                                        className="text-red-300 hover:bg-red-500/20"
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{note.content}</p>
-                                  <p className={`text-xs ${getCurrentTheme().textMuted}`}>
-                                    Creado el{" "}
-                                    {new Date(note.createdAt).toLocaleDateString("es-ES", {
-                                      day: "numeric",
-                                      month: "long",
-                                      year: "numeric",
-                                    })}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-
-                          {notes.length === 0 && (
-                            <div className="p-4 rounded-lg border border-yellow-500/30 text-center">
-                              <StickyNote className="w-12 h-12 mx-auto mb-3 text-yellow-400" />
-                              <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes notas aún</p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva nota arriba!</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+              </CardContent>
+            </Card>
+          ) : activeTab === "achievements" ? (
+            <div>
+              <h2 className={`text-lg font-bold mb-4 ${getCurrentTheme().textPrimary}`}>{t("achievements")}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {achievements.map((achievement) => (
+                  <Card key={achievement.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{achievement.name}</CardTitle>
+                      {achievement.unlocked ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Clock className="w-5 h-5 text-gray-400" />
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription className="text-xs text-gray-500">{achievement.description}</CardDescription>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
-          </div>
+          ) : null}
+
+          {/* Edit Task Modal */}
+          <Dialog open={editingTask !== null} onOpenChange={() => setEditingTask(null)}>
+            <DialogContent className={`sm:max-w-[425px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <DialogHeader>
+                <DialogTitle className={getCurrentTheme().textPrimary}>Editar Tarea</DialogTitle>
+                <DialogDescription className={getCurrentTheme().textSecondary}>
+                  Actualiza los detalles de tu tarea.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Tarea
+                  </Label>
+                  <Input
+                    type="text"
+                    id="name"
+                    value={editTaskText}
+                    onChange={(e) => setEditTaskText(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Descripción
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={editTaskDescription}
+                    onChange={(e) => setEditTaskDescription(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="time" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Hora
+                  </Label>
+                  <Input
+                    type="time"
+                    id="time"
+                    value={editTaskTime}
+                    onChange={(e) => setEditTaskTime(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="category" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Categoría
+                  </Label>
+                  <Select value={editTaskCategory} onValueChange={setEditTaskCategory}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="work">{t("work")}</SelectItem>
+                      <SelectItem value="personal">{t("personal")}</SelectItem>
+                      <SelectItem value="health">{t("health")}</SelectItem>
+                      <SelectItem value="learning">{t("learning")}</SelectItem>
+                      <SelectItem value="other">{t("other")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="priority" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Prioridad
+                  </Label>
+                  <Select value={editTaskPriority} onValueChange={setEditTaskPriority}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Prioridad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">{t("high")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="secondary" onClick={cancelEditTask}>
+                  Cancelar
+                </Button>
+                <Button type="submit" onClick={saveEditTask}>
+                  Guardar Cambios
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Note Modal */}
+          <Dialog open={editingNote !== null} onOpenChange={() => setEditingNote(null)}>
+            <DialogContent className={`sm:max-w-[425px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <DialogHeader>
+                <DialogTitle className={getCurrentTheme().textPrimary}>Editar Nota</DialogTitle>
+                <DialogDescription className={getCurrentTheme().textSecondary}>
+                  Actualiza los detalles de tu nota.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Título
+                  </Label>
+                  <Input
+                    type="text"
+                    id="title"
+                    value={editNoteTitle}
+                    onChange={(e) => setEditNoteTitle(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="content" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Contenido
+                  </Label>
+                  <Textarea
+                    id="content"
+                    value={editNoteContent}
+                    onChange={(e) => setEditNoteContent(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="secondary" onClick={cancelEditNote}>
+                  Cancelar
+                </Button>
+                <Button type="submit" onClick={saveEditNote}>
+                  Guardar Cambios
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Profile Modal */}
+          <Dialog open={showProfileModal} onOpenChange={() => setShowProfileModal(false)}>
+            <DialogContent className={`sm:max-w-[425px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <DialogHeader>
+                <DialogTitle className={getCurrentTheme().textPrimary}>{t("profile")}</DialogTitle>
+                <DialogDescription className={getCurrentTheme().textSecondary}>
+                  Administra tu cuenta y preferencias.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    {t("name")}
+                  </Label>
+                  <Input
+                    type="text"
+                    id="name"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="email" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    {t("email")}
+                  </Label>
+                  <Input
+                    type="email"
+                    id="email"
+                    value={profileEmail}
+                    onChange={(e) => setProfileEmail(e.target.value)}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="language" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Idioma
+                  </Label>
+                  <Select value={profileLanguage} onValueChange={setProfileLanguage}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="de">Deutsch</SelectItem>
+                      <SelectItem value="it">Italiano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="theme" className={`text-right ${getCurrentTheme().textSecondary}`}>
+                    Tema
+                  </Label>
+                  <Select value={profileTheme} onValueChange={setProfileTheme}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Tema" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(THEMES.free).map(([key, theme]) => (
+                        <SelectItem key={key} value={key}>
+                          {theme.name}
+                        </SelectItem>
+                      ))}
+                      {user.isPremium &&
+                        Object.entries(THEMES.premium).map(([key, theme]) => (
+                          <SelectItem key={key} value={key}>
+                            {theme.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="secondary" onClick={() => setShowProfileModal(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" onClick={saveProfile}>
+                  Guardar Cambios
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Premium Modal */}
+          <Dialog open={showPremiumModal} onOpenChange={() => setShowPremiumModal(false)}>
+            <DialogContent className={`sm:max-w-[425px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <DialogHeader>
+                <DialogTitle className={getCurrentTheme().textPrimary}>{t("premium")}</DialogTitle>
+                <DialogDescription className={getCurrentTheme().textSecondary}>
+                  ¡Desbloquea funciones exclusivas!
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <p className={getCurrentTheme().textPrimary}>
+                  Con Premium, obtienes acceso ilimitado a listas de deseos, notas, temas exclusivos y más.
+                </p>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="secondary" onClick={() => setShowPremiumModal(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  onClick={() => {
+                    setShowPremiumModal(false)
+                    setCurrentScreen("premium")
+                  }}
+                >
+                  {t("upgradeButton")}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Notification Prompt */}
+          <Dialog open={showNotificationPrompt} onOpenChange={() => setShowNotificationPrompt(false)}>
+            <DialogContent className={`sm:max-w-[425px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <DialogHeader>
+                <DialogTitle className={getCurrentTheme().textPrimary}>{t("notification")}</DialogTitle>
+                <DialogDescription className={getCurrentTheme().textSecondary}>
+                  {t("notificationPermissionDesc")}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <p className={getCurrentTheme().textPrimary}>{t("enableNotifications")}</p>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="secondary" onClick={() => setShowNotificationPrompt(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" onClick={requestNotificationPermission}>
+                  {t("enableNotifications")}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
-
-      {/* Profile Modal */}
-      <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-md`}>
-          <DialogHeader>
-            <DialogTitle>{t("profile")}</DialogTitle>
-            <DialogDescription>Administra tu cuenta y preferencias</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                {t("name")}
-              </Label>
-              <Input
-                id="name"
-                value={profileName}
-                onChange={(e) => setProfileName(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="email" className="text-right">
-                {t("email")}
-              </Label>
-              <Input
-                id="email"
-                value={profileEmail}
-                onChange={(e) => setProfileEmail(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="password" className="text-right">
-                {t("password")}
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={profilePassword}
-                onChange={(e) => setProfilePassword(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="language" className="text-right">
-                Idioma
-              </Label>
-              <Select value={profileLanguage} onValueChange={(value) => setProfileLanguage(value as any)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Idioma" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
-                  <SelectItem value="it">Italiano</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="theme" className="text-right">
-                Tema
-              </Label>
-              <Select value={profileTheme} onValueChange={(value) => setProfileTheme(value as any)}>
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Tema" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 border-purple-500/30">
-                  <SelectItem value="default" className={getCurrentTheme().textPrimary}>
-                    Futurista (Predeterminado)
-                  </SelectItem>
-                  <SelectItem value="light" className={getCurrentTheme().textPrimary}>
-                    Claro
-                  </SelectItem>
-                  <SelectItem value="dark" className={getCurrentTheme().textPrimary}>
-                    Oscuro
-                  </SelectItem>
-                  <SelectItem value="ocean" className={getCurrentTheme().textPrimary}>
-                    Océano
-                  </SelectItem>
-                  <SelectItem value="forest" className={getCurrentTheme().textPrimary}>
-                    Bosque
-                  </SelectItem>
-                  {user.isPremium && (
-                    <>
-                      <SelectItem value="neon" className={getCurrentTheme().textPrimary}>
-                        Neón
-                      </SelectItem>
-                      <SelectItem value="galaxy" className={getCurrentTheme().textPrimary}>
-                        Galaxia
-                      </SelectItem>
-                      <SelectItem value="sunset" className={getCurrentTheme().textPrimary}>
-                        Atardecer
-                      </SelectItem>
-                      <SelectItem value="aurora" className={getCurrentTheme().textPrimary}>
-                        Aurora
-                      </SelectItem>
-                      <SelectItem value="cyberpunk" className={getCurrentTheme().textPrimary}>
-                        Cyberpunk
-                      </SelectItem>
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="secondary" onClick={() => setShowProfileModal(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" onClick={saveProfile}>
-              Guardar cambios
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Premium Modal */}
-      <Dialog open={showPremiumModal} onOpenChange={setShowPremiumModal}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-md`}>
-          <DialogHeader>
-            <DialogTitle>¿Quieres acceder a más funciones?</DialogTitle>
-            <DialogDescription>
-              Con Premium, desbloquea la lista de deseos, notas ilimitadas y temas exclusivos.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p>
-              ¿Te gustaría probar Premium para desbloquear todas las funciones y llevar tu productividad al siguiente
-              nivel?
-            </p>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="secondary" onClick={() => setShowPremiumModal(false)}>
-              No, gracias
-            </Button>
-            <Button type="submit" onClick={() => handlePremiumChoice(true)}>
-              ¡Sí, quiero Premium!
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Notification Prompt */}
-      <Dialog open={showNotificationPrompt} onOpenChange={setShowNotificationPrompt}>
-        <DialogContent className={`bg-black/90 backdrop-blur-xl border-purple-500/30 text-white max-w-md`}>
-          <DialogHeader>
-            <DialogTitle>{t("notificationPermission")}</DialogTitle>
-            <DialogDescription>{t("notificationPermissionDesc")}</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p>{t("enableNotifications")}</p>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="secondary" onClick={() => setShowNotificationPrompt(false)}>
-              {language === "en" ? "Maybe later" : "Quizás más tarde"}
-            </Button>
-            <Button type="submit" onClick={requestNotificationPermission}>
-              {language === "en" ? "Allow Notifications" : "Permitir Notificaciones"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
