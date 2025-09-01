@@ -64,11 +64,13 @@ interface User {
   id: string
   name: string
   email: string
+  password: string
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   isPremium: boolean
   onboardingCompleted: boolean
   pomodoroSessions: number
+  createdAt: string
 }
 
 interface Achievement {
@@ -626,65 +628,29 @@ export default function FutureTaskApp() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // En el useEffect de notificaciones (línea ~200 aproximadamente), reemplazar todo el bloque con:
-
   // Request notification permission and check status
   useEffect(() => {
-    console.log("Checking notification support and permissions...")
+    if (!("Notification" in window)) return
 
-    if (!("Notification" in window)) {
-      console.log("This browser does not support notifications")
-      return
-    }
-
-    console.log("Current permission:", Notification.permission)
     setNotificationPermission(Notification.permission)
 
-    // Show prompt if permission is default and user is logged in
-    if (user && currentScreen === "app") {
-      console.log("User logged in, checking if should show prompt...")
-
-      if (Notification.permission === "default") {
-        console.log("Permission is default, showing prompt in 3 seconds...")
-        const timer = setTimeout(() => {
-          console.log("Showing notification prompt now")
-          setShowNotificationPrompt(true)
-        }, 3000)
-
-        return () => {
-          console.log("Clearing notification timer")
-          clearTimeout(timer)
-        }
-      } else {
-        console.log("Permission already granted or denied:", Notification.permission)
-      }
-    } else {
-      console.log("User not logged in or not in app screen")
+    if (user && currentScreen === "app" && Notification.permission === "default") {
+      const timer = setTimeout(() => {
+        setShowNotificationPrompt(true)
+      }, 3000)
+      return () => clearTimeout(timer)
     }
   }, [user, currentScreen])
 
-  // También actualizar la función requestNotificationPermission (línea ~230 aproximadamente):
-
   // Mejorar la función requestNotificationPermission para que sea más robusta
   const requestNotificationPermission = async () => {
-    console.log("🔔 requestNotificationPermission called")
-
     if (!("Notification" in window)) {
-      console.log("❌ Browser doesn't support notifications")
       alert("Este navegador no soporta notificaciones")
       setShowNotificationPrompt(false)
       return
     }
 
     try {
-      console.log("📋 Current permission before request:", Notification.permission)
-
-      // Mostrar loading state
-      const originalText = document.activeElement?.textContent
-      if (document.activeElement) {
-        document.activeElement.textContent = "Solicitando..."
-      }
-
       let permission
       if (Notification.requestPermission.length) {
         permission = await new Promise((resolve) => {
@@ -694,103 +660,28 @@ export default function FutureTaskApp() {
         permission = await Notification.requestPermission()
       }
 
-      console.log("✅ Permission result:", permission)
       setNotificationPermission(permission)
       setShowNotificationPrompt(false)
 
       if (permission === "granted") {
-        console.log("🎉 Permission granted, showing test notification")
-        try {
-          const notification = new Notification("¡Notificaciones activadas! 🎉", {
-            body: "Ahora recibirás recordatorios de tus tareas",
-            icon: "/favicon-32x32.png",
-            tag: "permission-granted",
-            requireInteraction: false,
-          })
-
-          notification.onclick = () => {
-            console.log("👆 Test notification clicked")
-            window.focus()
-            notification.close()
-          }
-
-          // Auto close after 5 seconds
-          setTimeout(() => {
-            notification.close()
-          }, 5000)
-        } catch (notifError) {
-          console.error("❌ Error showing test notification:", notifError)
-        }
-      } else if (permission === "denied") {
-        console.log("🚫 Permission denied")
-        alert(
-          "Has denegado las notificaciones. Puedes activarlas desde la configuración del navegador (icono de candado en la barra de direcciones).",
-        )
-      } else {
-        console.log("⏸️ Permission default/dismissed")
+        new Notification("¡Notificaciones activadas! 🎉", {
+          body: "Ahora recibirás recordatorios de tus tareas",
+          icon: "/favicon-32x32.png",
+        })
       }
     } catch (error) {
-      console.error("💥 Error requesting notification permission:", error)
+      console.error("Error requesting notification permission:", error)
       setShowNotificationPrompt(false)
-      alert("Error al solicitar permisos de notificación: " + error.message)
     }
   }
 
-  // Agregar función para manejar clics en botones de notificación
-  const handleNotificationButtonClick = async (action: "request" | "test" | "help") => {
-    console.log(`🎯 Notification button clicked: ${action}`)
+  // Función para verificar si el usuario existe en la base de datos
+  const verifyUserExists = (email: string, password: string): User | null => {
+    const savedUsers = localStorage.getItem("futureTask_users")
+    if (!savedUsers) return null
 
-    if (!("Notification" in window)) {
-      alert("Este navegador no soporta notificaciones")
-      return
-    }
-
-    switch (action) {
-      case "request":
-        await requestNotificationPermission()
-        break
-
-      case "test":
-        if (Notification.permission === "granted") {
-          try {
-            console.log("🧪 Creating test notification")
-            const notification = new Notification("🧪 Notificación de prueba", {
-              body: "¡Las notificaciones están funcionando correctamente!",
-              icon: "/favicon-32x32.png",
-              tag: "manual-test",
-              requireInteraction: false,
-            })
-
-            notification.onclick = () => {
-              console.log("👆 Manual test notification clicked")
-              window.focus()
-              notification.close()
-            }
-
-            setTimeout(() => notification.close(), 5000)
-            console.log("✅ Test notification created successfully")
-          } catch (error) {
-            console.error("❌ Error showing manual test notification:", error)
-            alert("Error mostrando notificación: " + error.message)
-          }
-        } else {
-          alert("Las notificaciones no están permitidas")
-        }
-        break
-
-      case "help":
-        alert(`🔧 Para activar las notificaciones:
-
-1. Haz clic en el icono de candado 🔒 en la barra de direcciones
-2. Busca "Notificaciones" 
-3. Cambia de "Bloquear" a "Permitir"
-4. Recarga la página
-
-O ve a la configuración del navegador:
-- Chrome: chrome://settings/content/notifications
-- Firefox: about:preferences#privacy`)
-        break
-    }
+    const users: User[] = JSON.parse(savedUsers)
+    return users.find((u) => u.email === email && u.password === password) || null
   }
 
   // Initialize app - runs only once
@@ -802,6 +693,17 @@ O ve a la configuración del navegador:
         const savedUser = localStorage.getItem("futureTask_user")
         if (savedUser) {
           const parsedUser = JSON.parse(savedUser)
+
+          // Verificar que el usuario aún existe en la base de datos
+          const userExists = verifyUserExists(parsedUser.email, parsedUser.password)
+          if (!userExists) {
+            // Si el usuario no existe, limpiar datos locales
+            localStorage.removeItem("futureTask_user")
+            setCurrentScreen("welcome")
+            setIsInitialized(true)
+            return
+          }
+
           setUser(parsedUser)
           setLanguage(parsedUser.language || "es")
 
@@ -1117,20 +1019,48 @@ O ve a la configuración del navegador:
 
   // Event handlers
   const handleAuth = () => {
-    const newUser: User = {
-      id: Date.now().toString(),
-      name: authMode === "register" ? name : email.split("@")[0],
-      email,
-      language,
-      theme: "default",
-      isPremium: false,
-      onboardingCompleted: false,
-      pomodoroSessions: 0,
-    }
+    if (authMode === "login") {
+      // Verificar credenciales en la base de datos
+      const existingUser = verifyUserExists(email, password)
+      if (!existingUser) {
+        alert("Usuario o contraseña incorrectos, o el usuario no existe en la base de datos.")
+        return
+      }
 
-    setUser(newUser)
-    localStorage.setItem("futureTask_user", JSON.stringify(newUser))
-    setCurrentScreen(authMode === "register" ? "premium" : "app")
+      setUser(existingUser)
+      localStorage.setItem("futureTask_user", JSON.stringify(existingUser))
+      setCurrentScreen(existingUser.onboardingCompleted ? "app" : "premium")
+    } else {
+      // Registro - verificar si el usuario ya existe
+      const savedUsers = localStorage.getItem("futureTask_users")
+      const users: User[] = savedUsers ? JSON.parse(savedUsers) : []
+
+      if (users.find((u) => u.email === email)) {
+        alert("Ya existe un usuario con este email.")
+        return
+      }
+
+      const newUser: User = {
+        id: Date.now().toString(),
+        name: name,
+        email,
+        password,
+        language,
+        theme: "default",
+        isPremium: false,
+        onboardingCompleted: false,
+        pomodoroSessions: 0,
+        createdAt: new Date().toISOString(),
+      }
+
+      // Agregar usuario a la base de datos
+      users.push(newUser)
+      localStorage.setItem("futureTask_users", JSON.stringify(users))
+
+      setUser(newUser)
+      localStorage.setItem("futureTask_user", JSON.stringify(newUser))
+      setCurrentScreen("premium")
+    }
 
     // Reset form
     setEmail("")
@@ -1144,6 +1074,18 @@ O ve a la configuración del navegador:
     const updatedUser = { ...user, isPremium, onboardingCompleted: true }
     setUser(updatedUser)
     localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+
+    // Actualizar también en la base de datos de usuarios
+    const savedUsers = localStorage.getItem("futureTask_users")
+    if (savedUsers) {
+      const users: User[] = JSON.parse(savedUsers)
+      const userIndex = users.findIndex((u) => u.id === user.id)
+      if (userIndex !== -1) {
+        users[userIndex] = updatedUser
+        localStorage.setItem("futureTask_users", JSON.stringify(users))
+      }
+    }
+
     setCurrentScreen("app")
   }
 
@@ -1273,6 +1215,18 @@ O ve a la configuración del navegador:
     setUser(updatedUser)
     setLanguage(profileLanguage)
     localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+
+    // Actualizar también en la base de datos de usuarios
+    const savedUsers = localStorage.getItem("futureTask_users")
+    if (savedUsers) {
+      const users: User[] = JSON.parse(savedUsers)
+      const userIndex = users.findIndex((u) => u.id === user.id)
+      if (userIndex !== -1) {
+        users[userIndex] = updatedUser
+        localStorage.setItem("futureTask_users", JSON.stringify(users))
+      }
+    }
+
     setShowProfileModal(false)
   }
 
@@ -1358,6 +1312,11 @@ O ve a la configuración del navegador:
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {authMode === "login" ? t("login") : t("register")}
             </CardTitle>
+            {authMode === "login" && (
+              <p className={`text-sm ${getCurrentTheme().textSecondary} mt-2`}>
+                Solo usuarios registrados en la base de datos pueden acceder
+              </p>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {authMode === "register" && (
@@ -1604,6 +1563,35 @@ O ve a la configuración del navegador:
   if (!user) return null
 
   // Agregar función para debug de botones
+  const showDatabase = () => {
+    const data = {
+      users: JSON.parse(localStorage.getItem("futureTask_users") || "[]"),
+      currentUser: user,
+      tasks: tasks,
+      wishlist: wishlistItems,
+      notes: notes,
+      allStorageKeys: Object.keys(localStorage).filter((key) => key.startsWith("futureTask_")),
+    }
+
+    console.log("📊 BASE DE DATOS FUTURETASK:", data)
+
+    // Mostrar en una ventana nueva para mejor visualización
+    const newWindow = window.open("", "_blank", "width=800,height=600")
+    if (newWindow) {
+      newWindow.document.write(`
+        <html>
+          <head><title>FutureTask - Base de Datos</title></head>
+          <body style="font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff;">
+            <h1>📊 Base de Datos FutureTask</h1>
+            <pre style="background: #2a2a2a; padding: 15px; border-radius: 8px; overflow: auto;">
+${JSON.stringify(data, null, 2)}
+            </pre>
+          </body>
+        </html>
+      `)
+    }
+  }
+
   const debugButtonClick = (buttonName: string) => {
     console.log(`🎯 Button clicked: ${buttonName}`)
     console.log(`📊 Current state:`, {
@@ -1823,7 +1811,7 @@ O ve a la configuración del navegador:
                     {/* Mejorar el botón de activar notificaciones en el indicador de estado */}
                     {notificationPermission !== "granted" && (
                       <Button
-                        onClick={() => handleNotificationButtonClick("request")}
+                        onClick={requestNotificationPermission}
                         size="sm"
                         variant="outline"
                         className="w-full mt-2 border-purple-500/30 text-purple-300 bg-transparent text-xs hover:bg-purple-500/10 transition-all duration-200"
@@ -1837,45 +1825,9 @@ O ve a la configuración del navegador:
               </div>
             )}
 
-            {/* En la sección del botón manual de notificaciones, reemplazar el onClick con: */}
-            {/* Manual notification test button - mejorado */}
-            {user && (
-              <div className="px-4 pb-2">
-                <Button
-                  onClick={() =>
-                    handleNotificationButtonClick(
-                      notificationPermission === "default"
-                        ? "request"
-                        : notificationPermission === "granted"
-                          ? "test"
-                          : "help",
-                    )
-                  }
-                  variant="outline"
-                  size="sm"
-                  className={`w-full text-xs transition-all duration-200 ${
-                    notificationPermission === "granted"
-                      ? "border-green-500/30 text-green-300 bg-green-500/5 hover:bg-green-500/10"
-                      : notificationPermission === "denied"
-                        ? "border-red-500/30 text-red-300 bg-red-500/5 hover:bg-red-500/10"
-                        : "border-blue-500/30 text-blue-300 bg-blue-500/5 hover:bg-blue-500/10"
-                  }`}
-                >
-                  <Bell className="w-3 h-3 mr-1" />
-                  {notificationPermission === "default"
-                    ? "🔔 Activar notificaciones"
-                    : notificationPermission === "granted"
-                      ? "🧪 Probar notificación"
-                      : "🚫 Ayuda con notificaciones"}
-                </Button>
-              </div>
-            )}
-
             {/* Navigation */}
             <div className="p-4">
               <div className="space-y-2">
-                {/* En todos los botones principales, agregar el debug: */}
-                {/* Por ejemplo, en los botones de navegación: */}
                 <Button
                   onClick={() => {
                     debugButtonClick("tasks-tab")
@@ -1993,11 +1945,18 @@ O ve a la configuración del navegador:
                     </div>
                   </DialogContent>
                 </Dialog>
+                <Button
+                  onClick={showDatabase}
+                  variant="outline"
+                  className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
+                >
+                  📊 Ver Base de Datos
+                </Button>
 
                 <Button
                   onClick={() => {
                     debugButtonClick("profile-modal")
-                    openProfileModal
+                    openProfileModal()
                   }}
                   variant="outline"
                   className="w-full border-purple-500/30 text-purple-300 bg-transparent text-sm"
@@ -2331,7 +2290,6 @@ O ve a la configuración del navegador:
                                   )}
                                 </div>
                               </div>
-                              {/* Mejorar el botón de eliminar tarea: */}
                               <div className="flex space-x-1">
                                 {!task.completed && editingTask !== task.id && (
                                   <Button
@@ -2518,7 +2476,7 @@ O ve a la configuración del navegador:
                             <div className="p-4 rounded-lg border border-pink-500/30 text-center">
                               <Heart className="w-12 h-12 mx-auto mb-3 text-pink-400" />
                               <p className={`${getCurrentTheme().textPrimary} font-semibold`}>No tienes deseos aún</p>
-                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega un nuevo deseo arriba!</p>
+                              <p className={`${getCurrentTheme().textSecondary}`}>¡Agrega una nueva deseo arriba!</p>
                             </div>
                           )}
                         </div>
