@@ -1,43 +1,35 @@
 // Get environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
 // Check if we have valid Supabase configuration
 const hasValidSupabaseConfig = Boolean(
   supabaseUrl &&
-    supabaseAnonKey &&
+    supabaseKey &&
     supabaseUrl.startsWith("https://") &&
     supabaseUrl.includes(".supabase.co") &&
-    supabaseAnonKey.length > 20,
+    supabaseKey.length > 20,
 )
 
-// Export a flag to check if Supabase is available
-export const isSupabaseAvailable = hasValidSupabaseConfig
-
-// Create Supabase client only if we have valid configuration
+// Create Supabase client only if we have valid configuration and we're in browser
 let supabaseClient: any = null
 
-// Only create client in browser environment
 if (typeof window !== "undefined" && hasValidSupabaseConfig) {
   try {
     const { createClient } = require("@supabase/supabase-js")
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+    supabaseClient = createClient(supabaseUrl, supabaseKey)
+    console.log("✅ Supabase client created successfully")
   } catch (error) {
-    console.error("Error creating Supabase client:", error)
+    console.error("❌ Error creating Supabase client:", error)
     supabaseClient = null
   }
+} else if (typeof window !== "undefined") {
+  console.log("📦 Using localStorage fallback - Supabase not configured")
 }
 
+// Export the client and availability flag
 export const supabase = supabaseClient
-
-// Log configuration status (only in development and client-side)
-if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-  console.log("🔧 Supabase Configuration Status:")
-  console.log("  URL:", supabaseUrl ? "✅ Set" : "❌ Missing")
-  console.log("  Key:", supabaseAnonKey ? "✅ Set" : "❌ Missing")
-  console.log("  Valid Config:", hasValidSupabaseConfig ? "✅ Yes" : "❌ No")
-  console.log("  Client Created:", supabaseClient ? "✅ Yes" : "❌ No (using localStorage fallback)")
-}
+export const isSupabaseAvailable = hasValidSupabaseConfig
 
 // Types for TypeScript
 export interface User {
