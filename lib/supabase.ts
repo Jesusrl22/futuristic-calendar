@@ -1,11 +1,66 @@
-import { createClient } from "@supabase/supabase-js"
+// Get environment variables with fallbacks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Check if we have valid Supabase configuration
+const hasValidSupabaseConfig = Boolean(
+  supabaseUrl &&
+    supabaseAnonKey &&
+    supabaseUrl.startsWith("https://") &&
+    supabaseUrl.includes(".supabase.co") &&
+    supabaseAnonKey.length > 20,
+)
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Export a flag to check if Supabase is available
+export const isSupabaseAvailable = hasValidSupabaseConfig
 
-// Tipos para TypeScript
+// Create Supabase client only if we have valid configuration AND we're in the browser
+let supabaseClient: any = null
+
+if (hasValidSupabaseConfig && typeof window !== "undefined") {
+  try {
+    const { createClient } = require("@supabase/supabase-js")
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+  } catch (error) {
+    console.error("Error creating Supabase client:", error)
+    supabaseClient = null
+  }
+}
+
+// Create a function to get the client safely
+export const getSupabaseClient = () => {
+  if (!hasValidSupabaseConfig) return null
+
+  if (typeof window === "undefined") {
+    // Server-side: return null to force fallback
+    return null
+  }
+
+  if (!supabaseClient) {
+    try {
+      const { createClient } = require("@supabase/supabase-js")
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+    } catch (error) {
+      console.error("Error creating Supabase client:", error)
+      return null
+    }
+  }
+
+  return supabaseClient
+}
+
+export const supabase = getSupabaseClient()
+
+// Log configuration status (only in development and client-side)
+if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
+  console.log("🔧 Supabase Configuration Status:")
+  console.log("  URL:", supabaseUrl ? "✅ Set" : "❌ Missing")
+  console.log("  Key:", supabaseAnonKey ? "✅ Set" : "❌ Missing")
+  console.log("  Valid Config:", hasValidSupabaseConfig ? "✅ Yes" : "❌ No")
+  console.log("  Client Created:", supabaseClient ? "✅ Yes" : "❌ No (using localStorage fallback)")
+}
+
+// Types for TypeScript
 export interface User {
   id: string
   name: string
@@ -63,7 +118,7 @@ export interface Achievement {
   unlocked_at: string
 }
 
-// Tipos para la base de datos
+// Types for the database
 export interface Database {
   public: {
     Tables: {
