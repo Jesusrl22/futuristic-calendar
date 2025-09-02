@@ -1230,12 +1230,9 @@ export default function FutureTaskApp() {
           {/* Mobile Content */}
           <div className="flex-1 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-              <TabsList className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} m-4 grid grid-cols-5`}>
+              <TabsList className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} m-4 grid grid-cols-4`}>
                 <TabsTrigger value="tasks" className="text-xs">
                   <CheckCircle className="w-4 h-4" />
-                </TabsTrigger>
-                <TabsTrigger value="calendar" className="text-xs">
-                  <CalendarIcon className="w-4 h-4" />
                 </TabsTrigger>
                 <TabsTrigger value="pomodoro" className="text-xs">
                   <Timer className="w-4 h-4" />
@@ -1251,6 +1248,26 @@ export default function FutureTaskApp() {
               <div className="flex-1 overflow-y-auto px-4 pb-4">
                 <TabsContent value="tasks" className="mt-0">
                   <div className="space-y-4">
+                    {/* Calendar Widget Mobile */}
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className={`text-lg ${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
+                          <CalendarIcon className="w-5 h-5" />
+                          <span>{t("calendar")}</span>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="scale-90 origin-top">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={(date) => date && setSelectedDate(date)}
+                            className="rounded-md border-none shadow-none w-full"
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
                     {/* Stats Cards Mobile */}
                     <div className="grid grid-cols-2 gap-3">
                       <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
@@ -1282,27 +1299,18 @@ export default function FutureTaskApp() {
                       </Card>
                     </div>
 
-                    {/* Date Selector */}
+                    {/* Selected Date Display */}
                     <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
                       <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary}`}>
-                            {selectedDate.toLocaleDateString(language, {
-                              weekday: "long",
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setActiveTab("calendar")}
-                            className={getCurrentTheme().textAccent}
-                          >
-                            <CalendarIcon className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <h3 className={`font-semibold ${getCurrentTheme().textPrimary} text-center`}>
+                          Tareas para{" "}
+                          {selectedDate.toLocaleDateString(language, {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </h3>
                       </CardContent>
                     </Card>
 
@@ -1447,30 +1455,6 @@ export default function FutureTaskApp() {
                       </CardContent>
                     </Card>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="calendar" className="mt-0">
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardHeader>
-                      <CardTitle className={getCurrentTheme().textPrimary}>{t("calendar")}</CardTitle>
-                      <CardDescription className={getCurrentTheme().textSecondary}>
-                        Selecciona un día para ver tus tareas
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => {
-                          if (date) {
-                            setSelectedDate(date)
-                            setActiveTab("tasks")
-                          }
-                        }}
-                        className="rounded-md border-none shadow-none w-full"
-                      />
-                    </CardContent>
-                  </Card>
                 </TabsContent>
 
                 <TabsContent value="pomodoro" className="mt-0">
@@ -1621,14 +1605,6 @@ export default function FutureTaskApp() {
                 {t("tasks")}
               </Button>
               <Button
-                variant={activeTab === "calendar" ? "default" : "ghost"}
-                className={`w-full justify-start ${activeTab === "calendar" ? getCurrentTheme().buttonPrimary : getCurrentTheme().textSecondary}`}
-                onClick={() => setActiveTab("calendar")}
-              >
-                <CalendarIcon className="w-4 h-4 mr-2" />
-                {t("calendar")}
-              </Button>
-              <Button
                 variant={activeTab === "pomodoro" ? "default" : "ghost"}
                 className={`w-full justify-start ${activeTab === "pomodoro" ? getCurrentTheme().buttonPrimary : getCurrentTheme().textSecondary}`}
                 onClick={() => setActiveTab("pomodoro")}
@@ -1689,253 +1665,254 @@ export default function FutureTaskApp() {
           <div className="flex-1 p-6 overflow-y-auto">
             {activeTab === "tasks" && (
               <div className="space-y-6">
-                {/* Stats Cards Desktop */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <CheckCircle className="w-5 h-5 text-green-400" />
-                        <div>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
-                          <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
-                            {getCompletedTasks().length}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <Target className="w-5 h-5 text-blue-400" />
-                        <div>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
-                          <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
-                            {getTodayTasks().length}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <Flame className="w-5 h-5 text-orange-400" />
-                        <div>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("streak")}</p>
-                          <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>3 días</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <Star className="w-5 h-5 text-purple-400" />
-                        <div>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</p>
-                          <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
-                            {Math.round(getTodayProgress())}%
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Date and Filters */}
-                <div className="flex items-center justify-between">
-                  <h2 className={`text-2xl font-bold ${getCurrentTheme().textPrimary}`}>
-                    {t("tasks")} - {selectedDate.toLocaleDateString(language)}
-                  </h2>
-                  <div className="flex space-x-2">
-                    <Select value={taskFilter} onValueChange={setTaskFilter}>
-                      <SelectTrigger className={`w-32 ${getCurrentTheme().inputBg}`}>
-                        <SelectValue placeholder="Filtrar" />
-                      </SelectTrigger>
-                      <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                        <SelectItem value="all" className={getCurrentTheme().textPrimary}>
-                          {t("all")}
-                        </SelectItem>
-                        <SelectItem value="completed" className={getCurrentTheme().textPrimary}>
-                          {t("completedToday")}
-                        </SelectItem>
-                        <SelectItem value="pending" className={getCurrentTheme().textPrimary}>
-                          {t("pending")}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Task List Desktop */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>Tareas de Hoy</h3>
-                    {getFilteredTasks().length > 0 ? (
-                      getFilteredTasks().map((task) => (
-                        <Card key={task.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-start space-x-3">
-                              <Checkbox
-                                id={`task-${task.id}`}
-                                checked={task.completed}
-                                onCheckedChange={() => toggleTask(task.id)}
-                                className="mt-1"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <Label
-                                  htmlFor={`task-${task.id}`}
-                                  className={`text-sm font-medium block ${
-                                    task.completed
-                                      ? `line-through ${getCurrentTheme().textMuted}`
-                                      : getCurrentTheme().textPrimary
-                                  }`}
-                                >
-                                  {task.text}
-                                </Label>
-                                {task.description && (
-                                  <p className={`text-xs mt-1 ${getCurrentTheme().textSecondary}`}>
-                                    {task.description}
-                                  </p>
-                                )}
-                                <div className="flex items-center space-x-2 mt-2">
-                                  <Badge className={CATEGORY_COLORS[task.category]} size="sm">
-                                    {t(task.category)}
-                                  </Badge>
-                                  {task.priority && (
-                                    <Badge className={PRIORITY_COLORS[task.priority]} size="sm">
-                                      {task.priority}
-                                    </Badge>
-                                  )}
-                                  {task.time && (
-                                    <Badge variant="outline" size="sm">
-                                      <Clock className="w-3 h-3 mr-1" />
-                                      {task.time}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              <Button variant="ghost" size="icon" onClick={() => deleteTaskHandler(task.id)}>
-                                <Trash2 className="w-4 h-4 text-red-400" />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                        <CardContent className="p-8 text-center">
-                          <CheckCircle className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
-                          <p className={getCurrentTheme().textMuted}>No hay tareas para este día.</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </div>
-
-                  {/* Add Task Form Desktop */}
-                  <div>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  {/* Calendar Section */}
+                  <div className="xl:col-span-1">
                     <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
                       <CardHeader>
-                        <CardTitle className={getCurrentTheme().textPrimary}>{t("newTask")}</CardTitle>
+                        <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
+                          <CalendarIcon className="w-5 h-5" />
+                          <span>{t("calendar")}</span>
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
-                        <Input
-                          type="text"
-                          placeholder={t("newTask")}
-                          value={newTask}
-                          onChange={(e) => setNewTask(e.target.value)}
-                          className={getCurrentTheme().inputBg}
+                      <CardContent>
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => date && setSelectedDate(date)}
+                          className="rounded-md border-none shadow-none w-full"
                         />
-                        <Textarea
-                          placeholder={t("description")}
-                          value={newTaskDescription}
-                          onChange={(e) => setNewTaskDescription(e.target.value)}
-                          className={getCurrentTheme().inputBg}
-                        />
-                        <div className="grid grid-cols-2 gap-4">
-                          <Input
-                            type="time"
-                            placeholder={t("time")}
-                            value={newTaskTime}
-                            onChange={(e) => setNewTaskTime(e.target.value)}
-                            className={getCurrentTheme().inputBg}
-                          />
-                          <Select value={newTaskCategory} onValueChange={setNewTaskCategory}>
-                            <SelectTrigger className={getCurrentTheme().inputBg}>
-                              <SelectValue placeholder="Categoría" />
-                            </SelectTrigger>
-                            <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                              <SelectItem value="work" className={getCurrentTheme().textPrimary}>
-                                {t("work")}
-                              </SelectItem>
-                              <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
-                                {t("personal")}
-                              </SelectItem>
-                              <SelectItem value="health" className={getCurrentTheme().textPrimary}>
-                                {t("health")}
-                              </SelectItem>
-                              <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
-                                {t("learning")}
-                              </SelectItem>
-                              <SelectItem value="other" className={getCurrentTheme().textPrimary}>
-                                {t("other")}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
-                          <SelectTrigger className={getCurrentTheme().inputBg}>
-                            <SelectValue placeholder="Prioridad" />
+                      </CardContent>
+                    </Card>
+
+                    {/* Stats Cards Desktop */}
+                    <div className="grid grid-cols-2 gap-4 mt-6">
+                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-2">
+                            <CheckCircle className="w-5 h-5 text-green-400" />
+                            <div>
+                              <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
+                              <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
+                                {getCompletedTasks().length}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-2">
+                            <Target className="w-5 h-5 text-blue-400" />
+                            <div>
+                              <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
+                              <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
+                                {getTodayTasks().length}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-2">
+                            <Flame className="w-5 h-5 text-orange-400" />
+                            <div>
+                              <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("streak")}</p>
+                              <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>3 días</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-2">
+                            <Star className="w-5 h-5 text-purple-400" />
+                            <div>
+                              <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</p>
+                              <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
+                                {Math.round(getTodayProgress())}%
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+
+                  {/* Tasks Section */}
+                  <div className="xl:col-span-2 space-y-6">
+                    {/* Date and Filters */}
+                    <div className="flex items-center justify-between">
+                      <h2 className={`text-2xl font-bold ${getCurrentTheme().textPrimary}`}>
+                        Tareas - {selectedDate.toLocaleDateString(language)}
+                      </h2>
+                      <div className="flex space-x-2">
+                        <Select value={taskFilter} onValueChange={setTaskFilter}>
+                          <SelectTrigger className={`w-32 ${getCurrentTheme().inputBg}`}>
+                            <SelectValue placeholder="Filtrar" />
                           </SelectTrigger>
                           <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                            <SelectItem value="high" className={getCurrentTheme().textPrimary}>
-                              {t("high")}
+                            <SelectItem value="all" className={getCurrentTheme().textPrimary}>
+                              {t("all")}
                             </SelectItem>
-                            <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
-                              {t("medium")}
+                            <SelectItem value="completed" className={getCurrentTheme().textPrimary}>
+                              {t("completedToday")}
                             </SelectItem>
-                            <SelectItem value="low" className={getCurrentTheme().textPrimary}>
-                              {t("low")}
+                            <SelectItem value="pending" className={getCurrentTheme().textPrimary}>
+                              {t("pending")}
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                        <Button onClick={addTask} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          {t("addTask")}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Task List */}
+                      <div className="space-y-4">
+                        <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>Lista de Tareas</h3>
+                        {getFilteredTasks().length > 0 ? (
+                          getFilteredTasks().map((task) => (
+                            <Card key={task.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                              <CardContent className="p-4">
+                                <div className="flex items-start space-x-3">
+                                  <Checkbox
+                                    id={`task-${task.id}`}
+                                    checked={task.completed}
+                                    onCheckedChange={() => toggleTask(task.id)}
+                                    className="mt-1"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <Label
+                                      htmlFor={`task-${task.id}`}
+                                      className={`text-sm font-medium block ${
+                                        task.completed
+                                          ? `line-through ${getCurrentTheme().textMuted}`
+                                          : getCurrentTheme().textPrimary
+                                      }`}
+                                    >
+                                      {task.text}
+                                    </Label>
+                                    {task.description && (
+                                      <p className={`text-xs mt-1 ${getCurrentTheme().textSecondary}`}>
+                                        {task.description}
+                                      </p>
+                                    )}
+                                    <div className="flex items-center space-x-2 mt-2">
+                                      <Badge className={CATEGORY_COLORS[task.category]} size="sm">
+                                        {t(task.category)}
+                                      </Badge>
+                                      {task.priority && (
+                                        <Badge className={PRIORITY_COLORS[task.priority]} size="sm">
+                                          {task.priority}
+                                        </Badge>
+                                      )}
+                                      {task.time && (
+                                        <Badge variant="outline" size="sm">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          {task.time}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Button variant="ghost" size="icon" onClick={() => deleteTaskHandler(task.id)}>
+                                    <Trash2 className="w-4 h-4 text-red-400" />
+                                  </Button>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))
+                        ) : (
+                          <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                            <CardContent className="p-8 text-center">
+                              <CheckCircle className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                              <p className={getCurrentTheme().textMuted}>No hay tareas para este día.</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+
+                      {/* Add Task Form */}
+                      <div>
+                        <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <CardHeader>
+                            <CardTitle className={getCurrentTheme().textPrimary}>{t("newTask")}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <Input
+                              type="text"
+                              placeholder={t("newTask")}
+                              value={newTask}
+                              onChange={(e) => setNewTask(e.target.value)}
+                              className={getCurrentTheme().inputBg}
+                            />
+                            <Textarea
+                              placeholder={t("description")}
+                              value={newTaskDescription}
+                              onChange={(e) => setNewTaskDescription(e.target.value)}
+                              className={getCurrentTheme().inputBg}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                              <Input
+                                type="time"
+                                placeholder={t("time")}
+                                value={newTaskTime}
+                                onChange={(e) => setNewTaskTime(e.target.value)}
+                                className={getCurrentTheme().inputBg}
+                              />
+                              <Select value={newTaskCategory} onValueChange={setNewTaskCategory}>
+                                <SelectTrigger className={getCurrentTheme().inputBg}>
+                                  <SelectValue placeholder="Categoría" />
+                                </SelectTrigger>
+                                <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                                  <SelectItem value="work" className={getCurrentTheme().textPrimary}>
+                                    {t("work")}
+                                  </SelectItem>
+                                  <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
+                                    {t("personal")}
+                                  </SelectItem>
+                                  <SelectItem value="health" className={getCurrentTheme().textPrimary}>
+                                    {t("health")}
+                                  </SelectItem>
+                                  <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
+                                    {t("learning")}
+                                  </SelectItem>
+                                  <SelectItem value="other" className={getCurrentTheme().textPrimary}>
+                                    {t("other")}
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
+                              <SelectTrigger className={getCurrentTheme().inputBg}>
+                                <SelectValue placeholder="Prioridad" />
+                              </SelectTrigger>
+                              <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                                <SelectItem value="high" className={getCurrentTheme().textPrimary}>
+                                  {t("high")}
+                                </SelectItem>
+                                <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
+                                  {t("medium")}
+                                </SelectItem>
+                                <SelectItem value="low" className={getCurrentTheme().textPrimary}>
+                                  {t("low")}
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button onClick={addTask} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              {t("addTask")}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
-
-            {activeTab === "calendar" && (
-              <Card className={`max-w-md mx-auto ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                <CardHeader>
-                  <CardTitle className={getCurrentTheme().textPrimary}>{t("calendar")}</CardTitle>
-                  <CardDescription className={getCurrentTheme().textSecondary}>
-                    Selecciona un día para ver tus tareas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => {
-                      if (date) {
-                        setSelectedDate(date)
-                        setActiveTab("tasks")
-                      }
-                    }}
-                    className="rounded-md border-none shadow-none"
-                  />
-                </CardContent>
-              </Card>
             )}
 
             {activeTab === "pomodoro" && (
