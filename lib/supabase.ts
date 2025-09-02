@@ -14,10 +14,11 @@ const hasValidSupabaseConfig = Boolean(
 // Export a flag to check if Supabase is available
 export const isSupabaseAvailable = hasValidSupabaseConfig
 
-// Create Supabase client only if we have valid configuration AND we're in the browser
+// Create Supabase client only if we have valid configuration
 let supabaseClient: any = null
 
-if (hasValidSupabaseConfig && typeof window !== "undefined") {
+// Only create client in browser environment
+if (typeof window !== "undefined" && hasValidSupabaseConfig) {
   try {
     const { createClient } = require("@supabase/supabase-js")
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
@@ -27,29 +28,7 @@ if (hasValidSupabaseConfig && typeof window !== "undefined") {
   }
 }
 
-// Create a function to get the client safely
-export const getSupabaseClient = () => {
-  if (!hasValidSupabaseConfig) return null
-
-  if (typeof window === "undefined") {
-    // Server-side: return null to force fallback
-    return null
-  }
-
-  if (!supabaseClient) {
-    try {
-      const { createClient } = require("@supabase/supabase-js")
-      supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
-    } catch (error) {
-      console.error("Error creating Supabase client:", error)
-      return null
-    }
-  }
-
-  return supabaseClient
-}
-
-export const supabase = getSupabaseClient()
+export const supabase = supabaseClient
 
 // Log configuration status (only in development and client-side)
 if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {

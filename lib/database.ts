@@ -1,4 +1,4 @@
-import { getSupabaseClient, isSupabaseAvailable } from "./supabase"
+import { supabase, isSupabaseAvailable } from "./supabase"
 import type { User, Task, WishlistItem, Note, Achievement } from "./supabase"
 
 // Helper function to safely use Supabase
@@ -8,9 +8,7 @@ const safeSupabaseCall = async (
   operationName: string,
 ): Promise<any> => {
   // Always use fallback if Supabase is not available or we're on server-side
-  const supabase = getSupabaseClient()
-
-  if (!isSupabaseAvailable || !supabase || typeof window === "undefined") {
+  if (!isSupabaseAvailable || typeof window === "undefined") {
     console.log(`📦 Using localStorage fallback for ${operationName}`)
     return fallback()
   }
@@ -245,7 +243,6 @@ const deleteNoteFallback = (noteId: string): boolean => {
 export const createUser = async (userData: Omit<User, "id" | "created_at" | "updated_at">) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("users").insert([userData]).select().single()
@@ -260,7 +257,6 @@ export const createUser = async (userData: Omit<User, "id" | "created_at" | "upd
 export const getUserByEmail = async (email: string, password: string): Promise<User | null> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase
@@ -286,7 +282,6 @@ export const getUserByEmail = async (email: string, password: string): Promise<U
 export const updateUser = async (userId: string, updates: Partial<User>) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select().single()
@@ -301,7 +296,6 @@ export const updateUser = async (userId: string, updates: Partial<User>) => {
 export const getAllUsers = async (): Promise<User[]> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
@@ -316,7 +310,6 @@ export const getAllUsers = async (): Promise<User[]> => {
 export const deleteUser = async (userId: string) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { error } = await supabase.from("users").delete().eq("id", userId)
@@ -333,7 +326,6 @@ export const deleteUser = async (userId: string) => {
 export const getUserTasks = async (userId: string): Promise<Task[]> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase
@@ -352,7 +344,6 @@ export const getUserTasks = async (userId: string): Promise<Task[]> => {
 export const createTask = async (taskData: Omit<Task, "id" | "created_at" | "updated_at">) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("tasks").insert([taskData]).select().single()
@@ -367,7 +358,6 @@ export const createTask = async (taskData: Omit<Task, "id" | "created_at" | "upd
 export const updateTask = async (taskId: string, updates: Partial<Task>) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("tasks").update(updates).eq("id", taskId).select().single()
@@ -382,7 +372,6 @@ export const updateTask = async (taskId: string, updates: Partial<Task>) => {
 export const deleteTask = async (taskId: string) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { error } = await supabase.from("tasks").delete().eq("id", taskId)
@@ -397,7 +386,6 @@ export const deleteTask = async (taskId: string) => {
 export const getAllTasks = async (): Promise<Task[]> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false })
@@ -414,7 +402,6 @@ export const getAllTasks = async (): Promise<Task[]> => {
 export const getUserWishlist = async (userId: string): Promise<WishlistItem[]> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase
@@ -433,7 +420,6 @@ export const getUserWishlist = async (userId: string): Promise<WishlistItem[]> =
 export const createWishlistItem = async (itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("wishlist_items").insert([itemData]).select().single()
@@ -448,7 +434,6 @@ export const createWishlistItem = async (itemData: Omit<WishlistItem, "id" | "cr
 export const updateWishlistItem = async (itemId: string, updates: Partial<WishlistItem>) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("wishlist_items").update(updates).eq("id", itemId).select().single()
@@ -463,7 +448,6 @@ export const updateWishlistItem = async (itemId: string, updates: Partial<Wishli
 export const deleteWishlistItem = async (itemId: string) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { error } = await supabase.from("wishlist_items").delete().eq("id", itemId)
@@ -480,7 +464,6 @@ export const deleteWishlistItem = async (itemId: string) => {
 export const getUserNotes = async (userId: string): Promise<Note[]> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase
@@ -499,7 +482,6 @@ export const getUserNotes = async (userId: string): Promise<Note[]> => {
 export const createNote = async (noteData: Omit<Note, "id" | "created_at" | "updated_at">) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("notes").insert([noteData]).select().single()
@@ -514,7 +496,6 @@ export const createNote = async (noteData: Omit<Note, "id" | "created_at" | "upd
 export const updateNote = async (noteId: string, updates: Partial<Note>) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase.from("notes").update(updates).eq("id", noteId).select().single()
@@ -529,7 +510,6 @@ export const updateNote = async (noteId: string, updates: Partial<Note>) => {
 export const deleteNote = async (noteId: string) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { error } = await supabase.from("notes").delete().eq("id", noteId)
@@ -546,7 +526,6 @@ export const deleteNote = async (noteId: string) => {
 export const getUserAchievements = async (userId: string): Promise<Achievement[]> => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data, error } = await supabase
@@ -565,7 +544,6 @@ export const getUserAchievements = async (userId: string): Promise<Achievement[]
 export const unlockAchievement = async (userId: string, achievementKey: string) => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const { data: existing } = await supabase
@@ -598,7 +576,6 @@ export const unlockAchievement = async (userId: string, achievementKey: string) 
 export const getStats = async () => {
   return safeSupabaseCall(
     async () => {
-      const supabase = getSupabaseClient()
       if (!supabase) throw new Error("Supabase client not available")
 
       const [usersResult, tasksResult] = await Promise.all([
