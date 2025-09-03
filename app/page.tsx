@@ -34,6 +34,8 @@ import {
   Clock,
   Settings,
   LogOut,
+  Globe,
+  Database,
 } from "lucide-react"
 
 import {
@@ -45,8 +47,17 @@ import {
   updateTask,
   deleteTask,
   getUserWishlist,
+  createWishlistItem,
+  updateWishlistItem,
+  deleteWishlistItem,
   getUserNotes,
+  createNote,
+  updateNote,
+  deleteNote,
+  migrateLocalStorageToSupabase,
 } from "@/lib/database"
+
+import { isSupabaseAvailable } from "@/lib/supabase"
 
 // Types
 interface Task {
@@ -85,6 +96,25 @@ interface Achievement {
   rarity: "common" | "rare" | "epic" | "legendary"
 }
 
+interface WishlistItem {
+  id: string
+  user_id: string
+  text: string
+  description?: string
+  completed: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface Note {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
 // Constants
 const translations = {
   es: {
@@ -96,6 +126,8 @@ const translations = {
     email: "Email",
     password: "Contraseña",
     name: "Nombre",
+    language: "Idioma",
+    selectLanguage: "Selecciona tu idioma",
     calendar: "Calendario",
     tasks: "Tareas",
     wishlist: "Lista de Deseos",
@@ -150,6 +182,19 @@ const translations = {
     deleteTask: "Eliminar Tarea",
     saveChanges: "Guardar Cambios",
     cancel: "Cancelar",
+    getStarted: "Comenzar",
+    noAccountRegister: "¿No tienes cuenta? Regístrate",
+    hasAccountLogin: "¿Ya tienes cuenta? Inicia sesión",
+    settings: "Configuración",
+    configuration: "Configuración",
+    personalizeAccount: "Personaliza tu cuenta y preferencias",
+    theme: "Tema",
+    registration: "Registro",
+    newPassword: "Nueva Contraseña",
+    leaveEmptyKeepCurrent: "Dejar vacío para mantener actual",
+    databaseStatus: "Estado de la Base de Datos",
+    migrateData: "Migrar Datos",
+    migrateDataDesc: "Migrar datos locales a Supabase",
   },
   en: {
     appName: "FutureTask",
@@ -160,6 +205,8 @@ const translations = {
     email: "Email",
     password: "Password",
     name: "Name",
+    language: "Language",
+    selectLanguage: "Select your language",
     calendar: "Calendar",
     tasks: "Tasks",
     wishlist: "Wishlist",
@@ -214,6 +261,256 @@ const translations = {
     deleteTask: "Delete Task",
     saveChanges: "Save Changes",
     cancel: "Cancel",
+    getStarted: "Get Started",
+    noAccountRegister: "Don't have an account? Register",
+    hasAccountLogin: "Already have an account? Login",
+    settings: "Settings",
+    configuration: "Configuration",
+    personalizeAccount: "Customize your account and preferences",
+    theme: "Theme",
+    registration: "Registration",
+    newPassword: "New Password",
+    leaveEmptyKeepCurrent: "Leave empty to keep current",
+    databaseStatus: "Database Status",
+    migrateData: "Migrate Data",
+    migrateDataDesc: "Migrate local data to Supabase",
+  },
+  fr: {
+    appName: "FutureTask",
+    appDescription: "Votre calendrier intelligent du futur",
+    welcomeTitle: "Bienvenue sur FutureTask !",
+    login: "Se connecter",
+    register: "S'inscrire",
+    email: "Email",
+    password: "Mot de passe",
+    name: "Nom",
+    language: "Langue",
+    selectLanguage: "Sélectionnez votre langue",
+    calendar: "Calendrier",
+    tasks: "Tâches",
+    wishlist: "Liste de souhaits",
+    notes: "Notes",
+    pomodoro: "Pomodoro",
+    newTask: "Nouvelle tâche...",
+    description: "Description (optionnelle)...",
+    time: "Heure (optionnelle)",
+    completedToday: "Terminées aujourd'hui",
+    totalToday: "Total aujourd'hui",
+    streak: "Série",
+    achievements: "Réalisations",
+    progressToday: "Progrès aujourd'hui",
+    work: "Travail",
+    personal: "Personnel",
+    health: "Santé",
+    learning: "Apprentissage",
+    other: "Autres",
+    high: "Élevée",
+    medium: "Moyenne",
+    low: "Faible",
+    profile: "Profil",
+    logout: "Se déconnecter",
+    start: "Commencer",
+    pause: "Pause",
+    reset: "Réinitialiser",
+    workSession: "Session de travail",
+    shortBreak: "Pause courte",
+    premium: "Premium",
+    free: "Gratuit",
+    choosePlan: "Choisissez votre plan",
+    startPremium: "Commencer Premium",
+    continueFreee: "Continuer gratuitement",
+    monthly: "Mensuel",
+    yearly: "Annuel",
+    monthlyPrice: "1,99€/mois",
+    yearlyPrice: "20€/an",
+    yearlyDiscount: "Économisez 3,88€",
+    billingMonthly: "Facturation mensuelle",
+    billingYearly: "Facturation annuelle (2 mois gratuits)",
+    upgradeButton: "Passer à Premium",
+    notification: "Notification",
+    taskReminder: "Rappel de tâche",
+    notificationPermission: "Autoriser les notifications",
+    notificationPermissionDesc: "Activez les notifications pour recevoir des rappels de tâches",
+    enableNotifications: "Activer les notifications",
+    search: "Rechercher",
+    all: "Tous",
+    pending: "En attente",
+    addTask: "Ajouter une tâche",
+    editTask: "Modifier la tâche",
+    deleteTask: "Supprimer la tâche",
+    saveChanges: "Enregistrer les modifications",
+    cancel: "Annuler",
+    getStarted: "Commencer",
+    noAccountRegister: "Pas de compte ? Inscrivez-vous",
+    hasAccountLogin: "Déjà un compte ? Connectez-vous",
+    settings: "Paramètres",
+    configuration: "Configuration",
+    personalizeAccount: "Personnalisez votre compte et préférences",
+    theme: "Thème",
+    registration: "Inscription",
+    newPassword: "Nouveau mot de passe",
+    leaveEmptyKeepCurrent: "Laisser vide pour conserver l'actuel",
+    databaseStatus: "État de la base de données",
+    migrateData: "Migrer les données",
+    migrateDataDesc: "Migrer les données locales vers Supabase",
+  },
+  de: {
+    appName: "FutureTask",
+    appDescription: "Ihr intelligenter Kalender der Zukunft",
+    welcomeTitle: "Willkommen bei FutureTask!",
+    login: "Anmelden",
+    register: "Registrieren",
+    email: "E-Mail",
+    password: "Passwort",
+    name: "Name",
+    language: "Sprache",
+    selectLanguage: "Wählen Sie Ihre Sprache",
+    calendar: "Kalender",
+    tasks: "Aufgaben",
+    wishlist: "Wunschliste",
+    notes: "Notizen",
+    pomodoro: "Pomodoro",
+    newTask: "Neue Aufgabe...",
+    description: "Beschreibung (optional)...",
+    time: "Zeit (optional)",
+    completedToday: "Heute erledigt",
+    totalToday: "Gesamt heute",
+    streak: "Serie",
+    achievements: "Erfolge",
+    progressToday: "Fortschritt heute",
+    work: "Arbeit",
+    personal: "Persönlich",
+    health: "Gesundheit",
+    learning: "Lernen",
+    other: "Andere",
+    high: "Hoch",
+    medium: "Mittel",
+    low: "Niedrig",
+    profile: "Profil",
+    logout: "Abmelden",
+    start: "Starten",
+    pause: "Pause",
+    reset: "Zurücksetzen",
+    workSession: "Arbeitssitzung",
+    shortBreak: "Kurze Pause",
+    premium: "Premium",
+    free: "Kostenlos",
+    choosePlan: "Wählen Sie Ihren Plan",
+    startPremium: "Premium starten",
+    continueFreee: "Kostenlos fortfahren",
+    monthly: "Monatlich",
+    yearly: "Jährlich",
+    monthlyPrice: "1,99€/Monat",
+    yearlyPrice: "20€/Jahr",
+    yearlyDiscount: "Sparen Sie 3,88€",
+    billingMonthly: "Monatliche Abrechnung",
+    billingYearly: "Jährliche Abrechnung (2 Monate kostenlos)",
+    upgradeButton: "Auf Premium upgraden",
+    notification: "Benachrichtigung",
+    taskReminder: "Aufgabenerinnerung",
+    notificationPermission: "Benachrichtigungen erlauben",
+    notificationPermissionDesc: "Aktivieren Sie Benachrichtigungen für Aufgabenerinnerungen",
+    enableNotifications: "Benachrichtigungen aktivieren",
+    search: "Suchen",
+    all: "Alle",
+    pending: "Ausstehend",
+    addTask: "Aufgabe hinzufügen",
+    editTask: "Aufgabe bearbeiten",
+    deleteTask: "Aufgabe löschen",
+    saveChanges: "Änderungen speichern",
+    cancel: "Abbrechen",
+    getStarted: "Loslegen",
+    noAccountRegister: "Kein Konto? Registrieren",
+    hasAccountLogin: "Bereits ein Konto? Anmelden",
+    settings: "Einstellungen",
+    configuration: "Konfiguration",
+    personalizeAccount: "Passen Sie Ihr Konto und Ihre Einstellungen an",
+    theme: "Design",
+    registration: "Registrierung",
+    newPassword: "Neues Passwort",
+    leaveEmptyKeepCurrent: "Leer lassen, um das aktuelle zu behalten",
+    databaseStatus: "Datenbankstatus",
+    migrateData: "Daten migrieren",
+    migrateDataDesc: "Lokale Daten zu Supabase migrieren",
+  },
+  it: {
+    appName: "FutureTask",
+    appDescription: "Il tuo calendario intelligente del futuro",
+    welcomeTitle: "Benvenuto su FutureTask!",
+    login: "Accedi",
+    register: "Registrati",
+    email: "Email",
+    password: "Password",
+    name: "Nome",
+    language: "Lingua",
+    selectLanguage: "Seleziona la tua lingua",
+    calendar: "Calendario",
+    tasks: "Attività",
+    wishlist: "Lista dei desideri",
+    notes: "Note",
+    pomodoro: "Pomodoro",
+    newTask: "Nuova attività...",
+    description: "Descrizione (opzionale)...",
+    time: "Ora (opzionale)",
+    completedToday: "Completate oggi",
+    totalToday: "Totale oggi",
+    streak: "Serie",
+    achievements: "Risultati",
+    progressToday: "Progresso oggi",
+    work: "Lavoro",
+    personal: "Personale",
+    health: "Salute",
+    learning: "Apprendimento",
+    other: "Altri",
+    high: "Alta",
+    medium: "Media",
+    low: "Bassa",
+    profile: "Profilo",
+    logout: "Disconnetti",
+    start: "Inizia",
+    pause: "Pausa",
+    reset: "Reimposta",
+    workSession: "Sessione di lavoro",
+    shortBreak: "Pausa breve",
+    premium: "Premium",
+    free: "Gratuito",
+    choosePlan: "Scegli il tuo piano",
+    startPremium: "Inizia Premium",
+    continueFreee: "Continua gratis",
+    monthly: "Mensile",
+    yearly: "Annuale",
+    monthlyPrice: "1,99€/mese",
+    yearlyPrice: "20€/anno",
+    yearlyDiscount: "Risparmia 3,88€",
+    billingMonthly: "Fatturazione mensile",
+    billingYearly: "Fatturazione annuale (2 mesi gratuiti)",
+    upgradeButton: "Passa a Premium",
+    notification: "Notifica",
+    taskReminder: "Promemoria attività",
+    notificationPermission: "Consenti notifiche",
+    notificationPermissionDesc: "Attiva le notifiche per ricevere promemoria delle attività",
+    enableNotifications: "Attiva notifiche",
+    search: "Cerca",
+    all: "Tutti",
+    pending: "In sospeso",
+    addTask: "Aggiungi attività",
+    editTask: "Modifica attività",
+    deleteTask: "Elimina attività",
+    saveChanges: "Salva modifiche",
+    cancel: "Annulla",
+    getStarted: "Inizia",
+    noAccountRegister: "Non hai un account? Registrati",
+    hasAccountLogin: "Hai già un account? Accedi",
+    settings: "Impostazioni",
+    configuration: "Configurazione",
+    personalizeAccount: "Personalizza il tuo account e le preferenze",
+    theme: "Tema",
+    registration: "Registrazione",
+    newPassword: "Nuova password",
+    leaveEmptyKeepCurrent: "Lascia vuoto per mantenere quello attuale",
+    databaseStatus: "Stato del database",
+    migrateData: "Migra dati",
+    migrateDataDesc: "Migra i dati locali su Supabase",
   },
 }
 
@@ -406,10 +703,18 @@ const PRIORITY_COLORS = {
   high: "text-red-400",
 }
 
+const LANGUAGE_OPTIONS = [
+  { value: "es", label: "Español", flag: "🇪🇸" },
+  { value: "en", label: "English", flag: "🇺🇸" },
+  { value: "fr", label: "Français", flag: "🇫🇷" },
+  { value: "de", label: "Deutsch", flag: "🇩🇪" },
+  { value: "it", label: "Italiano", flag: "🇮🇹" },
+]
+
 export default function FutureTaskApp() {
   // Core state
   const [user, setUser] = useState<User | null>(null)
-  const [language, setLanguage] = useState<"es" | "en">("es")
+  const [language, setLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "auth" | "premium" | "app">("welcome")
   const [isInitialized, setIsInitialized] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -452,10 +757,11 @@ export default function FutureTaskApp() {
 
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [profileName, setProfileName] = useState("")
   const [profileEmail, setProfileEmail] = useState("")
   const [profilePassword, setProfilePassword] = useState("")
-  const [profileLanguage, setProfileLanguage] = useState<"es" | "en">("es")
+  const [profileLanguage, setProfileLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [profileTheme, setProfileTheme] = useState("default")
   const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly")
 
@@ -467,10 +773,8 @@ export default function FutureTaskApp() {
   const [showGlobalSearch, setShowGlobalSearch] = useState(false)
 
   // Wishlist and Notes state
-  const [wishlistItems, setWishlistItems] = useState<
-    Array<{ id: string; text: string; description?: string; completed: boolean }>
-  >([])
-  const [notes, setNotes] = useState<Array<{ id: string; title: string; content: string; createdAt: string }>>([])
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
+  const [notes, setNotes] = useState<Note[]>([])
   const [newWishItem, setNewWishItem] = useState("")
   const [newWishDescription, setNewWishDescription] = useState("")
   const [newNoteTitle, setNewNoteTitle] = useState("")
@@ -480,6 +784,9 @@ export default function FutureTaskApp() {
   const [editNoteContent, setEditNoteContent] = useState("")
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Migration state
+  const [showMigrationPrompt, setShowMigrationPrompt] = useState(false)
 
   const t = useCallback(
     (key: string) => {
@@ -499,6 +806,19 @@ export default function FutureTaskApp() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
+  // Load saved language on init
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("futureTask_language")
+    if (savedLanguage && ["es", "en", "fr", "de", "it"].includes(savedLanguage)) {
+      setLanguage(savedLanguage as "es" | "en" | "fr" | "de" | "it")
+    }
+  }, [])
+
+  // Save language when it changes
+  useEffect(() => {
+    localStorage.setItem("futureTask_language", language)
+  }, [language])
+
   // Request notification permission and check status
   useEffect(() => {
     if (!("Notification" in window)) return
@@ -513,7 +833,7 @@ export default function FutureTaskApp() {
     }
   }, [user, currentScreen])
 
-  // Mejorar la función requestNotificationPermission para que sea más robusta
+  // Request notification permission function
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
       alert("Este navegador no soporta notificaciones")
@@ -575,7 +895,7 @@ export default function FutureTaskApp() {
         setUser(userExists)
         setLanguage(userExists.language || "es")
 
-        // Cargar datos del usuario desde Supabase
+        // Cargar datos del usuario desde Supabase/localStorage
         const [userTasks, userWishlist, userNotes] = await Promise.all([
           getUserTasks(userExists.id),
           getUserWishlist(userExists.id),
@@ -585,6 +905,18 @@ export default function FutureTaskApp() {
         setTasks(userTasks)
         setWishlistItems(userWishlist)
         setNotes(userNotes)
+
+        // Check if we should show migration prompt
+        if (isSupabaseAvailable) {
+          const hasLocalData =
+            localStorage.getItem(`futureTask_tasks_${userExists.id}`) ||
+            localStorage.getItem(`futureTask_wishlist_${userExists.id}`) ||
+            localStorage.getItem(`futureTask_notes_${userExists.id}`)
+
+          if (hasLocalData && userTasks.length === 0 && userWishlist.length === 0 && userNotes.length === 0) {
+            setShowMigrationPrompt(true)
+          }
+        }
 
         setCurrentScreen(userExists.onboarding_completed ? "app" : "welcome")
       }
@@ -603,48 +935,19 @@ export default function FutureTaskApp() {
     return () => clearTimeout(timer)
   }, [isInitialized])
 
-  // Save tasks when they change
-  useEffect(() => {
-    if (user && tasks.length > 0) {
-      localStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(tasks))
-    }
-  }, [tasks, user])
-
-  // Save wishlist when it changes
-  useEffect(() => {
-    if (user && wishlistItems.length >= 0) {
-      localStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(wishlistItems))
-    }
-  }, [wishlistItems, user])
-
-  // Save notes when they change
-  useEffect(() => {
-    if (user && notes.length >= 0) {
-      localStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(notes))
-    }
-  }, [notes, user])
-
   // Check for task notifications
   useEffect(() => {
     if (!user || !("Notification" in window)) return
 
     const checkNotifications = () => {
-      console.log("Checking notifications, permission:", notificationPermission)
-
-      if (notificationPermission !== "granted") {
-        console.log("Notifications not granted")
-        return
-      }
+      if (notificationPermission !== "granted") return
 
       const now = new Date()
       const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
       const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
 
-      console.log("Current time:", currentTime, "Today:", today)
-
       tasks.forEach((task) => {
         if (!task.completed && task.date === today && task.time === currentTime && task.notification_enabled) {
-          console.log("Showing notification for task:", task.text)
           try {
             const notification = new Notification(`⏰ ${t("taskReminder")}`, {
               body: task.text,
@@ -659,7 +962,6 @@ export default function FutureTaskApp() {
               notification.close()
             }
 
-            // Auto close after 10 seconds
             setTimeout(() => {
               notification.close()
             }, 10000)
@@ -670,7 +972,6 @@ export default function FutureTaskApp() {
       })
     }
 
-    // Check immediately and then every minute
     checkNotifications()
     const interval = setInterval(checkNotifications, 60000)
     return () => clearInterval(interval)
@@ -711,56 +1012,23 @@ export default function FutureTaskApp() {
 
   const getTodayTasks = () => getTasksForDate(selectedDate)
 
-  const getGlobalSearchResults = () => {
-    if (!searchTerm.trim()) return []
-
-    return tasks
-      .filter(
-        (task) =>
-          task.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (task.description && task.description.toLowerCase().includes(searchTerm.toLowerCase())),
-      )
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  }
-
-  // Agregar función para navegar a la fecha de una tarea:
-  const navigateToTaskDate = (taskDate: string) => {
-    const [year, month, day] = taskDate.split("-").map(Number)
-    const date = new Date(year, month - 1, day)
-    setSelectedDate(date)
-    setSearchTerm("")
-    setShowGlobalSearch(false)
-    setActiveTab("tasks")
-    if (isMobile) setSidebarOpen(false)
-  }
-
-  // Modificar el handleSearch para mostrar/ocultar resultados:
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value)
-    setShowGlobalSearch(value.trim().length > 0)
-  }
-
   const getFilteredTasks = () => {
     let filtered = getTodayTasks()
 
-    // Filter by completion status
     if (taskFilter === "completed") {
       filtered = filtered.filter((task) => task.completed)
     } else if (taskFilter === "pending") {
       filtered = filtered.filter((task) => !task.completed)
     }
 
-    // Filter by category
     if (categoryFilter !== "all") {
       filtered = filtered.filter((task) => task.category === categoryFilter)
     }
 
-    // Filter by priority
     if (priorityFilter !== "all") {
       filtered = filtered.filter((task) => task.priority === priorityFilter)
     }
 
-    // Sort by time if available
     return filtered.sort((a, b) => {
       if (a.time && b.time) {
         return a.time.localeCompare(b.time)
@@ -779,65 +1047,98 @@ export default function FutureTaskApp() {
   }
 
   // Wishlist functions
-  const addWishItem = () => {
+  const addWishItem = async () => {
     if (!newWishItem.trim() || !user) return
 
-    const item = {
-      id: `${user.id}_wish_${Date.now()}`,
-      text: newWishItem,
-      description: newWishDescription,
-      completed: false,
+    try {
+      const itemData = {
+        user_id: user.id,
+        text: newWishItem,
+        description: newWishDescription || undefined,
+        completed: false,
+      }
+
+      const newItem = await createWishlistItem(itemData)
+      setWishlistItems((prev) => [...prev, newItem])
+      setNewWishItem("")
+      setNewWishDescription("")
+    } catch (error) {
+      console.error("Error adding wishlist item:", error)
+      alert("Error al agregar elemento a la lista de deseos")
     }
-
-    setWishlistItems((prev) => [...prev, item])
-    setNewWishItem("")
-    setNewWishDescription("")
   }
 
-  const toggleWishItem = (itemId: string) => {
-    setWishlistItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, completed: !item.completed } : item)),
-    )
+  const toggleWishItem = async (itemId: string) => {
+    try {
+      const item = wishlistItems.find((i) => i.id === itemId)
+      if (!item) return
+
+      const updatedItem = await updateWishlistItem(itemId, {
+        completed: !item.completed,
+      })
+
+      setWishlistItems((prev) => prev.map((i) => (i.id === itemId ? updatedItem : i)))
+    } catch (error) {
+      console.error("Error toggling wishlist item:", error)
+      alert("Error al actualizar elemento de la lista de deseos")
+    }
   }
 
-  const deleteWishItem = (itemId: string) => {
-    setWishlistItems((prev) => prev.filter((item) => item.id !== itemId))
+  const deleteWishItem = async (itemId: string) => {
+    try {
+      await deleteWishlistItem(itemId)
+      setWishlistItems((prev) => prev.filter((item) => item.id !== itemId))
+    } catch (error) {
+      console.error("Error deleting wishlist item:", error)
+      alert("Error al eliminar elemento de la lista de deseos")
+    }
   }
 
   // Notes functions
-  const addNote = () => {
+  const addNote = async () => {
     if (!newNoteTitle.trim() || !user) return
 
-    const note = {
-      id: `${user.id}_note_${Date.now()}`,
-      title: newNoteTitle,
-      content: newNoteContent,
-      createdAt: new Date().toISOString(),
-    }
+    try {
+      const noteData = {
+        user_id: user.id,
+        title: newNoteTitle,
+        content: newNoteContent,
+      }
 
-    setNotes((prev) => [...prev, note])
-    setNewNoteTitle("")
-    setNewNoteContent("")
+      const newNoteFromDB = await createNote(noteData)
+      setNotes((prev) => [...prev, newNoteFromDB])
+      setNewNoteTitle("")
+      setNewNoteContent("")
+    } catch (error) {
+      console.error("Error adding note:", error)
+      alert("Error al agregar nota")
+    }
   }
 
-  const startEditNote = (note: any) => {
+  const startEditNote = (note: Note) => {
     setEditingNote(note.id)
     setEditNoteTitle(note.title)
     setEditNoteContent(note.content)
   }
 
-  const saveEditNote = () => {
+  const saveEditNote = async () => {
     if (!editNoteTitle.trim() || !editingNote) return
 
-    setNotes((prev) =>
-      prev.map((note) =>
-        note.id === editingNote ? { ...note, title: editNoteTitle, content: editNoteContent } : note,
-      ),
-    )
+    try {
+      const updatedNote = await updateNote(editingNote, {
+        title: editNoteTitle,
+        content: editNoteContent,
+      })
 
-    setEditingNote(null)
-    setEditNoteTitle("")
-    setEditNoteContent("")
+      setNotes((prev) => prev.map((note) => (note.id === editingNote ? updatedNote : note)))
+
+      setEditingNote(null)
+      setEditNoteTitle("")
+      setEditNoteContent("")
+    } catch (error) {
+      console.error("Error updating note:", error)
+      alert("Error al actualizar nota")
+    }
   }
 
   const cancelEditNote = () => {
@@ -846,8 +1147,14 @@ export default function FutureTaskApp() {
     setEditNoteContent("")
   }
 
-  const deleteNote = (noteId: string) => {
-    setNotes((prev) => prev.filter((note) => note.id !== noteId))
+  const deleteNoteHandler = async (noteId: string) => {
+    try {
+      await deleteNote(noteId)
+      setNotes((prev) => prev.filter((note) => note.id !== noteId))
+    } catch (error) {
+      console.error("Error deleting note:", error)
+      alert("Error al eliminar nota")
+    }
   }
 
   // Event handlers
@@ -970,6 +1277,8 @@ export default function FutureTaskApp() {
   const logout = () => {
     setUser(null)
     setTasks([])
+    setWishlistItems([])
+    setNotes([])
     setCurrentScreen("welcome")
     localStorage.removeItem("futureTask_user")
   }
@@ -981,6 +1290,67 @@ export default function FutureTaskApp() {
     return allThemes[user.theme as keyof typeof allThemes] || THEMES.free.default
   }
 
+  const updateSettings = async () => {
+    if (!user) return
+
+    try {
+      const updatedUser = await updateUser(user.id, {
+        name: profileName,
+        email: profileEmail,
+        password: profilePassword || user.password,
+        language: profileLanguage,
+        theme: profileTheme,
+      })
+
+      setUser(updatedUser)
+      localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+      setLanguage(profileLanguage)
+      setShowSettingsModal(false)
+      alert(t("saveChanges"))
+    } catch (error) {
+      console.error("Error updating settings:", error)
+      alert("Error al actualizar la configuración")
+    }
+  }
+
+  const openSettings = () => {
+    setProfileName(user?.name || "")
+    setProfileEmail(user?.email || "")
+    setProfilePassword("")
+    setProfileLanguage(user?.language || "es")
+    setProfileTheme(user?.theme || "default")
+    setShowSettingsModal(true)
+  }
+
+  const handleMigration = async () => {
+    if (!user) return
+
+    try {
+      setShowMigrationPrompt(false)
+      const success = await migrateLocalStorageToSupabase(user.id)
+
+      if (success) {
+        // Reload data after migration
+        const [userTasks, userWishlist, userNotes] = await Promise.all([
+          getUserTasks(user.id),
+          getUserWishlist(user.id),
+          getUserNotes(user.id),
+        ])
+
+        setTasks(userTasks)
+        setWishlistItems(userWishlist)
+        setNotes(userNotes)
+
+        alert("¡Migración completada exitosamente! Tus datos ahora están sincronizados en la nube.")
+      } else {
+        alert("Error durante la migración. Intenta de nuevo más tarde.")
+      }
+    } catch (error) {
+      console.error("Migration error:", error)
+      alert("Error durante la migración. Intenta de nuevo más tarde.")
+    }
+  }
+
   // Loading state
   if (!isInitialized) {
     return (
@@ -988,7 +1358,9 @@ export default function FutureTaskApp() {
         <div className="text-center space-y-4">
           <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto"></div>
           <div className={`${getCurrentTheme().textPrimary} text-lg font-semibold`}>Cargando FutureTask...</div>
-          <div className={`${getCurrentTheme().textSecondary} text-sm`}>Preparando tu experiencia</div>
+          <div className={`${getCurrentTheme().textSecondary} text-sm`}>
+            {isSupabaseAvailable ? "Conectando con Supabase..." : "Preparando tu experiencia"}
+          </div>
         </div>
       </div>
     )
@@ -1009,10 +1381,38 @@ export default function FutureTaskApp() {
               {t("appName")}
             </CardTitle>
             <CardDescription className={getCurrentTheme().textSecondary}>{t("appDescription")}</CardDescription>
+            {isSupabaseAvailable && (
+              <div className="flex items-center justify-center space-x-2 mt-2">
+                <Database className="w-4 h-4 text-green-400" />
+                <span className="text-xs text-green-400">Conectado a Supabase</span>
+              </div>
+            )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Language Selector */}
+            <div className="space-y-2">
+              <Label className={`${getCurrentTheme().textSecondary} flex items-center space-x-2`}>
+                <Globe className="w-4 h-4" />
+                <span>{t("selectLanguage")}</span>
+              </Label>
+              <Select value={language} onValueChange={(value) => setLanguage(value as any)}>
+                <SelectTrigger className={getCurrentTheme().inputBg}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                  {LANGUAGE_OPTIONS.map((lang) => (
+                    <SelectItem key={lang.value} value={lang.value} className={getCurrentTheme().textPrimary}>
+                      <span className="flex items-center space-x-2">
+                        <span>{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button onClick={() => setCurrentScreen("auth")} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
-              Comenzar
+              {t("getStarted")}
             </Button>
           </CardContent>
         </Card>
@@ -1031,13 +1431,37 @@ export default function FutureTaskApp() {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {authMode === "login" ? t("login") : t("register")}
             </CardTitle>
-            {authMode === "login" && (
-              <p className={`text-sm ${getCurrentTheme().textSecondary} mt-2`}>
-                Solo usuarios registrados en la base de datos pueden acceder
-              </p>
+            {isSupabaseAvailable && (
+              <div className="flex items-center justify-center space-x-2 mt-2">
+                <Database className="w-4 h-4 text-green-400" />
+                <span className="text-xs text-green-400">Usando Supabase</span>
+              </div>
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Language Selector */}
+            <div className="space-y-2">
+              <Label className={`${getCurrentTheme().textSecondary} flex items-center space-x-2`}>
+                <Globe className="w-4 h-4" />
+                <span>{t("language")}</span>
+              </Label>
+              <Select value={language} onValueChange={(value) => setLanguage(value as any)}>
+                <SelectTrigger className={getCurrentTheme().inputBg}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                  {LANGUAGE_OPTIONS.map((lang) => (
+                    <SelectItem key={lang.value} value={lang.value} className={getCurrentTheme().textPrimary}>
+                      <span className="flex items-center space-x-2">
+                        <span>{lang.flag}</span>
+                        <span>{lang.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {authMode === "register" && (
               <div className="space-y-2">
                 <Label htmlFor="name" className={getCurrentTheme().textSecondary}>
@@ -1048,7 +1472,7 @@ export default function FutureTaskApp() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className={getCurrentTheme().inputBg}
-                  placeholder="Tu nombre"
+                  placeholder={t("name")}
                 />
               </div>
             )}
@@ -1086,7 +1510,7 @@ export default function FutureTaskApp() {
               onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
               className={`w-full ${getCurrentTheme().textAccent}`}
             >
-              {authMode === "login" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+              {authMode === "login" ? t("noAccountRegister") : t("hasAccountLogin")}
             </Button>
           </CardContent>
         </Card>
@@ -1153,8 +1577,7 @@ export default function FutureTaskApp() {
                     <span>{t("premium")}</span>
                   </CardTitle>
                   <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
-                    €1,99
-                    <span className={`text-sm md:text-lg font-normal ${getCurrentTheme().textMuted}`}>/mes</span>
+                    {t("monthlyPrice")}
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1177,13 +1600,21 @@ export default function FutureTaskApp() {
                         Todos los temas premium
                       </span>
                     </div>
+                    {isSupabaseAvailable && (
+                      <div className="flex items-center space-x-3">
+                        <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                        <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                          Sincronización en la nube
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <Button
                     onClick={() => handlePremiumChoice(true)}
                     className={`w-full ${getCurrentTheme().buttonPrimary} text-sm md:text-lg py-2 md:py-3`}
                   >
                     <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                    {t("startPremium")} - €1,99/mes
+                    {t("startPremium")} - {t("monthlyPrice")}
                   </Button>
                 </CardContent>
               </Card>
@@ -1220,7 +1651,8 @@ export default function FutureTaskApp() {
                 {user.is_premium && (
                   <Badge className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs">Premium</Badge>
                 )}
-                <Button variant="ghost" size="icon" onClick={() => setShowProfileModal(true)}>
+                {isSupabaseAvailable && <Database className="w-4 h-4 text-green-400" />}
+                <Button variant="ghost" size="icon" onClick={openSettings}>
                   <Settings className="w-5 h-5" />
                 </Button>
               </div>
@@ -1502,27 +1934,229 @@ export default function FutureTaskApp() {
                 </TabsContent>
 
                 <TabsContent value="wishlist" className="mt-0">
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardHeader>
-                      <CardTitle className={getCurrentTheme().textPrimary}>{t("wishlist")}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {!user.is_premium ? (
-                        <div className="text-center py-8">
+                  <div className="max-w-2xl mx-auto">
+                    <h2 className={`text-2xl font-bold mb-6 ${getCurrentTheme().textPrimary}`}>{t("wishlist")}</h2>
+                    {!user.is_premium ? (
+                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-8 text-center">
                           <Crown className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
-                          <p className={getCurrentTheme().textMuted}>Función Premium</p>
-                          <Button
-                            onClick={() => setShowPremiumModal(true)}
-                            className={`mt-4 ${getCurrentTheme().buttonPrimary}`}
-                          >
+                          <h3 className={`text-lg font-semibold mb-2 ${getCurrentTheme().textPrimary}`}>
+                            Función Premium
+                          </h3>
+                          <p className={`mb-4 ${getCurrentTheme().textMuted}`}>
+                            Actualiza a Premium para acceder a tu lista de deseos
+                          </p>
+                          <Button onClick={() => setShowPremiumModal(true)} className={getCurrentTheme().buttonPrimary}>
                             {t("upgradeButton")}
                           </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Add Wishlist Item Form */}
+                        <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <CardHeader>
+                            <CardTitle className={getCurrentTheme().textPrimary}>Agregar Deseo</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <Input
+                              type="text"
+                              placeholder="¿Qué deseas lograr?"
+                              value={newWishItem}
+                              onChange={(e) => setNewWishItem(e.target.value)}
+                              className={getCurrentTheme().inputBg}
+                            />
+                            <Textarea
+                              placeholder="Descripción (opcional)..."
+                              value={newWishDescription}
+                              onChange={(e) => setNewWishDescription(e.target.value)}
+                              className={getCurrentTheme().inputBg}
+                            />
+                            <Button onClick={addWishItem} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Agregar a Lista de Deseos
+                            </Button>
+                          </CardContent>
+                        </Card>
+
+                        {/* Wishlist Items */}
+                        <div className="space-y-4">
+                          {wishlistItems.length > 0 ? (
+                            wishlistItems.map((item) => (
+                              <Card key={item.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start space-x-3">
+                                    <Checkbox
+                                      id={`wish-${item.id}`}
+                                      checked={item.completed}
+                                      onCheckedChange={() => toggleWishItem(item.id)}
+                                      className="mt-1"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <Label
+                                        htmlFor={`wish-${item.id}`}
+                                        className={`text-sm font-medium block ${
+                                          item.completed
+                                            ? `line-through ${getCurrentTheme().textMuted}`
+                                            : getCurrentTheme().textPrimary
+                                        }`}
+                                      >
+                                        {item.text}
+                                      </Label>
+                                      {item.description && (
+                                        <p className={`text-xs mt-1 ${getCurrentTheme().textSecondary}`}>
+                                          {item.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <Button variant="ghost" size="icon" onClick={() => deleteWishItem(item.id)}>
+                                      <Trash2 className="w-4 h-4 text-red-400" />
+                                    </Button>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          ) : (
+                            <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                              <CardContent className="p-8 text-center">
+                                <Star className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                                <p className={getCurrentTheme().textMuted}>Tu lista de deseos está vacía.</p>
+                                <p className={`text-sm mt-2 ${getCurrentTheme().textSecondary}`}>
+                                  Agrega tus metas y sueños para el futuro.
+                                </p>
+                              </CardContent>
+                            </Card>
+                          )}
                         </div>
-                      ) : (
-                        <p className={getCurrentTheme().textMuted}>Tu lista de deseos está vacía.</p>
-                      )}
-                    </CardContent>
-                  </Card>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="notes" className="mt-0">
+                  <div className="max-w-2xl mx-auto">
+                    <h2 className={`text-2xl font-bold mb-6 ${getCurrentTheme().textPrimary}`}>{t("notes")}</h2>
+                    {!user.is_premium ? (
+                      <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-8 text-center">
+                          <StickyNote className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                          <h3 className={`text-lg font-semibold mb-2 ${getCurrentTheme().textPrimary}`}>
+                            Función Premium
+                          </h3>
+                          <p className={`mb-4 ${getCurrentTheme().textMuted}`}>
+                            Actualiza a Premium para acceder a tus notas
+                          </p>
+                          <Button onClick={() => setShowPremiumModal(true)} className={getCurrentTheme().buttonPrimary}>
+                            {t("upgradeButton")}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Add Note Form */}
+                        <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <CardHeader>
+                            <CardTitle className={getCurrentTheme().textPrimary}>Nueva Nota</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <Input
+                              type="text"
+                              placeholder="Título de la nota..."
+                              value={newNoteTitle}
+                              onChange={(e) => setNewNoteTitle(e.target.value)}
+                              className={getCurrentTheme().inputBg}
+                            />
+                            <Textarea
+                              placeholder="Contenido de la nota..."
+                              value={newNoteContent}
+                              onChange={(e) => setNewNoteContent(e.target.value)}
+                              className={`${getCurrentTheme().inputBg} min-h-[120px]`}
+                            />
+                            <Button onClick={addNote} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Crear Nota
+                            </Button>
+                          </CardContent>
+                        </Card>
+
+                        {/* Notes List */}
+                        <div className="space-y-4">
+                          {notes.length > 0 ? (
+                            notes.map((note) => (
+                              <Card key={note.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                                <CardContent className="p-4">
+                                  {editingNote === note.id ? (
+                                    <div className="space-y-3">
+                                      <Input
+                                        value={editNoteTitle}
+                                        onChange={(e) => setEditNoteTitle(e.target.value)}
+                                        className={getCurrentTheme().inputBg}
+                                      />
+                                      <Textarea
+                                        value={editNoteContent}
+                                        onChange={(e) => setEditNoteContent(e.target.value)}
+                                        className={`${getCurrentTheme().inputBg} min-h-[100px]`}
+                                      />
+                                      <div className="flex space-x-2">
+                                        <Button
+                                          onClick={saveEditNote}
+                                          size="sm"
+                                          className={getCurrentTheme().buttonPrimary}
+                                        >
+                                          <Check className="w-4 h-4 mr-1" />
+                                          Guardar
+                                        </Button>
+                                        <Button onClick={cancelEditNote} size="sm" variant="outline">
+                                          <X className="w-4 h-4 mr-1" />
+                                          Cancelar
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div>
+                                      <div className="flex items-start justify-between mb-2">
+                                        <h3 className={`font-semibold ${getCurrentTheme().textPrimary}`}>
+                                          {note.title}
+                                        </h3>
+                                        <div className="flex space-x-1">
+                                          <Button variant="ghost" size="icon" onClick={() => startEditNote(note)}>
+                                            <Settings className="w-4 h-4 text-blue-400" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => deleteNoteHandler(note.id)}
+                                          >
+                                            <Trash2 className="w-4 h-4 text-red-400" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                      <p className={`text-sm ${getCurrentTheme().textSecondary} whitespace-pre-wrap`}>
+                                        {note.content}
+                                      </p>
+                                      <p className={`text-xs mt-2 ${getCurrentTheme().textMuted}`}>
+                                        {new Date(note.created_at).toLocaleDateString(language)}
+                                      </p>
+                                    </div>
+                                  )}
+                                </CardContent>
+                              </Card>
+                            ))
+                          ) : (
+                            <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                              <CardContent className="p-8 text-center">
+                                <StickyNote className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                                <p className={getCurrentTheme().textMuted}>No tienes notas.</p>
+                                <p className={`text-sm mt-2 ${getCurrentTheme().textSecondary}`}>
+                                  Crea tu primera nota para guardar ideas importantes.
+                                </p>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
 
                 <TabsContent value="achievements" className="mt-0">
@@ -1584,11 +2218,14 @@ export default function FutureTaskApp() {
                           Premium
                         </Badge>
                       )}
+                      {isSupabaseAvailable && (
+                        <Database className="w-4 h-4 text-green-400" title="Conectado a Supabase" />
+                      )}
                     </div>
                     <p className={`text-sm ${getCurrentTheme().textSecondary}`}>Hola, {user.name}</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setShowProfileModal(true)}>
+                <Button variant="ghost" size="icon" onClick={openSettings}>
                   <Settings className="w-5 h-5" />
                 </Button>
               </div>
@@ -1976,12 +2613,83 @@ export default function FutureTaskApp() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardContent className="p-8 text-center">
-                      <Star className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
-                      <p className={getCurrentTheme().textMuted}>Tu lista de deseos está vacía.</p>
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-6">
+                    {/* Add Wishlist Item Form */}
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={getCurrentTheme().textPrimary}>Agregar Deseo</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Input
+                          type="text"
+                          placeholder="¿Qué deseas lograr?"
+                          value={newWishItem}
+                          onChange={(e) => setNewWishItem(e.target.value)}
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <Textarea
+                          placeholder="Descripción (opcional)..."
+                          value={newWishDescription}
+                          onChange={(e) => setNewWishDescription(e.target.value)}
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <Button onClick={addWishItem} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Agregar a Lista de Deseos
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* Wishlist Items */}
+                    <div className="space-y-4">
+                      {wishlistItems.length > 0 ? (
+                        wishlistItems.map((item) => (
+                          <Card key={item.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                            <CardContent className="p-4">
+                              <div className="flex items-start space-x-3">
+                                <Checkbox
+                                  id={`wish-${item.id}`}
+                                  checked={item.completed}
+                                  onCheckedChange={() => toggleWishItem(item.id)}
+                                  className="mt-1"
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <Label
+                                    htmlFor={`wish-${item.id}`}
+                                    className={`text-sm font-medium block ${
+                                      item.completed
+                                        ? `line-through ${getCurrentTheme().textMuted}`
+                                        : getCurrentTheme().textPrimary
+                                    }`}
+                                  >
+                                    {item.text}
+                                  </Label>
+                                  {item.description && (
+                                    <p className={`text-xs mt-1 ${getCurrentTheme().textSecondary}`}>
+                                      {item.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => deleteWishItem(item.id)}>
+                                  <Trash2 className="w-4 h-4 text-red-400" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <CardContent className="p-8 text-center">
+                            <Star className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                            <p className={getCurrentTheme().textMuted}>Tu lista de deseos está vacía.</p>
+                            <p className={`text-sm mt-2 ${getCurrentTheme().textSecondary}`}>
+                              Agrega tus metas y sueños para el futuro.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -2003,12 +2711,103 @@ export default function FutureTaskApp() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardContent className="p-8 text-center">
-                      <StickyNote className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
-                      <p className={getCurrentTheme().textMuted}>No tienes notas.</p>
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-6">
+                    {/* Add Note Form */}
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={getCurrentTheme().textPrimary}>Nueva Nota</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Input
+                          type="text"
+                          placeholder="Título de la nota..."
+                          value={newNoteTitle}
+                          onChange={(e) => setNewNoteTitle(e.target.value)}
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <Textarea
+                          placeholder="Contenido de la nota..."
+                          value={newNoteContent}
+                          onChange={(e) => setNewNoteContent(e.target.value)}
+                          className={`${getCurrentTheme().inputBg} min-h-[120px]`}
+                        />
+                        <Button onClick={addNote} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Crear Nota
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* Notes List */}
+                    <div className="space-y-4">
+                      {notes.length > 0 ? (
+                        notes.map((note) => (
+                          <Card key={note.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                            <CardContent className="p-4">
+                              {editingNote === note.id ? (
+                                <div className="space-y-3">
+                                  <Input
+                                    value={editNoteTitle}
+                                    onChange={(e) => setEditNoteTitle(e.target.value)}
+                                    className={getCurrentTheme().inputBg}
+                                  />
+                                  <Textarea
+                                    value={editNoteContent}
+                                    onChange={(e) => setEditNoteContent(e.target.value)}
+                                    className={`${getCurrentTheme().inputBg} min-h-[100px]`}
+                                  />
+                                  <div className="flex space-x-2">
+                                    <Button
+                                      onClick={saveEditNote}
+                                      size="sm"
+                                      className={getCurrentTheme().buttonPrimary}
+                                    >
+                                      <Check className="w-4 h-4 mr-1" />
+                                      Guardar
+                                    </Button>
+                                    <Button onClick={cancelEditNote} size="sm" variant="outline">
+                                      <X className="w-4 h-4 mr-1" />
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <div className="flex items-start justify-between mb-2">
+                                    <h3 className={`font-semibold ${getCurrentTheme().textPrimary}`}>{note.title}</h3>
+                                    <div className="flex space-x-1">
+                                      <Button variant="ghost" size="icon" onClick={() => startEditNote(note)}>
+                                        <Settings className="w-4 h-4 text-blue-400" />
+                                      </Button>
+                                      <Button variant="ghost" size="icon" onClick={() => deleteNoteHandler(note.id)}>
+                                        <Trash2 className="w-4 h-4 text-red-400" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <p className={`text-sm ${getCurrentTheme().textSecondary} whitespace-pre-wrap`}>
+                                    {note.content}
+                                  </p>
+                                  <p className={`text-xs mt-2 ${getCurrentTheme().textMuted}`}>
+                                    {new Date(note.created_at).toLocaleDateString(language)}
+                                  </p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <CardContent className="p-8 text-center">
+                            <StickyNote className={`w-16 h-16 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                            <p className={getCurrentTheme().textMuted}>No tienes notas.</p>
+                            <p className={`text-sm mt-2 ${getCurrentTheme().textSecondary}`}>
+                              Crea tu primera nota para guardar ideas importantes.
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}
@@ -2043,6 +2842,77 @@ export default function FutureTaskApp() {
         </div>
       )}
 
+      {/* Notification Permission Prompt */}
+      {showNotificationPrompt && (
+        <div className="fixed top-4 right-4 z-50">
+          <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} w-80`}>
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                    <CalendarIcon className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h4 className={`font-semibold ${getCurrentTheme().textPrimary}`}>{t("notificationPermission")}</h4>
+                  <p className={`text-sm mt-1 ${getCurrentTheme().textSecondary}`}>{t("notificationPermissionDesc")}</p>
+                  <div className="flex space-x-2 mt-3">
+                    <Button
+                      onClick={requestNotificationPermission}
+                      size="sm"
+                      className={getCurrentTheme().buttonPrimary}
+                    >
+                      {t("enableNotifications")}
+                    </Button>
+                    <Button
+                      onClick={() => setShowNotificationPrompt(false)}
+                      size="sm"
+                      variant="outline"
+                      className={getCurrentTheme().buttonSecondary}
+                    >
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Migration Prompt */}
+      {showMigrationPrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+            <CardHeader>
+              <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
+                <Database className="w-5 h-5 text-green-400" />
+                <span>{t("migrateData")}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className={getCurrentTheme().textSecondary}>
+                Hemos detectado que tienes datos locales. ¿Te gustaría migrarlos a Supabase para sincronización en la
+                nube?
+              </p>
+              <div className="flex space-x-2">
+                <Button onClick={handleMigration} className={`flex-1 ${getCurrentTheme().buttonPrimary}`}>
+                  <Database className="w-4 h-4 mr-2" />
+                  Migrar Datos
+                </Button>
+                <Button
+                  onClick={() => setShowMigrationPrompt(false)}
+                  variant="outline"
+                  className={`flex-1 ${getCurrentTheme().buttonSecondary}`}
+                >
+                  Más Tarde
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Profile Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
         <DialogContent className={`sm:max-w-[425px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
@@ -2065,18 +2935,36 @@ export default function FutureTaskApp() {
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className={getCurrentTheme().textSecondary}>Tema:</span>
+                <span className={getCurrentTheme().textSecondary}>{t("theme")}:</span>
                 <span className={`${getCurrentTheme().textPrimary} capitalize`}>{getCurrentTheme().name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className={getCurrentTheme().textSecondary}>Idioma:</span>
-                <span className={getCurrentTheme().textPrimary}>{language.toUpperCase()}</span>
+                <span className={getCurrentTheme().textSecondary}>{t("language")}:</span>
+                <span className={getCurrentTheme().textPrimary}>
+                  {LANGUAGE_OPTIONS.find((lang) => lang.value === language)?.label}
+                </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className={getCurrentTheme().textSecondary}>Registro:</span>
+                <span className={getCurrentTheme().textSecondary}>{t("registration")}:</span>
                 <span className={getCurrentTheme().textPrimary}>
                   {new Date(user.created_at).toLocaleDateString(language)}
                 </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className={getCurrentTheme().textSecondary}>{t("databaseStatus")}:</span>
+                <div className="flex items-center space-x-2">
+                  {isSupabaseAvailable ? (
+                    <>
+                      <Database className="w-4 h-4 text-green-400" />
+                      <span className="text-green-400 text-sm">Supabase</span>
+                    </>
+                  ) : (
+                    <>
+                      <Database className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-400 text-sm">Local</span>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -2127,6 +3015,12 @@ export default function FutureTaskApp() {
                 <Check className="w-5 h-5 text-green-500" />
                 <span className={getCurrentTheme().textPrimary}>Todos los temas premium</span>
               </div>
+              {isSupabaseAvailable && (
+                <div className="flex items-center space-x-3">
+                  <Check className="w-5 h-5 text-green-500" />
+                  <span className={getCurrentTheme().textPrimary}>Sincronización en la nube</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex justify-end space-x-2">
@@ -2148,6 +3042,143 @@ export default function FutureTaskApp() {
             >
               <Crown className="w-4 h-4 mr-2" />
               {t("upgradeButton")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Modal */}
+      <Dialog open={showSettingsModal} onOpenChange={setShowSettingsModal}>
+        <DialogContent className={`sm:max-w-[500px] ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+          <DialogHeader>
+            <DialogTitle className={getCurrentTheme().textPrimary}>
+              <Settings className="w-5 h-5 inline mr-2" />
+              {t("configuration")}
+            </DialogTitle>
+            <DialogDescription className={getCurrentTheme().textSecondary}>{t("personalizeAccount")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="settings-name" className={getCurrentTheme().textSecondary}>
+                  {t("name")}
+                </Label>
+                <Input
+                  id="settings-name"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  className={getCurrentTheme().inputBg}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="settings-email" className={getCurrentTheme().textSecondary}>
+                  {t("email")}
+                </Label>
+                <Input
+                  id="settings-email"
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  className={getCurrentTheme().inputBg}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="settings-password" className={getCurrentTheme().textSecondary}>
+                  {t("newPassword")}
+                </Label>
+                <Input
+                  id="settings-password"
+                  type="password"
+                  value={profilePassword}
+                  onChange={(e) => setProfilePassword(e.target.value)}
+                  className={getCurrentTheme().inputBg}
+                  placeholder={t("leaveEmptyKeepCurrent")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="settings-language" className={getCurrentTheme().textSecondary}>
+                  {t("language")}
+                </Label>
+                <Select value={profileLanguage} onValueChange={setProfileLanguage}>
+                  <SelectTrigger className={getCurrentTheme().inputBg}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    {LANGUAGE_OPTIONS.map((lang) => (
+                      <SelectItem key={lang.value} value={lang.value} className={getCurrentTheme().textPrimary}>
+                        <span className="flex items-center space-x-2">
+                          <span>{lang.flag}</span>
+                          <span>{lang.label}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="settings-theme" className={getCurrentTheme().textSecondary}>
+                  {t("theme")}
+                </Label>
+                <Select value={profileTheme} onValueChange={setProfileTheme}>
+                  <SelectTrigger className={getCurrentTheme().inputBg}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <SelectItem value="default" className={getCurrentTheme().textPrimary}>
+                      Futurista
+                    </SelectItem>
+                    <SelectItem value="light" className={getCurrentTheme().textPrimary}>
+                      Claro
+                    </SelectItem>
+                    <SelectItem value="dark" className={getCurrentTheme().textPrimary}>
+                      Oscuro
+                    </SelectItem>
+                    <SelectItem value="ocean" className={getCurrentTheme().textPrimary}>
+                      Océano
+                    </SelectItem>
+                    <SelectItem value="forest" className={getCurrentTheme().textPrimary}>
+                      Bosque
+                    </SelectItem>
+                    {user?.is_premium && (
+                      <>
+                        <SelectItem value="neon" className={getCurrentTheme().textPrimary}>
+                          Neón (Premium)
+                        </SelectItem>
+                        <SelectItem value="galaxy" className={getCurrentTheme().textPrimary}>
+                          Galaxia (Premium)
+                        </SelectItem>
+                        <SelectItem value="sunset" className={getCurrentTheme().textPrimary}>
+                          Atardecer (Premium)
+                        </SelectItem>
+                        <SelectItem value="aurora" className={getCurrentTheme().textPrimary}>
+                          Aurora (Premium)
+                        </SelectItem>
+                        <SelectItem value="cyberpunk" className={getCurrentTheme().textPrimary}>
+                          Cyberpunk (Premium)
+                        </SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowSettingsModal(false)}
+              className={getCurrentTheme().buttonSecondary}
+            >
+              {t("cancel")}
+            </Button>
+            <Button onClick={updateSettings} className={getCurrentTheme().buttonPrimary}>
+              <Settings className="w-4 h-4 mr-2" />
+              {t("saveChanges")}
             </Button>
           </div>
         </DialogContent>

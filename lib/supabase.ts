@@ -1,6 +1,13 @@
-// Get environment variables with fallbacks
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+import { createClient } from "@supabase/supabase-js"
+
+// Get environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("⚠️  Supabase environment variables not found. Using localStorage fallback.")
+}
 
 // Check if we have valid Supabase configuration
 const hasValidSupabaseConfig = Boolean(
@@ -11,25 +18,33 @@ const hasValidSupabaseConfig = Boolean(
     supabaseKey.length > 20,
 )
 
-// Create Supabase client only if we have valid configuration and we're in browser
+// Create Supabase client
 let supabaseClient: any = null
 
-if (typeof window !== "undefined" && hasValidSupabaseConfig) {
+if (hasValidSupabaseConfig) {
   try {
-    const { createClient } = require("@supabase/supabase-js")
-    supabaseClient = createClient(supabaseUrl, supabaseKey)
+    supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false, // We handle our own auth
+        autoRefreshToken: false,
+      },
+      db: {
+        schema: "public",
+      },
+    })
     console.log("✅ Supabase client created successfully")
+    console.log("🔗 Connected to:", supabaseUrl)
   } catch (error) {
     console.error("❌ Error creating Supabase client:", error)
     supabaseClient = null
   }
-} else if (typeof window !== "undefined") {
+} else {
   console.log("📦 Using localStorage fallback - Supabase not configured")
 }
 
 // Export the client and availability flag
 export const supabase = supabaseClient
-export const isSupabaseAvailable = hasValidSupabaseConfig
+export const isSupabaseAvailable = hasValidSupabaseConfig && supabaseClient !== null
 
 // Types for TypeScript
 export interface User {
@@ -119,5 +134,28 @@ export interface Database {
         Update: Partial<Omit<Achievement, "id" | "unlocked_at">>
       }
     }
+  }
+}
+
+// Test connection function
+export const testSupabaseConnection = async () => {
+  if (!supabaseClient) {
+    console.log("❌ Supabase client not available")
+    return false
+  }
+
+  try {
+    const { data, error } = await supabaseClient.from("users").select("count(*)").limit(1)
+
+    if (error) {
+      console.error("❌ Supabase connection test failed:", error.message)
+      return false
+    }
+
+    console.log("✅ Supabase connection test successful")
+    return true
+  } catch (error) {
+    console.error("❌ Supabase connection test error:", error)
+    return false
   }
 }

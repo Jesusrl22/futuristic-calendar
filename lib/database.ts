@@ -1,5 +1,10 @@
-import { supabase, isSupabaseAvailable } from "./supabase"
+import { supabase, isSupabaseAvailable, testSupabaseConnection } from "./supabase"
 import type { User, Task, WishlistItem, Note, Achievement } from "./supabase"
+
+// Test connection on module load
+if (typeof window !== "undefined" && isSupabaseAvailable) {
+  testSupabaseConnection()
+}
 
 // Helper function to safely use Supabase with localStorage fallback
 const safeSupabaseCall = async (
@@ -144,8 +149,88 @@ const getUserWishlistFallback = (userId: string): WishlistItem[] => {
   return JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
 }
 
+const createWishlistItemFallback = (itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">): WishlistItem => {
+  const newItem: WishlistItem = {
+    ...itemData,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+  const items = getUserWishlistFallback(itemData.user_id)
+  items.push(newItem)
+  safeLocalStorage.setItem(`futureTask_wishlist_${itemData.user_id}`, JSON.stringify(items))
+  return newItem
+}
+
+const updateWishlistItemFallback = (itemId: string, updates: Partial<WishlistItem>): WishlistItem => {
+  const users = getAllUsersFallback()
+  for (const user of users) {
+    const items = getUserWishlistFallback(user.id)
+    const itemIndex = items.findIndex((i: WishlistItem) => i.id === itemId)
+    if (itemIndex !== -1) {
+      items[itemIndex] = { ...items[itemIndex], ...updates, updated_at: new Date().toISOString() }
+      safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(items))
+      return items[itemIndex]
+    }
+  }
+  throw new Error("Wishlist item not found")
+}
+
+const deleteWishlistItemFallback = (itemId: string): boolean => {
+  const users = getAllUsersFallback()
+  for (const user of users) {
+    const items = getUserWishlistFallback(user.id)
+    const filteredItems = items.filter((i: WishlistItem) => i.id !== itemId)
+    if (filteredItems.length !== items.length) {
+      safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(filteredItems))
+      return true
+    }
+  }
+  return false
+}
+
 const getUserNotesFallback = (userId: string): Note[] => {
   return JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
+}
+
+const createNoteFallback = (noteData: Omit<Note, "id" | "created_at" | "updated_at">): Note => {
+  const newNote: Note = {
+    ...noteData,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+  const notes = getUserNotesFallback(noteData.user_id)
+  notes.push(newNote)
+  safeLocalStorage.setItem(`futureTask_notes_${noteData.user_id}`, JSON.stringify(notes))
+  return newNote
+}
+
+const updateNoteFallback = (noteId: string, updates: Partial<Note>): Note => {
+  const users = getAllUsersFallback()
+  for (const user of users) {
+    const notes = getUserNotesFallback(user.id)
+    const noteIndex = notes.findIndex((n: Note) => n.id === noteId)
+    if (noteIndex !== -1) {
+      notes[noteIndex] = { ...notes[noteIndex], ...updates, updated_at: new Date().toISOString() }
+      safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(notes))
+      return notes[noteIndex]
+    }
+  }
+  throw new Error("Note not found")
+}
+
+const deleteNoteFallback = (noteId: string): boolean => {
+  const users = getAllUsersFallback()
+  for (const user of users) {
+    const notes = getUserNotesFallback(user.id)
+    const filteredNotes = notes.filter((n: Note) => n.id !== noteId)
+    if (filteredNotes.length !== notes.length) {
+      safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(filteredNotes))
+      return true
+    }
+  }
+  return false
 }
 
 // ==================== USUARIOS ====================
@@ -293,6 +378,42 @@ export const getUserWishlist = async (userId: string): Promise<WishlistItem[]> =
   )
 }
 
+export const createWishlistItem = async (itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">) => {
+  return safeSupabaseCall(
+    async () => {
+      const { data, error } = await supabase.from("wishlist_items").insert([itemData]).select().single()
+      if (error) throw error
+      return data
+    },
+    () => createWishlistItemFallback(itemData),
+    "createWishlistItem",
+  )
+}
+
+export const updateWishlistItem = async (itemId: string, updates: Partial<WishlistItem>) => {
+  return safeSupabaseCall(
+    async () => {
+      const { data, error } = await supabase.from("wishlist_items").update(updates).eq("id", itemId).select().single()
+      if (error) throw error
+      return data
+    },
+    () => updateWishlistItemFallback(itemId, updates),
+    "updateWishlistItem",
+  )
+}
+
+export const deleteWishlistItem = async (itemId: string) => {
+  return safeSupabaseCall(
+    async () => {
+      const { error } = await supabase.from("wishlist_items").delete().eq("id", itemId)
+      if (error) throw error
+      return true
+    },
+    () => deleteWishlistItemFallback(itemId),
+    "deleteWishlistItem",
+  )
+}
+
 // ==================== NOTAS ====================
 
 export const getUserNotes = async (userId: string): Promise<Note[]> => {
@@ -308,6 +429,42 @@ export const getUserNotes = async (userId: string): Promise<Note[]> => {
     },
     () => getUserNotesFallback(userId),
     "getUserNotes",
+  )
+}
+
+export const createNote = async (noteData: Omit<Note, "id" | "created_at" | "updated_at">) => {
+  return safeSupabaseCall(
+    async () => {
+      const { data, error } = await supabase.from("notes").insert([noteData]).select().single()
+      if (error) throw error
+      return data
+    },
+    () => createNoteFallback(noteData),
+    "createNote",
+  )
+}
+
+export const updateNote = async (noteId: string, updates: Partial<Note>) => {
+  return safeSupabaseCall(
+    async () => {
+      const { data, error } = await supabase.from("notes").update(updates).eq("id", noteId).select().single()
+      if (error) throw error
+      return data
+    },
+    () => updateNoteFallback(noteId, updates),
+    "updateNote",
+  )
+}
+
+export const deleteNote = async (noteId: string) => {
+  return safeSupabaseCall(
+    async () => {
+      const { error } = await supabase.from("notes").delete().eq("id", noteId)
+      if (error) throw error
+      return true
+    },
+    () => deleteNoteFallback(noteId),
+    "deleteNote",
   )
 }
 
@@ -399,4 +556,53 @@ export const getStats = async () => {
     },
     "getStats",
   )
+}
+
+// ==================== MIGRATION UTILITIES ====================
+
+export const migrateLocalStorageToSupabase = async (userId: string) => {
+  if (!isSupabaseAvailable) {
+    console.log("❌ Cannot migrate: Supabase not available")
+    return false
+  }
+
+  try {
+    console.log("🔄 Starting migration from localStorage to Supabase...")
+
+    // Migrate tasks
+    const localTasks = getUserTasksFallback(userId)
+    if (localTasks.length > 0) {
+      console.log(`📋 Migrating ${localTasks.length} tasks...`)
+      for (const task of localTasks) {
+        const { id, created_at, updated_at, ...taskData } = task
+        await createTask(taskData)
+      }
+    }
+
+    // Migrate wishlist
+    const localWishlist = getUserWishlistFallback(userId)
+    if (localWishlist.length > 0) {
+      console.log(`⭐ Migrating ${localWishlist.length} wishlist items...`)
+      for (const item of localWishlist) {
+        const { id, created_at, updated_at, ...itemData } = item
+        await createWishlistItem(itemData)
+      }
+    }
+
+    // Migrate notes
+    const localNotes = getUserNotesFallback(userId)
+    if (localNotes.length > 0) {
+      console.log(`📝 Migrating ${localNotes.length} notes...`)
+      for (const note of localNotes) {
+        const { id, created_at, updated_at, ...noteData } = note
+        await createNote(noteData)
+      }
+    }
+
+    console.log("✅ Migration completed successfully!")
+    return true
+  } catch (error) {
+    console.error("❌ Migration failed:", error)
+    return false
+  }
 }
