@@ -25,7 +25,6 @@ import {
   Upload,
   RefreshCw,
   Lock,
-  Database,
 } from "lucide-react"
 
 interface User {
@@ -62,10 +61,10 @@ interface UserStats {
   streak: number
 }
 
-// Credenciales de administrador actualizadas
+// Credenciales de administrador
 const ADMIN_CREDENTIALS = {
   username: "admin",
-  password: "535353-Jrl",
+  password: "FutureTask2024!",
 }
 
 export default function AdminPanel() {
@@ -85,7 +84,6 @@ export default function AdminPanel() {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [showAddUser, setShowAddUser] = useState(false)
   const [showDataManager, setShowDataManager] = useState(false)
-  const [isSupabaseConnected, setIsSupabaseConnected] = useState(false)
 
   // Form states
   const [formName, setFormName] = useState("")
@@ -112,16 +110,7 @@ export default function AdminPanel() {
     } else {
       setIsLoading(false)
     }
-
-    // Verificar conexión a Supabase
-    checkSupabaseConnection()
   }, [])
-
-  const checkSupabaseConnection = () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    setIsSupabaseConnected(!!(supabaseUrl && supabaseKey))
-  }
 
   const handleLogin = () => {
     if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
@@ -485,12 +474,6 @@ export default function AdminPanel() {
               🛠️ Panel de Administración
             </CardTitle>
             <p className="text-gray-300">Acceso restringido - Solo administradores</p>
-            {isSupabaseConnected && (
-              <div className="flex items-center justify-center space-x-2 mt-2">
-                <Database className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 text-sm">Conectado a Supabase</span>
-              </div>
-            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -569,12 +552,6 @@ export default function AdminPanel() {
               🛠️ Panel de Administración
             </h1>
             <p className="text-gray-300">Gestiona usuarios y datos de FutureTask</p>
-            {isSupabaseConnected && (
-              <div className="flex items-center space-x-2 mt-2">
-                <Database className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 text-sm">Conectado a Supabase</span>
-              </div>
-            )}
           </div>
           <div className="flex space-x-2 flex-wrap">
             <Button
@@ -1057,24 +1034,6 @@ export default function AdminPanel() {
             <DialogTitle>📊 Gestión de Datos</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            {/* Database Status */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-purple-300">Estado de la Base de Datos</h3>
-              <div className="bg-black/30 p-4 rounded-lg">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Database className={`w-5 h-5 ${isSupabaseConnected ? "text-green-400" : "text-gray-400"}`} />
-                  <span className={`font-semibold ${isSupabaseConnected ? "text-green-400" : "text-gray-400"}`}>
-                    {isSupabaseConnected ? "Conectado a Supabase" : "Usando localStorage"}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-300">
-                  {isSupabaseConnected
-                    ? "Los datos se sincronizan automáticamente con la base de datos en la nube."
-                    : "Los datos se almacenan localmente en el navegador. Configura Supabase para sincronización en la nube."}
-                </p>
-              </div>
-            </div>
-
             {/* Export/Import */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-purple-300">Backup y Restauración</h3>

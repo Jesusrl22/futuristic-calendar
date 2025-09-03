@@ -1,19 +1,65 @@
 import { createClient } from "@supabase/supabase-js"
 
-// Tipos de datos
+// Get environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+// Validate environment variables
+if (!supabaseUrl || !supabaseKey) {
+  console.warn("⚠️  Supabase environment variables not found. Using localStorage fallback.")
+}
+
+// Check if we have valid Supabase configuration
+const hasValidSupabaseConfig = Boolean(
+  supabaseUrl &&
+    supabaseKey &&
+    supabaseUrl.startsWith("https://") &&
+    supabaseUrl.includes(".supabase.co") &&
+    supabaseKey.length > 20,
+)
+
+// Create Supabase client
+let supabaseClient: any = null
+
+if (hasValidSupabaseConfig) {
+  try {
+    supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false, // We handle our own auth
+        autoRefreshToken: false,
+      },
+      db: {
+        schema: "public",
+      },
+    })
+    console.log("✅ Supabase client created successfully")
+    console.log("🔗 Connected to:", supabaseUrl)
+  } catch (error) {
+    console.error("❌ Error creating Supabase client:", error)
+    supabaseClient = null
+  }
+} else {
+  console.log("📦 Using localStorage fallback - Supabase not configured")
+}
+
+// Export the client and availability flag
+export const supabase = supabaseClient
+export const isSupabaseAvailable = hasValidSupabaseConfig && supabaseClient !== null
+
+// Types for TypeScript
 export interface User {
   id: string
   name: string
   email: string
   password: string
-  created_at: string
-  updated_at: string
+  language: "es" | "en" | "fr" | "de" | "it"
   theme: string
-  language: "es" | "en" | "de" | "fr" | "it"
   is_premium: boolean
   premium_expiry?: string
   onboarding_completed: boolean
   pomodoro_sessions: number
+  created_at: string
+  updated_at: string
 }
 
 export interface Task {
@@ -23,10 +69,10 @@ export interface Task {
   description?: string
   completed: boolean
   date: string
+  time?: string
   category: "work" | "personal" | "health" | "learning" | "other"
   priority: "low" | "medium" | "high"
   completed_at?: string
-  time?: string
   notification_enabled?: boolean
   created_at: string
   updated_at: string
@@ -35,12 +81,9 @@ export interface Task {
 export interface WishlistItem {
   id: string
   user_id: string
-  title: string
+  text: string
   description?: string
-  price?: number
-  url?: string
-  priority: "low" | "medium" | "high"
-  category: string
+  completed: boolean
   created_at: string
   updated_at: string
 }
@@ -50,7 +93,6 @@ export interface Note {
   user_id: string
   title: string
   content: string
-  color?: string
   created_at: string
   updated_at: string
 }
@@ -62,122 +104,7 @@ export interface Achievement {
   unlocked_at: string
 }
 
-// Configuración de Supabase - obtener variables de entorno de forma segura
-const getSupabaseConfig = () => {
-  // Solo en el cliente (browser)
-  if (typeof window === "undefined") {
-    return { url: null, key: null }
-  }
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  return { url, key }
-}
-
-const { url: supabaseUrl, key: supabaseAnonKey } = getSupabaseConfig()
-
-// Función para validar la configuración de Supabase
-const isValidSupabaseConfig = (url: string | null | undefined, key: string | null | undefined): boolean => {
-  if (!url || !key) {
-    return false
-  }
-
-  // Verificar que la URL tenga el formato correcto de Supabase
-  try {
-    const urlObj = new URL(url)
-    return urlObj.protocol === "https:" && urlObj.hostname.includes("supabase.co") && key.length > 20
-  } catch {
-    return false
-  }
-}
-
-// Verificar si Supabase está configurado correctamente
-export const isSupabaseAvailable = isValidSupabaseConfig(supabaseUrl, supabaseAnonKey)
-
-// Crear cliente de Supabase solo si está configurado correctamente
-export const supabase = (() => {
-  if (!isSupabaseAvailable || !supabaseUrl || !supabaseAnonKey) {
-    console.log("📦 Supabase not configured - using localStorage fallback")
-    return null
-  }
-
-  try {
-    const client = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-      db: {
-        schema: "public",
-      },
-    })
-
-    console.log("✅ Supabase client created successfully")
-    console.log("🔗 Connected to:", supabaseUrl)
-    return client
-  } catch (error) {
-    console.error("❌ Error creating Supabase client:", error)
-    return null
-  }
-})()
-
-// Función para probar la conexión
-export const testSupabaseConnection = async (): Promise<boolean> => {
-  if (!supabase) {
-    console.log("📦 Supabase client not available - using localStorage fallback")
-    return false
-  }
-
-  try {
-    const { data, error } = await supabase.from("users").select("count").limit(1)
-
-    if (error) {
-      console.error("❌ Supabase connection test failed:", error.message)
-      return false
-    }
-
-    console.log("✅ Supabase connection test successful")
-    return true
-  } catch (error) {
-    console.error("❌ Supabase connection test error:", error)
-    return false
-  }
-}
-
-// Función para obtener información de configuración
-export const getSupabaseInfo = () => {
-  return {
-    isAvailable: isSupabaseAvailable,
-    hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseAnonKey,
-    url: supabaseUrl ? supabaseUrl.replace(/\/+$/, "") : null, // Remove trailing slashes
-  }
-}
-
-// Log de estado al cargar (solo en el cliente)
-if (typeof window !== "undefined") {
-  if (isSupabaseAvailable) {
-    console.log("🟢 Supabase configured and ready")
-    // Test connection after a short delay to avoid blocking
-    setTimeout(() => {
-      testSupabaseConnection()
-    }, 1000)
-  } else {
-    console.log("📦 Using localStorage fallback - Supabase not configured")
-    if (supabaseUrl && !supabaseAnonKey) {
-      console.log("⚠️  Supabase URL found but missing ANON_KEY")
-    } else if (!supabaseUrl && supabaseAnonKey) {
-      console.log("⚠️  Supabase ANON_KEY found but missing URL")
-    } else if (!supabaseUrl && !supabaseAnonKey) {
-      console.log("ℹ️  No Supabase configuration found")
-    } else {
-      console.log("⚠️  Invalid Supabase configuration")
-    }
-  }
-}
-
-// Tipos para la base de datos
+// Types for the database
 export interface Database {
   public: {
     Tables: {
@@ -207,5 +134,28 @@ export interface Database {
         Update: Partial<Omit<Achievement, "id" | "unlocked_at">>
       }
     }
+  }
+}
+
+// Test connection function
+export const testSupabaseConnection = async () => {
+  if (!supabaseClient) {
+    console.log("❌ Supabase client not available")
+    return false
+  }
+
+  try {
+    const { data, error } = await supabaseClient.from("users").select("count(*)").limit(1)
+
+    if (error) {
+      console.error("❌ Supabase connection test failed:", error.message)
+      return false
+    }
+
+    console.log("✅ Supabase connection test successful")
+    return true
+  } catch (error) {
+    console.error("❌ Supabase connection test error:", error)
+    return false
   }
 }
