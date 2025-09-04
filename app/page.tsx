@@ -218,6 +218,9 @@ const translations = {
     yearlyPrice: "$20/year",
     yearlyDiscount: "Save $3.88",
     billingMonthly: "Monthly billing",
+    yearlyPrice: "$20/year",
+    yearlyDiscount: "Save $3.88",
+    billingMonthly: "Monthly billing",
     billingYearly: "Yearly billing (2 months free)",
     upgradeButton: "Upgrade to Premium",
     notification: "Notification",
@@ -1611,7 +1614,7 @@ export default function FutureTaskApp() {
                       setShowPremiumModal(false)
                       handlePremiumChoice(true)
                     }}
-                    className={`w-full ${getCurrentTheme().buttonPrimary} text-sm md:text-lg py-2 md:py-3`}
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm md:text-lg py-2 md:py-3"
                   >
                     <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     {t("startPremium")} - {t("monthlyPrice")}
@@ -1689,207 +1692,1023 @@ export default function FutureTaskApp() {
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="container mx-auto p-4 space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                {t("appName")}
-              </h1>
-              <p className={`${getCurrentTheme().textSecondary} text-sm`}>
-                Hola, {user?.name} {user?.is_premium && <Crown className="inline w-4 h-4 text-yellow-400 ml-1" />}
-              </p>
+        {/* Mobile Layout */}
+        {isMobile ? (
+          <div className="min-h-screen">
+            {/* Mobile Header */}
+            <div className="sticky top-0 z-40 bg-black/20 backdrop-blur-xl border-b border-purple-500/20 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                    {t("appName")}
+                  </h1>
+                  <p className={`${getCurrentTheme().textSecondary} text-sm`}>
+                    {user?.name} {user?.is_premium && <Crown className="inline w-3 h-3 text-yellow-400 ml-1" />}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {!user?.is_premium && (
+                    <Button
+                      size="sm"
+                      onClick={() => setShowPremiumModal(true)}
+                      className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-2 py-1"
+                    >
+                      <Crown className="w-3 h-3 mr-1" />
+                      Premium
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={openSettings} className={getCurrentTheme().textSecondary}>
+                    ⚙️
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={logout} className={getCurrentTheme().textSecondary}>
+                    🚪
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" onClick={openSettings} className={getCurrentTheme().textSecondary}>
-                {t("settings")}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={logout} className={getCurrentTheme().textSecondary}>
-                {t("logout")}
-              </Button>
+
+            {/* Mobile Tabs */}
+            <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
+              <div className="flex overflow-x-auto">
+                {["tasks", "calendar", "pomodoro", user?.is_premium && "wishlist", user?.is_premium && "notes"]
+                  .filter(Boolean)
+                  .map((tab) => (
+                    <Button
+                      key={tab}
+                      variant="ghost"
+                      onClick={() => setActiveTab(tab)}
+                      className={`flex-shrink-0 px-4 py-3 text-sm ${
+                        activeTab === tab
+                          ? `${getCurrentTheme().textPrimary} border-b-2 border-purple-400`
+                          : getCurrentTheme().textSecondary
+                      }`}
+                    >
+                      {tab === "tasks" && "📋"}
+                      {tab === "calendar" && "📅"}
+                      {tab === "pomodoro" && "🍅"}
+                      {tab === "wishlist" && "⭐"}
+                      {tab === "notes" && "📝"}
+                      <span className="ml-1">{t(tab)}</span>
+                    </Button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Mobile Content */}
+            <div className="p-4 pb-20">
+              {/* Tasks Tab */}
+              {activeTab === "tasks" && (
+                <div className="space-y-4">
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <Target className="w-4 h-4 text-blue-400" />
+                          <div>
+                            <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
+                            <p className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>
+                              {getTodayTasks().length}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center space-x-2">
+                          <Check className="w-4 h-4 text-green-400" />
+                          <div>
+                            <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
+                            <p className={`text-lg font-bold ${getCurrentTheme().textPrimary}`}>
+                              {getCompletedTasks().length}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Task Form */}
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardContent className="p-4 space-y-3">
+                      <Input
+                        value={newTask}
+                        onChange={(e) => setNewTask(e.target.value)}
+                        placeholder={t("newTask")}
+                        className={getCurrentTheme().inputBg}
+                        onKeyPress={(e) => e.key === "Enter" && addTask()}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          type="time"
+                          value={newTaskTime}
+                          onChange={(e) => setNewTaskTime(e.target.value)}
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <Button onClick={addTask} className={getCurrentTheme().buttonPrimary}>
+                          ➕
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select value={newTaskCategory} onValueChange={setNewTaskCategory}>
+                          <SelectTrigger className={getCurrentTheme().inputBg}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                            <SelectItem value="work" className={getCurrentTheme().textPrimary}>
+                              {t("work")}
+                            </SelectItem>
+                            <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
+                              {t("personal")}
+                            </SelectItem>
+                            <SelectItem value="health" className={getCurrentTheme().textPrimary}>
+                              {t("health")}
+                            </SelectItem>
+                            <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
+                              {t("learning")}
+                            </SelectItem>
+                            <SelectItem value="other" className={getCurrentTheme().textPrimary}>
+                              {t("other")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
+                          <SelectTrigger className={getCurrentTheme().inputBg}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                            <SelectItem value="high" className={getCurrentTheme().textPrimary}>
+                              {t("high")}
+                            </SelectItem>
+                            <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
+                              {t("medium")}
+                            </SelectItem>
+                            <SelectItem value="low" className={getCurrentTheme().textPrimary}>
+                              {t("low")}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Tasks List */}
+                  <div className="space-y-3">
+                    {getFilteredTasks().map((task) => (
+                      <Card
+                        key={task.id}
+                        className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} ${task.completed ? "opacity-60" : ""}`}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3 flex-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleTask(task.id)}
+                                className={task.completed ? "text-green-400" : getCurrentTheme().textSecondary}
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <div className="flex-1">
+                                <p
+                                  className={`${getCurrentTheme().textPrimary} ${task.completed ? "line-through" : ""}`}
+                                >
+                                  {task.text}
+                                </p>
+                                {task.time && (
+                                  <p className={`text-xs ${getCurrentTheme().textSecondary}`}>⏰ {task.time}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <span className={`text-xs px-2 py-1 rounded ${CATEGORY_COLORS[task.category]}`}>
+                                {t(task.category)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteTaskHandler(task.id)}
+                                className="text-red-400"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {getFilteredTasks().length === 0 && (
+                      <div className="text-center py-8">
+                        <Target className={`w-12 h-12 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                        <p className={getCurrentTheme().textPrimary}>No hay tareas para hoy</p>
+                        <p className={getCurrentTheme().textSecondary}>¡Agrega tu primera tarea!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Calendar Tab */}
+              {activeTab === "calendar" && (
+                <div className="space-y-4">
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>📅 {t("calendar")}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <Button
+                            variant="ghost"
+                            onClick={() => setSelectedDate(new Date())}
+                            className={getCurrentTheme().textSecondary}
+                          >
+                            Hoy: {new Date().toLocaleDateString()}
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center">
+                          {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+                            <div key={day} className={`p-2 text-xs font-semibold ${getCurrentTheme().textSecondary}`}>
+                              {day}
+                            </div>
+                          ))}
+                          {Array.from({ length: 35 }, (_, i) => {
+                            const date = new Date()
+                            date.setDate(date.getDate() - date.getDay() + i)
+                            const isToday = date.toDateString() === new Date().toDateString()
+                            const isSelected = date.toDateString() === selectedDate.toDateString()
+                            const tasksForDate = getTasksForDate(date)
+
+                            return (
+                              <Button
+                                key={i}
+                                variant="ghost"
+                                onClick={() => setSelectedDate(date)}
+                                className={`p-2 h-10 text-xs ${
+                                  isSelected
+                                    ? "bg-purple-500 text-white"
+                                    : isToday
+                                      ? "bg-purple-500/20 text-purple-300"
+                                      : getCurrentTheme().textSecondary
+                                }`}
+                              >
+                                <div>
+                                  <div>{date.getDate()}</div>
+                                  {tasksForDate.length > 0 && (
+                                    <div className="w-1 h-1 bg-cyan-400 rounded-full mx-auto mt-1"></div>
+                                  )}
+                                </div>
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <div className="text-center">
+                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                            Fecha seleccionada: {selectedDate.toLocaleDateString()}
+                          </p>
+                          <p className={`text-xs ${getCurrentTheme().textMuted}`}>
+                            {getTodayTasks().length} tareas para este día
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Pomodoro Tab */}
+              {activeTab === "pomodoro" && (
+                <div className="space-y-4">
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>🍅 {t("pomodoro")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-6">
+                      <div>
+                        <div className={`text-6xl font-bold ${getCurrentTheme().textPrimary} mb-2`}>
+                          {formatTime(pomodoroTime)}
+                        </div>
+                        <p className={getCurrentTheme().textSecondary}>
+                          {pomodoroType === "work" ? t("workSession") : t("shortBreak")}
+                        </p>
+                      </div>
+                      <div className="flex justify-center space-x-4">
+                        <Button
+                          onClick={() => setPomodoroActive(!pomodoroActive)}
+                          className={getCurrentTheme().buttonPrimary}
+                        >
+                          {pomodoroActive ? t("pause") : t("start")}
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setPomodoroActive(false)
+                            setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
+                          }}
+                          variant="outline"
+                          className={getCurrentTheme().buttonSecondary}
+                        >
+                          {t("reset")}
+                        </Button>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-1000"
+                          style={{
+                            width: `${(((pomodoroType === "work" ? 25 * 60 : 5 * 60) - pomodoroTime) / (pomodoroType === "work" ? 25 * 60 : 5 * 60)) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Wishlist Tab */}
+              {activeTab === "wishlist" && user?.is_premium && (
+                <div className="space-y-4">
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Input
+                          value={newWishItem}
+                          onChange={(e) => setNewWishItem(e.target.value)}
+                          placeholder="Nuevo deseo..."
+                          className={getCurrentTheme().inputBg}
+                          onKeyPress={(e) => e.key === "Enter" && addWishItem()}
+                        />
+                        <Input
+                          value={newWishDescription}
+                          onChange={(e) => setNewWishDescription(e.target.value)}
+                          placeholder="Descripción (opcional)..."
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <Button onClick={addWishItem} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                          Agregar Deseo
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-3">
+                    {wishlistItems.map((item) => (
+                      <Card
+                        key={item.id}
+                        className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} ${item.completed ? "opacity-60" : ""}`}
+                      >
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3 flex-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleWishItem(item.id)}
+                                className={item.completed ? "text-green-400" : getCurrentTheme().textSecondary}
+                              >
+                                <Star className="w-4 h-4" />
+                              </Button>
+                              <div className="flex-1">
+                                <p
+                                  className={`${getCurrentTheme().textPrimary} ${item.completed ? "line-through" : ""}`}
+                                >
+                                  {item.text}
+                                </p>
+                                {item.description && (
+                                  <p className={`text-xs ${getCurrentTheme().textSecondary}`}>{item.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteWishItem(item.id)}
+                              className="text-red-400"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {wishlistItems.length === 0 && (
+                      <div className="text-center py-8">
+                        <Star className={`w-12 h-12 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                        <p className={getCurrentTheme().textPrimary}>No tienes deseos aún</p>
+                        <p className={getCurrentTheme().textSecondary}>¡Agrega tu primer deseo!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes Tab */}
+              {activeTab === "notes" && user?.is_premium && (
+                <div className="space-y-4">
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Input
+                          value={newNoteTitle}
+                          onChange={(e) => setNewNoteTitle(e.target.value)}
+                          placeholder="Título de la nota..."
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <textarea
+                          value={newNoteContent}
+                          onChange={(e) => setNewNoteContent(e.target.value)}
+                          placeholder="Contenido de la nota..."
+                          className={`w-full p-3 rounded-md ${getCurrentTheme().inputBg} min-h-[100px] resize-none`}
+                        />
+                        <Button onClick={addNote} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                          Agregar Nota
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="space-y-3">
+                    {notes.map((note) => (
+                      <Card key={note.id} className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <CardContent className="p-3">
+                          {editingNote === note.id ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={editNoteTitle}
+                                onChange={(e) => setEditNoteTitle(e.target.value)}
+                                className={getCurrentTheme().inputBg}
+                              />
+                              <textarea
+                                value={editNoteContent}
+                                onChange={(e) => setEditNoteContent(e.target.value)}
+                                className={`w-full p-2 rounded ${getCurrentTheme().inputBg} min-h-[80px] resize-none`}
+                              />
+                              <div className="flex space-x-2">
+                                <Button size="sm" onClick={saveEditNote} className={getCurrentTheme().buttonPrimary}>
+                                  Guardar
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={cancelEditNote}>
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className={`font-semibold ${getCurrentTheme().textPrimary}`}>{note.title}</h4>
+                                <div className="flex space-x-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => startEditNote(note)}
+                                    className={getCurrentTheme().textSecondary}
+                                  >
+                                    ✏️
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => deleteNoteHandler(note.id)}
+                                    className="text-red-400"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className={`text-sm ${getCurrentTheme().textSecondary} whitespace-pre-wrap`}>
+                                {note.content}
+                              </p>
+                              <p className={`text-xs ${getCurrentTheme().textMuted} mt-2`}>
+                                {new Date(note.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {notes.length === 0 && (
+                      <div className="text-center py-8">
+                        <div className={`text-4xl mb-4`}>📝</div>
+                        <p className={getCurrentTheme().textPrimary}>No tienes notas aún</p>
+                        <p className={getCurrentTheme().textSecondary}>¡Agrega tu primera nota!</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        ) : (
+          /* Desktop Layout */
+          <div className="container mx-auto p-6 space-y-6">
+            {/* Desktop Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  {t("appName")}
+                </h1>
+                <p className={`${getCurrentTheme().textSecondary} text-sm`}>
+                  Hola, {user?.name} {user?.is_premium && <Crown className="inline w-4 h-4 text-yellow-400 ml-1" />}
+                </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                {!user?.is_premium && (
+                  <Button
+                    onClick={() => setShowPremiumModal(true)}
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    {t("upgradeButton")}
+                  </Button>
+                )}
+                <Button variant="ghost" onClick={openSettings} className={getCurrentTheme().textSecondary}>
+                  {t("settings")}
+                </Button>
+                <Button variant="ghost" onClick={logout} className={getCurrentTheme().textSecondary}>
+                  {t("logout")}
+                </Button>
+              </div>
+            </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Target className="w-5 h-5 text-blue-400" />
-                  <div>
-                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
-                    <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getTodayTasks().length}</p>
+            {/* Desktop Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Target className="w-5 h-5 text-blue-400" />
+                    <div>
+                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("totalToday")}</p>
+                      <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getTodayTasks().length}</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Check className="w-5 h-5 text-green-400" />
-                  <div>
-                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
-                    <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>{getCompletedTasks().length}</p>
+                </CardContent>
+              </Card>
+              <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Check className="w-5 h-5 text-green-400" />
+                    <div>
+                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("completedToday")}</p>
+                      <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
+                        {getCompletedTasks().length}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Flame className="w-5 h-5 text-orange-400" />
-                  <div>
-                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("streak")}</p>
-                    <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>3</p>
+                </CardContent>
+              </Card>
+              <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Flame className="w-5 h-5 text-orange-400" />
+                    <div>
+                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("streak")}</p>
+                      <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>3</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+              <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-2">
+                    <Star className="w-5 h-5 text-purple-400" />
+                    <div>
+                      <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</p>
+                      <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
+                        {Math.round(getTodayProgress())}%
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-            <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 text-purple-400" />
-                  <div>
-                    <p className={`text-sm ${getCurrentTheme().textSecondary}`}>{t("progressToday")}</p>
-                    <p className={`text-xl font-bold ${getCurrentTheme().textPrimary}`}>
-                      {Math.round(getTodayProgress())}%
+            {/* Desktop Main Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Tasks and Calendar */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Task Form */}
+                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                  <CardHeader>
+                    <CardTitle className={getCurrentTheme().textPrimary}>{t("addTask")}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Input
+                      value={newTask}
+                      onChange={(e) => setNewTask(e.target.value)}
+                      placeholder={t("newTask")}
+                      className={getCurrentTheme().inputBg}
+                      onKeyPress={(e) => e.key === "Enter" && addTask()}
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        type="time"
+                        value={newTaskTime}
+                        onChange={(e) => setNewTaskTime(e.target.value)}
+                        className={getCurrentTheme().inputBg}
+                      />
+                      <Select value={newTaskCategory} onValueChange={setNewTaskCategory}>
+                        <SelectTrigger className={getCurrentTheme().inputBg}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <SelectItem value="work" className={getCurrentTheme().textPrimary}>
+                            {t("work")}
+                          </SelectItem>
+                          <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
+                            {t("personal")}
+                          </SelectItem>
+                          <SelectItem value="health" className={getCurrentTheme().textPrimary}>
+                            {t("health")}
+                          </SelectItem>
+                          <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
+                            {t("learning")}
+                          </SelectItem>
+                          <SelectItem value="other" className={getCurrentTheme().textPrimary}>
+                            {t("other")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
+                        <SelectTrigger className={getCurrentTheme().inputBg}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                          <SelectItem value="high" className={getCurrentTheme().textPrimary}>
+                            {t("high")}
+                          </SelectItem>
+                          <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
+                            {t("medium")}
+                          </SelectItem>
+                          <SelectItem value="low" className={getCurrentTheme().textPrimary}>
+                            {t("low")}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={addTask} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                      {t("addTask")}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Tasks List */}
+                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                  <CardHeader>
+                    <CardTitle className={getCurrentTheme().textPrimary}>
+                      {t("tasks")} - {selectedDate.toLocaleDateString()}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {getFilteredTasks().map((task) => (
+                        <div
+                          key={task.id}
+                          className={`p-3 rounded-lg border ${getCurrentTheme().border} ${
+                            task.completed ? "opacity-60" : ""
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleTask(task.id)}
+                                className={task.completed ? "text-green-400" : getCurrentTheme().textSecondary}
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <div>
+                                <p
+                                  className={`${getCurrentTheme().textPrimary} ${task.completed ? "line-through" : ""}`}
+                                >
+                                  {task.text}
+                                </p>
+                                {task.time && (
+                                  <p className={`text-sm ${getCurrentTheme().textSecondary}`}>⏰ {task.time}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-xs px-2 py-1 rounded ${CATEGORY_COLORS[task.category]}`}>
+                                {t(task.category)}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteTaskHandler(task.id)}
+                                className="text-red-400 hover:bg-red-500/20"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {getFilteredTasks().length === 0 && (
+                        <div className="text-center py-8">
+                          <Target className={`w-12 h-12 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                          <p className={getCurrentTheme().textPrimary}>No hay tareas para hoy</p>
+                          <p className={getCurrentTheme().textSecondary}>¡Agrega tu primera tarea!</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - Calendar, Pomodoro, etc. */}
+              <div className="space-y-6">
+                {/* Calendar */}
+                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                  <CardHeader>
+                    <CardTitle className={getCurrentTheme().textPrimary}>📅 {t("calendar")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setSelectedDate(new Date())}
+                          className={getCurrentTheme().textSecondary}
+                        >
+                          Hoy: {new Date().toLocaleDateString()}
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+                          <div key={day} className={`p-2 text-xs font-semibold ${getCurrentTheme().textSecondary}`}>
+                            {day}
+                          </div>
+                        ))}
+                        {Array.from({ length: 35 }, (_, i) => {
+                          const date = new Date()
+                          date.setDate(date.getDate() - date.getDay() + i)
+                          const isToday = date.toDateString() === new Date().toDateString()
+                          const isSelected = date.toDateString() === selectedDate.toDateString()
+                          const tasksForDate = getTasksForDate(date)
+
+                          return (
+                            <Button
+                              key={i}
+                              variant="ghost"
+                              onClick={() => setSelectedDate(date)}
+                              className={`p-2 h-10 text-xs ${
+                                isSelected
+                                  ? "bg-purple-500 text-white"
+                                  : isToday
+                                    ? "bg-purple-500/20 text-purple-300"
+                                    : getCurrentTheme().textSecondary
+                              }`}
+                            >
+                              <div>
+                                <div>{date.getDate()}</div>
+                                {tasksForDate.length > 0 && (
+                                  <div className="w-1 h-1 bg-cyan-400 rounded-full mx-auto mt-1"></div>
+                                )}
+                              </div>
+                            </Button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Pomodoro */}
+                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                  <CardHeader>
+                    <CardTitle className={getCurrentTheme().textPrimary}>🍅 {t("pomodoro")}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-center space-y-4">
+                    <div>
+                      <div className={`text-4xl font-bold ${getCurrentTheme().textPrimary} mb-2`}>
+                        {formatTime(pomodoroTime)}
+                      </div>
+                      <p className={getCurrentTheme().textSecondary}>
+                        {pomodoroType === "work" ? t("workSession") : t("shortBreak")}
+                      </p>
+                    </div>
+                    <div className="flex justify-center space-x-2">
+                      <Button
+                        size="sm"
+                        onClick={() => setPomodoroActive(!pomodoroActive)}
+                        className={getCurrentTheme().buttonPrimary}
+                      >
+                        {pomodoroActive ? t("pause") : t("start")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setPomodoroActive(false)
+                          setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
+                        }}
+                        variant="outline"
+                        className={getCurrentTheme().buttonSecondary}
+                      >
+                        {t("reset")}
+                      </Button>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div
+                        className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-1000"
+                        style={{
+                          width: `${(((pomodoroType === "work" ? 25 * 60 : 5 * 60) - pomodoroTime) / (pomodoroType === "work" ? 25 * 60 : 5 * 60)) * 100}%`,
+                        }}
+                      ></div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Wishlist - Premium Only */}
+                {user?.is_premium && (
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        <Input
+                          value={newWishItem}
+                          onChange={(e) => setNewWishItem(e.target.value)}
+                          placeholder="Nuevo deseo..."
+                          className={getCurrentTheme().inputBg}
+                          onKeyPress={(e) => e.key === "Enter" && addWishItem()}
+                        />
+                        <Button onClick={addWishItem} size="sm" className={getCurrentTheme().buttonPrimary}>
+                          Agregar
+                        </Button>
+                      </div>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {wishlistItems.slice(0, 3).map((item) => (
+                          <div
+                            key={item.id}
+                            className={`flex items-center justify-between p-2 rounded ${getCurrentTheme().border} border`}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleWishItem(item.id)}
+                                className={item.completed ? "text-green-400" : getCurrentTheme().textSecondary}
+                              >
+                                <Star className="w-3 h-3" />
+                              </Button>
+                              <span
+                                className={`text-sm ${getCurrentTheme().textPrimary} ${item.completed ? "line-through" : ""}`}
+                              >
+                                {item.text}
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteWishItem(item.id)}
+                              className="text-red-400"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ))}
+                        {wishlistItems.length === 0 && (
+                          <p className={`text-sm ${getCurrentTheme().textSecondary} text-center py-4`}>
+                            No hay deseos aún
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Notes - Premium Only */}
+                {user?.is_premium && (
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        <Input
+                          value={newNoteTitle}
+                          onChange={(e) => setNewNoteTitle(e.target.value)}
+                          placeholder="Título..."
+                          className={getCurrentTheme().inputBg}
+                        />
+                        <textarea
+                          value={newNoteContent}
+                          onChange={(e) => setNewNoteContent(e.target.value)}
+                          placeholder="Contenido..."
+                          className={`w-full p-2 rounded ${getCurrentTheme().inputBg} text-sm min-h-[60px] resize-none`}
+                        />
+                        <Button onClick={addNote} size="sm" className={getCurrentTheme().buttonPrimary}>
+                          Agregar
+                        </Button>
+                      </div>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {notes.slice(0, 2).map((note) => (
+                          <div key={note.id} className={`p-2 rounded border ${getCurrentTheme().border}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <h5 className={`text-sm font-semibold ${getCurrentTheme().textPrimary}`}>{note.title}</h5>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteNoteHandler(note.id)}
+                                className="text-red-400"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <p className={`text-xs ${getCurrentTheme().textSecondary} line-clamp-2`}>{note.content}</p>
+                          </div>
+                        ))}
+                        {notes.length === 0 && (
+                          <p className={`text-sm ${getCurrentTheme().textSecondary} text-center py-4`}>
+                            No hay notas aún
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Premium Modal */}
+        {showPremiumModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className={`w-full max-w-2xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                  <Crown className="inline w-6 h-6 mr-2" />
+                  {t("upgradeButton")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <h3 className={`text-lg font-semibold ${getCurrentTheme().textPrimary}`}>
+                      Características Premium:
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className={getCurrentTheme().textPrimary}>Tareas ilimitadas</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className={getCurrentTheme().textPrimary}>Lista de deseos</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className={getCurrentTheme().textPrimary}>Notas ilimitadas</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className={getCurrentTheme().textPrimary}>Temas premium</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Check className="w-4 h-4 text-green-400" />
+                        <span className={getCurrentTheme().textPrimary}>Sincronización en la nube</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-center space-y-4">
+                    <div>
+                      <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary}`}>{t("monthlyPrice")}</div>
+                      <p className={getCurrentTheme().textSecondary}>Facturación mensual</p>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        setShowPremiumModal(false)
+                        handlePremiumChoice(true)
+                      }}
+                      className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-lg py-3"
+                    >
+                      <Crown className="w-5 h-5 mr-2" />
+                      {t("startPremium")}
+                    </Button>
+                    <p className={`text-xs ${getCurrentTheme().textMuted}`}>
+                      * Esta es una demo. No se procesará ningún pago real.
                     </p>
                   </div>
                 </div>
               </CardContent>
+              <div className="flex justify-end p-6">
+                <Button variant="ghost" onClick={() => setShowPremiumModal(false)}>
+                  {t("cancel")}
+                </Button>
+              </div>
             </Card>
           </div>
-
-          {/* Task Form */}
-          <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-            <CardHeader>
-              <CardTitle className={getCurrentTheme().textPrimary}>{t("addTask")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                placeholder={t("newTask")}
-                className={getCurrentTheme().inputBg}
-                onKeyPress={(e) => e.key === "Enter" && addTask()}
-              />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input
-                  type="time"
-                  value={newTaskTime}
-                  onChange={(e) => setNewTaskTime(e.target.value)}
-                  className={getCurrentTheme().inputBg}
-                />
-                <Select value={newTaskCategory} onValueChange={setNewTaskCategory}>
-                  <SelectTrigger className={getCurrentTheme().inputBg}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <SelectItem value="work" className={getCurrentTheme().textPrimary}>
-                      {t("work")}
-                    </SelectItem>
-                    <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
-                      {t("personal")}
-                    </SelectItem>
-                    <SelectItem value="health" className={getCurrentTheme().textPrimary}>
-                      {t("health")}
-                    </SelectItem>
-                    <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
-                      {t("learning")}
-                    </SelectItem>
-                    <SelectItem value="other" className={getCurrentTheme().textPrimary}>
-                      {t("other")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={newTaskPriority} onValueChange={setNewTaskPriority}>
-                  <SelectTrigger className={getCurrentTheme().inputBg}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <SelectItem value="high" className={getCurrentTheme().textPrimary}>
-                      {t("high")}
-                    </SelectItem>
-                    <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
-                      {t("medium")}
-                    </SelectItem>
-                    <SelectItem value="low" className={getCurrentTheme().textPrimary}>
-                      {t("low")}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={addTask} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
-                {t("addTask")}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Tasks List */}
-          <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-            <CardHeader>
-              <CardTitle className={getCurrentTheme().textPrimary}>
-                {t("tasks")} - {selectedDate.toLocaleDateString()}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {getFilteredTasks().map((task) => (
-                  <div
-                    key={task.id}
-                    className={`p-3 rounded-lg border ${getCurrentTheme().border} ${
-                      task.completed ? "opacity-60" : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleTask(task.id)}
-                          className={task.completed ? "text-green-400" : getCurrentTheme().textSecondary}
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <div>
-                          <p className={`${getCurrentTheme().textPrimary} ${task.completed ? "line-through" : ""}`}>
-                            {task.text}
-                          </p>
-                          {task.time && <p className={`text-sm ${getCurrentTheme().textSecondary}`}>⏰ {task.time}</p>}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`text-xs px-2 py-1 rounded ${CATEGORY_COLORS[task.category]}`}>
-                          {t(task.category)}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteTaskHandler(task.id)}
-                          className="text-red-400 hover:bg-red-500/20"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {getFilteredTasks().length === 0 && (
-                  <div className="text-center py-8">
-                    <Target className={`w-12 h-12 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
-                    <p className={getCurrentTheme().textPrimary}>No hay tareas para hoy</p>
-                    <p className={getCurrentTheme().textSecondary}>¡Agrega tu primera tarea!</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        )}
 
         {/* Settings Modal */}
         {showSettingsModal && (
@@ -1952,6 +2771,16 @@ export default function FutureTaskApp() {
                     </SelectContent>
                   </Select>
                 </div>
+                {isSupabaseAvailable && (
+                  <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <Database className="w-4 h-4 text-green-400" />
+                      <span className={`text-sm ${getCurrentTheme().textPrimary}`}>
+                        {t("databaseStatus")}: Conectado a Supabase
+                      </span>
+                    </div>
+                  </div>
+                )}
               </CardContent>
               <div className="flex justify-end space-x-2 p-6">
                 <Button variant="secondary" onClick={() => setShowSettingsModal(false)}>
