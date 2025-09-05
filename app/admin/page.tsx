@@ -64,7 +64,7 @@ interface UserStats {
 // Credenciales de administrador
 const ADMIN_CREDENTIALS = {
   username: "admin",
-  password: "FutureTask2024!",
+  password: "535353-Jrl", // Cambiar de "FutureTask2024!" a "535353-Jrl"
 }
 
 export default function AdminPanel() {
