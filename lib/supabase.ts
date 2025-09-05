@@ -64,16 +64,32 @@ export interface Achievement {
   unlocked_at: string
 }
 
-// Supabase configuration
+// Supabase configuration with validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-// Create Supabase client
+// Validate URL format
+function isValidUrl(string: string): boolean {
+  try {
+    new URL(string)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
+// Create Supabase client with proper error handling
 let supabaseClient: ReturnType<typeof createClient> | null = null
 
 try {
-  if (supabaseUrl && supabaseAnonKey) {
+  if (supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl)) {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+    console.log("✅ Supabase client initialized successfully")
+  } else {
+    console.warn("⚠️ Supabase credentials missing or invalid URL format")
+    console.warn("URL:", supabaseUrl ? "Present" : "Missing")
+    console.warn("Key:", supabaseAnonKey ? "Present" : "Missing")
+    console.warn("Valid URL:", supabaseUrl ? isValidUrl(supabaseUrl) : false)
   }
 } catch (error) {
   console.warn("Failed to initialize Supabase client:", error)
@@ -83,7 +99,7 @@ try {
 export const supabase = supabaseClient
 
 // Check if Supabase is available
-export const isSupabaseAvailable = Boolean(supabaseClient && supabaseUrl && supabaseAnonKey)
+export const isSupabaseAvailable = Boolean(supabaseClient && supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl))
 
 // Helper function to get Supabase client
 export function getSupabaseClient() {
@@ -95,6 +111,7 @@ export function getDatabaseStatus() {
   return {
     supabaseAvailable: isSupabaseAvailable,
     hasCredentials: Boolean(supabaseUrl && supabaseAnonKey),
+    validUrl: supabaseUrl ? isValidUrl(supabaseUrl) : false,
     client: Boolean(supabaseClient),
   }
 }
