@@ -947,7 +947,7 @@ export default function FutureTaskApp() {
           Notification.requestPermission(resolve)
         })
       } else {
-        permission = await await Notification.requestPermission()
+        permission = await Notification.requestPermission()
       }
 
       setNotificationPermission(permission)
@@ -2324,7 +2324,7 @@ export default function FutureTaskApp() {
                             <SelectItem value="work" className={getCurrentTheme().textPrimary}>
                               {t("work")}
                             </SelectItem>
-                            <SelectItem value="personal" className={GetCurrentTheme().textPrimary}>
+                            <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
                               {t("personal")}
                             </SelectItem>
                             <SelectItem value="health" className={getCurrentTheme().textPrimary}>
@@ -2771,16 +2771,16 @@ export default function FutureTaskApp() {
                           <SelectItem value="work" className={getCurrentTheme().textPrimary}>
                             {t("work")}
                           </SelectItem>
-                          <SelectItem value="personal" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
                             {t("personal")}
                           </SelectItem>
-                          <SelectItem value="health" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="health" className={getCurrentTheme().textPrimary}>
                             {t("health")}
                           </SelectItem>
-                          <SelectItem value="learning" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
                             {t("learning")}
                           </SelectItem>
-                          <SelectItem value="other" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="other" className={getCurrentTheme().textPrimary}>
                             {t("other")}
                           </SelectItem>
                         </SelectContent>
@@ -2790,13 +2790,13 @@ export default function FutureTaskApp() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                          <SelectItem value="high" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="high" className={getCurrentTheme().textPrimary}>
                             {t("high")}
                           </SelectItem>
-                          <SelectItem value="medium" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
                             {t("medium")}
                           </SelectItem>
-                          <SelectItem value="low" className={GetCurrentTheme().textPrimary}>
+                          <SelectItem value="low" className={getCurrentTheme().textPrimary}>
                             {t("low")}
                           </SelectItem>
                         </SelectContent>
@@ -3207,7 +3207,7 @@ export default function FutureTaskApp() {
                 {showPasswordFields && (
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="profileCurrentPassword" className={GetCurrentTheme().textSecondary}>
+                      <Label htmlFor="profileCurrentPassword" className={getCurrentTheme().textSecondary}>
                         {t("currentPassword")}
                       </Label>
                       <Input
@@ -3215,12 +3215,12 @@ export default function FutureTaskApp() {
                         type="password"
                         value={profileCurrentPassword}
                         onChange={(e) => setProfileCurrentPassword(e.target.value)}
-                        className={GetCurrentTheme().inputBg}
+                        className={getCurrentTheme().inputBg}
                         placeholder={t("currentPassword")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="profileNewPassword" className={GetCurrentTheme().textSecondary}>
+                      <Label htmlFor="profileNewPassword" className={getCurrentTheme().textSecondary}>
                         {t("newPassword")}
                       </Label>
                       <Input
@@ -3233,7 +3233,7 @@ export default function FutureTaskApp() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="profileConfirmPassword" className={GetCurrentTheme().textSecondary}>
+                      <Label htmlFor="profileConfirmPassword" className={getCurrentTheme().textSecondary}>
                         {t("confirmPassword")}
                       </Label>
                       <Input
@@ -3314,7 +3314,7 @@ export default function FutureTaskApp() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="profileWorkDuration" className={GetCurrentTheme().textSecondary}>
+                  <Label htmlFor="profileWorkDuration" className={getCurrentTheme().textSecondary}>
                     {t("workDuration")}
                   </Label>
                   <Input
@@ -3322,11 +3322,11 @@ export default function FutureTaskApp() {
                     type="number"
                     value={profileWorkDuration}
                     onChange={(e) => setProfileWorkDuration(Number.parseInt(e.target.value))}
-                    className={GetCurrentTheme().inputBg}
+                    className={getCurrentTheme().inputBg}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="profileShortBreakDuration" className={GetCurrentTheme().textSecondary}>
+                  <Label htmlFor="profileShortBreakDuration" className={getCurrentTheme().textSecondary}>
                     {t("shortBreakDuration")}
                   </Label>
                   <Input
@@ -3334,11 +3334,11 @@ export default function FutureTaskApp() {
                     type="number"
                     value={profileShortBreakDuration}
                     onChange={(e) => setProfileShortBreakDuration(Number.parseInt(e.target.value))}
-                    className={GetCurrentTheme().inputBg}
+                    className={getCurrentTheme().inputBg}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="profileLongBreakDuration" className={GetCurrentTheme().textSecondary}>
+                  <Label htmlFor="profileLongBreakDuration" className={getCurrentTheme().textSecondary}>
                     {t("longBreakDuration")}
                   </Label>
                   <Input
@@ -3346,11 +3346,11 @@ export default function FutureTaskApp() {
                     type="number"
                     value={profileLongBreakDuration}
                     onChange={(e) => setProfileLongBreakDuration(Number.parseInt(e.target.value))}
-                    className={GetCurrentTheme().inputBg}
+                    className={getCurrentTheme().inputBg}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="profileSessionsUntilLongBreak" className={GetCurrentTheme().textSecondary}>
+                  <Label htmlFor="profileSessionsUntilLongBreak" className={getCurrentTheme().textSecondary}>
                     {t("sessionsUntilLongBreak")}
                   </Label>
                   <Input
@@ -3358,12 +3358,12 @@ export default function FutureTaskApp() {
                     type="number"
                     value={profileSessionsUntilLongBreak}
                     onChange={(e) => setProfileSessionsUntilLongBreak(Number.parseInt(e.target.value))}
-                    className={GetCurrentTheme().inputBg}
+                    className={getCurrentTheme().inputBg}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className={GetCurrentTheme().textSecondary}>{t("presetConfigurations")}</Label>
+                  <Label className={getCurrentTheme().textSecondary}>{t("presetConfigurations")}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
@@ -3373,7 +3373,7 @@ export default function FutureTaskApp() {
                         setProfileLongBreakDuration(15)
                         setProfileSessionsUntilLongBreak(4)
                       }}
-                      className={GetCurrentTheme().buttonSecondary}
+                      className={getCurrentTheme().buttonSecondary}
                     >
                       {t("classic")}
                     </Button>
@@ -3385,7 +3385,7 @@ export default function FutureTaskApp() {
                         setProfileLongBreakDuration(20)
                         setProfileSessionsUntilLongBreak(3)
                       }}
-                      className={GetCurrentTheme().buttonSecondary}
+                      className={getCurrentTheme().buttonSecondary}
                     >
                       {t("extended")}
                     </Button>
@@ -3397,7 +3397,7 @@ export default function FutureTaskApp() {
                         setProfileLongBreakDuration(30)
                         setProfileSessionsUntilLongBreak(2)
                       }}
-                      className={GetCurrentTheme().buttonSecondary}
+                      className={getCurrentTheme().buttonSecondary}
                     >
                       {t("intensive")}
                     </Button>
@@ -3409,7 +3409,7 @@ export default function FutureTaskApp() {
                         setProfileLongBreakDuration(20)
                         setProfileSessionsUntilLongBreak(3)
                       }}
-                      className={GetCurrentTheme().buttonSecondary}
+                      className={getCurrentTheme().buttonSecondary}
                     >
                       {t("university")}
                     </Button>
@@ -3427,7 +3427,7 @@ export default function FutureTaskApp() {
                       work_duration: profileWorkDuration,
                       short_break_duration: profileShortBreakDuration,
                       long_break_duration: profileLongBreakDuration,
-                      sessionsUntilLongBreak: profileSessionsUntilLongBreak,
+                      sessions_until_long_break: profileSessionsUntilLongBreak,
                     })
                       .then((updatedUser) => {
                         setUser(updatedUser)
@@ -3444,7 +3444,7 @@ export default function FutureTaskApp() {
                           work_duration: profileWorkDuration,
                           short_break_duration: profileShortBreakDuration,
                           long_break_duration: profileLongBreakDuration,
-                          sessionsUntilLongBreak: profileSessionsUntilLongBreak,
+                          sessions_until_long_break: profileSessionsUntilLongBreak,
                         }
                         setUser(updatedUserLocal)
                         localStorage.setItem("futureTask_user", JSON.stringify(updatedUserLocal))
@@ -3453,7 +3453,7 @@ export default function FutureTaskApp() {
                         alert(t("settingsSaved"))
                       })
                   }}
-                  className={GetCurrentTheme().buttonPrimary}
+                  className={getCurrentTheme().buttonPrimary}
                 >
                   {t("applyAndReset")}
                 </Button>
@@ -3465,7 +3465,7 @@ export default function FutureTaskApp() {
         {/* Premium Modal */}
         {showPremiumModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className={`w-full max-w-4xl ${GetCurrentTheme().cardBg} ${GetCurrentTheme().border} m-4`}>
+            <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border} m-4`}>
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                   {t("choosePlan")}
@@ -3473,55 +3473,55 @@ export default function FutureTaskApp() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                  <Card className={`${GetCurrentTheme().cardBg} ${GetCurrentTheme().border}`}>
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
                     <CardHeader>
-                      <CardTitle className={`text-lg md:text-xl ${GetCurrentTheme().textPrimary}`}>
+                      <CardTitle className={`text-lg md:text-xl ${getCurrentTheme().textPrimary}`}>
                         {t("free")}
                       </CardTitle>
-                      <div className={`text-2xl md:text-3xl font-bold ${GetCurrentTheme().textPrimary}`}>
+                      <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
                         €0
-                        <span className={`text-sm md:text-lg font-normal ${GetCurrentTheme().textMuted}`}>/mes</span>
+                        <span className={`text-sm md:text-lg font-normal ${getCurrentTheme().textMuted}`}>/mes</span>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-3">
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Hasta 10 tareas
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Calendario básico
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Pomodoro clásico 25/5
                           </span>
                         </div>
                       </div>
                       <Button
                         onClick={() => setShowPremiumModal(false)}
-                        className={`w-full ${GetCurrentTheme().buttonSecondary}`}
+                        className={`w-full ${getCurrentTheme().buttonSecondary}`}
                       >
                         {t("continueFreee")}
                       </Button>
                     </CardContent>
                   </Card>
 
-                  <Card className={`${GetCurrentTheme().cardBg} ${GetCurrentTheme().border} relative`}>
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} relative`}>
                     <CardHeader>
                       <CardTitle
-                        className={`text-lg md:text-xl ${GetCurrentTheme().textPrimary} flex items-center space-x-2`}
+                        className={`text-lg md:text-xl ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
                       >
                         <Crown className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
                         <span>{t("premium")}</span>
                       </CardTitle>
-                      <div className={`text-2xl md:text-3xl font-bold ${GetCurrentTheme().textPrimary}`}>
+                      <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
                         {t("monthlyPrice")}
                       </div>
                     </CardHeader>
@@ -3529,31 +3529,31 @@ export default function FutureTaskApp() {
                       <div className="space-y-3">
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Tareas ilimitadas
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Lista de deseos
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Notas ilimitadas
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Pomodoro personalizable
                           </span>
                         </div>
                         <div className="flex items-center space-x-3">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
-                          <span className={`text-sm md:text-base ${GetCurrentTheme().textPrimary}`}>
+                          <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
                             Todos los temas premium
                           </span>
                         </div>
@@ -3576,7 +3576,7 @@ export default function FutureTaskApp() {
                 <Button
                   variant="ghost"
                   onClick={() => setShowPremiumModal(false)}
-                  className={GetCurrentTheme().textSecondary}
+                  className={getCurrentTheme().textSecondary}
                 >
                   {t("cancel")}
                 </Button>
@@ -3588,10 +3588,10 @@ export default function FutureTaskApp() {
         {/* Migration Modal */}
         {showMigrationPrompt && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className={`w-full max-w-md ${GetCurrentTheme().cardBg} ${GetCurrentTheme().border} m-4`}>
+            <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border} m-4`}>
               <CardHeader>
-                <CardTitle className={GetCurrentTheme().textPrimary}>{t("migrateData")}</CardTitle>
-                <CardDescription className={GetCurrentTheme().textSecondary}>{t("migrateDataDesc")}</CardDescription>
+                <CardTitle className={getCurrentTheme().textPrimary}>{t("migrateData")}</CardTitle>
+                <CardDescription className={getCurrentTheme().textSecondary}>{t("migrateDataDesc")}</CardDescription>
               </CardHeader>
               <div className="flex justify-end space-x-2 p-6">
                 <Button type="button" variant="secondary" onClick={() => setShowMigrationPrompt(false)}>
