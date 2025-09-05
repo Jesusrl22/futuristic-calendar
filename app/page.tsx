@@ -27,6 +27,7 @@ import {
   updateNote,
   deleteNote,
   migrateLocalStorageToSupabase,
+  initializeAdminUser,
 } from "@/lib/database"
 
 import { isSupabaseAvailable } from "@/lib/supabase"
@@ -106,6 +107,7 @@ const translations = {
     selectLanguage: "Selecciona tu idioma",
     calendar: "Calendario",
     tasks: "Tareas",
+    tasksAndCalendar: "Tareas y Calendario",
     wishlist: "Lista de Deseos",
     notes: "Notas",
     pomodoro: "Pomodoro",
@@ -204,6 +206,7 @@ const translations = {
     selectLanguage: "Select your language",
     calendar: "Calendar",
     tasks: "Tasks",
+    tasksAndCalendar: "Tasks & Calendar",
     wishlist: "Wishlist",
     notes: "Notes",
     pomodoro: "Pomodoro",
@@ -302,6 +305,7 @@ const translations = {
     selectLanguage: "Sélectionnez votre langue",
     calendar: "Calendrier",
     tasks: "Tâches",
+    tasksAndCalendar: "Tâches et Calendrier",
     wishlist: "Liste de souhaits",
     notes: "Notes",
     pomodoro: "Pomodoro",
@@ -400,6 +404,7 @@ const translations = {
     selectLanguage: "Wählen Sie Ihre Sprache",
     calendar: "Kalender",
     tasks: "Aufgaben",
+    tasksAndCalendar: "Aufgaben und Kalender",
     wishlist: "Wunschliste",
     notes: "Notizen",
     pomodoro: "Pomodoro",
@@ -498,6 +503,7 @@ const translations = {
     selectLanguage: "Seleziona la tua lingua",
     calendar: "Calendario",
     tasks: "Attività",
+    tasksAndCalendar: "Attività e Calendario",
     wishlist: "Lista dei desideri",
     notes: "Note",
     pomodoro: "Pomodoro",
@@ -793,7 +799,7 @@ export default function FutureTaskApp() {
   // App state
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [activeTab, setActiveTab] = useState("calendar")
+  const [activeTab, setActiveTab] = useState("tasks")
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS)
 
   // Notification state
@@ -972,6 +978,9 @@ export default function FutureTaskApp() {
   // Initialize app - runs only once
   const initializeApp = async () => {
     try {
+      // Initialize admin user
+      await initializeAdminUser()
+
       const savedUser = localStorage.getItem("futureTask_user")
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser)
@@ -1990,7 +1999,7 @@ export default function FutureTaskApp() {
             {/* Mobile Tabs */}
             <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
               <div className="flex overflow-x-auto">
-                {["tasks", "calendar", "pomodoro", user?.is_premium && "wishlist", user?.is_premium && "notes"]
+                {["tasks", "pomodoro", user?.is_premium && "wishlist", user?.is_premium && "notes"]
                   .filter(Boolean)
                   .map((tab) => (
                     <Button
@@ -2004,11 +2013,10 @@ export default function FutureTaskApp() {
                       }`}
                     >
                       {tab === "tasks" && "📋"}
-                      {tab === "calendar" && "📅"}
                       {tab === "pomodoro" && "🍅"}
                       {tab === "wishlist" && "⭐"}
                       {tab === "notes" && "📝"}
-                      <span className="ml-1">{t(tab)}</span>
+                      <span className="ml-1">{tab === "tasks" ? t("tasksAndCalendar") : t(tab)}</span>
                     </Button>
                   ))}
               </div>
@@ -2016,7 +2024,7 @@ export default function FutureTaskApp() {
 
             {/* Mobile Content */}
             <div className="p-4 pb-20">
-              {/* Tasks Tab */}
+              {/* Tasks & Calendar Tab */}
               {activeTab === "tasks" && (
                 <div className="space-y-4">
                   {/* Quick Stats */}
@@ -2048,6 +2056,70 @@ export default function FutureTaskApp() {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* Calendar Widget */}
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                    <CardHeader>
+                      <CardTitle className={getCurrentTheme().textPrimary}>📅 {t("calendar")}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <Button
+                            variant="ghost"
+                            onClick={() => setSelectedDate(new Date())}
+                            className={getCurrentTheme().textSecondary}
+                          >
+                            Hoy: {new Date().toLocaleDateString()}
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center">
+                          {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+                            <div key={day} className={`p-2 text-xs font-semibold ${getCurrentTheme().textSecondary}`}>
+                              {day}
+                            </div>
+                          ))}
+                          {Array.from({ length: 35 }, (_, i) => {
+                            const date = new Date()
+                            date.setDate(date.getDate() - date.getDay() + i)
+                            const isToday = date.toDateString() === new Date().toDateString()
+                            const isSelected = date.toDateString() === selectedDate.toDateString()
+                            const tasksForDate = getTasksForDate(date)
+
+                            return (
+                              <Button
+                                key={i}
+                                variant="ghost"
+                                onClick={() => setSelectedDate(date)}
+                                className={`p-2 h-10 text-xs ${
+                                  isSelected
+                                    ? "bg-purple-500 text-white"
+                                    : isToday
+                                      ? "bg-purple-500/20 text-purple-300"
+                                      : getCurrentTheme().textSecondary
+                                }`}
+                              >
+                                <div>
+                                  <div>{date.getDate()}</div>
+                                  {tasksForDate.length > 0 && (
+                                    <div className="w-1 h-1 bg-cyan-400 rounded-full mx-auto mt-1"></div>
+                                  )}
+                                </div>
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <div className="text-center">
+                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
+                            Fecha seleccionada: {selectedDate.toLocaleDateString()}
+                          </p>
+                          <p className={`text-xs ${getCurrentTheme().textMuted}`}>
+                            {getTodayTasks().length} tareas para este día
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {/* Task Form */}
                   <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
@@ -2167,74 +2239,6 @@ export default function FutureTaskApp() {
                       </div>
                     )}
                   </div>
-                </div>
-              )}
-
-              {/* Calendar Tab */}
-              {activeTab === "calendar" && (
-                <div className="space-y-4">
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardHeader>
-                      <CardTitle className={getCurrentTheme().textPrimary}>📅 {t("calendar")}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="text-center">
-                          <Button
-                            variant="ghost"
-                            onClick={() => setSelectedDate(new Date())}
-                            className={getCurrentTheme().textSecondary}
-                          >
-                            Hoy: {new Date().toLocaleDateString()}
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-7 gap-1 text-center">
-                          {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
-                            <div key={day} className={`p-2 text-xs font-semibold ${getCurrentTheme().textSecondary}`}>
-                              {day}
-                            </div>
-                          ))}
-                          {Array.from({ length: 35 }, (_, i) => {
-                            const date = new Date()
-                            date.setDate(date.getDate() - date.getDay() + i)
-                            const isToday = date.toDateString() === new Date().toDateString()
-                            const isSelected = date.toDateString() === selectedDate.toDateString()
-                            const tasksForDate = getTasksForDate(date)
-
-                            return (
-                              <Button
-                                key={i}
-                                variant="ghost"
-                                onClick={() => setSelectedDate(date)}
-                                className={`p-2 h-10 text-xs ${
-                                  isSelected
-                                    ? "bg-purple-500 text-white"
-                                    : isToday
-                                      ? "bg-purple-500/20 text-purple-300"
-                                      : getCurrentTheme().textSecondary
-                                }`}
-                              >
-                                <div>
-                                  <div>{date.getDate()}</div>
-                                  {tasksForDate.length > 0 && (
-                                    <div className="w-1 h-1 bg-cyan-400 rounded-full mx-auto mt-1"></div>
-                                  )}
-                                </div>
-                              </Button>
-                            )
-                          })}
-                        </div>
-                        <div className="text-center">
-                          <p className={`text-sm ${getCurrentTheme().textSecondary}`}>
-                            Fecha seleccionada: {selectedDate.toLocaleDateString()}
-                          </p>
-                          <p className={`text-xs ${getCurrentTheme().textMuted}`}>
-                            {getTodayTasks().length} tareas para este día
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
               )}
 

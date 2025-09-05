@@ -1,32 +1,13 @@
-import { supabase, isSupabaseAvailable, testSupabaseConnection } from "./supabase"
-import type { User, Task, WishlistItem, Note, Achievement } from "./supabase"
+import { supabase, isSupabaseAvailable } from "./supabase"
+import type { User, Task, WishlistItem, Note } from "./supabase"
 
-// Test connection on module load
-if (typeof window !== "undefined" && isSupabaseAvailable) {
-  testSupabaseConnection()
-}
-
-// Helper function to safely use Supabase with localStorage fallback
-const safeSupabaseCall = async (
-  operation: () => Promise<any>,
-  fallback: () => any,
-  operationName: string,
-): Promise<any> => {
-  // Use fallback if Supabase is not available or we're on server-side
-  if (!isSupabaseAvailable || typeof window === "undefined" || !supabase) {
-    console.log(`📦 Using localStorage fallback for ${operationName}`)
-    return fallback()
-  }
-
-  try {
-    const result = await operation()
-    console.log(`✅ Supabase operation successful: ${operationName}`)
-    return result
-  } catch (error) {
-    console.error(`❌ Supabase operation failed: ${operationName}`, error)
-    console.log(`📦 Falling back to localStorage for ${operationName}`)
-    return fallback()
-  }
+// Helper function to generate UUID
+function generateId(): string {
+  return "xxxx-xxxx-4xxx-yxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
 // Helper function to safely access localStorage
@@ -59,554 +40,419 @@ const safeLocalStorage = {
   },
 }
 
-// ==================== FALLBACK FUNCTIONS ====================
+// Helper function to safely use Supabase with localStorage fallback
+async function safeSupabaseCall<T>(
+  operation: () => Promise<{ data: T; error: any }>,
+  fallback: () => T,
+  operationName: string,
+): Promise<T> {
+  // Use fallback if Supabase is not available or we're on server-side
+  if (!isSupabaseAvailable || typeof window === "undefined" || !supabase) {
+    console.log(`📦 Using localStorage fallback for ${operationName}`)
+    return fallback()
+  }
 
-const createUserFallback = (userData: Omit<User, "id" | "created_at" | "updated_at">): User => {
-  const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+  try {
+    const { data, error } = await operation()
+    if (error) throw error
+    console.log(`✅ Supabase operation successful: ${operationName}`)
+    return data
+  } catch (error) {
+    console.error(`❌ Supabase operation failed: ${operationName}`, error)
+    console.log(`📦 Falling back to localStorage for ${operationName}`)
+    return fallback()
+  }
+}
+
+// User functions
+export async function createUser(userData: Omit<User, "id" | "created_at" | "updated_at">): Promise<User> {
   const newUser: User = {
     ...userData,
-    id: Date.now().toString(),
-    work_duration: userData.work_duration || 25,
-    short_break_duration: userData.short_break_duration || 5,
-    long_break_duration: userData.long_break_duration || 15,
-    sessions_until_long_break: userData.sessions_until_long_break || 4,
+    id: generateId(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
-  users.push(newUser)
-  safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
-  return newUser
-}
 
-const getUserByEmailFallback = (email: string, password: string): User | null => {
-  const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-  return users.find((u: User) => u.email === email && u.password === password) || null
-}
-
-const updateUserFallback = (userId: string, updates: Partial<User>): User => {
-  const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-  const userIndex = users.findIndex((u: User) => u.id === userId)
-  if (userIndex !== -1) {
-    users[userIndex] = { ...users[userIndex], ...updates, updated_at: new Date().toISOString() }
-    safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
-    return users[userIndex]
-  }
-  throw new Error("User not found")
-}
-
-const getAllUsersFallback = (): User[] => {
-  return JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-}
-
-const deleteUserFallback = (userId: string): boolean => {
-  const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-  const filteredUsers = users.filter((u: User) => u.id !== userId)
-  safeLocalStorage.setItem("futureTask_users", JSON.stringify(filteredUsers))
-  return true
-}
-
-const getUserTasksFallback = (userId: string): Task[] => {
-  return JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${userId}`) || "[]")
-}
-
-const createTaskFallback = (taskData: Omit<Task, "id" | "created_at" | "updated_at">): Task => {
-  const newTask: Task = {
-    ...taskData,
-    id: Date.now().toString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-  const tasks = getUserTasksFallback(taskData.user_id)
-  tasks.push(newTask)
-  safeLocalStorage.setItem(`futureTask_tasks_${taskData.user_id}`, JSON.stringify(tasks))
-  return newTask
-}
-
-const updateTaskFallback = (taskId: string, updates: Partial<Task>): Task => {
-  const users = getAllUsersFallback()
-  for (const user of users) {
-    const tasks = getUserTasksFallback(user.id)
-    const taskIndex = tasks.findIndex((t: Task) => t.id === taskId)
-    if (taskIndex !== -1) {
-      tasks[taskIndex] = { ...tasks[taskIndex], ...updates, updated_at: new Date().toISOString() }
-      safeLocalStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(tasks))
-      return tasks[taskIndex]
-    }
-  }
-  throw new Error("Task not found")
-}
-
-const deleteTaskFallback = (taskId: string): boolean => {
-  const users = getAllUsersFallback()
-  for (const user of users) {
-    const tasks = getUserTasksFallback(user.id)
-    const filteredTasks = tasks.filter((t: Task) => t.id !== taskId)
-    if (filteredTasks.length !== tasks.length) {
-      safeLocalStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(filteredTasks))
-      return true
-    }
-  }
-  return false
-}
-
-const getUserWishlistFallback = (userId: string): WishlistItem[] => {
-  return JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
-}
-
-const createWishlistItemFallback = (itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">): WishlistItem => {
-  const newItem: WishlistItem = {
-    ...itemData,
-    id: Date.now().toString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-  const items = getUserWishlistFallback(itemData.user_id)
-  items.push(newItem)
-  safeLocalStorage.setItem(`futureTask_wishlist_${itemData.user_id}`, JSON.stringify(items))
-  return newItem
-}
-
-const updateWishlistItemFallback = (itemId: string, updates: Partial<WishlistItem>): WishlistItem => {
-  const users = getAllUsersFallback()
-  for (const user of users) {
-    const items = getUserWishlistFallback(user.id)
-    const itemIndex = items.findIndex((i: WishlistItem) => i.id === itemId)
-    if (itemIndex !== -1) {
-      items[itemIndex] = { ...items[itemIndex], ...updates, updated_at: new Date().toISOString() }
-      safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(items))
-      return items[itemIndex]
-    }
-  }
-  throw new Error("Wishlist item not found")
-}
-
-const deleteWishlistItemFallback = (itemId: string): boolean => {
-  const users = getAllUsersFallback()
-  for (const user of users) {
-    const items = getUserWishlistFallback(user.id)
-    const filteredItems = items.filter((i: WishlistItem) => i.id !== itemId)
-    if (filteredItems.length !== items.length) {
-      safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(filteredItems))
-      return true
-    }
-  }
-  return false
-}
-
-const getUserNotesFallback = (userId: string): Note[] => {
-  return JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
-}
-
-const createNoteFallback = (noteData: Omit<Note, "id" | "created_at" | "updated_at">): Note => {
-  const newNote: Note = {
-    ...noteData,
-    id: Date.now().toString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-  const notes = getUserNotesFallback(noteData.user_id)
-  notes.push(newNote)
-  safeLocalStorage.setItem(`futureTask_notes_${noteData.user_id}`, JSON.stringify(notes))
-  return newNote
-}
-
-const updateNoteFallback = (noteId: string, updates: Partial<Note>): Note => {
-  const users = getAllUsersFallback()
-  for (const user of users) {
-    const notes = getUserNotesFallback(user.id)
-    const noteIndex = notes.findIndex((n: Note) => n.id === noteId)
-    if (noteIndex !== -1) {
-      notes[noteIndex] = { ...notes[noteIndex], ...updates, updated_at: new Date().toISOString() }
-      safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(notes))
-      return notes[noteIndex]
-    }
-  }
-  throw new Error("Note not found")
-}
-
-const deleteNoteFallback = (noteId: string): boolean => {
-  const users = getAllUsersFallback()
-  for (const user of users) {
-    const notes = getUserNotesFallback(user.id)
-    const filteredNotes = notes.filter((n: Note) => n.id !== noteId)
-    if (filteredNotes.length !== notes.length) {
-      safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(filteredNotes))
-      return true
-    }
-  }
-  return false
-}
-
-// ==================== USUARIOS ====================
-
-export const createUser = async (userData: Omit<User, "id" | "created_at" | "updated_at">) => {
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("users").insert([userData]).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("users").insert([newUser]).select().single(),
+    () => {
+      // Fallback to localStorage
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      // Check if user already exists
+      const existingUser = users.find((u: User) => u.email === userData.email)
+      if (existingUser) {
+        throw new Error("User already exists")
+      }
+
+      users.push(newUser)
+      safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+      return newUser
     },
-    () => createUserFallback(userData),
     "createUser",
   )
 }
 
-export const getUserByEmail = async (email: string, password: string): Promise<User | null> => {
+export async function getUserByEmail(email: string, password: string): Promise<User | null> {
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password)
-        .single()
-
-      if (error) {
-        if (error.code === "PGRST116") {
-          return null
-        }
-        throw error
-      }
-      return data
+    () => supabase!.from("users").select("*").eq("email", email).eq("password", password).single(),
+    () => {
+      // Fallback to localStorage
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      return users.find((u: User) => u.email === email && u.password === password) || null
     },
-    () => getUserByEmailFallback(email, password),
     "getUserByEmail",
   )
 }
 
-export const updateUser = async (userId: string, updates: Partial<User>) => {
+export async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
+  const updatesWithTimestamp = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("users").update(updatesWithTimestamp).eq("id", userId).select().single(),
+    () => {
+      // Fallback to localStorage
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      const userIndex = users.findIndex((u: User) => u.id === userId)
+
+      if (userIndex === -1) {
+        throw new Error("User not found")
+      }
+
+      users[userIndex] = { ...users[userIndex], ...updatesWithTimestamp }
+      safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+      return users[userIndex]
     },
-    () => updateUserFallback(userId, updates),
     "updateUser",
   )
 }
 
-export const getAllUsers = async (): Promise<User[]> => {
+// Task functions
+export async function getUserTasks(userId: string): Promise<Task[]> {
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
-      if (error) throw error
-      return data || []
+    () => supabase!.from("tasks").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    () => {
+      // Fallback to localStorage
+      const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${userId}`) || "[]")
+      return tasks
     },
-    () => getAllUsersFallback(),
-    "getAllUsers",
-  )
-}
-
-export const deleteUser = async (userId: string) => {
-  return safeSupabaseCall(
-    async () => {
-      const { error } = await supabase.from("users").delete().eq("id", userId)
-      if (error) throw error
-      return true
-    },
-    () => deleteUserFallback(userId),
-    "deleteUser",
-  )
-}
-
-// ==================== TAREAS ====================
-
-export const getUserTasks = async (userId: string): Promise<Task[]> => {
-  return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", userId)
-        .order("date", { ascending: true })
-      if (error) throw error
-      return data || []
-    },
-    () => getUserTasksFallback(userId),
     "getUserTasks",
   )
 }
 
-export const createTask = async (taskData: Omit<Task, "id" | "created_at" | "updated_at">) => {
+export async function createTask(taskData: Omit<Task, "id" | "created_at" | "updated_at">): Promise<Task> {
+  const newTask: Task = {
+    ...taskData,
+    id: generateId(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("tasks").insert([taskData]).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("tasks").insert([newTask]).select().single(),
+    () => {
+      // Fallback to localStorage
+      const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${taskData.user_id}`) || "[]")
+      tasks.push(newTask)
+      safeLocalStorage.setItem(`futureTask_tasks_${taskData.user_id}`, JSON.stringify(tasks))
+      return newTask
     },
-    () => createTaskFallback(taskData),
     "createTask",
   )
 }
 
-export const updateTask = async (taskId: string, updates: Partial<Task>) => {
+export async function updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
+  const updatesWithTimestamp = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("tasks").update(updates).eq("id", taskId).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("tasks").update(updatesWithTimestamp).eq("id", taskId).select().single(),
+    () => {
+      // Fallback to localStorage - need to find task across all users
+      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      for (const user of allUsers) {
+        const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${user.id}`) || "[]")
+        const taskIndex = tasks.findIndex((t: Task) => t.id === taskId)
+
+        if (taskIndex !== -1) {
+          tasks[taskIndex] = { ...tasks[taskIndex], ...updatesWithTimestamp }
+          safeLocalStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(tasks))
+          return tasks[taskIndex]
+        }
+      }
+
+      throw new Error("Task not found")
     },
-    () => updateTaskFallback(taskId, updates),
     "updateTask",
   )
 }
 
-export const deleteTask = async (taskId: string) => {
+export async function deleteTask(taskId: string): Promise<void> {
   return safeSupabaseCall(
-    async () => {
-      const { error } = await supabase.from("tasks").delete().eq("id", taskId)
-      if (error) throw error
-      return true
+    () => supabase!.from("tasks").delete().eq("id", taskId),
+    () => {
+      // Fallback to localStorage
+      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      for (const user of allUsers) {
+        const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${user.id}`) || "[]")
+        const filteredTasks = tasks.filter((t: Task) => t.id !== taskId)
+
+        if (filteredTasks.length !== tasks.length) {
+          safeLocalStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(filteredTasks))
+          return
+        }
+      }
     },
-    () => deleteTaskFallback(taskId),
     "deleteTask",
   )
 }
 
-// ==================== WISHLIST ====================
-
-export const getUserWishlist = async (userId: string): Promise<WishlistItem[]> => {
+// Wishlist functions
+export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase
-        .from("wishlist_items")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-      if (error) throw error
-      return data || []
+    () => supabase!.from("wishlist_items").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    () => {
+      // Fallback to localStorage
+      const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
+      return wishlist
     },
-    () => getUserWishlistFallback(userId),
     "getUserWishlist",
   )
 }
 
-export const createWishlistItem = async (itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">) => {
+export async function createWishlistItem(
+  itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">,
+): Promise<WishlistItem> {
+  const newItem: WishlistItem = {
+    ...itemData,
+    id: generateId(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("wishlist_items").insert([itemData]).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("wishlist_items").insert([newItem]).select().single(),
+    () => {
+      // Fallback to localStorage
+      const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${itemData.user_id}`) || "[]")
+      wishlist.push(newItem)
+      safeLocalStorage.setItem(`futureTask_wishlist_${itemData.user_id}`, JSON.stringify(wishlist))
+      return newItem
     },
-    () => createWishlistItemFallback(itemData),
     "createWishlistItem",
   )
 }
 
-export const updateWishlistItem = async (itemId: string, updates: Partial<WishlistItem>) => {
+export async function updateWishlistItem(itemId: string, updates: Partial<WishlistItem>): Promise<WishlistItem> {
+  const updatesWithTimestamp = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("wishlist_items").update(updates).eq("id", itemId).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("wishlist_items").update(updatesWithTimestamp).eq("id", itemId).select().single(),
+    () => {
+      // Fallback to localStorage
+      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      for (const user of allUsers) {
+        const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${user.id}`) || "[]")
+        const itemIndex = wishlist.findIndex((item: WishlistItem) => item.id === itemId)
+
+        if (itemIndex !== -1) {
+          wishlist[itemIndex] = { ...wishlist[itemIndex], ...updatesWithTimestamp }
+          safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(wishlist))
+          return wishlist[itemIndex]
+        }
+      }
+
+      throw new Error("Wishlist item not found")
     },
-    () => updateWishlistItemFallback(itemId, updates),
     "updateWishlistItem",
   )
 }
 
-export const deleteWishlistItem = async (itemId: string) => {
+export async function deleteWishlistItem(itemId: string): Promise<void> {
   return safeSupabaseCall(
-    async () => {
-      const { error } = await supabase.from("wishlist_items").delete().eq("id", itemId)
-      if (error) throw error
-      return true
+    () => supabase!.from("wishlist_items").delete().eq("id", itemId),
+    () => {
+      // Fallback to localStorage
+      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      for (const user of allUsers) {
+        const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${user.id}`) || "[]")
+        const filteredWishlist = wishlist.filter((item: WishlistItem) => item.id !== itemId)
+
+        if (filteredWishlist.length !== wishlist.length) {
+          safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(filteredWishlist))
+          return
+        }
+      }
     },
-    () => deleteWishlistItemFallback(itemId),
     "deleteWishlistItem",
   )
 }
 
-// ==================== NOTAS ====================
-
-export const getUserNotes = async (userId: string): Promise<Note[]> => {
+// Notes functions
+export async function getUserNotes(userId: string): Promise<Note[]> {
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-      if (error) throw error
-      return data || []
+    () => supabase!.from("notes").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    () => {
+      // Fallback to localStorage
+      const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
+      return notes
     },
-    () => getUserNotesFallback(userId),
     "getUserNotes",
   )
 }
 
-export const createNote = async (noteData: Omit<Note, "id" | "created_at" | "updated_at">) => {
+export async function createNote(noteData: Omit<Note, "id" | "created_at" | "updated_at">): Promise<Note> {
+  const newNote: Note = {
+    ...noteData,
+    id: generateId(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("notes").insert([noteData]).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("notes").insert([newNote]).select().single(),
+    () => {
+      // Fallback to localStorage
+      const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${noteData.user_id}`) || "[]")
+      notes.push(newNote)
+      safeLocalStorage.setItem(`futureTask_notes_${noteData.user_id}`, JSON.stringify(notes))
+      return newNote
     },
-    () => createNoteFallback(noteData),
     "createNote",
   )
 }
 
-export const updateNote = async (noteId: string, updates: Partial<Note>) => {
+export async function updateNote(noteId: string, updates: Partial<Note>): Promise<Note> {
+  const updatesWithTimestamp = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  }
+
   return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase.from("notes").update(updates).eq("id", noteId).select().single()
-      if (error) throw error
-      return data
+    () => supabase!.from("notes").update(updatesWithTimestamp).eq("id", noteId).select().single(),
+    () => {
+      // Fallback to localStorage
+      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      for (const user of allUsers) {
+        const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${user.id}`) || "[]")
+        const noteIndex = notes.findIndex((note: Note) => note.id === noteId)
+
+        if (noteIndex !== -1) {
+          notes[noteIndex] = { ...notes[noteIndex], ...updatesWithTimestamp }
+          safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(notes))
+          return notes[noteIndex]
+        }
+      }
+
+      throw new Error("Note not found")
     },
-    () => updateNoteFallback(noteId, updates),
     "updateNote",
   )
 }
 
-export const deleteNote = async (noteId: string) => {
+export async function deleteNote(noteId: string): Promise<void> {
   return safeSupabaseCall(
-    async () => {
-      const { error } = await supabase.from("notes").delete().eq("id", noteId)
-      if (error) throw error
-      return true
+    () => supabase!.from("notes").delete().eq("id", noteId),
+    () => {
+      // Fallback to localStorage
+      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+
+      for (const user of allUsers) {
+        const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${user.id}`) || "[]")
+        const filteredNotes = notes.filter((note: Note) => note.id !== noteId)
+
+        if (filteredNotes.length !== notes.length) {
+          safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(filteredNotes))
+          return
+        }
+      }
     },
-    () => deleteNoteFallback(noteId),
     "deleteNote",
   )
 }
 
-// ==================== ACHIEVEMENTS ====================
-
-export const getUserAchievements = async (userId: string): Promise<Achievement[]> => {
-  return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase
-        .from("achievements")
-        .select("*")
-        .eq("user_id", userId)
-        .order("unlocked_at", { ascending: false })
-      if (error) throw error
-      return data || []
-    },
-    () => [],
-    "getUserAchievements",
-  )
-}
-
-export const unlockAchievement = async (userId: string, achievementKey: string) => {
-  return safeSupabaseCall(
-    async () => {
-      const { data: existing } = await supabase
-        .from("achievements")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("achievement_key", achievementKey)
-        .single()
-
-      if (existing) {
-        return existing
-      }
-
-      const { data, error } = await supabase
-        .from("achievements")
-        .insert([{ user_id: userId, achievement_key: achievementKey }])
-        .select()
-        .single()
-
-      if (error) throw error
-      return data
-    },
-    () => null,
-    "unlockAchievement",
-  )
-}
-
-// ==================== UTILIDADES ====================
-
-export const getStats = async () => {
-  return safeSupabaseCall(
-    async () => {
-      const [usersResult, tasksResult] = await Promise.all([
-        supabase.from("users").select("id, is_premium, created_at, onboarding_completed"),
-        supabase.from("tasks").select("id, completed, user_id"),
-      ])
-
-      if (usersResult.error) throw usersResult.error
-      if (tasksResult.error) throw tasksResult.error
-
-      const users = usersResult.data || []
-      const tasks = tasksResult.data || []
-
-      return {
-        totalUsers: users.length,
-        premiumUsers: users.filter((u) => u.is_premium).length,
-        totalTasks: tasks.length,
-        completedTasks: tasks.filter((t) => t.completed).length,
-        activeUsers: users.filter((u) => u.onboarding_completed).length,
-      }
-    },
-    () => {
-      const users = getAllUsersFallback()
-      let allTasks: Task[] = []
-      users.forEach((user) => {
-        const userTasks = getUserTasksFallback(user.id)
-        allTasks = [...allTasks, ...userTasks]
-      })
-
-      return {
-        totalUsers: users.length,
-        premiumUsers: users.filter((u) => u.is_premium).length,
-        totalTasks: allTasks.length,
-        completedTasks: allTasks.filter((t) => t.completed).length,
-        activeUsers: users.filter((u) => u.onboarding_completed).length,
-      }
-    },
-    "getStats",
-  )
-}
-
-// ==================== MIGRATION UTILITIES ====================
-
-export const migrateLocalStorageToSupabase = async (userId: string) => {
-  if (!isSupabaseAvailable) {
-    console.log("❌ Cannot migrate: Supabase not available")
+// Migration function
+export async function migrateLocalStorageToSupabase(userId: string): Promise<boolean> {
+  if (!isSupabaseAvailable || !supabase) {
     return false
   }
 
   try {
-    console.log("🔄 Starting migration from localStorage to Supabase...")
-
     // Migrate tasks
-    const localTasks = getUserTasksFallback(userId)
+    const localTasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${userId}`) || "[]")
     if (localTasks.length > 0) {
-      console.log(`📋 Migrating ${localTasks.length} tasks...`)
-      for (const task of localTasks) {
-        const { id, created_at, updated_at, ...taskData } = task
-        await createTask(taskData)
-      }
+      const { error: tasksError } = await supabase.from("tasks").insert(localTasks)
+
+      if (tasksError) throw tasksError
+      safeLocalStorage.removeItem(`futureTask_tasks_${userId}`)
     }
 
     // Migrate wishlist
-    const localWishlist = getUserWishlistFallback(userId)
+    const localWishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
     if (localWishlist.length > 0) {
-      console.log(`⭐ Migrating ${localWishlist.length} wishlist items...`)
-      for (const item of localWishlist) {
-        const { id, created_at, updated_at, ...itemData } = item
-        await createWishlistItem(itemData)
-      }
+      const { error: wishlistError } = await supabase.from("wishlist_items").insert(localWishlist)
+
+      if (wishlistError) throw wishlistError
+      safeLocalStorage.removeItem(`futureTask_wishlist_${userId}`)
     }
 
     // Migrate notes
-    const localNotes = getUserNotesFallback(userId)
+    const localNotes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
     if (localNotes.length > 0) {
-      console.log(`📝 Migrating ${localNotes.length} notes...`)
-      for (const note of localNotes) {
-        const { id, created_at, updated_at, ...noteData } = note
-        await createNote(noteData)
-      }
+      const { error: notesError } = await supabase.from("notes").insert(localNotes)
+
+      if (notesError) throw notesError
+      safeLocalStorage.removeItem(`futureTask_notes_${userId}`)
     }
 
-    console.log("✅ Migration completed successfully!")
     return true
   } catch (error) {
-    console.error("❌ Migration failed:", error)
+    console.error("Migration error:", error)
     return false
+  }
+}
+
+// Initialize admin user
+export async function initializeAdminUser(): Promise<void> {
+  try {
+    // Check if admin user already exists
+    const existingAdmin = await getUserByEmail("admin", "535353-Jrl")
+
+    if (!existingAdmin) {
+      // Create admin user
+      await createUser({
+        name: "Administrator",
+        email: "admin",
+        password: "535353-Jrl",
+        language: "es",
+        theme: "default",
+        is_premium: true,
+        premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+        onboarding_completed: true,
+        pomodoro_sessions: 0,
+        work_duration: 25,
+        short_break_duration: 5,
+        long_break_duration: 15,
+        sessions_until_long_break: 4,
+      })
+      console.log("✅ Admin user created successfully")
+    } else {
+      console.log("✅ Admin user already exists")
+    }
+  } catch (error) {
+    console.error("❌ Error initializing admin user:", error)
   }
 }
