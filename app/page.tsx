@@ -697,7 +697,7 @@ export default function FutureTaskApp() {
   // App state
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [activeTab, setActiveTab] = useState("tasks")
+  const [activeTab, setActiveTab] = useState("calendar")
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS)
 
   // Notification state
@@ -2288,10 +2288,10 @@ export default function FutureTaskApp() {
               </Card>
             </div>
 
-            {/* Desktop Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Tasks and Calendar */}
-              <div className="lg:col-span-2 space-y-6">
+            {/* Desktop Main Content - Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Left Column - Tasks (3/4 width) */}
+              <div className="lg:col-span-3 space-y-6">
                 {/* Task Form */}
                 <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
                   <CardHeader>
@@ -2423,219 +2423,279 @@ export default function FutureTaskApp() {
                 </Card>
               </div>
 
-              {/* Right Column - Calendar, Pomodoro, etc. */}
-              <div className="space-y-6">
-                {/* Calendar */}
-                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                  <CardHeader>
-                    <CardTitle className={getCurrentTheme().textPrimary}>📅 {t("calendar")}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <Button
-                          variant="ghost"
-                          onClick={() => setSelectedDate(new Date())}
-                          className={getCurrentTheme().textSecondary}
-                        >
-                          Hoy: {new Date().toLocaleDateString()}
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-7 gap-1 text-center">
-                        {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
-                          <div key={day} className={`p-2 text-xs font-semibold ${getCurrentTheme().textSecondary}`}>
-                            {day}
-                          </div>
-                        ))}
-                        {Array.from({ length: 35 }, (_, i) => {
-                          const date = new Date()
-                          date.setDate(date.getDate() - date.getDay() + i)
-                          const isToday = date.toDateString() === new Date().toDateString()
-                          const isSelected = date.toDateString() === selectedDate.toDateString()
-                          const tasksForDate = getTasksForDate(date)
-
-                          return (
-                            <Button
-                              key={i}
-                              variant="ghost"
-                              onClick={() => setSelectedDate(date)}
-                              className={`p-2 h-10 text-xs ${
-                                isSelected
-                                  ? "bg-purple-500 text-white"
-                                  : isToday
-                                    ? "bg-purple-500/20 text-purple-300"
-                                    : getCurrentTheme().textSecondary
-                              }`}
-                            >
-                              <div>
-                                <div>{date.getDate()}</div>
-                                {tasksForDate.length > 0 && (
-                                  <div className="w-1 h-1 bg-cyan-400 rounded-full mx-auto mt-1"></div>
-                                )}
-                              </div>
-                            </Button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Pomodoro */}
-                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                  <CardHeader>
-                    <CardTitle className={getCurrentTheme().textPrimary}>🍅 {t("pomodoro")}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-center space-y-4">
-                    <div>
-                      <div className={`text-4xl font-bold ${getCurrentTheme().textPrimary} mb-2`}>
-                        {formatTime(pomodoroTime)}
-                      </div>
-                      <p className={getCurrentTheme().textSecondary}>
-                        {pomodoroType === "work" ? t("workSession") : t("shortBreak")}
-                      </p>
-                    </div>
-                    <div className="flex justify-center space-x-2">
+              {/* Right Column - Tabbed Interface (1/4 width) */}
+              <div className="lg:col-span-1">
+                <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} h-fit`}>
+                  <CardHeader className="pb-2">
+                    <div className="flex space-x-1 bg-black/20 rounded-lg p-1">
                       <Button
+                        variant={activeTab === "calendar" ? "default" : "ghost"}
                         size="sm"
-                        onClick={() => setPomodoroActive(!pomodoroActive)}
-                        className={getCurrentTheme().buttonPrimary}
+                        onClick={() => setActiveTab("calendar")}
+                        className={`flex-1 text-xs ${
+                          activeTab === "calendar" ? getCurrentTheme().buttonPrimary : getCurrentTheme().textSecondary
+                        }`}
                       >
-                        {pomodoroActive ? t("pause") : t("start")}
+                        📅
                       </Button>
                       <Button
+                        variant={activeTab === "pomodoro" ? "default" : "ghost"}
                         size="sm"
-                        onClick={() => {
-                          setPomodoroActive(false)
-                          setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
-                        }}
-                        variant="outline"
-                        className={getCurrentTheme().buttonSecondary}
+                        onClick={() => setActiveTab("pomodoro")}
+                        className={`flex-1 text-xs ${
+                          activeTab === "pomodoro" ? getCurrentTheme().buttonPrimary : getCurrentTheme().textSecondary
+                        }`}
                       >
-                        {t("reset")}
+                        🍅
                       </Button>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-1000"
-                        style={{
-                          width: `${(((pomodoroType === "work" ? 25 * 60 : 5 * 60) - pomodoroTime) / (pomodoroType === "work" ? 25 * 60 : 5 * 60)) * 100}%`,
-                        }}
-                      ></div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Wishlist - Premium Only */}
-                {user?.is_premium && (
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardHeader>
-                      <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-2">
-                        <Input
-                          value={newWishItem}
-                          onChange={(e) => setNewWishItem(e.target.value)}
-                          placeholder="Nuevo deseo..."
-                          className={getCurrentTheme().inputBg}
-                          onKeyPress={(e) => e.key === "Enter" && addWishItem()}
-                        />
-                        <Button onClick={addWishItem} size="sm" className={getCurrentTheme().buttonPrimary}>
-                          Agregar
-                        </Button>
-                      </div>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {wishlistItems.slice(0, 3).map((item) => (
-                          <div
-                            key={item.id}
-                            className={`flex items-center justify-between p-2 rounded ${getCurrentTheme().border} border`}
+                      {user?.is_premium && (
+                        <>
+                          <Button
+                            variant={activeTab === "wishlist" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setActiveTab("wishlist")}
+                            className={`flex-1 text-xs ${
+                              activeTab === "wishlist"
+                                ? getCurrentTheme().buttonPrimary
+                                : getCurrentTheme().textSecondary
+                            }`}
                           >
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleWishItem(item.id)}
-                                className={item.completed ? "text-green-400" : getCurrentTheme().textSecondary}
-                              >
-                                <Star className="w-3 h-3" />
-                              </Button>
-                              <span
-                                className={`text-sm ${getCurrentTheme().textPrimary} ${item.completed ? "line-through" : ""}`}
-                              >
-                                {item.text}
-                              </span>
+                            ⭐
+                          </Button>
+                          <Button
+                            variant={activeTab === "notes" ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setActiveTab("notes")}
+                            className={`flex-1 text-xs ${
+                              activeTab === "notes" ? getCurrentTheme().buttonPrimary : getCurrentTheme().textSecondary
+                            }`}
+                          >
+                            📝
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-2">
+                    {/* Calendar Tab */}
+                    {activeTab === "calendar" && (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary} mb-2`}>📅 {t("calendar")}</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedDate(new Date())}
+                            className={getCurrentTheme().textSecondary}
+                          >
+                            Hoy: {new Date().toLocaleDateString()}
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center">
+                          {["D", "L", "M", "X", "J", "V", "S"].map((day) => (
+                            <div key={day} className={`p-1 text-xs font-semibold ${getCurrentTheme().textSecondary}`}>
+                              {day}
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteWishItem(item.id)}
-                              className="text-red-400"
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ))}
-                        {wishlistItems.length === 0 && (
-                          <p className={`text-sm ${getCurrentTheme().textSecondary} text-center py-4`}>
-                            No hay deseos aún
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                          ))}
+                          {Array.from({ length: 35 }, (_, i) => {
+                            const date = new Date()
+                            date.setDate(date.getDate() - date.getDay() + i)
+                            const isToday = date.toDateString() === new Date().toDateString()
+                            const isSelected = date.toDateString() === selectedDate.toDateString()
+                            const tasksForDate = getTasksForDate(date)
 
-                {/* Notes - Premium Only */}
-                {user?.is_premium && (
-                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardHeader>
-                      <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-2">
-                        <Input
-                          value={newNoteTitle}
-                          onChange={(e) => setNewNoteTitle(e.target.value)}
-                          placeholder="Título..."
-                          className={getCurrentTheme().inputBg}
-                        />
-                        <textarea
-                          value={newNoteContent}
-                          onChange={(e) => setNewNoteContent(e.target.value)}
-                          placeholder="Contenido..."
-                          className={`w-full p-2 rounded ${getCurrentTheme().inputBg} text-sm min-h-[60px] resize-none`}
-                        />
-                        <Button onClick={addNote} size="sm" className={getCurrentTheme().buttonPrimary}>
-                          Agregar
-                        </Button>
+                            return (
+                              <Button
+                                key={i}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedDate(date)}
+                                className={`p-1 h-8 text-xs ${
+                                  isSelected
+                                    ? "bg-purple-500 text-white"
+                                    : isToday
+                                      ? "bg-purple-500/20 text-purple-300"
+                                      : getCurrentTheme().textSecondary
+                                }`}
+                              >
+                                <div>
+                                  <div>{date.getDate()}</div>
+                                  {tasksForDate.length > 0 && (
+                                    <div className="w-1 h-1 bg-cyan-400 rounded-full mx-auto"></div>
+                                  )}
+                                </div>
+                              </Button>
+                            )
+                          })}
+                        </div>
+                        <div className="text-center">
+                          <p className={`text-xs ${getCurrentTheme().textSecondary}`}>
+                            {selectedDate.toLocaleDateString()}
+                          </p>
+                          <p className={`text-xs ${getCurrentTheme().textMuted}`}>{getTodayTasks().length} tareas</p>
+                        </div>
                       </div>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {notes.slice(0, 2).map((note) => (
-                          <div key={note.id} className={`p-2 rounded border ${getCurrentTheme().border}`}>
-                            <div className="flex items-center justify-between mb-1">
-                              <h5 className={`text-sm font-semibold ${getCurrentTheme().textPrimary}`}>{note.title}</h5>
+                    )}
+
+                    {/* Pomodoro Tab */}
+                    {activeTab === "pomodoro" && (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary} mb-4`}>🍅 {t("pomodoro")}</h3>
+                          <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary} mb-2`}>
+                            {formatTime(pomodoroTime)}
+                          </div>
+                          <p className={`text-sm ${getCurrentTheme().textSecondary} mb-4`}>
+                            {pomodoroType === "work" ? t("workSession") : t("shortBreak")}
+                          </p>
+                        </div>
+                        <div className="flex flex-col space-y-2">
+                          <Button
+                            size="sm"
+                            onClick={() => setPomodoroActive(!pomodoroActive)}
+                            className={getCurrentTheme().buttonPrimary}
+                          >
+                            {pomodoroActive ? t("pause") : t("start")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setPomodoroActive(false)
+                              setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
+                            }}
+                            variant="outline"
+                            className={getCurrentTheme().buttonSecondary}
+                          >
+                            {t("reset")}
+                          </Button>
+                        </div>
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-1000"
+                            style={{
+                              width: `${(((pomodoroType === "work" ? 25 * 60 : 5 * 60) - pomodoroTime) / (pomodoroType === "work" ? 25 * 60 : 5 * 60)) * 100}%`,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Wishlist Tab - Premium Only */}
+                    {activeTab === "wishlist" && user?.is_premium && (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary} mb-4`}>⭐ {t("wishlist")}</h3>
+                        </div>
+                        <div className="space-y-2">
+                          <Input
+                            value={newWishItem}
+                            onChange={(e) => setNewWishItem(e.target.value)}
+                            placeholder="Nuevo deseo..."
+                            className={getCurrentTheme().inputBg}
+                            onKeyPress={(e) => e.key === "Enter" && addWishItem()}
+                          />
+                          <Button
+                            onClick={addWishItem}
+                            size="sm"
+                            className={`w-full ${getCurrentTheme().buttonPrimary}`}
+                          >
+                            Agregar
+                          </Button>
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {wishlistItems.map((item) => (
+                            <div
+                              key={item.id}
+                              className={`flex items-center justify-between p-2 rounded text-sm ${getCurrentTheme().border} border`}
+                            >
+                              <div className="flex items-center space-x-2 flex-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleWishItem(item.id)}
+                                  className={`p-1 ${item.completed ? "text-green-400" : getCurrentTheme().textSecondary}`}
+                                >
+                                  <Star className="w-3 h-3" />
+                                </Button>
+                                <span
+                                  className={`text-xs ${getCurrentTheme().textPrimary} ${item.completed ? "line-through" : ""} truncate`}
+                                >
+                                  {item.text}
+                                </span>
+                              </div>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => deleteNoteHandler(note.id)}
-                                className="text-red-400"
+                                onClick={() => deleteWishItem(item.id)}
+                                className="text-red-400 p-1"
                               >
                                 <X className="w-3 h-3" />
                               </Button>
                             </div>
-                            <p className={`text-xs ${getCurrentTheme().textSecondary} line-clamp-2`}>{note.content}</p>
-                          </div>
-                        ))}
-                        {notes.length === 0 && (
-                          <p className={`text-sm ${getCurrentTheme().textSecondary} text-center py-4`}>
-                            No hay notas aún
-                          </p>
-                        )}
+                          ))}
+                          {wishlistItems.length === 0 && (
+                            <p className={`text-xs ${getCurrentTheme().textSecondary} text-center py-4`}>
+                              No hay deseos aún
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    )}
+
+                    {/* Notes Tab - Premium Only */}
+                    {activeTab === "notes" && user?.is_premium && (
+                      <div className="space-y-4">
+                        <div className="text-center">
+                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary} mb-4`}>📝 {t("notes")}</h3>
+                        </div>
+                        <div className="space-y-2">
+                          <Input
+                            value={newNoteTitle}
+                            onChange={(e) => setNewNoteTitle(e.target.value)}
+                            placeholder="Título..."
+                            className={getCurrentTheme().inputBg}
+                          />
+                          <textarea
+                            value={newNoteContent}
+                            onChange={(e) => setNewNoteContent(e.target.value)}
+                            placeholder="Contenido..."
+                            className={`w-full p-2 rounded ${getCurrentTheme().inputBg} text-xs min-h-[60px] resize-none`}
+                          />
+                          <Button onClick={addNote} size="sm" className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+                            Agregar
+                          </Button>
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                          {notes.map((note) => (
+                            <div key={note.id} className={`p-2 rounded border text-sm ${getCurrentTheme().border}`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <h5 className={`text-xs font-semibold ${getCurrentTheme().textPrimary} truncate`}>
+                                  {note.title}
+                                </h5>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteNoteHandler(note.id)}
+                                  className="text-red-400 p-1"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <p className={`text-xs ${getCurrentTheme().textSecondary} line-clamp-3`}>
+                                {note.content}
+                              </p>
+                            </div>
+                          ))}
+                          {notes.length === 0 && (
+                            <p className={`text-xs ${getCurrentTheme().textSecondary} text-center py-4`}>
+                              No hay notas aún
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
