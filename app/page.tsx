@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CalendarIcon, Star, Target, Flame, Crown, Check, X, Globe, Database } from "lucide-react"
+import { CalendarIcon, Star, Target, Flame, Crown, Check, X, Globe, Database, Eye, EyeOff } from "lucide-react"
 
 import {
   createUser,
@@ -56,6 +56,10 @@ interface User {
   is_premium: boolean
   onboarding_completed: boolean
   pomodoro_sessions: number
+  work_duration: number
+  short_break_duration: number
+  long_break_duration: number
+  sessions_until_long_break: number
   created_at: string
 }
 
@@ -164,10 +168,28 @@ const translations = {
     theme: "Tema",
     registration: "Registro",
     newPassword: "Nueva Contraseña",
+    currentPassword: "Contraseña Actual",
+    confirmPassword: "Confirmar Contraseña",
+    changePassword: "Cambiar Contraseña",
     leaveEmptyKeepCurrent: "Dejar vacío para mantener actual",
     databaseStatus: "Estado de la Base de Datos",
     migrateData: "Migrar Datos",
     migrateDataDesc: "Migrar datos locales a Supabase",
+    pomodoroSettings: "Configuración Pomodoro",
+    workDuration: "Duración de trabajo (minutos)",
+    shortBreakDuration: "Descanso corto (minutos)",
+    longBreakDuration: "Descanso largo (minutos)",
+    sessionsUntilLongBreak: "Sesiones hasta descanso largo",
+    presetConfigurations: "Configuraciones predefinidas",
+    classic: "Clásico 25/5",
+    extended: "Extendido 30/10",
+    intensive: "Intensivo 45/15",
+    university: "Universitario 50/10",
+    applyAndReset: "Aplicar y Reiniciar",
+    passwordsDoNotMatch: "Las contraseñas no coinciden",
+    passwordChangedSuccessfully: "Contraseña cambiada exitosamente",
+    incorrectCurrentPassword: "Contraseña actual incorrecta",
+    settingsSaved: "Configuración guardada exitosamente",
   },
   en: {
     appName: "FutureTask",
@@ -220,9 +242,6 @@ const translations = {
     yearlyPrice: "$20/year",
     yearlyDiscount: "Save $3.88",
     billingMonthly: "Monthly billing",
-    yearlyPrice: "$20/year",
-    yearlyDiscount: "Save $3.88",
-    billingMonthly: "Monthly billing",
     billingYearly: "Yearly billing (2 months free)",
     upgradeButton: "Upgrade to Premium",
     notification: "Notification",
@@ -247,10 +266,28 @@ const translations = {
     theme: "Theme",
     registration: "Registration",
     newPassword: "New Password",
+    currentPassword: "Current Password",
+    confirmPassword: "Confirm Password",
+    changePassword: "Change Password",
     leaveEmptyKeepCurrent: "Leave empty to keep current",
     databaseStatus: "Database Status",
     migrateData: "Migrate Data",
     migrateDataDesc: "Migrate local data to Supabase",
+    pomodoroSettings: "Pomodoro Settings",
+    workDuration: "Work duration (minutes)",
+    shortBreakDuration: "Short break (minutes)",
+    longBreakDuration: "Long break (minutes)",
+    sessionsUntilLongBreak: "Sessions until long break",
+    presetConfigurations: "Preset configurations",
+    classic: "Classic 25/5",
+    extended: "Extended 30/10",
+    intensive: "Intensive 45/15",
+    university: "University 50/10",
+    applyAndReset: "Apply and Reset",
+    passwordsDoNotMatch: "Passwords do not match",
+    passwordChangedSuccessfully: "Password changed successfully",
+    incorrectCurrentPassword: "Incorrect current password",
+    settingsSaved: "Settings saved successfully",
   },
   fr: {
     appName: "FutureTask",
@@ -292,7 +329,7 @@ const translations = {
     workSession: "Session de travail",
     shortBreak: "Pause courte",
     longBreak: "Pause longue",
-    premium: "Gratuit",
+    premium: "Premium",
     free: "Gratuit",
     choosePlan: "Choisissez votre plan",
     startPremium: "Commencer Premium",
@@ -327,10 +364,28 @@ const translations = {
     theme: "Thème",
     registration: "Inscription",
     newPassword: "Nouveau mot de passe",
+    currentPassword: "Mot de passe actuel",
+    confirmPassword: "Confirmer le mot de passe",
+    changePassword: "Changer le mot de passe",
     leaveEmptyKeepCurrent: "Laisser vide pour conserver l'actuel",
     databaseStatus: "État de la base de données",
     migrateData: "Migrer les données",
     migrateDataDesc: "Migrer les données locales vers Supabase",
+    pomodoroSettings: "Paramètres Pomodoro",
+    workDuration: "Durée de travail (minutes)",
+    shortBreakDuration: "Pause courte (minutes)",
+    longBreakDuration: "Pause longue (minutes)",
+    sessionsUntilLongBreak: "Sessions jusqu'à la pause longue",
+    presetConfigurations: "Configurations prédéfinies",
+    classic: "Classique 25/5",
+    extended: "Étendu 30/10",
+    intensive: "Intensif 45/15",
+    university: "Universitaire 50/10",
+    applyAndReset: "Appliquer et réinitialiser",
+    passwordsDoNotMatch: "Les mots de passe ne correspondent pas",
+    passwordChangedSuccessfully: "Mot de passe changé avec succès",
+    incorrectCurrentPassword: "Mot de passe actuel incorrect",
+    settingsSaved: "Paramètres sauvegardés avec succès",
   },
   de: {
     appName: "FutureTask",
@@ -372,7 +427,7 @@ const translations = {
     workSession: "Arbeitssitzung",
     shortBreak: "Kurze Pause",
     longBreak: "Lange Pause",
-    premium: "Kostenlos",
+    premium: "Premium",
     free: "Kostenlos",
     choosePlan: "Wählen Sie Ihren Plan",
     startPremium: "Premium starten",
@@ -407,10 +462,28 @@ const translations = {
     theme: "Design",
     registration: "Registrierung",
     newPassword: "Neues Passwort",
+    currentPassword: "Aktuelles Passwort",
+    confirmPassword: "Passwort bestätigen",
+    changePassword: "Passwort ändern",
     leaveEmptyKeepCurrent: "Leer lassen, um das aktuelle zu behalten",
     databaseStatus: "Datenbankstatus",
     migrateData: "Daten migrieren",
     migrateDataDesc: "Lokale Daten zu Supabase migrieren",
+    pomodoroSettings: "Pomodoro-Einstellungen",
+    workDuration: "Arbeitsdauer (Minuten)",
+    shortBreakDuration: "Kurze Pause (Minuten)",
+    longBreakDuration: "Lange Pause (Minuten)",
+    sessionsUntilLongBreak: "Sitzungen bis zur langen Pause",
+    presetConfigurations: "Vordefinierte Konfigurationen",
+    classic: "Klassisch 25/5",
+    extended: "Erweitert 30/10",
+    intensive: "Intensiv 45/15",
+    university: "Universität 50/10",
+    applyAndReset: "Anwenden und zurücksetzen",
+    passwordsDoNotMatch: "Passwörter stimmen nicht überein",
+    passwordChangedSuccessfully: "Passwort erfolgreich geändert",
+    incorrectCurrentPassword: "Aktuelles Passwort ist falsch",
+    settingsSaved: "Einstellungen erfolgreich gespeichert",
   },
   it: {
     appName: "FutureTask",
@@ -452,7 +525,7 @@ const translations = {
     workSession: "Sessione di lavoro",
     shortBreak: "Pausa breve",
     longBreak: "Pausa lunga",
-    premium: "Gratuito",
+    premium: "Premium",
     free: "Gratuito",
     choosePlan: "Scegli il tuo piano",
     startPremium: "Inizia Premium",
@@ -487,10 +560,28 @@ const translations = {
     theme: "Tema",
     registration: "Registrazione",
     newPassword: "Nuova password",
+    currentPassword: "Password attuale",
+    confirmPassword: "Conferma password",
+    changePassword: "Cambia password",
     leaveEmptyKeepCurrent: "Lascia vuoto per mantenere quello attuale",
     databaseStatus: "Stato del database",
     migrateData: "Migra dati",
     migrateDataDesc: "Migra i dati locali su Supabase",
+    pomodoroSettings: "Impostazioni Pomodoro",
+    workDuration: "Durata lavoro (minuti)",
+    shortBreakDuration: "Pausa breve (minuti)",
+    longBreakDuration: "Pausa lunga (minuti)",
+    sessionsUntilLongBreak: "Sessioni fino alla pausa lunga",
+    presetConfigurations: "Configurazioni predefinite",
+    classic: "Classico 25/5",
+    extended: "Esteso 30/10",
+    intensive: "Intensivo 45/15",
+    university: "Universitario 50/10",
+    applyAndReset: "Applica e reimposta",
+    passwordsDoNotMatch: "Le password non corrispondono",
+    passwordChangedSuccessfully: "Password cambiata con successo",
+    incorrectCurrentPassword: "Password attuale errata",
+    settingsSaved: "Impostazioni salvate con successo",
   },
 }
 
@@ -736,21 +827,21 @@ export default function FutureTaskApp() {
   const [pomodoroType, setPomodoroType] = useState<"work" | "shortBreak" | "longBreak">("work")
   const [pomodoroSessions, setPomodoroSessions] = useState(0)
 
-  // Premium Pomodoro Configuration
-  const [workDuration, setWorkDuration] = useState(25)
-  const [shortBreakDuration, setShortBreakDuration] = useState(5)
-  const [longBreakDuration, setLongBreakDuration] = useState(15)
-  const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(4)
-  const [showPomodoroSettings, setShowPomodoroSettings] = useState(false)
-
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [profileName, setProfileName] = useState("")
   const [profileEmail, setProfileEmail] = useState("")
-  const [profilePassword, setProfilePassword] = useState("")
+  const [profileCurrentPassword, setProfileCurrentPassword] = useState("")
+  const [profileNewPassword, setProfileNewPassword] = useState("")
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState("")
   const [profileLanguage, setProfileLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [profileTheme, setProfileTheme] = useState("default")
+  const [profileWorkDuration, setProfileWorkDuration] = useState(25)
+  const [profileShortBreakDuration, setProfileShortBreakDuration] = useState(5)
+  const [profileLongBreakDuration, setProfileLongBreakDuration] = useState(15)
+  const [profileSessionsUntilLongBreak, setProfileSessionsUntilLongBreak] = useState(4)
+  const [showPasswordFields, setShowPasswordFields] = useState(false)
   const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly")
 
   // Filter state
@@ -772,6 +863,9 @@ export default function FutureTaskApp() {
   const [editNoteContent, setEditNoteContent] = useState("")
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Pomodoro Settings Modal
+  const [showPomodoroSettings, setShowPomodoroSettings] = useState(false)
 
   // Migration state
   const [showMigrationPrompt, setShowMigrationPrompt] = useState(false)
@@ -806,6 +900,17 @@ export default function FutureTaskApp() {
   useEffect(() => {
     localStorage.setItem("futureTask_language", language)
   }, [language])
+
+  // Load user Pomodoro settings
+  useEffect(() => {
+    if (user) {
+      setPomodoroTime((user.work_duration || 25) * 60)
+      setProfileWorkDuration(user.work_duration || 25)
+      setProfileShortBreakDuration(user.short_break_duration || 5)
+      setProfileLongBreakDuration(user.long_break_duration || 15)
+      setProfileSessionsUntilLongBreak(user.sessions_until_long_break || 4)
+    }
+  }, [user])
 
   // Request notification permission and check status
   useEffect(() => {
@@ -979,16 +1084,16 @@ export default function FutureTaskApp() {
         setPomodoroSessions((prev) => prev + 1)
 
         // Check if it's time for a long break
-        if ((pomodoroSessions + 1) % sessionsUntilLongBreak === 0) {
+        if ((pomodoroSessions + 1) % (user?.sessions_until_long_break || 4) === 0) {
           setPomodoroType("longBreak")
-          setPomodoroTime(longBreakDuration * 60)
+          setPomodoroTime((user?.long_break_duration || 15) * 60)
         } else {
           setPomodoroType("shortBreak")
-          setPomodoroTime(shortBreakDuration * 60)
+          setPomodoroTime((user?.short_break_duration || 5) * 60)
         }
       } else {
         setPomodoroType("work")
-        setPomodoroTime(workDuration * 60)
+        setPomodoroTime((user?.work_duration || 25) * 60)
       }
 
       // Show notification if permission granted
@@ -997,7 +1102,7 @@ export default function FutureTaskApp() {
           new Notification(`🍅 ${pomodoroType === "work" ? "¡Descanso!" : "¡A trabajar!"}`, {
             body:
               pomodoroType === "work"
-                ? `Sesión completada. Tiempo de ${(pomodoroSessions + 1) % sessionsUntilLongBreak === 0 ? "descanso largo" : "descanso corto"}.`
+                ? `Sesión completada. Tiempo de ${(pomodoroSessions + 1) % (user?.sessions_until_long_break || 4) === 0 ? "descanso largo" : "descanso corto"}.`
                 : "Descanso terminado. ¡Hora de trabajar!",
             icon: "/favicon-32x32.png",
           })
@@ -1012,17 +1117,17 @@ export default function FutureTaskApp() {
     pomodoroTime,
     pomodoroType,
     pomodoroSessions,
-    workDuration,
-    shortBreakDuration,
-    longBreakDuration,
-    sessionsUntilLongBreak,
+    user?.work_duration,
+    user?.short_break_duration,
+    user?.long_break_duration,
+    user?.sessions_until_long_break,
     notificationPermission,
   ])
 
   const resetPomodoro = () => {
     setPomodoroActive(false)
     setPomodoroType("work")
-    setPomodoroTime(workDuration * 60)
+    setPomodoroTime((user?.work_duration || 25) * 60)
   }
 
   const resetPomodoroSession = () => {
@@ -1037,7 +1142,7 @@ export default function FutureTaskApp() {
       case "shortBreak":
         return t("shortBreak")
       case "longBreak":
-        return "Descanso Largo"
+        return t("longBreak")
       default:
         return t("workSession")
     }
@@ -1046,13 +1151,13 @@ export default function FutureTaskApp() {
   const getTotalDuration = () => {
     switch (pomodoroType) {
       case "work":
-        return workDuration * 60
+        return (user?.work_duration || 25) * 60
       case "shortBreak":
-        return shortBreakDuration * 60
+        return (user?.short_break_duration || 5) * 60
       case "longBreak":
-        return longBreakDuration * 60
+        return (user?.long_break_duration || 15) * 60
       default:
-        return workDuration * 60
+        return (user?.work_duration || 25) * 60
     }
   }
 
@@ -1239,6 +1344,10 @@ export default function FutureTaskApp() {
             is_premium: false,
             onboarding_completed: false,
             pomodoro_sessions: 0,
+            work_duration: 25,
+            short_break_duration: 5,
+            long_break_duration: 15,
+            sessions_until_long_break: 4,
           })
 
           setUser(newUser)
@@ -1362,19 +1471,55 @@ export default function FutureTaskApp() {
     if (!user) return
 
     try {
+      // Validate password change if requested
+      if (showPasswordFields) {
+        if (!profileCurrentPassword) {
+          alert(t("incorrectCurrentPassword"))
+          return
+        }
+
+        if (profileCurrentPassword !== user.password) {
+          alert(t("incorrectCurrentPassword"))
+          return
+        }
+
+        if (profileNewPassword !== profileConfirmPassword) {
+          alert(t("passwordsDoNotMatch"))
+          return
+        }
+
+        if (profileNewPassword.length < 6) {
+          alert("La contraseña debe tener al menos 6 caracteres")
+          return
+        }
+      }
+
       const updatedUser = await updateUser(user.id, {
         name: profileName,
         email: profileEmail,
-        password: profilePassword || user.password,
+        password: showPasswordFields && profileNewPassword ? profileNewPassword : user.password,
         language: profileLanguage,
         theme: profileTheme,
+        work_duration: profileWorkDuration,
+        short_break_duration: profileShortBreakDuration,
+        long_break_duration: profileLongBreakDuration,
+        sessions_until_long_break: profileSessionsUntilLongBreak,
       })
 
       setUser(updatedUser)
       localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
       setLanguage(profileLanguage)
+
+      // Reset Pomodoro with new settings
+      resetPomodoroSession()
+
       setShowSettingsModal(false)
-      alert(t("saveChanges"))
+      setShowPasswordFields(false)
+      setProfileCurrentPassword("")
+      setProfileNewPassword("")
+      setProfileConfirmPassword("")
+
+      alert(showPasswordFields ? t("passwordChangedSuccessfully") : t("settingsSaved"))
     } catch (error) {
       console.error("Error updating settings:", error)
 
@@ -1383,25 +1528,45 @@ export default function FutureTaskApp() {
         ...user,
         name: profileName,
         email: profileEmail,
-        password: profilePassword || user.password,
+        password: showPasswordFields && profileNewPassword ? profileNewPassword : user.password,
         language: profileLanguage,
         theme: profileTheme,
+        work_duration: profileWorkDuration,
+        short_break_duration: profileShortBreakDuration,
+        long_break_duration: profileLongBreakDuration,
+        sessions_until_long_break: profileSessionsUntilLongBreak,
       }
 
       setUser(updatedUserLocal)
       localStorage.setItem("futureTask_user", JSON.stringify(updatedUserLocal))
       setLanguage(profileLanguage)
+
+      // Reset Pomodoro with new settings
+      resetPomodoroSession()
+
       setShowSettingsModal(false)
-      alert(t("saveChanges"))
+      setShowPasswordFields(false)
+      setProfileCurrentPassword("")
+      setProfileNewPassword("")
+      setProfileConfirmPassword("")
+
+      alert(showPasswordFields ? t("passwordChangedSuccessfully") : t("settingsSaved"))
     }
   }
 
   const openSettings = () => {
     setProfileName(user?.name || "")
     setProfileEmail(user?.email || "")
-    setProfilePassword("")
     setProfileLanguage(user?.language || "es")
     setProfileTheme(user?.theme || "default")
+    setProfileWorkDuration(user?.work_duration || 25)
+    setProfileShortBreakDuration(user?.short_break_duration || 5)
+    setProfileLongBreakDuration(user?.long_break_duration || 15)
+    setProfileSessionsUntilLongBreak(user?.sessions_until_long_break || 4)
+    setShowPasswordFields(false)
+    setProfileCurrentPassword("")
+    setProfileNewPassword("")
+    setProfileConfirmPassword("")
     setShowSettingsModal(true)
   }
 
@@ -1634,6 +1799,12 @@ export default function FutureTaskApp() {
                       <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Calendario básico</span>
                     </div>
                     <div className="flex items-center space-x-3">
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        Pomodoro clásico 25/5
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
                       <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
                       <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Lista de deseos</span>
                     </div>
@@ -1676,6 +1847,12 @@ export default function FutureTaskApp() {
                     <div className="flex items-center space-x-3">
                       <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                       <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Notas ilimitadas</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        Pomodoro personalizable
+                      </span>
                     </div>
                     <div className="flex items-center space-x-3">
                       <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
@@ -2086,7 +2263,9 @@ export default function FutureTaskApp() {
                         <p className={getCurrentTheme().textSecondary}>{getCurrentPomodoroLabel()}</p>
                         <p className={`text-xs ${getCurrentTheme().textMuted} mt-1`}>
                           Sesión {pomodoroSessions + 1} •{" "}
-                          {sessionsUntilLongBreak - (pomodoroSessions % sessionsUntilLongBreak)} hasta descanso largo
+                          {(user?.sessions_until_long_break || 4) -
+                            (pomodoroSessions % (user?.sessions_until_long_break || 4))}{" "}
+                          hasta descanso largo
                         </p>
                       </div>
                       <div className="flex justify-center space-x-4">
@@ -2678,7 +2857,7 @@ export default function FutureTaskApp() {
                           <div
                             className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-1000"
                             style={{
-                              width: `${(((pomodoroType === "work" ? 25 * 60 : 5 * 60) - pomodoroTime) / (pomodoroType === "work" ? 25 * 60 : 5 * 60)) * 100}%`,
+                              width: `${((getTotalDuration() - pomodoroTime) / getTotalDuration()) * 100}%`,
                             }}
                           ></div>
                         </div>
@@ -2844,6 +3023,10 @@ export default function FutureTaskApp() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <Check className="w-4 h-4 text-green-400" />
+                        <span className={getCurrentTheme().textPrimary}>Pomodoro personalizable</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Check className="w-4 h-4 text-green-400" />
                         <span className={getCurrentTheme().textPrimary}>Temas premium</span>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -2889,7 +3072,7 @@ export default function FutureTaskApp() {
               <CardHeader>
                 <CardTitle className={getCurrentTheme().textPrimary}>{t("settings")}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 max-h-96 overflow-y-auto">
                 <div className="space-y-2">
                   <Label className={getCurrentTheme().textSecondary}>{t("name")}</Label>
                   <Input
@@ -2906,6 +3089,47 @@ export default function FutureTaskApp() {
                     className={getCurrentTheme().inputBg}
                   />
                 </div>
+
+                {/* Password Change Section */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className={getCurrentTheme().textSecondary}>{t("changePassword")}</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPasswordFields(!showPasswordFields)}
+                      className={getCurrentTheme().textAccent}
+                    >
+                      {showPasswordFields ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  {showPasswordFields && (
+                    <div className="space-y-2">
+                      <Input
+                        type="password"
+                        placeholder={t("currentPassword")}
+                        value={profileCurrentPassword}
+                        onChange={(e) => setProfileCurrentPassword(e.target.value)}
+                        className={getCurrentTheme().inputBg}
+                      />
+                      <Input
+                        type="password"
+                        placeholder={t("newPassword")}
+                        value={profileNewPassword}
+                        onChange={(e) => setProfileNewPassword(e.target.value)}
+                        className={getCurrentTheme().inputBg}
+                      />
+                      <Input
+                        type="password"
+                        placeholder={t("confirmPassword")}
+                        value={profileConfirmPassword}
+                        onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                        className={getCurrentTheme().inputBg}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <Label className={getCurrentTheme().textSecondary}>{t("language")}</Label>
                   <Select value={profileLanguage} onValueChange={setProfileLanguage}>
@@ -2943,6 +3167,97 @@ export default function FutureTaskApp() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Pomodoro Settings for Premium Users */}
+                {user?.is_premium && (
+                  <>
+                    <div className="border-t pt-4">
+                      <Label className={`${getCurrentTheme().textSecondary} flex items-center space-x-2`}>
+                        <Crown className="w-4 h-4 text-yellow-400" />
+                        <span>{t("pomodoroSettings")}</span>
+                      </Label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("workDuration")}</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={profileWorkDuration}
+                          onChange={(e) => setProfileWorkDuration(Number(e.target.value))}
+                          className={getCurrentTheme().inputBg}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className={`text-xs ${getCurrentTheme().textSecondary}`}>
+                          {t("shortBreakDuration")}
+                        </Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="60"
+                          value={profileShortBreakDuration}
+                          onChange={(e) => setProfileShortBreakDuration(Number(e.target.value))}
+                          className={getCurrentTheme().inputBg}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className={`text-xs ${getCurrentTheme().textSecondary}`}>{t("longBreakDuration")}</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={profileLongBreakDuration}
+                          onChange={(e) => setProfileLongBreakDuration(Number(e.target.value))}
+                          className={getCurrentTheme().inputBg}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className={`text-xs ${getCurrentTheme().textSecondary}`}>
+                          {t("sessionsUntilLongBreak")}
+                        </Label>
+                        <Input
+                          type="number"
+                          min="2"
+                          max="10"
+                          value={profileSessionsUntilLongBreak}
+                          onChange={(e) => setProfileSessionsUntilLongBreak(Number(e.target.value))}
+                          className={getCurrentTheme().inputBg}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setProfileWorkDuration(25)
+                          setProfileShortBreakDuration(5)
+                          setProfileLongBreakDuration(15)
+                          setProfileSessionsUntilLongBreak(4)
+                        }}
+                        className={getCurrentTheme().buttonSecondary}
+                      >
+                        {t("classic")}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setProfileWorkDuration(50)
+                          setProfileShortBreakDuration(10)
+                          setProfileLongBreakDuration(25)
+                          setProfileSessionsUntilLongBreak(4)
+                        }}
+                        className={getCurrentTheme().buttonSecondary}
+                      >
+                        {t("university")}
+                      </Button>
+                    </div>
+                  </>
+                )}
+
                 {isSupabaseAvailable && (
                   <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                     <div className="flex items-center space-x-2">
@@ -2973,120 +3288,120 @@ export default function FutureTaskApp() {
               <CardHeader>
                 <CardTitle className={getCurrentTheme().textPrimary}>
                   <Crown className="inline w-4 h-4 mr-2 text-yellow-400" />
-                  Configuración Pomodoro
+                  {t("pomodoroSettings")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className={getCurrentTheme().textSecondary}>Duración de trabajo (minutos)</Label>
+                  <Label className={getCurrentTheme().textSecondary}>{t("workDuration")}</Label>
                   <Input
                     type="number"
                     min="1"
                     max="120"
-                    value={workDuration}
-                    onChange={(e) => setWorkDuration(Number(e.target.value))}
+                    value={profileWorkDuration}
+                    onChange={(e) => setProfileWorkDuration(Number(e.target.value))}
                     className={getCurrentTheme().inputBg}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className={getCurrentTheme().textSecondary}>Descanso corto (minutos)</Label>
+                  <Label className={getCurrentTheme().textSecondary}>{t("shortBreakDuration")}</Label>
                   <Input
                     type="number"
                     min="1"
                     max="60"
-                    value={shortBreakDuration}
-                    onChange={(e) => setShortBreakDuration(Number(e.target.value))}
+                    value={profileShortBreakDuration}
+                    onChange={(e) => setProfileShortBreakDuration(Number(e.target.value))}
                     className={getCurrentTheme().inputBg}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className={getCurrentTheme().textSecondary}>Descanso largo (minutos)</Label>
+                  <Label className={getCurrentTheme().textSecondary}>{t("longBreakDuration")}</Label>
                   <Input
                     type="number"
                     min="1"
                     max="120"
-                    value={longBreakDuration}
-                    onChange={(e) => setLongBreakDuration(Number(e.target.value))}
+                    value={profileLongBreakDuration}
+                    onChange={(e) => setProfileLongBreakDuration(Number(e.target.value))}
                     className={getCurrentTheme().inputBg}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className={getCurrentTheme().textSecondary}>Sesiones hasta descanso largo</Label>
+                  <Label className={getCurrentTheme().textSecondary}>{t("sessionsUntilLongBreak")}</Label>
                   <Input
                     type="number"
                     min="2"
                     max="10"
-                    value={sessionsUntilLongBreak}
-                    onChange={(e) => setSessionsUntilLongBreak(Number(e.target.value))}
+                    value={profileSessionsUntilLongBreak}
+                    onChange={(e) => setProfileSessionsUntilLongBreak(Number(e.target.value))}
                     className={getCurrentTheme().inputBg}
                   />
                 </div>
 
                 {/* Preset Configurations */}
                 <div className="space-y-2">
-                  <Label className={getCurrentTheme().textSecondary}>Configuraciones predefinidas</Label>
+                  <Label className={getCurrentTheme().textSecondary}>{t("presetConfigurations")}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setWorkDuration(25)
-                        setShortBreakDuration(5)
-                        setLongBreakDuration(15)
-                        setSessionsUntilLongBreak(4)
+                        setProfileWorkDuration(25)
+                        setProfileShortBreakDuration(5)
+                        setProfileLongBreakDuration(15)
+                        setProfileSessionsUntilLongBreak(4)
                       }}
                       className={getCurrentTheme().buttonSecondary}
                     >
-                      Clásico 25/5
+                      {t("classic")}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setWorkDuration(30)
-                        setShortBreakDuration(10)
-                        setLongBreakDuration(20)
-                        setSessionsUntilLongBreak(4)
+                        setProfileWorkDuration(30)
+                        setProfileShortBreakDuration(10)
+                        setProfileLongBreakDuration(20)
+                        setProfileSessionsUntilLongBreak(4)
                       }}
                       className={getCurrentTheme().buttonSecondary}
                     >
-                      Extendido 30/10
+                      {t("extended")}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setWorkDuration(45)
-                        setShortBreakDuration(15)
-                        setLongBreakDuration(30)
-                        setSessionsUntilLongBreak(3)
+                        setProfileWorkDuration(45)
+                        setProfileShortBreakDuration(15)
+                        setProfileLongBreakDuration(30)
+                        setProfileSessionsUntilLongBreak(3)
                       }}
                       className={getCurrentTheme().buttonSecondary}
                     >
-                      Intensivo 45/15
+                      {t("intensive")}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setWorkDuration(50)
-                        setShortBreakDuration(10)
-                        setLongBreakDuration(25)
-                        setSessionsUntilLongBreak(4)
+                        setProfileWorkDuration(50)
+                        setProfileShortBreakDuration(10)
+                        setProfileLongBreakDuration(25)
+                        setProfileSessionsUntilLongBreak(4)
                       }}
                       className={getCurrentTheme().buttonSecondary}
                     >
-                      Universitario 50/10
+                      {t("university")}
                     </Button>
                   </div>
                 </div>
 
                 <div className={`p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg`}>
                   <p className={`text-sm ${getCurrentTheme().textPrimary}`}>
-                    Vista previa: {workDuration}min trabajo → {shortBreakDuration}min descanso
+                    Vista previa: {profileWorkDuration}min trabajo → {profileShortBreakDuration}min descanso
                   </p>
                   <p className={`text-xs ${getCurrentTheme().textMuted}`}>
-                    Descanso largo de {longBreakDuration}min cada {sessionsUntilLongBreak} sesiones
+                    Descanso largo de {profileLongBreakDuration}min cada {profileSessionsUntilLongBreak} sesiones
                   </p>
                 </div>
               </CardContent>
@@ -3096,12 +3411,13 @@ export default function FutureTaskApp() {
                 </Button>
                 <Button
                   onClick={() => {
-                    resetPomodoroSession()
+                    // Update user settings
+                    updateSettings()
                     setShowPomodoroSettings(false)
                   }}
                   className={getCurrentTheme().buttonPrimary}
                 >
-                  Aplicar y Reiniciar
+                  {t("applyAndReset")}
                 </Button>
               </div>
             </Card>

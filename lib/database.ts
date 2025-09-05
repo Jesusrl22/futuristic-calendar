@@ -66,6 +66,10 @@ const createUserFallback = (userData: Omit<User, "id" | "created_at" | "updated_
   const newUser: User = {
     ...userData,
     id: Date.now().toString(),
+    work_duration: userData.work_duration || 25,
+    short_break_duration: userData.short_break_duration || 5,
+    long_break_duration: userData.long_break_duration || 15,
+    sessions_until_long_break: userData.sessions_until_long_break || 4,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }

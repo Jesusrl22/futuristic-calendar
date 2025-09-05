@@ -58,6 +58,11 @@ export interface User {
   premium_expiry?: string
   onboarding_completed: boolean
   pomodoro_sessions: number
+  // New Pomodoro settings
+  work_duration: number
+  short_break_duration: number
+  long_break_duration: number
+  sessions_until_long_break: number
   created_at: string
   updated_at: string
 }
