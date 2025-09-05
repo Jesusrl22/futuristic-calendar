@@ -128,6 +128,7 @@ const translations = {
     reset: "Reiniciar",
     workSession: "Sesión de Trabajo",
     shortBreak: "Descanso Corto",
+    longBreak: "Descanso Largo",
     premium: "Premium",
     free: "Gratuito",
     choosePlan: "Elige tu plan",
@@ -207,6 +208,7 @@ const translations = {
     reset: "Reset",
     workSession: "Work Session",
     shortBreak: "Short Break",
+    longBreak: "Long Break",
     premium: "Premium",
     free: "Free",
     choosePlan: "Choose your plan",
@@ -289,6 +291,7 @@ const translations = {
     reset: "Réinitialiser",
     workSession: "Session de travail",
     shortBreak: "Pause courte",
+    longBreak: "Pause longue",
     premium: "Gratuit",
     free: "Gratuit",
     choosePlan: "Choisissez votre plan",
@@ -368,6 +371,7 @@ const translations = {
     reset: "Zurücksetzen",
     workSession: "Arbeitssitzung",
     shortBreak: "Kurze Pause",
+    longBreak: "Lange Pause",
     premium: "Kostenlos",
     free: "Kostenlos",
     choosePlan: "Wählen Sie Ihren Plan",
@@ -447,6 +451,7 @@ const translations = {
     reset: "Reimposta",
     workSession: "Sessione di lavoro",
     shortBreak: "Pausa breve",
+    longBreak: "Pausa lunga",
     premium: "Gratuito",
     free: "Gratuito",
     choosePlan: "Scegli il tuo piano",
@@ -728,7 +733,15 @@ export default function FutureTaskApp() {
   // Pomodoro state
   const [pomodoroTime, setPomodoroTime] = useState(25 * 60)
   const [pomodoroActive, setPomodoroActive] = useState(false)
-  const [pomodoroType, setPomodoroType] = useState<"work" | "shortBreak">("work")
+  const [pomodoroType, setPomodoroType] = useState<"work" | "shortBreak" | "longBreak">("work")
+  const [pomodoroSessions, setPomodoroSessions] = useState(0)
+
+  // Premium Pomodoro Configuration
+  const [workDuration, setWorkDuration] = useState(25)
+  const [shortBreakDuration, setShortBreakDuration] = useState(5)
+  const [longBreakDuration, setLongBreakDuration] = useState(15)
+  const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(4)
+  const [showPomodoroSettings, setShowPomodoroSettings] = useState(false)
 
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false)
@@ -963,15 +976,85 @@ export default function FutureTaskApp() {
       setPomodoroActive(false)
 
       if (pomodoroType === "work") {
-        setPomodoroType("shortBreak")
-        setPomodoroTime(5 * 60)
+        setPomodoroSessions((prev) => prev + 1)
+
+        // Check if it's time for a long break
+        if ((pomodoroSessions + 1) % sessionsUntilLongBreak === 0) {
+          setPomodoroType("longBreak")
+          setPomodoroTime(longBreakDuration * 60)
+        } else {
+          setPomodoroType("shortBreak")
+          setPomodoroTime(shortBreakDuration * 60)
+        }
       } else {
         setPomodoroType("work")
-        setPomodoroTime(25 * 60)
+        setPomodoroTime(workDuration * 60)
+      }
+
+      // Show notification if permission granted
+      if (notificationPermission === "granted") {
+        try {
+          new Notification(`🍅 ${pomodoroType === "work" ? "¡Descanso!" : "¡A trabajar!"}`, {
+            body:
+              pomodoroType === "work"
+                ? `Sesión completada. Tiempo de ${(pomodoroSessions + 1) % sessionsUntilLongBreak === 0 ? "descanso largo" : "descanso corto"}.`
+                : "Descanso terminado. ¡Hora de trabajar!",
+            icon: "/favicon-32x32.png",
+          })
+        } catch (error) {
+          console.error("Error showing pomodoro notification:", error)
+        }
       }
     }
     return () => clearInterval(interval)
-  }, [pomodoroActive, pomodoroTime, pomodoroType])
+  }, [
+    pomodoroActive,
+    pomodoroTime,
+    pomodoroType,
+    pomodoroSessions,
+    workDuration,
+    shortBreakDuration,
+    longBreakDuration,
+    sessionsUntilLongBreak,
+    notificationPermission,
+  ])
+
+  const resetPomodoro = () => {
+    setPomodoroActive(false)
+    setPomodoroType("work")
+    setPomodoroTime(workDuration * 60)
+  }
+
+  const resetPomodoroSession = () => {
+    setPomodoroSessions(0)
+    resetPomodoro()
+  }
+
+  const getCurrentPomodoroLabel = () => {
+    switch (pomodoroType) {
+      case "work":
+        return t("workSession")
+      case "shortBreak":
+        return t("shortBreak")
+      case "longBreak":
+        return "Descanso Largo"
+      default:
+        return t("workSession")
+    }
+  }
+
+  const getTotalDuration = () => {
+    switch (pomodoroType) {
+      case "work":
+        return workDuration * 60
+      case "shortBreak":
+        return shortBreakDuration * 60
+      case "longBreak":
+        return longBreakDuration * 60
+      default:
+        return workDuration * 60
+    }
+  }
 
   // Helper functions
   const formatTime = (seconds: number) => {
@@ -1982,16 +2065,28 @@ export default function FutureTaskApp() {
               {activeTab === "pomodoro" && (
                 <div className="space-y-4">
                   <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle className={getCurrentTheme().textPrimary}>🍅 {t("pomodoro")}</CardTitle>
+                      {user?.is_premium && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowPomodoroSettings(true)}
+                          className={getCurrentTheme().textSecondary}
+                        >
+                          ⚙️
+                        </Button>
+                      )}
                     </CardHeader>
                     <CardContent className="text-center space-y-6">
                       <div>
                         <div className={`text-6xl font-bold ${getCurrentTheme().textPrimary} mb-2`}>
                           {formatTime(pomodoroTime)}
                         </div>
-                        <p className={getCurrentTheme().textSecondary}>
-                          {pomodoroType === "work" ? t("workSession") : t("shortBreak")}
+                        <p className={getCurrentTheme().textSecondary}>{getCurrentPomodoroLabel()}</p>
+                        <p className={`text-xs ${getCurrentTheme().textMuted} mt-1`}>
+                          Sesión {pomodoroSessions + 1} •{" "}
+                          {sessionsUntilLongBreak - (pomodoroSessions % sessionsUntilLongBreak)} hasta descanso largo
                         </p>
                       </div>
                       <div className="flex justify-center space-x-4">
@@ -2001,14 +2096,7 @@ export default function FutureTaskApp() {
                         >
                           {pomodoroActive ? t("pause") : t("start")}
                         </Button>
-                        <Button
-                          onClick={() => {
-                            setPomodoroActive(false)
-                            setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
-                          }}
-                          variant="outline"
-                          className={getCurrentTheme().buttonSecondary}
-                        >
+                        <Button onClick={resetPomodoro} variant="outline" className={getCurrentTheme().buttonSecondary}>
                           {t("reset")}
                         </Button>
                       </div>
@@ -2016,10 +2104,17 @@ export default function FutureTaskApp() {
                         <div
                           className="bg-gradient-to-r from-purple-500 to-cyan-500 h-2 rounded-full transition-all duration-1000"
                           style={{
-                            width: `${(((pomodoroType === "work" ? 25 * 60 : 5 * 60) - pomodoroTime) / (pomodoroType === "work" ? 25 * 60 : 5 * 60)) * 100}%`,
+                            width: `${((getTotalDuration() - pomodoroTime) / getTotalDuration()) * 100}%`,
                           }}
                         ></div>
                       </div>
+                      {!user?.is_premium && (
+                        <div
+                          className={`text-xs ${getCurrentTheme().textMuted} text-center p-2 border border-yellow-500/20 rounded`}
+                        >
+                          💎 Premium: Configura duraciones personalizadas (30/10, 45/15, etc.)
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -2540,14 +2635,27 @@ export default function FutureTaskApp() {
                     {/* Pomodoro Tab */}
                     {activeTab === "pomodoro" && (
                       <div className="space-y-4">
+                        <div className="text-center flex items-center justify-between">
+                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary}`}>🍅 {t("pomodoro")}</h3>
+                          {user?.is_premium && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowPomodoroSettings(true)}
+                              className={`${getCurrentTheme().textSecondary} p-1`}
+                            >
+                              ⚙️
+                            </Button>
+                          )}
+                        </div>
                         <div className="text-center">
-                          <h3 className={`font-semibold ${getCurrentTheme().textPrimary} mb-4`}>🍅 {t("pomodoro")}</h3>
                           <div className={`text-3xl font-bold ${getCurrentTheme().textPrimary} mb-2`}>
                             {formatTime(pomodoroTime)}
                           </div>
-                          <p className={`text-sm ${getCurrentTheme().textSecondary} mb-4`}>
-                            {pomodoroType === "work" ? t("workSession") : t("shortBreak")}
+                          <p className={`text-sm ${getCurrentTheme().textSecondary} mb-1`}>
+                            {getCurrentPomodoroLabel()}
                           </p>
+                          <p className={`text-xs ${getCurrentTheme().textMuted}`}>Sesión {pomodoroSessions + 1}</p>
                         </div>
                         <div className="flex flex-col space-y-2">
                           <Button
@@ -2559,10 +2667,7 @@ export default function FutureTaskApp() {
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => {
-                              setPomodoroActive(false)
-                              setPomodoroTime(pomodoroType === "work" ? 25 * 60 : 5 * 60)
-                            }}
+                            onClick={resetPomodoro}
                             variant="outline"
                             className={getCurrentTheme().buttonSecondary}
                           >
@@ -2577,6 +2682,13 @@ export default function FutureTaskApp() {
                             }}
                           ></div>
                         </div>
+                        {!user?.is_premium && (
+                          <div
+                            className={`text-xs ${getCurrentTheme().textMuted} text-center p-2 border border-yellow-500/20 rounded`}
+                          >
+                            💎 Premium: Duraciones personalizadas
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -2848,6 +2960,148 @@ export default function FutureTaskApp() {
                 </Button>
                 <Button onClick={updateSettings} className={getCurrentTheme().buttonPrimary}>
                   {t("saveChanges")}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Pomodoro Settings Modal - Premium Only */}
+        {showPomodoroSettings && user?.is_premium && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <CardHeader>
+                <CardTitle className={getCurrentTheme().textPrimary}>
+                  <Crown className="inline w-4 h-4 mr-2 text-yellow-400" />
+                  Configuración Pomodoro
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Duración de trabajo (minutos)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={workDuration}
+                    onChange={(e) => setWorkDuration(Number(e.target.value))}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Descanso corto (minutos)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={shortBreakDuration}
+                    onChange={(e) => setShortBreakDuration(Number(e.target.value))}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Descanso largo (minutos)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={longBreakDuration}
+                    onChange={(e) => setLongBreakDuration(Number(e.target.value))}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Sesiones hasta descanso largo</Label>
+                  <Input
+                    type="number"
+                    min="2"
+                    max="10"
+                    value={sessionsUntilLongBreak}
+                    onChange={(e) => setSessionsUntilLongBreak(Number(e.target.value))}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+
+                {/* Preset Configurations */}
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Configuraciones predefinidas</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setWorkDuration(25)
+                        setShortBreakDuration(5)
+                        setLongBreakDuration(15)
+                        setSessionsUntilLongBreak(4)
+                      }}
+                      className={getCurrentTheme().buttonSecondary}
+                    >
+                      Clásico 25/5
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setWorkDuration(30)
+                        setShortBreakDuration(10)
+                        setLongBreakDuration(20)
+                        setSessionsUntilLongBreak(4)
+                      }}
+                      className={getCurrentTheme().buttonSecondary}
+                    >
+                      Extendido 30/10
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setWorkDuration(45)
+                        setShortBreakDuration(15)
+                        setLongBreakDuration(30)
+                        setSessionsUntilLongBreak(3)
+                      }}
+                      className={getCurrentTheme().buttonSecondary}
+                    >
+                      Intensivo 45/15
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setWorkDuration(50)
+                        setShortBreakDuration(10)
+                        setLongBreakDuration(25)
+                        setSessionsUntilLongBreak(4)
+                      }}
+                      className={getCurrentTheme().buttonSecondary}
+                    >
+                      Universitario 50/10
+                    </Button>
+                  </div>
+                </div>
+
+                <div className={`p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg`}>
+                  <p className={`text-sm ${getCurrentTheme().textPrimary}`}>
+                    Vista previa: {workDuration}min trabajo → {shortBreakDuration}min descanso
+                  </p>
+                  <p className={`text-xs ${getCurrentTheme().textMuted}`}>
+                    Descanso largo de {longBreakDuration}min cada {sessionsUntilLongBreak} sesiones
+                  </p>
+                </div>
+              </CardContent>
+              <div className="flex justify-end space-x-2 p-6">
+                <Button variant="secondary" onClick={() => setShowPomodoroSettings(false)}>
+                  {t("cancel")}
+                </Button>
+                <Button
+                  onClick={() => {
+                    resetPomodoroSession()
+                    setShowPomodoroSettings(false)
+                  }}
+                  className={getCurrentTheme().buttonPrimary}
+                >
+                  Aplicar y Reiniciar
                 </Button>
               </div>
             </Card>
