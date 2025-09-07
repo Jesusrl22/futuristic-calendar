@@ -1016,6 +1016,40 @@ export default function FutureTaskApp() {
     }
   }
 
+  // Agregar después de la función initializeApp, antes de useEffect:
+
+  const syncUserChanges = useCallback(async () => {
+    if (!user || !isSupabaseAvailable) return
+
+    try {
+      // Verificar si hay cambios en el usuario desde el admin
+      const updatedUser = await getUserByEmail(user.email, user.password)
+      if (
+        updatedUser &&
+        (updatedUser.is_premium !== user.is_premium ||
+          updatedUser.name !== user.name ||
+          updatedUser.theme !== user.theme ||
+          updatedUser.language !== user.language)
+      ) {
+        console.log("🔄 Sincronizando cambios del usuario desde admin...")
+        setUser(updatedUser)
+        setLanguage(updatedUser.language)
+        localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+
+        // Mostrar notificación si cambió el estado premium
+        if (updatedUser.is_premium !== user.is_premium) {
+          if (updatedUser.is_premium) {
+            alert("🎉 ¡Tu cuenta ha sido actualizada a Premium! Ahora tienes acceso a todas las funciones.")
+          } else {
+            alert("ℹ️ Tu cuenta Premium ha expirado. Algunas funciones estarán limitadas.")
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error syncing user changes:", error)
+    }
+  }, [user, isSupabaseAvailable])
+
   // Initialize app - runs only once
   useEffect(() => {
     if (isInitialized) return
@@ -1023,6 +1057,24 @@ export default function FutureTaskApp() {
     const timer = setTimeout(initializeApp, 100)
     return () => clearTimeout(timer)
   }, [isInitialized])
+
+  // Agregar useEffect para sincronización periódica después del useEffect de inicialización:
+
+  useEffect(() => {
+    if (currentScreen !== "app" || !user) return
+
+    // Sincronizar cambios cada 30 segundos
+    const interval = setInterval(syncUserChanges, 30000)
+
+    // Sincronizar cuando la ventana recupera el foco
+    const handleFocus = () => syncUserChanges()
+    window.addEventListener("focus", handleFocus)
+
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener("focus", handleFocus)
+    }
+  }, [currentScreen, user, syncUserChanges])
 
   // Pomodoro timer
   useEffect(() => {
@@ -2886,7 +2938,7 @@ export default function FutureTaskApp() {
         {/* Premium Modal */}
         {showPremiumModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+            <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} ${GetCurrentTheme().border}`}>
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                   {t("choosePlan")}

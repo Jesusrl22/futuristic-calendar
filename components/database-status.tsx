@@ -4,8 +4,8 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Database, Wifi, WifiOff, RefreshCw } from "lucide-react"
-import { getDatabaseStatus } from "@/lib/supabase"
+import { Database, Wifi, WifiOff, RefreshCw, AlertTriangle } from "lucide-react"
+import { getDatabaseStatus, testSupabaseConnection } from "@/lib/supabase"
 
 interface DatabaseStatusProps {
   className?: string
@@ -16,14 +16,28 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
     supabaseAvailable: false,
     hasCredentials: false,
     clientInitialized: false,
+    validUrl: false,
+    initializationError: null as string | null,
   })
+  const [connectionTested, setConnectionTested] = useState(false)
+  const [connectionWorks, setConnectionWorks] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const checkStatus = () => {
+  const checkStatus = async () => {
     setIsLoading(true)
     try {
       const dbStatus = getDatabaseStatus()
       setStatus(dbStatus)
+
+      // Test actual connection if client is initialized
+      if (dbStatus.clientInitialized) {
+        const works = await testSupabaseConnection()
+        setConnectionWorks(works)
+        setConnectionTested(true)
+      } else {
+        setConnectionTested(false)
+        setConnectionWorks(false)
+      }
     } catch (error) {
       console.error("Error checking database status:", error)
     } finally {
@@ -36,24 +50,35 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
   }, [])
 
   const getStatusColor = () => {
-    if (status.supabaseAvailable) return "bg-green-500"
-    if (status.hasCredentials) return "bg-yellow-500"
+    if (connectionTested && connectionWorks) return "bg-green-500"
+    if (status.clientInitialized && !connectionTested) return "bg-yellow-500"
+    if (status.hasCredentials) return "bg-orange-500"
     return "bg-red-500"
   }
 
   const getStatusText = () => {
-    if (status.supabaseAvailable) return "Conectado a Supabase"
+    if (connectionTested && connectionWorks) return "Conectado a Supabase"
+    if (status.clientInitialized && !connectionTested) return "Cliente inicializado"
+    if (status.hasCredentials && !status.clientInitialized) return "Error de inicialización"
     if (status.hasCredentials) return "Credenciales configuradas"
     return "Solo localStorage"
   }
 
   const getStatusIcon = () => {
-    if (status.supabaseAvailable) return <Wifi className="w-4 h-4" />
+    if (connectionTested && connectionWorks) return <Wifi className="w-4 h-4" />
+    if (status.initializationError) return <AlertTriangle className="w-4 h-4" />
     return <WifiOff className="w-4 h-4" />
   }
 
-  // Solo mostrar en desarrollo o si hay problemas de configuración
-  if (process.env.NODE_ENV === "production" && status.supabaseAvailable) {
+  const getBadgeText = () => {
+    if (connectionTested && connectionWorks) return "Online"
+    if (status.clientInitialized) return "Inicializado"
+    if (status.hasCredentials) return "Error"
+    return "Offline"
+  }
+
+  // Solo mostrar si hay problemas o en desarrollo
+  if (process.env.NODE_ENV === "production" && connectionTested && connectionWorks) {
     return null
   }
 
@@ -71,7 +96,7 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
             {getStatusIcon()}
             <span className="text-sm text-gray-300">{getStatusText()}</span>
           </div>
-          <Badge className={`${getStatusColor()} text-white`}>{status.supabaseAvailable ? "Online" : "Offline"}</Badge>
+          <Badge className={`${getStatusColor()} text-white`}>{getBadgeText()}</Badge>
         </div>
 
         <div className="space-y-2 text-xs text-gray-400">
@@ -80,14 +105,29 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
             <span>{status.hasCredentials ? "✅ Configurada" : "❌ Falta"}</span>
           </div>
           <div className="flex justify-between">
+            <span>URL válida:</span>
+            <span>{status.validUrl ? "✅ Sí" : "❌ No"}</span>
+          </div>
+          <div className="flex justify-between">
             <span>Cliente inicializado:</span>
             <span>{status.clientInitialized ? "✅ Sí" : "❌ No"}</span>
           </div>
           <div className="flex justify-between">
+            <span>Conexión probada:</span>
+            <span>{connectionTested ? (connectionWorks ? "✅ Funciona" : "❌ Falla") : "⏳ Pendiente"}</span>
+          </div>
+          <div className="flex justify-between">
             <span>Sincronización:</span>
-            <span>{status.supabaseAvailable ? "✅ Activa" : "❌ Solo local"}</span>
+            <span>{connectionWorks ? "✅ Activa" : "❌ Solo local"}</span>
           </div>
         </div>
+
+        {status.initializationError && (
+          <div className="p-2 bg-red-900/20 border border-red-500/30 rounded text-xs">
+            <p className="font-medium text-red-300">❌ Error de inicialización</p>
+            <p className="text-red-400">{status.initializationError}</p>
+          </div>
+        )}
 
         <Button
           variant="outline"
@@ -97,14 +137,16 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
           className="w-full bg-transparent border-white/20 text-gray-300 hover:bg-white/10"
         >
           {isLoading ? <RefreshCw className="w-3 h-3 animate-spin mr-2" /> : <RefreshCw className="w-3 h-3 mr-2" />}
-          Actualizar Estado
+          {isLoading ? "Probando..." : "Probar Conexión"}
         </Button>
 
-        {!status.supabaseAvailable && (
+        {!connectionWorks && (
           <div className="p-2 bg-yellow-900/20 border border-yellow-500/30 rounded text-xs">
             <p className="font-medium text-yellow-300">⚠️ Sin sincronización</p>
             <p className="text-yellow-400">
-              Los datos solo se guardan localmente. Para sincronizar entre dispositivos, configura Supabase.
+              {status.hasCredentials
+                ? "Verifica que las credenciales de Supabase sean correctas y que las tablas estén creadas."
+                : "Para sincronizar entre dispositivos, configura las variables de entorno de Supabase."}
             </p>
           </div>
         )}

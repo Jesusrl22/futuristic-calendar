@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { isSupabaseAvailable, supabase } from "@/lib/supabase"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -283,21 +283,58 @@ export default function AdminPanel() {
     }
   }
 
-  const togglePremium = (userId: string) => {
-    const updatedUsers = users.map((user) => {
-      if (user.id === userId) {
-        return {
-          ...user,
-          isPremium: !user.isPremium,
-          premiumExpiry: !user.isPremium ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+  const togglePremium = async (userId: string) => {
+    try {
+      const user = users.find((u) => u.id === userId)
+      if (!user) return
+
+      const newPremiumStatus = !user.isPremium
+      const premiumExpiry = newPremiumStatus
+        ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+        : undefined
+
+      // Actualizar en Supabase si está disponible
+      if (isSupabaseAvailable && supabase) {
+        const { error } = await supabase
+          .from("users")
+          .update({
+            is_premium: newPremiumStatus,
+            premium_expiry: premiumExpiry,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userId)
+
+        if (error) {
+          console.error("Error updating user in Supabase:", error)
+          alert("Error al actualizar en Supabase, pero se actualizará localmente")
+        } else {
+          console.log("✅ Usuario actualizado en Supabase")
         }
       }
-      return user
-    })
-    setUsers(updatedUsers)
-    localStorage.setItem("futureTask_users", JSON.stringify(updatedUsers))
-    if (selectedUser?.id === userId) {
-      setSelectedUser(updatedUsers.find((u) => u.id === userId) || null)
+
+      // Actualizar localmente
+      const updatedUsers = users.map((user) => {
+        if (user.id === userId) {
+          return {
+            ...user,
+            isPremium: newPremiumStatus,
+            premiumExpiry,
+          }
+        }
+        return user
+      })
+
+      setUsers(updatedUsers)
+      localStorage.setItem("futureTask_users", JSON.stringify(updatedUsers))
+
+      if (selectedUser?.id === userId) {
+        setSelectedUser(updatedUsers.find((u) => u.id === userId) || null)
+      }
+
+      alert(`✅ Usuario ${newPremiumStatus ? "actualizado a Premium" : "cambiado a gratuito"} exitosamente`)
+    } catch (error) {
+      console.error("Error toggling premium:", error)
+      alert("Error al cambiar el estado premium")
     }
   }
 

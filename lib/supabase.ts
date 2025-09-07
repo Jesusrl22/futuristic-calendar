@@ -64,9 +64,9 @@ export interface Achievement {
   unlocked_at: string
 }
 
-// Supabase configuration with validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+// Get environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Validate URL format
 function isValidUrl(string: string): boolean {
@@ -79,39 +79,65 @@ function isValidUrl(string: string): boolean {
   }
 }
 
-// Create Supabase client with proper error handling
+// Create Supabase client
 let supabaseClient: ReturnType<typeof createClient> | null = null
+let initializationError: string | null = null
 
 try {
-  if (supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl)) {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
-    console.log("✅ Supabase client initialized successfully")
+  if (supabaseUrl && supabaseAnonKey) {
+    if (isValidUrl(supabaseUrl)) {
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          persistSession: false, // We handle our own session management
+        },
+      })
+      console.log("✅ Supabase client initialized successfully")
+    } else {
+      initializationError = "Invalid Supabase URL format"
+      console.warn("⚠️ Invalid Supabase URL format:", supabaseUrl)
+    }
   } else {
-    console.warn("⚠️ Supabase credentials missing or invalid URL format - using localStorage fallback")
-    if (!supabaseUrl) console.warn("Missing NEXT_PUBLIC_SUPABASE_URL")
-    if (!supabaseAnonKey) console.warn("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY")
-    if (supabaseUrl && !isValidUrl(supabaseUrl)) console.warn("Invalid Supabase URL format")
+    initializationError = "Missing Supabase credentials"
+    console.warn("⚠️ Supabase credentials missing:")
+    console.warn("- NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing")
+    console.warn("- NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
   }
 } catch (error) {
-  console.warn("Failed to initialize Supabase client:", error)
+  initializationError = `Failed to initialize: ${error}`
+  console.error("❌ Failed to initialize Supabase client:", error)
 }
 
 // Export the client
 export const supabase = supabaseClient
 
-// Check if Supabase is available
-export const isSupabaseAvailable = Boolean(supabaseClient && supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl))
+// Check if Supabase is available and working
+export const isSupabaseAvailable = Boolean(supabaseClient && !initializationError)
+
+// Test Supabase connection
+export async function testSupabaseConnection(): Promise<boolean> {
+  if (!supabaseClient) return false
+
+  try {
+    const { error } = await supabaseClient.from("users").select("count", { count: "exact", head: true })
+    return !error
+  } catch (error) {
+    console.warn("Supabase connection test failed:", error)
+    return false
+  }
+}
 
 // Helper function to get Supabase client
 export function getSupabaseClient() {
   return supabaseClient
 }
 
-// Database status
+// Database status with connection test
 export function getDatabaseStatus() {
   return {
     supabaseAvailable: isSupabaseAvailable,
     hasCredentials: Boolean(supabaseUrl && supabaseAnonKey),
     clientInitialized: Boolean(supabaseClient),
+    validUrl: supabaseUrl ? isValidUrl(supabaseUrl) : false,
+    initializationError,
   }
 }

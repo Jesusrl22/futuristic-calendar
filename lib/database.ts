@@ -112,7 +112,25 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("users").update(updatesWithTimestamp).eq("id", userId).select().single(),
+    async () => {
+      const { data, error } = await supabase!
+        .from("users")
+        .update(updatesWithTimestamp)
+        .eq("id", userId)
+        .select()
+        .single()
+      if (error) throw error
+
+      // También actualizar localStorage para sincronización inmediata
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      const userIndex = users.findIndex((u: User) => u.id === userId)
+      if (userIndex !== -1) {
+        users[userIndex] = { ...users[userIndex], ...updatesWithTimestamp }
+        safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+      }
+
+      return data
+    },
     () => {
       // Fallback to localStorage
       const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
