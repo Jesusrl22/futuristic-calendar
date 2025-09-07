@@ -70,9 +70,10 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
 // Validate URL format
 function isValidUrl(string: string): boolean {
+  if (!string) return false
   try {
-    new URL(string)
-    return true
+    const url = new URL(string)
+    return url.protocol === "http:" || url.protocol === "https:"
   } catch (_) {
     return false
   }
@@ -86,10 +87,10 @@ try {
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
     console.log("✅ Supabase client initialized successfully")
   } else {
-    console.warn("⚠️ Supabase credentials missing or invalid URL format")
-    console.warn("URL:", supabaseUrl ? "Present" : "Missing")
-    console.warn("Key:", supabaseAnonKey ? "Present" : "Missing")
-    console.warn("Valid URL:", supabaseUrl ? isValidUrl(supabaseUrl) : false)
+    console.warn("⚠️ Supabase credentials missing or invalid URL format - using localStorage fallback")
+    if (!supabaseUrl) console.warn("Missing NEXT_PUBLIC_SUPABASE_URL")
+    if (!supabaseAnonKey) console.warn("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY")
+    if (supabaseUrl && !isValidUrl(supabaseUrl)) console.warn("Invalid Supabase URL format")
   }
 } catch (error) {
   console.warn("Failed to initialize Supabase client:", error)
@@ -111,7 +112,6 @@ export function getDatabaseStatus() {
   return {
     supabaseAvailable: isSupabaseAvailable,
     hasCredentials: Boolean(supabaseUrl && supabaseAnonKey),
-    validUrl: supabaseUrl ? isValidUrl(supabaseUrl) : false,
-    client: Boolean(supabaseClient),
+    clientInitialized: Boolean(supabaseClient),
   }
 }

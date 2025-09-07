@@ -52,10 +52,15 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
     return <WifiOff className="w-4 h-4" />
   }
 
+  // Solo mostrar en desarrollo o si hay problemas de configuración
+  if (process.env.NODE_ENV === "production" && status.supabaseAvailable) {
+    return null
+  }
+
   return (
-    <Card className={className}>
+    <Card className={`bg-black/20 backdrop-blur-xl border-purple-500/20 ${className}`}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center space-x-2">
+        <CardTitle className="text-sm flex items-center space-x-2 text-white">
           <Database className="w-4 h-4" />
           <span>Estado de la Base de Datos</span>
         </CardTitle>
@@ -64,12 +69,12 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {getStatusIcon()}
-            <span className="text-sm">{getStatusText()}</span>
+            <span className="text-sm text-gray-300">{getStatusText()}</span>
           </div>
-          <Badge className={getStatusColor()}>{status.supabaseAvailable ? "Online" : "Offline"}</Badge>
+          <Badge className={`${getStatusColor()} text-white`}>{status.supabaseAvailable ? "Online" : "Offline"}</Badge>
         </div>
 
-        <div className="space-y-2 text-xs text-gray-600">
+        <div className="space-y-2 text-xs text-gray-400">
           <div className="flex justify-between">
             <span>Supabase URL:</span>
             <span>{status.hasCredentials ? "✅ Configurada" : "❌ Falta"}</span>
@@ -89,16 +94,16 @@ export function DatabaseStatus({ className }: DatabaseStatusProps) {
           size="sm"
           onClick={checkStatus}
           disabled={isLoading}
-          className="w-full bg-transparent"
+          className="w-full bg-transparent border-white/20 text-gray-300 hover:bg-white/10"
         >
           {isLoading ? <RefreshCw className="w-3 h-3 animate-spin mr-2" /> : <RefreshCw className="w-3 h-3 mr-2" />}
           Actualizar Estado
         </Button>
 
         {!status.supabaseAvailable && (
-          <div className="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-            <p className="font-medium text-yellow-800">⚠️ Sin sincronización</p>
-            <p className="text-yellow-700">
+          <div className="p-2 bg-yellow-900/20 border border-yellow-500/30 rounded text-xs">
+            <p className="font-medium text-yellow-300">⚠️ Sin sincronización</p>
+            <p className="text-yellow-400">
               Los datos solo se guardan localmente. Para sincronizar entre dispositivos, configura Supabase.
             </p>
           </div>
