@@ -17,12 +17,11 @@ interface User {
 }
 
 interface NotificationServiceProps {
-  tasks: Task[]
-  user: User | null
-  t: (key: string) => string
+  tasks?: Task[]
+  user?: User | null
 }
 
-export function NotificationService({ tasks, user, t }: NotificationServiceProps) {
+export function NotificationService({ tasks = [], user = null }: NotificationServiceProps) {
   useEffect(() => {
     if (!user || !("Notification" in window)) return
 
@@ -36,7 +35,7 @@ export function NotificationService({ tasks, user, t }: NotificationServiceProps
       tasks.forEach((task) => {
         if (!task.completed && task.date === today && task.time === currentTime && task.notification_enabled) {
           try {
-            const notification = new Notification(`⏰ ${t("taskReminder")}`, {
+            const notification = new Notification(`⏰ Recordatorio de Tarea`, {
               body: task.text,
               icon: "/favicon-32x32.png",
               tag: task.id,
@@ -62,7 +61,7 @@ export function NotificationService({ tasks, user, t }: NotificationServiceProps
     checkNotifications()
     const interval = setInterval(checkNotifications, 60000)
     return () => clearInterval(interval)
-  }, [tasks, user, t])
+  }, [tasks, user])
 
   return null // This component doesn't render anything
 }

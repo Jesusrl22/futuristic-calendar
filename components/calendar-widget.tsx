@@ -4,15 +4,22 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { format, isSameDay } from "date-fns"
+import type { Locale } from "date-fns"
 
 interface CalendarWidgetProps {
   selectedDate: Date
   onDateSelect: (date: Date) => void
-  theme: any
-  t: (key: string) => string
+  tasks: Array<{
+    id: string
+    date: string
+    completed: boolean
+  }>
+  locale: Locale
+  fullSize?: boolean
 }
 
-export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: CalendarWidgetProps) {
+export function CalendarWidget({ selectedDate, onDateSelect, tasks, locale, fullSize = false }: CalendarWidgetProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
 
   const getDaysInMonth = (date: Date) => {
@@ -35,11 +42,21 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
 
   const isToday = (date: Date) => {
     const today = new Date()
-    return date.toDateString() === today.toDateString()
+    return isSameDay(date, today)
   }
 
   const isSelected = (date: Date) => {
-    return date.toDateString() === selectedDate.toDateString()
+    return isSameDay(date, selectedDate)
+  }
+
+  const hasTasksOnDate = (date: Date) => {
+    const dateString = format(date, "yyyy-MM-dd")
+    return tasks.some((task) => task.date === dateString)
+  }
+
+  const getCompletedTasksOnDate = (date: Date) => {
+    const dateString = format(date, "yyyy-MM-dd")
+    return tasks.filter((task) => task.date === dateString && task.completed).length
   }
 
   const monthNames = [
@@ -77,16 +94,16 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
   }
 
   return (
-    <Card className={`${theme.cardBg} ${theme.border} backdrop-blur-xl`}>
+    <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className={`text-lg ${theme.textPrimary}`}>📅 {t("calendar")}</CardTitle>
+          <CardTitle className="text-lg text-white">📅 Calendario</CardTitle>
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigateMonth("prev")}
-              className={`${theme.textSecondary} hover:${theme.textPrimary}`}
+              className="text-gray-300 hover:text-white hover:bg-white/10"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -94,13 +111,13 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
               variant="ghost"
               size="sm"
               onClick={() => navigateMonth("next")}
-              className={`${theme.textSecondary} hover:${theme.textPrimary}`}
+              className="text-gray-300 hover:text-white hover:bg-white/10"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </div>
-        <div className={`text-center ${theme.textPrimary} font-semibold`}>
+        <div className="text-center text-white font-semibold">
           {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </div>
       </CardHeader>
@@ -116,16 +133,16 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
                 onDateSelect(today)
                 setCurrentMonth(today)
               }}
-              className={`${theme.textSecondary} hover:${theme.textPrimary} text-xs`}
+              className="text-gray-300 hover:text-white text-xs hover:bg-white/10"
             >
-              Ir a hoy: {new Date().toLocaleDateString()}
+              Ir a hoy: {format(new Date(), "dd/MM/yyyy")}
             </Button>
           </div>
 
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {dayNames.map((day) => (
-              <div key={day} className={`text-center text-xs font-semibold ${theme.textSecondary} p-1`}>
+              <div key={day} className="text-center text-xs font-semibold text-gray-300 p-1">
                 {day}
               </div>
             ))}
@@ -140,6 +157,8 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
 
               const isDateToday = isToday(date)
               const isDateSelected = isSelected(date)
+              const hasTasks = hasTasksOnDate(date)
+              const completedTasks = getCompletedTasksOnDate(date)
 
               return (
                 <Button
@@ -147,15 +166,19 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
                   variant="ghost"
                   size="sm"
                   onClick={() => onDateSelect(date)}
-                  className={`h-8 w-8 p-0 text-xs font-normal ${
+                  className={`h-8 w-8 p-0 text-xs font-normal relative ${
                     isDateSelected
-                      ? `${theme.buttonPrimary} text-white`
+                      ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
                       : isDateToday
-                        ? `bg-purple-500/20 ${theme.textAccent} border border-purple-400/50`
-                        : `${theme.textSecondary} hover:${theme.textPrimary} hover:bg-white/10`
+                        ? "bg-purple-500/20 text-purple-300 border border-purple-400/50"
+                        : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   {date.getDate()}
+                  {hasTasks && <div className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-green-400"></div>}
+                  {completedTasks > 0 && (
+                    <div className="absolute top-0 right-0 w-1 h-1 rounded-full bg-blue-400"></div>
+                  )}
                 </Button>
               )
             })}
@@ -163,14 +186,9 @@ export function CalendarWidget({ selectedDate, onDateSelect, theme, t }: Calenda
 
           {/* Selected date info */}
           <div className="text-center mt-4 pt-2 border-t border-white/10">
-            <p className={`text-sm ${theme.textSecondary}`}>Fecha seleccionada:</p>
-            <p className={`text-sm font-semibold ${theme.textPrimary}`}>
-              {selectedDate.toLocaleDateString("es-ES", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+            <p className="text-sm text-gray-300">Fecha seleccionada:</p>
+            <p className="text-sm font-semibold text-white">
+              {format(selectedDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale })}
             </p>
           </div>
         </div>

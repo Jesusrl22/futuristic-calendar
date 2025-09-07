@@ -1,476 +1,614 @@
-import { supabase, isSupabaseAvailable } from "./supabase"
-import type { User, Task, WishlistItem, Note } from "./supabase"
+import {
+  supabase,
+  isSupabaseAvailable,
+  type User,
+  type Task,
+  type WishlistItem,
+  type Note,
+  type Achievement,
+} from "./supabase"
 
-// Helper function to generate UUID
+// Utility functions
 function generateId(): string {
-  return "xxxx-xxxx-4xxx-yxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === "x" ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+  return Math.random().toString(36).substr(2, 9) + Date.now().toString(36)
 }
 
-// Helper function to safely access localStorage
-const safeLocalStorage = {
-  getItem: (key: string): string | null => {
-    try {
-      return typeof window !== "undefined" ? localStorage.getItem(key) : null
-    } catch (error) {
-      console.error("Error accessing localStorage:", error)
-      return null
-    }
-  },
-  setItem: (key: string, value: string): void => {
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(key, value)
-      }
-    } catch (error) {
-      console.error("Error setting localStorage:", error)
-    }
-  },
-  removeItem: (key: string): void => {
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(key)
-      }
-    } catch (error) {
-      console.error("Error removing from localStorage:", error)
-    }
-  },
+function getCurrentTimestamp(): string {
+  return new Date().toISOString()
 }
 
-// Helper function to safely use Supabase with localStorage fallback
-async function safeSupabaseCall<T>(
-  operation: () => Promise<{ data: T; error: any }>,
-  fallback: () => T,
-  operationName: string,
-): Promise<T> {
-  // Use fallback if Supabase is not available or we're on server-side
-  if (!isSupabaseAvailable || typeof window === "undefined" || !supabase) {
-    console.log(`📦 Using localStorage fallback for ${operationName}`)
-    return fallback()
+// User Management
+export async function createUser(userData: Omit<User, "id" | "created_at" | "updated_at">): Promise<User> {
+  const user: User = {
+    ...userData,
+    id: generateId(),
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
   }
 
   try {
-    const { data, error } = await operation()
-    if (error) throw error
-    console.log(`✅ Supabase operation successful: ${operationName}`)
-    return data
-  } catch (error) {
-    console.error(`❌ Supabase operation failed: ${operationName}`, error)
-    console.log(`📦 Falling back to localStorage for ${operationName}`)
-    return fallback()
-  }
-}
-
-// User functions
-export async function createUser(userData: Omit<User, "id" | "created_at" | "updated_at">): Promise<User> {
-  const newUser: User = {
-    ...userData,
-    id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-
-  return safeSupabaseCall(
-    () => supabase!.from("users").insert([newUser]).select().single(),
-    () => {
-      // Fallback to localStorage
-      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-
-      // Check if user already exists
-      const existingUser = users.find((u: User) => u.email === userData.email)
-      if (existingUser) {
-        throw new Error("User already exists")
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("users").insert([user])
+      if (error) {
+        console.warn("Supabase insert failed, using localStorage:", error.message)
+        throw error
       }
-
-      users.push(newUser)
-      safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
-      return newUser
-    },
-    "createUser",
-  )
-}
-
-export async function getUserByEmail(email: string, password: string): Promise<User | null> {
-  return safeSupabaseCall(
-    () => supabase!.from("users").select("*").eq("email", email).eq("password", password).single(),
-    () => {
-      // Fallback to localStorage
-      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-      return users.find((u: User) => u.email === email && u.password === password) || null
-    },
-    "getUserByEmail",
-  )
-}
-
-export async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
-  const updatesWithTimestamp = {
-    ...updates,
-    updated_at: new Date().toISOString(),
+      console.log("✅ User created in Supabase")
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const users = getLocalUsers()
+    users.push(user)
+    localStorage.setItem("users", JSON.stringify(users))
+    console.log("📱 User created in localStorage")
   }
 
-  return safeSupabaseCall(
-    async () => {
-      const { data, error } = await supabase!
-        .from("users")
-        .update(updatesWithTimestamp)
-        .eq("id", userId)
-        .select()
-        .single()
+  return user
+}
+
+export async function getUser(id: string): Promise<User | null> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("users").select("*").eq("id", id).single()
+      if (error) throw error
+      return data as User
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const users = getLocalUsers()
+    return users.find((user) => user.id === id) || null
+  }
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("users").select("*").eq("email", email).single()
+      if (error) throw error
+      return data as User
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const users = getLocalUsers()
+    return users.find((user) => user.email === email) || null
+  }
+}
+
+export async function updateUser(id: string, updates: Partial<User>): Promise<User | null> {
+  const updatedData = {
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  }
+
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("users").update(updatedData).eq("id", id).select().single()
       if (error) throw error
 
-      // También actualizar localStorage para sincronización inmediata
-      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-      const userIndex = users.findIndex((u: User) => u.id === userId)
+      // Also update localStorage for consistency
+      const users = getLocalUsers()
+      const userIndex = users.findIndex((user) => user.id === id)
       if (userIndex !== -1) {
-        users[userIndex] = { ...users[userIndex], ...updatesWithTimestamp }
-        safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+        users[userIndex] = { ...users[userIndex], ...updatedData }
+        localStorage.setItem("users", JSON.stringify(users))
       }
 
-      return data
-    },
-    () => {
-      // Fallback to localStorage
-      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-      const userIndex = users.findIndex((u: User) => u.id === userId)
-
-      if (userIndex === -1) {
-        throw new Error("User not found")
-      }
-
-      users[userIndex] = { ...users[userIndex], ...updatesWithTimestamp }
-      safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+      return data as User
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const users = getLocalUsers()
+    const userIndex = users.findIndex((user) => user.id === id)
+    if (userIndex !== -1) {
+      users[userIndex] = { ...users[userIndex], ...updatedData }
+      localStorage.setItem("users", JSON.stringify(users))
       return users[userIndex]
-    },
-    "updateUser",
-  )
+    }
+    return null
+  }
 }
 
-// Task functions
-export async function getUserTasks(userId: string): Promise<Task[]> {
-  return safeSupabaseCall(
-    () => supabase!.from("tasks").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-    () => {
-      // Fallback to localStorage
-      const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${userId}`) || "[]")
-      return tasks
-    },
-    "getUserTasks",
-  )
+export async function getAllUsers(): Promise<User[]> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("users").select("*").order("created_at", { ascending: false })
+      if (error) throw error
+      return data as User[]
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    return getLocalUsers()
+  }
 }
 
+export async function deleteUser(id: string): Promise<boolean> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("users").delete().eq("id", id)
+      if (error) throw error
+
+      // Also remove from localStorage
+      const users = getLocalUsers()
+      const filteredUsers = users.filter((user) => user.id !== id)
+      localStorage.setItem("users", JSON.stringify(filteredUsers))
+
+      return true
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const users = getLocalUsers()
+    const filteredUsers = users.filter((user) => user.id !== id)
+    localStorage.setItem("users", JSON.stringify(filteredUsers))
+    return true
+  }
+}
+
+// Task Management
 export async function createTask(taskData: Omit<Task, "id" | "created_at" | "updated_at">): Promise<Task> {
-  const newTask: Task = {
+  const task: Task = {
     ...taskData,
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
   }
 
-  return safeSupabaseCall(
-    () => supabase!.from("tasks").insert([newTask]).select().single(),
-    () => {
-      // Fallback to localStorage
-      const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${taskData.user_id}`) || "[]")
-      tasks.push(newTask)
-      safeLocalStorage.setItem(`futureTask_tasks_${taskData.user_id}`, JSON.stringify(tasks))
-      return newTask
-    },
-    "createTask",
-  )
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("tasks").insert([task])
+      if (error) throw error
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const tasks = getLocalTasks()
+    tasks.push(task)
+    localStorage.setItem("tasks", JSON.stringify(tasks))
+  }
+
+  return task
 }
 
-export async function updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
-  const updatesWithTimestamp = {
+export async function getTasks(userId: string): Promise<Task[]> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data as Task[]
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const tasks = getLocalTasks()
+    return tasks.filter((task) => task.user_id === userId)
+  }
+}
+
+export async function updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
+  const updatedData = {
     ...updates,
-    updated_at: new Date().toISOString(),
+    updated_at: getCurrentTimestamp(),
   }
 
-  return safeSupabaseCall(
-    () => supabase!.from("tasks").update(updatesWithTimestamp).eq("id", taskId).select().single(),
-    () => {
-      // Fallback to localStorage - need to find task across all users
-      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-
-      for (const user of allUsers) {
-        const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${user.id}`) || "[]")
-        const taskIndex = tasks.findIndex((t: Task) => t.id === taskId)
-
-        if (taskIndex !== -1) {
-          tasks[taskIndex] = { ...tasks[taskIndex], ...updatesWithTimestamp }
-          safeLocalStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(tasks))
-          return tasks[taskIndex]
-        }
-      }
-
-      throw new Error("Task not found")
-    },
-    "updateTask",
-  )
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("tasks").update(updatedData).eq("id", id).select().single()
+      if (error) throw error
+      return data as Task
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const tasks = getLocalTasks()
+    const taskIndex = tasks.findIndex((task) => task.id === id)
+    if (taskIndex !== -1) {
+      tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+      localStorage.setItem("tasks", JSON.stringify(tasks))
+      return tasks[taskIndex]
+    }
+    return null
+  }
 }
 
-export async function deleteTask(taskId: string): Promise<void> {
-  return safeSupabaseCall(
-    () => supabase!.from("tasks").delete().eq("id", taskId),
-    () => {
-      // Fallback to localStorage
-      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+export async function deleteTask(id: string): Promise<boolean> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("tasks").delete().eq("id", id)
+      if (error) throw error
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const tasks = getLocalTasks()
+    const filteredTasks = tasks.filter((task) => task.id !== id)
+    localStorage.setItem("tasks", JSON.stringify(filteredTasks))
+  }
 
-      for (const user of allUsers) {
-        const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${user.id}`) || "[]")
-        const filteredTasks = tasks.filter((t: Task) => t.id !== taskId)
-
-        if (filteredTasks.length !== tasks.length) {
-          safeLocalStorage.setItem(`futureTask_tasks_${user.id}`, JSON.stringify(filteredTasks))
-          return
-        }
-      }
-    },
-    "deleteTask",
-  )
+  return true
 }
 
-// Wishlist functions
-export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
-  return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-    () => {
-      // Fallback to localStorage
-      const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
-      return wishlist
-    },
-    "getUserWishlist",
-  )
-}
-
+// Wishlist Management
 export async function createWishlistItem(
   itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">,
 ): Promise<WishlistItem> {
-  const newItem: WishlistItem = {
+  const item: WishlistItem = {
     ...itemData,
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
   }
 
-  return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").insert([newItem]).select().single(),
-    () => {
-      // Fallback to localStorage
-      const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${itemData.user_id}`) || "[]")
-      wishlist.push(newItem)
-      safeLocalStorage.setItem(`futureTask_wishlist_${itemData.user_id}`, JSON.stringify(wishlist))
-      return newItem
-    },
-    "createWishlistItem",
-  )
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("wishlist_items").insert([item])
+      if (error) throw error
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const items = getLocalWishlistItems()
+    items.push(item)
+    localStorage.setItem("wishlist_items", JSON.stringify(items))
+  }
+
+  return item
 }
 
-export async function updateWishlistItem(itemId: string, updates: Partial<WishlistItem>): Promise<WishlistItem> {
-  const updatesWithTimestamp = {
+export async function getWishlistItems(userId: string): Promise<WishlistItem[]> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      return data as WishlistItem[]
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const items = getLocalWishlistItems()
+    return items.filter((item) => item.user_id === userId)
+  }
+}
+
+export async function updateWishlistItem(id: string, updates: Partial<WishlistItem>): Promise<WishlistItem | null> {
+  const updatedData = {
     ...updates,
-    updated_at: new Date().toISOString(),
+    updated_at: getCurrentTimestamp(),
   }
 
-  return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").update(updatesWithTimestamp).eq("id", itemId).select().single(),
-    () => {
-      // Fallback to localStorage
-      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-
-      for (const user of allUsers) {
-        const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${user.id}`) || "[]")
-        const itemIndex = wishlist.findIndex((item: WishlistItem) => item.id === itemId)
-
-        if (itemIndex !== -1) {
-          wishlist[itemIndex] = { ...wishlist[itemIndex], ...updatesWithTimestamp }
-          safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(wishlist))
-          return wishlist[itemIndex]
-        }
-      }
-
-      throw new Error("Wishlist item not found")
-    },
-    "updateWishlistItem",
-  )
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("wishlist_items").update(updatedData).eq("id", id).select().single()
+      if (error) throw error
+      return data as WishlistItem
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const items = getLocalWishlistItems()
+    const itemIndex = items.findIndex((item) => item.id === id)
+    if (itemIndex !== -1) {
+      items[itemIndex] = { ...items[itemIndex], ...updatedData }
+      localStorage.setItem("wishlist_items", JSON.stringify(items))
+      return items[itemIndex]
+    }
+    return null
+  }
 }
 
-export async function deleteWishlistItem(itemId: string): Promise<void> {
-  return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").delete().eq("id", itemId),
-    () => {
-      // Fallback to localStorage
-      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+export async function deleteWishlistItem(id: string): Promise<boolean> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("wishlist_items").delete().eq("id", id)
+      if (error) throw error
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const items = getLocalWishlistItems()
+    const filteredItems = items.filter((item) => item.id !== id)
+    localStorage.setItem("wishlist_items", JSON.stringify(filteredItems))
+  }
 
-      for (const user of allUsers) {
-        const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${user.id}`) || "[]")
-        const filteredWishlist = wishlist.filter((item: WishlistItem) => item.id !== itemId)
-
-        if (filteredWishlist.length !== wishlist.length) {
-          safeLocalStorage.setItem(`futureTask_wishlist_${user.id}`, JSON.stringify(filteredWishlist))
-          return
-        }
-      }
-    },
-    "deleteWishlistItem",
-  )
+  return true
 }
 
-// Notes functions
-export async function getUserNotes(userId: string): Promise<Note[]> {
-  return safeSupabaseCall(
-    () => supabase!.from("notes").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-    () => {
-      // Fallback to localStorage
-      const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
-      return notes
-    },
-    "getUserNotes",
-  )
-}
-
+// Notes Management
 export async function createNote(noteData: Omit<Note, "id" | "created_at" | "updated_at">): Promise<Note> {
-  const newNote: Note = {
+  const note: Note = {
     ...noteData,
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-
-  return safeSupabaseCall(
-    () => supabase!.from("notes").insert([newNote]).select().single(),
-    () => {
-      // Fallback to localStorage
-      const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${noteData.user_id}`) || "[]")
-      notes.push(newNote)
-      safeLocalStorage.setItem(`futureTask_notes_${noteData.user_id}`, JSON.stringify(notes))
-      return newNote
-    },
-    "createNote",
-  )
-}
-
-export async function updateNote(noteId: string, updates: Partial<Note>): Promise<Note> {
-  const updatesWithTimestamp = {
-    ...updates,
-    updated_at: new Date().toISOString(),
-  }
-
-  return safeSupabaseCall(
-    () => supabase!.from("notes").update(updatesWithTimestamp).eq("id", noteId).select().single(),
-    () => {
-      // Fallback to localStorage
-      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-
-      for (const user of allUsers) {
-        const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${user.id}`) || "[]")
-        const noteIndex = notes.findIndex((note: Note) => note.id === noteId)
-
-        if (noteIndex !== -1) {
-          notes[noteIndex] = { ...notes[noteIndex], ...updatesWithTimestamp }
-          safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(notes))
-          return notes[noteIndex]
-        }
-      }
-
-      throw new Error("Note not found")
-    },
-    "updateNote",
-  )
-}
-
-export async function deleteNote(noteId: string): Promise<void> {
-  return safeSupabaseCall(
-    () => supabase!.from("notes").delete().eq("id", noteId),
-    () => {
-      // Fallback to localStorage
-      const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-
-      for (const user of allUsers) {
-        const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${user.id}`) || "[]")
-        const filteredNotes = notes.filter((note: Note) => note.id !== noteId)
-
-        if (filteredNotes.length !== notes.length) {
-          safeLocalStorage.setItem(`futureTask_notes_${user.id}`, JSON.stringify(filteredNotes))
-          return
-        }
-      }
-    },
-    "deleteNote",
-  )
-}
-
-// Migration function
-export async function migrateLocalStorageToSupabase(userId: string): Promise<boolean> {
-  if (!isSupabaseAvailable || !supabase) {
-    return false
+    created_at: getCurrentTimestamp(),
+    updated_at: getCurrentTimestamp(),
   }
 
   try {
-    // Migrate tasks
-    const localTasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${userId}`) || "[]")
-    if (localTasks.length > 0) {
-      const { error: tasksError } = await supabase.from("tasks").insert(localTasks)
-
-      if (tasksError) throw tasksError
-      safeLocalStorage.removeItem(`futureTask_tasks_${userId}`)
-    }
-
-    // Migrate wishlist
-    const localWishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
-    if (localWishlist.length > 0) {
-      const { error: wishlistError } = await supabase.from("wishlist_items").insert(localWishlist)
-
-      if (wishlistError) throw wishlistError
-      safeLocalStorage.removeItem(`futureTask_wishlist_${userId}`)
-    }
-
-    // Migrate notes
-    const localNotes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
-    if (localNotes.length > 0) {
-      const { error: notesError } = await supabase.from("notes").insert(localNotes)
-
-      if (notesError) throw notesError
-      safeLocalStorage.removeItem(`futureTask_notes_${userId}`)
-    }
-
-    return true
-  } catch (error) {
-    console.error("Migration error:", error)
-    return false
-  }
-}
-
-// Initialize admin user
-export async function initializeAdminUser(): Promise<void> {
-  try {
-    // Check if admin user already exists
-    const existingAdmin = await getUserByEmail("admin", "535353-Jrl")
-
-    if (!existingAdmin) {
-      // Create admin user
-      await createUser({
-        name: "Administrator",
-        email: "admin",
-        password: "535353-Jrl",
-        language: "es",
-        theme: "default",
-        is_premium: true,
-        premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
-        onboarding_completed: true,
-        pomodoro_sessions: 0,
-        work_duration: 25,
-        short_break_duration: 5,
-        long_break_duration: 15,
-        sessions_until_long_break: 4,
-      })
-      console.log("✅ Admin user created successfully")
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("notes").insert([note])
+      if (error) throw error
     } else {
-      console.log("✅ Admin user already exists")
+      throw new Error("Supabase not available")
     }
   } catch (error) {
-    console.error("❌ Error initializing admin user:", error)
+    // Fallback to localStorage
+    const notes = getLocalNotes()
+    notes.push(note)
+    localStorage.setItem("notes", JSON.stringify(notes))
+  }
+
+  return note
+}
+
+export async function getNotes(userId: string): Promise<Note[]> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+      if (error) throw error
+      return data as Note[]
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const notes = getLocalNotes()
+    return notes.filter((note) => note.user_id === userId)
+  }
+}
+
+export async function updateNote(id: string, updates: Partial<Note>): Promise<Note | null> {
+  const updatedData = {
+    ...updates,
+    updated_at: getCurrentTimestamp(),
+  }
+
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase.from("notes").update(updatedData).eq("id", id).select().single()
+      if (error) throw error
+      return data as Note
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const notes = getLocalNotes()
+    const noteIndex = notes.findIndex((note) => note.id === id)
+    if (noteIndex !== -1) {
+      notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
+      localStorage.setItem("notes", JSON.stringify(notes))
+      return notes[noteIndex]
+    }
+    return null
+  }
+}
+
+export async function deleteNote(id: string): Promise<boolean> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("notes").delete().eq("id", id)
+      if (error) throw error
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const notes = getLocalNotes()
+    const filteredNotes = notes.filter((note) => note.id !== id)
+    localStorage.setItem("notes", JSON.stringify(filteredNotes))
+  }
+
+  return true
+}
+
+// Achievement Management
+export async function createAchievement(achievementData: Omit<Achievement, "id">): Promise<Achievement> {
+  const achievement: Achievement = {
+    ...achievementData,
+    id: generateId(),
+  }
+
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { error } = await supabase.from("achievements").insert([achievement])
+      if (error) throw error
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const achievements = getLocalAchievements()
+    achievements.push(achievement)
+    localStorage.setItem("achievements", JSON.stringify(achievements))
+  }
+
+  return achievement
+}
+
+export async function getAchievements(userId: string): Promise<Achievement[]> {
+  try {
+    if (isSupabaseAvailable && supabase) {
+      const { data, error } = await supabase
+        .from("achievements")
+        .select("*")
+        .eq("user_id", userId)
+        .order("unlocked_at", { ascending: false })
+      if (error) throw error
+      return data as Achievement[]
+    } else {
+      throw new Error("Supabase not available")
+    }
+  } catch (error) {
+    // Fallback to localStorage
+    const achievements = getLocalAchievements()
+    return achievements.filter((achievement) => achievement.user_id === userId)
+  }
+}
+
+// Sync functions
+export async function syncLocalToSupabase(userId: string): Promise<void> {
+  if (!isSupabaseAvailable || !supabase) {
+    console.log("Supabase not available, skipping sync")
+    return
+  }
+
+  try {
+    // Sync tasks
+    const localTasks = getLocalTasks().filter((task) => task.user_id === userId)
+    for (const task of localTasks) {
+      const { error } = await supabase.from("tasks").upsert([task])
+      if (error) console.warn("Failed to sync task:", error.message)
+    }
+
+    // Sync wishlist items
+    const localWishlistItems = getLocalWishlistItems().filter((item) => item.user_id === userId)
+    for (const item of localWishlistItems) {
+      const { error } = await supabase.from("wishlist_items").upsert([item])
+      if (error) console.warn("Failed to sync wishlist item:", error.message)
+    }
+
+    // Sync notes
+    const localNotes = getLocalNotes().filter((note) => note.user_id === userId)
+    for (const note of localNotes) {
+      const { error } = await supabase.from("notes").upsert([note])
+      if (error) console.warn("Failed to sync note:", error.message)
+    }
+
+    // Sync achievements
+    const localAchievements = getLocalAchievements().filter((achievement) => achievement.user_id === userId)
+    for (const achievement of localAchievements) {
+      const { error } = await supabase.from("achievements").upsert([achievement])
+      if (error) console.warn("Failed to sync achievement:", error.message)
+    }
+
+    console.log("✅ Local data synced to Supabase")
+  } catch (error) {
+    console.error("❌ Failed to sync local data to Supabase:", error)
+  }
+}
+
+export async function syncSupabaseToLocal(userId: string): Promise<void> {
+  if (!isSupabaseAvailable || !supabase) {
+    console.log("Supabase not available, skipping sync")
+    return
+  }
+
+  try {
+    // Sync tasks
+    const { data: tasks } = await supabase.from("tasks").select("*").eq("user_id", userId)
+    if (tasks) {
+      const localTasks = getLocalTasks().filter((task) => task.user_id !== userId)
+      localStorage.setItem("tasks", JSON.stringify([...localTasks, ...tasks]))
+    }
+
+    // Sync wishlist items
+    const { data: wishlistItems } = await supabase.from("wishlist_items").select("*").eq("user_id", userId)
+    if (wishlistItems) {
+      const localItems = getLocalWishlistItems().filter((item) => item.user_id !== userId)
+      localStorage.setItem("wishlist_items", JSON.stringify([...localItems, ...wishlistItems]))
+    }
+
+    // Sync notes
+    const { data: notes } = await supabase.from("notes").select("*").eq("user_id", userId)
+    if (notes) {
+      const localNotes = getLocalNotes().filter((note) => note.user_id !== userId)
+      localStorage.setItem("notes", JSON.stringify([...localNotes, ...notes]))
+    }
+
+    // Sync achievements
+    const { data: achievements } = await supabase.from("achievements").select("*").eq("user_id", userId)
+    if (achievements) {
+      const localAchievements = getLocalAchievements().filter((achievement) => achievement.user_id !== userId)
+      localStorage.setItem("achievements", JSON.stringify([...localAchievements, ...achievements]))
+    }
+
+    console.log("✅ Supabase data synced to local")
+  } catch (error) {
+    console.error("❌ Failed to sync Supabase data to local:", error)
+  }
+}
+
+// LocalStorage helper functions
+function getLocalUsers(): User[] {
+  if (typeof window === "undefined") return []
+  try {
+    const users = localStorage.getItem("users")
+    return users ? JSON.parse(users) : []
+  } catch (error) {
+    console.error("Error parsing users from localStorage:", error)
+    return []
+  }
+}
+
+function getLocalTasks(): Task[] {
+  if (typeof window === "undefined") return []
+  try {
+    const tasks = localStorage.getItem("tasks")
+    return tasks ? JSON.parse(tasks) : []
+  } catch (error) {
+    console.error("Error parsing tasks from localStorage:", error)
+    return []
+  }
+}
+
+function getLocalWishlistItems(): WishlistItem[] {
+  if (typeof window === "undefined") return []
+  try {
+    const items = localStorage.getItem("wishlist_items")
+    return items ? JSON.parse(items) : []
+  } catch (error) {
+    console.error("Error parsing wishlist items from localStorage:", error)
+    return []
+  }
+}
+
+function getLocalNotes(): Note[] {
+  if (typeof window === "undefined") return []
+  try {
+    const notes = localStorage.getItem("notes")
+    return notes ? JSON.parse(notes) : []
+  } catch (error) {
+    console.error("Error parsing notes from localStorage:", error)
+    return []
+  }
+}
+
+function getLocalAchievements(): Achievement[] {
+  if (typeof window === "undefined") return []
+  try {
+    const achievements = localStorage.getItem("achievements")
+    return achievements ? JSON.parse(achievements) : []
+  } catch (error) {
+    console.error("Error parsing achievements from localStorage:", error)
+    return []
   }
 }
