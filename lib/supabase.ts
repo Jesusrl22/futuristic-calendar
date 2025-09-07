@@ -68,77 +68,42 @@ export interface Achievement {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Validate Supabase URL format
-function isValidSupabaseUrl(url: string): { valid: boolean; error?: string } {
-  if (!url) {
-    return { valid: false, error: "URL is empty" }
-  }
-
-  // Remove trailing slash if present
-  const cleanUrl = url.replace(/\/$/, "")
-
+// Validate URL format
+function isValidUrl(string: string): boolean {
+  if (!string) return false
   try {
-    const urlObj = new URL(cleanUrl)
-
-    // Check protocol
-    if (urlObj.protocol !== "https:" && urlObj.protocol !== "http:") {
-      return { valid: false, error: "URL must use http:// or https://" }
-    }
-
-    // Check if it looks like a Supabase URL
-    if (urlObj.hostname.includes("supabase.co") || urlObj.hostname.includes("supabase.")) {
-      return { valid: true }
-    }
-
-    // Allow localhost for development
-    if (urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1") {
-      return { valid: true }
-    }
-
-    // Allow any valid URL format (for custom domains)
-    if (urlObj.hostname && urlObj.hostname.includes(".")) {
-      return { valid: true }
-    }
-
-    return { valid: false, error: "Invalid hostname format" }
-  } catch (error) {
-    return { valid: false, error: `Invalid URL format: ${error instanceof Error ? error.message : "Unknown error"}` }
+    const url = new URL(string)
+    return url.protocol === "http:" || url.protocol === "https:"
+  } catch (_) {
+    return false
   }
 }
 
 // Create Supabase client
 let supabaseClient: ReturnType<typeof createClient> | null = null
 let initializationError: string | null = null
-let urlValidation: { valid: boolean; error?: string } = { valid: false }
 
 try {
   if (supabaseUrl && supabaseAnonKey) {
-    urlValidation = isValidSupabaseUrl(supabaseUrl)
-
-    if (urlValidation.valid) {
-      // Clean URL (remove trailing slash)
-      const cleanUrl = supabaseUrl.replace(/\/$/, "")
-
-      supabaseClient = createClient(cleanUrl, supabaseAnonKey, {
+    if (isValidUrl(supabaseUrl)) {
+      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
-          persistSession: false,
+          persistSession: false, // We handle our own session management
         },
       })
       console.log("✅ Supabase client initialized successfully")
-      console.log("📍 URL:", cleanUrl)
     } else {
-      initializationError = `Invalid URL: ${urlValidation.error}`
-      console.warn("⚠️ Invalid Supabase URL:", supabaseUrl)
-      console.warn("❌ Error:", urlValidation.error)
+      initializationError = "Invalid Supabase URL format"
+      console.warn("⚠️ Invalid Supabase URL format:", supabaseUrl)
     }
   } else {
-    initializationError = "Missing credentials"
+    initializationError = "Missing Supabase credentials"
     console.warn("⚠️ Supabase credentials missing:")
-    if (!supabaseUrl) console.warn("- NEXT_PUBLIC_SUPABASE_URL: ❌ Missing")
-    if (!supabaseAnonKey) console.warn("- NEXT_PUBLIC_SUPABASE_ANON_KEY: ❌ Missing")
+    console.warn("- NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing")
+    console.warn("- NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
   }
 } catch (error) {
-  initializationError = `Initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`
+  initializationError = `Failed to initialize: ${error}`
   console.error("❌ Failed to initialize Supabase client:", error)
 }
 
@@ -149,25 +114,15 @@ export const supabase = supabaseClient
 export const isSupabaseAvailable = Boolean(supabaseClient && !initializationError)
 
 // Test Supabase connection
-export async function testSupabaseConnection(): Promise<{ success: boolean; error?: string }> {
-  if (!supabaseClient) {
-    return { success: false, error: "Client not initialized" }
-  }
+export async function testSupabaseConnection(): Promise<boolean> {
+  if (!supabaseClient) return false
 
   try {
-    // Try to query the users table
     const { error } = await supabaseClient.from("users").select("count", { count: "exact", head: true })
-
-    if (error) {
-      return { success: false, error: error.message }
-    }
-
-    return { success: true }
+    return !error
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown connection error",
-    }
+    console.warn("Supabase connection test failed:", error)
+    return false
   }
 }
 
@@ -176,25 +131,13 @@ export function getSupabaseClient() {
   return supabaseClient
 }
 
-// Database status with detailed information
+// Database status with connection test
 export function getDatabaseStatus() {
   return {
     supabaseAvailable: isSupabaseAvailable,
     hasCredentials: Boolean(supabaseUrl && supabaseAnonKey),
-    hasUrl: Boolean(supabaseUrl),
-    hasKey: Boolean(supabaseAnonKey),
     clientInitialized: Boolean(supabaseClient),
-    urlValidation,
+    validUrl: supabaseUrl ? isValidUrl(supabaseUrl) : false,
     initializationError,
-    currentUrl: supabaseUrl,
   }
-}
-
-// Get example URLs for help
-export function getSupabaseUrlExamples() {
-  return [
-    "https://your-project.supabase.co",
-    "https://abcdefghijklmnop.supabase.co",
-    "https://localhost:54321 (for local development)",
-  ]
 }
