@@ -64,9 +64,16 @@ export interface Achievement {
   unlocked_at: string
 }
 
-// Get environment variables
+// Get environment variables with better validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+// Only log in development
+if (process.env.NODE_ENV === "development") {
+  console.log("🔧 Supabase Configuration:")
+  console.log("URL:", supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : "❌ Missing")
+  console.log("Key:", supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "❌ Missing")
+}
 
 // Validate URL format
 function isValidUrl(string: string): boolean {
@@ -79,7 +86,7 @@ function isValidUrl(string: string): boolean {
   }
 }
 
-// Create Supabase client
+// Create Supabase client with better error handling
 let supabaseClient: ReturnType<typeof createClient> | null = null
 let initializationError: string | null = null
 
@@ -91,16 +98,21 @@ try {
           persistSession: false, // We handle our own session management
         },
       })
-      console.log("✅ Supabase client initialized successfully")
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("✅ Supabase client initialized successfully")
+      }
     } else {
       initializationError = "Invalid Supabase URL format"
       console.warn("⚠️ Invalid Supabase URL format:", supabaseUrl)
     }
   } else {
     initializationError = "Missing Supabase credentials"
-    console.warn("⚠️ Supabase credentials missing:")
-    console.warn("- NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing")
-    console.warn("- NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
+    if (process.env.NODE_ENV === "development") {
+      console.warn("⚠️ Supabase credentials missing:")
+      console.warn("- NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing")
+      console.warn("- NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
+    }
   }
 } catch (error) {
   initializationError = `Failed to initialize: ${error}`
@@ -113,15 +125,37 @@ export const supabase = supabaseClient
 // Check if Supabase is available and working
 export const isSupabaseAvailable = Boolean(supabaseClient && !initializationError)
 
-// Test Supabase connection
+// Test Supabase connection with better error handling
 export async function testSupabaseConnection(): Promise<boolean> {
-  if (!supabaseClient) return false
+  if (!supabaseClient) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("❌ No Supabase client available for connection test")
+    }
+    return false
+  }
 
   try {
-    const { error } = await supabaseClient.from("users").select("count", { count: "exact", head: true })
-    return !error
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔍 Testing Supabase connection...")
+    }
+
+    const { data, error } = await supabaseClient.from("users").select("count", { count: "exact", head: true })
+
+    if (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("❌ Supabase connection test failed:", error.message)
+      }
+      return false
+    }
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("✅ Supabase connection test successful")
+    }
+    return true
   } catch (error) {
-    console.warn("Supabase connection test failed:", error)
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Supabase connection test failed with exception:", error)
+    }
     return false
   }
 }

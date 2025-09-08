@@ -6,62 +6,14 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FutureTask - Tu calendario inteligente del futuro",
-  description:
-    "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask, tu calendario inteligente del futuro.",
-  keywords: ["calendario", "tareas", "productividad", "pomodoro", "logros", "organizacion"],
-  authors: [{ name: "FutureTask Team" }],
-  creator: "FutureTask",
-  publisher: "FutureTask",
+  title: "FutureTask - Calendar App",
+  description: "Your intelligent calendar of the future",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-    ],
-  },
-  openGraph: {
-    title: "FutureTask - Tu calendario inteligente del futuro",
-    description: "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask.",
-    url: "https://futuretask.app",
-    siteName: "FutureTask",
-    images: [
-      {
-        url: "/apple-touch-icon.png",
-        width: 1200,
-        height: 630,
-        alt: "FutureTask Logo",
-      },
-    ],
-    locale: "es_ES",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "FutureTask - Tu calendario inteligente del futuro",
-    description: "Organiza tus tareas, desbloquea logros y mantén rachas con FutureTask.",
-    images: ["/apple-touch-icon.png"],
-    creator: "@futuretask",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  verification: {
-    google: "google-site-verification-code",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
     generator: 'v0.app'
 }
@@ -72,19 +24,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
-      <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
-        <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
-        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
-        <meta name="theme-color" content="#8b5cf6" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-      </head>
+    <html lang="en">
       <body className={inter.className}>{children}</body>
     </html>
   )

@@ -2,65 +2,42 @@
 
 import { useEffect } from "react"
 
-interface Task {
-  id: string
-  text: string
-  time?: string | null
-  date: string
-  completed: boolean
-  notification_enabled?: boolean
-}
-
-interface User {
-  id: string
-  name: string
-}
-
 interface NotificationServiceProps {
-  tasks: Task[]
-  user: User | null
-  t: (key: string) => string
+  tasks?: any[]
+  user?: any
+  t?: (key: string) => string
 }
 
-export function NotificationService({ tasks, user, t }: NotificationServiceProps) {
+export function NotificationService({ tasks = [], user, t = (key) => key }: NotificationServiceProps) {
   useEffect(() => {
-    if (!user || !("Notification" in window)) return
-
-    const checkNotifications = () => {
-      if (Notification.permission !== "granted") return
+    // Check for task notifications every minute
+    const interval = setInterval(() => {
+      if (!tasks || !user || !("Notification" in window) || Notification.permission !== "granted") {
+        return
+      }
 
       const now = new Date()
       const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
       const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
 
-      tasks.forEach((task) => {
-        if (!task.completed && task.date === today && task.time === currentTime && task.notification_enabled) {
-          try {
-            const notification = new Notification(`⏰ ${t("taskReminder")}`, {
-              body: task.text,
-              icon: "/favicon-32x32.png",
-              tag: task.id,
-              requireInteraction: true,
-              silent: false,
-            })
+      // Find tasks that should trigger notifications
+      const tasksToNotify = tasks.filter(
+        (task) => task.date === today && task.time === currentTime && !task.completed && task.notification_enabled,
+      )
 
-            notification.onclick = () => {
-              window.focus()
-              notification.close()
-            }
-
-            setTimeout(() => {
-              notification.close()
-            }, 10000)
-          } catch (error) {
-            console.error("Error showing task notification:", error)
-          }
+      tasksToNotify.forEach((task) => {
+        try {
+          new Notification(`⏰ ${t("taskReminder")}`, {
+            body: task.text,
+            icon: "/favicon-32x32.png",
+            tag: `task-${task.id}`, // Prevent duplicate notifications
+          })
+        } catch (error) {
+          console.error("Error showing notification:", error)
         }
       })
-    }
+    }, 60000) // Check every minute
 
-    checkNotifications()
-    const interval = setInterval(checkNotifications, 60000)
     return () => clearInterval(interval)
   }, [tasks, user, t])
 

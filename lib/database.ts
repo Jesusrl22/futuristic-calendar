@@ -53,8 +53,12 @@ async function safeSupabaseCall<T>(
   }
 
   try {
+    console.log(`🔄 Attempting Supabase operation: ${operationName}`)
     const { data, error } = await operation()
-    if (error) throw error
+    if (error) {
+      console.error(`❌ Supabase operation failed: ${operationName}`, error.message)
+      throw error
+    }
     console.log(`✅ Supabase operation successful: ${operationName}`)
     return data
   } catch (error) {
@@ -443,13 +447,109 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<boo
   }
 }
 
-// Initialize admin user
+// Admin functions - Get all users
+export async function getAllUsers(): Promise<User[]> {
+  return safeSupabaseCall(
+    () => supabase!.from("users").select("*").order("created_at", { ascending: false }),
+    () => {
+      // Fallback to localStorage
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      return users
+    },
+    "getAllUsers",
+  )
+}
+
+// Admin functions - Delete user
+export async function deleteUser(userId: string): Promise<void> {
+  return safeSupabaseCall(
+    async () => {
+      // First delete all related data
+      await Promise.all([
+        supabase!.from("tasks").delete().eq("user_id", userId),
+        supabase!.from("wishlist_items").delete().eq("user_id", userId),
+        supabase!.from("notes").delete().eq("user_id", userId),
+        supabase!.from("achievements").delete().eq("user_id", userId),
+      ])
+
+      // Then delete the user
+      const { error } = await supabase!.from("users").delete().eq("id", userId)
+      if (error) throw error
+
+      return undefined
+    },
+    () => {
+      // Fallback to localStorage
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      const filteredUsers = users.filter((u: User) => u.id !== userId)
+      safeLocalStorage.setItem("futureTask_users", JSON.stringify(filteredUsers))
+
+      // Also remove user's data from localStorage
+      safeLocalStorage.removeItem(`futureTask_tasks_${userId}`)
+      safeLocalStorage.removeItem(`futureTask_wishlist_${userId}`)
+      safeLocalStorage.removeItem(`futureTask_notes_${userId}`)
+
+      return undefined
+    },
+    "deleteUser",
+  )
+}
+
+// Initialize admin user - with better error handling and fallback
 export async function initializeAdminUser(): Promise<void> {
   try {
+    if (process.env.NODE_ENV === "development") {
+      console.log("🔧 Initializing admin user...")
+    }
+
+    // Only try to create admin user if Supabase is available
+    if (!isSupabaseAvailable) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("📦 Supabase not available, creating admin user in localStorage")
+      }
+
+      // Create admin user in localStorage as fallback
+      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      const existingAdmin = users.find((u: User) => u.email === "admin")
+
+      if (!existingAdmin) {
+        const adminUser: User = {
+          id: generateId(),
+          name: "Administrator",
+          email: "admin",
+          password: "535353-Jrl",
+          language: "es",
+          theme: "default",
+          is_premium: true,
+          premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          onboarding_completed: true,
+          pomodoro_sessions: 0,
+          work_duration: 25,
+          short_break_duration: 5,
+          long_break_duration: 15,
+          sessions_until_long_break: 4,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
+
+        users.push(adminUser)
+        safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+
+        if (process.env.NODE_ENV === "development") {
+          console.log("✅ Admin user created in localStorage")
+        }
+      }
+      return
+    }
+
     // Check if admin user already exists
     const existingAdmin = await getUserByEmail("admin", "535353-Jrl")
 
     if (!existingAdmin) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("👤 Creating admin user...")
+      }
+
       // Create admin user
       await createUser({
         name: "Administrator",
@@ -466,11 +566,20 @@ export async function initializeAdminUser(): Promise<void> {
         long_break_duration: 15,
         sessions_until_long_break: 4,
       })
-      console.log("✅ Admin user created successfully")
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("✅ Admin user created successfully")
+      }
     } else {
-      console.log("✅ Admin user already exists")
+      if (process.env.NODE_ENV === "development") {
+        console.log("✅ Admin user already exists")
+      }
     }
   } catch (error) {
-    console.error("❌ Error initializing admin user:", error)
+    // Don't throw the error, just log it so the app can continue
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Error initializing admin user:", error)
+      console.log("📦 App will continue with localStorage fallback")
+    }
   }
 }

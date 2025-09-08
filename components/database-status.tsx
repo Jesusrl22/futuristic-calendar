@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Database, Wifi, WifiOff, RefreshCw, AlertTriangle } from "lucide-react"
+import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
 import { getDatabaseStatus, testSupabaseConnection } from "@/lib/supabase"
 
 interface DatabaseStatusProps {
@@ -12,144 +11,129 @@ interface DatabaseStatusProps {
 }
 
 export function DatabaseStatus({ className }: DatabaseStatusProps) {
-  const [status, setStatus] = useState({
-    supabaseAvailable: false,
-    hasCredentials: false,
-    clientInitialized: false,
-    validUrl: false,
-    initializationError: null as string | null,
-  })
-  const [connectionTested, setConnectionTested] = useState(false)
-  const [connectionWorks, setConnectionWorks] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [status, setStatus] = useState(getDatabaseStatus())
+  const [connectionTest, setConnectionTest] = useState<boolean | null>(null)
+  const [isTestingConnection, setIsTestingConnection] = useState(false)
 
-  const checkStatus = async () => {
-    setIsLoading(true)
+  const testConnection = async () => {
+    setIsTestingConnection(true)
     try {
-      const dbStatus = getDatabaseStatus()
-      setStatus(dbStatus)
-
-      // Test actual connection if client is initialized
-      if (dbStatus.clientInitialized) {
-        const works = await testSupabaseConnection()
-        setConnectionWorks(works)
-        setConnectionTested(true)
-      } else {
-        setConnectionTested(false)
-        setConnectionWorks(false)
-      }
+      const result = await testSupabaseConnection()
+      setConnectionTest(result)
     } catch (error) {
-      console.error("Error checking database status:", error)
+      setConnectionTest(false)
     } finally {
-      setIsLoading(false)
+      setIsTestingConnection(false)
     }
   }
 
   useEffect(() => {
-    checkStatus()
-  }, [])
+    // Test connection on mount if Supabase is available
+    if (status.supabaseAvailable) {
+      testConnection()
+    }
+  }, [status.supabaseAvailable])
 
-  const getStatusColor = () => {
-    if (connectionTested && connectionWorks) return "bg-green-500"
-    if (status.clientInitialized && !connectionTested) return "bg-yellow-500"
-    if (status.hasCredentials) return "bg-orange-500"
-    return "bg-red-500"
-  }
-
-  const getStatusText = () => {
-    if (connectionTested && connectionWorks) return "Conectado a Supabase"
-    if (status.clientInitialized && !connectionTested) return "Cliente inicializado"
-    if (status.hasCredentials && !status.clientInitialized) return "Error de inicialización"
-    if (status.hasCredentials) return "Credenciales configuradas"
-    return "Solo localStorage"
-  }
-
-  const getStatusIcon = () => {
-    if (connectionTested && connectionWorks) return <Wifi className="w-4 h-4" />
-    if (status.initializationError) return <AlertTriangle className="w-4 h-4" />
-    return <WifiOff className="w-4 h-4" />
-  }
-
-  const getBadgeText = () => {
-    if (connectionTested && connectionWorks) return "Online"
-    if (status.clientInitialized) return "Inicializado"
-    if (status.hasCredentials) return "Error"
-    return "Offline"
-  }
-
-  // Solo mostrar si hay problemas o en desarrollo
-  if (process.env.NODE_ENV === "production" && connectionTested && connectionWorks) {
+  // Don't show if everything is working fine
+  if (status.supabaseAvailable && connectionTest === true) {
     return null
   }
 
+  const getStatusIcon = () => {
+    if (status.supabaseAvailable && connectionTest === true) {
+      return <CheckCircle className="h-5 w-5 text-green-400" />
+    } else if (status.supabaseAvailable && connectionTest === false) {
+      return <XCircle className="h-5 w-5 text-red-400" />
+    } else if (!status.supabaseAvailable) {
+      return <AlertCircle className="h-5 w-5 text-yellow-400" />
+    }
+    return <Database className="h-5 w-5 text-gray-400" />
+  }
+
+  const getStatusText = () => {
+    if (!status.hasCredentials) {
+      return "Credenciales de Supabase no configuradas"
+    }
+    if (!status.validUrl) {
+      return "URL de Supabase inválida"
+    }
+    if (!status.clientInitialized) {
+      return "Cliente de Supabase no inicializado"
+    }
+    if (status.initializationError) {
+      return `Error: ${status.initializationError}`
+    }
+    if (connectionTest === false) {
+      return "Error de conexión con Supabase"
+    }
+    if (connectionTest === null && status.supabaseAvailable) {
+      return "Probando conexión..."
+    }
+    return "Usando almacenamiento local"
+  }
+
+  const getStatusColor = () => {
+    if (status.supabaseAvailable && connectionTest === true) {
+      return "border-green-500/30 bg-green-900/20"
+    } else if (status.supabaseAvailable && connectionTest === false) {
+      return "border-red-500/30 bg-red-900/20"
+    } else if (!status.supabaseAvailable) {
+      return "border-yellow-500/30 bg-yellow-900/20"
+    }
+    return "border-gray-500/30 bg-gray-900/20"
+  }
+
   return (
-    <Card className={`bg-black/20 backdrop-blur-xl border-purple-500/20 ${className}`}>
+    <Card className={`${getStatusColor()} backdrop-blur-xl ${className}`}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center space-x-2 text-white">
-          <Database className="w-4 h-4" />
+        <CardTitle className="text-sm font-medium text-white flex items-center space-x-2">
+          {getStatusIcon()}
           <span>Estado de la Base de Datos</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon()}
-            <span className="text-sm text-gray-300">{getStatusText()}</span>
-          </div>
-          <Badge className={`${getStatusColor()} text-white`}>{getBadgeText()}</Badge>
-        </div>
+        <p className="text-xs text-gray-300">{getStatusText()}</p>
 
-        <div className="space-y-2 text-xs text-gray-400">
-          <div className="flex justify-between">
-            <span>Supabase URL:</span>
-            <span>{status.hasCredentials ? "✅ Configurada" : "❌ Falta"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>URL válida:</span>
-            <span>{status.validUrl ? "✅ Sí" : "❌ No"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Cliente inicializado:</span>
-            <span>{status.clientInitialized ? "✅ Sí" : "❌ No"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Conexión probada:</span>
-            <span>{connectionTested ? (connectionWorks ? "✅ Funciona" : "❌ Falla") : "⏳ Pendiente"}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Sincronización:</span>
-            <span>{connectionWorks ? "✅ Activa" : "❌ Solo local"}</span>
-          </div>
-        </div>
+        {status.supabaseAvailable && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={testConnection}
+            disabled={isTestingConnection}
+            className="w-full text-xs border-white/20 text-white hover:bg-white/10 bg-transparent"
+          >
+            {isTestingConnection ? (
+              <>
+                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                Probando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Probar Conexión
+              </>
+            )}
+          </Button>
+        )}
 
-        {status.initializationError && (
-          <div className="p-2 bg-red-900/20 border border-red-500/30 rounded text-xs">
-            <p className="font-medium text-red-300">❌ Error de inicialización</p>
-            <p className="text-red-400">{status.initializationError}</p>
+        {!status.hasCredentials && (
+          <div className="text-xs text-gray-400 space-y-1">
+            <p>Para configurar Supabase:</p>
+            <p>1. Crea un archivo .env.local</p>
+            <p>2. Agrega NEXT_PUBLIC_SUPABASE_URL</p>
+            <p>3. Agrega NEXT_PUBLIC_SUPABASE_ANON_KEY</p>
           </div>
         )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={checkStatus}
-          disabled={isLoading}
-          className="w-full bg-transparent border-white/20 text-gray-300 hover:bg-white/10"
-        >
-          {isLoading ? <RefreshCw className="w-3 h-3 animate-spin mr-2" /> : <RefreshCw className="w-3 h-3 mr-2" />}
-          {isLoading ? "Probando..." : "Probar Conexión"}
-        </Button>
-
-        {!connectionWorks && (
-          <div className="p-2 bg-yellow-900/20 border border-yellow-500/30 rounded text-xs">
-            <p className="font-medium text-yellow-300">⚠️ Sin sincronización</p>
-            <p className="text-yellow-400">
-              {status.hasCredentials
-                ? "Verifica que las credenciales de Supabase sean correctas y que las tablas estén creadas."
-                : "Para sincronizar entre dispositivos, configura las variables de entorno de Supabase."}
-            </p>
-          </div>
-        )}
+        <div className="text-xs text-gray-500">
+          {status.supabaseAvailable
+            ? connectionTest === true
+              ? "✅ Conectado a Supabase"
+              : connectionTest === false
+                ? "❌ Error de conexión"
+                : "🔄 Verificando conexión..."
+            : "📱 Usando almacenamiento local"}
+        </div>
       </CardContent>
     </Card>
   )
