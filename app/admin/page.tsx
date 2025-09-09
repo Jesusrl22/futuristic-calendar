@@ -11,14 +11,13 @@ import { Crown, Users, Database, Settings, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 // Import database functions
-import { getUserByEmail, updateUser } from "@/lib/database"
+import { getUserByEmail, updateUser, getAllUsers } from "@/lib/database"
 import { isSupabaseAvailable } from "@/lib/supabase"
 
 interface User {
   id: string
   name: string
   email: string
-  password: string
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   is_premium: boolean
@@ -64,8 +63,8 @@ export default function AdminPanel() {
   const [adminEmail, setAdminEmail] = useState("")
   const [adminPassword, setAdminPassword] = useState("")
   const [users, setUsers] = useState<User[]>([])
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Form states for editing user
   const [editName, setEditName] = useState("")
@@ -84,30 +83,44 @@ export default function AdminPanel() {
   }, [])
 
   const handleLogin = async () => {
+    setIsLoading(true)
     try {
-      const admin = await getUserByEmail(adminEmail, adminPassword)
-      if (admin && admin.email === "admin" && admin.password === "535353-Jrl") {
+      // Intentar con las credenciales correctas del admin
+      const admin = await getUserByEmail("admin", "535353-Jrl")
+
+      if (admin && (adminEmail === "admin" || adminEmail === "Administrator") && adminPassword === "535353-Jrl") {
         setIsAuthenticated(true)
         localStorage.setItem("futureTask_admin_auth", "true")
-        loadUsers()
+        await loadUsers()
         setAdminEmail("")
         setAdminPassword("")
       } else {
-        alert("Credenciales de administrador incorrectas")
+        alert("Credenciales de administrador incorrectas. Usa: admin / 535353-Jrl")
       }
     } catch (error) {
       console.error("Error logging in:", error)
-      alert("Error al iniciar sesión")
+      alert("Error al iniciar sesión. Credenciales: admin / 535353-Jrl")
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const loadUsers = async () => {
     try {
-      // Load users from localStorage (since we're using hybrid storage)
-      const localUsers = JSON.parse(localStorage.getItem("futureTask_users") || "[]")
-      setUsers(localUsers.filter((u: User) => u.email !== "admin"))
+      const allUsers = await getAllUsers()
+      // Filtrar el usuario admin
+      const regularUsers = allUsers.filter((u: User) => u.email !== "admin")
+      setUsers(regularUsers)
     } catch (error) {
       console.error("Error loading users:", error)
+      // Fallback a localStorage si hay error
+      try {
+        const localUsers = JSON.parse(localStorage.getItem("futureTask_users") || "[]")
+        setUsers(localUsers.filter((u: User) => u.email !== "admin"))
+      } catch (localError) {
+        console.error("Error loading from localStorage:", localError)
+        setUsers([])
+      }
     }
   }
 
@@ -123,6 +136,7 @@ export default function AdminPanel() {
   const handleSaveUser = async () => {
     if (!editingUser) return
 
+    setIsLoading(true)
     try {
       const updatedUser = await updateUser(editingUser.id, {
         name: editName,
@@ -136,19 +150,13 @@ export default function AdminPanel() {
       // Update local state
       setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? updatedUser : u)))
 
-      // Update localStorage to ensure sync
-      const allUsers = JSON.parse(localStorage.getItem("futureTask_users") || "[]")
-      const userIndex = allUsers.findIndex((u: User) => u.id === editingUser.id)
-      if (userIndex !== -1) {
-        allUsers[userIndex] = updatedUser
-        localStorage.setItem("futureTask_users", JSON.stringify(allUsers))
-      }
-
       setEditingUser(null)
       alert("Usuario actualizado exitosamente")
     } catch (error) {
       console.error("Error updating user:", error)
       alert("Error al actualizar usuario")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -156,7 +164,6 @@ export default function AdminPanel() {
     setIsAuthenticated(false)
     localStorage.removeItem("futureTask_admin_auth")
     setUsers([])
-    setSelectedUser(null)
     setEditingUser(null)
   }
 
@@ -175,6 +182,17 @@ export default function AdminPanel() {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Panel de Administración
             </CardTitle>
+            <div className="text-sm text-gray-400 mt-2 p-2 bg-yellow-900/20 rounded border border-yellow-500/20">
+              <p>
+                <strong>Credenciales:</strong>
+              </p>
+              <p>
+                Usuario: <code className="bg-black/30 px-1 rounded">admin</code>
+              </p>
+              <p>
+                Contraseña: <code className="bg-black/30 px-1 rounded">535353-Jrl</code>
+              </p>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -183,7 +201,7 @@ export default function AdminPanel() {
               </Label>
               <Input
                 id="adminEmail"
-                type="email"
+                type="text"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
                 className="bg-black/30 border-purple-500/30 text-white"
@@ -200,12 +218,16 @@ export default function AdminPanel() {
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 className="bg-black/30 border-purple-500/30 text-white"
-                placeholder="••••••••"
-                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+                placeholder="535353-Jrl"
+                onKeyPress={(e) => e.key === "Enter" && !isLoading && handleLogin()}
               />
             </div>
-            <Button onClick={handleLogin} className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white">
-              Iniciar Sesión
+            <Button
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
+            >
+              {isLoading ? "Iniciando..." : "Iniciar Sesión"}
             </Button>
             <Button onClick={goBack} variant="ghost" className="w-full text-gray-300">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -381,20 +403,16 @@ export default function AdminPanel() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-black/20 backdrop-blur-xl border-purple-500/20">
-                      <optgroup label="Temas Gratuitos">
-                        {Object.entries(THEMES.free).map(([key, name]) => (
-                          <SelectItem key={key} value={key} className="text-white">
-                            {name}
-                          </SelectItem>
-                        ))}
-                      </optgroup>
-                      <optgroup label="Temas Premium">
-                        {Object.entries(THEMES.premium).map(([key, name]) => (
-                          <SelectItem key={key} value={key} className="text-white">
-                            {name} (Premium)
-                          </SelectItem>
-                        ))}
-                      </optgroup>
+                      {Object.entries(THEMES.free).map(([key, name]) => (
+                        <SelectItem key={key} value={key} className="text-white">
+                          {name}
+                        </SelectItem>
+                      ))}
+                      {Object.entries(THEMES.premium).map(([key, name]) => (
+                        <SelectItem key={key} value={key} className="text-white">
+                          {name} (Premium)
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -417,8 +435,12 @@ export default function AdminPanel() {
                 <Button variant="secondary" onClick={() => setEditingUser(null)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveUser} className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white">
-                  Guardar Cambios
+                <Button
+                  onClick={handleSaveUser}
+                  disabled={isLoading}
+                  className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
+                >
+                  {isLoading ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </div>
             </Card>
