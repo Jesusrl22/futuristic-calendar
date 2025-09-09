@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Star, Target, Flame, Crown, Check, X, Globe, Database, Trash2 } from "lucide-react"
+import { CalendarIcon, Star, Target, Flame, Crown, Check, X, Globe, Database, Trash2, Edit2 } from "lucide-react"
 
 // Import custom components
 import { StatsCards } from "@/components/stats-cards"
@@ -16,6 +16,9 @@ import { CalendarWidget } from "@/components/calendar-widget"
 import { TaskForm } from "@/components/task-form"
 import { NotificationService } from "@/components/notification-service"
 import { DatabaseStatus } from "@/components/database-status"
+import { WishlistManager } from "@/components/wishlist-manager"
+import { NotesManager } from "@/components/notes-manager"
+import { SettingsModal } from "@/components/settings-modal"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 // Import database functions
@@ -28,7 +31,13 @@ import {
   updateTask,
   deleteTask,
   getUserWishlist,
+  createWishlistItem,
+  updateWishlistItem,
+  deleteWishlistItem,
   getUserNotes,
+  createNote,
+  updateNote,
+  deleteNote,
   initializeAdminUser,
 } from "@/lib/database"
 
@@ -827,26 +836,9 @@ export default function FutureTaskApp() {
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [showMigrationPrompt, setShowMigrationPrompt] = useState(false)
 
-  // Profile settings
-  const [profileName, setProfileName] = useState("")
-  const [profileEmail, setProfileEmail] = useState("")
-  const [profileCurrentPassword, setProfileCurrentPassword] = useState("")
-  const [profileNewPassword, setProfileNewPassword] = useState("")
-  const [profileConfirmPassword, setProfileConfirmPassword] = useState("")
-  const [profileLanguage, setProfileLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
-  const [profileTheme, setProfileTheme] = useState("default")
-  const [showPasswordFields, setShowPasswordFields] = useState(false)
-
   // Wishlist and Notes state
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [notes, setNotes] = useState<Note[]>([])
-  const [newWishItem, setNewWishItem] = useState("")
-  const [newWishDescription, setNewWishDescription] = useState("")
-  const [newNoteTitle, setNewNoteTitle] = useState("")
-  const [newNoteContent, setNewNoteContent] = useState("")
-  const [editingNote, setEditingNote] = useState<string | null>(null)
-  const [editNoteTitle, setEditNoteTitle] = useState("")
-  const [editNoteContent, setEditNoteContent] = useState("")
 
   // Edit task state
   const [showEditTaskModal, setShowEditTaskModal] = useState(false)
@@ -1307,6 +1299,153 @@ export default function FutureTaskApp() {
     }
   }
 
+  const handleEditTask = (task: Task) => {
+    setEditingTaskId(task.id)
+    setEditTaskText(task.text)
+    setEditTaskDescription(task.description || "")
+    setEditTaskTime(task.time || "")
+    setEditTaskCategory(task.category)
+    setEditTaskPriority(task.priority)
+    setShowEditTaskModal(true)
+  }
+
+  const handleSaveEditTask = async () => {
+    if (!editingTaskId) return
+
+    try {
+      const updatedTask = await updateTask(editingTaskId, {
+        text: editTaskText,
+        description: editTaskDescription || null,
+        time: editTaskTime || null,
+        category: editTaskCategory,
+        priority: editTaskPriority,
+      })
+
+      setTasks((prev) => prev.map((t) => (t.id === editingTaskId ? updatedTask : t)))
+      setShowEditTaskModal(false)
+      setEditingTaskId(null)
+    } catch (error) {
+      console.error("Error updating task:", error)
+      alert("Error al actualizar tarea. Intenta de nuevo.")
+    }
+  }
+
+  // Wishlist handlers
+  const handleAddWishlistItem = async (text: string, description: string) => {
+    if (!user) return
+
+    try {
+      const newItem = await createWishlistItem({
+        user_id: user.id,
+        text,
+        description: description || undefined,
+        completed: false,
+      })
+
+      setWishlistItems((prev) => [...prev, newItem])
+    } catch (error) {
+      console.error("Error adding wishlist item:", error)
+      alert("Error al agregar objetivo. Intenta de nuevo.")
+    }
+  }
+
+  const handleToggleWishlistItem = async (itemId: string) => {
+    try {
+      const item = wishlistItems.find((i) => i.id === itemId)
+      if (!item) return
+
+      const updatedItem = await updateWishlistItem(itemId, {
+        completed: !item.completed,
+      })
+
+      setWishlistItems((prev) => prev.map((i) => (i.id === itemId ? updatedItem : i)))
+    } catch (error) {
+      console.error("Error toggling wishlist item:", error)
+      alert("Error al actualizar objetivo. Intenta de nuevo.")
+    }
+  }
+
+  const handleUpdateWishlistItem = async (itemId: string, text: string, description: string) => {
+    try {
+      const updatedItem = await updateWishlistItem(itemId, {
+        text,
+        description: description || undefined,
+      })
+
+      setWishlistItems((prev) => prev.map((i) => (i.id === itemId ? updatedItem : i)))
+    } catch (error) {
+      console.error("Error updating wishlist item:", error)
+      alert("Error al actualizar objetivo. Intenta de nuevo.")
+    }
+  }
+
+  const handleDeleteWishlistItem = async (itemId: string) => {
+    try {
+      await deleteWishlistItem(itemId)
+      setWishlistItems((prev) => prev.filter((item) => item.id !== itemId))
+    } catch (error) {
+      console.error("Error deleting wishlist item:", error)
+      alert("Error al eliminar objetivo. Intenta de nuevo.")
+    }
+  }
+
+  // Notes handlers
+  const handleAddNote = async (title: string, content: string) => {
+    if (!user) return
+
+    try {
+      const newNote = await createNote({
+        user_id: user.id,
+        title,
+        content,
+      })
+
+      setNotes((prev) => [...prev, newNote])
+    } catch (error) {
+      console.error("Error adding note:", error)
+      alert("Error al agregar nota. Intenta de nuevo.")
+    }
+  }
+
+  const handleUpdateNote = async (noteId: string, title: string, content: string) => {
+    try {
+      const updatedNote = await updateNote(noteId, {
+        title,
+        content,
+      })
+
+      setNotes((prev) => prev.map((n) => (n.id === noteId ? updatedNote : n)))
+    } catch (error) {
+      console.error("Error updating note:", error)
+      alert("Error al actualizar nota. Intenta de nuevo.")
+    }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(noteId)
+      setNotes((prev) => prev.filter((note) => note.id !== noteId))
+    } catch (error) {
+      console.error("Error deleting note:", error)
+      alert("Error al eliminar nota. Intenta de nuevo.")
+    }
+  }
+
+  const handleUpdateUser = async (updates: Partial<User>) => {
+    if (!user) return
+
+    try {
+      const updatedUser = await updateUser(user.id, updates)
+      setUser(updatedUser)
+      setLanguage(updatedUser.language)
+      localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+      alert(t("settingsSaved"))
+    } catch (error) {
+      console.error("Error updating user:", error)
+      alert("Error al actualizar configuración. Intenta de nuevo.")
+    }
+  }
+
   const logout = () => {
     setUser(null)
     setTasks([])
@@ -1616,6 +1755,112 @@ export default function FutureTaskApp() {
         {/* Notification Service */}
         <NotificationService tasks={tasks} user={user} t={t} />
 
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          user={user!}
+          onUpdateUser={handleUpdateUser}
+          theme={getCurrentTheme()}
+          t={t}
+        />
+
+        {/* Edit Task Modal */}
+        {showEditTaskModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className={`w-full max-w-md ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <CardHeader>
+                <CardTitle className={getCurrentTheme().textPrimary}>{t("editTask")}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Tarea</Label>
+                  <Input
+                    value={editTaskText}
+                    onChange={(e) => setEditTaskText(e.target.value)}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Descripción</Label>
+                  <Input
+                    value={editTaskDescription}
+                    onChange={(e) => setEditTaskDescription(e.target.value)}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className={getCurrentTheme().textSecondary}>Hora</Label>
+                  <Input
+                    type="time"
+                    value={editTaskTime}
+                    onChange={(e) => setEditTaskTime(e.target.value)}
+                    className={getCurrentTheme().inputBg}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label className={getCurrentTheme().textSecondary}>Categoría</Label>
+                    <Select value={editTaskCategory} onValueChange={(value) => setEditTaskCategory(value as any)}>
+                      <SelectTrigger className={getCurrentTheme().inputBg}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <SelectItem value="work" className={getCurrentTheme().textPrimary}>
+                          {t("work")}
+                        </SelectItem>
+                        <SelectItem value="personal" className={getCurrentTheme().textPrimary}>
+                          {t("personal")}
+                        </SelectItem>
+                        <SelectItem value="health" className={getCurrentTheme().textPrimary}>
+                          {t("health")}
+                        </SelectItem>
+                        <SelectItem value="learning" className={getCurrentTheme().textPrimary}>
+                          {t("learning")}
+                        </SelectItem>
+                        <SelectItem value="other" className={getCurrentTheme().textPrimary}>
+                          {t("other")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className={getCurrentTheme().textSecondary}>Prioridad</Label>
+                    <Select value={editTaskPriority} onValueChange={(value) => setEditTaskPriority(value as any)}>
+                      <SelectTrigger className={getCurrentTheme().inputBg}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                        <SelectItem value="high" className={getCurrentTheme().textPrimary}>
+                          {t("high")}
+                        </SelectItem>
+                        <SelectItem value="medium" className={getCurrentTheme().textPrimary}>
+                          {t("medium")}
+                        </SelectItem>
+                        <SelectItem value="low" className={getCurrentTheme().textPrimary}>
+                          {t("low")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+              <div className="flex justify-end space-x-2 p-6">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowEditTaskModal(false)}
+                  className={getCurrentTheme().textSecondary}
+                >
+                  {t("cancel")}
+                </Button>
+                <Button onClick={handleSaveEditTask} className={getCurrentTheme().buttonPrimary}>
+                  {t("saveChanges")}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Notification Permission Prompt */}
         {showNotificationPrompt && (
           <div className="fixed top-4 right-4 z-50">
@@ -1699,7 +1944,9 @@ export default function FutureTaskApp() {
             {/* Mobile Tabs */}
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
               <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
-                <TabsList className="grid w-full grid-cols-5 h-12 bg-transparent">
+                <TabsList
+                  className={`grid w-full ${user?.is_premium ? "grid-cols-5" : "grid-cols-3"} h-12 bg-transparent`}
+                >
                   <TabsTrigger value="tasks" className="text-xs">
                     📋 {t("tasks")}
                   </TabsTrigger>
@@ -1735,14 +1982,6 @@ export default function FutureTaskApp() {
                       theme={getCurrentTheme()}
                       t={t}
                       isMobile
-                    />
-
-                    {/* Calendar Widget */}
-                    <CalendarWidget
-                      selectedDate={selectedDate}
-                      onDateSelect={setSelectedDate}
-                      theme={getCurrentTheme()}
-                      t={t}
                     />
 
                     {/* Task Form */}
@@ -1794,6 +2033,14 @@ export default function FutureTaskApp() {
                                   <span className={`text-xs px-2 py-1 rounded ${CATEGORY_COLORS[task.category]}`}>
                                     {t(task.category)}
                                   </span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditTask(task)}
+                                    className={getCurrentTheme().textSecondary}
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </Button>
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -1886,31 +2133,28 @@ export default function FutureTaskApp() {
 
                 <TabsContent value="wishlist">
                   <div className="space-y-4">
-                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                      <CardHeader>
-                        <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className={getCurrentTheme().textSecondary}>
-                          Función de lista de deseos disponible para usuarios Premium
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <WishlistManager
+                      items={wishlistItems}
+                      onAddItem={handleAddWishlistItem}
+                      onToggleItem={handleToggleWishlistItem}
+                      onUpdateItem={handleUpdateWishlistItem}
+                      onDeleteItem={handleDeleteWishlistItem}
+                      theme={getCurrentTheme()}
+                      t={t}
+                    />
                   </div>
                 </TabsContent>
 
                 <TabsContent value="notes">
                   <div className="space-y-4">
-                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
-                      <CardHeader>
-                        <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className={getCurrentTheme().textSecondary}>
-                          Función de notas disponible para usuarios Premium
-                        </p>
-                      </CardContent>
-                    </Card>
+                    <NotesManager
+                      notes={notes}
+                      onAddNote={handleAddNote}
+                      onUpdateNote={handleUpdateNote}
+                      onDeleteNote={handleDeleteNote}
+                      theme={getCurrentTheme()}
+                      t={t}
+                    />
                   </div>
                 </TabsContent>
               </div>
@@ -2027,6 +2271,14 @@ export default function FutureTaskApp() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  onClick={() => handleEditTask(task)}
+                                  className={getCurrentTheme().textSecondary}
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => deleteTaskHandler(task.id)}
                                   className="text-red-400 hover:bg-red-500/20"
                                 >
@@ -2052,7 +2304,7 @@ export default function FutureTaskApp() {
               {/* Right Column - Tabbed Interface (1/4 width) */}
               <div className="lg:col-span-1">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className={`grid w-full ${user?.is_premium ? "grid-cols-4" : "grid-cols-2"}`}>
                     <TabsTrigger value="calendar">📅</TabsTrigger>
                     <TabsTrigger value="pomodoro">🍅</TabsTrigger>
                     {user?.is_premium && <TabsTrigger value="wishlist">⭐</TabsTrigger>}
@@ -2121,27 +2373,28 @@ export default function FutureTaskApp() {
 
                   {user?.is_premium && (
                     <TabsContent value="wishlist" className="mt-4">
-                      <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                        <CardHeader>
-                          <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center space-y-4">
-                          <p>Wishlist content here</p>
-                        </CardContent>
-                      </Card>
+                      <WishlistManager
+                        items={wishlistItems}
+                        onAddItem={handleAddWishlistItem}
+                        onToggleItem={handleToggleWishlistItem}
+                        onUpdateItem={handleUpdateWishlistItem}
+                        onDeleteItem={handleDeleteWishlistItem}
+                        theme={getCurrentTheme()}
+                        t={t}
+                      />
                     </TabsContent>
                   )}
 
                   {user?.is_premium && (
                     <TabsContent value="notes" className="mt-4">
-                      <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
-                        <CardHeader>
-                          <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center space-y-4">
-                          <p>Notes content here</p>
-                        </CardContent>
-                      </Card>
+                      <NotesManager
+                        notes={notes}
+                        onAddNote={handleAddNote}
+                        onUpdateNote={handleUpdateNote}
+                        onDeleteNote={handleDeleteNote}
+                        theme={getCurrentTheme()}
+                        t={t}
+                      />
                     </TabsContent>
                   )}
                 </Tabs>
