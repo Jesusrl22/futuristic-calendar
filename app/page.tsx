@@ -1699,12 +1699,15 @@ export default function FutureTaskApp() {
             {/* Mobile Tabs */}
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
               <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
-                <TabsList className="grid w-full grid-cols-4 h-12 bg-transparent">
+                <TabsList className="grid w-full grid-cols-5 h-12 bg-transparent">
                   <TabsTrigger value="tasks" className="text-xs">
                     📋 {t("tasks")}
                   </TabsTrigger>
                   <TabsTrigger value="pomodoro" className="text-xs">
                     🍅 {t("pomodoro")}
+                  </TabsTrigger>
+                  <TabsTrigger value="calendar" className="text-xs">
+                    📅 {t("calendar")}
                   </TabsTrigger>
                   {user?.is_premium && (
                     <TabsTrigger value="wishlist" className="text-xs">
@@ -1869,6 +1872,47 @@ export default function FutureTaskApp() {
                     </Card>
                   </div>
                 </TabsContent>
+
+                <TabsContent value="calendar">
+                  <div className="space-y-4">
+                    <CalendarWidget
+                      selectedDate={selectedDate}
+                      onDateSelect={setSelectedDate}
+                      theme={getCurrentTheme()}
+                      t={t}
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="wishlist">
+                  <div className="space-y-4">
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className={getCurrentTheme().textSecondary}>
+                          Función de lista de deseos disponible para usuarios Premium
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="notes">
+                  <div className="space-y-4">
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className={getCurrentTheme().textSecondary}>
+                          Función de notas disponible para usuarios Premium
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
               </div>
             </Tabs>
           </div>
@@ -2008,9 +2052,11 @@ export default function FutureTaskApp() {
               {/* Right Column - Tabbed Interface (1/4 width) */}
               <div className="lg:col-span-1">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="calendar">📅</TabsTrigger>
                     <TabsTrigger value="pomodoro">🍅</TabsTrigger>
+                    {user?.is_premium && <TabsTrigger value="wishlist">⭐</TabsTrigger>}
+                    {user?.is_premium && <TabsTrigger value="notes">📝</TabsTrigger>}
                   </TabsList>
 
                   <TabsContent value="calendar" className="mt-4">
@@ -2072,6 +2118,32 @@ export default function FutureTaskApp() {
                       </CardContent>
                     </Card>
                   </TabsContent>
+
+                  {user?.is_premium && (
+                    <TabsContent value="wishlist" className="mt-4">
+                      <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                        <CardHeader>
+                          <CardTitle className={getCurrentTheme().textPrimary}>⭐ {t("wishlist")}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center space-y-4">
+                          <p>Wishlist content here</p>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  )}
+
+                  {user?.is_premium && (
+                    <TabsContent value="notes" className="mt-4">
+                      <Card className={`${getCurrentTheme().cardBg} backdrop-blur-xl ${getCurrentTheme().border}`}>
+                        <CardHeader>
+                          <CardTitle className={getCurrentTheme().textPrimary}>📝 {t("notes")}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center space-y-4">
+                          <p>Notes content here</p>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  )}
                 </Tabs>
               </div>
             </div>

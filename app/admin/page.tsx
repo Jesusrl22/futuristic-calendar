@@ -95,11 +95,11 @@ export default function AdminPanel() {
         setAdminEmail("")
         setAdminPassword("")
       } else {
-        alert("Credenciales de administrador incorrectas. Usa: admin / 535353-Jrl")
+        alert("Credenciales de administrador incorrectas")
       }
     } catch (error) {
       console.error("Error logging in:", error)
-      alert("Error al iniciar sesión. Credenciales: admin / 535353-Jrl")
+      alert("Error al iniciar sesión")
     } finally {
       setIsLoading(false)
     }
@@ -182,17 +182,6 @@ export default function AdminPanel() {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Panel de Administración
             </CardTitle>
-            <div className="text-sm text-gray-400 mt-2 p-2 bg-yellow-900/20 rounded border border-yellow-500/20">
-              <p>
-                <strong>Credenciales:</strong>
-              </p>
-              <p>
-                Usuario: <code className="bg-black/30 px-1 rounded">admin</code>
-              </p>
-              <p>
-                Contraseña: <code className="bg-black/30 px-1 rounded">535353-Jrl</code>
-              </p>
-            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -218,7 +207,7 @@ export default function AdminPanel() {
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 className="bg-black/30 border-purple-500/30 text-white"
-                placeholder="535353-Jrl"
+                placeholder="••••••••"
                 onKeyPress={(e) => e.key === "Enter" && !isLoading && handleLogin()}
               />
             </div>
