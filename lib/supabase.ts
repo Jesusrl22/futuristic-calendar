@@ -1,11 +1,11 @@
 import { createClient } from "@supabase/supabase-js"
 
-// Types
+// Types - Updated User interface without password
 export interface User {
   id: string
   name: string
   email: string
-  password: string
+  auth_id?: string
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   is_premium: boolean
@@ -16,6 +16,15 @@ export interface User {
   short_break_duration: number
   long_break_duration: number
   sessions_until_long_break: number
+  created_at: string
+  updated_at: string
+}
+
+export interface UserCredentials {
+  id: string
+  user_id: string
+  email: string
+  password_hash: string
   created_at: string
   updated_at: string
 }

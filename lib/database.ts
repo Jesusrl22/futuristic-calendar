@@ -1,5 +1,5 @@
 import { supabase, isSupabaseAvailable } from "./supabase"
-import type { User, Task, WishlistItem, Note } from "./supabase"
+import type { User, UserCredentials, Task, WishlistItem, Note } from "./supabase"
 
 // Helper function to generate UUID
 function generateId(): string {
@@ -8,6 +8,16 @@ function generateId(): string {
     const v = c === "x" ? r : (r & 0x3) | 0x8
     return v.toString(16)
   })
+}
+
+// Simple password hashing (for demo purposes - in production use bcrypt or similar)
+function hashPassword(password: string): string {
+  // Simple hash for demo - in production use proper hashing
+  return btoa(password + "salt123")
+}
+
+function verifyPassword(password: string, hash: string): boolean {
+  return hashPassword(password) === hash
 }
 
 // Helper function to safely access localStorage
@@ -54,11 +64,21 @@ async function safeSupabaseCall<T>(
 
   try {
     console.log(`🔄 Attempting Supabase operation: ${operationName}`)
-    const { data, error } = await operation()
+    const result = await operation()
+
+    // Check if result is null or undefined
+    if (!result) {
+      console.warn(`⚠️ Supabase operation returned null: ${operationName}`)
+      throw new Error("Operation returned null")
+    }
+
+    const { data, error } = result
+
     if (error) {
       console.error(`❌ Supabase operation failed: ${operationName}`, error.message)
       throw error
     }
+
     console.log(`✅ Supabase operation successful: ${operationName}`)
     return data
   } catch (error) {
@@ -68,20 +88,86 @@ async function safeSupabaseCall<T>(
   }
 }
 
-// User functions
-export async function createUser(userData: Omit<User, "id" | "created_at" | "updated_at">): Promise<User> {
+// User functions - Updated to explicitly handle all columns
+export async function createUser(
+  userData: Omit<User, "id" | "created_at" | "updated_at"> & { password: string },
+): Promise<User> {
+  const userId = generateId()
+  const now = new Date().toISOString()
+
+  // Create user object with all required fields explicitly
   const newUser: User = {
-    ...userData,
+    id: userId,
+    name: userData.name,
+    email: userData.email,
+    auth_id: undefined,
+    language: userData.language,
+    theme: userData.theme,
+    is_premium: userData.is_premium,
+    premium_expiry: userData.premium_expiry,
+    onboarding_completed: userData.onboarding_completed,
+    pomodoro_sessions: userData.pomodoro_sessions,
+    work_duration: userData.work_duration,
+    short_break_duration: userData.short_break_duration,
+    long_break_duration: userData.long_break_duration,
+    sessions_until_long_break: userData.sessions_until_long_break,
+    created_at: now,
+    updated_at: now,
+  }
+
+  const credentials: UserCredentials = {
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    user_id: userId,
+    email: userData.email,
+    password_hash: hashPassword(userData.password),
+    created_at: now,
+    updated_at: now,
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("users").insert([newUser]).select().single(),
+    async () => {
+      // Insert user with explicit column specification
+      const userInsert = {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        auth_id: newUser.auth_id,
+        language: newUser.language,
+        theme: newUser.theme,
+        is_premium: newUser.is_premium,
+        premium_expiry: newUser.premium_expiry,
+        onboarding_completed: newUser.onboarding_completed,
+        pomodoro_sessions: newUser.pomodoro_sessions,
+        work_duration: newUser.work_duration,
+        short_break_duration: newUser.short_break_duration,
+        long_break_duration: newUser.long_break_duration,
+        sessions_until_long_break: newUser.sessions_until_long_break,
+        created_at: newUser.created_at,
+        updated_at: newUser.updated_at,
+      }
+
+      const userResult = await supabase!.from("users").insert([userInsert]).select().single()
+      if (userResult.error) throw userResult.error
+
+      // Insert credentials
+      const credInsert = {
+        id: credentials.id,
+        user_id: credentials.user_id,
+        email: credentials.email,
+        password_hash: credentials.password_hash,
+        created_at: credentials.created_at,
+        updated_at: credentials.updated_at,
+      }
+
+      const credResult = await supabase!.from("user_credentials").insert([credInsert])
+      if (credResult.error) throw credResult.error
+
+      return { data: userResult.data, error: null }
+    },
     () => {
       // Fallback to localStorage
       const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      const userCredentials = JSON.parse(safeLocalStorage.getItem("futureTask_user_credentials") || "[]")
 
       // Check if user already exists
       const existingUser = users.find((u: User) => u.email === userData.email)
@@ -90,7 +176,11 @@ export async function createUser(userData: Omit<User, "id" | "created_at" | "upd
       }
 
       users.push(newUser)
+      userCredentials.push(credentials)
+
       safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
+      safeLocalStorage.setItem("futureTask_user_credentials", JSON.stringify(userCredentials))
+
       return newUser
     },
     "createUser",
@@ -99,11 +189,39 @@ export async function createUser(userData: Omit<User, "id" | "created_at" | "upd
 
 export async function getUserByEmail(email: string, password: string): Promise<User | null> {
   return safeSupabaseCall(
-    () => supabase!.from("users").select("*").eq("email", email).eq("password", password).single(),
+    async () => {
+      // First get credentials
+      const credResult = await supabase!.from("user_credentials").select("*").eq("email", email).single()
+
+      if (credResult.error || !credResult.data) {
+        return { data: null, error: null }
+      }
+
+      // Verify password
+      if (!verifyPassword(password, credResult.data.password_hash)) {
+        return { data: null, error: null }
+      }
+
+      // Get user data
+      const userResult = await supabase!.from("users").select("*").eq("id", credResult.data.user_id).single()
+
+      if (userResult.error) {
+        return { data: null, error: null }
+      }
+
+      return { data: userResult.data, error: null }
+    },
     () => {
       // Fallback to localStorage
       const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-      return users.find((u: User) => u.email === email && u.password === password) || null
+      const userCredentials = JSON.parse(safeLocalStorage.getItem("futureTask_user_credentials") || "[]")
+
+      const credentials = userCredentials.find((c: UserCredentials) => c.email === email)
+      if (!credentials || !verifyPassword(password, credentials.password_hash)) {
+        return null
+      }
+
+      return users.find((u: User) => u.id === credentials.user_id) || null
     },
     "getUserByEmail",
   )
@@ -117,13 +235,9 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
 
   return safeSupabaseCall(
     async () => {
-      const { data, error } = await supabase!
-        .from("users")
-        .update(updatesWithTimestamp)
-        .eq("id", userId)
-        .select()
-        .single()
-      if (error) throw error
+      const result = await supabase!.from("users").update(updatesWithTimestamp).eq("id", userId).select().single()
+
+      if (result.error) throw result.error
 
       // También actualizar localStorage para sincronización inmediata
       const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -133,7 +247,7 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
         safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
       }
 
-      return data
+      return { data: result.data, error: null }
     },
     () => {
       // Fallback to localStorage
@@ -155,7 +269,14 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
 // Task functions
 export async function getUserTasks(userId: string): Promise<Task[]> {
   return safeSupabaseCall(
-    () => supabase!.from("tasks").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    async () => {
+      const result = await supabase!
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      return { data: result.data || [], error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${userId}`) || "[]")
@@ -166,15 +287,36 @@ export async function getUserTasks(userId: string): Promise<Task[]> {
 }
 
 export async function createTask(taskData: Omit<Task, "id" | "created_at" | "updated_at">): Promise<Task> {
+  const now = new Date().toISOString()
   const newTask: Task = {
     ...taskData,
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: now,
+    updated_at: now,
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("tasks").insert([newTask]).select().single(),
+    async () => {
+      // Insert with explicit column specification
+      const taskInsert = {
+        id: newTask.id,
+        user_id: newTask.user_id,
+        text: newTask.text,
+        description: newTask.description,
+        completed: newTask.completed,
+        date: newTask.date,
+        time: newTask.time,
+        category: newTask.category,
+        priority: newTask.priority,
+        completed_at: newTask.completed_at,
+        notification_enabled: newTask.notification_enabled,
+        created_at: newTask.created_at,
+        updated_at: newTask.updated_at,
+      }
+
+      const result = await supabase!.from("tasks").insert([taskInsert]).select().single()
+      return { data: result.data, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const tasks = JSON.parse(safeLocalStorage.getItem(`futureTask_tasks_${taskData.user_id}`) || "[]")
@@ -193,7 +335,10 @@ export async function updateTask(taskId: string, updates: Partial<Task>): Promis
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("tasks").update(updatesWithTimestamp).eq("id", taskId).select().single(),
+    async () => {
+      const result = await supabase!.from("tasks").update(updatesWithTimestamp).eq("id", taskId).select().single()
+      return { data: result.data, error: result.error }
+    },
     () => {
       // Fallback to localStorage - need to find task across all users
       const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -217,7 +362,10 @@ export async function updateTask(taskId: string, updates: Partial<Task>): Promis
 
 export async function deleteTask(taskId: string): Promise<void> {
   return safeSupabaseCall(
-    () => supabase!.from("tasks").delete().eq("id", taskId),
+    async () => {
+      const result = await supabase!.from("tasks").delete().eq("id", taskId)
+      return { data: undefined, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -239,7 +387,14 @@ export async function deleteTask(taskId: string): Promise<void> {
 // Wishlist functions
 export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
   return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    async () => {
+      const result = await supabase!
+        .from("wishlist_items")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      return { data: result.data || [], error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${userId}`) || "[]")
@@ -252,15 +407,29 @@ export async function getUserWishlist(userId: string): Promise<WishlistItem[]> {
 export async function createWishlistItem(
   itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">,
 ): Promise<WishlistItem> {
+  const now = new Date().toISOString()
   const newItem: WishlistItem = {
     ...itemData,
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: now,
+    updated_at: now,
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").insert([newItem]).select().single(),
+    async () => {
+      const itemInsert = {
+        id: newItem.id,
+        user_id: newItem.user_id,
+        text: newItem.text,
+        description: newItem.description,
+        completed: newItem.completed,
+        created_at: newItem.created_at,
+        updated_at: newItem.updated_at,
+      }
+
+      const result = await supabase!.from("wishlist_items").insert([itemInsert]).select().single()
+      return { data: result.data, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const wishlist = JSON.parse(safeLocalStorage.getItem(`futureTask_wishlist_${itemData.user_id}`) || "[]")
@@ -279,7 +448,15 @@ export async function updateWishlistItem(itemId: string, updates: Partial<Wishli
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").update(updatesWithTimestamp).eq("id", itemId).select().single(),
+    async () => {
+      const result = await supabase!
+        .from("wishlist_items")
+        .update(updatesWithTimestamp)
+        .eq("id", itemId)
+        .select()
+        .single()
+      return { data: result.data, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -303,7 +480,10 @@ export async function updateWishlistItem(itemId: string, updates: Partial<Wishli
 
 export async function deleteWishlistItem(itemId: string): Promise<void> {
   return safeSupabaseCall(
-    () => supabase!.from("wishlist_items").delete().eq("id", itemId),
+    async () => {
+      const result = await supabase!.from("wishlist_items").delete().eq("id", itemId)
+      return { data: undefined, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -325,7 +505,14 @@ export async function deleteWishlistItem(itemId: string): Promise<void> {
 // Notes functions
 export async function getUserNotes(userId: string): Promise<Note[]> {
   return safeSupabaseCall(
-    () => supabase!.from("notes").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+    async () => {
+      const result = await supabase!
+        .from("notes")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+      return { data: result.data || [], error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${userId}`) || "[]")
@@ -336,15 +523,28 @@ export async function getUserNotes(userId: string): Promise<Note[]> {
 }
 
 export async function createNote(noteData: Omit<Note, "id" | "created_at" | "updated_at">): Promise<Note> {
+  const now = new Date().toISOString()
   const newNote: Note = {
     ...noteData,
     id: generateId(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    created_at: now,
+    updated_at: now,
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("notes").insert([newNote]).select().single(),
+    async () => {
+      const noteInsert = {
+        id: newNote.id,
+        user_id: newNote.user_id,
+        title: newNote.title,
+        content: newNote.content,
+        created_at: newNote.created_at,
+        updated_at: newNote.updated_at,
+      }
+
+      const result = await supabase!.from("notes").insert([noteInsert]).select().single()
+      return { data: result.data, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const notes = JSON.parse(safeLocalStorage.getItem(`futureTask_notes_${noteData.user_id}`) || "[]")
@@ -363,7 +563,10 @@ export async function updateNote(noteId: string, updates: Partial<Note>): Promis
   }
 
   return safeSupabaseCall(
-    () => supabase!.from("notes").update(updatesWithTimestamp).eq("id", noteId).select().single(),
+    async () => {
+      const result = await supabase!.from("notes").update(updatesWithTimestamp).eq("id", noteId).select().single()
+      return { data: result.data, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -387,7 +590,10 @@ export async function updateNote(noteId: string, updates: Partial<Note>): Promis
 
 export async function deleteNote(noteId: string): Promise<void> {
   return safeSupabaseCall(
-    () => supabase!.from("notes").delete().eq("id", noteId),
+    async () => {
+      const result = await supabase!.from("notes").delete().eq("id", noteId)
+      return { data: undefined, error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const allUsers = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -450,7 +656,10 @@ export async function migrateLocalStorageToSupabase(userId: string): Promise<boo
 // Admin functions - Get all users
 export async function getAllUsers(): Promise<User[]> {
   return safeSupabaseCall(
-    () => supabase!.from("users").select("*").order("created_at", { ascending: false }),
+    async () => {
+      const result = await supabase!.from("users").select("*").order("created_at", { ascending: false })
+      return { data: result.data || [], error: result.error }
+    },
     () => {
       // Fallback to localStorage
       const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
@@ -470,19 +679,23 @@ export async function deleteUser(userId: string): Promise<void> {
         supabase!.from("wishlist_items").delete().eq("user_id", userId),
         supabase!.from("notes").delete().eq("user_id", userId),
         supabase!.from("achievements").delete().eq("user_id", userId),
+        supabase!.from("user_credentials").delete().eq("user_id", userId),
       ])
 
       // Then delete the user
-      const { error } = await supabase!.from("users").delete().eq("id", userId)
-      if (error) throw error
-
-      return undefined
+      const result = await supabase!.from("users").delete().eq("id", userId)
+      return { data: undefined, error: result.error }
     },
     () => {
       // Fallback to localStorage
       const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
+      const userCredentials = JSON.parse(safeLocalStorage.getItem("futureTask_user_credentials") || "[]")
+
       const filteredUsers = users.filter((u: User) => u.id !== userId)
+      const filteredCredentials = userCredentials.filter((c: UserCredentials) => c.user_id !== userId)
+
       safeLocalStorage.setItem("futureTask_users", JSON.stringify(filteredUsers))
+      safeLocalStorage.setItem("futureTask_user_credentials", JSON.stringify(filteredCredentials))
 
       // Also remove user's data from localStorage
       safeLocalStorage.removeItem(`futureTask_tasks_${userId}`)
@@ -495,51 +708,11 @@ export async function deleteUser(userId: string): Promise<void> {
   )
 }
 
-// Initialize admin user - with better error handling and fallback
+// Initialize admin user - Simplified to avoid schema issues
 export async function initializeAdminUser(): Promise<void> {
   try {
     if (process.env.NODE_ENV === "development") {
       console.log("🔧 Initializing admin user...")
-    }
-
-    // Only try to create admin user if Supabase is available
-    if (!isSupabaseAvailable) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("📦 Supabase not available, creating admin user in localStorage")
-      }
-
-      // Create admin user in localStorage as fallback
-      const users = JSON.parse(safeLocalStorage.getItem("futureTask_users") || "[]")
-      const existingAdmin = users.find((u: User) => u.email === "admin")
-
-      if (!existingAdmin) {
-        const adminUser: User = {
-          id: generateId(),
-          name: "Administrator",
-          email: "admin",
-          password: "535353-Jrl",
-          language: "es",
-          theme: "default",
-          is_premium: true,
-          premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          onboarding_completed: true,
-          pomodoro_sessions: 0,
-          work_duration: 25,
-          short_break_duration: 5,
-          long_break_duration: 15,
-          sessions_until_long_break: 4,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }
-
-        users.push(adminUser)
-        safeLocalStorage.setItem("futureTask_users", JSON.stringify(users))
-
-        if (process.env.NODE_ENV === "development") {
-          console.log("✅ Admin user created in localStorage")
-        }
-      }
-      return
     }
 
     // Check if admin user already exists

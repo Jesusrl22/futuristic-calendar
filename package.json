@@ -9,7 +9,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@radix-ui/react-calendar": "^1.0.0",
     "@radix-ui/react-dialog": "latest",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-progress": "latest",

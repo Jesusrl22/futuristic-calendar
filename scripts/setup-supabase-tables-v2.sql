@@ -6,40 +6,41 @@ DROP TABLE IF EXISTS tasks CASCADE;
 DROP TABLE IF EXISTS user_credentials CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- Create users table (simplified schema)
+-- Create users table with explicit column definitions
 CREATE TABLE users (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
-    auth_id TEXT UNIQUE,
+    auth_id TEXT,
     language TEXT DEFAULT 'es',
     theme TEXT DEFAULT 'default',
     is_premium BOOLEAN DEFAULT FALSE,
-    premium_expiry TIMESTAMPTZ,
+    premium_expiry TEXT,
     onboarding_completed BOOLEAN DEFAULT FALSE,
     pomodoro_sessions INTEGER DEFAULT 0,
     work_duration INTEGER DEFAULT 25,
     short_break_duration INTEGER DEFAULT 5,
     long_break_duration INTEGER DEFAULT 15,
     sessions_until_long_break INTEGER DEFAULT 4,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
 );
 
 -- Create user_credentials table for authentication
 CREATE TABLE user_credentials (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Create tasks table
 CREATE TABLE tasks (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
     text TEXT NOT NULL,
     description TEXT,
     completed BOOLEAN DEFAULT FALSE,
@@ -47,51 +48,55 @@ CREATE TABLE tasks (
     time TEXT,
     category TEXT DEFAULT 'personal',
     priority TEXT DEFAULT 'medium',
-    completed_at TIMESTAMPTZ,
+    completed_at TEXT,
     notification_enabled BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Create wishlist_items table
 CREATE TABLE wishlist_items (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
     text TEXT NOT NULL,
     description TEXT,
     completed BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Create notes table
 CREATE TABLE notes (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Create achievements table
 CREATE TABLE achievements (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL,
     type TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    unlocked_at TIMESTAMPTZ DEFAULT NOW()
+    unlocked_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_tasks_user_id ON tasks(user_id);
-CREATE INDEX idx_tasks_date ON tasks(date);
-CREATE INDEX idx_wishlist_user_id ON wishlist_items(user_id);
-CREATE INDEX idx_notes_user_id ON notes(user_id);
-CREATE INDEX idx_achievements_user_id ON achievements(user_id);
-CREATE INDEX idx_user_credentials_email ON user_credentials(email);
-CREATE INDEX idx_user_credentials_user_id ON user_credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date);
+CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_items(user_id);
+CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
+CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_credentials_email ON user_credentials(email);
+CREATE INDEX IF NOT EXISTS idx_user_credentials_user_id ON user_credentials(user_id);
 
 -- Enable Row Level Security (RLS) - but make it permissive for now
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -101,7 +106,7 @@ ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_credentials ENABLE ROW LEVEL SECURITY;
 
--- Create permissive policies for all tables (since we're not using Supabase Auth)
+-- Create permissive policies for all tables
 CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations on tasks" ON tasks FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations on wishlist_items" ON wishlist_items FOR ALL USING (true) WITH CHECK (true);
@@ -109,7 +114,7 @@ CREATE POLICY "Allow all operations on notes" ON notes FOR ALL USING (true) WITH
 CREATE POLICY "Allow all operations on achievements" ON achievements FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations on user_credentials" ON user_credentials FOR ALL USING (true) WITH CHECK (true);
 
--- Insert admin user
+-- Insert admin user with explicit timestamps
 INSERT INTO users (
     id, 
     name, 
@@ -123,7 +128,9 @@ INSERT INTO users (
     work_duration, 
     short_break_duration, 
     long_break_duration, 
-    sessions_until_long_break
+    sessions_until_long_break,
+    created_at,
+    updated_at
 ) VALUES (
     'admin-user-535353',
     'Administrator',
@@ -131,29 +138,35 @@ INSERT INTO users (
     'es',
     'default',
     true,
-    NOW() + INTERVAL '1 year',
+    '2025-12-31T23:59:59.000Z',
     true,
     0,
     25,
     5,
     15,
-    4
+    4,
+    '2024-01-01T00:00:00.000Z',
+    '2024-01-01T00:00:00.000Z'
 ) ON CONFLICT (email) DO UPDATE SET
     is_premium = EXCLUDED.is_premium,
     premium_expiry = EXCLUDED.premium_expiry,
-    updated_at = NOW();
+    updated_at = '2024-01-01T00:00:00.000Z';
 
 -- Insert admin credentials (password: 535353-Jrl, hashed with simple base64)
 INSERT INTO user_credentials (
     id,
     user_id,
     email,
-    password_hash
+    password_hash,
+    created_at,
+    updated_at
 ) VALUES (
     'admin-cred-535353',
     'admin-user-535353',
     'admin',
-    'NTM1MzUzLUpybHNhbHQxMjM='
+    'NTM1MzUzLUpybHNhbHQxMjM=',
+    '2024-01-01T00:00:00.000Z',
+    '2024-01-01T00:00:00.000Z'
 ) ON CONFLICT (email) DO UPDATE SET
     password_hash = EXCLUDED.password_hash,
-    updated_at = NOW();
+    updated_at = '2024-01-01T00:00:00.000Z';
