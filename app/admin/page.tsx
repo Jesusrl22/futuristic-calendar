@@ -185,7 +185,7 @@ export default function AdminPanel() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="adminEmail" className="text-gray-300">
+              <Label htmlFor="adminEmail" className="text-gray-200 font-medium">
                 Email de Administrador
               </Label>
               <Input
@@ -193,12 +193,12 @@ export default function AdminPanel() {
                 type="text"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                className="bg-black/30 border-purple-500/30 text-white"
+                className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
                 placeholder="admin"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="adminPassword" className="text-gray-300">
+              <Label htmlFor="adminPassword" className="text-gray-200 font-medium">
                 Contraseña
               </Label>
               <Input
@@ -206,7 +206,7 @@ export default function AdminPanel() {
                 type="password"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
-                className="bg-black/30 border-purple-500/30 text-white"
+                className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
                 placeholder="••••••••"
                 onKeyPress={(e) => e.key === "Enter" && !isLoading && handleLogin()}
               />
@@ -214,11 +214,11 @@ export default function AdminPanel() {
             <Button
               onClick={handleLogin}
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
+              className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-medium"
             >
               {isLoading ? "Iniciando..." : "Iniciar Sesión"}
             </Button>
-            <Button onClick={goBack} variant="ghost" className="w-full text-gray-300">
+            <Button onClick={goBack} variant="ghost" className="w-full text-gray-200 hover:text-white">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Volver a la App
             </Button>
@@ -237,14 +237,14 @@ export default function AdminPanel() {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Panel de Administración
             </h1>
-            <p className="text-gray-300 text-sm">Gestiona usuarios y configuraciones de FutureTask</p>
+            <p className="text-gray-200 text-sm">Gestiona usuarios y configuraciones de FutureTask</p>
           </div>
           <div className="flex items-center space-x-3">
-            <Button onClick={goBack} variant="ghost" className="text-gray-300">
+            <Button onClick={goBack} variant="ghost" className="text-gray-200 hover:text-white">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Volver a la App
             </Button>
-            <Button onClick={handleLogout} variant="ghost" className="text-gray-300">
+            <Button onClick={handleLogout} variant="ghost" className="text-gray-200 hover:text-white">
               Cerrar Sesión
             </Button>
           </div>
@@ -254,7 +254,7 @@ export default function AdminPanel() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Total Usuarios</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-200">Total Usuarios</CardTitle>
               <Users className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
@@ -264,7 +264,7 @@ export default function AdminPanel() {
 
           <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Usuarios Premium</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-200">Usuarios Premium</CardTitle>
               <Crown className="h-4 w-4 text-yellow-400" />
             </CardHeader>
             <CardContent>
@@ -274,7 +274,7 @@ export default function AdminPanel() {
 
           <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">Base de Datos</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-200">Base de Datos</CardTitle>
               <Database className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
@@ -303,26 +303,33 @@ export default function AdminPanel() {
                         <span>{user.name}</span>
                         {user.is_premium && <Crown className="w-4 h-4 text-yellow-400" />}
                       </h3>
-                      <p className="text-sm text-gray-300">{user.email}</p>
+                      <p className="text-sm text-gray-200">{user.email}</p>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs border-purple-400/50 text-purple-200">
                           {LANGUAGE_OPTIONS.find((l) => l.value === user.language)?.flag}{" "}
                           {LANGUAGE_OPTIONS.find((l) => l.value === user.language)?.label}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs border-cyan-400/50 text-cyan-200">
                           {user.theme}
                         </Badge>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant={user.is_premium ? "default" : "secondary"}>
+                    <Badge
+                      variant={user.is_premium ? "default" : "secondary"}
+                      className={
+                        user.is_premium
+                          ? "bg-yellow-500/20 text-yellow-200 border-yellow-400/50"
+                          : "bg-gray-500/20 text-gray-200 border-gray-400/50"
+                      }
+                    >
                       {user.is_premium ? "Premium" : "Free"}
                     </Badge>
                     <Button
                       size="sm"
                       onClick={() => handleEditUser(user)}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
                     >
                       Editar
                     </Button>
@@ -333,7 +340,7 @@ export default function AdminPanel() {
               {users.length === 0 && (
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-300">No hay usuarios registrados</p>
+                  <p className="text-gray-200">No hay usuarios registrados</p>
                 </div>
               )}
             </div>
@@ -349,32 +356,32 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Nombre</Label>
+                  <Label className="text-gray-200 font-medium">Nombre</Label>
                   <Input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="bg-black/30 border-purple-500/30 text-white"
+                    className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Email</Label>
+                  <Label className="text-gray-200 font-medium">Email</Label>
                   <Input
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="bg-black/30 border-purple-500/30 text-white"
+                    className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Idioma</Label>
+                  <Label className="text-gray-200 font-medium">Idioma</Label>
                   <Select value={editLanguage} onValueChange={(value) => setEditLanguage(value as any)}>
                     <SelectTrigger className="bg-black/30 border-purple-500/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-black/20 backdrop-blur-xl border-purple-500/20">
                       {LANGUAGE_OPTIONS.map((lang) => (
-                        <SelectItem key={lang.value} value={lang.value} className="text-white">
+                        <SelectItem key={lang.value} value={lang.value} className="text-white hover:bg-purple-500/20">
                           <span className="flex items-center space-x-2">
                             <span>{lang.flag}</span>
                             <span>{lang.label}</span>
@@ -386,19 +393,19 @@ export default function AdminPanel() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-300">Tema</Label>
+                  <Label className="text-gray-200 font-medium">Tema</Label>
                   <Select value={editTheme} onValueChange={setEditTheme}>
                     <SelectTrigger className="bg-black/30 border-purple-500/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-black/20 backdrop-blur-xl border-purple-500/20">
                       {Object.entries(THEMES.free).map(([key, name]) => (
-                        <SelectItem key={key} value={key} className="text-white">
+                        <SelectItem key={key} value={key} className="text-white hover:bg-purple-500/20">
                           {name}
                         </SelectItem>
                       ))}
                       {Object.entries(THEMES.premium).map(([key, name]) => (
-                        <SelectItem key={key} value={key} className="text-white">
+                        <SelectItem key={key} value={key} className="text-white hover:bg-purple-500/20">
                           {name} (Premium)
                         </SelectItem>
                       ))}
@@ -412,16 +419,20 @@ export default function AdminPanel() {
                     id="isPremium"
                     checked={editIsPremium}
                     onChange={(e) => setEditIsPremium(e.target.checked)}
-                    className="rounded"
+                    className="rounded border-purple-400/50"
                   />
-                  <Label htmlFor="isPremium" className="text-gray-300 flex items-center space-x-2">
+                  <Label htmlFor="isPremium" className="text-gray-200 flex items-center space-x-2 font-medium">
                     <Crown className="w-4 h-4 text-yellow-400" />
                     <span>Usuario Premium</span>
                   </Label>
                 </div>
               </CardContent>
               <div className="flex justify-end space-x-2 p-6">
-                <Button variant="secondary" onClick={() => setEditingUser(null)}>
+                <Button
+                  variant="secondary"
+                  onClick={() => setEditingUser(null)}
+                  className="text-gray-200 bg-gray-600 hover:bg-gray-700"
+                >
                   Cancelar
                 </Button>
                 <Button

@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Edit2, Trash2, Save, X } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { FileText, Edit2, Trash2, Plus, Save, X } from "lucide-react"
 
 interface Note {
   id: string
@@ -19,8 +20,8 @@ interface Note {
 interface NotesManagerProps {
   notes: Note[]
   onAddNote: (title: string, content: string) => void
-  onUpdateNote: (id: string, title: string, content: string) => void
-  onDeleteNote: (id: string) => void
+  onUpdateNote: (noteId: string, title: string, content: string) => void
+  onDeleteNote: (noteId: string) => void
   theme: any
   t: (key: string) => string
 }
@@ -31,12 +32,15 @@ export function NotesManager({ notes, onAddNote, onUpdateNote, onDeleteNote, the
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState("")
+  const [showAddForm, setShowAddForm] = useState(false)
 
   const handleAddNote = () => {
-    if (!newNoteTitle.trim() || !newNoteContent.trim()) return
-    onAddNote(newNoteTitle, newNoteContent)
-    setNewNoteTitle("")
-    setNewNoteContent("")
+    if (newNoteTitle.trim() && newNoteContent.trim()) {
+      onAddNote(newNoteTitle.trim(), newNoteContent.trim())
+      setNewNoteTitle("")
+      setNewNoteContent("")
+      setShowAddForm(false)
+    }
   }
 
   const handleEditNote = (note: Note) => {
@@ -46,11 +50,12 @@ export function NotesManager({ notes, onAddNote, onUpdateNote, onDeleteNote, the
   }
 
   const handleSaveEdit = () => {
-    if (!editingId || !editTitle.trim() || !editContent.trim()) return
-    onUpdateNote(editingId, editTitle, editContent)
-    setEditingId(null)
-    setEditTitle("")
-    setEditContent("")
+    if (editingId && editTitle.trim() && editContent.trim()) {
+      onUpdateNote(editingId, editTitle.trim(), editContent.trim())
+      setEditingId(null)
+      setEditTitle("")
+      setEditContent("")
+    }
   }
 
   const handleCancelEdit = () => {
@@ -61,56 +66,85 @@ export function NotesManager({ notes, onAddNote, onUpdateNote, onDeleteNote, the
 
   return (
     <Card className={`${theme.cardBg} ${theme.border}`}>
-      <CardHeader>
-        <CardTitle className={theme.textPrimary}>📝 {t("notes")}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Add new note form */}
-        <div className="space-y-2">
-          <Input
-            value={newNoteTitle}
-            onChange={(e) => setNewNoteTitle(e.target.value)}
-            placeholder="Título de la nota..."
-            className={`${theme.inputBg} ${theme.placeholder}`}
-          />
-          <Textarea
-            value={newNoteContent}
-            onChange={(e) => setNewNoteContent(e.target.value)}
-            placeholder="Contenido de la nota..."
-            className={`${theme.inputBg} ${theme.placeholder} min-h-[80px] resize-none`}
-            rows={3}
-          />
-          <Button onClick={handleAddNote} className={`w-full ${theme.buttonPrimary}`}>
-            <Plus className="w-4 h-4 mr-2" />
-            Agregar Nota
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
+            <FileText className="w-5 h-5 text-blue-400" />
+            <span>{t("notes")}</span>
+          </CardTitle>
+          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} className={`${theme.buttonPrimary} text-xs`}>
+            <Plus className="w-3 h-3 mr-1" />
+            Agregar
           </Button>
         </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Add Form */}
+        {showAddForm && (
+          <div className={`p-3 rounded-lg ${theme.cardBg} ${theme.border} space-y-2`}>
+            <div className="space-y-1">
+              <Label className={`${theme.textSecondary} text-xs`}>Título</Label>
+              <Input
+                value={newNoteTitle}
+                onChange={(e) => setNewNoteTitle(e.target.value)}
+                placeholder="Título de la nota..."
+                className={`${theme.inputBg} text-sm`}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className={`${theme.textSecondary} text-xs`}>Contenido</Label>
+              <Textarea
+                value={newNoteContent}
+                onChange={(e) => setNewNoteContent(e.target.value)}
+                placeholder="Escribe tu nota aquí..."
+                className={`${theme.inputBg} text-sm h-20 resize-none`}
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button size="sm" onClick={handleAddNote} className={`${theme.buttonPrimary} text-xs`}>
+                <Save className="w-3 h-3 mr-1" />
+                Guardar
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowAddForm(false)}
+                className={`${theme.textSecondary} text-xs`}
+              >
+                <X className="w-3 h-3 mr-1" />
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
 
-        {/* Notes list */}
-        <div className="space-y-3">
+        {/* Notes List */}
+        <div className="space-y-2">
           {notes.map((note) => (
-            <div key={note.id} className={`p-3 rounded-lg border ${theme.border}`}>
+            <div key={note.id} className={`p-3 rounded-lg ${theme.cardBg} ${theme.border}`}>
               {editingId === note.id ? (
                 <div className="space-y-2">
                   <Input
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    className={theme.inputBg}
-                    placeholder="Título..."
+                    className={`${theme.inputBg} text-sm font-medium`}
                   />
                   <Textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className={`${theme.inputBg} min-h-[80px] resize-none`}
-                    rows={3}
-                    placeholder="Contenido..."
+                    className={`${theme.inputBg} text-sm h-20 resize-none`}
                   />
                   <div className="flex space-x-2">
-                    <Button size="sm" onClick={handleSaveEdit} className={theme.buttonPrimary}>
+                    <Button size="sm" onClick={handleSaveEdit} className={`${theme.buttonPrimary} text-xs`}>
                       <Save className="w-3 h-3 mr-1" />
                       Guardar
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={handleCancelEdit} className={theme.textSecondary}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleCancelEdit}
+                      className={`${theme.textSecondary} text-xs`}
+                    >
                       <X className="w-3 h-3 mr-1" />
                       Cancelar
                     </Button>
@@ -119,33 +153,38 @@ export function NotesManager({ notes, onAddNote, onUpdateNote, onDeleteNote, the
               ) : (
                 <div>
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className={`font-semibold ${theme.textPrimary}`}>{note.title}</h3>
+                    <h4 className={`${theme.textPrimary} text-sm font-medium`}>{note.title}</h4>
                     <div className="flex items-center space-x-1">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditNote(note)}
-                        className={theme.textSecondary}
+                        className={`${theme.textSecondary} p-1`}
                       >
                         <Edit2 className="w-3 h-3" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => onDeleteNote(note.id)} className="text-red-400">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDeleteNote(note.id)}
+                        className="text-red-400 p-1"
+                      >
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </div>
-                  <p className={`text-sm ${theme.textSecondary} whitespace-pre-wrap`}>{note.content}</p>
-                  <p className={`text-xs ${theme.textMuted} mt-2`}>{new Date(note.updated_at).toLocaleDateString()}</p>
+                  <p className={`${theme.textSecondary} text-xs leading-relaxed`}>{note.content}</p>
+                  <p className={`${theme.textMuted} text-xs mt-2`}>{new Date(note.updated_at).toLocaleDateString()}</p>
                 </div>
               )}
             </div>
           ))}
 
           {notes.length === 0 && (
-            <div className="text-center py-8">
-              <div className="text-4xl mb-4">📝</div>
-              <p className={theme.textPrimary}>No tienes notas aún</p>
-              <p className={theme.textSecondary}>¡Agrega tu primera nota!</p>
+            <div className="text-center py-6">
+              <FileText className={`w-8 h-8 mx-auto mb-2 ${theme.textMuted}`} />
+              <p className={`${theme.textPrimary} text-sm`}>No hay notas aún</p>
+              <p className={`${theme.textSecondary} text-xs`}>¡Crea tu primera nota!</p>
             </div>
           )}
         </div>
