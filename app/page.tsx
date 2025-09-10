@@ -799,12 +799,42 @@ const LANGUAGE_OPTIONS = [
   { value: "it", label: "Italiano", flag: "🇮🇹" },
 ]
 
+// Helper functions for localStorage
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window === "undefined") return null
+      return localStorage.getItem(key)
+    } catch (error) {
+      console.error("Error accessing localStorage:", error)
+      return null
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window === "undefined") return
+      localStorage.setItem(key, value)
+    } catch (error) {
+      console.error("Error setting localStorage:", error)
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof window === "undefined") return
+      localStorage.removeItem(key)
+    } catch (error) {
+      console.error("Error removing from localStorage:", error)
+    }
+  },
+}
+
 export default function FutureTaskApp() {
   // Core state
   const [user, setUser] = useState<User | null>(null)
   const [language, setLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "auth" | "premium" | "app">("welcome")
   const [isInitialized, setIsInitialized] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const isMobile = useIsMobile()
 
   // App state
@@ -865,7 +895,7 @@ export default function FutureTaskApp() {
 
   // Load saved language on init
   useEffect(() => {
-    const savedLanguage = localStorage.getItem("futureTask_language")
+    const savedLanguage = safeLocalStorage.getItem("futureTask_language")
     if (savedLanguage && ["es", "en", "fr", "de", "it"].includes(savedLanguage)) {
       setLanguage(savedLanguage as "es" | "en" | "fr" | "de" | "it")
     }
@@ -873,7 +903,7 @@ export default function FutureTaskApp() {
 
   // Save language when it changes
   useEffect(() => {
-    localStorage.setItem("futureTask_language", language)
+    safeLocalStorage.setItem("futureTask_language", language)
   }, [language])
 
   // Load user Pomodoro settings
@@ -932,56 +962,100 @@ export default function FutureTaskApp() {
     }
   }
 
-  // Initialize app - runs only once
+  // Función mejorada para cargar datos del usuario
+  const loadUserData = async (userId: string) => {
+    try {
+      console.log("🔄 Loading user data for:", userId)
+
+      const [userTasks, userWishlist, userNotes] = await Promise.all([
+        getUserTasks(userId).catch((error) => {
+          console.error("Error loading tasks:", error)
+          return []
+        }),
+        getUserWishlist(userId).catch((error) => {
+          console.error("Error loading wishlist:", error)
+          return []
+        }),
+        getUserNotes(userId).catch((error) => {
+          console.error("Error loading notes:", error)
+          return []
+        }),
+      ])
+
+      console.log("✅ User data loaded:", {
+        tasks: userTasks.length,
+        wishlist: userWishlist.length,
+        notes: userNotes.length,
+      })
+
+      setTasks(userTasks)
+      setWishlistItems(userWishlist)
+      setNotes(userNotes)
+
+      return { userTasks, userWishlist, userNotes }
+    } catch (error) {
+      console.error("❌ Error loading user data:", error)
+      return { userTasks: [], userWishlist: [], userNotes: [] }
+    }
+  }
+
+  // Initialize app - runs only once - MEJORADA
   const initializeApp = async () => {
     try {
       console.log("🚀 Initializing FutureTask app...")
+      setIsLoading(true)
 
       // Initialize admin user first
       await initializeAdminUser()
 
-      const savedUser = localStorage.getItem("futureTask_user")
-      if (savedUser) {
-        const parsedUser = JSON.parse(savedUser)
+      // Verificar si hay un usuario guardado
+      const savedUserData = safeLocalStorage.getItem("futureTask_user")
+      const savedUserSession = safeLocalStorage.getItem("futureTask_user_session")
 
-        // Verificar que el usuario aún existe en la base de datos
-        const userExists = await verifyUserExists(parsedUser.email, parsedUser.password)
-        if (!userExists) {
-          console.log("👤 Saved user no longer exists, clearing localStorage")
-          localStorage.removeItem("futureTask_user")
-          setCurrentScreen("welcome")
-          setIsInitialized(true)
-          return
-        }
+      if (savedUserData && savedUserSession) {
+        try {
+          const parsedUser = JSON.parse(savedUserData)
+          const sessionData = JSON.parse(savedUserSession)
 
-        console.log("👤 User found, loading data...")
-        setUser(userExists)
-        setLanguage(userExists.language || "es")
+          console.log("👤 Found saved user:", parsedUser.email)
 
-        // Cargar datos del usuario desde Supabase/localStorage
-        const [userTasks, userWishlist, userNotes] = await Promise.all([
-          getUserTasks(userExists.id),
-          getUserWishlist(userExists.id),
-          getUserNotes(userExists.id),
-        ])
+          // Verificar que el usuario aún existe en la base de datos
+          const userExists = await verifyUserExists(parsedUser.email, sessionData.password)
 
-        setTasks(userTasks)
-        setWishlistItems(userWishlist)
-        setNotes(userNotes)
-
-        // Check if we should show migration prompt
-        if (isSupabaseAvailable) {
-          const hasLocalData =
-            localStorage.getItem(`futureTask_tasks_${userExists.id}`) ||
-            localStorage.getItem(`futureTask_wishlist_${userExists.id}`) ||
-            localStorage.getItem(`futureTask_notes_${userExists.id}`)
-
-          if (hasLocalData && userTasks.length === 0 && userWishlist.length === 0 && userNotes.length === 0) {
-            setShowMigrationPrompt(true)
+          if (!userExists) {
+            console.log("👤 Saved user no longer exists, clearing localStorage")
+            safeLocalStorage.removeItem("futureTask_user")
+            safeLocalStorage.removeItem("futureTask_user_session")
+            setCurrentScreen("welcome")
+            return
           }
-        }
 
-        setCurrentScreen(userExists.onboarding_completed ? "app" : "welcome")
+          console.log("✅ User verified, loading data...")
+          setUser(userExists)
+          setLanguage(userExists.language || "es")
+
+          // Cargar datos del usuario
+          await loadUserData(userExists.id)
+
+          // Check if we should show migration prompt
+          if (isSupabaseAvailable) {
+            const hasLocalData =
+              safeLocalStorage.getItem(`futureTask_tasks_${userExists.id}`) ||
+              safeLocalStorage.getItem(`futureTask_wishlist_${userExists.id}`) ||
+              safeLocalStorage.getItem(`futureTask_notes_${userExists.id}`)
+
+            if (hasLocalData) {
+              setShowMigrationPrompt(true)
+            }
+          }
+
+          setCurrentScreen(userExists.onboarding_completed ? "app" : "welcome")
+        } catch (parseError) {
+          console.error("❌ Error parsing saved user data:", parseError)
+          safeLocalStorage.removeItem("futureTask_user")
+          safeLocalStorage.removeItem("futureTask_user_session")
+          setCurrentScreen("welcome")
+        }
       } else {
         console.log("👤 No saved user found")
         setCurrentScreen("welcome")
@@ -990,7 +1064,19 @@ export default function FutureTaskApp() {
       console.error("❌ Error initializing app:", error)
       setCurrentScreen("welcome")
     } finally {
+      setIsLoading(false)
       setIsInitialized(true)
+    }
+  }
+
+  // Función para guardar usuario de forma segura
+  const saveUserSession = (user: User, password: string) => {
+    try {
+      safeLocalStorage.setItem("futureTask_user", JSON.stringify(user))
+      safeLocalStorage.setItem("futureTask_user_session", JSON.stringify({ password, timestamp: Date.now() }))
+      console.log("✅ User session saved")
+    } catch (error) {
+      console.error("❌ Error saving user session:", error)
     }
   }
 
@@ -1000,8 +1086,13 @@ export default function FutureTaskApp() {
     if (!user || !isSupabaseAvailable) return
 
     try {
+      const savedSession = safeLocalStorage.getItem("futureTask_user_session")
+      if (!savedSession) return
+
+      const sessionData = JSON.parse(savedSession)
+
       // Verificar si hay cambios en el usuario desde el admin
-      const updatedUser = await getUserByEmail(user.email, user.password)
+      const updatedUser = await getUserByEmail(user.email, sessionData.password)
       if (
         updatedUser &&
         (updatedUser.is_premium !== user.is_premium ||
@@ -1012,7 +1103,7 @@ export default function FutureTaskApp() {
         console.log("🔄 Sincronizando cambios del usuario desde admin...")
         setUser(updatedUser)
         setLanguage(updatedUser.language)
-        localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+        saveUserSession(updatedUser, sessionData.password)
 
         // Mostrar notificación si cambió el estado premium
         if (updatedUser.is_premium !== user.is_premium) {
@@ -1166,9 +1257,11 @@ export default function FutureTaskApp() {
     return (getCompletedTasks().length / todayTasks.length) * 100
   }
 
-  // Event handlers
+  // Event handlers - MEJORADOS
   const handleAuth = async () => {
     try {
+      setIsLoading(true)
+
       if (authMode === "login") {
         const existingUser = await getUserByEmail(email, password)
         if (!existingUser) {
@@ -1177,7 +1270,11 @@ export default function FutureTaskApp() {
         }
 
         setUser(existingUser)
-        localStorage.setItem("futureTask_user", JSON.stringify(existingUser))
+        saveUserSession(existingUser, password)
+
+        // Cargar datos del usuario
+        await loadUserData(existingUser.id)
+
         setCurrentScreen(existingUser.onboarding_completed ? "app" : "premium")
       } else {
         try {
@@ -1197,7 +1294,7 @@ export default function FutureTaskApp() {
           })
 
           setUser(newUser)
-          localStorage.setItem("futureTask_user", JSON.stringify(newUser))
+          saveUserSession(newUser, password)
           setCurrentScreen("premium")
         } catch (error) {
           alert("Error al crear usuario. Es posible que el email ya esté registrado.")
@@ -1211,6 +1308,8 @@ export default function FutureTaskApp() {
     } catch (error) {
       console.error("Error in auth:", error)
       alert("Error de conexión. Intenta de nuevo.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -1218,13 +1317,20 @@ export default function FutureTaskApp() {
     if (!user) return
 
     try {
+      setIsLoading(true)
+
       const updatedUser = await updateUser(user.id, {
         is_premium: isPremium,
         onboarding_completed: true,
       })
 
       setUser(updatedUser)
-      localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+      const savedSession = safeLocalStorage.getItem("futureTask_user_session")
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession)
+        saveUserSession(updatedUser, sessionData.password)
+      }
+
       setCurrentScreen("app")
     } catch (error) {
       console.error("Error updating premium status:", error)
@@ -1237,8 +1343,15 @@ export default function FutureTaskApp() {
       }
 
       setUser(updatedUserLocal)
-      localStorage.setItem("futureTask_user", JSON.stringify(updatedUserLocal))
+      const savedSession = safeLocalStorage.getItem("futureTask_user_session")
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession)
+        saveUserSession(updatedUserLocal, sessionData.password)
+      }
+
       setCurrentScreen("app")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -1438,7 +1551,13 @@ export default function FutureTaskApp() {
       const updatedUser = await updateUser(user.id, updates)
       setUser(updatedUser)
       setLanguage(updatedUser.language)
-      localStorage.setItem("futureTask_user", JSON.stringify(updatedUser))
+
+      const savedSession = safeLocalStorage.getItem("futureTask_user_session")
+      if (savedSession) {
+        const sessionData = JSON.parse(savedSession)
+        saveUserSession(updatedUser, sessionData.password)
+      }
+
       alert(t("settingsSaved"))
     } catch (error) {
       console.error("Error updating user:", error)
@@ -1452,7 +1571,8 @@ export default function FutureTaskApp() {
     setWishlistItems([])
     setNotes([])
     setCurrentScreen("welcome")
-    localStorage.removeItem("futureTask_user")
+    safeLocalStorage.removeItem("futureTask_user")
+    safeLocalStorage.removeItem("futureTask_user_session")
   }
 
   const getCurrentTheme = () => {
@@ -1463,7 +1583,7 @@ export default function FutureTaskApp() {
   }
 
   // Loading state
-  if (!isInitialized) {
+  if (!isInitialized || isLoading) {
     return (
       <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} flex items-center justify-center`}>
         <div className="text-center space-y-4">
@@ -1613,8 +1733,8 @@ export default function FutureTaskApp() {
                 placeholder="••••••••"
               />
             </div>
-            <Button onClick={handleAuth} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
-              {authMode === "login" ? t("login") : t("register")}
+            <Button onClick={handleAuth} disabled={isLoading} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
+              {isLoading ? "Cargando..." : authMode === "login" ? t("login") : t("register")}
             </Button>
             <Button
               variant="ghost"
@@ -1678,9 +1798,10 @@ export default function FutureTaskApp() {
                   </div>
                   <Button
                     onClick={() => handlePremiumChoice(false)}
+                    disabled={isLoading}
                     className={`w-full ${getCurrentTheme().buttonSecondary}`}
                   >
-                    {t("continueFreee")}
+                    {isLoading ? "Cargando..." : t("continueFreee")}
                   </Button>
                 </CardContent>
               </Card>
@@ -1734,10 +1855,11 @@ export default function FutureTaskApp() {
                   </div>
                   <Button
                     onClick={() => handlePremiumChoice(true)}
+                    disabled={isLoading}
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm md:text-lg py-2 md:py-3"
                   >
                     <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                    {t("startPremium")} - {t("monthlyPrice")}
+                    {isLoading ? "Cargando..." : `${t("startPremium")} - ${t("monthlyPrice")}`}
                   </Button>
                 </CardContent>
               </Card>
