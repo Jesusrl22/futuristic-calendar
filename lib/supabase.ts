@@ -9,6 +9,7 @@ export interface User {
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   is_premium: boolean
+  is_pro: boolean // Make sure this is included
   premium_expiry?: string
   onboarding_completed: boolean
   pomodoro_sessions: number

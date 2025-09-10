@@ -104,7 +104,7 @@ export async function createUser(
     language: userData.language,
     theme: userData.theme,
     is_premium: userData.is_premium,
-    is_pro: userData.is_pro || false, // Add is_pro field
+    is_pro: userData.is_pro || false, // Ensure is_pro is always defined
     premium_expiry: userData.premium_expiry,
     onboarding_completed: userData.onboarding_completed,
     pomodoro_sessions: userData.pomodoro_sessions,
@@ -136,7 +136,7 @@ export async function createUser(
         language: newUser.language,
         theme: newUser.theme,
         is_premium: newUser.is_premium,
-        is_pro: newUser.is_pro,
+        is_pro: newUser.is_pro, // Make sure this is included
         premium_expiry: newUser.premium_expiry,
         onboarding_completed: newUser.onboarding_completed,
         pomodoro_sessions: newUser.pomodoro_sessions,

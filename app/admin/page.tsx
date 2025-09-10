@@ -136,14 +136,12 @@ export default function AdminPanel() {
     setEditIsPremium(user.is_premium)
     setEditIsPro(user.is_pro || false)
 
-    // Set expiry date - if exists, format it for input, otherwise set to 1 year from now
+    // Set expiry date - don't set default date, leave empty for lifetime
     if (user.premium_expiry) {
       const expiryDate = new Date(user.premium_expiry)
       setEditPremiumExpiry(expiryDate.toISOString().split("T")[0])
     } else {
-      const oneYearFromNow = new Date()
-      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
-      setEditPremiumExpiry(oneYearFromNow.toISOString().split("T")[0])
+      setEditPremiumExpiry("") // Empty for lifetime plan
     }
   }
 
@@ -152,20 +150,16 @@ export default function AdminPanel() {
 
     setIsLoading(true)
     try {
-      // Calculate expiry date
+      // Calculate expiry date - FIXED LOGIC
       let premiumExpiry = undefined
       if (editIsPremium || editIsPro) {
         if (editPremiumExpiry) {
-          // Use the selected date
+          // Use the selected date if provided
           const selectedDate = new Date(editPremiumExpiry)
           selectedDate.setHours(23, 59, 59, 999) // Set to end of day
           premiumExpiry = selectedDate.toISOString()
-        } else {
-          // Default to 1 year from now
-          const oneYearFromNow = new Date()
-          oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
-          premiumExpiry = oneYearFromNow.toISOString()
         }
+        // If no date is provided, leave premiumExpiry as undefined (lifetime plan)
       }
 
       const updatedUser = await updateUser(editingUser.id, {
@@ -227,7 +221,7 @@ export default function AdminPanel() {
   }
 
   const formatExpiryDate = (expiry?: string) => {
-    if (!expiry) return "Sin fecha"
+    if (!expiry) return "De por vida"
     const date = new Date(expiry)
     return date.toLocaleDateString("es-ES", {
       year: "numeric",
@@ -540,7 +534,7 @@ export default function AdminPanel() {
                         className="bg-black/30 border-purple-500/30 text-white"
                         min={new Date().toISOString().split("T")[0]}
                       />
-                      <p className="text-xs text-gray-400">Deja vacío para establecer 1 año desde hoy</p>
+                      <p className="text-xs text-gray-400">Deja vacío para plan de por vida</p>
                     </div>
                   )}
                 </div>
