@@ -22,6 +22,8 @@ import {
   Edit2,
   Eye,
   EyeOff,
+  Sparkles,
+  Bot,
 } from "lucide-react"
 
 // Import custom components
@@ -33,6 +35,7 @@ import { DatabaseStatus } from "@/components/database-status"
 import { WishlistManager } from "@/components/wishlist-manager"
 import { NotesManager } from "@/components/notes-manager"
 import { SettingsModal } from "@/components/settings-modal"
+import { AIAssistant } from "@/components/ai-assistant"
 import { useIsMobile } from "@/hooks/use-mobile"
 
 // Import database functions
@@ -80,6 +83,7 @@ interface User {
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   is_premium: boolean
+  is_pro: boolean
   onboarding_completed: boolean
   pomodoro_sessions: number
   work_duration: number
@@ -136,6 +140,7 @@ const translations = {
     wishlist: "Lista de Deseos",
     notes: "Notas",
     pomodoro: "Pomodoro",
+    aiAssistant: "Asistente IA",
     newTask: "Nueva tarea...",
     description: "Descripción (opcional)...",
     time: "Hora (opcional)",
@@ -161,18 +166,24 @@ const translations = {
     shortBreak: "Descanso Corto",
     longBreak: "Descanso Largo",
     premium: "Premium",
+    pro: "Pro",
     free: "Gratuito",
     choosePlan: "Elige tu plan",
     startPremium: "Comenzar Premium",
+    startPro: "Comenzar Pro",
     continueFreee: "Continuar gratis",
     monthly: "Mensual",
     yearly: "Anual",
     monthlyPrice: "€1,99/mes",
     yearlyPrice: "€20/año",
+    proMonthlyPrice: "€4,99/mes",
+    proYearlyPrice: "€50/año",
     yearlyDiscount: "Ahorra €3,88",
+    proYearlyDiscount: "Ahorra €9,88",
     billingMonthly: "Facturación mensual",
     billingYearly: "Facturación anual (2 meses gratis)",
     upgradeButton: "Actualizar a Premium",
+    upgradeToProButton: "Actualizar a Pro",
     notification: "Notificación",
     taskReminder: "Recordatorio de tarea",
     notificationPermission: "Permitir notificaciones",
@@ -227,6 +238,12 @@ const translations = {
     tasksForDate: "Tareas para",
     noTasksForDate: "No hay tareas para esta fecha",
     addTaskForDate: "Agregar tarea para este día",
+    aiPoweredPlanning: "Planificación con IA",
+    smartGoalSetting: "Objetivos inteligentes",
+    autoTaskCreation: "Creación automática de tareas",
+    personalizedScheduling: "Programación personalizada",
+    advancedAnalytics: "Análisis avanzado",
+    unlimitedAIRequests: "Consultas IA ilimitadas",
   },
   en: {
     appName: "FutureTask",
@@ -245,6 +262,7 @@ const translations = {
     wishlist: "Wishlist",
     notes: "Notes",
     pomodoro: "Pomodoro",
+    aiAssistant: "AI Assistant",
     newTask: "New task...",
     description: "Description (optional)...",
     time: "Time (optional)",
@@ -270,18 +288,24 @@ const translations = {
     shortBreak: "Short Break",
     longBreak: "Long Break",
     premium: "Premium",
+    pro: "Pro",
     free: "Free",
     choosePlan: "Choose your plan",
     startPremium: "Start Premium",
+    startPro: "Start Pro",
     continueFreee: "Continue free",
     monthly: "Monthly",
     yearly: "Yearly",
     monthlyPrice: "$1.99/month",
     yearlyPrice: "$20/year",
+    proMonthlyPrice: "$4.99/month",
+    proYearlyPrice: "$50/year",
     yearlyDiscount: "Save $3.88",
+    proYearlyDiscount: "Save $9.88",
     billingMonthly: "Monthly billing",
     billingYearly: "Yearly billing (2 months free)",
     upgradeButton: "Upgrade to Premium",
+    upgradeToProButton: "Upgrade to Pro",
     notification: "Notification",
     taskReminder: "Task reminder",
     notificationPermission: "Allow notifications",
@@ -336,6 +360,12 @@ const translations = {
     tasksForDate: "Tasks for",
     noTasksForDate: "No tasks for this date",
     addTaskForDate: "Add task for this day",
+    aiPoweredPlanning: "AI-Powered Planning",
+    smartGoalSetting: "Smart Goal Setting",
+    autoTaskCreation: "Auto Task Creation",
+    personalizedScheduling: "Personalized Scheduling",
+    advancedAnalytics: "Advanced Analytics",
+    unlimitedAIRequests: "Unlimited AI Requests",
   },
   fr: {
     appName: "FutureTask",
@@ -354,6 +384,7 @@ const translations = {
     wishlist: "Liste de souhaits",
     notes: "Notes",
     pomodoro: "Pomodoro",
+    aiAssistant: "Assistant IA",
     newTask: "Nouvelle tâche...",
     description: "Description (optionnelle)...",
     time: "Heure (optionnelle)",
@@ -379,18 +410,24 @@ const translations = {
     shortBreak: "Pause courte",
     longBreak: "Pause longue",
     premium: "Premium",
+    pro: "Pro",
     free: "Gratuit",
     choosePlan: "Choisissez votre plan",
     startPremium: "Commencer Premium",
+    startPro: "Commencer Pro",
     continueFreee: "Continuer gratuitement",
     monthly: "Mensuel",
     yearly: "Annuel",
     monthlyPrice: "1,99€/mois",
     yearlyPrice: "20€/an",
+    proMonthlyPrice: "4,99€/mois",
+    proYearlyPrice: "50€/an",
     yearlyDiscount: "Économisez 3,88€",
+    proYearlyDiscount: "Économisez 9,88€",
     billingMonthly: "Facturation mensuelle",
     billingYearly: "Facturation annuelle (2 mois gratuits)",
     upgradeButton: "Passer à Premium",
+    upgradeToProButton: "Passer à Pro",
     notification: "Notification",
     taskReminder: "Rappel de tâche",
     notificationPermission: "Autoriser les notifications",
@@ -445,6 +482,12 @@ const translations = {
     tasksForDate: "Tâches pour le",
     noTasksForDate: "Aucune tâche pour cette date",
     addTaskForDate: "Ajouter une tâche pour ce jour",
+    aiPoweredPlanning: "Planification IA",
+    smartGoalSetting: "Objectifs intelligents",
+    autoTaskCreation: "Création automatique de tâches",
+    personalizedScheduling: "Programmation personnalisée",
+    advancedAnalytics: "Analyses avancées",
+    unlimitedAIRequests: "Requêtes IA illimitées",
   },
   de: {
     appName: "FutureTask",
@@ -463,6 +506,7 @@ const translations = {
     wishlist: "Wunschliste",
     notes: "Notizen",
     pomodoro: "Pomodoro",
+    aiAssistant: "KI-Assistent",
     newTask: "Neue Aufgabe...",
     description: "Beschreibung (optional)...",
     time: "Zeit (optional)",
@@ -488,18 +532,24 @@ const translations = {
     shortBreak: "Kurze Pause",
     longBreak: "Lange Pause",
     premium: "Premium",
+    pro: "Pro",
     free: "Kostenlos",
     choosePlan: "Wählen Sie Ihren Plan",
     startPremium: "Premium starten",
+    startPro: "Pro starten",
     continueFreee: "Kostenlos fortfahren",
     monthly: "Monatlich",
     yearly: "Jährlich",
     monthlyPrice: "1,99€/Monat",
     yearlyPrice: "20€/Jahr",
+    proMonthlyPrice: "4,99€/Monat",
+    proYearlyPrice: "50€/Jahr",
     yearlyDiscount: "Sparen Sie 3,88€",
+    proYearlyDiscount: "Sparen Sie 9,88€",
     billingMonthly: "Monatliche Abrechnung",
     billingYearly: "Jährliche Abrechnung (2 Monate kostenlos)",
     upgradeButton: "Auf Premium upgraden",
+    upgradeToProButton: "Auf Pro upgraden",
     notification: "Benachrichtigung",
     taskReminder: "Aufgabenerinnerung",
     notificationPermission: "Benachrichtigungen erlauben",
@@ -554,6 +604,12 @@ const translations = {
     tasksForDate: "Aufgaben für",
     noTasksForDate: "Keine Aufgaben für dieses Datum",
     addTaskForDate: "Aufgabe für diesen Tag hinzufügen",
+    aiPoweredPlanning: "KI-gestützte Planung",
+    smartGoalSetting: "Intelligente Zielsetzung",
+    autoTaskCreation: "Automatische Aufgabenerstellung",
+    personalizedScheduling: "Personalisierte Terminplanung",
+    advancedAnalytics: "Erweiterte Analysen",
+    unlimitedAIRequests: "Unbegrenzte KI-Anfragen",
   },
   it: {
     appName: "FutureTask",
@@ -572,6 +628,7 @@ const translations = {
     wishlist: "Lista dei desideri",
     notes: "Note",
     pomodoro: "Pomodoro",
+    aiAssistant: "Assistente IA",
     newTask: "Nuova attività...",
     description: "Descrizione (opzionale)...",
     time: "Ora (opzionale)",
@@ -597,18 +654,24 @@ const translations = {
     shortBreak: "Pausa breve",
     longBreak: "Pausa lunga",
     premium: "Premium",
+    pro: "Pro",
     free: "Gratuito",
     choosePlan: "Scegli il tuo piano",
     startPremium: "Inizia Premium",
+    startPro: "Inizia Pro",
     continueFreee: "Continua gratis",
     monthly: "Mensile",
     yearly: "Annuale",
     monthlyPrice: "1,99€/mese",
     yearlyPrice: "20€/anno",
+    proMonthlyPrice: "4,99€/mese",
+    proYearlyPrice: "50€/anno",
     yearlyDiscount: "Risparmia 3,88€",
+    proYearlyDiscount: "Risparmia 9,88€",
     billingMonthly: "Fatturazione mensile",
     billingYearly: "Fatturazione annuale (2 mesi gratuiti)",
     upgradeButton: "Passa a Premium",
+    upgradeToProButton: "Passa a Pro",
     notification: "Notifica",
     taskReminder: "Promemoria attività",
     notificationPermission: "Consenti notifiche",
@@ -663,6 +726,12 @@ const translations = {
     tasksForDate: "Attività per",
     noTasksForDate: "Nessuna attività per questa data",
     addTaskForDate: "Aggiungi attività per questo giorno",
+    aiPoweredPlanning: "Pianificazione IA",
+    smartGoalSetting: "Obiettivi intelligenti",
+    autoTaskCreation: "Creazione automatica attività",
+    personalizedScheduling: "Programmazione personalizzata",
+    advancedAnalytics: "Analisi avanzate",
+    unlimitedAIRequests: "Richieste IA illimitate",
   },
 }
 
@@ -904,7 +973,7 @@ export default function FutureTaskApp() {
   // App state
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [activeTab, setActiveTab] = useState<"tasksAndCalendar" | "tasks" | "pomodoro" | "wishlist" | "notes">(
+  const [activeTab, setActiveTab] = useState<"tasksAndCalendar" | "tasks" | "pomodoro" | "wishlist" | "notes" | "ai">(
     isMobile ? "tasksAndCalendar" : "tasksAndCalendar",
   )
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS)
@@ -1185,6 +1254,7 @@ export default function FutureTaskApp() {
       if (
         updatedUser &&
         (updatedUser.is_premium !== user.is_premium ||
+          updatedUser.is_pro !== user.is_pro ||
           updatedUser.name !== user.name ||
           updatedUser.theme !== user.theme ||
           updatedUser.language !== user.language)
@@ -1194,10 +1264,16 @@ export default function FutureTaskApp() {
         setLanguage(updatedUser.language)
         saveUserSession(updatedUser, sessionData.password)
 
-        // Mostrar notificación si cambió el estado premium
-        if (updatedUser.is_premium !== user.is_premium) {
+        // Mostrar notificación si cambió el estado premium/pro
+        if (updatedUser.is_pro !== user.is_pro) {
+          if (updatedUser.is_pro) {
+            alert("🎉 ¡Tu cuenta ha sido actualizada a Pro! Ahora tienes acceso a la IA y todas las funciones.")
+          } else {
+            alert("ℹ️ Tu cuenta Pro ha expirado. La IA y algunas funciones estarán limitadas.")
+          }
+        } else if (updatedUser.is_premium !== user.is_premium) {
           if (updatedUser.is_premium) {
-            alert("🎉 ¡Tu cuenta ha sido actualizada a Premium! Ahora tienes acceso a todas las funciones.")
+            alert("🎉 ¡Tu cuenta ha sido actualizada a Premium! Ahora tienes acceso a más funciones.")
           } else {
             alert("ℹ️ Tu cuenta Premium ha expirado. Algunas funciones estarán limitadas.")
           }
@@ -1374,6 +1450,7 @@ export default function FutureTaskApp() {
             language,
             theme: "default",
             is_premium: false,
+            is_pro: false,
             onboarding_completed: false,
             pomodoro_sessions: 0,
             work_duration: 25,
@@ -1402,14 +1479,15 @@ export default function FutureTaskApp() {
     }
   }
 
-  const handlePremiumChoice = async (isPremium: boolean) => {
+  const handlePremiumChoice = async (plan: "free" | "premium" | "pro") => {
     if (!user) return
 
     try {
       setIsLoading(true)
 
       const updatedUser = await updateUser(user.id, {
-        is_premium: isPremium,
+        is_premium: plan === "premium" || plan === "pro",
+        is_pro: plan === "pro",
         onboarding_completed: true,
       })
 
@@ -1427,7 +1505,8 @@ export default function FutureTaskApp() {
       // Fallback: update user locally if database update fails
       const updatedUserLocal = {
         ...user,
-        is_premium: isPremium,
+        is_premium: plan === "premium" || plan === "pro",
+        is_pro: plan === "pro",
         onboarding_completed: true,
       }
 
@@ -1651,6 +1730,178 @@ export default function FutureTaskApp() {
     } catch (error) {
       console.error("Error updating user:", error)
       alert("Error al actualizar configuración. Intenta de nuevo.")
+    }
+  }
+
+  // AI Assistant handlers
+  const handleAIRequest = async (request: string) => {
+    if (!user?.is_pro) return
+
+    // Simular respuesta de IA y crear plan automáticamente
+    const aiResponse = await simulateAIResponse(request)
+
+    // Crear tareas, wishlist items, etc. basado en la respuesta de IA
+    if (aiResponse.tasks) {
+      for (const task of aiResponse.tasks) {
+        await handleAddTask(task)
+      }
+    }
+
+    if (aiResponse.wishlistItems) {
+      for (const item of aiResponse.wishlistItems) {
+        await handleAddWishlistItem(item.text, item.description)
+      }
+    }
+
+    if (aiResponse.notes) {
+      for (const note of aiResponse.notes) {
+        await handleAddNote(note.title, note.content)
+      }
+    }
+
+    return aiResponse
+  }
+
+  // Simular respuesta de IA
+  const simulateAIResponse = async (request: string) => {
+    // Simular delay de IA
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    const lowerRequest = request.toLowerCase()
+
+    if (lowerRequest.includes("inglés") || lowerRequest.includes("english")) {
+      return {
+        response:
+          "¡Perfecto! He creado un plan completo para aprender inglés. Incluye tareas diarias, objetivos semanales y recursos de estudio. Todo está programado en tu calendario con sesiones de Pomodoro optimizadas.",
+        tasks: [
+          {
+            text: "Estudiar vocabulario básico (30 palabras)",
+            description: "Usar flashcards o app como Anki",
+            time: "09:00",
+            category: "learning",
+            priority: "high",
+          },
+          {
+            text: "Practicar pronunciación (15 min)",
+            description: "Usar apps como Forvo o repetir después de videos",
+            time: "10:00",
+            category: "learning",
+            priority: "medium",
+          },
+          {
+            text: "Ver video en inglés con subtítulos",
+            description: "YouTube, Netflix o TED Talks",
+            time: "20:00",
+            category: "learning",
+            priority: "medium",
+          },
+        ],
+        wishlistItems: [
+          {
+            text: "Alcanzar nivel B1 en inglés",
+            description: "Objetivo para los próximos 6 meses",
+          },
+          {
+            text: "Hacer examen TOEFL",
+            description: "Certificación oficial de inglés",
+          },
+          {
+            text: "Leer un libro completo en inglés",
+            description: "Empezar con libros juveniles",
+          },
+        ],
+        notes: [
+          {
+            title: "Plan de Estudio de Inglés",
+            content:
+              "Semana 1-2: Vocabulario básico (500 palabras)\nSemana 3-4: Gramática fundamental\nSemana 5-6: Conversación básica\nSemana 7-8: Comprensión auditiva\n\nRecursos recomendados:\n- Duolingo (15 min/día)\n- BBC Learning English\n- English Grammar in Use\n- Podcasts: ESL Pod, 6 Minute English",
+          },
+        ],
+      }
+    }
+
+    if (lowerRequest.includes("ejercicio") || lowerRequest.includes("fitness") || lowerRequest.includes("gym")) {
+      return {
+        response:
+          "¡Excelente! He diseñado un plan de ejercicios personalizado. Incluye rutinas para principiantes, objetivos de fitness y un cronograma semanal con recordatorios.",
+        tasks: [
+          {
+            text: "Rutina de cardio (30 min)",
+            description: "Caminar, correr o bicicleta",
+            time: "07:00",
+            category: "health",
+            priority: "high",
+          },
+          {
+            text: "Ejercicios de fuerza (45 min)",
+            description: "Pesas o ejercicios corporales",
+            time: "18:00",
+            category: "health",
+            priority: "high",
+          },
+          {
+            text: "Estiramientos y yoga (20 min)",
+            description: "Relajación y flexibilidad",
+            time: "21:00",
+            category: "health",
+            priority: "medium",
+          },
+        ],
+        wishlistItems: [
+          {
+            text: "Perder 5kg en 3 meses",
+            description: "Objetivo de peso saludable",
+          },
+          {
+            text: "Correr 5km sin parar",
+            description: "Objetivo de resistencia cardiovascular",
+          },
+          {
+            text: "Hacer 50 flexiones seguidas",
+            description: "Objetivo de fuerza",
+          },
+        ],
+        notes: [
+          {
+            title: "Plan de Ejercicios",
+            content:
+              "Lunes: Cardio + Core\nMartes: Fuerza (tren superior)\nMiércoles: Descanso activo (yoga)\nJueves: Fuerza (tren inferior)\nViernes: Cardio + Flexibilidad\nSábado: Actividad libre\nDomingo: Descanso\n\nTips:\n- Hidratarse bien\n- Dormir 7-8 horas\n- Calentar antes de ejercitarse\n- Progresar gradualmente",
+          },
+        ],
+      }
+    }
+
+    // Respuesta genérica
+    return {
+      response: `He analizado tu solicitud: "${request}". He creado un plan personalizado con tareas, objetivos y notas para ayudarte a alcanzar tu meta. Todo está organizado en tu calendario con recordatorios y sesiones de Pomodoro optimizadas.`,
+      tasks: [
+        {
+          text: `Investigar sobre: ${request}`,
+          description: "Buscar información y recursos relevantes",
+          time: "10:00",
+          category: "learning",
+          priority: "medium",
+        },
+        {
+          text: `Planificar estrategia para: ${request}`,
+          description: "Definir pasos específicos y cronograma",
+          time: "15:00",
+          category: "personal",
+          priority: "high",
+        },
+      ],
+      wishlistItems: [
+        {
+          text: `Dominar: ${request}`,
+          description: "Objetivo principal a largo plazo",
+        },
+      ],
+      notes: [
+        {
+          title: `Plan para: ${request}`,
+          content: `Objetivo: ${request}\n\nPasos sugeridos:\n1. Investigación inicial\n2. Definir metas específicas\n3. Crear cronograma\n4. Buscar recursos\n5. Comenzar práctica\n6. Evaluar progreso\n\nRecursos a explorar:\n- Libros especializados\n- Cursos online\n- Comunidades y foros\n- Mentores o expertos`,
+        },
+      ],
     }
   }
 
@@ -1909,20 +2160,21 @@ export default function FutureTaskApp() {
     )
   }
 
-  // Premium Screen
+  // Premium Screen - ACTUALIZADA CON PLAN PRO
   if (currentScreen === "premium") {
     return (
       <div
         className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient} flex items-center justify-center p-4`}
       >
-        <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+        <Card className={`w-full max-w-6xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               {t("choosePlan")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              {/* Plan Gratuito */}
               <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
                 <CardHeader>
                   <CardTitle className={`text-lg md:text-xl ${getCurrentTheme().textPrimary}`}>{t("free")}</CardTitle>
@@ -1955,9 +2207,13 @@ export default function FutureTaskApp() {
                       <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
                       <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Notas</span>
                     </div>
+                    <div className="flex items-center space-x-3">
+                      <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Asistente IA</span>
+                    </div>
                   </div>
                   <Button
-                    onClick={() => handlePremiumChoice(false)}
+                    onClick={() => handlePremiumChoice("free")}
                     disabled={isLoading}
                     className={`w-full ${getCurrentTheme().buttonSecondary}`}
                   >
@@ -1966,6 +2222,7 @@ export default function FutureTaskApp() {
                 </CardContent>
               </Card>
 
+              {/* Plan Premium */}
               <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} relative`}>
                 <CardHeader>
                   <CardTitle
@@ -2004,6 +2261,10 @@ export default function FutureTaskApp() {
                         Todos los temas premium
                       </span>
                     </div>
+                    <div className="flex items-center space-x-3">
+                      <X className="w-4 h-4 md:w-5 md:h-5 text-red-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textMuted}`}>Asistente IA</span>
+                    </div>
                     {isSupabaseAvailable && (
                       <div className="flex items-center space-x-3">
                         <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
@@ -2014,12 +2275,80 @@ export default function FutureTaskApp() {
                     )}
                   </div>
                   <Button
-                    onClick={() => handlePremiumChoice(true)}
+                    onClick={() => handlePremiumChoice("premium")}
                     disabled={isLoading}
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm md:text-lg py-2 md:py-3"
                   >
                     <Crown className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     {isLoading ? "Cargando..." : `${t("startPremium")} - ${t("monthlyPrice")}`}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Plan Pro */}
+              <Card
+                className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} relative ring-2 ring-purple-500/50`}
+              >
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                    RECOMENDADO
+                  </span>
+                </div>
+                <CardHeader>
+                  <CardTitle
+                    className={`text-lg md:text-xl ${getCurrentTheme().textPrimary} flex items-center space-x-2`}
+                  >
+                    <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                    <span>{t("pro")}</span>
+                  </CardTitle>
+                  <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
+                    {t("proMonthlyPrice")}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <Check className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>Todo de Premium +</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        {t("aiPoweredPlanning")}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Bot className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        {t("smartGoalSetting")}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Target className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        {t("autoTaskCreation")}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <CalendarIcon className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        {t("personalizedScheduling")}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <Star className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+                      <span className={`text-sm md:text-base ${getCurrentTheme().textPrimary}`}>
+                        {t("unlimitedAIRequests")}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => handlePremiumChoice("pro")}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm md:text-lg py-2 md:py-3 shadow-lg"
+                  >
+                    <Sparkles className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                    {isLoading ? "Cargando..." : `${t("startPro")} - ${t("proMonthlyPrice")}`}
                   </Button>
                 </CardContent>
               </Card>
@@ -2194,18 +2523,29 @@ export default function FutureTaskApp() {
                     {t("appName")}
                   </h1>
                   <p className={`${getCurrentTheme().textSecondary} text-sm`}>
-                    {user?.name} {user?.is_premium && <Crown className="inline w-3 h-3 text-yellow-400 ml-1" />}
+                    {user?.name} {user?.is_pro && <Sparkles className="inline w-3 h-3 text-purple-400 ml-1" />}
+                    {user?.is_premium && !user?.is_pro && <Crown className="inline w-3 h-3 text-yellow-400 ml-1" />}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {!user?.is_premium && (
+                  {!user?.is_pro && !user?.is_premium && (
                     <Button
                       size="sm"
                       onClick={() => setShowPremiumModal(true)}
-                      className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-2 py-1"
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1"
                     >
-                      <Crown className="w-3 h-3 mr-1" />
-                      Premium
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Pro
+                    </Button>
+                  )}
+                  {!user?.is_pro && user?.is_premium && (
+                    <Button
+                      size="sm"
+                      onClick={() => setShowPremiumModal(true)}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1"
+                    >
+                      <Sparkles className="w-3 h-3 mr-1" />
+                      Upgrade Pro
                     </Button>
                   )}
                   <Button
@@ -2227,7 +2567,7 @@ export default function FutureTaskApp() {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
               <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
                 <TabsList
-                  className={`grid w-full ${user?.is_premium ? "grid-cols-4" : "grid-cols-2"} h-12 bg-transparent`}
+                  className={`grid w-full ${user?.is_pro ? "grid-cols-5" : user?.is_premium ? "grid-cols-4" : "grid-cols-2"} h-12 bg-transparent`}
                 >
                   <TabsTrigger value="tasksAndCalendar" className="text-xs">
                     📅 {t("tasksAndCalendar")}
@@ -2243,6 +2583,11 @@ export default function FutureTaskApp() {
                   {user?.is_premium && (
                     <TabsTrigger value="notes" className="text-xs">
                       📝 {t("notes")}
+                    </TabsTrigger>
+                  )}
+                  {user?.is_pro && (
+                    <TabsTrigger value="ai" className="text-xs">
+                      🤖 {t("aiAssistant")}
                     </TabsTrigger>
                   )}
                 </TabsList>
@@ -2450,6 +2795,12 @@ export default function FutureTaskApp() {
                     />
                   </div>
                 </TabsContent>
+
+                <TabsContent value="ai">
+                  <div className="space-y-4">
+                    <AIAssistant onAIRequest={handleAIRequest} theme={getCurrentTheme()} t={t} user={user!} />
+                  </div>
+                </TabsContent>
               </div>
             </Tabs>
           </div>
@@ -2463,17 +2814,27 @@ export default function FutureTaskApp() {
                   {t("appName")}
                 </h1>
                 <p className={`${getCurrentTheme().textSecondary} text-sm`}>
-                  Hola, {user?.name} {user?.is_premium && <Crown className="inline w-4 h-4 text-yellow-400 ml-1" />}
+                  Hola, {user?.name} {user?.is_pro && <Sparkles className="inline w-4 h-4 text-purple-400 ml-1" />}
+                  {user?.is_premium && !user?.is_pro && <Crown className="inline w-4 h-4 text-yellow-400 ml-1" />}
                 </p>
               </div>
               <div className="flex items-center space-x-3">
-                {!user?.is_premium && (
+                {!user?.is_pro && !user?.is_premium && (
                   <Button
                     onClick={() => setShowPremiumModal(true)}
-                    className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
                   >
-                    <Crown className="w-4 h-4 mr-2" />
-                    {t("upgradeButton")}
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    {t("upgradeToProButton")}
+                  </Button>
+                )}
+                {!user?.is_pro && user?.is_premium && (
+                  <Button
+                    onClick={() => setShowPremiumModal(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Upgrade a Pro
                   </Button>
                 )}
                 <Button
@@ -2600,11 +2961,14 @@ export default function FutureTaskApp() {
               {/* Right Column - Tabbed Interface (1/4 width) */}
               <div className="lg:col-span-1">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-                  <TabsList className={`grid w-full ${user?.is_premium ? "grid-cols-4" : "grid-cols-2"}`}>
+                  <TabsList
+                    className={`grid w-full ${user?.is_pro ? "grid-cols-5" : user?.is_premium ? "grid-cols-4" : "grid-cols-2"}`}
+                  >
                     <TabsTrigger value="tasksAndCalendar">📅</TabsTrigger>
                     <TabsTrigger value="pomodoro">🍅</TabsTrigger>
                     {user?.is_premium && <TabsTrigger value="wishlist">⭐</TabsTrigger>}
                     {user?.is_premium && <TabsTrigger value="notes">📝</TabsTrigger>}
+                    {user?.is_pro && <TabsTrigger value="ai">🤖</TabsTrigger>}
                   </TabsList>
 
                   <TabsContent value="tasksAndCalendar" className="mt-4">
@@ -2691,6 +3055,12 @@ export default function FutureTaskApp() {
                         theme={getCurrentTheme()}
                         t={t}
                       />
+                    </TabsContent>
+                  )}
+
+                  {user?.is_pro && (
+                    <TabsContent value="ai" className="mt-4">
+                      <AIAssistant onAIRequest={handleAIRequest} theme={getCurrentTheme()} t={t} user={user!} />
                     </TabsContent>
                   )}
                 </Tabs>

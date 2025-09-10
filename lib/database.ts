@@ -88,7 +88,7 @@ async function safeSupabaseCall<T>(
   }
 }
 
-// User functions - Updated to explicitly handle all columns
+// User functions - Updated to explicitly handle all columns including is_pro
 export async function createUser(
   userData: Omit<User, "id" | "created_at" | "updated_at"> & { password: string },
 ): Promise<User> {
@@ -104,6 +104,7 @@ export async function createUser(
     language: userData.language,
     theme: userData.theme,
     is_premium: userData.is_premium,
+    is_pro: userData.is_pro || false, // Add is_pro field
     premium_expiry: userData.premium_expiry,
     onboarding_completed: userData.onboarding_completed,
     pomodoro_sessions: userData.pomodoro_sessions,
@@ -135,6 +136,7 @@ export async function createUser(
         language: newUser.language,
         theme: newUser.theme,
         is_premium: newUser.is_premium,
+        is_pro: newUser.is_pro,
         premium_expiry: newUser.premium_expiry,
         onboarding_completed: newUser.onboarding_completed,
         pomodoro_sessions: newUser.pomodoro_sessions,
@@ -723,7 +725,7 @@ export async function initializeAdminUser(): Promise<void> {
         console.log("👤 Creating admin user...")
       }
 
-      // Create admin user
+      // Create admin user with Pro access
       await createUser({
         name: "Administrator",
         email: "admin",
@@ -731,6 +733,7 @@ export async function initializeAdminUser(): Promise<void> {
         language: "es",
         theme: "default",
         is_premium: true,
+        is_pro: true, // Admin gets Pro access
         premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
         onboarding_completed: true,
         pomodoro_sessions: 0,
@@ -741,7 +744,7 @@ export async function initializeAdminUser(): Promise<void> {
       })
 
       if (process.env.NODE_ENV === "development") {
-        console.log("✅ Admin user created successfully")
+        console.log("✅ Admin user created successfully with Pro access")
       }
     } else {
       if (process.env.NODE_ENV === "development") {
