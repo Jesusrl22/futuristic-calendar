@@ -1,16 +1,17 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { FileText, Edit2, Trash2, Plus, Save, X } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { FileText, Plus, Edit2, Trash2, Save, X } from "lucide-react"
 
 interface Note {
   id: string
-  user_id: string
   title: string
   content: string
   created_at: string
@@ -19,175 +20,174 @@ interface Note {
 
 interface NotesManagerProps {
   notes: Note[]
-  onAddNote: (title: string, content: string) => void
-  onUpdateNote: (noteId: string, title: string, content: string) => void
-  onDeleteNote: (noteId: string) => void
+  onAddNote: (note: Omit<Note, "id" | "created_at" | "updated_at">) => void
+  onUpdateNote: (id: string, updates: Partial<Note>) => void
+  onDeleteNote: (id: string) => void
   theme: any
   t: (key: string) => string
+  isPremium: boolean
 }
 
-export function NotesManager({ notes, onAddNote, onUpdateNote, onDeleteNote, theme, t }: NotesManagerProps) {
-  const [newNoteTitle, setNewNoteTitle] = useState("")
-  const [newNoteContent, setNewNoteContent] = useState("")
+export function NotesManager({ notes, onAddNote, onUpdateNote, onDeleteNote, theme, t, isPremium }: NotesManagerProps) {
+  const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editTitle, setEditTitle] = useState("")
-  const [editContent, setEditContent] = useState("")
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [title, setTitle] = useState("")
+  const [content, setContent] = useState("")
 
-  const handleAddNote = () => {
-    if (newNoteTitle.trim() && newNoteContent.trim()) {
-      onAddNote(newNoteTitle.trim(), newNoteContent.trim())
-      setNewNoteTitle("")
-      setNewNoteContent("")
-      setShowAddForm(false)
-    }
-  }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!title.trim()) return
 
-  const handleEditNote = (note: Note) => {
-    setEditingId(note.id)
-    setEditTitle(note.title)
-    setEditContent(note.content)
-  }
-
-  const handleSaveEdit = () => {
-    if (editingId && editTitle.trim() && editContent.trim()) {
-      onUpdateNote(editingId, editTitle.trim(), editContent.trim())
+    if (editingId) {
+      onUpdateNote(editingId, {
+        title: title.trim(),
+        content: content.trim(),
+      })
       setEditingId(null)
-      setEditTitle("")
-      setEditContent("")
+    } else {
+      onAddNote({
+        title: title.trim(),
+        content: content.trim(),
+      })
     }
+
+    setTitle("")
+    setContent("")
+    setShowForm(false)
   }
 
-  const handleCancelEdit = () => {
+  const handleEdit = (note: Note) => {
+    setTitle(note.title)
+    setContent(note.content)
+    setEditingId(note.id)
+    setShowForm(true)
+  }
+
+  const handleCancel = () => {
+    setTitle("")
+    setContent("")
     setEditingId(null)
-    setEditTitle("")
-    setEditContent("")
+    setShowForm(false)
+  }
+
+  if (!isPremium) {
+    return (
+      <Card className={`${theme.cardBg} ${theme.border}`}>
+        <CardHeader>
+          <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
+            <FileText className="w-5 h-5 text-blue-400" />
+            <span>{t("notes")}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <FileText className={`w-12 h-12 mx-auto mb-4 ${theme.textMuted}`} />
+          <p className={theme.textPrimary}>Función Premium</p>
+          <p className={theme.textSecondary}>Actualiza a Premium para usar las notas</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
     <Card className={`${theme.cardBg} ${theme.border}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
+      <CardHeader>
+        <CardTitle className={`${theme.textPrimary} flex items-center justify-between`}>
+          <div className="flex items-center space-x-2">
             <FileText className="w-5 h-5 text-blue-400" />
             <span>{t("notes")}</span>
-          </CardTitle>
-          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} className={`${theme.buttonPrimary} text-xs`}>
-            <Plus className="w-3 h-3 mr-1" />
-            Agregar
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)} className={theme.textAccent}>
+            <Plus className="w-4 h-4" />
           </Button>
-        </div>
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Add Form */}
-        {showAddForm && (
-          <div className={`p-3 rounded-lg ${theme.cardBg} ${theme.border} space-y-2`}>
-            <div className="space-y-1">
-              <Label className={`${theme.textSecondary} text-xs`}>Título</Label>
-              <Input
-                value={newNoteTitle}
-                onChange={(e) => setNewNoteTitle(e.target.value)}
-                placeholder="Título de la nota..."
-                className={`${theme.inputBg} text-sm`}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className={`${theme.textSecondary} text-xs`}>Contenido</Label>
-              <Textarea
-                value={newNoteContent}
-                onChange={(e) => setNewNoteContent(e.target.value)}
-                placeholder="Escribe tu nota aquí..."
-                className={`${theme.inputBg} text-sm h-20 resize-none`}
-              />
-            </div>
+      <CardContent className="space-y-4">
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-3 p-3 border rounded-lg border-blue-500/20">
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Título de la nota..."
+              className={theme.inputBg}
+              required
+            />
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Contenido de la nota..."
+              className={theme.inputBg}
+              rows={4}
+            />
             <div className="flex space-x-2">
-              <Button size="sm" onClick={handleAddNote} className={`${theme.buttonPrimary} text-xs`}>
+              <Button type="submit" size="sm" className={theme.buttonPrimary}>
                 <Save className="w-3 h-3 mr-1" />
-                Guardar
+                {editingId ? "Actualizar" : "Guardar"}
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowAddForm(false)}
-                className={`${theme.textSecondary} text-xs`}
-              >
+              <Button type="button" variant="ghost" size="sm" onClick={handleCancel}>
                 <X className="w-3 h-3 mr-1" />
                 Cancelar
               </Button>
             </div>
-          </div>
+          </form>
         )}
 
-        {/* Notes List */}
-        <div className="space-y-2">
-          {notes.map((note) => (
-            <div key={note.id} className={`p-3 rounded-lg ${theme.cardBg} ${theme.border}`}>
-              {editingId === note.id ? (
-                <div className="space-y-2">
-                  <Input
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className={`${theme.inputBg} text-sm font-medium`}
-                  />
-                  <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className={`${theme.inputBg} text-sm h-20 resize-none`}
-                  />
-                  <div className="flex space-x-2">
-                    <Button size="sm" onClick={handleSaveEdit} className={`${theme.buttonPrimary} text-xs`}>
-                      <Save className="w-3 h-3 mr-1" />
-                      Guardar
+        <div className="space-y-3">
+          {notes.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className={`w-8 h-8 mx-auto mb-2 ${theme.textMuted}`} />
+              <p className={theme.textSecondary}>No tienes notas guardadas</p>
+              <p className={`text-xs ${theme.textMuted}`}>Crea tu primera nota para empezar</p>
+            </div>
+          ) : (
+            notes.map((note) => (
+              <div
+                key={note.id}
+                className={`p-3 rounded-lg border ${theme.border} bg-black/10 hover:bg-black/20 transition-colors`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className={`font-medium ${theme.textPrimary}`}>{note.title}</h4>
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(note)}
+                      className={`p-1 h-auto ${theme.textMuted}`}
+                    >
+                      <Edit2 className="w-3 h-3" />
                     </Button>
                     <Button
-                      size="sm"
                       variant="ghost"
-                      onClick={handleCancelEdit}
-                      className={`${theme.textSecondary} text-xs`}
+                      size="sm"
+                      onClick={() => onDeleteNote(note.id)}
+                      className={`p-1 h-auto ${theme.textMuted} hover:text-red-400`}
                     >
-                      <X className="w-3 h-3 mr-1" />
-                      Cancelar
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className={`${theme.textPrimary} text-sm font-medium`}>{note.title}</h4>
-                    <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditNote(note)}
-                        className={`${theme.textSecondary} p-1`}
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDeleteNote(note.id)}
-                        className="text-red-400 p-1"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className={`${theme.textSecondary} text-xs leading-relaxed`}>{note.content}</p>
-                  <p className={`${theme.textMuted} text-xs mt-2`}>{new Date(note.updated_at).toLocaleDateString()}</p>
-                </div>
-              )}
-            </div>
-          ))}
 
-          {notes.length === 0 && (
-            <div className="text-center py-6">
-              <FileText className={`w-8 h-8 mx-auto mb-2 ${theme.textMuted}`} />
-              <p className={`${theme.textPrimary} text-sm`}>No hay notas aún</p>
-              <p className={`${theme.textSecondary} text-xs`}>¡Crea tu primera nota!</p>
-            </div>
+                {note.content && (
+                  <p className={`text-sm ${theme.textSecondary} whitespace-pre-wrap`}>
+                    {note.content.length > 150 ? `${note.content.substring(0, 150)}...` : note.content}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-600/20">
+                  <Badge variant="outline" className="text-xs">
+                    {new Date(note.updated_at).toLocaleDateString("es-ES")}
+                  </Badge>
+                  <span className={`text-xs ${theme.textMuted}`}>{note.content.length} caracteres</span>
+                </div>
+              </div>
+            ))
           )}
         </div>
+
+        {notes.length > 0 && (
+          <div className={`text-xs ${theme.textMuted} text-center pt-2 border-t ${theme.border}`}>
+            {notes.length} {notes.length === 1 ? "nota guardada" : "notas guardadas"}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

@@ -3,567 +3,225 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Users, Database, Settings, ArrowLeft, Sparkles, Calendar } from "lucide-react"
-import { useRouter } from "next/navigation"
-
-// Import database functions
-import { getUserByEmail, updateUser, getAllUsers } from "@/lib/database"
-import { isSupabaseAvailable } from "@/lib/supabase"
+import { Users, TrendingUp, DollarSign, Zap, ArrowLeft } from "lucide-react"
+import { getAllUsers } from "@/lib/database"
+import { getAICostStats } from "@/lib/ai-credits"
+import Link from "next/link"
 
 interface User {
   id: string
   name: string
   email: string
-  language: "es" | "en" | "fr" | "de" | "it"
-  theme: string
   is_premium: boolean
   is_pro: boolean
-  premium_expiry?: string
-  onboarding_completed: boolean
-  pomodoro_sessions: number
-  work_duration: number
-  short_break_duration: number
-  long_break_duration: number
-  sessions_until_long_break: number
   created_at: string
-  updated_at: string
+  ai_credits?: number
+  ai_credits_used?: number
+  ai_total_cost_eur?: number
 }
 
-const THEMES = {
-  free: {
-    default: "Futurista (Predeterminado)",
-    light: "Claro",
-    dark: "Oscuro",
-    ocean: "Océano",
-    forest: "Bosque",
-  },
-  premium: {
-    neon: "Neón",
-    galaxy: "Galaxia",
-    sunset: "Atardecer",
-    aurora: "Aurora",
-    cyberpunk: "Cyberpunk",
-  },
-}
-
-const LANGUAGE_OPTIONS = [
-  { value: "es", label: "Español", flag: "🇪🇸" },
-  { value: "en", label: "English", flag: "🇺🇸" },
-  { value: "fr", label: "Français", flag: "🇫🇷" },
-  { value: "de", label: "Deutsch", flag: "🇩🇪" },
-  { value: "it", label: "Italiano", flag: "🇮🇹" },
-]
-
-export default function AdminPanel() {
-  const router = useRouter()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [adminEmail, setAdminEmail] = useState("")
-  const [adminPassword, setAdminPassword] = useState("")
+export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([])
-  const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [aiStats, setAiStats] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Form states for editing user
-  const [editName, setEditName] = useState("")
-  const [editEmail, setEditEmail] = useState("")
-  const [editLanguage, setEditLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
-  const [editTheme, setEditTheme] = useState("default")
-  const [editIsPremium, setEditIsPremium] = useState(false)
-  const [editIsPro, setEditIsPro] = useState(false)
-  const [editPremiumExpiry, setEditPremiumExpiry] = useState("")
+  const theme = {
+    gradient: "from-slate-900 via-purple-900 to-slate-900",
+    cardBg: "bg-black/20 backdrop-blur-xl",
+    border: "border-purple-500/20",
+    textPrimary: "text-white",
+    textSecondary: "text-gray-300",
+    textMuted: "text-gray-400",
+    buttonPrimary: "bg-gradient-to-r from-purple-500 to-cyan-500 text-white",
+    buttonSecondary: "bg-white/10 text-white border-white/20",
+  }
 
-  // Check authentication on mount
   useEffect(() => {
-    const savedAuth = localStorage.getItem("futureTask_admin_auth")
-    if (savedAuth === "true") {
-      setIsAuthenticated(true)
-      loadUsers()
-    }
+    loadData()
   }, [])
 
-  const handleLogin = async () => {
-    setIsLoading(true)
+  const loadData = async () => {
     try {
-      // Intentar con las credenciales correctas del admin
-      const admin = await getUserByEmail("admin", "535353-Jrl")
-
-      if (admin && (adminEmail === "admin" || adminEmail === "Administrator") && adminPassword === "535353-Jrl") {
-        setIsAuthenticated(true)
-        localStorage.setItem("futureTask_admin_auth", "true")
-        await loadUsers()
-        setAdminEmail("")
-        setAdminPassword("")
-      } else {
-        alert("Credenciales de administrador incorrectas")
-      }
+      const [usersData, statsData] = await Promise.all([getAllUsers(), getAICostStats()])
+      setUsers(usersData)
+      setAiStats(statsData)
     } catch (error) {
-      console.error("Error logging in:", error)
-      alert("Error al iniciar sesión")
+      console.error("Error loading admin data:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const loadUsers = async () => {
-    try {
-      const allUsers = await getAllUsers()
-      // Filtrar el usuario admin
-      const regularUsers = allUsers.filter((u: User) => u.email !== "admin")
-      setUsers(regularUsers)
-    } catch (error) {
-      console.error("Error loading users:", error)
-      // Fallback a localStorage si hay error
-      try {
-        const localUsers = JSON.parse(localStorage.getItem("futureTask_users") || "[]")
-        setUsers(localUsers.filter((u: User) => u.email !== "admin"))
-      } catch (localError) {
-        console.error("Error loading from localStorage:", localError)
-        setUsers([])
-      }
-    }
-  }
+  const totalUsers = users.length
+  const premiumUsers = users.filter((u) => u.is_premium).length
+  const proUsers = users.filter((u) => u.is_pro).length
+  const freeUsers = totalUsers - premiumUsers
 
-  const handleEditUser = (user: User) => {
-    setEditingUser(user)
-    setEditName(user.name)
-    setEditEmail(user.email)
-    setEditLanguage(user.language)
-    setEditTheme(user.theme)
-    setEditIsPremium(user.is_premium)
-    setEditIsPro(user.is_pro || false)
-
-    // Set expiry date - don't set default date, leave empty for lifetime
-    if (user.premium_expiry) {
-      const expiryDate = new Date(user.premium_expiry)
-      setEditPremiumExpiry(expiryDate.toISOString().split("T")[0])
-    } else {
-      setEditPremiumExpiry("") // Empty for lifetime plan
-    }
-  }
-
-  const handleSaveUser = async () => {
-    if (!editingUser) return
-
-    setIsLoading(true)
-    try {
-      // Calculate expiry date - FIXED LOGIC
-      let premiumExpiry = undefined
-      if (editIsPremium || editIsPro) {
-        if (editPremiumExpiry) {
-          // Use the selected date if provided
-          const selectedDate = new Date(editPremiumExpiry)
-          selectedDate.setHours(23, 59, 59, 999) // Set to end of day
-          premiumExpiry = selectedDate.toISOString()
-        }
-        // If no date is provided, leave premiumExpiry as undefined (lifetime plan)
-      }
-
-      const updatedUser = await updateUser(editingUser.id, {
-        name: editName,
-        email: editEmail,
-        language: editLanguage,
-        theme: editTheme,
-        is_premium: editIsPremium,
-        is_pro: editIsPro,
-        premium_expiry: premiumExpiry,
-      })
-
-      // Update local state
-      setUsers((prev) => prev.map((u) => (u.id === editingUser.id ? updatedUser : u)))
-
-      setEditingUser(null)
-      alert("Usuario actualizado exitosamente")
-    } catch (error) {
-      console.error("Error updating user:", error)
-      alert("Error al actualizar usuario")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    localStorage.removeItem("futureTask_admin_auth")
-    setUsers([])
-    setEditingUser(null)
-  }
-
-  const goBack = () => {
-    router.push("/")
-  }
-
-  const getUserPlanBadge = (user: User) => {
-    if (user.is_pro) {
-      return (
-        <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/50">
-          <Sparkles className="w-3 h-3 mr-1" />
-          Pro
-        </Badge>
-      )
-    } else if (user.is_premium) {
-      return (
-        <Badge className="bg-yellow-500/20 text-yellow-200 border-yellow-400/50">
-          <Crown className="w-3 h-3 mr-1" />
-          Premium
-        </Badge>
-      )
-    } else {
-      return (
-        <Badge variant="secondary" className="bg-gray-500/20 text-gray-200 border-gray-400/50">
-          Free
-        </Badge>
-      )
-    }
-  }
-
-  const formatExpiryDate = (expiry?: string) => {
-    if (!expiry) return "De por vida"
-    const date = new Date(expiry)
-    return date.toLocaleDateString("es-ES", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
-
-  const isExpired = (expiry?: string) => {
-    if (!expiry) return false
-    return new Date(expiry) < new Date()
-  }
-
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-black/20 backdrop-blur-xl border-purple-500/20">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center mb-4">
-              <Settings className="w-10 h-10 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              Panel de Administración
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="adminEmail" className="text-gray-200 font-medium">
-                Email de Administrador
-              </Label>
-              <Input
-                id="adminEmail"
-                type="text"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
-                placeholder="admin"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="adminPassword" className="text-gray-200 font-medium">
-                Contraseña
-              </Label>
-              <Input
-                id="adminPassword"
-                type="password"
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
-                placeholder="••••••••"
-                onKeyPress={(e) => e.key === "Enter" && !isLoading && handleLogin()}
-              />
-            </div>
-            <Button
-              onClick={handleLogin}
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-medium"
-            >
-              {isLoading ? "Iniciando..." : "Iniciar Sesión"}
-            </Button>
-            <Button onClick={goBack} variant="ghost" className="w-full text-gray-200 hover:text-white">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver a la App
-            </Button>
-          </CardContent>
-        </Card>
+      <div className={`min-h-screen bg-gradient-to-br ${theme.gradient} flex items-center justify-center`}>
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto"></div>
+          <div className={`${theme.textPrimary} text-lg font-semibold`}>Cargando panel de administración...</div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="container mx-auto space-y-6">
+    <div className={`min-h-screen bg-gradient-to-br ${theme.gradient}`}>
+      <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
               Panel de Administración
             </h1>
-            <p className="text-gray-200 text-sm">Gestiona usuarios y configuraciones de FutureTask</p>
+            <p className={`${theme.textSecondary} text-sm`}>Gestión y estadísticas de FutureTask</p>
           </div>
-          <div className="flex items-center space-x-3">
-            <Button onClick={goBack} variant="ghost" className="text-gray-200 hover:text-white">
+          <Link href="/">
+            <Button variant="ghost" className={theme.textSecondary}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver a la App
+              Volver a la app
             </Button>
-            <Button onClick={handleLogout} variant="ghost" className="text-gray-200 hover:text-white">
-              Cerrar Sesión
-            </Button>
-          </div>
+          </Link>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className={`${theme.cardBg} ${theme.border}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-200">Total Usuarios</CardTitle>
-              <Users className="h-4 w-4 text-purple-400" />
+              <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>Total Usuarios</CardTitle>
+              <Users className="h-4 w-4 text-blue-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{users.length}</div>
+              <div className={`text-2xl font-bold ${theme.textPrimary}`}>{totalUsers}</div>
+              <p className={`text-xs ${theme.textMuted}`}>usuarios registrados</p>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${theme.cardBg} ${theme.border}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-200">Usuarios Premium</CardTitle>
-              <Crown className="h-4 w-4 text-yellow-400" />
+              <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>Usuarios Premium</CardTitle>
+              <TrendingUp className="h-4 w-4 text-yellow-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{users.filter((u) => u.is_premium).length}</div>
+              <div className={`text-2xl font-bold ${theme.textPrimary}`}>{premiumUsers}</div>
+              <p className={`text-xs ${theme.textMuted}`}>
+                {totalUsers > 0 ? Math.round((premiumUsers / totalUsers) * 100) : 0}% del total
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${theme.cardBg} ${theme.border}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-200">Usuarios Pro</CardTitle>
-              <Sparkles className="h-4 w-4 text-purple-400" />
+              <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>Usuarios Pro</CardTitle>
+              <Zap className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">{users.filter((u) => u.is_pro).length}</div>
+              <div className={`text-2xl font-bold ${theme.textPrimary}`}>{proUsers}</div>
+              <p className={`text-xs ${theme.textMuted}`}>
+                {totalUsers > 0 ? Math.round((proUsers / totalUsers) * 100) : 0}% del total
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+          <Card className={`${theme.cardBg} ${theme.border}`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-200">Base de Datos</CardTitle>
-              <Database className="h-4 w-4 text-green-400" />
+              <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>Ingresos IA</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-sm font-bold text-white">
-                {isSupabaseAvailable ? "Supabase Conectado" : "Solo localStorage"}
+              <div className={`text-2xl font-bold ${theme.textPrimary}`}>
+                €{aiStats?.totalCostEur?.toFixed(2) || "0.00"}
               </div>
+              <p className={`text-xs ${theme.textMuted}`}>costo total IA</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Users Table */}
-        <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+        {/* AI Statistics */}
+        {aiStats && (
+          <Card className={`${theme.cardBg} ${theme.border}`}>
+            <CardHeader>
+              <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
+                <Zap className="w-5 h-5 text-purple-400" />
+                <span>Estadísticas de IA</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className={`text-xl font-bold ${theme.textPrimary}`}>{aiStats.totalRequests}</div>
+                  <p className={`text-sm ${theme.textMuted}`}>Consultas totales</p>
+                </div>
+                <div className="text-center">
+                  <div className={`text-xl font-bold ${theme.textPrimary}`}>
+                    {aiStats.totalTokens?.toLocaleString()}
+                  </div>
+                  <p className={`text-sm ${theme.textMuted}`}>Tokens usados</p>
+                </div>
+                <div className="text-center">
+                  <div className={`text-xl font-bold ${theme.textPrimary}`}>
+                    €{aiStats.avgCostPerRequest?.toFixed(4)}
+                  </div>
+                  <p className={`text-sm ${theme.textMuted}`}>Costo por consulta</p>
+                </div>
+                <div className="text-center">
+                  <div className={`text-xl font-bold ${theme.textPrimary}`}>
+                    €{aiStats.monthlyProjectedCost?.toFixed(2)}
+                  </div>
+                  <p className={`text-sm ${theme.textMuted}`}>Proyección mensual</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Users List */}
+        <Card className={`${theme.cardBg} ${theme.border}`}>
           <CardHeader>
-            <CardTitle className="text-white">Usuarios Registrados</CardTitle>
+            <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
+              <Users className="w-5 h-5 text-blue-400" />
+              <span>Lista de Usuarios</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {users.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-purple-500/20 bg-black/10"
+                  className={`p-3 rounded-lg border ${theme.border} bg-black/10 flex items-center justify-between`}
                 >
-                  <div className="flex items-center space-x-4">
-                    <div>
-                      <h3 className="font-semibold text-white flex items-center space-x-2">
-                        <span>{user.name}</span>
-                        {user.is_pro && <Sparkles className="w-4 h-4 text-purple-400" />}
-                        {user.is_premium && !user.is_pro && <Crown className="w-4 h-4 text-yellow-400" />}
-                      </h3>
-                      <p className="text-sm text-gray-200">{user.email}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge variant="outline" className="text-xs border-purple-400/50 text-purple-200">
-                          {LANGUAGE_OPTIONS.find((l) => l.value === user.language)?.flag}{" "}
-                          {LANGUAGE_OPTIONS.find((l) => l.value === user.language)?.label}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs border-cyan-400/50 text-cyan-200">
-                          {user.theme}
-                        </Badge>
-                        {user.premium_expiry && (
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${
-                              isExpired(user.premium_expiry)
-                                ? "border-red-400/50 text-red-200"
-                                : "border-green-400/50 text-green-200"
-                            }`}
-                          >
-                            <Calendar className="w-3 h-3 mr-1" />
-                            {formatExpiryDate(user.premium_expiry)}
-                          </Badge>
-                        )}
-                      </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className={`font-medium ${theme.textPrimary}`}>{user.name}</span>
+                      {user.is_pro && (
+                        <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">Pro</Badge>
+                      )}
+                      {user.is_premium && !user.is_pro && (
+                        <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">Premium</Badge>
+                      )}
                     </div>
+                    <p className={`text-sm ${theme.textSecondary}`}>{user.email}</p>
+                    {user.is_pro && (
+                      <p className={`text-xs ${theme.textMuted}`}>
+                        Créditos IA: {user.ai_credits || 0} | Usados: {user.ai_credits_used || 0} | Costo: €
+                        {(user.ai_total_cost_eur || 0).toFixed(4)}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {getUserPlanBadge(user)}
-                    <Button
-                      size="sm"
-                      onClick={() => handleEditUser(user)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      Editar
-                    </Button>
+                  <div className="text-right">
+                    <p className={`text-xs ${theme.textMuted}`}>
+                      {new Date(user.created_at).toLocaleDateString("es-ES")}
+                    </p>
                   </div>
                 </div>
               ))}
-
-              {users.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-200">No hay usuarios registrados</p>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>
-
-        {/* Edit User Modal */}
-        {editingUser && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md bg-black/20 backdrop-blur-xl border-purple-500/20 max-h-[90vh] overflow-y-auto">
-              <CardHeader>
-                <CardTitle className="text-white">Editar Usuario</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-200 font-medium">Nombre</Label>
-                  <Input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-gray-200 font-medium">Email</Label>
-                  <Input
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    className="bg-black/30 border-purple-500/30 text-white placeholder:text-gray-400"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-gray-200 font-medium">Idioma</Label>
-                  <Select value={editLanguage} onValueChange={(value) => setEditLanguage(value as any)}>
-                    <SelectTrigger className="bg-black/30 border-purple-500/30 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/20 backdrop-blur-xl border-purple-500/20">
-                      {LANGUAGE_OPTIONS.map((lang) => (
-                        <SelectItem key={lang.value} value={lang.value} className="text-white hover:bg-purple-500/20">
-                          <span className="flex items-center space-x-2">
-                            <span>{lang.flag}</span>
-                            <span>{lang.label}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-gray-200 font-medium">Tema</Label>
-                  <Select value={editTheme} onValueChange={setEditTheme}>
-                    <SelectTrigger className="bg-black/30 border-purple-500/30 text-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-black/20 backdrop-blur-xl border-purple-500/20">
-                      {Object.entries(THEMES.free).map(([key, name]) => (
-                        <SelectItem key={key} value={key} className="text-white hover:bg-purple-500/20">
-                          {name}
-                        </SelectItem>
-                      ))}
-                      {Object.entries(THEMES.premium).map(([key, name]) => (
-                        <SelectItem key={key} value={key} className="text-white hover:bg-purple-500/20">
-                          {name} (Premium)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isPremium"
-                      checked={editIsPremium}
-                      onChange={(e) => setEditIsPremium(e.target.checked)}
-                      className="rounded border-purple-400/50"
-                    />
-                    <Label htmlFor="isPremium" className="text-gray-200 flex items-center space-x-2 font-medium">
-                      <Crown className="w-4 h-4 text-yellow-400" />
-                      <span>Usuario Premium</span>
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="isPro"
-                      checked={editIsPro}
-                      onChange={(e) => setEditIsPro(e.target.checked)}
-                      className="rounded border-purple-400/50"
-                    />
-                    <Label htmlFor="isPro" className="text-gray-200 flex items-center space-x-2 font-medium">
-                      <Sparkles className="w-4 h-4 text-purple-400" />
-                      <span>Usuario Pro (incluye IA)</span>
-                    </Label>
-                  </div>
-
-                  {(editIsPremium || editIsPro) && (
-                    <div className="space-y-2">
-                      <Label className="text-gray-200 font-medium flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-blue-400" />
-                        <span>Fecha de Expiración</span>
-                      </Label>
-                      <Input
-                        type="date"
-                        value={editPremiumExpiry}
-                        onChange={(e) => setEditPremiumExpiry(e.target.value)}
-                        className="bg-black/30 border-purple-500/30 text-white"
-                        min={new Date().toISOString().split("T")[0]}
-                      />
-                      <p className="text-xs text-gray-400">Deja vacío para plan de por vida</p>
-                    </div>
-                  )}
-                </div>
-
-                {(editIsPremium || editIsPro) && (
-                  <div className="text-xs text-gray-400 p-2 bg-purple-500/10 rounded">
-                    💡 Al activar Premium/Pro puedes establecer una fecha de expiración personalizada
-                  </div>
-                )}
-              </CardContent>
-              <div className="flex justify-end space-x-2 p-6">
-                <Button
-                  variant="secondary"
-                  onClick={() => setEditingUser(null)}
-                  className="text-gray-200 bg-gray-600 hover:bg-gray-700"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleSaveUser}
-                  disabled={isLoading}
-                  className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white"
-                >
-                  {isLoading ? "Guardando..." : "Guardar Cambios"}
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   )

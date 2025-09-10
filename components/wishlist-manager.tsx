@@ -1,16 +1,17 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Star, Check, Edit2, Trash2, Plus, Save, X } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Heart, Plus, Check, Edit2, Trash2 } from "lucide-react"
 
 interface WishlistItem {
   id: string
-  user_id: string
   text: string
   description?: string
   completed: boolean
@@ -19,174 +20,174 @@ interface WishlistItem {
 }
 
 interface WishlistManagerProps {
-  items: WishlistItem[]
-  onAddItem: (text: string, description: string) => void
-  onToggleItem: (itemId: string) => void
-  onUpdateItem: (itemId: string, text: string, description: string) => void
-  onDeleteItem: (itemId: string) => void
+  wishlistItems: WishlistItem[]
+  onAddItem: (item: Omit<WishlistItem, "id" | "created_at" | "updated_at">) => void
+  onUpdateItem: (id: string, updates: Partial<WishlistItem>) => void
+  onDeleteItem: (id: string) => void
   theme: any
   t: (key: string) => string
+  isPremium: boolean
 }
 
 export function WishlistManager({
-  items,
+  wishlistItems,
   onAddItem,
-  onToggleItem,
   onUpdateItem,
   onDeleteItem,
   theme,
   t,
+  isPremium,
 }: WishlistManagerProps) {
-  const [newItemText, setNewItemText] = useState("")
-  const [newItemDescription, setNewItemDescription] = useState("")
+  const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editText, setEditText] = useState("")
-  const [editDescription, setEditDescription] = useState("")
-  const [showAddForm, setShowAddForm] = useState(false)
+  const [text, setText] = useState("")
+  const [description, setDescription] = useState("")
 
-  const handleAddItem = () => {
-    if (newItemText.trim()) {
-      onAddItem(newItemText.trim(), newItemDescription.trim())
-      setNewItemText("")
-      setNewItemDescription("")
-      setShowAddForm(false)
-    }
-  }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!text.trim()) return
 
-  const handleEditItem = (item: WishlistItem) => {
-    setEditingId(item.id)
-    setEditText(item.text)
-    setEditDescription(item.description || "")
-  }
-
-  const handleSaveEdit = () => {
-    if (editingId && editText.trim()) {
-      onUpdateItem(editingId, editText.trim(), editDescription.trim())
+    if (editingId) {
+      onUpdateItem(editingId, {
+        text: text.trim(),
+        description: description.trim() || undefined,
+      })
       setEditingId(null)
-      setEditText("")
-      setEditDescription("")
+    } else {
+      onAddItem({
+        text: text.trim(),
+        description: description.trim() || undefined,
+        completed: false,
+      })
     }
+
+    setText("")
+    setDescription("")
+    setShowForm(false)
   }
 
-  const handleCancelEdit = () => {
+  const handleEdit = (item: WishlistItem) => {
+    setText(item.text)
+    setDescription(item.description || "")
+    setEditingId(item.id)
+    setShowForm(true)
+  }
+
+  const handleCancel = () => {
+    setText("")
+    setDescription("")
     setEditingId(null)
-    setEditText("")
-    setEditDescription("")
+    setShowForm(false)
+  }
+
+  if (!isPremium) {
+    return (
+      <Card className={`${theme.cardBg} ${theme.border}`}>
+        <CardHeader>
+          <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
+            <Heart className="w-5 h-5 text-pink-400" />
+            <span>{t("wishlist")}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <Heart className={`w-12 h-12 mx-auto mb-4 ${theme.textMuted}`} />
+          <p className={theme.textPrimary}>Función Premium</p>
+          <p className={theme.textSecondary}>Actualiza a Premium para usar la lista de deseos</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
     <Card className={`${theme.cardBg} ${theme.border}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
-            <Star className="w-5 h-5 text-yellow-400" />
+      <CardHeader>
+        <CardTitle className={`${theme.textPrimary} flex items-center justify-between`}>
+          <div className="flex items-center space-x-2">
+            <Heart className="w-5 h-5 text-pink-400" />
             <span>{t("wishlist")}</span>
-          </CardTitle>
-          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)} className={`${theme.buttonPrimary} text-xs`}>
-            <Plus className="w-3 h-3 mr-1" />
-            Agregar
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)} className={theme.textAccent}>
+            <Plus className="w-4 h-4" />
           </Button>
-        </div>
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Add Form */}
-        {showAddForm && (
-          <div className={`p-3 rounded-lg ${theme.cardBg} ${theme.border} space-y-2`}>
-            <div className="space-y-1">
-              <Label className={`${theme.textSecondary} text-xs`}>Objetivo</Label>
-              <Input
-                value={newItemText}
-                onChange={(e) => setNewItemText(e.target.value)}
-                placeholder="Nuevo objetivo..."
-                className={`${theme.inputBg} text-sm`}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className={`${theme.textSecondary} text-xs`}>Descripción</Label>
-              <Textarea
-                value={newItemDescription}
-                onChange={(e) => setNewItemDescription(e.target.value)}
-                placeholder="Descripción opcional..."
-                className={`${theme.inputBg} text-sm h-16 resize-none`}
-              />
-            </div>
+      <CardContent className="space-y-4">
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-3 p-3 border rounded-lg border-pink-500/20">
+            <Input
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Mi objetivo o deseo..."
+              className={theme.inputBg}
+              required
+            />
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Descripción detallada (opcional)..."
+              className={theme.inputBg}
+              rows={2}
+            />
             <div className="flex space-x-2">
-              <Button size="sm" onClick={handleAddItem} className={`${theme.buttonPrimary} text-xs`}>
-                <Save className="w-3 h-3 mr-1" />
-                Guardar
+              <Button type="submit" size="sm" className={theme.buttonPrimary}>
+                {editingId ? "Actualizar" : "Agregar"}
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowAddForm(false)}
-                className={`${theme.textSecondary} text-xs`}
-              >
-                <X className="w-3 h-3 mr-1" />
+              <Button type="button" variant="ghost" size="sm" onClick={handleCancel}>
                 Cancelar
               </Button>
             </div>
-          </div>
+          </form>
         )}
 
-        {/* Items List */}
-        <div className="space-y-2">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className={`p-3 rounded-lg ${theme.cardBg} ${theme.border} ${item.completed ? "opacity-60" : ""}`}
-            >
-              {editingId === item.id ? (
-                <div className="space-y-2">
-                  <Input
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    className={`${theme.inputBg} text-sm`}
-                  />
-                  <Textarea
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    className={`${theme.inputBg} text-sm h-16 resize-none`}
-                  />
-                  <div className="flex space-x-2">
-                    <Button size="sm" onClick={handleSaveEdit} className={`${theme.buttonPrimary} text-xs`}>
-                      <Save className="w-3 h-3 mr-1" />
-                      Guardar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleCancelEdit}
-                      className={`${theme.textSecondary} text-xs`}
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
-              ) : (
+        <div className="space-y-3">
+          {wishlistItems.length === 0 ? (
+            <div className="text-center py-8">
+              <Heart className={`w-8 h-8 mx-auto mb-2 ${theme.textMuted}`} />
+              <p className={theme.textSecondary}>No hay objetivos en tu lista de deseos</p>
+              <p className={`text-xs ${theme.textMuted}`}>Agrega tus metas y sueños aquí</p>
+            </div>
+          ) : (
+            wishlistItems.map((item) => (
+              <div
+                key={item.id}
+                className={`p-3 rounded-lg border ${theme.border} ${
+                  item.completed ? "bg-green-500/10 border-green-500/20" : "bg-black/10"
+                }`}
+              >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3 flex-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onToggleItem(item.id)}
-                      className={`${item.completed ? "text-green-400" : theme.textSecondary} p-1`}
-                    >
-                      <Check className="w-4 h-4" />
-                    </Button>
-                    <div className="flex-1">
-                      <p className={`${theme.textPrimary} text-sm ${item.completed ? "line-through" : ""}`}>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onUpdateItem(item.id, { completed: !item.completed })}
+                        className="p-0 h-auto"
+                      >
+                        {item.completed ? (
+                          <Check className="w-4 h-4 text-green-400" />
+                        ) : (
+                          <div className="w-4 h-4 border border-gray-400 rounded" />
+                        )}
+                      </Button>
+                      <h4 className={`font-medium ${item.completed ? theme.textMuted : theme.textPrimary}`}>
                         {item.text}
-                      </p>
-                      {item.description && <p className={`${theme.textMuted} text-xs mt-1`}>{item.description}</p>}
+                      </h4>
+                      {item.completed && (
+                        <Badge variant="outline" className="text-green-400 border-green-400">
+                          Completado
+                        </Badge>
+                      )}
                     </div>
+                    {item.description && (
+                      <p className={`text-sm mt-1 ml-6 ${theme.textSecondary}`}>{item.description}</p>
+                    )}
                   </div>
                   <div className="flex items-center space-x-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleEditItem(item)}
-                      className={`${theme.textSecondary} p-1`}
+                      onClick={() => handleEdit(item)}
+                      className={`p-1 h-auto ${theme.textMuted}`}
                     >
                       <Edit2 className="w-3 h-3" />
                     </Button>
@@ -194,24 +195,22 @@ export function WishlistManager({
                       variant="ghost"
                       size="sm"
                       onClick={() => onDeleteItem(item.id)}
-                      className="text-red-400 p-1"
+                      className={`p-1 h-auto ${theme.textMuted} hover:text-red-400`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
-
-          {items.length === 0 && (
-            <div className="text-center py-6">
-              <Star className={`w-8 h-8 mx-auto mb-2 ${theme.textMuted}`} />
-              <p className={`${theme.textPrimary} text-sm`}>No hay objetivos aún</p>
-              <p className={`${theme.textSecondary} text-xs`}>¡Agrega tu primer objetivo!</p>
-            </div>
+              </div>
+            ))
           )}
         </div>
+
+        {wishlistItems.length > 0 && (
+          <div className={`text-xs ${theme.textMuted} text-center pt-2 border-t ${theme.border}`}>
+            {wishlistItems.filter((item) => item.completed).length} de {wishlistItems.length} objetivos completados
+          </div>
+        )}
       </CardContent>
     </Card>
   )

@@ -1,172 +1,192 @@
--- Drop existing tables if they exist (to start fresh)
-DROP TABLE IF EXISTS achievements CASCADE;
-DROP TABLE IF EXISTS notes CASCADE;
-DROP TABLE IF EXISTS wishlist_items CASCADE;
-DROP TABLE IF EXISTS tasks CASCADE;
-DROP TABLE IF EXISTS user_credentials CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+-- This is an updated version of the Supabase setup script with additional features
 
--- Create users table with explicit column definitions
-CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    auth_id TEXT,
-    language TEXT DEFAULT 'es',
-    theme TEXT DEFAULT 'default',
-    is_premium BOOLEAN DEFAULT FALSE,
-    premium_expiry TEXT,
-    onboarding_completed BOOLEAN DEFAULT FALSE,
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+
+-- Create updated users table with additional fields
+CREATE TABLE IF NOT EXISTS users_v2 (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    avatar_url TEXT,
+    language VARCHAR(10) DEFAULT 'es' CHECK (language IN ('es', 'en', 'fr', 'de', 'it', 'pt', 'ru', 'zh', 'ja')),
+    theme VARCHAR(50) DEFAULT 'default',
+    timezone VARCHAR(100) DEFAULT 'UTC',
+    is_premium BOOLEAN DEFAULT false,
+    is_pro BOOLEAN DEFAULT false,
+    premium_expiry TIMESTAMP WITH TIME ZONE,
+    onboarding_completed BOOLEAN DEFAULT false,
+    onboarding_step INTEGER DEFAULT 0,
     pomodoro_sessions INTEGER DEFAULT 0,
     work_duration INTEGER DEFAULT 25,
     short_break_duration INTEGER DEFAULT 5,
     long_break_duration INTEGER DEFAULT 15,
     sessions_until_long_break INTEGER DEFAULT 4,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-);
-
--- Create user_credentials table for authentication
-CREATE TABLE user_credentials (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Create tasks table
-CREATE TABLE tasks (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    text TEXT NOT NULL,
-    description TEXT,
-    completed BOOLEAN DEFAULT FALSE,
-    date TEXT NOT NULL,
-    time TEXT,
-    category TEXT DEFAULT 'personal',
-    priority TEXT DEFAULT 'medium',
-    completed_at TEXT,
-    notification_enabled BOOLEAN DEFAULT FALSE,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Create wishlist_items table
-CREATE TABLE wishlist_items (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    text TEXT NOT NULL,
-    description TEXT,
-    completed BOOLEAN DEFAULT FALSE,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- Create notes table
-CREATE TABLE notes (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    title TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ai_credits INTEGER DEFAULT 100,
+    total_tasks_completed INTEGER DEFAULT 0,
+    current_streak INTEGER DEFAULT 0,
+    longest_streak INTEGER DEFAULT 0,
+    last_activity_date DATE,
+    preferences JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create achievements table
-CREATE TABLE achievements (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT NOT NULL,
-    unlocked_at TEXT NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS achievements (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES users_v2(id) ON DELETE CASCADE,
+    achievement_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    icon VARCHAR(50),
+    points INTEGER DEFAULT 0,
+    unlocked_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_date ON tasks(date);
-CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON wishlist_items(user_id);
-CREATE INDEX IF NOT EXISTS idx_notes_user_id ON notes(user_id);
-CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON achievements(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_credentials_email ON user_credentials(email);
-CREATE INDEX IF NOT EXISTS idx_user_credentials_user_id ON user_credentials(user_id);
+-- Create habits table
+CREATE TABLE IF NOT EXISTS habits (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES users_v2(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    frequency VARCHAR(20) DEFAULT 'daily' CHECK (frequency IN ('daily', 'weekly', 'monthly')),
+    target_count INTEGER DEFAULT 1,
+    color VARCHAR(7) DEFAULT '#8b5cf6',
+    icon VARCHAR(50) DEFAULT 'target',
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- Enable Row Level Security (RLS) - but make it permissive for now
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wishlist_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+-- Create habit_completions table
+CREATE TABLE IF NOT EXISTS habit_completions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    habit_id UUID REFERENCES habits(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users_v2(id) ON DELETE CASCADE,
+    completed_date DATE DEFAULT CURRENT_DATE,
+    count INTEGER DEFAULT 1,
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create tags table
+CREATE TABLE IF NOT EXISTS tags (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES users_v2(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(7) DEFAULT '#8b5cf6',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, name)
+);
+
+-- Create task_tags junction table
+CREATE TABLE IF NOT EXISTS task_tags (
+    task_id UUID REFERENCES tasks(id) ON DELETE CASCADE,
+    tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, tag_id)
+);
+
+-- Create analytics_events table for tracking user behavior
+CREATE TABLE IF NOT EXISTS analytics_events (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES users_v2(id) ON DELETE CASCADE,
+    event_type VARCHAR(100) NOT NULL,
+    event_data JSONB,
+    session_id VARCHAR(255),
+    ip_address INET,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers for updated_at
+CREATE TRIGGER update_users_v2_updated_at BEFORE UPDATE ON users_v2 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_tasks_updated_at BEFORE UPDATE ON tasks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_wishlist_updated_at BEFORE UPDATE ON wishlist FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_habits_updated_at BEFORE UPDATE ON habits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Create function to calculate user streaks
+CREATE OR REPLACE FUNCTION calculate_user_streak(user_uuid UUID)
+RETURNS INTEGER AS $$
+DECLARE
+    streak_count INTEGER := 0;
+    current_date_check DATE := CURRENT_DATE;
+    has_activity BOOLEAN;
+BEGIN
+    LOOP
+        -- Check if user has any completed tasks on current_date_check
+        SELECT EXISTS(
+            SELECT 1 FROM tasks 
+            WHERE user_id = user_uuid 
+            AND date = current_date_check 
+            AND completed = true
+        ) INTO has_activity;
+        
+        IF has_activity THEN
+            streak_count := streak_count + 1;
+            current_date_check := current_date_check - INTERVAL '1 day';
+        ELSE
+            EXIT;
+        END IF;
+    END LOOP;
+    
+    RETURN streak_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Enable RLS on new tables
+ALTER TABLE users_v2 ENABLE ROW LEVEL SECURITY;
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_credentials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE habit_completions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE task_tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
 
--- Create permissive policies for all tables
-CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on tasks" ON tasks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on wishlist_items" ON wishlist_items FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on notes" ON notes FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on achievements" ON achievements FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all operations on user_credentials" ON user_credentials FOR ALL USING (true) WITH CHECK (true);
+-- Create RLS policies
+CREATE POLICY "Users can manage their own data" ON users_v2 FOR ALL USING (true);
+CREATE POLICY "Users can manage their own achievements" ON achievements FOR ALL USING (true);
+CREATE POLICY "Users can manage their own habits" ON habits FOR ALL USING (true);
+CREATE POLICY "Users can manage their own habit completions" ON habit_completions FOR ALL USING (true);
+CREATE POLICY "Users can manage their own tags" ON tags FOR ALL USING (true);
+CREATE POLICY "Users can manage their own task tags" ON task_tags FOR ALL USING (true);
+CREATE POLICY "Users can manage their own analytics" ON analytics_events FOR ALL USING (true);
 
--- Insert admin user with explicit timestamps
-INSERT INTO users (
-    id, 
-    name, 
-    email, 
-    language, 
-    theme, 
-    is_premium, 
-    premium_expiry,
-    onboarding_completed, 
-    pomodoro_sessions, 
-    work_duration, 
-    short_break_duration, 
-    long_break_duration, 
-    sessions_until_long_break,
-    created_at,
-    updated_at
-) VALUES (
-    'admin-user-535353',
-    'Administrator',
-    'admin',
-    'es',
-    'default',
-    true,
-    '2025-12-31T23:59:59.000Z',
-    true,
-    0,
-    25,
-    5,
-    15,
-    4,
-    '2024-01-01T00:00:00.000Z',
-    '2024-01-01T00:00:00.000Z'
-) ON CONFLICT (email) DO UPDATE SET
-    is_premium = EXCLUDED.is_premium,
-    premium_expiry = EXCLUDED.premium_expiry,
-    updated_at = '2024-01-01T00:00:00.000Z';
+-- Create additional indexes
+CREATE INDEX IF NOT EXISTS idx_achievements_user_id ON achievements(user_id);
+CREATE INDEX IF NOT EXISTS idx_achievements_type ON achievements(achievement_type);
+CREATE INDEX IF NOT EXISTS idx_habits_user_id ON habits(user_id);
+CREATE INDEX IF NOT EXISTS idx_habits_active ON habits(is_active);
+CREATE INDEX IF NOT EXISTS idx_habit_completions_habit_id ON habit_completions(habit_id);
+CREATE INDEX IF NOT EXISTS idx_habit_completions_date ON habit_completions(completed_date);
+CREATE INDEX IF NOT EXISTS idx_tags_user_id ON tags(user_id);
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id ON analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created_at ON analytics_events(created_at);
 
--- Insert admin credentials (password: 535353-Jrl, hashed with simple base64)
-INSERT INTO user_credentials (
+-- Insert sample achievements
+INSERT INTO achievements (user_id, achievement_type, title, description, icon, points) 
+SELECT 
     id,
-    user_id,
-    email,
-    password_hash,
-    created_at,
-    updated_at
-) VALUES (
-    'admin-cred-535353',
-    'admin-user-535353',
-    'admin',
-    'NTM1MzUzLUpybHNhbHQxMjM=',
-    '2024-01-01T00:00:00.000Z',
-    '2024-01-01T00:00:00.000Z'
-) ON CONFLICT (email) DO UPDATE SET
-    password_hash = EXCLUDED.password_hash,
-    updated_at = '2024-01-01T00:00:00.000Z';
+    'first_task',
+    'Primera Tarea',
+    'Completaste tu primera tarea',
+    'check-circle',
+    10
+FROM users_v2 
+WHERE email = 'demo@futuretask.com'
+ON CONFLICT DO NOTHING;

@@ -130,14 +130,14 @@ try {
 }
 
 // Export the client
-export const supabase = supabaseClient
+export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null
 
 // Check if Supabase is available and working
-export const isSupabaseAvailable = Boolean(supabaseClient && !initializationError)
+export const isSupabaseAvailable = !!supabase
 
 // Test Supabase connection with better error handling
 export async function testSupabaseConnection(): Promise<boolean> {
-  if (!supabaseClient) {
+  if (!supabase) {
     if (process.env.NODE_ENV === "development") {
       console.log("❌ No Supabase client available for connection test")
     }
@@ -149,7 +149,7 @@ export async function testSupabaseConnection(): Promise<boolean> {
       console.log("🔍 Testing Supabase connection...")
     }
 
-    const { data, error } = await supabaseClient.from("users").select("count", { count: "exact", head: true })
+    const { data, error } = await supabase.from("users").select("count", { count: "exact", head: true })
 
     if (error) {
       if (process.env.NODE_ENV === "development") {
@@ -172,7 +172,7 @@ export async function testSupabaseConnection(): Promise<boolean> {
 
 // Helper function to get Supabase client
 export function getSupabaseClient() {
-  return supabaseClient
+  return supabase
 }
 
 // Database status with connection test
@@ -180,8 +180,10 @@ export function getDatabaseStatus() {
   return {
     supabaseAvailable: isSupabaseAvailable,
     hasCredentials: Boolean(supabaseUrl && supabaseAnonKey),
-    clientInitialized: Boolean(supabaseClient),
+    clientInitialized: Boolean(supabase),
     validUrl: supabaseUrl ? isValidUrl(supabaseUrl) : false,
     initializationError,
   }
 }
+
+export default supabase

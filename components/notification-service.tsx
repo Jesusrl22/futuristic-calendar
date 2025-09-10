@@ -1,45 +1,65 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect } from "react"
 
-interface NotificationServiceProps {
-  tasks?: any[]
-  user?: any
-  t?: (key: string) => string
+// Simple notification functions
+export function showSuccessNotification(title: string, message: string) {
+  if (typeof window !== "undefined" && "Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/favicon.png",
+      })
+    }
+  }
+
+  // Fallback to console for development
+  console.log(`✅ ${title}: ${message}`)
 }
 
-export function NotificationService({ tasks = [], user, t = (key) => key }: NotificationServiceProps) {
-  useEffect(() => {
-    // Check for task notifications every minute
-    const interval = setInterval(() => {
-      if (!tasks || !user || !("Notification" in window) || Notification.permission !== "granted") {
-        return
-      }
+export function showErrorNotification(title: string, message: string) {
+  if (typeof window !== "undefined" && "Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/favicon.png",
+      })
+    }
+  }
 
-      const now = new Date()
-      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`
-      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  // Fallback to console for development
+  console.log(`❌ ${title}: ${message}`)
+}
 
-      // Find tasks that should trigger notifications
-      const tasksToNotify = tasks.filter(
-        (task) => task.date === today && task.time === currentTime && !task.completed && task.notification_enabled,
-      )
-
-      tasksToNotify.forEach((task) => {
-        try {
-          new Notification(`⏰ ${t("taskReminder")}`, {
-            body: task.text,
-            icon: "/favicon-32x32.png",
-            tag: `task-${task.id}`, // Prevent duplicate notifications
-          })
-        } catch (error) {
-          console.error("Error showing notification:", error)
+export function requestNotificationPermission() {
+  if (typeof window !== "undefined" && "Notification" in window) {
+    if (Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          showSuccessNotification("Notificaciones activadas", "Ahora recibirás recordatorios de tus tareas")
         }
       })
-    }, 60000) // Check every minute
+    }
+  }
+}
 
-    return () => clearInterval(interval)
-  }, [tasks, user, t])
+interface NotificationServiceProps {
+  children: React.ReactNode
+}
 
-  return null // This component doesn't render anything
+export function NotificationService({ children }: NotificationServiceProps) {
+  useEffect(() => {
+    // Request notification permission on mount
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        setTimeout(() => {
+          requestNotificationPermission()
+        }, 3000) // Wait 3 seconds before asking
+      }
+    }
+  }, [])
+
+  return <>{children}</>
 }

@@ -1,139 +1,117 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
 import { getDatabaseStatus, testSupabaseConnection } from "@/lib/supabase"
 
 interface DatabaseStatusProps {
-  className?: string
+  theme: any
 }
 
-export function DatabaseStatus({ className }: DatabaseStatusProps) {
+export function DatabaseStatus({ theme }: DatabaseStatusProps) {
   const [status, setStatus] = useState(getDatabaseStatus())
-  const [connectionTest, setConnectionTest] = useState<boolean | null>(null)
-  const [isTestingConnection, setIsTestingConnection] = useState(false)
+  const [isConnected, setIsConnected] = useState<boolean | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const testConnection = async () => {
-    setIsTestingConnection(true)
+    setIsLoading(true)
     try {
-      const result = await testSupabaseConnection()
-      setConnectionTest(result)
+      const connected = await testSupabaseConnection()
+      setIsConnected(connected)
     } catch (error) {
-      setConnectionTest(false)
+      setIsConnected(false)
     } finally {
-      setIsTestingConnection(false)
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    // Test connection on mount if Supabase is available
-    if (status.supabaseAvailable) {
-      testConnection()
-    }
-  }, [status.supabaseAvailable])
-
-  // Don't show if everything is working fine
-  if (status.supabaseAvailable && connectionTest === true) {
-    return null
-  }
+    testConnection()
+  }, [])
 
   const getStatusIcon = () => {
-    if (status.supabaseAvailable && connectionTest === true) {
-      return <CheckCircle className="h-5 w-5 text-green-400" />
-    } else if (status.supabaseAvailable && connectionTest === false) {
-      return <XCircle className="h-5 w-5 text-red-400" />
-    } else if (!status.supabaseAvailable) {
-      return <AlertCircle className="h-5 w-5 text-yellow-400" />
-    }
-    return <Database className="h-5 w-5 text-gray-400" />
+    if (isLoading) return <RefreshCw className="w-4 h-4 animate-spin" />
+    if (isConnected === true) return <CheckCircle className="w-4 h-4 text-green-400" />
+    if (isConnected === false) return <XCircle className="w-4 h-4 text-red-400" />
+    return <AlertCircle className="w-4 h-4 text-yellow-400" />
   }
 
   const getStatusText = () => {
-    if (!status.hasCredentials) {
-      return "Credenciales de Supabase no configuradas"
-    }
-    if (!status.validUrl) {
-      return "URL de Supabase inválida"
-    }
-    if (!status.clientInitialized) {
-      return "Cliente de Supabase no inicializado"
-    }
-    if (status.initializationError) {
-      return `Error: ${status.initializationError}`
-    }
-    if (connectionTest === false) {
-      return "Error de conexión con Supabase"
-    }
-    if (connectionTest === null && status.supabaseAvailable) {
-      return "Probando conexión..."
-    }
-    return "Usando almacenamiento local"
+    if (isLoading) return "Probando conexión..."
+    if (isConnected === true) return "Conectado"
+    if (isConnected === false) return "Desconectado"
+    return "Desconocido"
   }
 
   const getStatusColor = () => {
-    if (status.supabaseAvailable && connectionTest === true) {
-      return "border-green-500/30 bg-green-900/20"
-    } else if (status.supabaseAvailable && connectionTest === false) {
-      return "border-red-500/30 bg-red-900/20"
-    } else if (!status.supabaseAvailable) {
-      return "border-yellow-500/30 bg-yellow-900/20"
-    }
-    return "border-gray-500/30 bg-gray-900/20"
+    if (isConnected === true) return "text-green-400"
+    if (isConnected === false) return "text-red-400"
+    return "text-yellow-400"
   }
 
   return (
-    <Card className={`${getStatusColor()} backdrop-blur-xl ${className}`}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-white flex items-center space-x-2">
-          {getStatusIcon()}
+    <Card className={`${theme.cardBg} ${theme.border}`}>
+      <CardHeader>
+        <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
+          <Database className="w-5 h-5" />
           <span>Estado de la Base de Datos</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-xs text-gray-300">{getStatusText()}</p>
-
-        {status.supabaseAvailable && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={testConnection}
-            disabled={isTestingConnection}
-            className="w-full text-xs border-white/20 text-white hover:bg-white/10 bg-transparent"
-          >
-            {isTestingConnection ? (
-              <>
-                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                Probando...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Probar Conexión
-              </>
-            )}
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            {getStatusIcon()}
+            <span className={`font-semibold ${getStatusColor()}`}>{getStatusText()}</span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={testConnection} disabled={isLoading} className={theme.textMuted}>
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </Button>
-        )}
+        </div>
 
-        {!status.hasCredentials && (
-          <div className="text-xs text-gray-400 space-y-1">
-            <p>Para configurar Supabase:</p>
-            <p>1. Crea un archivo .env.local</p>
-            <p>2. Agrega NEXT_PUBLIC_SUPABASE_URL</p>
-            <p>3. Agrega NEXT_PUBLIC_SUPABASE_ANON_KEY</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className={theme.textSecondary}>Supabase disponible:</span>
+            <Badge variant={status.supabaseAvailable ? "default" : "destructive"}>
+              {status.supabaseAvailable ? "Sí" : "No"}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className={theme.textSecondary}>Credenciales:</span>
+            <Badge variant={status.hasCredentials ? "default" : "destructive"}>
+              {status.hasCredentials ? "Configuradas" : "Faltantes"}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className={theme.textSecondary}>Cliente inicializado:</span>
+            <Badge variant={status.clientInitialized ? "default" : "destructive"}>
+              {status.clientInitialized ? "Sí" : "No"}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className={theme.textSecondary}>URL válida:</span>
+            <Badge variant={status.validUrl ? "default" : "destructive"}>{status.validUrl ? "Sí" : "No"}</Badge>
+          </div>
+        </div>
+
+        {status.initializationError && (
+          <div className={`p-3 rounded border border-red-500/20 bg-red-500/10`}>
+            <p className={`text-sm text-red-400`}>Error: {status.initializationError}</p>
           </div>
         )}
 
-        <div className="text-xs text-gray-500">
-          {status.supabaseAvailable
-            ? connectionTest === true
-              ? "✅ Conectado a Supabase"
-              : connectionTest === false
-                ? "❌ Error de conexión"
-                : "🔄 Verificando conexión..."
-            : "📱 Usando almacenamiento local"}
-        </div>
+        {!status.supabaseAvailable && (
+          <div className={`p-3 rounded border border-yellow-500/20 bg-yellow-500/10`}>
+            <p className={`text-sm ${theme.textPrimary}`}>
+              💡 Configura las variables de entorno NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

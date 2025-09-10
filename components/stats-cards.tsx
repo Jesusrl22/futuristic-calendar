@@ -1,73 +1,63 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Target, CheckCircle2, Clock, Flame } from "lucide-react"
+import { CheckCircle, Clock, Target, Trophy } from "lucide-react"
 
 interface StatsCardsProps {
-  completedTasks: number
-  totalTasks: number
-  progress: number
+  completedToday: number
+  totalToday: number
   streak: number
+  achievements: number
   theme: any
   t: (key: string) => string
-  isMobile?: boolean
 }
 
-export function StatsCards({
-  completedTasks,
-  totalTasks,
-  progress,
-  streak,
-  theme,
-  t,
-  isMobile = false,
-}: StatsCardsProps) {
-  const gridCols = isMobile ? "grid-cols-2" : "grid-cols-4"
+export function StatsCards({ completedToday, totalToday, streak, achievements, theme, t }: StatsCardsProps) {
+  const progressPercentage = totalToday > 0 ? (completedToday / totalToday) * 100 : 0
 
   return (
-    <div className={`grid ${gridCols} gap-4`}>
-      <Card className={`bg-black/20 backdrop-blur-xl border-purple-500/20`}>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card className={`${theme.cardBg} ${theme.border}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className={`text-sm font-medium text-white`}>{t("completedToday")}</CardTitle>
-          <CheckCircle2 className="h-4 w-4 text-green-400" />
+          <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>{t("completedToday")}</CardTitle>
+          <CheckCircle className="h-4 w-4 text-green-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">{completedTasks}</div>
-          <p className="text-xs text-gray-400">de {totalTasks} tareas</p>
+          <div className={`text-2xl font-bold ${theme.textPrimary}`}>{completedToday}</div>
+          <p className={`text-xs ${theme.textMuted}`}>de {totalToday} tareas</p>
         </CardContent>
       </Card>
 
-      <Card className={`bg-black/20 backdrop-blur-xl border-purple-500/20`}>
+      <Card className={`${theme.cardBg} ${theme.border}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className={`text-sm font-medium text-white`}>{t("totalToday")}</CardTitle>
+          <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>{t("progressToday")}</CardTitle>
           <Target className="h-4 w-4 text-blue-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">{totalTasks}</div>
-          <p className="text-xs text-gray-400">tareas programadas</p>
+          <div className={`text-2xl font-bold ${theme.textPrimary}`}>{Math.round(progressPercentage)}%</div>
+          <p className={`text-xs ${theme.textMuted}`}>progreso del día</p>
         </CardContent>
       </Card>
 
-      <Card className={`bg-black/20 backdrop-blur-xl border-purple-500/20`}>
+      <Card className={`${theme.cardBg} ${theme.border}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className={`text-sm font-medium text-white`}>{t("progressToday")}</CardTitle>
-          <Clock className="h-4 w-4 text-purple-400" />
+          <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>{t("streak")}</CardTitle>
+          <Clock className="h-4 w-4 text-orange-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">{Math.round(progress)}%</div>
-          <Progress value={progress} className="mt-2" />
+          <div className={`text-2xl font-bold ${theme.textPrimary}`}>{streak}</div>
+          <p className={`text-xs ${theme.textMuted}`}>días consecutivos</p>
         </CardContent>
       </Card>
 
-      <Card className={`bg-black/20 backdrop-blur-xl border-purple-500/20`}>
+      <Card className={`${theme.cardBg} ${theme.border}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className={`text-sm font-medium text-white`}>{t("streak")}</CardTitle>
-          <Flame className="h-4 w-4 text-orange-400" />
+          <CardTitle className={`text-sm font-medium ${theme.textSecondary}`}>{t("achievements")}</CardTitle>
+          <Trophy className="h-4 w-4 text-yellow-400" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-white">{streak}</div>
-          <p className="text-xs text-gray-400">días consecutivos</p>
+          <div className={`text-2xl font-bold ${theme.textPrimary}`}>{achievements}</div>
+          <p className={`text-xs ${theme.textMuted}`}>logros desbloqueados</p>
         </CardContent>
       </Card>
     </div>
