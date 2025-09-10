@@ -2376,6 +2376,121 @@ export default function FutureTaskApp() {
           t={t}
         />
 
+        {/* Premium Modal - NUEVA FUNCIONALIDAD */}
+        {showPremiumModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  {user?.is_premium ? "Actualizar a Pro" : "Actualizar Plan"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {!user?.is_premium && (
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
+                          <Crown className="w-5 h-5 text-yellow-400" />
+                          <span>{t("premium")}</span>
+                        </CardTitle>
+                        <div className={`text-2xl font-bold ${getCurrentTheme().textPrimary}`}>{t("monthlyPrice")}</div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span className={`text-sm ${getCurrentTheme().textPrimary}`}>Tareas ilimitadas</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span className={`text-sm ${getCurrentTheme().textPrimary}`}>Lista de deseos</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span className={`text-sm ${getCurrentTheme().textPrimary}`}>Notas ilimitadas</span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <Check className="w-4 h-4 text-green-500" />
+                            <span className={`text-sm ${getCurrentTheme().textPrimary}`}>Temas premium</span>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            handlePremiumChoice("premium")
+                            setShowPremiumModal(false)
+                          }}
+                          disabled={isLoading}
+                          className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                        >
+                          <Crown className="w-4 h-4 mr-2" />
+                          {isLoading ? "Cargando..." : `${t("startPremium")} - ${t("monthlyPrice")}`}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} ring-2 ring-purple-500/50`}>
+                    <CardHeader>
+                      <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
+                        <Sparkles className="w-5 h-5 text-purple-400" />
+                        <span>{t("pro")}</span>
+                      </CardTitle>
+                      <div className={`text-2xl font-bold ${getCurrentTheme().textPrimary}`}>
+                        {t("proMonthlyPrice")}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3">
+                          <Check className="w-4 h-4 text-green-500" />
+                          <span className={`text-sm ${getCurrentTheme().textPrimary}`}>Todo de Premium +</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Sparkles className="w-4 h-4 text-purple-400" />
+                          <span className={`text-sm ${getCurrentTheme().textPrimary}`}>{t("aiPoweredPlanning")}</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Bot className="w-4 h-4 text-purple-400" />
+                          <span className={`text-sm ${getCurrentTheme().textPrimary}`}>{t("smartGoalSetting")}</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Target className="w-4 h-4 text-purple-400" />
+                          <span className={`text-sm ${getCurrentTheme().textPrimary}`}>{t("autoTaskCreation")}</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <Star className="w-4 h-4 text-purple-400" />
+                          <span className={`text-sm ${getCurrentTheme().textPrimary}`}>{t("unlimitedAIRequests")}</span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          handlePremiumChoice("pro")
+                          setShowPremiumModal(false)
+                        }}
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        {isLoading ? "Cargando..." : `${t("startPro")} - ${t("proMonthlyPrice")}`}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+                <div className="flex justify-center mt-6">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowPremiumModal(false)}
+                    className={getCurrentTheme().textSecondary}
+                  >
+                    Cerrar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Edit Task Modal */}
         {showEditTaskModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

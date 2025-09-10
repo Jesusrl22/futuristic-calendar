@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Users, Database, Settings, ArrowLeft } from "lucide-react"
+import { Crown, Users, Database, Settings, ArrowLeft, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 // Import database functions
@@ -21,6 +21,7 @@ interface User {
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   is_premium: boolean
+  is_pro: boolean
   premium_expiry?: string
   onboarding_completed: boolean
   pomodoro_sessions: number
@@ -72,6 +73,7 @@ export default function AdminPanel() {
   const [editLanguage, setEditLanguage] = useState<"es" | "en" | "fr" | "de" | "it">("es")
   const [editTheme, setEditTheme] = useState("default")
   const [editIsPremium, setEditIsPremium] = useState(false)
+  const [editIsPro, setEditIsPro] = useState(false)
 
   // Check authentication on mount
   useEffect(() => {
@@ -131,6 +133,7 @@ export default function AdminPanel() {
     setEditLanguage(user.language)
     setEditTheme(user.theme)
     setEditIsPremium(user.is_premium)
+    setEditIsPro(user.is_pro || false)
   }
 
   const handleSaveUser = async () => {
@@ -144,7 +147,9 @@ export default function AdminPanel() {
         language: editLanguage,
         theme: editTheme,
         is_premium: editIsPremium,
-        premium_expiry: editIsPremium ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+        is_pro: editIsPro,
+        premium_expiry:
+          editIsPremium || editIsPro ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined,
       })
 
       // Update local state
@@ -169,6 +174,30 @@ export default function AdminPanel() {
 
   const goBack = () => {
     router.push("/")
+  }
+
+  const getUserPlanBadge = (user: User) => {
+    if (user.is_pro) {
+      return (
+        <Badge className="bg-purple-500/20 text-purple-200 border-purple-400/50">
+          <Sparkles className="w-3 h-3 mr-1" />
+          Pro
+        </Badge>
+      )
+    } else if (user.is_premium) {
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-200 border-yellow-400/50">
+          <Crown className="w-3 h-3 mr-1" />
+          Premium
+        </Badge>
+      )
+    } else {
+      return (
+        <Badge variant="secondary" className="bg-gray-500/20 text-gray-200 border-gray-400/50">
+          Free
+        </Badge>
+      )
+    }
   }
 
   if (!isAuthenticated) {
@@ -251,7 +280,7 @@ export default function AdminPanel() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-200">Total Usuarios</CardTitle>
@@ -269,6 +298,16 @@ export default function AdminPanel() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{users.filter((u) => u.is_premium).length}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-black/20 backdrop-blur-xl border-purple-500/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-200">Usuarios Pro</CardTitle>
+              <Sparkles className="h-4 w-4 text-purple-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">{users.filter((u) => u.is_pro).length}</div>
             </CardContent>
           </Card>
 
@@ -301,7 +340,8 @@ export default function AdminPanel() {
                     <div>
                       <h3 className="font-semibold text-white flex items-center space-x-2">
                         <span>{user.name}</span>
-                        {user.is_premium && <Crown className="w-4 h-4 text-yellow-400" />}
+                        {user.is_pro && <Sparkles className="w-4 h-4 text-purple-400" />}
+                        {user.is_premium && !user.is_pro && <Crown className="w-4 h-4 text-yellow-400" />}
                       </h3>
                       <p className="text-sm text-gray-200">{user.email}</p>
                       <div className="flex items-center space-x-2 mt-1">
@@ -316,16 +356,7 @@ export default function AdminPanel() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge
-                      variant={user.is_premium ? "default" : "secondary"}
-                      className={
-                        user.is_premium
-                          ? "bg-yellow-500/20 text-yellow-200 border-yellow-400/50"
-                          : "bg-gray-500/20 text-gray-200 border-gray-400/50"
-                      }
-                    >
-                      {user.is_premium ? "Premium" : "Free"}
-                    </Badge>
+                    {getUserPlanBadge(user)}
                     <Button
                       size="sm"
                       onClick={() => handleEditUser(user)}
@@ -413,19 +444,41 @@ export default function AdminPanel() {
                   </Select>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isPremium"
-                    checked={editIsPremium}
-                    onChange={(e) => setEditIsPremium(e.target.checked)}
-                    className="rounded border-purple-400/50"
-                  />
-                  <Label htmlFor="isPremium" className="text-gray-200 flex items-center space-x-2 font-medium">
-                    <Crown className="w-4 h-4 text-yellow-400" />
-                    <span>Usuario Premium</span>
-                  </Label>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isPremium"
+                      checked={editIsPremium}
+                      onChange={(e) => setEditIsPremium(e.target.checked)}
+                      className="rounded border-purple-400/50"
+                    />
+                    <Label htmlFor="isPremium" className="text-gray-200 flex items-center space-x-2 font-medium">
+                      <Crown className="w-4 h-4 text-yellow-400" />
+                      <span>Usuario Premium</span>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isPro"
+                      checked={editIsPro}
+                      onChange={(e) => setEditIsPro(e.target.checked)}
+                      className="rounded border-purple-400/50"
+                    />
+                    <Label htmlFor="isPro" className="text-gray-200 flex items-center space-x-2 font-medium">
+                      <Sparkles className="w-4 h-4 text-purple-400" />
+                      <span>Usuario Pro (incluye IA)</span>
+                    </Label>
+                  </div>
                 </div>
+
+                {(editIsPremium || editIsPro) && (
+                  <div className="text-xs text-gray-400 p-2 bg-purple-500/10 rounded">
+                    💡 Al activar Premium/Pro se extenderá la suscripción por 1 año
+                  </div>
+                )}
               </CardContent>
               <div className="flex justify-end space-x-2 p-6">
                 <Button
