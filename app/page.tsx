@@ -8,7 +8,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Star, Target, Flame, Crown, Check, X, Globe, Database, Trash2, Edit2 } from "lucide-react"
+import {
+  CalendarIcon,
+  Star,
+  Target,
+  Flame,
+  Crown,
+  Check,
+  X,
+  Globe,
+  Database,
+  Trash2,
+  Edit2,
+  Eye,
+  EyeOff,
+} from "lucide-react"
 
 // Import custom components
 import { StatsCards } from "@/components/stats-cards"
@@ -203,6 +217,16 @@ const translations = {
     passwordChangedSuccessfully: "Contraseña cambiada exitosamente",
     incorrectCurrentPassword: "Contraseña actual incorrecta",
     settingsSaved: "Configuración guardada exitosamente",
+    forgotPassword: "¿Olvidaste tu contraseña?",
+    loginWithGoogle: "Continuar con Google",
+    loginWithGitHub: "Continuar con GitHub",
+    loginWithApple: "Continuar con Apple",
+    orContinueWith: "O continúa con",
+    showPassword: "Mostrar contraseña",
+    hidePassword: "Ocultar contraseña",
+    tasksForDate: "Tareas para",
+    noTasksForDate: "No hay tareas para esta fecha",
+    addTaskForDate: "Agregar tarea para este día",
   },
   en: {
     appName: "FutureTask",
@@ -302,6 +326,16 @@ const translations = {
     passwordChangedSuccessfully: "Password changed successfully",
     incorrectCurrentPassword: "Incorrect current password",
     settingsSaved: "Settings saved successfully",
+    forgotPassword: "Forgot your password?",
+    loginWithGoogle: "Continue with Google",
+    loginWithGitHub: "Continue with GitHub",
+    loginWithApple: "Continue with Apple",
+    orContinueWith: "Or continue with",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    tasksForDate: "Tasks for",
+    noTasksForDate: "No tasks for this date",
+    addTaskForDate: "Add task for this day",
   },
   fr: {
     appName: "FutureTask",
@@ -401,6 +435,16 @@ const translations = {
     passwordChangedSuccessfully: "Mot de passe changé avec succès",
     incorrectCurrentPassword: "Mot de passe actuel incorrect",
     settingsSaved: "Paramètres sauvegardés avec succès",
+    forgotPassword: "Mot de passe oublié ?",
+    loginWithGoogle: "Continuer avec Google",
+    loginWithGitHub: "Continuer avec GitHub",
+    loginWithApple: "Continuer avec Apple",
+    orContinueWith: "Ou continuer avec",
+    showPassword: "Afficher le mot de passe",
+    hidePassword: "Masquer le mot de passe",
+    tasksForDate: "Tâches pour le",
+    noTasksForDate: "Aucune tâche pour cette date",
+    addTaskForDate: "Ajouter une tâche pour ce jour",
   },
   de: {
     appName: "FutureTask",
@@ -500,6 +544,16 @@ const translations = {
     passwordChangedSuccessfully: "Passwort erfolgreich geändert",
     incorrectCurrentPassword: "Aktuelles Passwort ist falsch",
     settingsSaved: "Einstellungen erfolgreich gespeichert",
+    forgotPassword: "Passwort vergessen?",
+    loginWithGoogle: "Mit Google fortfahren",
+    loginWithGitHub: "Mit GitHub fortfahren",
+    loginWithApple: "Mit Apple fortfahren",
+    orContinueWith: "Oder fortfahren mit",
+    showPassword: "Passwort anzeigen",
+    hidePassword: "Passwort verbergen",
+    tasksForDate: "Aufgaben für",
+    noTasksForDate: "Keine Aufgaben für dieses Datum",
+    addTaskForDate: "Aufgabe für diesen Tag hinzufügen",
   },
   it: {
     appName: "FutureTask",
@@ -599,6 +653,16 @@ const translations = {
     passwordChangedSuccessfully: "Password cambiata con successo",
     incorrectCurrentPassword: "Password attuale errata",
     settingsSaved: "Impostazioni salvate con successo",
+    forgotPassword: "Password dimenticata?",
+    loginWithGoogle: "Continua con Google",
+    loginWithGitHub: "Continua con GitHub",
+    loginWithApple: "Continua con Apple",
+    orContinueWith: "O continua con",
+    showPassword: "Mostra password",
+    hidePassword: "Nascondi password",
+    tasksForDate: "Attività per",
+    noTasksForDate: "Nessuna attività per questa data",
+    addTaskForDate: "Aggiungi attività per questo giorno",
   },
 }
 
@@ -840,8 +904,8 @@ export default function FutureTaskApp() {
   // App state
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [activeTab, setActiveTab] = useState<"calendar" | "tasks" | "pomodoro" | "wishlist" | "notes">(
-    isMobile ? "tasks" : "calendar",
+  const [activeTab, setActiveTab] = useState<"tasksAndCalendar" | "tasks" | "pomodoro" | "wishlist" | "notes">(
+    isMobile ? "tasksAndCalendar" : "tasksAndCalendar",
   )
   const [achievements, setAchievements] = useState<Achievement[]>(DEFAULT_ACHIEVEMENTS)
 
@@ -854,6 +918,7 @@ export default function FutureTaskApp() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   // Pomodoro state
   const [pomodoroTime, setPomodoroTime] = useState(25 * 60)
@@ -889,7 +954,7 @@ export default function FutureTaskApp() {
   // Set default tab based on screen size
   useEffect(() => {
     if (currentScreen === "app") {
-      setActiveTab(isMobile ? "tasks" : "calendar")
+      setActiveTab(isMobile ? "tasksAndCalendar" : "tasksAndCalendar")
     }
   }, [isMobile, currentScreen])
 
@@ -1078,6 +1143,30 @@ export default function FutureTaskApp() {
     } catch (error) {
       console.error("❌ Error saving user session:", error)
     }
+  }
+
+  // Función para login con proveedores sociales (simulada por ahora)
+  const handleSocialLogin = async (provider: "google" | "github" | "apple") => {
+    try {
+      setIsLoading(true)
+
+      // Simular login social - en producción esto sería con OAuth real
+      alert(
+        `🚧 Login con ${provider} estará disponible próximamente.\n\nPor ahora puedes usar:\n📧 Email: admin\n🔑 Contraseña: 535353-Jrl`,
+      )
+    } catch (error) {
+      console.error(`Error with ${provider} login:`, error)
+      alert(`Error al iniciar sesión con ${provider}. Intenta de nuevo.`)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Función para recuperar contraseña (simulada por ahora)
+  const handleForgotPassword = () => {
+    alert(
+      "🚧 La recuperación de contraseña estará disponible próximamente.\n\nPor ahora puedes usar:\n📧 Email: admin\n🔑 Contraseña: 535353-Jrl",
+    )
   }
 
   // Agregar después de la función initializeApp, antes de useEffect:
@@ -1670,6 +1759,52 @@ export default function FutureTaskApp() {
             )}
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <Button
+                onClick={() => handleSocialLogin("google")}
+                disabled={isLoading}
+                className={`w-full ${getCurrentTheme().buttonSecondary} flex items-center justify-center space-x-2`}
+              >
+                <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-xs">G</span>
+                </div>
+                <span>{t("loginWithGoogle")}</span>
+              </Button>
+
+              <Button
+                onClick={() => handleSocialLogin("github")}
+                disabled={isLoading}
+                className={`w-full ${getCurrentTheme().buttonSecondary} flex items-center justify-center space-x-2`}
+              >
+                <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">⚡</span>
+                </div>
+                <span>{t("loginWithGitHub")}</span>
+              </Button>
+
+              <Button
+                onClick={() => handleSocialLogin("apple")}
+                disabled={isLoading}
+                className={`w-full ${getCurrentTheme().buttonSecondary} flex items-center justify-center space-x-2`}
+              >
+                <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs">🍎</span>
+                </div>
+                <span>{t("loginWithApple")}</span>
+              </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className={`w-full border-t ${getCurrentTheme().border}`} />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className={`bg-transparent px-2 ${getCurrentTheme().textMuted}`}>{t("orContinueWith")}</span>
+              </div>
+            </div>
+
             {/* Language Selector */}
             <div className="space-y-2">
               <Label className={`${getCurrentTheme().textSecondary} flex items-center space-x-2`}>
@@ -1724,15 +1859,40 @@ export default function FutureTaskApp() {
               <Label htmlFor="password" className={getCurrentTheme().textSecondary}>
                 {t("password")}
               </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={getCurrentTheme().inputBg}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`${getCurrentTheme().inputBg} pr-10`}
+                  placeholder="••••••••"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={`absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent ${getCurrentTheme().textMuted}`}
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
+
+            {authMode === "login" && (
+              <div className="text-center">
+                <Button
+                  variant="ghost"
+                  onClick={handleForgotPassword}
+                  className={`text-sm ${getCurrentTheme().textAccent} hover:underline`}
+                >
+                  {t("forgotPassword")}
+                </Button>
+              </div>
+            )}
+
             <Button onClick={handleAuth} disabled={isLoading} className={`w-full ${getCurrentTheme().buttonPrimary}`}>
               {isLoading ? "Cargando..." : authMode === "login" ? t("login") : t("register")}
             </Button>
@@ -2067,16 +2227,13 @@ export default function FutureTaskApp() {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
               <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
                 <TabsList
-                  className={`grid w-full ${user?.is_premium ? "grid-cols-5" : "grid-cols-3"} h-12 bg-transparent`}
+                  className={`grid w-full ${user?.is_premium ? "grid-cols-4" : "grid-cols-2"} h-12 bg-transparent`}
                 >
-                  <TabsTrigger value="tasks" className="text-xs">
-                    📋 {t("tasks")}
+                  <TabsTrigger value="tasksAndCalendar" className="text-xs">
+                    📅 {t("tasksAndCalendar")}
                   </TabsTrigger>
                   <TabsTrigger value="pomodoro" className="text-xs">
                     🍅 {t("pomodoro")}
-                  </TabsTrigger>
-                  <TabsTrigger value="calendar" className="text-xs">
-                    📅 {t("calendar")}
                   </TabsTrigger>
                   {user?.is_premium && (
                     <TabsTrigger value="wishlist" className="text-xs">
@@ -2093,7 +2250,7 @@ export default function FutureTaskApp() {
 
               {/* Mobile Content */}
               <div className="p-4 pb-20">
-                <TabsContent value="tasks">
+                <TabsContent value="tasksAndCalendar">
                   <div className="space-y-4">
                     {/* Quick Stats */}
                     <StatsCards
@@ -2106,85 +2263,110 @@ export default function FutureTaskApp() {
                       isMobile
                     />
 
+                    {/* Calendar Widget */}
+                    <CalendarWidget
+                      selectedDate={selectedDate}
+                      onDateSelect={setSelectedDate}
+                      theme={getCurrentTheme()}
+                      t={t}
+                    />
+
                     {/* Task Form */}
                     <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={`${getCurrentTheme().textPrimary} text-lg`}>
+                          {t("addTaskForDate")} - {selectedDate.toLocaleDateString()}
+                        </CardTitle>
+                      </CardHeader>
                       <CardContent className="p-4">
                         <TaskForm onAddTask={handleAddTask} theme={getCurrentTheme()} t={t} />
                       </CardContent>
                     </Card>
 
-                    {/* Tasks List */}
-                    <div className="space-y-3">
-                      {getTodayTasks()
-                        .sort((a, b) => {
-                          if (a.time && b.time) {
-                            return a.time.localeCompare(b.time)
-                          }
-                          if (a.time && !b.time) return -1
-                          if (!a.time && b.time) return 1
-                          return 0
-                        })
-                        .map((task) => (
-                          <Card
-                            key={task.id}
-                            className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border} ${task.completed ? "opacity-60" : ""}`}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3 flex-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => toggleTask(task.id)}
-                                    className={task.completed ? "text-green-400" : getCurrentTheme().textSecondary}
-                                  >
-                                    <Check className="w-4 h-4" />
-                                  </Button>
-                                  <div className="flex-1">
-                                    <p
-                                      className={`${getCurrentTheme().textPrimary} ${task.completed ? "line-through" : ""}`}
+                    {/* Tasks List for Selected Date */}
+                    <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
+                      <CardHeader>
+                        <CardTitle className={`${getCurrentTheme().textPrimary} text-lg`}>
+                          {t("tasksForDate")} {selectedDate.toLocaleDateString()}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {getTodayTasks()
+                            .sort((a, b) => {
+                              if (a.time && b.time) {
+                                return a.time.localeCompare(b.time)
+                              }
+                              if (a.time && !b.time) return -1
+                              if (!a.time && b.time) return 1
+                              return 0
+                            })
+                            .map((task) => (
+                              <div
+                                key={task.id}
+                                className={`p-3 rounded-lg border ${getCurrentTheme().border} ${task.completed ? "opacity-60" : ""}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3 flex-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => toggleTask(task.id)}
+                                      className={task.completed ? "text-green-400" : getCurrentTheme().textSecondary}
                                     >
-                                      {task.text}
-                                    </p>
-                                    {task.time && (
-                                      <p className={`text-xs ${getCurrentTheme().textSecondary}`}>⏰ {task.time}</p>
-                                    )}
+                                      <Check className="w-4 h-4" />
+                                    </Button>
+                                    <div className="flex-1">
+                                      <p
+                                        className={`${getCurrentTheme().textPrimary} ${task.completed ? "line-through" : ""}`}
+                                      >
+                                        {task.text}
+                                      </p>
+                                      {task.description && (
+                                        <p className={`text-xs ${getCurrentTheme().textMuted} mt-1`}>
+                                          {task.description}
+                                        </p>
+                                      )}
+                                      {task.time && (
+                                        <p className={`text-xs ${getCurrentTheme().textSecondary}`}>⏰ {task.time}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span className={`text-xs px-2 py-1 rounded ${CATEGORY_COLORS[task.category]}`}>
+                                      {t(task.category)}
+                                    </span>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleEditTask(task)}
+                                      className={getCurrentTheme().textSecondary}
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => deleteTaskHandler(task.id)}
+                                      className="text-red-400"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="flex items-center space-x-1">
-                                  <span className={`text-xs px-2 py-1 rounded ${CATEGORY_COLORS[task.category]}`}>
-                                    {t(task.category)}
-                                  </span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditTask(task)}
-                                    className={getCurrentTheme().textSecondary}
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => deleteTaskHandler(task.id)}
-                                    className="text-red-400"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
                               </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                            ))}
 
-                      {getTodayTasks().length === 0 && (
-                        <div className="text-center py-8">
-                          <Target className={`w-12 h-12 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
-                          <p className={getCurrentTheme().textPrimary}>No hay tareas para hoy</p>
-                          <p className={getCurrentTheme().textSecondary}>¡Agrega tu primera tarea!</p>
+                          {getTodayTasks().length === 0 && (
+                            <div className="text-center py-8">
+                              <Target className={`w-12 h-12 mx-auto mb-4 ${getCurrentTheme().textMuted}`} />
+                              <p className={getCurrentTheme().textPrimary}>{t("noTasksForDate")}</p>
+                              <p className={getCurrentTheme().textSecondary}>{t("addTaskForDate")}</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </TabsContent>
 
@@ -2239,17 +2421,6 @@ export default function FutureTaskApp() {
                         )}
                       </CardContent>
                     </Card>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="calendar">
-                  <div className="space-y-4">
-                    <CalendarWidget
-                      selectedDate={selectedDate}
-                      onDateSelect={setSelectedDate}
-                      theme={getCurrentTheme()}
-                      t={t}
-                    />
                   </div>
                 </TabsContent>
 
@@ -2381,6 +2552,9 @@ export default function FutureTaskApp() {
                                   >
                                     {task.text}
                                   </p>
+                                  {task.description && (
+                                    <p className={`text-sm ${getCurrentTheme().textMuted}`}>{task.description}</p>
+                                  )}
                                   {task.time && (
                                     <p className={`text-sm ${getCurrentTheme().textSecondary}`}>⏰ {task.time}</p>
                                   )}
@@ -2427,13 +2601,13 @@ export default function FutureTaskApp() {
               <div className="lg:col-span-1">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
                   <TabsList className={`grid w-full ${user?.is_premium ? "grid-cols-4" : "grid-cols-2"}`}>
-                    <TabsTrigger value="calendar">📅</TabsTrigger>
+                    <TabsTrigger value="tasksAndCalendar">📅</TabsTrigger>
                     <TabsTrigger value="pomodoro">🍅</TabsTrigger>
                     {user?.is_premium && <TabsTrigger value="wishlist">⭐</TabsTrigger>}
                     {user?.is_premium && <TabsTrigger value="notes">📝</TabsTrigger>}
                   </TabsList>
 
-                  <TabsContent value="calendar" className="mt-4">
+                  <TabsContent value="tasksAndCalendar" className="mt-4">
                     <CalendarWidget
                       selectedDate={selectedDate}
                       onDateSelect={setSelectedDate}

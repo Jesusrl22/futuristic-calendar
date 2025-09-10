@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Settings, X, Save } from "lucide-react"
+import { Settings, X, Save, Lock, Eye, EyeOff } from "lucide-react"
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -50,7 +50,7 @@ const POMODORO_PRESETS = {
 }
 
 export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "pomodoro">("profile")
+  const [activeTab, setActiveTab] = useState<"profile" | "appearance" | "pomodoro" | "security">("profile")
   const [profileName, setProfileName] = useState(user.name)
   const [profileEmail, setProfileEmail] = useState(user.email)
   const [profileLanguage, setProfileLanguage] = useState(user.language)
@@ -59,6 +59,14 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
   const [shortBreakDuration, setShortBreakDuration] = useState(user.short_break_duration)
   const [longBreakDuration, setLongBreakDuration] = useState(user.long_break_duration)
   const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(user.sessions_until_long_break)
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -70,6 +78,11 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
       setShortBreakDuration(user.short_break_duration)
       setLongBreakDuration(user.long_break_duration)
       setSessionsUntilLongBreak(user.sessions_until_long_break)
+
+      // Reset password fields
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
     }
   }, [isOpen, user])
 
@@ -87,6 +100,39 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
 
     onUpdateUser(updates)
     onClose()
+  }
+
+  const handlePasswordChange = () => {
+    if (!currentPassword || !newPassword) {
+      alert("Por favor completa todos los campos de contraseña")
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert(t("passwordsDoNotMatch"))
+      return
+    }
+
+    if (newPassword.length < 6) {
+      alert("La nueva contraseña debe tener al menos 6 caracteres")
+      return
+    }
+
+    // Verificar contraseña actual (simulado)
+    if (currentPassword !== user.password) {
+      alert(t("incorrectCurrentPassword"))
+      return
+    }
+
+    // Actualizar contraseña
+    onUpdateUser({ password: newPassword })
+
+    // Limpiar campos
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
+
+    alert(t("passwordChangedSuccessfully"))
   }
 
   const applyPreset = (presetKey: any) => {
@@ -123,8 +169,7 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
               onClick={() => setActiveTab("profile")}
               className={`flex-1 text-xs ${activeTab === "profile" ? theme.buttonPrimary : theme.textSecondary}`}
             >
-              <div className="w-3 h-3 mr-1" />
-              Perfil
+              👤 Perfil
             </Button>
             <Button
               variant={activeTab === "appearance" ? "default" : "ghost"}
@@ -132,8 +177,7 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
               onClick={() => setActiveTab("appearance")}
               className={`flex-1 text-xs ${activeTab === "appearance" ? theme.buttonPrimary : theme.textSecondary}`}
             >
-              <div className="w-3 h-3 mr-1" />
-              Apariencia
+              🎨 Apariencia
             </Button>
             <Button
               variant={activeTab === "pomodoro" ? "default" : "ghost"}
@@ -141,8 +185,15 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
               onClick={() => setActiveTab("pomodoro")}
               className={`flex-1 text-xs ${activeTab === "pomodoro" ? theme.buttonPrimary : theme.textSecondary}`}
             >
-              <div className="w-3 h-3 mr-1" />
-              Pomodoro
+              🍅 Pomodoro
+            </Button>
+            <Button
+              variant={activeTab === "security" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveTab("security")}
+              className={`flex-1 text-xs ${activeTab === "security" ? theme.buttonPrimary : theme.textSecondary}`}
+            >
+              🔒 Seguridad
             </Button>
           </div>
 
@@ -207,7 +258,7 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
                         <div
                           className={`px-2 py-1 text-xs font-semibold ${theme.textMuted} uppercase flex items-center space-x-1`}
                         >
-                          <div className="w-3 h-3 text-yellow-400" />
+                          <span className="text-yellow-400">👑</span>
                           <span>Premium</span>
                         </div>
                         {Object.entries(THEMES.premium).map(([key, name]) => (
@@ -223,7 +274,7 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
               {!user.is_premium && (
                 <div className={`p-3 rounded-lg border border-yellow-500/20 ${theme.cardBg}`}>
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-4 h-4 text-yellow-400" />
+                    <span className="text-yellow-400">👑</span>
                     <span className={`${theme.textPrimary} text-sm font-medium`}>Temas Premium</span>
                   </div>
                   <p className={`${theme.textSecondary} text-xs`}>
@@ -310,7 +361,7 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
               {!user.is_premium && (
                 <div className={`p-3 rounded-lg border border-yellow-500/20 ${theme.cardBg}`}>
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-4 h-4 text-yellow-400" />
+                    <span className="text-yellow-400">👑</span>
                     <span className={`${theme.textPrimary} text-sm font-medium`}>Configuración Premium</span>
                   </div>
                   <p className={`${theme.textSecondary} text-xs`}>
@@ -318,6 +369,106 @@ export function SettingsModal({ isOpen, onClose, user, onUpdateUser, theme, t }:
                   </p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Security Tab */}
+          {activeTab === "security" && (
+            <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <Lock className="w-5 h-5 text-blue-400" />
+                  <h3 className={`${theme.textPrimary} text-lg font-semibold`}>Cambiar Contraseña</h3>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className={`${theme.textSecondary} text-sm`}>Contraseña Actual</Label>
+                  <div className="relative">
+                    <Input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className={`${theme.inputBg} text-sm pr-10`}
+                      placeholder="Ingresa tu contraseña actual"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={`absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent ${theme.textMuted}`}
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className={`${theme.textSecondary} text-sm`}>Nueva Contraseña</Label>
+                  <div className="relative">
+                    <Input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className={`${theme.inputBg} text-sm pr-10`}
+                      placeholder="Ingresa tu nueva contraseña"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={`absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent ${theme.textMuted}`}
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className={`${theme.textSecondary} text-sm`}>Confirmar Nueva Contraseña</Label>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`${theme.inputBg} text-sm pr-10`}
+                      placeholder="Confirma tu nueva contraseña"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className={`absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent ${theme.textMuted}`}
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handlePasswordChange}
+                  className={`${theme.buttonPrimary} text-sm`}
+                  disabled={!currentPassword || !newPassword || !confirmPassword}
+                >
+                  <Lock className="w-3 h-3 mr-1" />
+                  Cambiar Contraseña
+                </Button>
+
+                <div className={`p-3 rounded-lg border border-blue-500/20 ${theme.cardBg} mt-4`}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="text-blue-400">🔒</span>
+                    <span className={`${theme.textPrimary} text-sm font-medium`}>Consejos de Seguridad</span>
+                  </div>
+                  <ul className={`${theme.textSecondary} text-xs space-y-1`}>
+                    <li>• Usa al menos 8 caracteres</li>
+                    <li>• Combina letras, números y símbolos</li>
+                    <li>• No uses información personal</li>
+                    <li>• Cambia tu contraseña regularmente</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           )}
 
