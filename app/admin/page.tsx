@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Crown, Users, Database, Settings, ArrowLeft, Sparkles } from "lucide-react"
+import { Crown, Users, Database, Settings, ArrowLeft, Sparkles, Calendar } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 // Import database functions
@@ -74,6 +74,7 @@ export default function AdminPanel() {
   const [editTheme, setEditTheme] = useState("default")
   const [editIsPremium, setEditIsPremium] = useState(false)
   const [editIsPro, setEditIsPro] = useState(false)
+  const [editPremiumExpiry, setEditPremiumExpiry] = useState("")
 
   // Check authentication on mount
   useEffect(() => {
@@ -134,6 +135,16 @@ export default function AdminPanel() {
     setEditTheme(user.theme)
     setEditIsPremium(user.is_premium)
     setEditIsPro(user.is_pro || false)
+
+    // Set expiry date - if exists, format it for input, otherwise set to 1 year from now
+    if (user.premium_expiry) {
+      const expiryDate = new Date(user.premium_expiry)
+      setEditPremiumExpiry(expiryDate.toISOString().split("T")[0])
+    } else {
+      const oneYearFromNow = new Date()
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+      setEditPremiumExpiry(oneYearFromNow.toISOString().split("T")[0])
+    }
   }
 
   const handleSaveUser = async () => {
@@ -141,6 +152,22 @@ export default function AdminPanel() {
 
     setIsLoading(true)
     try {
+      // Calculate expiry date
+      let premiumExpiry = undefined
+      if (editIsPremium || editIsPro) {
+        if (editPremiumExpiry) {
+          // Use the selected date
+          const selectedDate = new Date(editPremiumExpiry)
+          selectedDate.setHours(23, 59, 59, 999) // Set to end of day
+          premiumExpiry = selectedDate.toISOString()
+        } else {
+          // Default to 1 year from now
+          const oneYearFromNow = new Date()
+          oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+          premiumExpiry = oneYearFromNow.toISOString()
+        }
+      }
+
       const updatedUser = await updateUser(editingUser.id, {
         name: editName,
         email: editEmail,
@@ -148,8 +175,7 @@ export default function AdminPanel() {
         theme: editTheme,
         is_premium: editIsPremium,
         is_pro: editIsPro,
-        premium_expiry:
-          editIsPremium || editIsPro ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+        premium_expiry: premiumExpiry,
       })
 
       // Update local state
@@ -198,6 +224,21 @@ export default function AdminPanel() {
         </Badge>
       )
     }
+  }
+
+  const formatExpiryDate = (expiry?: string) => {
+    if (!expiry) return "Sin fecha"
+    const date = new Date(expiry)
+    return date.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  }
+
+  const isExpired = (expiry?: string) => {
+    if (!expiry) return false
+    return new Date(expiry) < new Date()
   }
 
   if (!isAuthenticated) {
@@ -352,6 +393,19 @@ export default function AdminPanel() {
                         <Badge variant="outline" className="text-xs border-cyan-400/50 text-cyan-200">
                           {user.theme}
                         </Badge>
+                        {user.premium_expiry && (
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              isExpired(user.premium_expiry)
+                                ? "border-red-400/50 text-red-200"
+                                : "border-green-400/50 text-green-200"
+                            }`}
+                          >
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {formatExpiryDate(user.premium_expiry)}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -381,7 +435,7 @@ export default function AdminPanel() {
         {/* Edit User Modal */}
         {editingUser && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md bg-black/20 backdrop-blur-xl border-purple-500/20">
+            <Card className="w-full max-w-md bg-black/20 backdrop-blur-xl border-purple-500/20 max-h-[90vh] overflow-y-auto">
               <CardHeader>
                 <CardTitle className="text-white">Editar Usuario</CardTitle>
               </CardHeader>
@@ -472,11 +526,28 @@ export default function AdminPanel() {
                       <span>Usuario Pro (incluye IA)</span>
                     </Label>
                   </div>
+
+                  {(editIsPremium || editIsPro) && (
+                    <div className="space-y-2">
+                      <Label className="text-gray-200 font-medium flex items-center space-x-2">
+                        <Calendar className="w-4 h-4 text-blue-400" />
+                        <span>Fecha de Expiración</span>
+                      </Label>
+                      <Input
+                        type="date"
+                        value={editPremiumExpiry}
+                        onChange={(e) => setEditPremiumExpiry(e.target.value)}
+                        className="bg-black/30 border-purple-500/30 text-white"
+                        min={new Date().toISOString().split("T")[0]}
+                      />
+                      <p className="text-xs text-gray-400">Deja vacío para establecer 1 año desde hoy</p>
+                    </div>
+                  )}
                 </div>
 
                 {(editIsPremium || editIsPro) && (
                   <div className="text-xs text-gray-400 p-2 bg-purple-500/10 rounded">
-                    💡 Al activar Premium/Pro se extenderá la suscripción por 1 año
+                    💡 Al activar Premium/Pro puedes establecer una fecha de expiración personalizada
                   </div>
                 )}
               </CardContent>

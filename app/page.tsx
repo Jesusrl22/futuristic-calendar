@@ -84,6 +84,7 @@ interface User {
   theme: string
   is_premium: boolean
   is_pro: boolean
+  premium_expiry?: string
   onboarding_completed: boolean
   pomodoro_sessions: number
   work_duration: number
@@ -177,11 +178,11 @@ const translations = {
     monthlyPrice: "€1,99/mes",
     yearlyPrice: "€20/año",
     proMonthlyPrice: "€4,99/mes",
-    proYearlyPrice: "€50/año",
+    proYearlyPrice: "€45/año",
     yearlyDiscount: "Ahorra €3,88",
-    proYearlyDiscount: "Ahorra €9,88",
+    proYearlyDiscount: "Ahorra €14,88",
     billingMonthly: "Facturación mensual",
-    billingYearly: "Facturación anual (2 meses gratis)",
+    billingYearly: "Facturación anual (3 meses gratis)",
     upgradeButton: "Actualizar a Premium",
     upgradeToProButton: "Actualizar a Pro",
     notification: "Notificación",
@@ -299,11 +300,11 @@ const translations = {
     monthlyPrice: "$1.99/month",
     yearlyPrice: "$20/year",
     proMonthlyPrice: "$4.99/month",
-    proYearlyPrice: "$50/year",
+    proYearlyPrice: "$45/year",
     yearlyDiscount: "Save $3.88",
-    proYearlyDiscount: "Save $9.88",
+    proYearlyDiscount: "Save $14.88",
     billingMonthly: "Monthly billing",
-    billingYearly: "Yearly billing (2 months free)",
+    billingYearly: "Yearly billing (3 months free)",
     upgradeButton: "Upgrade to Premium",
     upgradeToProButton: "Upgrade to Pro",
     notification: "Notification",
@@ -421,11 +422,11 @@ const translations = {
     monthlyPrice: "1,99€/mois",
     yearlyPrice: "20€/an",
     proMonthlyPrice: "4,99€/mois",
-    proYearlyPrice: "50€/an",
+    proYearlyPrice: "45€/an",
     yearlyDiscount: "Économisez 3,88€",
-    proYearlyDiscount: "Économisez 9,88€",
+    proYearlyDiscount: "Économisez 14,88€",
     billingMonthly: "Facturation mensuelle",
-    billingYearly: "Facturation annuelle (2 mois gratuits)",
+    billingYearly: "Facturation annuelle (3 mois gratuits)",
     upgradeButton: "Passer à Premium",
     upgradeToProButton: "Passer à Pro",
     notification: "Notification",
@@ -543,11 +544,11 @@ const translations = {
     monthlyPrice: "1,99€/Monat",
     yearlyPrice: "20€/Jahr",
     proMonthlyPrice: "4,99€/Monat",
-    proYearlyPrice: "50€/Jahr",
+    proYearlyPrice: "45€/Jahr",
     yearlyDiscount: "Sparen Sie 3,88€",
-    proYearlyDiscount: "Sparen Sie 9,88€",
+    proYearlyDiscount: "Sparen Sie 14,88€",
     billingMonthly: "Monatliche Abrechnung",
-    billingYearly: "Jährliche Abrechnung (2 Monate kostenlos)",
+    billingYearly: "Jährliche Abrechnung (3 Monate kostenlos)",
     upgradeButton: "Auf Premium upgraden",
     upgradeToProButton: "Auf Pro upgraden",
     notification: "Benachrichtigung",
@@ -665,11 +666,11 @@ const translations = {
     monthlyPrice: "1,99€/mese",
     yearlyPrice: "20€/anno",
     proMonthlyPrice: "4,99€/mese",
-    proYearlyPrice: "50€/anno",
+    proYearlyPrice: "45€/anno",
     yearlyDiscount: "Risparmia 3,88€",
-    proYearlyDiscount: "Risparmia 9,88€",
+    proYearlyDiscount: "Risparmia 14,88€",
     billingMonthly: "Fatturazione mensile",
-    billingYearly: "Fatturazione annuale (2 mesi gratuiti)",
+    billingYearly: "Fatturazione annuale (3 mesi gratuiti)",
     upgradeButton: "Passa a Premium",
     upgradeToProButton: "Passa a Pro",
     notification: "Notifica",
@@ -959,6 +960,22 @@ const safeLocalStorage = {
       console.error("Error removing from localStorage:", error)
     }
   },
+}
+
+// Helper function to check if user's premium/pro has expired
+const isUserPlanExpired = (user: User): boolean => {
+  if (!user.premium_expiry) return false
+  return new Date(user.premium_expiry) < new Date()
+}
+
+// Helper function to get user's effective plan status
+const getUserEffectivePlan = (user: User) => {
+  const expired = isUserPlanExpired(user)
+  return {
+    is_premium: user.is_premium && !expired,
+    is_pro: user.is_pro && !expired,
+    expired: expired,
+  }
 }
 
 export default function FutureTaskApp() {
@@ -1257,25 +1274,32 @@ export default function FutureTaskApp() {
           updatedUser.is_pro !== user.is_pro ||
           updatedUser.name !== user.name ||
           updatedUser.theme !== user.theme ||
-          updatedUser.language !== user.language)
+          updatedUser.language !== user.language ||
+          updatedUser.premium_expiry !== user.premium_expiry)
       ) {
         console.log("🔄 Sincronizando cambios del usuario desde admin...")
         setUser(updatedUser)
         setLanguage(updatedUser.language)
         saveUserSession(updatedUser, sessionData.password)
 
+        // Check if plan expired
+        const effectivePlan = getUserEffectivePlan(updatedUser)
+        if (effectivePlan.expired && (user.is_premium || user.is_pro)) {
+          alert("⚠️ Tu plan ha expirado. Algunas funciones estarán limitadas.")
+        }
+
         // Mostrar notificación si cambió el estado premium/pro
-        if (updatedUser.is_pro !== user.is_pro) {
+        if (updatedUser.is_pro !== user.is_pro && !effectivePlan.expired) {
           if (updatedUser.is_pro) {
             alert("🎉 ¡Tu cuenta ha sido actualizada a Pro! Ahora tienes acceso a la IA y todas las funciones.")
           } else {
-            alert("ℹ️ Tu cuenta Pro ha expirado. La IA y algunas funciones estarán limitadas.")
+            alert("ℹ️ Tu cuenta Pro ha sido desactivada. La IA y algunas funciones estarán limitadas.")
           }
-        } else if (updatedUser.is_premium !== user.is_premium) {
+        } else if (updatedUser.is_premium !== user.is_premium && !effectivePlan.expired) {
           if (updatedUser.is_premium) {
             alert("🎉 ¡Tu cuenta ha sido actualizada a Premium! Ahora tienes acceso a más funciones.")
           } else {
-            alert("ℹ️ Tu cuenta Premium ha expirado. Algunas funciones estarán limitadas.")
+            alert("ℹ️ Tu cuenta Premium ha sido desactivada. Algunas funciones estarán limitadas.")
           }
         }
       }
@@ -1485,9 +1509,18 @@ export default function FutureTaskApp() {
     try {
       setIsLoading(true)
 
+      // Calculate expiry date for premium/pro plans
+      let premiumExpiry = undefined
+      if (plan === "premium" || plan === "pro") {
+        const oneYearFromNow = new Date()
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+        premiumExpiry = oneYearFromNow.toISOString()
+      }
+
       const updatedUser = await updateUser(user.id, {
         is_premium: plan === "premium" || plan === "pro",
         is_pro: plan === "pro",
+        premium_expiry: premiumExpiry,
         onboarding_completed: true,
       })
 
@@ -1503,10 +1536,14 @@ export default function FutureTaskApp() {
       console.error("Error updating premium status:", error)
 
       // Fallback: update user locally if database update fails
+      const oneYearFromNow = new Date()
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+
       const updatedUserLocal = {
         ...user,
         is_premium: plan === "premium" || plan === "pro",
         is_pro: plan === "pro",
+        premium_expiry: plan === "premium" || plan === "pro" ? oneYearFromNow.toISOString() : undefined,
         onboarding_completed: true,
       }
 
@@ -1735,7 +1772,14 @@ export default function FutureTaskApp() {
 
   // AI Assistant handlers
   const handleAIRequest = async (request: string) => {
-    if (!user?.is_pro) return
+    if (!user) return
+
+    // Check if user's Pro plan is active
+    const effectivePlan = getUserEffectivePlan(user)
+    if (!effectivePlan.is_pro) {
+      alert("⚠️ Tu plan Pro ha expirado o no está activo. Actualiza tu plan para usar la IA.")
+      return
+    }
 
     // Simular respuesta de IA y crear plan automáticamente
     const aiResponse = await simulateAIResponse(request)
@@ -1920,6 +1964,15 @@ export default function FutureTaskApp() {
 
     const allThemes = { ...THEMES.free, ...THEMES.premium }
     return allThemes[user.theme as keyof typeof allThemes] || THEMES.free.default
+  }
+
+  // Get effective user plan (considering expiry)
+  const getEffectiveUser = () => {
+    if (!user) return null
+    return {
+      ...user,
+      ...getUserEffectivePlan(user),
+    }
   }
 
   // Loading state
@@ -2160,7 +2213,7 @@ export default function FutureTaskApp() {
     )
   }
 
-  // Premium Screen - ACTUALIZADA CON PLAN PRO
+  // Premium Screen - ACTUALIZADA CON PLAN PRO Y PRECIOS CORREGIDOS
   if (currentScreen === "premium") {
     return (
       <div
@@ -2234,6 +2287,9 @@ export default function FutureTaskApp() {
                   <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
                     {t("monthlyPrice")}
                   </div>
+                  <div className={`text-sm ${getCurrentTheme().textMuted}`}>
+                    {t("yearlyPrice")} - {t("yearlyDiscount")}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -2304,6 +2360,9 @@ export default function FutureTaskApp() {
                   <div className={`text-2xl md:text-3xl font-bold ${getCurrentTheme().textPrimary}`}>
                     {t("proMonthlyPrice")}
                   </div>
+                  <div className={`text-sm ${getCurrentTheme().textMuted}`}>
+                    {t("proYearlyPrice")} - {t("proYearlyDiscount")}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
@@ -2361,6 +2420,8 @@ export default function FutureTaskApp() {
 
   // Main App Screen
   if (currentScreen === "app") {
+    const effectiveUser = getEffectiveUser()
+
     return (
       <div className={`min-h-screen bg-gradient-to-br ${getCurrentTheme().gradient}`}>
         {/* Notification Service */}
@@ -2382,12 +2443,12 @@ export default function FutureTaskApp() {
             <Card className={`w-full max-w-4xl ${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  {user?.is_premium ? "Actualizar a Pro" : "Actualizar Plan"}
+                  {effectiveUser?.is_premium ? "Actualizar a Pro" : "Actualizar Plan"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {!user?.is_premium && (
+                  {!effectiveUser?.is_premium && (
                     <Card className={`${getCurrentTheme().cardBg} ${getCurrentTheme().border}`}>
                       <CardHeader>
                         <CardTitle className={`${getCurrentTheme().textPrimary} flex items-center space-x-2`}>
@@ -2395,6 +2456,9 @@ export default function FutureTaskApp() {
                           <span>{t("premium")}</span>
                         </CardTitle>
                         <div className={`text-2xl font-bold ${getCurrentTheme().textPrimary}`}>{t("monthlyPrice")}</div>
+                        <div className={`text-sm ${getCurrentTheme().textMuted}`}>
+                          {t("yearlyPrice")} - {t("yearlyDiscount")}
+                        </div>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="space-y-3">
@@ -2438,6 +2502,9 @@ export default function FutureTaskApp() {
                       </CardTitle>
                       <div className={`text-2xl font-bold ${getCurrentTheme().textPrimary}`}>
                         {t("proMonthlyPrice")}
+                      </div>
+                      <div className={`text-sm ${getCurrentTheme().textMuted}`}>
+                        {t("proYearlyPrice")} - {t("proYearlyDiscount")}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -2638,12 +2705,14 @@ export default function FutureTaskApp() {
                     {t("appName")}
                   </h1>
                   <p className={`${getCurrentTheme().textSecondary} text-sm`}>
-                    {user?.name} {user?.is_pro && <Sparkles className="inline w-3 h-3 text-purple-400 ml-1" />}
-                    {user?.is_premium && !user?.is_pro && <Crown className="inline w-3 h-3 text-yellow-400 ml-1" />}
+                    {user?.name} {effectiveUser?.is_pro && <Sparkles className="inline w-3 h-3 text-purple-400 ml-1" />}
+                    {effectiveUser?.is_premium && !effectiveUser?.is_pro && (
+                      <Crown className="inline w-3 h-3 text-yellow-400 ml-1" />
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {!user?.is_pro && !user?.is_premium && (
+                  {!effectiveUser?.is_pro && !effectiveUser?.is_premium && (
                     <Button
                       size="sm"
                       onClick={() => setShowPremiumModal(true)}
@@ -2653,7 +2722,7 @@ export default function FutureTaskApp() {
                       Pro
                     </Button>
                   )}
-                  {!user?.is_pro && user?.is_premium && (
+                  {!effectiveUser?.is_pro && effectiveUser?.is_premium && (
                     <Button
                       size="sm"
                       onClick={() => setShowPremiumModal(true)}
@@ -2682,7 +2751,7 @@ export default function FutureTaskApp() {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
               <div className="sticky top-16 z-30 bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
                 <TabsList
-                  className={`grid w-full ${user?.is_pro ? "grid-cols-5" : user?.is_premium ? "grid-cols-4" : "grid-cols-2"} h-12 bg-transparent`}
+                  className={`grid w-full ${effectiveUser?.is_pro ? "grid-cols-5" : effectiveUser?.is_premium ? "grid-cols-4" : "grid-cols-2"} h-12 bg-transparent`}
                 >
                   <TabsTrigger value="tasksAndCalendar" className="text-xs">
                     📅 {t("tasksAndCalendar")}
@@ -2690,17 +2759,17 @@ export default function FutureTaskApp() {
                   <TabsTrigger value="pomodoro" className="text-xs">
                     🍅 {t("pomodoro")}
                   </TabsTrigger>
-                  {user?.is_premium && (
+                  {effectiveUser?.is_premium && (
                     <TabsTrigger value="wishlist" className="text-xs">
                       ⭐ {t("wishlist")}
                     </TabsTrigger>
                   )}
-                  {user?.is_premium && (
+                  {effectiveUser?.is_premium && (
                     <TabsTrigger value="notes" className="text-xs">
                       📝 {t("notes")}
                     </TabsTrigger>
                   )}
-                  {user?.is_pro && (
+                  {effectiveUser?.is_pro && (
                     <TabsTrigger value="ai" className="text-xs">
                       🤖 {t("aiAssistant")}
                     </TabsTrigger>
@@ -2872,7 +2941,7 @@ export default function FutureTaskApp() {
                             }}
                           ></div>
                         </div>
-                        {!user?.is_premium && (
+                        {!effectiveUser?.is_premium && (
                           <div
                             className={`text-xs ${getCurrentTheme().textMuted} text-center p-2 border border-yellow-500/20 rounded`}
                           >
@@ -2913,7 +2982,7 @@ export default function FutureTaskApp() {
 
                 <TabsContent value="ai">
                   <div className="space-y-4">
-                    <AIAssistant onAIRequest={handleAIRequest} theme={getCurrentTheme()} t={t} user={user!} />
+                    <AIAssistant onAIRequest={handleAIRequest} theme={getCurrentTheme()} t={t} user={effectiveUser!} />
                   </div>
                 </TabsContent>
               </div>
@@ -2929,12 +2998,15 @@ export default function FutureTaskApp() {
                   {t("appName")}
                 </h1>
                 <p className={`${getCurrentTheme().textSecondary} text-sm`}>
-                  Hola, {user?.name} {user?.is_pro && <Sparkles className="inline w-4 h-4 text-purple-400 ml-1" />}
-                  {user?.is_premium && !user?.is_pro && <Crown className="inline w-4 h-4 text-yellow-400 ml-1" />}
+                  Hola, {user?.name}{" "}
+                  {effectiveUser?.is_pro && <Sparkles className="inline w-4 h-4 text-purple-400 ml-1" />}
+                  {effectiveUser?.is_premium && !effectiveUser?.is_pro && (
+                    <Crown className="inline w-4 h-4 text-yellow-400 ml-1" />
+                  )}
                 </p>
               </div>
               <div className="flex items-center space-x-3">
-                {!user?.is_pro && !user?.is_premium && (
+                {!effectiveUser?.is_pro && !effectiveUser?.is_premium && (
                   <Button
                     onClick={() => setShowPremiumModal(true)}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
@@ -2943,7 +3015,7 @@ export default function FutureTaskApp() {
                     {t("upgradeToProButton")}
                   </Button>
                 )}
-                {!user?.is_pro && user?.is_premium && (
+                {!effectiveUser?.is_pro && effectiveUser?.is_premium && (
                   <Button
                     onClick={() => setShowPremiumModal(true)}
                     className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
@@ -3077,13 +3149,13 @@ export default function FutureTaskApp() {
               <div className="lg:col-span-1">
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
                   <TabsList
-                    className={`grid w-full ${user?.is_pro ? "grid-cols-5" : user?.is_premium ? "grid-cols-4" : "grid-cols-2"}`}
+                    className={`grid w-full ${effectiveUser?.is_pro ? "grid-cols-5" : effectiveUser?.is_premium ? "grid-cols-4" : "grid-cols-2"}`}
                   >
                     <TabsTrigger value="tasksAndCalendar">📅</TabsTrigger>
                     <TabsTrigger value="pomodoro">🍅</TabsTrigger>
-                    {user?.is_premium && <TabsTrigger value="wishlist">⭐</TabsTrigger>}
-                    {user?.is_premium && <TabsTrigger value="notes">📝</TabsTrigger>}
-                    {user?.is_pro && <TabsTrigger value="ai">🤖</TabsTrigger>}
+                    {effectiveUser?.is_premium && <TabsTrigger value="wishlist">⭐</TabsTrigger>}
+                    {effectiveUser?.is_premium && <TabsTrigger value="notes">📝</TabsTrigger>}
+                    {effectiveUser?.is_pro && <TabsTrigger value="ai">🤖</TabsTrigger>}
                   </TabsList>
 
                   <TabsContent value="tasksAndCalendar" className="mt-4">
@@ -3135,7 +3207,7 @@ export default function FutureTaskApp() {
                             }}
                           ></div>
                         </div>
-                        {!user?.is_premium && (
+                        {!effectiveUser?.is_premium && (
                           <div
                             className={`text-xs ${getCurrentTheme().textMuted} text-center p-2 border border-yellow-500/20 rounded`}
                           >
@@ -3146,7 +3218,7 @@ export default function FutureTaskApp() {
                     </Card>
                   </TabsContent>
 
-                  {user?.is_premium && (
+                  {effectiveUser?.is_premium && (
                     <TabsContent value="wishlist" className="mt-4">
                       <WishlistManager
                         items={wishlistItems}
@@ -3160,7 +3232,7 @@ export default function FutureTaskApp() {
                     </TabsContent>
                   )}
 
-                  {user?.is_premium && (
+                  {effectiveUser?.is_premium && (
                     <TabsContent value="notes" className="mt-4">
                       <NotesManager
                         notes={notes}
@@ -3173,9 +3245,14 @@ export default function FutureTaskApp() {
                     </TabsContent>
                   )}
 
-                  {user?.is_pro && (
+                  {effectiveUser?.is_pro && (
                     <TabsContent value="ai" className="mt-4">
-                      <AIAssistant onAIRequest={handleAIRequest} theme={getCurrentTheme()} t={t} user={user!} />
+                      <AIAssistant
+                        onAIRequest={handleAIRequest}
+                        theme={getCurrentTheme()}
+                        t={t}
+                        user={effectiveUser!}
+                      />
                     </TabsContent>
                   )}
                 </Tabs>
