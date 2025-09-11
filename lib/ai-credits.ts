@@ -36,29 +36,29 @@ const OPENAI_INPUT_COST_PER_1K_TOKENS_USD = 0.00015
 const OPENAI_OUTPUT_COST_PER_1K_TOKENS_USD = 0.0006
 const USD_TO_EUR_RATE = 0.92 // Approximate conversion rate
 
-// Credit system based on real OpenAI costs
-// 1 credit = €0.02 (2 cents)
+// Credit system based on real OpenAI costs + margin
+// 1 credit = €0.02 (2 cents) - includes OpenAI cost + profit margin
 export const CREDIT_VALUE_EUR = 0.02
 export const CREDIT_VALUE_USD = CREDIT_VALUE_EUR / USD_TO_EUR_RATE
 
-// Plan pricing and credit allocation (CORRECTED PRICES)
+// Plan pricing and credit allocation (CORRECTED BUSINESS MODEL)
 export const PLAN_CREDITS = {
   // Monthly plans
   monthly: {
     premium: 0, // €1.99/month - no AI
-    pro: 150, // €4.99/month - €3.00 difference = 150 credits
+    pro: 100, // €4.99/month - €3.00 difference = €2.00 for AI + €1.00 profit = 100 credits
   },
   // Yearly plans (with discount)
   yearly: {
     premium: 0, // €20/year - no AI
-    pro: 1500, // €50/year - €30 difference = 1,500 credits (125/month average)
+    pro: 1200, // €50/year - €30 difference = €24 for AI + €6 profit = 1,200 credits (100/month average)
   },
 }
 
 // Monthly limits for yearly plans (to prevent abuse)
 export const MONTHLY_LIMITS = {
-  monthly_pro: 150, // 150 credits per month
-  yearly_pro: 125, // 1500/12 = 125 per month (allowing some flexibility)
+  monthly_pro: 100, // 100 credits per month (€2.00 for AI)
+  yearly_pro: 100, // 1200/12 = 100 per month (same monthly value)
 }
 
 // Get user's AI credits info
@@ -143,7 +143,7 @@ export function calculateCreditsNeeded(requestText: string): number {
     (estimatedInputTokens / 1000) * OPENAI_INPUT_COST_PER_1K_TOKENS_USD +
     (estimatedOutputTokens / 1000) * OPENAI_OUTPUT_COST_PER_1K_TOKENS_USD
 
-  // Convert to credits (round up)
+  // Convert to credits (round up) - includes profit margin
   const creditsNeeded = Math.ceil(estimatedCostUSD / CREDIT_VALUE_USD)
 
   // Minimum 1 credit, maximum 20 credits per request
@@ -165,7 +165,7 @@ export function calculateActualCost(
   const totalCostUSD = inputCostUSD + outputCostUSD
   const costEur = totalCostUSD * USD_TO_EUR_RATE
 
-  // Convert to credits (round up, minimum 1)
+  // Convert to credits (round up, minimum 1) - includes profit margin
   const creditsConsumed = Math.max(1, Math.ceil(totalCostUSD / CREDIT_VALUE_USD))
 
   return {
@@ -384,39 +384,47 @@ export async function getAICostStats(): Promise<{
   }
 }
 
-// Credit packages with real-world pricing
+// Credit packages for additional purchases (UPDATED BUSINESS MODEL)
 export const CREDIT_PACKAGES = [
   {
-    credits: 25,
-    price: "€0.50",
-    priceValue: 0.5,
+    credits: 50,
+    price: "€1.00",
+    priceValue: 1.0,
     popular: false,
-    description: "~1,450 tokens • Consultas básicas",
-    estimatedRequests: "5-8 consultas simples",
+    description: "~2,900 tokens • Consultas básicas",
+    estimatedRequests: "10-15 consultas simples",
+    aiCost: "€0.80", // 80% for AI
+    profit: "€0.20", // 20% profit
   },
   {
-    credits: 75,
-    price: "€1.50",
-    priceValue: 1.5,
+    credits: 100,
+    price: "€2.00",
+    priceValue: 2.0,
     popular: true,
-    description: "~4,350 tokens • Consultas detalladas",
-    estimatedRequests: "15-25 consultas típicas",
+    description: "~5,800 tokens • Consultas detalladas",
+    estimatedRequests: "20-30 consultas típicas",
+    aiCost: "€1.60", // 80% for AI
+    profit: "€0.40", // 20% profit
   },
   {
-    credits: 150,
-    price: "€3.00",
-    priceValue: 3.0,
+    credits: 250,
+    price: "€5.00",
+    priceValue: 5.0,
     popular: false,
-    description: "~8,700 tokens • Planificación completa",
-    estimatedRequests: "30-50 consultas complejas",
+    description: "~14,500 tokens • Planificación completa",
+    estimatedRequests: "50-75 consultas complejas",
+    aiCost: "€4.00", // 80% for AI
+    profit: "€1.00", // 20% profit
   },
   {
-    credits: 300,
-    price: "€6.00",
-    priceValue: 6.0,
+    credits: 500,
+    price: "€10.00",
+    priceValue: 10.0,
     popular: false,
-    description: "~17,400 tokens • Uso intensivo",
-    estimatedRequests: "60-100 consultas variadas",
+    description: "~29,000 tokens • Uso intensivo",
+    estimatedRequests: "100-150 consultas variadas",
+    aiCost: "€8.00", // 80% for AI
+    profit: "€2.00", // 20% profit
   },
 ]
 
@@ -469,7 +477,7 @@ export function getEfficiencyRating(avgCostPerCredit: number): {
   }
 }
 
-// Plan comparison helper (CORRECTED PRICES)
+// Plan comparison helper (UPDATED BUSINESS MODEL)
 export function getPlanComparison() {
   return {
     monthly: {
@@ -482,9 +490,10 @@ export function getPlanComparison() {
       pro: {
         price: "€4.99",
         priceValue: 4.99,
-        credits: 150,
+        credits: 100,
         aiAccess: true,
-        creditValue: "€3.00",
+        creditValue: "€2.00", // €2.00 for AI credits
+        profitMargin: "€1.00", // €1.00 profit
         resetPeriod: "mensual",
       },
     },
@@ -498,15 +507,16 @@ export function getPlanComparison() {
         savings: "€3.88",
       },
       pro: {
-        price: "€50", // CORRECTED: €50 not €45
+        price: "€50",
         priceValue: 50,
-        credits: 1500, // CORRECTED: €30 difference ÷ €0.02 = 1,500 credits
+        credits: 1200, // €24 for AI credits + €6 profit
         aiAccess: true,
-        creditValue: "€30.00", // CORRECTED: €30 not €25
+        creditValue: "€24.00", // €24 for AI credits
+        profitMargin: "€6.00", // €6 profit
         resetPeriod: "anual",
-        monthlyEquivalent: "€4.17", // CORRECTED: €50/12 = €4.17
-        savings: "€9.88", // CORRECTED: (€4.99×12) - €50 = €9.88
-        monthlyCredits: "~125", // CORRECTED: 1500/12 = 125
+        monthlyEquivalent: "€4.17", // €50/12 = €4.17
+        savings: "€9.88", // (€4.99×12) - €50 = €9.88
+        monthlyCredits: "100", // 1200/12 = 100
       },
     },
   }

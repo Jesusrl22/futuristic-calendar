@@ -63,3 +63,6 @@ export function NotificationService({ children }: NotificationServiceProps) {
 
   return <>{children}</>
 }
+
+// Add default export at the end
+export default NotificationService

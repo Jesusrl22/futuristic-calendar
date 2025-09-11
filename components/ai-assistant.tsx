@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Bot, Send, Sparkles } from "lucide-react"
 
-interface AIAssistantProps {
+interface AiAssistantProps {
   onAIRequest: (request: string) => Promise<any>
   theme: any
   t: (key: string) => string
   user: any
 }
 
-export function AIAssistant({ onAIRequest, theme, t, user }: AIAssistantProps) {
+export function AiAssistant({ onAIRequest, theme, t, user }: AiAssistantProps) {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([])
@@ -48,7 +48,7 @@ export function AIAssistant({ onAIRequest, theme, t, user }: AIAssistantProps) {
         <CardHeader>
           <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
             <Bot className="w-5 h-5 text-purple-400" />
-            <span>{t("aiAssistant")}</span>
+            <span>Asistente IA</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center py-8">
@@ -65,7 +65,7 @@ export function AIAssistant({ onAIRequest, theme, t, user }: AIAssistantProps) {
       <CardHeader>
         <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
           <Bot className="w-5 h-5 text-purple-400" />
-          <span>{t("aiAssistant")}</span>
+          <span>Asistente IA</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -119,3 +119,5 @@ export function AIAssistant({ onAIRequest, theme, t, user }: AIAssistantProps) {
     </Card>
   )
 }
+
+// Add named export for compatibility;

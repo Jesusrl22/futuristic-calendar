@@ -1,15 +1,15 @@
 import { createClient } from "@supabase/supabase-js"
 
-// Types - Updated User interface without password
+// Types
 export interface User {
   id: string
   name: string
   email: string
-  auth_id?: string
+  password?: string
   language: "es" | "en" | "fr" | "de" | "it"
   theme: string
   is_premium: boolean
-  is_pro: boolean // Make sure this is included
+  is_pro: boolean
   premium_expiry?: string
   onboarding_completed: boolean
   pomodoro_sessions: number
@@ -19,15 +19,9 @@ export interface User {
   sessions_until_long_break: number
   created_at: string
   updated_at: string
-}
-
-export interface UserCredentials {
-  id: string
-  user_id: string
-  email: string
-  password_hash: string
-  created_at: string
-  updated_at: string
+  ai_credits?: number
+  ai_credits_used?: number
+  ai_total_cost_eur?: number
 }
 
 export interface Task {
@@ -74,115 +68,88 @@ export interface Achievement {
   unlocked_at: string
 }
 
-// Get environment variables with better validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-// Only log in development
-if (process.env.NODE_ENV === "development") {
-  console.log("🔧 Supabase Configuration:")
-  console.log("URL:", supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : "❌ Missing")
-  console.log("Key:", supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "❌ Missing")
-}
+// Environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
 
 // Validate URL format
-function isValidUrl(string: string): boolean {
-  if (!string) return false
+function isValidUrl(url: string | undefined): boolean {
+  if (!url || typeof url !== "string") return false
   try {
-    const url = new URL(string)
-    return url.protocol === "http:" || url.protocol === "https:"
-  } catch (_) {
+    const urlObj = new URL(url.trim())
+    return urlObj.protocol === "https:" || urlObj.protocol === "http:"
+  } catch {
     return false
   }
 }
 
-// Create Supabase client with better error handling
+// Check if Supabase is available - THIS IS THE MISSING EXPORT
+export const isSupabaseAvailable = Boolean(
+  supabaseUrl && supabaseAnonKey && isValidUrl(supabaseUrl) && supabaseAnonKey.length > 10,
+)
+
+// Create Supabase client only if we have valid credentials
 let supabaseClient: ReturnType<typeof createClient> | null = null
-let initializationError: string | null = null
 
-try {
-  if (supabaseUrl && supabaseAnonKey) {
-    if (isValidUrl(supabaseUrl)) {
-      supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: false, // We handle our own session management
-        },
-      })
-
-      if (process.env.NODE_ENV === "development") {
-        console.log("✅ Supabase client initialized successfully")
-      }
-    } else {
-      initializationError = "Invalid Supabase URL format"
-      console.warn("⚠️ Invalid Supabase URL format:", supabaseUrl)
-    }
-  } else {
-    initializationError = "Missing Supabase credentials"
-    if (process.env.NODE_ENV === "development") {
-      console.warn("⚠️ Supabase credentials missing:")
-      console.warn("- NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✅ Present" : "❌ Missing")
-      console.warn("- NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseAnonKey ? "✅ Present" : "❌ Missing")
-    }
+if (isSupabaseAvailable) {
+  try {
+    supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!)
+  } catch (error) {
+    console.warn("Failed to initialize Supabase client:", error)
+    supabaseClient = null
   }
-} catch (error) {
-  initializationError = `Failed to initialize: ${error}`
-  console.error("❌ Failed to initialize Supabase client:", error)
+} else {
+  console.warn("Supabase credentials not configured properly. Using mock data.")
 }
 
-// Export the client
-export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null
+export const supabase = supabaseClient
 
-// Check if Supabase is available and working
-export const isSupabaseAvailable = !!supabase
-
-// Test Supabase connection with better error handling
-export async function testSupabaseConnection(): Promise<boolean> {
+// Test Supabase connection
+export async function testSupabaseConnection(): Promise<{
+  connected: boolean
+  error?: string
+  latency?: number
+}> {
   if (!supabase) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("❌ No Supabase client available for connection test")
+    return {
+      connected: false,
+      error: "Supabase client not initialized",
     }
-    return false
   }
 
   try {
-    if (process.env.NODE_ENV === "development") {
-      console.log("🔍 Testing Supabase connection...")
-    }
-
-    const { data, error } = await supabase.from("users").select("count", { count: "exact", head: true })
+    const startTime = Date.now()
+    const { error } = await supabase.from("users").select("count").limit(1)
+    const latency = Date.now() - startTime
 
     if (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.error("❌ Supabase connection test failed:", error.message)
+      return {
+        connected: false,
+        error: error.message,
+        latency,
       }
-      return false
     }
 
-    if (process.env.NODE_ENV === "development") {
-      console.log("✅ Supabase connection test successful")
+    return {
+      connected: true,
+      latency,
     }
-    return true
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("❌ Supabase connection test failed with exception:", error)
+    return {
+      connected: false,
+      error: error instanceof Error ? error.message : "Unknown error",
     }
-    return false
   }
 }
 
-// Helper function to get Supabase client
-export function getSupabaseClient() {
-  return supabase
-}
-
-// Database status with connection test
+// Get database status
 export function getDatabaseStatus() {
   return {
     supabaseAvailable: isSupabaseAvailable,
     hasCredentials: Boolean(supabaseUrl && supabaseAnonKey),
     clientInitialized: Boolean(supabase),
     validUrl: supabaseUrl ? isValidUrl(supabaseUrl) : false,
-    initializationError,
+    initializationError: isSupabaseAvailable ? null : "Missing or invalid Supabase credentials",
   }
 }
 

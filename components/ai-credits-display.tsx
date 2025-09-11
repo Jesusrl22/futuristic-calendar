@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { Sparkles, Zap, Plus, Clock, TrendingUp, DollarSign, Calendar, Infinity } from "lucide-react"
+import { Sparkles, Zap, TrendingUp, DollarSign } from "lucide-react"
 import {
   getUserAICredits,
   addAICredits,
@@ -20,7 +19,7 @@ import {
 interface AICreditsDisplayProps {
   userId: string
   theme: any
-  onCreditsUpdate?: (credits: AICreditsInfo) => void
+  onCreditsUpdate?: (credits: any) => void
 }
 
 export function AICreditsDisplay({ userId, theme, onCreditsUpdate }: AICreditsDisplayProps) {
@@ -120,144 +119,23 @@ export function AICreditsDisplay({ userId, theme, onCreditsUpdate }: AICreditsDi
   return (
     <div className="space-y-4">
       {/* Credits Overview */}
-      <Card className={`${theme.cardBg} ${theme.border}`}>
-        <CardHeader className="pb-3">
-          <CardTitle className={`${theme.textPrimary} text-lg flex items-center justify-between`}>
-            <div className="flex items-center space-x-2">
-              <Zap className="w-5 h-5 text-yellow-400" />
-              <span>Créditos IA</span>
-              <Badge variant="outline" className={`text-xs ${theme.textMuted}`}>
-                {creditsInfo.planType === "yearly" ? (
-                  <>
-                    <Calendar className="w-3 h-3 mr-1" />
-                    Anual
-                  </>
-                ) : (
-                  <>
-                    <Clock className="w-3 h-3 mr-1" />
-                    Mensual
-                  </>
-                )}
-              </Badge>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowPlanComparison(!showPlanComparison)}
-                className={`${theme.textMuted} text-xs`}
-              >
-                <DollarSign className="w-3 h-3 mr-1" />
-                Planes
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowStats(!showStats)}
-                className={`${theme.textMuted} text-xs`}
-              >
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Stats
-              </Button>
-            </div>
+      <Card className={`${theme.cardBg} ${theme.border} w-48`}>
+        <CardHeader className="pb-2">
+          <CardTitle className={`${theme.textPrimary} text-sm flex items-center space-x-2`}>
+            <Zap className="w-4 h-4 text-yellow-400" />
+            <span>Créditos IA</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="pt-0">
           <div className="flex items-center justify-between">
             <div>
-              <div className={`text-2xl font-bold ${theme.textPrimary} flex items-center space-x-2`}>
-                <span>{creditsInfo.remaining}</span>
-                {creditsInfo.isUnlimited && <Infinity className="w-5 h-5 text-purple-400" />}
-                <span className={`text-sm font-normal ${theme.textMuted} ml-1`}>/ {creditsInfo.credits}</span>
-              </div>
-              <p className={`text-sm ${theme.textSecondary}`}>
-                Créditos disponibles
-                {creditsInfo.planType === "yearly" && (
-                  <span className={`text-xs ${theme.textMuted} ml-2`}>
-                    (~{Math.floor(creditsInfo.credits / 12)}/mes)
-                  </span>
-                )}
-              </p>
+              <div className={`text-lg font-bold ${theme.textPrimary}`}>{creditsInfo.remaining}</div>
+              <p className={`text-xs ${theme.textSecondary}`}>disponibles</p>
             </div>
-            <div className="text-right">
-              <div className={`text-lg font-semibold ${theme.textPrimary}`}>{creditsInfo.used}</div>
-              <p className={`text-sm ${theme.textSecondary}`}>
-                Usados {creditsInfo.planType === "yearly" ? "este año" : "este mes"}
-              </p>
-            </div>
+            <Badge variant="outline" className="text-xs">
+              {creditsInfo.used}/{creditsInfo.credits}
+            </Badge>
           </div>
-
-          <div className="space-y-2">
-            <Progress value={progressPercentage} className="h-2" />
-            <div className="flex justify-between text-xs">
-              <span className={theme.textMuted}>{creditsInfo.used} usados</span>
-              <span className={theme.textMuted}>{getResetDateText()}</span>
-            </div>
-          </div>
-
-          {/* Cost Information */}
-          <div className={`p-3 rounded-lg border ${theme.border} bg-black/10`}>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                <span className={theme.textSecondary}>Costo total:</span>
-              </div>
-              <span className={`font-semibold ${theme.textPrimary}`}>{formatCost(creditsInfo.totalCostEur)}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className={theme.textMuted}>Tokens usados:</span>
-              <span className={theme.textMuted}>{creditsInfo.totalTokensUsed.toLocaleString()}</span>
-            </div>
-            {creditsInfo.used > 0 && (
-              <div className="flex items-center justify-between text-xs mt-1">
-                <span className={theme.textMuted}>Eficiencia:</span>
-                <span className={getEfficiencyColor()}>
-                  {formatCost(creditsInfo.totalCostEur / creditsInfo.used)}/crédito
-                </span>
-              </div>
-            )}
-            {creditsInfo.planType === "yearly" && (
-              <div className="flex items-center justify-between text-xs mt-1">
-                <span className={theme.textMuted}>Valor restante:</span>
-                <span className={`font-semibold ${theme.textPrimary}`}>{formatCost(creditsInfo.remaining * 0.02)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Warnings */}
-          {creditsInfo.remaining <= 20 && creditsInfo.remaining > 0 && (
-            <div className={`p-3 rounded-lg border border-yellow-500/20 bg-yellow-500/10`}>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-yellow-400" />
-                <span className={`text-sm ${theme.textPrimary}`}>
-                  ⚠️ Quedan pocos créditos ({creditsInfo.remaining})
-                </span>
-              </div>
-              <p className={`text-xs ${theme.textMuted} mt-1`}>
-                Valor restante: {formatCost(creditsInfo.remaining * 0.02)}
-                {creditsInfo.planType === "yearly" && ` • Se reinician ${getResetDateText().toLowerCase()}`}
-              </p>
-            </div>
-          )}
-
-          {creditsInfo.remaining === 0 && (
-            <div className={`p-3 rounded-lg border border-red-500/20 bg-red-500/10`}>
-              <div className="flex items-center space-x-2">
-                <Zap className="w-4 h-4 text-red-400" />
-                <span className={`text-sm ${theme.textPrimary}`}>Sin créditos disponibles</span>
-              </div>
-              <p className={`text-xs ${theme.textMuted} mt-1`}>
-                {creditsInfo.planType === "yearly"
-                  ? `Los créditos se reinician ${getResetDateText().toLowerCase()}`
-                  : "Compra más créditos para continuar usando la IA"}
-              </p>
-            </div>
-          )}
-
-          <Button onClick={() => setShowPurchase(!showPurchase)} className={`w-full ${theme.buttonPrimary}`} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Comprar más créditos
-          </Button>
         </CardContent>
       </Card>
 
@@ -448,3 +326,5 @@ export function AICreditsDisplay({ userId, theme, onCreditsUpdate }: AICreditsDi
     </div>
   )
 }
+
+// Add named export for compatibility;
