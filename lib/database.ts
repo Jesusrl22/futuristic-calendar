@@ -49,6 +49,27 @@ const mockUsers: User[] = [
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
+  {
+    id: "jesus-mock-id",
+    name: "Jesus Rayale",
+    email: "jesusrayaleon1@gmail.com",
+    password: "jesus123",
+    language: "es",
+    theme: "dark",
+    is_premium: true,
+    is_pro: true,
+    onboarding_completed: true,
+    pomodoro_sessions: 15,
+    work_duration: 25,
+    short_break_duration: 5,
+    long_break_duration: 15,
+    sessions_until_long_break: 4,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ai_credits: 1000,
+    ai_credits_used: 50,
+    ai_total_cost_eur: 2.5,
+  },
 ]
 
 const mockTasks: Task[] = [

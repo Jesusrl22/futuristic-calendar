@@ -40,6 +40,7 @@ export default function FutureTaskApp() {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" })
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" })
   const [authMode, setAuthMode] = useState<"login" | "register">("login")
+  const [authError, setAuthError] = useState("")
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -59,18 +60,29 @@ export default function FutureTaskApp() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setAuthError("")
 
     try {
+      console.log("🔐 Attempting login for:", loginForm.email)
       const user = await getUserByEmail(loginForm.email)
-      if (user && user.password === loginForm.password) {
-        setCurrentUser(user)
-        setLoginForm({ email: "", password: "" })
+
+      if (user) {
+        console.log("👤 User found:", user.email)
+        if (user.password === loginForm.password) {
+          console.log("✅ Password correct, logging in")
+          setCurrentUser(user)
+          setLoginForm({ email: "", password: "" })
+        } else {
+          console.log("❌ Password incorrect")
+          setAuthError("Contraseña incorrecta")
+        }
       } else {
-        alert("Credenciales incorrectas")
+        console.log("❌ User not found")
+        setAuthError("Usuario no encontrado")
       }
     } catch (error) {
-      console.error("Error during login:", error)
-      alert("Error al iniciar sesión")
+      console.error("❌ Error during login:", error)
+      setAuthError("Error al iniciar sesión. Inténtalo de nuevo.")
     } finally {
       setIsLoading(false)
     }
@@ -79,14 +91,19 @@ export default function FutureTaskApp() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setAuthError("")
 
     try {
+      console.log("📝 Attempting registration for:", registerForm.email)
       const existingUser = await getUserByEmail(registerForm.email)
+
       if (existingUser) {
-        alert("El usuario ya existe")
+        console.log("❌ User already exists")
+        setAuthError("El usuario ya existe")
         return
       }
 
+      console.log("✅ Creating new user")
       const newUser = await createUser({
         name: registerForm.name,
         email: registerForm.email,
@@ -103,11 +120,12 @@ export default function FutureTaskApp() {
         sessions_until_long_break: 4,
       })
 
+      console.log("✅ User created successfully:", newUser.email)
       setCurrentUser(newUser)
       setRegisterForm({ name: "", email: "", password: "" })
     } catch (error) {
-      console.error("Error during registration:", error)
-      alert("Error al registrarse")
+      console.error("❌ Error during registration:", error)
+      setAuthError("Error al registrarse. Inténtalo de nuevo.")
     } finally {
       setIsLoading(false)
     }
@@ -116,6 +134,7 @@ export default function FutureTaskApp() {
   const handleLogout = () => {
     setCurrentUser(null)
     setActiveTab("calendar")
+    setAuthError("")
   }
 
   const handleUserUpdate = async (updates: Partial<User>) => {
@@ -194,6 +213,12 @@ export default function FutureTaskApp() {
                 </TabsTrigger>
               </TabsList>
 
+              {authError && (
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  <p className="text-red-400 text-sm">{authError}</p>
+                </div>
+              )}
+
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>
@@ -204,7 +229,10 @@ export default function FutureTaskApp() {
                       id="email"
                       type="email"
                       value={loginForm.email}
-                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                      onChange={(e) => {
+                        setLoginForm({ ...loginForm, email: e.target.value })
+                        setAuthError("")
+                      }}
                       className="bg-slate-700 border-slate-600 text-white"
                       required
                     />
@@ -217,7 +245,10 @@ export default function FutureTaskApp() {
                       id="password"
                       type="password"
                       value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      onChange={(e) => {
+                        setLoginForm({ ...loginForm, password: e.target.value })
+                        setAuthError("")
+                      }}
                       className="bg-slate-700 border-slate-600 text-white"
                       required
                     />
@@ -229,9 +260,21 @@ export default function FutureTaskApp() {
 
                 <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
                   <p className="text-sm text-slate-300 mb-2">Cuentas de prueba:</p>
-                  <div className="space-y-1 text-xs text-slate-400">
-                    <div>Admin: admin@futuretask.com / 535353-Jrl</div>
-                    <div>Demo: demo@futuretask.com / demo123</div>
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setLoginForm({ email: "admin@futuretask.com", password: "535353-Jrl" })}
+                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-1 rounded hover:bg-slate-600/50"
+                    >
+                      Admin: admin@futuretask.com / 535353-Jrl
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLoginForm({ email: "demo@futuretask.com", password: "demo123" })}
+                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-1 rounded hover:bg-slate-600/50"
+                    >
+                      Demo: demo@futuretask.com / demo123
+                    </button>
                   </div>
                 </div>
               </TabsContent>
@@ -246,7 +289,10 @@ export default function FutureTaskApp() {
                       id="name"
                       type="text"
                       value={registerForm.name}
-                      onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                      onChange={(e) => {
+                        setRegisterForm({ ...registerForm, name: e.target.value })
+                        setAuthError("")
+                      }}
                       className="bg-slate-700 border-slate-600 text-white"
                       required
                     />
@@ -259,7 +305,10 @@ export default function FutureTaskApp() {
                       id="register-email"
                       type="email"
                       value={registerForm.email}
-                      onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                      onChange={(e) => {
+                        setRegisterForm({ ...registerForm, email: e.target.value })
+                        setAuthError("")
+                      }}
                       className="bg-slate-700 border-slate-600 text-white"
                       required
                     />
@@ -272,7 +321,10 @@ export default function FutureTaskApp() {
                       id="register-password"
                       type="password"
                       value={registerForm.password}
-                      onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                      onChange={(e) => {
+                        setRegisterForm({ ...registerForm, password: e.target.value })
+                        setAuthError("")
+                      }}
                       className="bg-slate-700 border-slate-600 text-white"
                       required
                     />
