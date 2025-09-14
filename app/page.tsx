@@ -30,6 +30,7 @@ import {
   Plus,
   Clock,
   TrendingUp,
+  AlertCircle,
 } from "lucide-react"
 
 export default function FutureTaskApp() {
@@ -41,10 +42,12 @@ export default function FutureTaskApp() {
   const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" })
   const [authMode, setAuthMode] = useState<"login" | "register">("login")
   const [authError, setAuthError] = useState("")
+  const [isAuthLoading, setIsAuthLoading] = useState(false)
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        console.log("🚀 Initializing FutureTask app...")
         await initializeAdminUser()
         console.log("✅ Admin user initialized")
       } catch (error) {
@@ -59,19 +62,22 @@ export default function FutureTaskApp() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsAuthLoading(true)
     setAuthError("")
 
+    console.log("🔐 Login attempt:", { email: loginForm.email })
+
     try {
-      console.log("🔐 Attempting login for:", loginForm.email)
       const user = await getUserByEmail(loginForm.email)
+      console.log("👤 User lookup result:", user ? "Found" : "Not found")
 
       if (user) {
-        console.log("👤 User found:", user.email)
+        console.log("🔑 Checking password...")
         if (user.password === loginForm.password) {
-          console.log("✅ Password correct, logging in")
+          console.log("✅ Login successful!")
           setCurrentUser(user)
           setLoginForm({ email: "", password: "" })
+          setAuthError("")
         } else {
           console.log("❌ Password incorrect")
           setAuthError("Contraseña incorrecta")
@@ -81,20 +87,21 @@ export default function FutureTaskApp() {
         setAuthError("Usuario no encontrado")
       }
     } catch (error) {
-      console.error("❌ Error during login:", error)
+      console.error("❌ Login error:", error)
       setAuthError("Error al iniciar sesión. Inténtalo de nuevo.")
     } finally {
-      setIsLoading(false)
+      setIsAuthLoading(false)
     }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setIsAuthLoading(true)
     setAuthError("")
 
+    console.log("📝 Registration attempt:", { email: registerForm.email })
+
     try {
-      console.log("📝 Attempting registration for:", registerForm.email)
       const existingUser = await getUserByEmail(registerForm.email)
 
       if (existingUser) {
@@ -103,7 +110,7 @@ export default function FutureTaskApp() {
         return
       }
 
-      console.log("✅ Creating new user")
+      console.log("✅ Creating new user...")
       const newUser = await createUser({
         name: registerForm.name,
         email: registerForm.email,
@@ -120,21 +127,29 @@ export default function FutureTaskApp() {
         sessions_until_long_break: 4,
       })
 
-      console.log("✅ User created successfully:", newUser.email)
+      console.log("✅ Registration successful!")
       setCurrentUser(newUser)
       setRegisterForm({ name: "", email: "", password: "" })
+      setAuthError("")
     } catch (error) {
-      console.error("❌ Error during registration:", error)
+      console.error("❌ Registration error:", error)
       setAuthError("Error al registrarse. Inténtalo de nuevo.")
     } finally {
-      setIsLoading(false)
+      setIsAuthLoading(false)
     }
   }
 
+  const handleQuickLogin = (email: string, password: string) => {
+    setLoginForm({ email, password })
+    setAuthError("")
+  }
+
   const handleLogout = () => {
+    console.log("👋 Logging out...")
     setCurrentUser(null)
     setActiveTab("calendar")
     setAuthError("")
+    setLoginForm({ email: "", password: "" })
   }
 
   const handleUserUpdate = async (updates: Partial<User>) => {
@@ -186,7 +201,10 @@ export default function FutureTaskApp() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-white text-xl">Cargando FutureTask...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
+          <div className="text-white text-xl">Cargando FutureTask...</div>
+        </div>
       </div>
     )
   }
@@ -214,7 +232,8 @@ export default function FutureTaskApp() {
               </TabsList>
 
               {authError && (
-                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-400" />
                   <p className="text-red-400 text-sm">{authError}</p>
                 </div>
               )}
@@ -234,6 +253,7 @@ export default function FutureTaskApp() {
                         setAuthError("")
                       }}
                       className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="tu@email.com"
                       required
                     />
                   </div>
@@ -250,30 +270,54 @@ export default function FutureTaskApp() {
                         setAuthError("")
                       }}
                       className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="••••••••"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
-                    {isLoading ? "Iniciando..." : "Iniciar Sesión"}
+                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isAuthLoading}>
+                    {isAuthLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Iniciando...
+                      </div>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
                   </Button>
                 </form>
 
                 <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
-                  <p className="text-sm text-slate-300 mb-2">Cuentas de prueba:</p>
+                  <p className="text-sm text-slate-300 mb-3">Cuentas de prueba (haz clic para usar):</p>
                   <div className="space-y-2">
                     <button
                       type="button"
-                      onClick={() => setLoginForm({ email: "admin@futuretask.com", password: "535353-Jrl" })}
-                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-1 rounded hover:bg-slate-600/50"
+                      onClick={() => handleQuickLogin("admin@futuretask.com", "535353-Jrl")}
+                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-2 rounded hover:bg-slate-600/50 transition-colors"
                     >
-                      Admin: admin@futuretask.com / 535353-Jrl
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-3 w-3 text-red-400" />
+                        <span>Admin: admin@futuretask.com / 535353-Jrl</span>
+                      </div>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setLoginForm({ email: "demo@futuretask.com", password: "demo123" })}
-                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-1 rounded hover:bg-slate-600/50"
+                      onClick={() => handleQuickLogin("demo@futuretask.com", "demo123")}
+                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-2 rounded hover:bg-slate-600/50 transition-colors"
                     >
-                      Demo: demo@futuretask.com / demo123
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-3 w-3 text-blue-400" />
+                        <span>Demo: demo@futuretask.com / demo123</span>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickLogin("jesusrayaleon1@gmail.com", "jesus123")}
+                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-2 rounded hover:bg-slate-600/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-3 w-3 text-purple-400" />
+                        <span>Jesus: jesusrayaleon1@gmail.com / jesus123</span>
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -294,6 +338,7 @@ export default function FutureTaskApp() {
                         setAuthError("")
                       }}
                       className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="Tu nombre"
                       required
                     />
                   </div>
@@ -310,6 +355,7 @@ export default function FutureTaskApp() {
                         setAuthError("")
                       }}
                       className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="tu@email.com"
                       required
                     />
                   </div>
@@ -326,11 +372,19 @@ export default function FutureTaskApp() {
                         setAuthError("")
                       }}
                       className="bg-slate-700 border-slate-600 text-white"
+                      placeholder="••••••••"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
-                    {isLoading ? "Registrando..." : "Registrarse"}
+                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isAuthLoading}>
+                    {isAuthLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Registrando...
+                      </div>
+                    ) : (
+                      "Registrarse"
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -562,7 +616,11 @@ export default function FutureTaskApp() {
                           </div>
                         ))}
 
-                        <Button className={`w-full ${theme.buttonPrimary} mt-4`} size="sm">
+                        <Button
+                          className={`w-full ${theme.buttonPrimary} mt-4`}
+                          size="sm"
+                          onClick={() => setActiveTab("tasks")}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Agregar tarea
                         </Button>

@@ -1,32 +1,62 @@
-import { supabase, isSupabaseAvailable } from "@/lib/supabase"
+import { supabase, isSupabaseAvailable } from "./supabase"
 
-export interface AICreditsInfo {
-  credits: number
-  used: number
-  remaining: number
-  resetDate: string | null
-  canUseAI: boolean
-  totalCostEur: number
-  totalTokensUsed: number
-  monthlyLimit: number
-  planType: "monthly" | "yearly"
-  isUnlimited: boolean
-}
+// Mock AI usage data
+const mockAIUsage: AIUsage[] = [
+  {
+    id: "1",
+    user_id: "jesus-mock-id",
+    request_text: "Ayúdame a planificar mi día",
+    response_text: "Aquí tienes un plan para tu día...",
+    input_tokens: 25,
+    output_tokens: 150,
+    total_tokens: 175,
+    credits_consumed: 2,
+    cost_eur: 0.04,
+    cost_usd: 0.043,
+    model_used: "gpt-4o-mini",
+    request_type: "planning",
+    created_at: new Date().toISOString(),
+  },
+]
 
-export interface AIUsage {
-  id: string
-  user_id: string
-  request_text: string
-  response_text?: string
-  input_tokens: number
-  output_tokens: number
-  total_tokens: number
-  credits_consumed: number
-  cost_eur: number
-  cost_usd: number
-  model_used: string
-  request_type: string
-  created_at: string
+// Mock data for fallback when Supabase is not available
+const mockAICreditsData: Record<string, AICreditsInfo> = {
+  "admin-mock-id": {
+    credits: 1000,
+    used: 50,
+    remaining: 950,
+    resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    canUseAI: true,
+    totalCostEur: 1.0,
+    totalTokensUsed: 2500,
+    monthlyLimit: 1000,
+    planType: "yearly",
+    isUnlimited: false,
+  },
+  "demo-mock-id": {
+    credits: 100,
+    used: 10,
+    remaining: 90,
+    resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    canUseAI: true,
+    totalCostEur: 0.2,
+    totalTokensUsed: 500,
+    monthlyLimit: 100,
+    planType: "monthly",
+    isUnlimited: false,
+  },
+  "jesus-mock-id": {
+    credits: 1000,
+    used: 50,
+    remaining: 950,
+    resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    canUseAI: true,
+    totalCostEur: 2.5,
+    totalTokensUsed: 2500,
+    monthlyLimit: 1000,
+    planType: "yearly",
+    isUnlimited: false,
+  },
 }
 
 // OpenAI GPT-4o-mini pricing (December 2024)
@@ -61,51 +91,78 @@ export const MONTHLY_LIMITS = {
   yearly_pro: 100, // 1200/12 = 100 per month (same monthly value)
 }
 
-// Mock data for fallback when Supabase is not available
-const mockAICreditsData: Record<string, AICreditsInfo> = {
-  "admin-mock-id": {
-    credits: 1000,
-    used: 50,
-    remaining: 950,
-    resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    canUseAI: true,
-    totalCostEur: 1.0,
-    totalTokensUsed: 2500,
-    monthlyLimit: 1000,
-    planType: "yearly",
-    isUnlimited: false,
-  },
-  "demo-mock-id": {
-    credits: 100,
-    used: 10,
-    remaining: 90,
-    resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    canUseAI: true,
-    totalCostEur: 0.2,
-    totalTokensUsed: 500,
-    monthlyLimit: 100,
-    planType: "monthly",
-    isUnlimited: false,
-  },
-}
-
-const mockAIUsage: AIUsage[] = [
+// Credit packages for additional purchases (UPDATED BUSINESS MODEL)
+export const CREDIT_PACKAGES = [
   {
-    id: "1",
-    user_id: "admin-mock-id",
-    request_text: "Ayúdame a planificar mi día",
-    response_text: "Aquí tienes un plan para tu día...",
-    input_tokens: 25,
-    output_tokens: 150,
-    total_tokens: 175,
-    credits_consumed: 2,
-    cost_eur: 0.04,
-    cost_usd: 0.043,
-    model_used: "gpt-4o-mini",
-    request_type: "planning",
-    created_at: new Date().toISOString(),
+    credits: 50,
+    price: "€1.00",
+    priceValue: 1.0,
+    popular: false,
+    description: "~2,900 tokens • Consultas básicas",
+    estimatedRequests: "10-15 consultas simples",
+    aiCost: "€0.80", // 80% for AI
+    profit: "€0.20", // 20% profit
+  },
+  {
+    credits: 100,
+    price: "€2.00",
+    priceValue: 2.0,
+    popular: true,
+    description: "~5,800 tokens • Consultas detalladas",
+    estimatedRequests: "20-30 consultas típicas",
+    aiCost: "€1.60", // 80% for AI
+    profit: "€0.40", // 20% profit
+  },
+  {
+    credits: 250,
+    price: "€5.00",
+    priceValue: 5.0,
+    popular: false,
+    description: "~14,500 tokens • Planificación completa",
+    estimatedRequests: "50-75 consultas complejas",
+    aiCost: "€4.00", // 80% for AI
+    profit: "€1.00", // 20% profit
+  },
+  {
+    credits: 500,
+    price: "€10.00",
+    priceValue: 10.0,
+    popular: false,
+    description: "~29,000 tokens • Uso intensivo",
+    estimatedRequests: "100-150 consultas variadas",
+    aiCost: "€8.00", // 80% for AI
+    profit: "€2.00", // 20% profit
   },
 ]
+
+export interface AICreditsInfo {
+  credits: number
+  used: number
+  remaining: number
+  resetDate: string | null
+  canUseAI: boolean
+  totalCostEur: number
+  totalTokensUsed: number
+  monthlyLimit: number
+  planType: "monthly" | "yearly"
+  isUnlimited: boolean
+}
+
+export interface AIUsage {
+  id: string
+  user_id: string
+  request_text: string
+  response_text?: string
+  input_tokens: number
+  output_tokens: number
+  total_tokens: number
+  credits_consumed: number
+  cost_eur: number
+  cost_usd: number
+  model_used: string
+  request_type: string
+  created_at: string
+}
 
 // Get user's AI credits info with fallback
 export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
@@ -601,50 +658,6 @@ export async function getAICostStats(): Promise<{
   }
 }
 
-// Credit packages for additional purchases (UPDATED BUSINESS MODEL)
-export const CREDIT_PACKAGES = [
-  {
-    credits: 50,
-    price: "€1.00",
-    priceValue: 1.0,
-    popular: false,
-    description: "~2,900 tokens • Consultas básicas",
-    estimatedRequests: "10-15 consultas simples",
-    aiCost: "€0.80", // 80% for AI
-    profit: "€0.20", // 20% profit
-  },
-  {
-    credits: 100,
-    price: "€2.00",
-    priceValue: 2.0,
-    popular: true,
-    description: "~5,800 tokens • Consultas detalladas",
-    estimatedRequests: "20-30 consultas típicas",
-    aiCost: "€1.60", // 80% for AI
-    profit: "€0.40", // 20% profit
-  },
-  {
-    credits: 250,
-    price: "€5.00",
-    priceValue: 5.0,
-    popular: false,
-    description: "~14,500 tokens • Planificación completa",
-    estimatedRequests: "50-75 consultas complejas",
-    aiCost: "€4.00", // 80% for AI
-    profit: "€1.00", // 20% profit
-  },
-  {
-    credits: 500,
-    price: "€10.00",
-    priceValue: 10.0,
-    popular: false,
-    description: "~29,000 tokens • Uso intensivo",
-    estimatedRequests: "100-150 consultas variadas",
-    aiCost: "€8.00", // 80% for AI
-    profit: "€2.00", // 20% profit
-  },
-]
-
 // Helper functions
 export function formatCost(costEur: number): string {
   if (costEur < 0.001) {
@@ -727,6 +740,11 @@ export function getPlanComparison() {
         price: "€50",
         priceValue: 50,
         credits: 1200, // €24 for AI credits + €6 profit
+        aiAccess: true,
+        creditValue: "€24.00", // €24 for AI credits
+        profitMargin: "€6.00", // €6 profit
+        resetPeriod: "anual",
+        monthlyEqu: 1200, // €24 for AI credits + €6 profit
         aiAccess: true,
         creditValue: "€24.00", // €24 for AI credits
         profitMargin: "€6.00", // €6 profit
