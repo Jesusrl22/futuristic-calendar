@@ -744,11 +744,6 @@ export function getPlanComparison() {
         creditValue: "€24.00", // €24 for AI credits
         profitMargin: "€6.00", // €6 profit
         resetPeriod: "anual",
-        monthlyEqu: 1200, // €24 for AI credits + €6 profit
-        aiAccess: true,
-        creditValue: "€24.00", // €24 for AI credits
-        profitMargin: "€6.00", // €6 profit
-        resetPeriod: "anual",
         monthlyEquivalent: "€4.17", // €50/12 = €4.17
         savings: "€9.88", // (€4.99×12) - €50 = €9.88
         monthlyCredits: "100", // 1200/12 = 100
