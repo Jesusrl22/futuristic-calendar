@@ -34,19 +34,19 @@ const mockAICreditsData: Record<string, AICreditsInfo> = {
     isUnlimited: false,
   },
   "demo-mock-id": {
-    credits: 100,
-    used: 10,
-    remaining: 90,
-    resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    canUseAI: true,
-    totalCostEur: 0.2,
-    totalTokensUsed: 500,
-    monthlyLimit: 100,
+    credits: 0, // Demo user has 0 credits
+    used: 0,
+    remaining: 0,
+    resetDate: null,
+    canUseAI: false,
+    totalCostEur: 0,
+    totalTokensUsed: 0,
+    monthlyLimit: 0,
     planType: "monthly",
     isUnlimited: false,
   },
   "jesus-mock-id": {
-    credits: 1000,
+    credits: 1000, // Jesus has Pro
     used: 50,
     remaining: 950,
     resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -71,27 +71,27 @@ const USD_TO_EUR_RATE = 0.92 // Approximate conversion rate
 export const CREDIT_VALUE_EUR = 0.02
 export const CREDIT_VALUE_USD = CREDIT_VALUE_EUR / USD_TO_EUR_RATE
 
-// Plan pricing and credit allocation (CORRECTED BUSINESS MODEL)
+// Plan pricing and credit allocation
 export const PLAN_CREDITS = {
   // Monthly plans
   monthly: {
     premium: 0, // €1.99/month - no AI
-    pro: 100, // €4.99/month - €3.00 difference = €2.00 for AI + €1.00 profit = 100 credits
+    pro: 100, // €4.99/month - 100 credits included
   },
   // Yearly plans (with discount)
   yearly: {
     premium: 0, // €20/year - no AI
-    pro: 1200, // €50/year - €30 difference = €24 for AI + €6 profit = 1,200 credits (100/month average)
+    pro: 1200, // €50/year - 1200 credits included (100/month average)
   },
 }
 
 // Monthly limits for yearly plans (to prevent abuse)
 export const MONTHLY_LIMITS = {
-  monthly_pro: 100, // 100 credits per month (€2.00 for AI)
+  monthly_pro: 100, // 100 credits per month
   yearly_pro: 100, // 1200/12 = 100 per month (same monthly value)
 }
 
-// Credit packages for additional purchases (UPDATED BUSINESS MODEL)
+// Credit packages for additional purchases
 export const CREDIT_PACKAGES = [
   {
     credits: 50,
@@ -135,6 +135,7 @@ export const CREDIT_PACKAGES = [
   },
 ]
 
+// Types
 export interface AICreditsInfo {
   credits: number
   used: number
@@ -166,6 +167,8 @@ export interface AIUsage {
 
 // Get user's AI credits info with fallback
 export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
+  console.log(`🔍 Getting AI credits for user: ${userId}`)
+
   // Check mock data first for development
   const mockData = mockAICreditsData[userId]
 
@@ -173,7 +176,7 @@ export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
     console.log(`📦 Using mock AI credits for user: ${userId}`)
     return (
       mockData || {
-        credits: 0,
+        credits: 0, // Default: 0 credits for new users
         used: 0,
         remaining: 0,
         resetDate: null,
@@ -210,21 +213,19 @@ export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
     }
 
     if (!data || !Array.isArray(data) || data.length === 0) {
-      console.log(`📦 No AI credits data found, using mock for: ${userId}`)
-      return (
-        mockData || {
-          credits: 0,
-          used: 0,
-          remaining: 0,
-          resetDate: null,
-          canUseAI: false,
-          totalCostEur: 0,
-          totalTokensUsed: 0,
-          monthlyLimit: 0,
-          planType: "monthly",
-          isUnlimited: false,
-        }
-      )
+      console.log(`📦 No AI credits data found, using default for: ${userId}`)
+      return {
+        credits: 0, // Default: 0 credits for new users
+        used: 0,
+        remaining: 0,
+        resetDate: null,
+        canUseAI: false,
+        totalCostEur: 0,
+        totalTokensUsed: 0,
+        monthlyLimit: 0,
+        planType: "monthly",
+        isUnlimited: false,
+      }
     }
 
     const userData = data[0]
@@ -235,6 +236,8 @@ export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
 
     // Check if plan is still active
     const isProActive = userData.is_pro && (!userData.premium_expiry || new Date(userData.premium_expiry) > new Date())
+
+    // User can only use AI if they have Pro AND have remaining credits
     const canUseAI = isProActive && remaining > 0
 
     // For yearly plans, check if we're within monthly limit
@@ -262,7 +265,7 @@ export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
       return mockData
     }
 
-    // Final fallback
+    // Final fallback - new users have 0 credits
     return {
       credits: 0,
       used: 0,
@@ -335,13 +338,29 @@ export async function consumeAICredits(
   modelUsed = "gpt-4o-mini",
   requestType = "general",
 ): Promise<boolean> {
+  console.log(`🔥 Attempting to consume AI credits for user: ${userId}`)
+
+  // First check if user has credits and Pro access
+  const creditsInfo = await getUserAICredits(userId)
+
+  if (!creditsInfo.canUseAI) {
+    console.log(`❌ User ${userId} cannot use AI - no Pro plan or no credits`)
+    return false
+  }
+
+  const { creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
+
+  if (creditsInfo.remaining < creditsConsumed) {
+    console.log(`❌ User ${userId} has insufficient credits: ${creditsInfo.remaining} < ${creditsConsumed}`)
+    return false
+  }
+
   if (!isSupabaseAvailable || !supabase) {
     console.log(`📦 Mock AI credits consumption for user: ${userId}`)
 
     // Update mock data
     const mockData = mockAICreditsData[userId]
     if (mockData) {
-      const { creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
       mockData.used += creditsConsumed
       mockData.remaining = Math.max(0, mockData.credits - mockData.used)
       mockData.totalTokensUsed += inputTokens + outputTokens
@@ -353,14 +372,8 @@ export async function consumeAICredits(
 
   try {
     // Calculate actual cost and credits
-    const { costUsd, costEur, creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
+    const { costUsd, costEur } = calculateActualCost(inputTokens, outputTokens)
     const totalTokens = inputTokens + outputTokens
-
-    // Check if user has enough credits
-    const creditsInfo = await getUserAICredits(userId)
-    if (!creditsInfo.canUseAI || creditsInfo.remaining < creditsConsumed) {
-      return false
-    }
 
     // Record usage with detailed cost data
     const { error: usageError } = await supabase.from("ai_usage").insert({
@@ -391,6 +404,7 @@ export async function consumeAICredits(
 
     if (updateError) throw updateError
 
+    console.log(`✅ Successfully consumed ${creditsConsumed} credits for user: ${userId}`)
     return true
   } catch (error) {
     console.error("Error consuming AI credits:", error)
@@ -399,7 +413,6 @@ export async function consumeAICredits(
     console.log(`📦 Fallback to mock AI credits consumption for user: ${userId}`)
     const mockData = mockAICreditsData[userId]
     if (mockData) {
-      const { creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
       mockData.used += creditsConsumed
       mockData.remaining = Math.max(0, mockData.credits - mockData.used)
     }
@@ -410,6 +423,8 @@ export async function consumeAICredits(
 
 // Add credits to user (for purchases) with fallback
 export async function addAICredits(userId: string, creditsToAdd: number): Promise<boolean> {
+  console.log(`➕ Adding ${creditsToAdd} AI credits to user: ${userId}`)
+
   if (!isSupabaseAvailable || !supabase) {
     console.log(`📦 Mock AI credits addition for user: ${userId}`)
 
@@ -418,6 +433,20 @@ export async function addAICredits(userId: string, creditsToAdd: number): Promis
     if (mockData) {
       mockData.credits += creditsToAdd
       mockData.remaining = mockData.credits - mockData.used
+    } else {
+      // Create new mock data for user
+      mockAICreditsData[userId] = {
+        credits: creditsToAdd,
+        used: 0,
+        remaining: creditsToAdd,
+        resetDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        canUseAI: true,
+        totalCostEur: 0,
+        totalTokensUsed: 0,
+        monthlyLimit: 100,
+        planType: "monthly",
+        isUnlimited: false,
+      }
     }
 
     return true
@@ -434,6 +463,8 @@ export async function addAICredits(userId: string, creditsToAdd: number): Promis
       .eq("id", userId)
 
     if (error) throw error
+
+    console.log(`✅ Successfully added ${creditsToAdd} credits to user: ${userId}`)
     return true
   } catch (error) {
     console.error("Error adding AI credits:", error)
@@ -455,6 +486,8 @@ export async function initializeProCredits(
   userId: string,
   planType: "monthly" | "yearly" = "monthly",
 ): Promise<boolean> {
+  console.log(`🎯 Initializing Pro credits for user: ${userId}, plan: ${planType}`)
+
   if (!isSupabaseAvailable || !supabase) {
     console.log(`📦 Mock Pro credits initialization for user: ${userId}`)
 
@@ -501,6 +534,8 @@ export async function initializeProCredits(
       .eq("id", userId)
 
     if (error) throw error
+
+    console.log(`✅ Successfully initialized ${credits} Pro credits for user: ${userId}`)
     return true
   } catch (error) {
     console.error("Error initializing Pro credits:", error)
@@ -529,6 +564,8 @@ export async function initializeProCredits(
 
 // Reset credits based on plan type with fallback
 export async function resetUserCredits(userId: string): Promise<boolean> {
+  console.log(`🔄 Resetting AI credits for user: ${userId}`)
+
   if (!isSupabaseAvailable || !supabase) {
     console.log(`📦 Mock AI credits reset for user: ${userId}`)
 
@@ -545,6 +582,8 @@ export async function resetUserCredits(userId: string): Promise<boolean> {
     const { data, error } = await supabase.rpc("reset_user_ai_credits", { user_uuid: userId })
 
     if (error) throw error
+
+    console.log(`✅ Successfully reset credits for user: ${userId}`)
     return data || false
   } catch (error) {
     console.error("Error resetting user credits:", error)
@@ -563,6 +602,8 @@ export async function resetUserCredits(userId: string): Promise<boolean> {
 
 // Get user's AI usage history with fallback
 export async function getUserAIUsage(userId: string, limit = 10): Promise<AIUsage[]> {
+  console.log(`📊 Getting AI usage for user: ${userId}`)
+
   if (!isSupabaseAvailable || !supabase) {
     console.log(`📦 Using mock AI usage for user: ${userId}`)
     return mockAIUsage.filter((usage) => usage.user_id === userId).slice(0, limit)
@@ -598,6 +639,8 @@ export async function getAICostStats(): Promise<{
   avgCostPerRequest: number
   monthlyProjectedCost: number
 }> {
+  console.log("💰 Getting AI cost statistics")
+
   if (!isSupabaseAvailable || !supabase) {
     console.log("📦 Using mock AI cost stats")
 
@@ -707,7 +750,7 @@ export function getEfficiencyRating(avgCostPerCredit: number): {
   }
 }
 
-// Plan comparison helper (UPDATED BUSINESS MODEL)
+// Plan comparison helper
 export function getPlanComparison() {
   return {
     monthly: {
