@@ -7,10 +7,10 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FutureTask - Tu calendario inteligente del futuro",
-  description: "Organiza tu vida con inteligencia artificial y productividad avanzada",
+  title: "FutureTask - Tu Calendario Inteligente",
+  description: "Organiza tu vida con el calendario más avanzado del futuro",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
     shortcut: "/favicon-16x16.png",
     apple: "/apple-touch-icon.png",
   },

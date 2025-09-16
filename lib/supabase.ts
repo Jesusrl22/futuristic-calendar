@@ -7,11 +7,7 @@ export const isSupabaseAvailable = !!(supabaseUrl && supabaseAnonKey)
 
 export const supabase = isSupabaseAvailable ? createClient(supabaseUrl!, supabaseAnonKey!) : null
 
-console.log("🔗 Supabase Status:", {
-  available: isSupabaseAvailable,
-  url: supabaseUrl ? "✅ Configured" : "❌ Missing",
-  anonKey: supabaseAnonKey ? "✅ Configured" : "❌ Missing",
-})
+console.log("🔗 Supabase status:", isSupabaseAvailable ? "Connected" : "Using fallback mode")
 
 export type Database = {
   public: {

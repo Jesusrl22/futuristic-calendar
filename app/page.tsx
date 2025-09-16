@@ -13,9 +13,11 @@ import { Badge } from "@/components/ui/badge"
 import { SettingsModal } from "@/components/settings-modal"
 import { DatabaseStatus } from "@/components/database-status"
 import { AiAssistant } from "@/components/ai-assistant"
-import { AICreditsDisplay } from "@/components/ai-credits-display"
 import { TaskManager } from "@/components/task-manager"
+import { WishlistManager } from "@/components/wishlist-manager"
+import { AchievementsDisplay } from "@/components/achievements-display"
 import { getUserByEmail, createUser, updateUser, initializeAdminUser, type User } from "@/lib/database"
+import { checkAndAwardAchievements } from "@/lib/achievements"
 import {
   Calendar,
   CheckSquare,
@@ -31,7 +33,17 @@ import {
   Clock,
   TrendingUp,
   AlertCircle,
+  Trophy,
 } from "lucide-react"
+
+interface WishlistItem {
+  id: string
+  text: string
+  description?: string
+  completed: boolean
+  created_at: string
+  updated_at: string
+}
 
 export default function FutureTaskApp() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -43,6 +55,24 @@ export default function FutureTaskApp() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login")
   const [authError, setAuthError] = useState("")
   const [isAuthLoading, setIsAuthLoading] = useState(false)
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([
+    {
+      id: "1",
+      text: "Aprender un nuevo idioma",
+      description: "Quiero ser fluido en francés para mi próximo viaje",
+      completed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "2",
+      text: "Correr un maratón",
+      description: "Entrenar durante 6 meses para completar mi primer maratón",
+      completed: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ])
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -78,6 +108,14 @@ export default function FutureTaskApp() {
           setCurrentUser(user)
           setLoginForm({ email: "", password: "" })
           setAuthError("")
+
+          // Check for upgrade achievements
+          if (user.is_premium) {
+            await checkAndAwardAchievements(user.id, "upgrade_premium", 1)
+          }
+          if (user.is_pro) {
+            await checkAndAwardAchievements(user.id, "upgrade_pro", 1)
+          }
         } else {
           console.log("❌ Password incorrect")
           setAuthError("Contraseña incorrecta")
@@ -154,6 +192,14 @@ export default function FutureTaskApp() {
       const updatedUser = await updateUser(currentUser.id, updates)
       if (updatedUser) {
         setCurrentUser(updatedUser)
+
+        // Check for upgrade achievements
+        if (updates.is_premium && !currentUser.is_premium) {
+          await checkAndAwardAchievements(updatedUser.id, "upgrade_premium", 1)
+        }
+        if (updates.is_pro && !currentUser.is_pro) {
+          await checkAndAwardAchievements(updatedUser.id, "upgrade_pro", 1)
+        }
       }
     } catch (error) {
       console.error("Error updating user:", error)
@@ -191,6 +237,26 @@ export default function FutureTaskApp() {
       wishlistItems: [],
       notes: [],
     }
+  }
+
+  const handleAddWishlistItem = (item: Omit<WishlistItem, "id" | "created_at" | "updated_at">) => {
+    const newItem: WishlistItem = {
+      ...item,
+      id: Date.now().toString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    setWishlistItems((prev) => [...prev, newItem])
+  }
+
+  const handleUpdateWishlistItem = (id: string, updates: Partial<WishlistItem>) => {
+    setWishlistItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...updates, updated_at: new Date().toISOString() } : item)),
+    )
+  }
+
+  const handleDeleteWishlistItem = (id: string) => {
+    setWishlistItems((prev) => prev.filter((item) => item.id !== id))
   }
 
   if (isLoading) {
@@ -403,8 +469,6 @@ export default function FutureTaskApp() {
                   )}
                 </div>
 
-                {currentUser.is_pro && <AICreditsDisplay userId={currentUser.id} theme={theme} />}
-
                 {!currentUser.is_premium && (
                   <Button onClick={upgradeToPremium} size="sm" className="bg-yellow-600 hover:bg-yellow-700">
                     <Crown className="h-4 w-4 mr-1" />
@@ -431,10 +495,10 @@ export default function FutureTaskApp() {
 
         <main className="container mx-auto px-4 py-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-            <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 backdrop-blur-sm">
+            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur-sm">
               <TabsTrigger value="calendar" className="text-white data-[state=active]:bg-purple-600">
                 <Calendar className="h-4 w-4 mr-2" />
-                Calendario
+                <span>Calendario</span>
               </TabsTrigger>
               <TabsTrigger value="tasks" className="text-white data-[state=active]:bg-purple-600">
                 <CheckSquare className="h-4 w-4 mr-2" />
@@ -452,6 +516,10 @@ export default function FutureTaskApp() {
                   Notas
                 </TabsTrigger>
               )}
+              <TabsTrigger value="achievements" className="text-white data-[state=active]:bg-yellow-600">
+                <Trophy className="h-4 w-4 mr-2" />
+                Logros
+              </TabsTrigger>
               {currentUser.is_pro && (
                 <TabsTrigger
                   value="ai"
@@ -604,7 +672,7 @@ export default function FutureTaskApp() {
                             <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
                             <div className="flex-1">
                               <p className={`text-sm ${theme.textPrimary}`}>{event.text}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-slate-400">
                                 {event.date} • {event.time}
                               </p>
                             </div>
@@ -652,20 +720,16 @@ export default function FutureTaskApp() {
 
               {currentUser.is_premium && (
                 <TabsContent value="wishlist">
-                  <Card className={`${theme.cardBg} ${theme.border}`}>
-                    <CardHeader>
-                      <CardTitle className={`${theme.textPrimary} flex items-center gap-2`}>
-                        <Heart className="h-5 w-5 text-pink-400" />
-                        Lista de Objetivos
-                      </CardTitle>
-                      <CardDescription className={theme.textSecondary}>Define y alcanza tus metas</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className={theme.textSecondary}>
-                        Sistema de objetivos disponible para usuarios Premium. En desarrollo.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <WishlistManager
+                    wishlistItems={wishlistItems}
+                    onAddItem={handleAddWishlistItem}
+                    onUpdateItem={handleUpdateWishlistItem}
+                    onDeleteItem={handleDeleteWishlistItem}
+                    theme={theme}
+                    t={t}
+                    isPremium={currentUser.is_premium}
+                    userId={currentUser.id}
+                  />
                 </TabsContent>
               )}
 
@@ -687,6 +751,10 @@ export default function FutureTaskApp() {
                   </Card>
                 </TabsContent>
               )}
+
+              <TabsContent value="achievements">
+                <AchievementsDisplay user={currentUser} theme={theme} t={t} />
+              </TabsContent>
 
               {currentUser.is_pro && (
                 <TabsContent value="ai">

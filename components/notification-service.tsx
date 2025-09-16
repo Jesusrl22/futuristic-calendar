@@ -1,23 +1,12 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Bell, X, CheckCircle, AlertCircle, Info } from "lucide-react"
-
-declare global {
-  interface Window {
-    FutureTaskNotifications: {
-      showSuccess: (title: string, message: string) => void
-      showError: (title: string, message: string) => void
-      showTaskReminder: (taskTitle: string, time: string) => void
-      showPomodoroNotification: (type: "work" | "break" | "longBreak", duration: number) => void
-      showAchievement: (title: string, description: string) => void
-      showSubscriptionNotification: (type: "expiring" | "expired" | "renewed", daysLeft?: number) => void
-    }
-  }
-}
+import { Badge } from "@/components/ui/badge"
+import { Bell, X, CheckCircle, AlertCircle, Info, Clock } from "lucide-react"
+import { AchievementNotification } from "@/components/achievement-notification"
+import type { Achievement } from "@/lib/achievements"
 
 interface Notification {
   id: string
@@ -26,125 +15,36 @@ interface Notification {
   message: string
   timestamp: Date
   read: boolean
+  persistent?: boolean
+}
+
+interface NotificationContextType {
+  notifications: Notification[]
+  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void
+  markAsRead: (id: string) => void
+  removeNotification: (id: string) => void
+  clearAll: () => void
+  showAchievement: (achievement: Achievement) => void
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
+
+export function useNotifications() {
+  const context = useContext(NotificationContext)
+  if (!context) {
+    throw new Error("useNotifications must be used within a NotificationService")
+  }
+  return context
 }
 
 interface NotificationServiceProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function NotificationService({ children }: NotificationServiceProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [permission, setPermission] = useState<NotificationPermission>("default")
-
-  useEffect(() => {
-    // Request notification permission
-    if ("Notification" in window) {
-      setPermission(Notification.permission)
-
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then((result) => {
-          setPermission(result)
-        })
-      }
-    }
-
-    // Add some demo notifications
-    const demoNotifications: Notification[] = [
-      {
-        id: "1",
-        type: "success",
-        title: "¡Bienvenido!",
-        message: "Tu cuenta ha sido configurada correctamente",
-        timestamp: new Date(),
-        read: false,
-      },
-      {
-        id: "2",
-        type: "info",
-        title: "Recordatorio",
-        message: "Tienes 3 tareas pendientes para hoy",
-        timestamp: new Date(Date.now() - 300000), // 5 minutes ago
-        read: false,
-      },
-    ]
-
-    setNotifications(demoNotifications)
-
-    // Show browser notification for demo
-    if (permission === "granted") {
-      setTimeout(() => {
-        new Notification("FutureTask", {
-          body: "¡Bienvenido a tu calendario inteligente!",
-          icon: "/favicon.png",
-        })
-      }, 2000)
-    }
-
-    // Create global notification API
-    window.FutureTaskNotifications = {
-      showSuccess: (title: string, message: string) => {
-        addNotification({ type: "success", title, message })
-      },
-
-      showError: (title: string, message: string) => {
-        addNotification({ type: "error", title, message })
-      },
-
-      showTaskReminder: (taskTitle: string, time: string) => {
-        addNotification({ type: "info", title: "📋 Task Reminder", message: `${taskTitle} is scheduled for ${time}` })
-      },
-
-      showPomodoroNotification: (type: "work" | "break" | "longBreak", duration: number) => {
-        const messages = {
-          work: `🍅 Work session complete! Time for a ${duration} minute break.`,
-          break: `☕ Break over! Ready for another work session?`,
-          longBreak: `🎉 Long break time! You've earned a ${duration} minute rest.`,
-        }
-
-        addNotification({
-          type: type === "work" ? "success" : type === "break" ? "info" : "warning",
-          title: "Pomodoro Timer",
-          message: messages[type],
-        })
-      },
-
-      showAchievement: (title: string, description: string) => {
-        addNotification({ type: "success", title: `🏆 Achievement Unlocked!`, message: `${title}: ${description}` })
-      },
-
-      showSubscriptionNotification: (type: "expiring" | "expired" | "renewed", daysLeft?: number) => {
-        const messages = {
-          expiring: `⚠️ Your subscription expires in ${daysLeft} days`,
-          expired: `❌ Your subscription has expired`,
-          renewed: `✅ Subscription renewed successfully!`,
-        }
-
-        const notificationType: Notification["type"] =
-          type === "expiring" ? "warning" : type === "expired" ? "error" : "success"
-
-        addNotification({ type: notificationType, title: "Subscription Update", message: messages[type] })
-      },
-    }
-
-    // Set up automatic task reminders (every 30 minutes during work hours)
-    const reminderInterval = setInterval(
-      () => {
-        const now = new Date()
-        const hour = now.getHours()
-
-        // Only show reminders during work hours (9 AM - 6 PM)
-        if (hour >= 9 && hour <= 18) {
-          checkForTaskReminders()
-        }
-      },
-      30 * 60 * 1000,
-    ) // 30 minutes
-
-    return () => {
-      clearInterval(reminderInterval)
-    }
-  }, [permission])
+  const [showPanel, setShowPanel] = useState(false)
+  const [currentAchievement, setCurrentAchievement] = useState<Achievement | null>(null)
 
   const addNotification = (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
     const newNotification: Notification = {
@@ -156,8 +56,15 @@ export function NotificationService({ children }: NotificationServiceProps) {
 
     setNotifications((prev) => [newNotification, ...prev])
 
-    // Show browser notification
-    if (permission === "granted") {
+    // Auto-remove non-persistent notifications after 5 seconds
+    if (!notification.persistent) {
+      setTimeout(() => {
+        removeNotification(newNotification.id)
+      }, 5000)
+    }
+
+    // Request browser notification permission and show notification
+    if ("Notification" in window && Notification.permission === "granted") {
       new Notification(notification.title, {
         body: notification.message,
         icon: "/favicon.png",
@@ -172,6 +79,21 @@ export function NotificationService({ children }: NotificationServiceProps) {
   const removeNotification = (id: string) => {
     setNotifications((prev) => prev.filter((notif) => notif.id !== id))
   }
+
+  const clearAll = () => {
+    setNotifications([])
+  }
+
+  const showAchievement = (achievement: Achievement) => {
+    setCurrentAchievement(achievement)
+  }
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
+    }
+  }, [])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
@@ -188,138 +110,132 @@ export function NotificationService({ children }: NotificationServiceProps) {
     }
   }
 
-  const getColorClass = (type: Notification["type"]) => {
+  const getBorderColor = (type: Notification["type"]) => {
     switch (type) {
       case "success":
-        return "border-green-500/20 bg-green-500/10"
+        return "border-green-500/20"
       case "error":
-        return "border-red-500/20 bg-red-500/10"
+        return "border-red-500/20"
       case "warning":
-        return "border-yellow-500/20 bg-yellow-500/10"
+        return "border-yellow-500/20"
       case "info":
-        return "border-blue-500/20 bg-blue-500/10"
-    }
-  }
-
-  const checkForTaskReminders = async () => {
-    try {
-      // This would typically fetch from your API
-      // For now, we'll simulate checking for upcoming tasks
-      const now = new Date()
-      const in30Minutes = new Date(now.getTime() + 30 * 60 * 1000)
-
-      // In a real app, you'd fetch tasks from your database
-      // and check if any are due within the next 30 minutes
-
-      console.log("Checking for task reminders...")
-    } catch (error) {
-      console.error("Failed to check task reminders:", error)
+        return "border-blue-500/20"
     }
   }
 
   return (
-    <>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        addNotification,
+        markAsRead,
+        removeNotification,
+        clearAll,
+        showAchievement,
+      }}
+    >
       {children}
 
       {/* Notification Bell */}
       <div className="fixed top-4 right-4 z-50">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={() => setShowNotifications(!showNotifications)}
-          className="relative bg-slate-800/90 border-slate-600 text-white hover:bg-slate-700"
+          onClick={() => setShowPanel(!showPanel)}
+          className="relative bg-slate-800/50 backdrop-blur-sm border border-slate-700 text-white hover:bg-slate-700"
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadCount}
-            </span>
+            <Badge className="absolute -top-2 -right-2 bg-red-600 text-white text-xs min-w-[1.25rem] h-5 flex items-center justify-center">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </Badge>
           )}
         </Button>
       </div>
 
-      {/* Notifications Panel */}
-      {showNotifications && (
-        <div className="fixed top-16 right-4 w-80 max-h-96 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
-          <div className="p-4 border-b border-slate-700">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-white">Notificaciones</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowNotifications(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      {/* Notification Panel */}
+      {showPanel && (
+        <div className="fixed top-16 right-4 w-80 max-h-96 z-50">
+          <Card className="bg-slate-800/95 backdrop-blur-sm border-slate-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium text-white">Notificaciones</h3>
+                <div className="flex gap-2">
+                  {notifications.length > 0 && (
+                    <Button variant="ghost" size="sm" onClick={clearAll} className="text-slate-400 text-xs">
+                      Limpiar
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setShowPanel(false)} className="text-slate-400">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-          <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="p-4 text-center text-slate-400">No hay notificaciones</div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 border-b border-slate-700 last:border-b-0 ${getColorClass(notification.type)} ${
-                    !notification.read ? "bg-opacity-20" : "bg-opacity-5"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    {getIcon(notification.type)}
-                    <div className="flex-1 min-w-0">
-                      <h4 className={`font-medium text-sm ${!notification.read ? "text-white" : "text-slate-300"}`}>
-                        {notification.title}
-                      </h4>
-                      <p className="text-sm text-slate-400 mt-1">{notification.message}</p>
-                      <p className="text-xs text-slate-500 mt-2">
-                        {notification.timestamp.toLocaleTimeString("es-ES", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex gap-1">
-                      {!notification.read && (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Bell className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                    <p className="text-slate-400 text-sm">No hay notificaciones</p>
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 rounded-lg border ${getBorderColor(notification.type)} ${
+                        notification.read ? "bg-slate-900/50" : "bg-slate-800/50"
+                      } cursor-pointer transition-colors hover:bg-slate-700/50`}
+                      onClick={() => markAsRead(notification.id)}
+                    >
+                      <div className="flex items-start gap-3">
+                        {getIcon(notification.type)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4
+                              className={`text-sm font-medium ${notification.read ? "text-slate-400" : "text-white"}`}
+                            >
+                              {notification.title}
+                            </h4>
+                            {!notification.read && <div className="w-2 h-2 bg-blue-400 rounded-full"></div>}
+                          </div>
+                          <p className={`text-xs ${notification.read ? "text-slate-500" : "text-slate-300"} mt-1`}>
+                            {notification.message}
+                          </p>
+                          <div className="flex items-center gap-1 mt-2">
+                            <Clock className="h-3 w-3 text-slate-500" />
+                            <span className="text-xs text-slate-500">
+                              {notification.timestamp.toLocaleTimeString("es-ES", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </div>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeNotification(notification.id)
+                          }}
                           className="text-slate-400 hover:text-white p-1 h-auto"
                         >
-                          <CheckCircle className="h-3 w-3" />
+                          <X className="h-3 w-3" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeNotification(notification.id)}
-                        className="text-slate-400 hover:text-red-400 p-1 h-auto"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {notifications.length > 0 && (
-            <div className="p-3 border-t border-slate-700">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setNotifications([])}
-                className="w-full text-slate-400 hover:text-white"
-              >
-                Limpiar todas
-              </Button>
-            </div>
-          )}
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
-    </>
+
+      {/* Achievement Notification */}
+      {currentAchievement && (
+        <AchievementNotification achievement={currentAchievement} onClose={() => setCurrentAchievement(null)} />
+      )}
+    </NotificationContext.Provider>
   )
 }
