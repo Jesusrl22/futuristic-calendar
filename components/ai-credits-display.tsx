@@ -1,13 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { getUserAICredits, type AICreditsInfo } from "@/lib/ai-credits"
-import { PayPalHtmlButtons } from "./paypal-html-buttons"
-import { Sparkles, CreditCard, AlertCircle, Clock } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Sparkles, CreditCard, TrendingUp, AlertCircle, Zap } from "lucide-react"
+import { getUserAICredits, formatCost, getCostExamples } from "@/lib/ai-credits"
 
 interface AICreditsDisplayProps {
   userId: string
@@ -15,133 +14,165 @@ interface AICreditsDisplayProps {
 }
 
 export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
-  const [credits, setCredits] = useState<AICreditsInfo | null>(null)
+  const [credits, setCredits] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
-    loadCredits()
+    const fetchCredits = async () => {
+      try {
+        const userCredits = await getUserAICredits(userId)
+        setCredits(userCredits)
+      } catch (error) {
+        console.error("Error fetching AI credits:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchCredits()
   }, [userId])
 
-  const loadCredits = async () => {
-    try {
-      const creditsInfo = await getUserAICredits(userId)
-      setCredits(creditsInfo)
-    } catch (error) {
-      console.error("Error loading AI credits:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handlePurchaseComplete = (purchasedCredits: number) => {
-    // Refresh credits after purchase
-    loadCredits()
-    setShowPurchaseDialog(false)
-  }
+  const costExamples = getCostExamples()
 
   if (isLoading) {
     return (
-      <div className="flex items-center space-x-2">
+      <div className={`flex items-center space-x-2 ${theme.textSecondary}`}>
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-400"></div>
-        <span className={`text-sm ${theme.textSecondary}`}>Cargando...</span>
+        <span className="text-sm">Cargando créditos...</span>
       </div>
     )
   }
 
-  if (!credits) {
-    return (
-      <div className="flex items-center space-x-2">
-        <AlertCircle className="h-4 w-4 text-red-400" />
-        <span className="text-sm text-red-400">Error cargando créditos</span>
-      </div>
-    )
+  const getCreditsColor = () => {
+    if (credits >= 100) return "text-green-400"
+    if (credits >= 50) return "text-yellow-400"
+    if (credits >= 10) return "text-orange-400"
+    return "text-red-400"
   }
 
-  const getStatusColor = () => {
-    if (!credits.canUseAI) return "text-red-400"
-    if (credits.remaining < 10) return "text-yellow-400"
-    return "text-green-400"
-  }
-
-  const getStatusIcon = () => {
-    if (!credits.canUseAI) return <AlertCircle className="h-4 w-4" />
-    if (credits.remaining < 10) return <Clock className="h-4 w-4" />
-    return <Sparkles className="h-4 w-4" />
-  }
-
-  const getStatusText = () => {
-    if (!credits.canUseAI) return "Sin acceso IA"
-    if (credits.remaining === 0) return "Sin créditos"
-    if (credits.remaining < 10) return "Pocos créditos"
-    return "IA disponible"
+  const getCreditsStatus = () => {
+    if (credits >= 100) return "Excelente"
+    if (credits >= 50) return "Bueno"
+    if (credits >= 10) return "Bajo"
+    return "Crítico"
   }
 
   return (
-    <div className="flex items-center space-x-3">
-      {/* Credits Display */}
-      <div className="flex items-center space-x-2">
-        <div className={`flex items-center space-x-1 ${getStatusColor()}`}>
-          {getStatusIcon()}
-          <span className="text-sm font-medium">{credits.remaining}</span>
-        </div>
-        <span className={`text-xs ${theme.textMuted}`}>créditos</span>
-      </div>
+    <div className="space-y-4">
+      {/* Main Credits Display */}
+      <Card className={`${theme.cardBg} ${theme.border}`}>
+        <CardHeader className="pb-3">
+          <CardTitle className={`${theme.textPrimary} text-lg flex items-center justify-between`}>
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-5 h-5 text-purple-400" />
+              <span>Créditos IA</span>
+            </div>
+            <Badge variant="secondary" className={`${getCreditsColor()} bg-opacity-20`}>
+              {getCreditsStatus()}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Credits Count */}
+          <div className="text-center">
+            <div className={`text-4xl font-bold ${getCreditsColor()}`}>{credits}</div>
+            <p className={`text-sm ${theme.textSecondary}`}>créditos disponibles</p>
+          </div>
 
-      {/* Status Badge */}
-      <Badge
-        variant="secondary"
-        className={`text-xs ${
-          credits.canUseAI
-            ? "bg-green-500/10 text-green-400 border-green-500/20"
-            : "bg-red-500/10 text-red-400 border-red-500/20"
-        }`}
-      >
-        {getStatusText()}
-      </Badge>
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className={theme.textSecondary}>Nivel de créditos</span>
+              <span className={theme.textSecondary}>{Math.min(100, (credits / 200) * 100).toFixed(0)}%</span>
+            </div>
+            <Progress value={Math.min(100, (credits / 200) * 100)} className="h-2" />
+          </div>
 
-      {/* Purchase Button */}
-      <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
-        <DialogTrigger asChild>
-          <Button size="sm" variant="ghost" className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10">
-            <CreditCard className="h-3 w-3 mr-1" />
-            Comprar
-          </Button>
-        </DialogTrigger>
-        <DialogContent className={`${theme.cardBg} ${theme.border} max-w-4xl max-h-[90vh] overflow-y-auto`}>
-          <DialogHeader>
-            <DialogTitle className={`${theme.textPrimary} flex items-center gap-2`}>
-              <Sparkles className="h-5 w-5 text-purple-400" />
-              Comprar Créditos IA
-            </DialogTitle>
-          </DialogHeader>
+          {/* Quick Actions */}
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDetails(!showDetails)}
+              className={`flex-1 ${theme.buttonSecondary}`}
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              {showDetails ? "Ocultar" : "Ver"} detalles
+            </Button>
+            <Button size="sm" className={`flex-1 ${theme.buttonPrimary}`}>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Comprar más
+            </Button>
+          </div>
 
-          <div className="space-y-6">
-            {/* Current Status */}
-            <Card className={`${theme.cardBg} border-slate-600`}>
-              <CardContent className="p-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className={`text-2xl font-bold ${theme.textPrimary}`}>{credits.remaining}</div>
-                    <div className={`text-sm ${theme.textSecondary}`}>Créditos restantes</div>
+          {/* Low Credits Warning */}
+          {credits < 10 && (
+            <div className={`flex items-center space-x-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20`}>
+              <AlertCircle className="w-4 h-4 text-red-400" />
+              <div>
+                <p className={`text-sm font-medium text-red-400`}>Créditos bajos</p>
+                <p className={`text-xs ${theme.textMuted}`}>
+                  Compra más créditos para continuar usando las funciones de IA
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Detailed Information */}
+      {showDetails && (
+        <Card className={`${theme.cardBg} ${theme.border}`}>
+          <CardHeader>
+            <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
+              <Zap className="w-5 h-5 text-yellow-400" />
+              <span>Costos por consulta</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className={`text-sm ${theme.textSecondary} mb-4`}>
+              Los créditos se calculan dinámicamente según el uso real de tokens. Solo pagas por lo que usas.
+            </div>
+
+            {/* Cost Examples */}
+            <div className="space-y-3">
+              {costExamples.map((example, index) => (
+                <div key={index} className={`p-3 rounded-lg bg-slate-800/30 border ${theme.border}`}>
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className={`text-sm font-medium ${theme.textPrimary}`}>{example.scenario}</h4>
+                    <Badge variant="secondary" className="text-xs">
+                      {example.creditsConsumed} crédito{example.creditsConsumed > 1 ? "s" : ""}
+                    </Badge>
                   </div>
-                  <div>
-                    <div className={`text-2xl font-bold ${theme.textPrimary}`}>{credits.used}</div>
-                    <div className={`text-sm ${theme.textSecondary}`}>Créditos usados</div>
-                  </div>
-                  <div>
-                    <div className={`text-2xl font-bold text-purple-400`}>{credits.totalCostEur.toFixed(2)}€</div>
-                    <div className={`text-sm ${theme.textSecondary}`}>Coste total</div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className={theme.textSecondary}>
+                      <span className="font-medium">Tokens:</span> {example.inputTokens + example.outputTokens}
+                    </div>
+                    <div className={theme.textSecondary}>
+                      <span className="font-medium">Costo:</span> {formatCost(example.costEur)}
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
 
-            {/* Purchase Options */}
-            <PayPalHtmlButtons userId={userId} theme={theme} onPurchaseComplete={handlePurchaseComplete} />
-          </div>
-        </DialogContent>
-      </Dialog>
+            {/* Value Proposition */}
+            <div className={`p-3 rounded-lg bg-purple-500/10 border border-purple-500/20`}>
+              <div className="flex items-center space-x-2 mb-2">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className={`text-sm font-medium ${theme.textPrimary}`}>Sistema justo y transparente</span>
+              </div>
+              <ul className={`text-xs ${theme.textSecondary} space-y-1`}>
+                <li>• Consultas simples cuestan menos créditos</li>
+                <li>• Ves el costo real antes de cada consulta</li>
+                <li>• Sin tarifas fijas, solo pagas lo que usas</li>
+                <li>• Historial detallado de todos tus gastos</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

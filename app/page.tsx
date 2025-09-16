@@ -139,11 +139,6 @@ export default function FutureTaskApp() {
     }
   }
 
-  const handleQuickLogin = (email: string, password: string) => {
-    setLoginForm({ email, password })
-    setAuthError("")
-  }
-
   const handleLogout = () => {
     console.log("👋 Logging out...")
     setCurrentUser(null)
@@ -285,42 +280,6 @@ export default function FutureTaskApp() {
                     )}
                   </Button>
                 </form>
-
-                <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
-                  <p className="text-sm text-slate-300 mb-3">Cuentas de prueba (haz clic para usar):</p>
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => handleQuickLogin("admin@futuretask.com", "535353-Jrl")}
-                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-2 rounded hover:bg-slate-600/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-3 w-3 text-red-400" />
-                        <span>Admin: admin@futuretask.com / 535353-Jrl</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleQuickLogin("demo@futuretask.com", "demo123")}
-                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-2 rounded hover:bg-slate-600/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <UserIcon className="h-3 w-3 text-blue-400" />
-                        <span>Demo: demo@futuretask.com / demo123</span>
-                      </div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleQuickLogin("jesusrayaleon1@gmail.com", "jesus123")}
-                      className="block w-full text-left text-xs text-slate-400 hover:text-slate-300 p-2 rounded hover:bg-slate-600/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-3 w-3 text-purple-400" />
-                        <span>Jesus: jesusrayaleon1@gmail.com / jesus123</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
               </TabsContent>
 
               <TabsContent value="register">

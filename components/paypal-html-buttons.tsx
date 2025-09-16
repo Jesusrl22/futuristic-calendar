@@ -2,175 +2,177 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Shield, CheckCircle, AlertCircle } from "lucide-react"
 import { CREDIT_PACKAGES } from "@/lib/ai-credits"
-import { Sparkles, CreditCard, Check, Star } from "lucide-react"
 
 interface PayPalHtmlButtonsProps {
   userId: string
   theme: any
-  onPurchaseComplete?: (credits: number) => void
 }
 
-export function PayPalHtmlButtons({ userId, theme, onPurchaseComplete }: PayPalHtmlButtonsProps) {
+export function PayPalHtmlButtons({ userId, theme }: PayPalHtmlButtonsProps) {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
 
-  // Aquí pegarás los botones HTML que te genere PayPal Business
-  const getPayPalButtonHTML = (packageIndex: number) => {
-    const pkg = CREDIT_PACKAGES[packageIndex]
-
-    // IMPORTANTE: Reemplaza estos botones con los que te genere PayPal Business
-    // Cada botón debe tener un item_number único para identificar el paquete
-    switch (packageIndex) {
-      case 0: // 50 créditos - €1.00
-        return `
-          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-            <input type="hidden" name="cmd" value="_s-xclick" />
-            <input type="hidden" name="hosted_button_id" value="TU_BUTTON_ID_1" />
-            <input type="hidden" name="item_number" value="credits_50" />
-            <input type="hidden" name="custom" value="${userId}" />
-            <input type="hidden" name="return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/success?credits=50" />
-            <input type="hidden" name="cancel_return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel" />
-            <input type="hidden" name="notify_url" value="${process.env.NEXT_PUBLIC_APP_URL}/api/paypal/ipn" />
-            <input type="image" src="https://www.paypalobjects.com/es_ES/ES/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Comprar ahora" />
-          </form>
-        `
-      case 1: // 100 créditos - €2.00
-        return `
-          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-            <input type="hidden" name="cmd" value="_s-xclick" />
-            <input type="hidden" name="hosted_button_id" value="TU_BUTTON_ID_2" />
-            <input type="hidden" name="item_number" value="credits_100" />
-            <input type="hidden" name="custom" value="${userId}" />
-            <input type="hidden" name="return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/success?credits=100" />
-            <input type="hidden" name="cancel_return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel" />
-            <input type="hidden" name="notify_url" value="${process.env.NEXT_PUBLIC_APP_URL}/api/paypal/ipn" />
-            <input type="image" src="https://www.paypalobjects.com/es_ES/ES/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Comprar ahora" />
-          </form>
-        `
-      case 2: // 250 créditos - €5.00
-        return `
-          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-            <input type="hidden" name="cmd" value="_s-xclick" />
-            <input type="hidden" name="hosted_button_id" value="TU_BUTTON_ID_3" />
-            <input type="hidden" name="item_number" value="credits_250" />
-            <input type="hidden" name="custom" value="${userId}" />
-            <input type="hidden" name="return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/success?credits=250" />
-            <input type="hidden" name="cancel_return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel" />
-            <input type="hidden" name="notify_url" value="${process.env.NEXT_PUBLIC_APP_URL}/api/paypal/ipn" />
-            <input type="image" src="https://www.paypalobjects.com/es_ES/ES/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Comprar ahora" />
-          </form>
-        `
-      case 3: // 500 créditos - €10.00
-        return `
-          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-            <input type="hidden" name="cmd" value="_s-xclick" />
-            <input type="hidden" name="hosted_button_id" value="TU_BUTTON_ID_4" />
-            <input type="hidden" name="item_number" value="credits_500" />
-            <input type="hidden" name="custom" value="${userId}" />
-            <input type="hidden" name="return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/success?credits=500" />
-            <input type="hidden" name="cancel_return" value="${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel" />
-            <input type="hidden" name="notify_url" value="${process.env.NEXT_PUBLIC_APP_URL}/api/paypal/ipn" />
-            <input type="image" src="https://www.paypalobjects.com/es_ES/ES/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Comprar ahora" />
-          </form>
-        `
-      default:
-        return ""
-    }
+  const handlePackageSelect = (packageIndex: number) => {
+    setSelectedPackage(packageIndex)
   }
 
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className={`text-2xl font-bold ${theme.textPrimary} mb-2`}>Comprar Créditos IA</h3>
-        <p className={theme.textSecondary}>Elige el paquete que mejor se adapte a tus necesidades</p>
+        <h2 className={`text-2xl font-bold ${theme.textPrimary} mb-2`}>Comprar Créditos IA</h2>
+        <p className={`${theme.textSecondary}`}>
+          Elige el paquete que mejor se adapte a tus necesidades. Solo pagas por lo que usas.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {CREDIT_PACKAGES.map((pkg, index) => (
           <Card
             key={index}
-            className={`${theme.cardBg} ${theme.border} relative transition-all duration-200 ${
+            className={`${theme.cardBg} ${theme.border} relative overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 ${
               selectedPackage === index ? "ring-2 ring-purple-500" : ""
-            } ${pkg.popular ? "ring-2 ring-yellow-500" : ""}`}
+            } ${pkg.popular ? "border-purple-500" : ""}`}
+            onClick={() => handlePackageSelect(index)}
           >
             {pkg.popular && (
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <Badge className="bg-yellow-500 text-black font-bold px-3 py-1">
-                  <Star className="w-3 h-3 mr-1" />
-                  Más Popular
+              <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 text-xs font-bold">
+                  POPULAR
                 </Badge>
               </div>
             )}
 
-            <CardHeader className="text-center pb-4">
-              <div className="flex items-center justify-center mb-2">
-                <Sparkles className="w-6 h-6 text-purple-400 mr-2" />
-                <CardTitle className={`text-xl ${theme.textPrimary}`}>{pkg.credits} Créditos</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className={`${theme.textPrimary} text-lg flex items-center justify-between`}>
+                <span>{pkg.credits} Créditos</span>
+                <span className="text-2xl font-bold">{pkg.price}</span>
+              </CardTitle>
+              <div className="space-y-2">
+                <p className={`text-sm ${theme.textSecondary}`}>{pkg.description}</p>
+                <p className={`text-xs ${theme.textMuted}`}>{pkg.estimatedRequests}</p>
               </div>
-              <div className={`text-3xl font-bold ${theme.textPrimary}`}>{pkg.price}</div>
-              <p className={`text-sm ${theme.textSecondary}`}>{pkg.description}</p>
             </CardHeader>
 
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center text-sm">
-                  <Check className="w-4 h-4 text-green-400 mr-2" />
-                  <span className={theme.textSecondary}>{pkg.estimatedRequests}</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <Check className="w-4 h-4 text-green-400 mr-2" />
-                  <span className={theme.textSecondary}>Válido por 12 meses</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <Check className="w-4 h-4 text-green-400 mr-2" />
-                  <span className={theme.textSecondary}>Soporte prioritario</span>
+              {/* PayPal Button */}
+              <div className="space-y-3">
+                <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" className="w-full">
+                  <input type="hidden" name="cmd" value="_s-xclick" />
+                  <input type="hidden" name="hosted_button_id" value={getButtonId(index)} />
+                  <input type="hidden" name="custom" value={JSON.stringify({ userId, credits: pkg.credits })} />
+                  <input
+                    type="hidden"
+                    name="return"
+                    value={`https://future-task.com/payment/success?credits=${pkg.credits}`}
+                  />
+                  <input type="hidden" name="cancel_return" value="https://future-task.com/payment/cancel" />
+                  <input type="hidden" name="notify_url" value="https://future-task.com/api/paypal/ipn" />
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    Pagar con PayPal
+                  </Button>
+                </form>
+
+                {/* Security Info */}
+                <div className={`flex items-center justify-center space-x-2 text-xs ${theme.textMuted}`}>
+                  <Shield className="w-3 h-3" />
+                  <span>Pago seguro procesado por PayPal</span>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-700">
-                {selectedPackage === index ? (
-                  <div className="space-y-3">
-                    <div
-                      className="paypal-button-container"
-                      dangerouslySetInnerHTML={{
-                        __html: getPayPalButtonHTML(index),
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedPackage(null)}
-                      className="w-full text-slate-400 hover:text-white"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    onClick={() => setSelectedPackage(index)}
-                    className={`w-full ${
-                      pkg.popular ? "bg-yellow-600 hover:bg-yellow-700 text-black font-bold" : theme.buttonPrimary
-                    }`}
-                    disabled={isProcessing}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Seleccionar Paquete
-                  </Button>
-                )}
+              {/* Package Details */}
+              <div className={`text-xs ${theme.textMuted} space-y-1 pt-2 border-t ${theme.border}`}>
+                <div className="flex justify-between">
+                  <span>Costo IA:</span>
+                  <span>{pkg.aiCost}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Comisión servicio:</span>
+                  <span>{pkg.profit}</span>
+                </div>
+                <div className="flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span>{pkg.price}</span>
+                </div>
+              </div>
+
+              {/* Value Indicators */}
+              <div className="space-y-2">
+                <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
+                  <CheckCircle className="w-3 h-3 text-green-400" />
+                  <span>Créditos añadidos instantáneamente</span>
+                </div>
+                <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
+                  <CheckCircle className="w-3 h-3 text-green-400" />
+                  <span>Sin fecha de caducidad</span>
+                </div>
+                <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
+                  <CheckCircle className="w-3 h-3 text-green-400" />
+                  <span>Costo transparente por consulta</span>
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className={`text-center text-sm ${theme.textMuted} space-y-2`}>
-        <p>🔒 Pago seguro procesado por PayPal</p>
-        <p>💳 Aceptamos tarjetas de crédito, débito y PayPal</p>
-        <p>⚡ Los créditos se añaden automáticamente a tu cuenta</p>
-      </div>
+      {/* Information Section */}
+      <Card className={`${theme.cardBg} ${theme.border}`}>
+        <CardHeader>
+          <CardTitle className={`${theme.textPrimary} text-lg`}>¿Cómo funcionan los créditos?</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`p-4 rounded-lg bg-blue-500/10 border border-blue-500/20`}>
+              <h3 className={`font-medium ${theme.textPrimary} mb-2`}>Sistema justo</h3>
+              <p className={`text-sm ${theme.textSecondary}`}>
+                Solo pagas por los tokens que realmente usas. Consultas simples cuestan menos.
+              </p>
+            </div>
+            <div className={`p-4 rounded-lg bg-green-500/10 border border-green-500/20`}>
+              <h3 className={`font-medium ${theme.textPrimary} mb-2`}>Transparente</h3>
+              <p className={`text-sm ${theme.textSecondary}`}>
+                Ves el costo exacto de cada consulta antes de enviarla.
+              </p>
+            </div>
+            <div className={`p-4 rounded-lg bg-purple-500/10 border border-purple-500/20`}>
+              <h3 className={`font-medium ${theme.textPrimary} mb-2`}>Sin caducidad</h3>
+              <p className={`text-sm ${theme.textSecondary}`}>Tus créditos no caducan nunca. Úsalos cuando quieras.</p>
+            </div>
+          </div>
+
+          <div className={`p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20`}>
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
+              <div>
+                <h3 className={`font-medium ${theme.textPrimary} mb-1`}>Importante</h3>
+                <p className={`text-sm ${theme.textSecondary}`}>
+                  Necesitas una suscripción Pro activa para poder usar los créditos IA. Los créditos se añaden
+                  automáticamente a tu cuenta después del pago exitoso.
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
+}
+
+// Helper function to get PayPal button ID based on package index
+function getButtonId(packageIndex: number): string {
+  const buttonIds = [
+    "TU_BUTTON_ID_50_CREDITS", // Replace with actual PayPal button ID for 50 credits
+    "TU_BUTTON_ID_100_CREDITS", // Replace with actual PayPal button ID for 100 credits
+    "TU_BUTTON_ID_250_CREDITS", // Replace with actual PayPal button ID for 250 credits
+    "TU_BUTTON_ID_500_CREDITS", // Replace with actual PayPal button ID for 500 credits
+  ]
+
+  return buttonIds[packageIndex] || buttonIds[0]
 }
