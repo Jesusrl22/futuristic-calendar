@@ -1,478 +1,348 @@
 "use client"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Settings, Clock, Save, User, Crown, Sparkles, AlertTriangle, X, Calendar } from "lucide-react"
-import { DatabaseStatus } from "./database-status"
-import { cancelUserSubscription } from "@/lib/database"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Settings, User, Clock, Crown, Sparkles, Shield, X } from "lucide-react"
+import type { User as UserType } from "@/lib/database"
 
 interface SettingsModalProps {
-  user: any
-  onUpdateUser: (updates: any) => void
-  theme: any
+  user: UserType
+  onUpdateUser: (updates: Partial<UserType>) => void
+  theme: {
+    cardBg: string
+    border: string
+    textPrimary: string
+    textSecondary: string
+    textMuted: string
+    buttonPrimary: string
+    buttonSecondary: string
+    inputBg: string
+  }
   t: (key: string) => string
 }
 
 export function SettingsModal({ user, onUpdateUser, theme, t }: SettingsModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [name, setName] = useState(user.name)
-  const [language, setLanguage] = useState(user.language)
-  const [workDuration, setWorkDuration] = useState(user.work_duration)
-  const [shortBreak, setShortBreak] = useState(user.short_break_duration)
-  const [longBreak, setLongBreak] = useState(user.long_break_duration)
-  const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(user.sessions_until_long_break)
-  const [showCancelPlan, setShowCancelPlan] = useState(false)
-  const [isCancelling, setIsCancelling] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    language: user.language,
+    theme: user.theme,
+    work_duration: user.work_duration,
+    short_break_duration: user.short_break_duration,
+    long_break_duration: user.long_break_duration,
+    sessions_until_long_break: user.sessions_until_long_break,
+  })
 
   const handleSave = () => {
-    onUpdateUser({
-      name,
-      language,
-      work_duration: workDuration,
-      short_break_duration: shortBreak,
-      long_break_duration: longBreak,
-      sessions_until_long_break: sessionsUntilLongBreak,
-    })
+    onUpdateUser(formData)
     setIsOpen(false)
   }
 
-  const handleCancelPlan = async () => {
-    setIsCancelling(true)
-    try {
-      // Cancel the subscription (but keep benefits until end of billing period)
-      const success = await cancelUserSubscription(user.id)
-
-      if (success) {
-        // Refresh user data to show cancelled status
-        window.location.reload()
-      } else {
-        console.error("Failed to cancel subscription")
-      }
-
-      setShowCancelPlan(false)
-      setIsOpen(false)
-    } catch (error) {
-      console.error("Error cancelling plan:", error)
-    } finally {
-      setIsCancelling(false)
-    }
+  const handleCancel = () => {
+    setIsOpen(false)
   }
 
-  const applyPreset = (preset: string) => {
-    switch (preset) {
-      case "classic":
-        setWorkDuration(25)
-        setShortBreak(5)
-        setLongBreak(15)
-        setSessionsUntilLongBreak(4)
-        break
-      case "extended":
-        setWorkDuration(30)
-        setShortBreak(10)
-        setLongBreak(20)
-        setSessionsUntilLongBreak(3)
-        break
-      case "intensive":
-        setWorkDuration(45)
-        setShortBreak(15)
-        setLongBreak(30)
-        setSessionsUntilLongBreak(2)
-        break
-      case "university":
-        setWorkDuration(50)
-        setShortBreak(10)
-        setLongBreak(25)
-        setSessionsUntilLongBreak(3)
-        break
-    }
-  }
-
-  const getCurrentPlan = () => {
-    if (user.is_pro) return "Pro"
-    if (user.is_premium) return "Premium"
-    return "Gratuito"
-  }
-
-  const getCurrentPlanPrice = () => {
-    if (user.is_pro) return "€4.99/mes"
-    if (user.is_premium) return "€1.99/mes"
-    return "€0/mes"
-  }
-
-  const getSubscriptionStatus = () => {
-    if (user.subscription_status === "cancelled") {
-      const endsAt = user.subscription_ends_at ? new Date(user.subscription_ends_at) : null
-      if (endsAt) {
-        return {
-          status: "Cancelado",
-          message: `Tu suscripción terminará el ${endsAt.toLocaleDateString("es-ES")}`,
-          color: "text-orange-400",
-          bgColor: "bg-orange-500/10 border-orange-500/20",
-        }
-      }
-    }
-
-    if (user.is_pro || user.is_premium) {
-      return {
-        status: "Activo",
-        message: "Tu suscripción está activa",
-        color: "text-green-400",
-        bgColor: "bg-green-500/10 border-green-500/20",
-      }
-    }
-
-    return {
-      status: "Inactivo",
-      message: "No tienes una suscripción activa",
-      color: "text-gray-400",
-      bgColor: "bg-gray-500/10 border-gray-500/20",
-    }
-  }
-
-  const subscriptionInfo = getSubscriptionStatus()
-  const isSubscriptionCancelled = user.subscription_status === "cancelled"
+  if (!isOpen) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className={theme.textSecondary}>
-          <Settings className="w-4 h-4 mr-2" />
-          {t("settings")}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className={`max-w-3xl ${theme.cardBg} ${theme.border}`}>
+      <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className={theme.textPrimary}>Configuración</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5 text-purple-400" />
+            Configuración
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              className="ml-auto text-slate-400 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogTitle>
+          <DialogDescription className="text-slate-400">Personaliza tu experiencia en FutureTask</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 max-h-[70vh] overflow-y-auto">
-          {/* Profile Settings */}
-          <Card className={`${theme.cardBg} ${theme.border}`}>
-            <CardHeader>
-              <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
-                <User className="w-5 h-5" />
-                <span>Perfil</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className={theme.textSecondary}>
-                  Nombre
-                </Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className={theme.inputBg} />
-              </div>
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-700">
+            <TabsTrigger value="profile" className="text-white">
+              <User className="h-4 w-4 mr-2" />
+              Perfil
+            </TabsTrigger>
+            <TabsTrigger value="pomodoro" className="text-white">
+              <Clock className="h-4 w-4 mr-2" />
+              Pomodoro
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="text-white">
+              <Crown className="h-4 w-4 mr-2" />
+              Suscripción
+            </TabsTrigger>
+          </TabsList>
 
-              <div className="space-y-2">
-                <Label htmlFor="language" className={theme.textSecondary}>
-                  Idioma
-                </Label>
-                <Select value={language} onValueChange={(value: any) => setLanguage(value)}>
-                  <SelectTrigger className={theme.inputBg}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="it">Italiano</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          <TabsContent value="profile" className="space-y-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <User className="h-4 w-4 text-blue-400" />
+                Información Personal
+              </h3>
 
-          {/* Subscription Management */}
-          <Card className={`${theme.cardBg} ${theme.border}`}>
-            <CardHeader>
-              <CardTitle className={`${theme.textPrimary} text-lg flex items-center justify-between`}>
-                <div className="flex items-center space-x-2">
-                  <Crown className="w-5 h-5 text-yellow-400" />
-                  <span>Suscripción</span>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className={`${user.is_pro ? "bg-purple-600" : user.is_premium ? "bg-yellow-600" : "bg-gray-600"} text-white`}
-                >
-                  {getCurrentPlan()}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Subscription Status Alert */}
-              {isSubscriptionCancelled && (
-                <div className={`p-4 rounded-lg ${subscriptionInfo.bgColor} border`}>
-                  <div className="flex items-start space-x-2">
-                    <Calendar className={`w-5 h-5 ${subscriptionInfo.color} mt-0.5`} />
-                    <div>
-                      <h4 className={`font-medium ${subscriptionInfo.color} mb-1`}>Suscripción Cancelada</h4>
-                      <p className={`text-sm ${theme.textSecondary}`}>{subscriptionInfo.message}</p>
-                      <p className={`text-xs ${theme.textSecondary} mt-1`}>
-                        Seguirás teniendo acceso a todas las funciones hasta esa fecha.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`p-4 rounded-lg bg-slate-800/30 border ${theme.border}`}>
-                  <h4 className={`font-medium ${theme.textPrimary} mb-1`}>Plan actual</h4>
-                  <p className={`text-2xl font-bold ${theme.textPrimary}`}>{getCurrentPlan()}</p>
-                  <p className={`text-sm ${theme.textSecondary}`}>{getCurrentPlanPrice()}</p>
-                  <div className="mt-2">
-                    <Badge variant="outline" className={`${subscriptionInfo.color} border-current`}>
-                      {subscriptionInfo.status}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className={`p-4 rounded-lg bg-slate-800/30 border ${theme.border}`}>
-                  <h4 className={`font-medium ${theme.textPrimary} mb-1`}>Características</h4>
-                  <div className="space-y-1">
-                    {user.is_pro && (
-                      <>
-                        <div className="flex items-center space-x-2">
-                          <Sparkles className="w-3 h-3 text-purple-400" />
-                          <span className={`text-xs ${theme.textSecondary}`}>Acceso completo a IA</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Crown className="w-3 h-3 text-yellow-400" />
-                          <span className={`text-xs ${theme.textSecondary}`}>Funciones Premium</span>
-                        </div>
-                      </>
-                    )}
-                    {user.is_premium && !user.is_pro && (
-                      <div className="flex items-center space-x-2">
-                        <Crown className="w-3 h-3 text-yellow-400" />
-                        <span className={`text-xs ${theme.textSecondary}`}>Funciones Premium</span>
-                      </div>
-                    )}
-                    {!user.is_premium && !user.is_pro && (
-                      <span className={`text-xs ${theme.textSecondary}`}>Funciones básicas</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Cancel Plan Button - Only show if subscription is active */}
-              {(user.is_premium || user.is_pro) && !isSubscriptionCancelled && (
-                <div className="pt-4 border-t border-gray-600/20">
-                  {!showCancelPlan ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowCancelPlan(true)}
-                      className="text-red-400 border-red-400/30 hover:bg-red-400/10"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancelar suscripción
-                    </Button>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className={`p-4 rounded-lg bg-red-500/10 border border-red-500/20`}>
-                        <div className="flex items-start space-x-2">
-                          <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5" />
-                          <div>
-                            <h4 className={`font-medium text-red-400 mb-1`}>¿Estás seguro?</h4>
-                            <p className={`text-sm ${theme.textSecondary} mb-3`}>
-                              Al cancelar tu suscripción {getCurrentPlan()}:
-                            </p>
-                            <ul className={`text-xs ${theme.textSecondary} space-y-1 mb-3`}>
-                              <li>• Mantendrás acceso hasta el final del período pagado</li>
-                              <li>• No se te cobrará en el próximo ciclo de facturación</li>
-                              {user.is_pro && <li>• Perderás acceso a IA cuando expire</li>}
-                              <li>• Podrás reactivar tu suscripción en cualquier momento</li>
-                            </ul>
-                            <p className={`text-xs ${theme.textSecondary} font-medium`}>
-                              Tu suscripción terminará el{" "}
-                              {user.premium_expiry
-                                ? new Date(user.premium_expiry).toLocaleDateString("es-ES")
-                                : "final del período actual"}
-                              .
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowCancelPlan(false)}
-                          className={theme.buttonSecondary}
-                          disabled={isCancelling}
-                        >
-                          Mantener plan
-                        </Button>
-                        <Button
-                          onClick={handleCancelPlan}
-                          disabled={isCancelling}
-                          className="bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          {isCancelling ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              <span>Cancelando...</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2">
-                              <X className="w-4 h-4 mr-2" />
-                              Confirmar cancelación
-                            </div>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Reactivate Button - Show if subscription is cancelled but still active */}
-              {isSubscriptionCancelled && (user.is_premium || user.is_pro) && (
-                <div className="pt-4 border-t border-gray-600/20">
-                  <Button
-                    variant="outline"
-                    className="text-green-400 border-green-400/30 hover:bg-green-400/10 bg-transparent"
-                    onClick={() => {
-                      // Here you would implement reactivation logic
-                      alert("Funcionalidad de reactivación - implementar con tu sistema de pagos")
-                    }}
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Reactivar suscripción
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Pomodoro Settings */}
-          <Card className={`${theme.cardBg} ${theme.border}`}>
-            <CardHeader>
-              <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
-                <Clock className="w-5 h-5" />
-                <span>Configuración Pomodoro</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="work-duration" className={theme.textSecondary}>
-                    Duración trabajo (min)
+                <div>
+                  <Label htmlFor="name" className="text-slate-300">
+                    Nombre
                   </Label>
                   <Input
-                    id="work-duration"
-                    type="number"
-                    min="1"
-                    max="120"
-                    value={workDuration}
-                    onChange={(e) => setWorkDuration(Number(e.target.value))}
-                    className={theme.inputBg}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="short-break" className={theme.textSecondary}>
-                    Descanso corto (min)
+                <div>
+                  <Label htmlFor="email" className="text-slate-300">
+                    Email
                   </Label>
                   <Input
-                    id="short-break"
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={shortBreak}
-                    onChange={(e) => setShortBreak(Number(e.target.value))}
-                    className={theme.inputBg}
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="bg-slate-700 border-slate-600 text-white"
                   />
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="long-break" className={theme.textSecondary}>
-                    Descanso largo (min)
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="language" className="text-slate-300">
+                    Idioma
+                  </Label>
+                  <Select
+                    value={formData.language}
+                    onValueChange={(value) => setFormData({ ...formData, language: value })}
+                  >
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="theme" className="text-slate-300">
+                    Tema
+                  </Label>
+                  <Select value={formData.theme} onValueChange={(value) => setFormData({ ...formData, theme: value })}>
+                    <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dark">Oscuro</SelectItem>
+                      <SelectItem value="light">Claro</SelectItem>
+                      <SelectItem value="system">Sistema</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pomodoro" className="space-y-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Clock className="h-4 w-4 text-green-400" />
+                Configuración Pomodoro
+              </h3>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="work_duration" className="text-slate-300">
+                    Duración Trabajo (minutos)
                   </Label>
                   <Input
-                    id="long-break"
+                    id="work_duration"
                     type="number"
+                    value={formData.work_duration}
+                    onChange={(e) => setFormData({ ...formData, work_duration: Number.parseInt(e.target.value) || 25 })}
+                    className="bg-slate-700 border-slate-600 text-white"
                     min="1"
                     max="60"
-                    value={longBreak}
-                    onChange={(e) => setLongBreak(Number(e.target.value))}
-                    className={theme.inputBg}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="short_break_duration" className="text-slate-300">
+                    Descanso Corto (minutos)
+                  </Label>
+                  <Input
+                    id="short_break_duration"
+                    type="number"
+                    value={formData.short_break_duration}
+                    onChange={(e) =>
+                      setFormData({ ...formData, short_break_duration: Number.parseInt(e.target.value) || 5 })
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                    min="1"
+                    max="30"
+                  />
+                </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="sessions-until-long" className={theme.textSecondary}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="long_break_duration" className="text-slate-300">
+                    Descanso Largo (minutos)
+                  </Label>
+                  <Input
+                    id="long_break_duration"
+                    type="number"
+                    value={formData.long_break_duration}
+                    onChange={(e) =>
+                      setFormData({ ...formData, long_break_duration: Number.parseInt(e.target.value) || 15 })
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                    min="1"
+                    max="60"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="sessions_until_long_break" className="text-slate-300">
                     Sesiones hasta descanso largo
                   </Label>
                   <Input
-                    id="sessions-until-long"
+                    id="sessions_until_long_break"
                     type="number"
+                    value={formData.sessions_until_long_break}
+                    onChange={(e) =>
+                      setFormData({ ...formData, sessions_until_long_break: Number.parseInt(e.target.value) || 4 })
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
                     min="1"
                     max="10"
-                    value={sessionsUntilLongBreak}
-                    onChange={(e) => setSessionsUntilLongBreak(Number(e.target.value))}
-                    className={theme.inputBg}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className={theme.textSecondary}>Configuraciones predefinidas</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => applyPreset("classic")}
-                    className={theme.buttonSecondary}
-                  >
-                    Clásico
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => applyPreset("extended")}
-                    className={theme.buttonSecondary}
-                  >
-                    Extendido
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => applyPreset("intensive")}
-                    className={theme.buttonSecondary}
-                  >
-                    Intensivo
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => applyPreset("university")}
-                    className={theme.buttonSecondary}
-                  >
-                    Universidad
-                  </Button>
+              <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <h4 className="font-medium text-blue-400 mb-2">Vista Previa</h4>
+                <p className="text-sm text-slate-300">
+                  Trabajarás por {formData.work_duration} minutos, luego descansarás {formData.short_break_duration}{" "}
+                  minutos. Después de {formData.sessions_until_long_break} sesiones, tendrás un descanso largo de{" "}
+                  {formData.long_break_duration} minutos.
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="subscription" className="space-y-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Crown className="h-4 w-4 text-yellow-400" />
+                Estado de Suscripción
+              </h3>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 border border-slate-700">
+                  <div className="flex items-center gap-3">
+                    {user.email === "admin@futuretask.com" && (
+                      <Badge variant="secondary" className="bg-red-600 text-white">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Admin
+                      </Badge>
+                    )}
+                    {user.is_pro && (
+                      <Badge variant="secondary" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Pro
+                      </Badge>
+                    )}
+                    {user.is_premium && !user.is_pro && (
+                      <Badge variant="secondary" className="bg-yellow-600 text-white">
+                        <Crown className="h-3 w-3 mr-1" />
+                        Premium
+                      </Badge>
+                    )}
+                    {!user.is_premium && (
+                      <Badge variant="secondary" className="bg-slate-600 text-white">
+                        Gratuito
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                {user.is_pro && (
+                  <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                    <h4 className="font-medium text-purple-400 mb-2">Créditos IA</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-slate-400">Disponibles</p>
+                        <p className="text-lg font-bold text-white">{user.ai_credits || 0}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-400">Usados</p>
+                        <p className="text-lg font-bold text-white">{user.ai_credits_used || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <h4 className="font-medium text-white">Funciones Disponibles</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 rounded bg-slate-900/30">
+                      <span className="text-slate-300">📅 Calendario básico</span>
+                      <Badge variant="secondary" className="bg-green-600 text-white">
+                        Incluido
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded bg-slate-900/30">
+                      <span className="text-slate-300">✅ Gestión de tareas</span>
+                      <Badge variant="secondary" className="bg-green-600 text-white">
+                        Incluido
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded bg-slate-900/30">
+                      <span className="text-slate-300">🎯 Lista de objetivos</span>
+                      <Badge variant="secondary" className={user.is_premium ? "bg-green-600" : "bg-yellow-600"}>
+                        {user.is_premium ? "Incluido" : "Premium"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded bg-slate-900/30">
+                      <span className="text-slate-300">📝 Sistema de notas</span>
+                      <Badge variant="secondary" className={user.is_premium ? "bg-green-600" : "bg-yellow-600"}>
+                        {user.is_premium ? "Incluido" : "Premium"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded bg-slate-900/30">
+                      <span className="text-slate-300">🤖 Asistente IA</span>
+                      <Badge variant="secondary" className={user.is_pro ? "bg-green-600" : "bg-purple-600"}>
+                        {user.is_pro ? "Incluido" : "Pro"}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
 
-          {/* Database Status */}
-          <DatabaseStatus theme={theme} />
-        </div>
-
-        <div className="flex justify-end space-x-2 pt-4 border-t border-gray-600/20">
-          <Button variant="ghost" onClick={() => setIsOpen(false)}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSave} className={theme.buttonPrimary}>
-            <Save className="w-4 h-4 mr-2" />
-            Guardar cambios
+          <Button onClick={handleSave} className="bg-purple-600 hover:bg-purple-700">
+            Guardar Cambios
           </Button>
         </div>
       </DialogContent>

@@ -1,114 +1,87 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Database, CheckCircle, XCircle, AlertCircle, RefreshCw } from "lucide-react"
-import { getDatabaseStatus, testSupabaseConnection } from "@/lib/supabase"
+import { Database, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { isSupabaseAvailable } from "@/lib/supabase"
 
 interface DatabaseStatusProps {
-  theme: any
+  theme: {
+    cardBg: string
+    border: string
+    textPrimary: string
+    textSecondary: string
+  }
 }
 
 export function DatabaseStatus({ theme }: DatabaseStatusProps) {
-  const [status, setStatus] = useState(getDatabaseStatus())
-  const [isConnected, setIsConnected] = useState<boolean | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [status, setStatus] = useState<"checking" | "connected" | "fallback">("checking")
 
-  const testConnection = async () => {
-    setIsLoading(true)
-    try {
-      const connected = await testSupabaseConnection()
-      setIsConnected(connected)
-    } catch (error) {
-      setIsConnected(false)
-    } finally {
-      setIsLoading(false)
+  useEffect(() => {
+    const checkStatus = () => {
+      if (isSupabaseAvailable) {
+        setStatus("connected")
+      } else {
+        setStatus("fallback")
+      }
+    }
+
+    checkStatus()
+  }, [])
+
+  const getStatusInfo = () => {
+    switch (status) {
+      case "checking":
+        return {
+          icon: <AlertCircle className="h-4 w-4 text-yellow-400" />,
+          text: "Verificando conexión...",
+          badge: "Verificando",
+          badgeColor: "bg-yellow-600",
+        }
+      case "connected":
+        return {
+          icon: <CheckCircle className="h-4 w-4 text-green-400" />,
+          text: "Conectado a Supabase",
+          badge: "Conectado",
+          badgeColor: "bg-green-600",
+        }
+      case "fallback":
+        return {
+          icon: <XCircle className="h-4 w-4 text-orange-400" />,
+          text: "Usando datos locales (modo demo)",
+          badge: "Modo Demo",
+          badgeColor: "bg-orange-600",
+        }
     }
   }
 
-  useEffect(() => {
-    testConnection()
-  }, [])
-
-  const getStatusIcon = () => {
-    if (isLoading) return <RefreshCw className="w-4 h-4 animate-spin" />
-    if (isConnected === true) return <CheckCircle className="w-4 h-4 text-green-400" />
-    if (isConnected === false) return <XCircle className="w-4 h-4 text-red-400" />
-    return <AlertCircle className="w-4 h-4 text-yellow-400" />
-  }
-
-  const getStatusText = () => {
-    if (isLoading) return "Probando conexión..."
-    if (isConnected === true) return "Conectado"
-    if (isConnected === false) return "Desconectado"
-    return "Desconocido"
-  }
-
-  const getStatusColor = () => {
-    if (isConnected === true) return "text-green-400"
-    if (isConnected === false) return "text-red-400"
-    return "text-yellow-400"
-  }
+  const statusInfo = getStatusInfo()
 
   return (
     <Card className={`${theme.cardBg} ${theme.border}`}>
       <CardHeader>
-        <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
-          <Database className="w-5 h-5" />
-          <span>Estado de la Base de Datos</span>
+        <CardTitle className={`${theme.textPrimary} flex items-center gap-2`}>
+          <Database className="h-5 w-5 text-blue-400" />
+          Estado de la Base de Datos
+          <Badge variant="secondary" className={`${statusInfo.badgeColor} text-white`}>
+            {statusInfo.badge}
+          </Badge>
         </CardTitle>
+        <CardDescription className={theme.textSecondary}>
+          Información sobre la conexión a la base de datos
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon()}
-            <span className={`font-semibold ${getStatusColor()}`}>{getStatusText()}</span>
-          </div>
-          <Button variant="ghost" size="sm" onClick={testConnection} disabled={isLoading} className={theme.textMuted}>
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
+      <CardContent>
+        <div className="flex items-center gap-3">
+          {statusInfo.icon}
+          <span className={theme.textPrimary}>{statusInfo.text}</span>
         </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className={theme.textSecondary}>Supabase disponible:</span>
-            <Badge variant={status.supabaseAvailable ? "default" : "destructive"}>
-              {status.supabaseAvailable ? "Sí" : "No"}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className={theme.textSecondary}>Credenciales:</span>
-            <Badge variant={status.hasCredentials ? "default" : "destructive"}>
-              {status.hasCredentials ? "Configuradas" : "Faltantes"}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className={theme.textSecondary}>Cliente inicializado:</span>
-            <Badge variant={status.clientInitialized ? "default" : "destructive"}>
-              {status.clientInitialized ? "Sí" : "No"}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className={theme.textSecondary}>URL válida:</span>
-            <Badge variant={status.validUrl ? "default" : "destructive"}>{status.validUrl ? "Sí" : "No"}</Badge>
-          </div>
-        </div>
-
-        {status.initializationError && (
-          <div className={`p-3 rounded border border-red-500/20 bg-red-500/10`}>
-            <p className={`text-sm text-red-400`}>Error: {status.initializationError}</p>
-          </div>
-        )}
-
-        {!status.supabaseAvailable && (
-          <div className={`p-3 rounded border border-yellow-500/20 bg-yellow-500/10`}>
-            <p className={`text-sm ${theme.textPrimary}`}>
-              💡 Configura las variables de entorno NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY
+        {status === "fallback" && (
+          <div className="mt-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+            <p className="text-sm text-orange-400">
+              La aplicación funciona en modo demo con datos locales. Para usar la base de datos completa, configura las
+              variables de entorno de Supabase.
             </p>
           </div>
         )}

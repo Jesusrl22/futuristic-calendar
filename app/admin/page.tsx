@@ -5,18 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { getAllUsers, type User } from "@/lib/database"
-import { Users, Crown, Sparkles, DollarSign, Edit, Save, X, Shield, Clock, Zap } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { getAllUsers, updateUser, type User } from "@/lib/database"
+import { Users, Crown, Sparkles, Euro, Edit, ArrowLeft, Shield, Clock, Zap } from "lucide-react"
+import Link from "next/link"
 
-export default function AdminPage() {
+export default function AdminPanel() {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [editForm, setEditForm] = useState<Partial<User>>({})
-  const [isSaving, setIsSaving] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
     loadUsers()
@@ -49,33 +57,21 @@ export default function AdminPage() {
     })
   }
 
-  const handleSaveUser = async () => {
+  const handleUpdateUser = async () => {
     if (!editingUser) return
 
-    setIsSaving(true)
+    setIsUpdating(true)
     try {
-      const response = await fetch("/api/admin/update-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: editingUser.id,
-          updates: editForm,
-        }),
-      })
-
-      if (response.ok) {
-        await loadUsers() // Reload users to get updated data
+      const updatedUser = await updateUser(editingUser.id, editForm)
+      if (updatedUser) {
+        setUsers(users.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
         setEditingUser(null)
         setEditForm({})
-      } else {
-        console.error("Failed to update user")
       }
     } catch (error) {
       console.error("Error updating user:", error)
     } finally {
-      setIsSaving(false)
+      setIsUpdating(false)
     }
   }
 
@@ -83,7 +79,11 @@ export default function AdminPage() {
     totalUsers: users.length,
     premiumUsers: users.filter((u) => u.is_premium).length,
     proUsers: users.filter((u) => u.is_pro).length,
-    totalRevenue: users.filter((u) => u.is_premium).length * 1.99 + users.filter((u) => u.is_pro).length * 4.99,
+    monthlyRevenue: users.reduce((acc, u) => {
+      if (u.is_pro) return acc + 4.99
+      if (u.is_premium) return acc + 1.99
+      return acc
+    }, 0),
   }
 
   if (isLoading) {
@@ -98,18 +98,26 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="container mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="h-8 w-8 text-red-400" />
-            <h1 className="text-3xl font-bold text-white">Panel de Administración</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Shield className="h-8 w-8 text-red-400" />
+              <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
+            </div>
+            <Link href="/">
+              <Button variant="ghost" className="text-slate-300 hover:text-white">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver a la App
+              </Button>
+            </Link>
           </div>
-          <p className="text-slate-300">Gestiona usuarios y configuraciones del sistema</p>
         </div>
+      </header>
 
-        {/* Stats Cards */}
+      <main className="container mx-auto px-4 py-6">
+        {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -118,6 +126,7 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{stats.totalUsers}</div>
+              <p className="text-xs text-slate-400">Usuarios registrados</p>
             </CardContent>
           </Card>
 
@@ -128,6 +137,9 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{stats.premiumUsers}</div>
+              <p className="text-xs text-slate-400">
+                {stats.totalUsers > 0 ? Math.round((stats.premiumUsers / stats.totalUsers) * 100) : 0}% del total
+              </p>
             </CardContent>
           </Card>
 
@@ -138,29 +150,33 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">{stats.proUsers}</div>
+              <p className="text-xs text-slate-400">
+                {stats.totalUsers > 0 ? Math.round((stats.proUsers / stats.totalUsers) * 100) : 0}% del total
+              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-slate-300">Ingresos Mensuales</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-400" />
+              <Euro className="h-4 w-4 text-green-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">€{stats.totalRevenue.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-white">€{stats.monthlyRevenue.toFixed(2)}</div>
+              <p className="text-xs text-slate-400">Estimado mensual</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Users Table */}
+        {/* Lista de usuarios */}
         <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Users className="h-5 w-5" />
+              <Users className="h-5 w-5 text-blue-400" />
               Gestión de Usuarios
             </CardTitle>
             <CardDescription className="text-slate-300">
-              Administra las cuentas y suscripciones de los usuarios
+              Administra todos los usuarios registrados en la plataforma
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -168,12 +184,12 @@ export default function AdminPage() {
               {users.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 border border-slate-600"
+                  className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 border border-slate-700"
                 >
                   <div className="flex items-center gap-4">
-                    <div>
+                    <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-white">{user.name}</h3>
+                        <span className="font-medium text-white">{user.name}</span>
                         {user.email === "admin@futuretask.com" && (
                           <Badge variant="secondary" className="bg-red-600 text-white">
                             <Shield className="h-3 w-3 mr-1" />
@@ -196,13 +212,14 @@ export default function AdminPage() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-slate-400">{user.email}</p>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
-                        <span>Registrado: {new Date(user.created_at).toLocaleDateString()}</span>
+                      <span className="text-sm text-slate-400">{user.email}</span>
+                      <div className="flex items-center gap-4 mt-1">
+                        <span className="text-xs text-slate-500">
+                          Registrado: {new Date(user.created_at).toLocaleDateString("es-ES")}
+                        </span>
                         {user.is_pro && (
-                          <span className="flex items-center gap-1">
-                            <Zap className="h-3 w-3" />
-                            Créditos IA: {user.ai_credits || 0}
+                          <span className="text-xs text-purple-400">
+                            Créditos IA: {user.ai_credits || 0} / Usados: {user.ai_credits_used || 0}
                           </span>
                         )}
                       </div>
@@ -217,24 +234,27 @@ export default function AdminPage() {
                         onClick={() => handleEditUser(user)}
                         className="border-slate-600 text-slate-300 hover:bg-slate-700"
                       >
-                        <Edit className="h-4 w-4 mr-1" />
+                        <Edit className="h-4 w-4 mr-2" />
                         Editar
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                          <Edit className="h-5 w-5" />
+                          <Edit className="h-5 w-5 text-purple-400" />
                           Editar Usuario: {editingUser?.name}
                         </DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                          Modifica la información y configuración del usuario
+                        </DialogDescription>
                       </DialogHeader>
 
                       {editingUser && (
                         <div className="space-y-6">
-                          {/* Basic Info */}
+                          {/* Información básica */}
                           <div className="space-y-4">
-                            <h3 className="text-lg font-medium flex items-center gap-2">
-                              <Users className="h-4 w-4" />
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                              <Users className="h-4 w-4 text-blue-400" />
                               Información Básica
                             </h3>
                             <div className="grid grid-cols-2 gap-4">
@@ -263,29 +283,29 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          {/* Subscription */}
+                          {/* Suscripciones */}
                           <div className="space-y-4">
-                            <h3 className="text-lg font-medium flex items-center gap-2">
-                              <Crown className="h-4 w-4" />
-                              Suscripción
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                              <Crown className="h-4 w-4 text-yellow-400" />
+                              Suscripciones
                             </h3>
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                <Label htmlFor="premium" className="text-slate-300">
-                                  Premium
-                                </Label>
+                            <div className="grid grid-cols-2 gap-6">
+                              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                                <div>
+                                  <Label className="text-slate-300 font-medium">Premium</Label>
+                                  <p className="text-xs text-slate-400">€1.99/mes - Funciones avanzadas</p>
+                                </div>
                                 <Switch
-                                  id="premium"
                                   checked={editForm.is_premium || false}
                                   onCheckedChange={(checked) => setEditForm({ ...editForm, is_premium: checked })}
                                 />
                               </div>
-                              <div className="flex items-center justify-between">
-                                <Label htmlFor="pro" className="text-slate-300">
-                                  Pro
-                                </Label>
+                              <div className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 border border-slate-700">
+                                <div>
+                                  <Label className="text-slate-300 font-medium">Pro</Label>
+                                  <p className="text-xs text-slate-400">€4.99/mes - IA + Premium</p>
+                                </div>
                                 <Switch
-                                  id="pro"
                                   checked={editForm.is_pro || false}
                                   onCheckedChange={(checked) => setEditForm({ ...editForm, is_pro: checked })}
                                 />
@@ -293,11 +313,11 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          {/* AI Credits */}
+                          {/* Créditos IA (solo si es Pro) */}
                           {editForm.is_pro && (
                             <div className="space-y-4">
-                              <h3 className="text-lg font-medium flex items-center gap-2">
-                                <Sparkles className="h-4 w-4" />
+                              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-purple-400" />
                                 Créditos IA
                               </h3>
                               <div className="grid grid-cols-2 gap-4">
@@ -336,10 +356,10 @@ export default function AdminPage() {
                             </div>
                           )}
 
-                          {/* Pomodoro Settings */}
+                          {/* Configuración Pomodoro */}
                           <div className="space-y-4">
-                            <h3 className="text-lg font-medium flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-green-400" />
                               Configuración Pomodoro
                             </h3>
                             <div className="grid grid-cols-2 gap-4">
@@ -411,31 +431,27 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          {/* Actions */}
-                          <div className="flex justify-end gap-3 pt-4 border-t border-slate-600">
+                          {/* Botones de acción */}
+                          <div className="flex justify-end gap-3 pt-4 border-t border-slate-700">
                             <Button
                               variant="outline"
                               onClick={() => setEditingUser(null)}
                               className="border-slate-600 text-slate-300 hover:bg-slate-700"
                             >
-                              <X className="h-4 w-4 mr-1" />
                               Cancelar
                             </Button>
                             <Button
-                              onClick={handleSaveUser}
-                              disabled={isSaving}
+                              onClick={handleUpdateUser}
+                              disabled={isUpdating}
                               className="bg-purple-600 hover:bg-purple-700"
                             >
-                              {isSaving ? (
+                              {isUpdating ? (
                                 <div className="flex items-center gap-2">
                                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                   Guardando...
                                 </div>
                               ) : (
-                                <>
-                                  <Save className="h-4 w-4 mr-1" />
-                                  Guardar Cambios
-                                </>
+                                "Guardar Cambios"
                               )}
                             </Button>
                           </div>
@@ -448,7 +464,7 @@ export default function AdminPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   )
 }

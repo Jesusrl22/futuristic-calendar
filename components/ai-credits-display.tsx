@@ -10,11 +10,19 @@ import { getUserAICredits, formatCost, getCostExamples } from "@/lib/ai-credits"
 
 interface AICreditsDisplayProps {
   userId: string
-  theme: any
+  theme: {
+    textPrimary: string
+    textSecondary: string
+    cardBg: string
+    border: string
+    buttonSecondary: string
+    buttonPrimary: string
+    textMuted: string
+  }
 }
 
 export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
-  const [credits, setCredits] = useState(0)
+  const [credits, setCredits] = useState({ available: 0, used: 0 })
   const [isLoading, setIsLoading] = useState(true)
   const [showDetails, setShowDetails] = useState(false)
 
@@ -35,6 +43,14 @@ export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
 
   const costExamples = getCostExamples()
 
+  const percentage = credits.available > 0 ? ((credits.available - credits.used) / credits.available) * 100 : 0
+
+  const getColorClass = () => {
+    if (percentage > 50) return "bg-green-600"
+    if (percentage > 20) return "bg-yellow-600"
+    return "bg-red-600"
+  }
+
   if (isLoading) {
     return (
       <div className={`flex items-center space-x-2 ${theme.textSecondary}`}>
@@ -42,20 +58,6 @@ export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
         <span className="text-sm">Cargando créditos...</span>
       </div>
     )
-  }
-
-  const getCreditsColor = () => {
-    if (credits >= 100) return "text-green-400"
-    if (credits >= 50) return "text-yellow-400"
-    if (credits >= 10) return "text-orange-400"
-    return "text-red-400"
-  }
-
-  const getCreditsStatus = () => {
-    if (credits >= 100) return "Excelente"
-    if (credits >= 50) return "Bueno"
-    if (credits >= 10) return "Bajo"
-    return "Crítico"
   }
 
   return (
@@ -68,15 +70,16 @@ export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
               <Sparkles className="w-5 h-5 text-purple-400" />
               <span>Créditos IA</span>
             </div>
-            <Badge variant="secondary" className={`${getCreditsColor()} bg-opacity-20`}>
-              {getCreditsStatus()}
+            <Badge variant="secondary" className={`${getColorClass()} text-white`}>
+              <Zap className="h-3 w-3 mr-1" />
+              {credits.available - credits.used} créditos
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Credits Count */}
           <div className="text-center">
-            <div className={`text-4xl font-bold ${getCreditsColor()}`}>{credits}</div>
+            <div className={`text-4xl font-bold ${getColorClass()}`}>{credits.available - credits.used}</div>
             <p className={`text-sm ${theme.textSecondary}`}>créditos disponibles</p>
           </div>
 
@@ -84,9 +87,9 @@ export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className={theme.textSecondary}>Nivel de créditos</span>
-              <span className={theme.textSecondary}>{Math.min(100, (credits / 200) * 100).toFixed(0)}%</span>
+              <span className={theme.textSecondary}>{percentage.toFixed(0)}%</span>
             </div>
-            <Progress value={Math.min(100, (credits / 200) * 100)} className="h-2" />
+            <Progress value={percentage} className="h-2" />
           </div>
 
           {/* Quick Actions */}
@@ -107,7 +110,7 @@ export function AICreditsDisplay({ userId, theme }: AICreditsDisplayProps) {
           </div>
 
           {/* Low Credits Warning */}
-          {credits < 10 && (
+          {percentage <= 20 && (
             <div className={`flex items-center space-x-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20`}>
               <AlertCircle className="w-4 h-4 text-red-400" />
               <div>
