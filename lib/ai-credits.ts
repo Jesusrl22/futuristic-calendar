@@ -221,6 +221,10 @@ export async function addCredits(userId: string, amount: number): Promise<boolea
   }
 }
 
+export async function addCreditsToUser(userId: string, amount: number): Promise<boolean> {
+  return await addCredits(userId, amount)
+}
+
 export function calculateSavings(packageId: string): number {
   const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
   if (!pkg) return 0
@@ -248,7 +252,11 @@ export function validateCustomAmount(amount: number): { valid: boolean; message?
   return { valid: true }
 }
 
-export async function purchaseCredits(userId: string, packageId: string, customAmount?: number): Promise<boolean> {
+export async function purchaseCredits(
+  userId: string,
+  packageId: string,
+  customAmount?: number,
+): Promise<{ success: boolean; message: string; credits?: number }> {
   try {
     let credits: number
     let amount: number
@@ -256,14 +264,14 @@ export async function purchaseCredits(userId: string, packageId: string, customA
     if (customAmount) {
       const validation = validateCustomAmount(customAmount)
       if (!validation.valid) {
-        throw new Error(validation.message)
+        return { success: false, message: validation.message || "Cantidad inválida" }
       }
       credits = calculateCreditsFromAmount(customAmount)
       amount = customAmount
     } else {
       const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
       if (!pkg) {
-        throw new Error("Paquete no encontrado")
+        return { success: false, message: "Paquete no encontrado" }
       }
       credits = pkg.credits
       amount = pkg.price
@@ -276,15 +284,17 @@ export async function purchaseCredits(userId: string, packageId: string, customA
     const success = await addCredits(userId, credits)
 
     if (success) {
-      // Log the purchase (in a real app, you'd save this to a purchases table)
-      console.log(`Purchase successful: ${credits} credits for €${amount}`)
-      return true
+      return {
+        success: true,
+        message: `¡Compra exitosa! Se han añadido ${credits} créditos a tu cuenta.`,
+        credits,
+      }
     }
 
-    return false
+    return { success: false, message: "Error procesando la compra. Inténtalo de nuevo." }
   } catch (error) {
     console.error("Error purchasing credits:", error)
-    return false
+    return { success: false, message: "Error procesando la compra. Inténtalo de nuevo." }
   }
 }
 
@@ -326,3 +336,7 @@ export function getCreditUsageEstimate(credits: number): string {
 
   return estimates.join(" • ")
 }
+
+export const MIN_CUSTOM_AMOUNT = 10.0
+export const MAX_CUSTOM_AMOUNT = 999.99
+export const CREDITS_PER_EURO = 50

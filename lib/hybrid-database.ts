@@ -226,6 +226,10 @@ class HybridDatabase {
   }
 
   // User methods
+  async getUser(id: string): Promise<User | null> {
+    return this.getUserById(id)
+  }
+
   async getUserByEmail(email: string): Promise<User | null> {
     try {
       if (this.isSupabaseAvailable) {
@@ -254,6 +258,20 @@ class HybridDatabase {
 
     const users = this.getLocalData("users")
     return users.find((user: User) => user.id === id) || null
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    try {
+      if (this.isSupabaseAvailable) {
+        const { data, error } = await this.supabase.from("users").select("*").order("createdAt", { ascending: false })
+
+        if (!error && data) return data
+      }
+    } catch (error) {
+      console.warn("Supabase query failed, using localStorage:", error)
+    }
+
+    return this.getLocalData("users")
   }
 
   async createUser(userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
@@ -321,6 +339,28 @@ class HybridDatabase {
       return users[index]
     }
     return null
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      if (this.isSupabaseAvailable) {
+        const { error } = await this.supabase.from("users").delete().eq("id", id)
+
+        if (!error) {
+          const users = this.getLocalData("users")
+          const filtered = users.filter((user: User) => user.id !== id)
+          this.setLocalData("users", filtered)
+          return true
+        }
+      }
+    } catch (error) {
+      console.warn("Supabase delete failed, using localStorage:", error)
+    }
+
+    const users = this.getLocalData("users")
+    const filtered = users.filter((user: User) => user.id !== id)
+    this.setLocalData("users", filtered)
+    return true
   }
 
   // Task methods
@@ -475,6 +515,40 @@ class HybridDatabase {
     notes.push(note)
     this.setLocalData("notes", notes)
     return note
+  }
+
+  async updateNote(id: string, updates: Partial<Note>): Promise<Note | null> {
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    }
+
+    try {
+      if (this.isSupabaseAvailable) {
+        const { data, error } = await this.supabase.from("notes").update(updatedData).eq("id", id).select().single()
+
+        if (!error && data) {
+          const notes = this.getLocalData("notes")
+          const index = notes.findIndex((note: Note) => note.id === id)
+          if (index !== -1) {
+            notes[index] = { ...notes[index], ...updatedData }
+            this.setLocalData("notes", notes)
+          }
+          return data
+        }
+      }
+    } catch (error) {
+      console.warn("Supabase update failed, using localStorage:", error)
+    }
+
+    const notes = this.getLocalData("notes")
+    const index = notes.findIndex((note: Note) => note.id === id)
+    if (index !== -1) {
+      notes[index] = { ...notes[index], ...updatedData }
+      this.setLocalData("notes", notes)
+      return notes[index]
+    }
+    return null
   }
 
   async deleteNote(id: string): Promise<boolean> {
