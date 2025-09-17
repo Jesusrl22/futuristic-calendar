@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: [],
+    appDir: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -12,6 +12,9 @@ const nextConfig = {
   images: {
     domains: ['localhost'],
     unoptimized: true,
+  },
+  env: {
+    CUSTOM_KEY: 'my-value',
   },
 }
 

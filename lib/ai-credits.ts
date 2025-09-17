@@ -1,491 +1,328 @@
-import { supabase, isSupabaseAvailable } from "./supabase"
+import { createClient } from "@/lib/supabase"
 
-// OpenAI GPT-4o-mini pricing (December 2024)
-// Input: $0.000150 per 1K tokens
-// Output: $0.000600 per 1K tokens
-const OPENAI_INPUT_COST_PER_1K_TOKENS_USD = 0.00015
-const OPENAI_OUTPUT_COST_PER_1K_TOKENS_USD = 0.0006
-const USD_TO_EUR_RATE = 0.92 // Approximate conversion rate
-
-// Credit system based on real OpenAI costs + margin
-// 1 credit = €0.02 (2 cents) - includes OpenAI cost + profit margin
-export const CREDIT_VALUE_EUR = 0.02
-export const CREDIT_VALUE_USD = CREDIT_VALUE_EUR / USD_TO_EUR_RATE
-
-// Credit packages for additional purchases
 export interface CreditPackage {
+  id: string
+  name: string
   credits: number
-  price: string
-  priceValue: number
-  description: string
-  estimatedRequests: string
+  price: number
   popular?: boolean
-  aiCost: string
-  profit: string
+  bestValue?: boolean
+  description: string
+  savings?: number
 }
 
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
+    id: "starter",
+    name: "Starter",
     credits: 50,
-    price: "€1.00",
-    priceValue: 1.0,
-    description: "Perfecto para empezar",
-    estimatedRequests: "~25-50 consultas IA",
-    aiCost: "€0.50",
-    profit: "€0.50",
+    price: 1,
+    description: "Perfecto para probar",
   },
   {
+    id: "basic",
+    name: "Básico",
     credits: 100,
-    price: "€2.00",
-    priceValue: 2.0,
-    description: "Para uso regular",
-    estimatedRequests: "~50-100 consultas IA",
+    price: 2,
+    description: "Para uso ocasional",
+  },
+  {
+    id: "standard",
+    name: "Estándar",
+    credits: 150,
+    price: 3,
     popular: true,
-    aiCost: "€1.00",
-    profit: "€1.00",
+    description: "Más popular",
+    savings: 0.5,
   },
   {
+    id: "plus",
+    name: "Plus",
+    credits: 200,
+    price: 4,
+    description: "Uso regular",
+    savings: 1,
+  },
+  {
+    id: "premium",
+    name: "Premium",
     credits: 250,
-    price: "€5.00",
-    priceValue: 5.0,
-    description: "Para usuarios activos",
-    estimatedRequests: "~125-250 consultas IA",
-    aiCost: "€2.50",
-    profit: "€2.50",
+    price: 5,
+    bestValue: true,
+    description: "Mejor valor",
+    savings: 1.5,
   },
   {
+    id: "pro",
+    name: "Pro",
+    credits: 300,
+    price: 6,
+    description: "Para profesionales",
+    savings: 2,
+  },
+  {
+    id: "business",
+    name: "Business",
+    credits: 350,
+    price: 7,
+    description: "Uso intensivo",
+    savings: 2.5,
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    credits: 400,
+    price: 8,
+    description: "Máximo rendimiento",
+    savings: 3,
+  },
+  {
+    id: "ultimate",
+    name: "Ultimate",
+    credits: 450,
+    price: 9,
+    description: "Sin límites",
+    savings: 3.5,
+  },
+  {
+    id: "mega",
+    name: "Mega",
     credits: 500,
-    price: "€10.00",
-    priceValue: 10.0,
-    description: "Máximo valor",
-    estimatedRequests: "~250-500 consultas IA",
-    aiCost: "€5.00",
-    profit: "€5.00",
+    price: 10,
+    description: "El más completo",
+    savings: 4,
   },
 ]
 
-// Types
-export interface AICreditsInfo {
-  credits: number
-  used: number
-  remaining: number
-  resetDate: string | null
-  canUseAI: boolean
-  totalCostEur: number
-  totalTokensUsed: number
-  monthlyLimit: number
-  planType: "monthly" | "yearly"
-  isUnlimited: boolean
+export const QUERY_COSTS = {
+  simple: 2,
+  complex: 8,
+  average: 5,
+  image_analysis: 10,
+  code_generation: 15,
 }
 
-export interface AIUsage {
-  id: string
-  user_id: string
-  request_text: string
-  response_text: string
-  input_tokens: number
-  output_tokens: number
-  cost_eur: number
-  credits_consumed: number
-  model_used: string
-  request_type: string
-  created_at: string
+export function formatCredits(credits: number): string {
+  if (credits >= 1000000) {
+    return `${(credits / 1000000).toFixed(1)}M`
+  }
+  if (credits >= 1000) {
+    return `${(credits / 1000).toFixed(1)}k`
+  }
+  return credits.toString()
 }
 
-export interface AIAccessResult {
-  canUse: boolean
-  reason?: string
-  creditsRemaining: number
-}
+export function formatCreditsEstimate(credits: number): string {
+  const simpleQueries = Math.floor(credits / QUERY_COSTS.simple)
+  const averageQueries = Math.floor(credits / QUERY_COSTS.average)
+  const complexQueries = Math.floor(credits / QUERY_COSTS.complex)
 
-// Mock data for fallback when Supabase is not available
-const mockAICreditsData: Record<string, number> = {
-  "admin-mock-id": 1000,
-  "demo-mock-id": 0, // Demo user has 0 credits
-  "jesus-mock-id": 950, // Jesus has Pro with credits
-}
-
-// Calculate actual cost and credits from real token usage
-export function calculateActualCost(
-  inputTokens: number,
-  outputTokens: number,
-): {
-  costUsd: number
-  costEur: number
-  creditsConsumed: number
-} {
-  // Calculate actual OpenAI cost
-  const inputCostUSD = (inputTokens / 1000) * OPENAI_INPUT_COST_PER_1K_TOKENS_USD
-  const outputCostUSD = (outputTokens / 1000) * OPENAI_OUTPUT_COST_PER_1K_TOKENS_USD
-  const totalCostUSD = inputCostUSD + outputCostUSD
-  const costEur = totalCostUSD * USD_TO_EUR_RATE
-
-  // Convert to credits (round up, minimum 1) - includes profit margin
-  // El costo real + margen de beneficio se convierte a créditos
-  const creditsConsumed = Math.max(1, Math.ceil(totalCostUSD / CREDIT_VALUE_USD))
-
-  return {
-    costUsd: Math.round(totalCostUSD * 10000) / 10000, // Round to 4 decimal places
-    costEur: Math.round(costEur * 10000) / 10000,
-    creditsConsumed,
+  if (credits < 10) {
+    return `${simpleQueries} consultas simples`
+  } else if (credits < 50) {
+    return `${averageQueries} consultas promedio`
+  } else if (credits < 100) {
+    return `${averageQueries} consultas IA`
+  } else {
+    return `${complexQueries} consultas complejas o ${averageQueries} promedio`
   }
 }
 
-// Estimate credits needed based on request text (for pre-validation)
-export function estimateCreditsNeeded(requestText: string): number {
-  // Estimate input tokens (rough approximation: 1 token ≈ 3.5 characters for Spanish)
-  const estimatedInputTokens = Math.ceil(requestText.length / 3.5)
-
-  // Estimate output tokens (typically 2-3x input for detailed responses)
-  const estimatedOutputTokens = estimatedInputTokens * 2.5
-
-  // Calculate estimated cost
-  const { creditsConsumed } = calculateActualCost(estimatedInputTokens, estimatedOutputTokens)
-
-  return creditsConsumed
+export function formatCreditBalance(credits: number): string {
+  const formatted = formatCredits(credits)
+  const estimate = formatCreditsEstimate(credits)
+  return `${formatted} créditos (${estimate})`
 }
 
-// Get user's current AI credits count
-export async function getUserAICredits(userId: string): Promise<number> {
-  console.log(`🔍 Getting AI credits for user: ${userId}`)
+export function getCreditStatusColor(credits: number): string {
+  if (credits >= 100) return "text-green-600"
+  if (credits >= 50) return "text-yellow-600"
+  if (credits >= 20) return "text-orange-600"
+  return "text-red-600"
+}
 
-  // Check mock data first for development
-  if (!isSupabaseAvailable() || !supabase) {
-    console.log(`📦 Using mock AI credits for user: ${userId}`)
-    return mockAICreditsData[userId] || 0 // Default: 0 credits for new users
-  }
+export function getCreditStatusMessage(credits: number): string {
+  if (credits >= 100) return "Excelente saldo"
+  if (credits >= 50) return "Buen saldo"
+  if (credits >= 20) return "Saldo bajo"
+  return "Saldo muy bajo"
+}
 
+export function canAffordQuery(credits: number, queryType: keyof typeof QUERY_COSTS = "average"): boolean {
+  return credits >= QUERY_COSTS[queryType]
+}
+
+export function getQueryCost(queryType: keyof typeof QUERY_COSTS = "average"): number {
+  return QUERY_COSTS[queryType]
+}
+
+export async function getUserCredits(userId: string): Promise<number> {
   try {
+    const supabase = createClient()
     const { data, error } = await supabase.from("users").select("ai_credits").eq("id", userId).single()
 
     if (error) {
-      console.error("Error fetching AI credits:", error)
-      return mockAICreditsData[userId] || 0
+      console.error("Error fetching user credits:", error)
+      return 0
     }
 
     return data?.ai_credits || 0
   } catch (error) {
-    console.error("Error in getUserAICredits:", error)
-    return mockAICreditsData[userId] || 0
+    console.error("Error getting user credits:", error)
+    return 0
   }
 }
 
-// Check if user can use AI features
-export async function canUseAI(userId: string, isPro: boolean): Promise<AIAccessResult> {
+export async function deductCredits(userId: string, amount: number): Promise<boolean> {
   try {
-    const credits = await getUserAICredits(userId)
+    const supabase = createClient()
+    const currentCredits = await getUserCredits(userId)
 
-    // Must be Pro user to use AI
-    if (!isPro) {
-      return {
-        canUse: false,
-        reason: "Necesitas una suscripción Pro para usar las funciones de IA. Actualiza tu plan para acceder.",
-        creditsRemaining: credits,
-      }
+    if (currentCredits < amount) {
+      return false
     }
 
-    // Must have credits to use AI
-    if (credits <= 0) {
-      return {
-        canUse: false,
-        reason: "No tienes créditos IA disponibles. Compra más créditos para continuar usando las funciones de IA.",
-        creditsRemaining: 0,
-      }
+    const { error } = await supabase
+      .from("users")
+      .update({ ai_credits: currentCredits - amount })
+      .eq("id", userId)
+
+    if (error) {
+      console.error("Error deducting credits:", error)
+      return false
     }
 
-    return {
-      canUse: true,
-      creditsRemaining: credits,
-    }
-  } catch (error) {
-    console.error("Error checking AI access:", error)
-    return {
-      canUse: false,
-      reason: "Error verificando acceso a IA. Inténtalo de nuevo.",
-      creditsRemaining: 0,
-    }
-  }
-}
-
-// Add credits to user account
-export async function addCreditsToUser(userId: string, credits: number): Promise<boolean> {
-  console.log(`➕ Adding ${credits} AI credits to user: ${userId}`)
-
-  if (!isSupabaseAvailable() || !supabase) {
-    console.log(`📦 Mock AI credits addition for user: ${userId}`)
-    // Update mock data
-    if (mockAICreditsData[userId] !== undefined) {
-      mockAICreditsData[userId] += credits
-    } else {
-      mockAICreditsData[userId] = credits
-    }
     return true
+  } catch (error) {
+    console.error("Error deducting credits:", error)
+    return false
   }
+}
 
+export async function addCredits(userId: string, amount: number): Promise<boolean> {
   try {
-    const { error } = await supabase.rpc("add_ai_credits", {
-      user_id: userId,
-      credits_to_add: credits,
-    })
+    const supabase = createClient()
+    const currentCredits = await getUserCredits(userId)
+
+    const { error } = await supabase
+      .from("users")
+      .update({ ai_credits: currentCredits + amount })
+      .eq("id", userId)
 
     if (error) {
       console.error("Error adding credits:", error)
       return false
     }
 
-    console.log(`✅ Successfully added ${credits} credits to user: ${userId}`)
     return true
   } catch (error) {
-    console.error("Error in addCreditsToUser:", error)
+    console.error("Error adding credits:", error)
     return false
   }
 }
 
-// Consume credits for AI usage with REAL cost calculation
-export async function consumeAICredits(
-  userId: string,
-  requestText: string,
-  responseText: string,
-  inputTokens: number,
-  outputTokens: number,
-  modelUsed = "gpt-4o-mini",
-  requestType = "chat",
-): Promise<boolean> {
-  console.log(`🔥 Consuming AI credits for user: ${userId}`)
+export function calculateSavings(packageId: string): number {
+  const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
+  if (!pkg) return 0
 
-  // Calculate REAL cost based on actual token usage
-  const { costUsd, costEur, creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
+  const baseRate = 0.02 // €0.02 per credit
+  const standardCost = pkg.credits * baseRate
+  const actualCost = pkg.price
+  const savings = standardCost - actualCost
 
-  console.log(`💰 Real cost: $${costUsd.toFixed(4)} (€${costEur.toFixed(4)}) = ${creditsConsumed} créditos`)
+  return Math.max(0, savings)
+}
 
-  // Check if user has enough credits
-  const currentCredits = await getUserAICredits(userId)
-  if (currentCredits < creditsConsumed) {
-    console.error(`❌ Insufficient credits: ${currentCredits} < ${creditsConsumed}`)
-    return false
+export function calculateCreditsFromAmount(amount: number): number {
+  // Base rate: 50 credits per euro
+  return Math.floor(amount * 50)
+}
+
+export function validateCustomAmount(amount: number): { valid: boolean; message?: string } {
+  if (amount < 10) {
+    return { valid: false, message: "El mínimo es €10" }
   }
-
-  if (!isSupabaseAvailable() || !supabase) {
-    console.log(`📦 Mock AI credits consumption for user: ${userId}`)
-    // Update mock data
-    if (mockAICreditsData[userId] !== undefined) {
-      mockAICreditsData[userId] -= creditsConsumed
-    }
-    return true
+  if (amount > 999.99) {
+    return { valid: false, message: "El máximo es €999.99" }
   }
+  return { valid: true }
+}
 
+export async function purchaseCredits(userId: string, packageId: string, customAmount?: number): Promise<boolean> {
   try {
-    // Start transaction - update credits
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({
-        ai_credits: currentCredits - creditsConsumed,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId)
+    let credits: number
+    let amount: number
 
-    if (updateError) {
-      console.error("Error updating credits:", updateError)
-      return false
+    if (customAmount) {
+      const validation = validateCustomAmount(customAmount)
+      if (!validation.valid) {
+        throw new Error(validation.message)
+      }
+      credits = calculateCreditsFromAmount(customAmount)
+      amount = customAmount
+    } else {
+      const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
+      if (!pkg) {
+        throw new Error("Paquete no encontrado")
+      }
+      credits = pkg.credits
+      amount = pkg.price
     }
 
-    // Log usage with REAL cost data
-    const { error: logError } = await supabase.from("ai_usage_logs").insert({
-      user_id: userId,
-      request_text: requestText.substring(0, 1000), // Limit length
-      response_text: responseText.substring(0, 2000), // Limit length
-      input_tokens: inputTokens,
-      output_tokens: outputTokens,
-      cost_eur: costEur,
-      cost_usd: costUsd,
-      credits_consumed: creditsConsumed,
-      model_used: modelUsed,
-      request_type: requestType,
-    })
+    // Simulate payment processing
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    if (logError) {
-      console.error("Error logging AI usage:", logError)
-      // Don't fail the whole operation for logging errors
+    // Add credits to user account
+    const success = await addCredits(userId, credits)
+
+    if (success) {
+      // Log the purchase (in a real app, you'd save this to a purchases table)
+      console.log(`Purchase successful: ${credits} credits for €${amount}`)
+      return true
     }
 
-    console.log(`✅ Successfully consumed ${creditsConsumed} credits (real cost: €${costEur.toFixed(4)})`)
-    return true
+    return false
   } catch (error) {
-    console.error("Error in consumeAICredits:", error)
+    console.error("Error purchasing credits:", error)
     return false
   }
 }
 
-// Get user's AI usage history
-export async function getUserAIUsage(userId: string, limit = 10): Promise<AIUsage[]> {
-  console.log(`📊 Getting AI usage for user: ${userId}`)
-
-  if (!isSupabaseAvailable() || !supabase) {
-    console.log(`📦 Using mock AI usage for user: ${userId}`)
-    return [
-      {
-        id: "1",
-        user_id: userId,
-        request_text: "Ayúdame a planificar mi día",
-        response_text: "Aquí tienes un plan para tu día...",
-        input_tokens: 25,
-        output_tokens: 150,
-        cost_eur: 0.0184, // Real cost calculation
-        credits_consumed: 1, // Based on real cost
-        model_used: "gpt-4o-mini",
-        request_type: "planning",
-        created_at: new Date().toISOString(),
-      },
-    ]
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("ai_usage_logs")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(limit)
-
-    if (error) {
-      console.error("Error fetching AI usage:", error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    console.error("Error in getUserAIUsage:", error)
-    return []
-  }
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "EUR",
+  }).format(amount)
 }
 
-// Get cost statistics for admin
-export async function getAICostStats(): Promise<{
-  totalUsers: number
-  totalCostEur: number
-  totalCostUsd: number
-  totalTokens: number
-  totalRequests: number
-  avgCostPerUser: number
-  avgCostPerRequest: number
-  monthlyProjectedCost: number
-}> {
-  console.log("💰 Getting AI cost statistics")
-
-  if (!isSupabaseAvailable() || !supabase) {
-    console.log("📦 Using mock AI cost stats")
-    return {
-      totalUsers: 3,
-      totalCostEur: 5.25,
-      totalCostUsd: 5.71,
-      totalTokens: 15000,
-      totalRequests: 45,
-      avgCostPerUser: 1.75,
-      avgCostPerRequest: 0.117,
-      monthlyProjectedCost: 157.5,
-    }
-  }
-
-  try {
-    const { data, error } = await supabase.rpc("get_ai_cost_stats")
-
-    if (error) throw error
-
-    const stats = data[0] || {}
-    return {
-      totalUsers: stats.total_users || 0,
-      totalCostEur: Number.parseFloat(stats.total_cost_eur || "0"),
-      totalCostUsd: Number.parseFloat(stats.total_cost_usd || "0"),
-      totalTokens: stats.total_tokens || 0,
-      totalRequests: stats.total_requests || 0,
-      avgCostPerUser: Number.parseFloat(stats.avg_cost_per_user || "0"),
-      avgCostPerRequest: Number.parseFloat(stats.avg_cost_per_request || "0"),
-      monthlyProjectedCost: Number.parseFloat(stats.monthly_projected_cost || "0"),
-    }
-  } catch (error) {
-    console.error("Error getting AI cost stats:", error)
-    return {
-      totalUsers: 0,
-      totalCostEur: 0,
-      totalCostUsd: 0,
-      totalTokens: 0,
-      totalRequests: 0,
-      avgCostPerUser: 0,
-      avgCostPerRequest: 0,
-      monthlyProjectedCost: 0,
-    }
-  }
+export function getPackageById(id: string): CreditPackage | undefined {
+  return CREDIT_PACKAGES.find((pkg) => pkg.id === id)
 }
 
-// Format cost for display
-export function formatCost(costEur: number): string {
-  if (costEur < 0.001) {
-    return `€${(costEur * 1000).toFixed(2)}‰` // Show in per-mille for very small amounts
-  }
-  if (costEur < 0.01) {
-    return `€${costEur.toFixed(4)}`
-  }
-  return `€${costEur.toFixed(2)}`
+export function getPopularPackage(): CreditPackage | undefined {
+  return CREDIT_PACKAGES.find((pkg) => pkg.popular)
 }
 
-// Get plan comparison data
-export function getPlanComparison() {
-  return {
-    monthly: {
-      premium: {
-        price: 1.99,
-        credits: 0,
-        features: ["Sin IA", "Funciones básicas"],
-      },
-      pro: {
-        price: 4.99,
-        credits: 0, // Pro no incluye créditos, se compran por separado
-        features: ["Acceso a IA", "Compra créditos por separado", "Funciones avanzadas"],
-      },
-    },
-    yearly: {
-      premium: {
-        price: 20,
-        credits: 0,
-        savings: 3.88,
-        features: ["Sin IA", "Funciones básicas"],
-      },
-      pro: {
-        price: 50,
-        credits: 0, // Pro no incluye créditos, se compran por separado
-        savings: 9.88,
-        features: ["Acceso a IA", "Compra créditos por separado", "Funciones avanzadas"],
-      },
-    },
-  }
+export function getBestValuePackage(): CreditPackage | undefined {
+  return CREDIT_PACKAGES.find((pkg) => pkg.bestValue)
 }
 
-// Helper to show real cost examples
-export function getCostExamples() {
-  return [
-    {
-      scenario: "Pregunta simple (50 tokens entrada, 100 tokens salida)",
-      inputTokens: 50,
-      outputTokens: 100,
-      ...calculateActualCost(50, 100),
-    },
-    {
-      scenario: "Consulta detallada (150 tokens entrada, 400 tokens salida)",
-      inputTokens: 150,
-      outputTokens: 400,
-      ...calculateActualCost(150, 400),
-    },
-    {
-      scenario: "Planificación compleja (300 tokens entrada, 800 tokens salida)",
-      inputTokens: 300,
-      outputTokens: 800,
-      ...calculateActualCost(300, 800),
-    },
+export function getPopularPackages(): CreditPackage[] {
+  return CREDIT_PACKAGES.filter((pkg) => pkg.popular || pkg.bestValue)
+}
+
+export function formatSavings(savings: number): string {
+  if (savings <= 0) return ""
+  return `Ahorras €${savings.toFixed(2)}`
+}
+
+export function getCreditUsageEstimate(credits: number): string {
+  const estimates = [
+    `Consultas simples: ~${Math.floor(credits / QUERY_COSTS.simple)}`,
+    `Consultas complejas: ~${Math.floor(credits / QUERY_COSTS.complex)}`,
+    `Análisis: ~${Math.floor(credits / QUERY_COSTS.image_analysis)}`,
+    `Generación: ~${Math.floor(credits / QUERY_COSTS.code_generation)}`,
   ]
-}
 
-// Estimate tokens from text (rough approximation)
-export function estimateTokens(text: string): number {
-  // Rough approximation: 1 token ≈ 3.5 characters for Spanish/mixed content
-  return Math.ceil(text.length / 3.5)
+  return estimates.join(" • ")
 }

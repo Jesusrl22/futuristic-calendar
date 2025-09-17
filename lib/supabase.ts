@@ -1,101 +1,65 @@
-import { createClient } from "@supabase/supabase-js"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-export const isSupabaseAvailable = !!(supabaseUrl && supabaseAnonKey)
-
-export const supabase = isSupabaseAvailable ? createClient(supabaseUrl!, supabaseAnonKey!) : null
-
-console.log("🔗 Supabase status:", isSupabaseAvailable ? "Connected" : "Using fallback mode")
-
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       users: {
         Row: {
           id: string
-          name: string
           email: string
-          password: string
-          language: string
-          theme: string
-          is_premium: boolean
-          is_pro: boolean
-          onboarding_completed: boolean
-          pomodoro_sessions: number
-          work_duration: number
-          short_break_duration: number
-          long_break_duration: number
-          sessions_until_long_break: number
+          name: string | null
+          subscription_plan: string
+          ai_credits: number
           created_at: string
           updated_at: string
-          premium_expiry: string | null
-          ai_credits: number
-          ai_credits_used: number
-          ai_total_cost_eur: number
-          subscription_status: string | null
-          subscription_cancelled_at: string | null
-          subscription_ends_at: string | null
-          email_verified: boolean
-          verification_token: string | null
-          verification_expires: string | null
+          tasks_completed: number
+          notes_created: number
+          wishlist_items: number
+          ai_queries_used: number
+          streak_days: number
+          early_tasks_completed: number
+          late_tasks_completed: number
+          categories_created: number
+          events_created: number
+          credits_purchased: number
         }
         Insert: {
           id?: string
-          name: string
           email: string
-          password: string
-          language?: string
-          theme?: string
-          is_premium?: boolean
-          is_pro?: boolean
-          onboarding_completed?: boolean
-          pomodoro_sessions?: number
-          work_duration?: number
-          short_break_duration?: number
-          long_break_duration?: number
-          sessions_until_long_break?: number
+          name?: string | null
+          subscription_plan?: string
+          ai_credits?: number
           created_at?: string
           updated_at?: string
-          premium_expiry?: string | null
-          ai_credits?: number
-          ai_credits_used?: number
-          ai_total_cost_eur?: number
-          subscription_status?: string | null
-          subscription_cancelled_at?: string | null
-          subscription_ends_at?: string | null
-          email_verified?: boolean
-          verification_token?: string | null
-          verification_expires?: string | null
+          tasks_completed?: number
+          notes_created?: number
+          wishlist_items?: number
+          ai_queries_used?: number
+          streak_days?: number
+          early_tasks_completed?: number
+          late_tasks_completed?: number
+          categories_created?: number
+          events_created?: number
+          credits_purchased?: number
         }
         Update: {
           id?: string
-          name?: string
           email?: string
-          password?: string
-          language?: string
-          theme?: string
-          is_premium?: boolean
-          is_pro?: boolean
-          onboarding_completed?: boolean
-          pomodoro_sessions?: number
-          work_duration?: number
-          short_break_duration?: number
-          long_break_duration?: number
-          sessions_until_long_break?: number
+          name?: string | null
+          subscription_plan?: string
+          ai_credits?: number
           created_at?: string
           updated_at?: string
-          premium_expiry?: string | null
-          ai_credits?: number
-          ai_credits_used?: number
-          ai_total_cost_eur?: number
-          subscription_status?: string | null
-          subscription_cancelled_at?: string | null
-          subscription_ends_at?: string | null
-          email_verified?: boolean
-          verification_token?: string | null
-          verification_expires?: string | null
+          tasks_completed?: number
+          notes_created?: number
+          wishlist_items?: number
+          ai_queries_used?: number
+          streak_days?: number
+          early_tasks_completed?: number
+          late_tasks_completed?: number
+          categories_created?: number
+          events_created?: number
+          credits_purchased?: number
         }
       }
       tasks: {
@@ -107,6 +71,7 @@ export type Database = {
           completed: boolean
           priority: string
           due_date: string | null
+          category: string | null
           created_at: string
           updated_at: string
         }
@@ -118,6 +83,7 @@ export type Database = {
           completed?: boolean
           priority?: string
           due_date?: string | null
+          category?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -129,38 +95,7 @@ export type Database = {
           completed?: boolean
           priority?: string
           due_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      wishlist_items: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          description: string | null
-          priority: string
-          achieved: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          description?: string | null
-          priority?: string
-          achieved?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          description?: string | null
-          priority?: string
-          achieved?: boolean
+          category?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -191,52 +126,101 @@ export type Database = {
           updated_at?: string
         }
       }
-      email_logs: {
+      wishlist_items: {
         Row: {
           id: string
           user_id: string
-          email_type: string
-          subject: string
-          sent_at: string
-          status: string
-          error_message: string | null
+          title: string
+          description: string | null
+          priority: string
+          estimated_cost: number | null
+          target_date: string | null
+          completed: boolean
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          email_type: string
-          subject: string
-          sent_at?: string
-          status?: string
-          error_message?: string | null
+          title: string
+          description?: string | null
+          priority?: string
+          estimated_cost?: number | null
+          target_date?: string | null
+          completed?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          email_type?: string
-          subject?: string
-          sent_at?: string
-          status?: string
-          error_message?: string | null
+          title?: string
+          description?: string | null
+          priority?: string
+          estimated_cost?: number | null
+          target_date?: string | null
+          completed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_achievements: {
+        Row: {
+          id: string
+          user_id: string
+          achievement_id: string
+          unlocked_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          achievement_id: string
+          unlocked_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          achievement_id?: string
+          unlocked_at?: string
         }
       }
     }
     Views: {
-      subscription_analytics: {
-        Row: {
-          total_users: number
-          premium_users: number
-          pro_users: number
-          monthly_revenue: number
-          cancelled_subscriptions: number
-        }
-      }
+      [_ in never]: never
     }
     Functions: {
-      update_subscription_status: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      [_ in never]: never
+    }
+    Enums: {
+      [_ in never]: never
     }
   }
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn("Supabase environment variables not found. Using fallback configuration.")
+}
+
+export function createClient() {
+  return createSupabaseClient<Database>(
+    supabaseUrl || "https://placeholder.supabase.co",
+    supabaseAnonKey || "placeholder-anon-key",
+  )
+}
+
+export function createServerClient() {
+  return createSupabaseClient<Database>(
+    supabaseUrl || "https://placeholder.supabase.co",
+    supabaseAnonKey || "placeholder-anon-key",
+  )
+}
+
+export function createBrowserClient() {
+  return createSupabaseClient<Database>(
+    supabaseUrl || "https://placeholder.supabase.co",
+    supabaseAnonKey || "placeholder-anon-key",
+  )
 }

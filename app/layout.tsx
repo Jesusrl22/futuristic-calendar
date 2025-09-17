@@ -7,10 +7,10 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FutureTask - Tu Calendario Inteligente",
-  description: "Organiza tu vida con el calendario más avanzado del futuro",
+  title: "FutureTask - Tu Asistente de Productividad",
+  description: "Aplicación futurista de gestión de tareas, notas y productividad personal",
   icons: {
-    icon: "/favicon.png",
+    icon: "/favicon.ico",
     shortcut: "/favicon-16x16.png",
     apple: "/apple-touch-icon.png",
   },
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>
       </body>

@@ -1,364 +1,335 @@
+import { createClient } from "@/lib/supabase"
+
 export interface Achievement {
   id: string
-  name: string
+  title: string
   description: string
   icon: string
   category: "basic" | "premium" | "pro"
-  type: "wishlist_complete" | "task_complete" | "upgrade_premium" | "upgrade_pro" | "daily_login" | "ai_usage"
-  target: number
   points: number
-  unlocked: boolean
-  progress: number
-  unlockedAt?: string
+  condition: (user: any) => boolean
+  unlocked?: boolean
+  unlockedAt?: Date
 }
 
-export interface UserAchievement {
-  userId: string
-  achievementId: string
-  progress: number
-  unlocked: boolean
-  unlockedAt?: string
-}
-
-// In-memory storage for user achievements
-const userAchievements: UserAchievement[] = []
-
-// Achievement definitions
 export const ACHIEVEMENTS: Achievement[] = [
-  // Basic achievements (available to all users)
-  {
-    id: "first_wishlist",
-    name: "Primera Meta",
-    description: "Completa tu primera meta de la lista de deseos",
-    icon: "🎯",
-    category: "basic",
-    type: "wishlist_complete",
-    target: 1,
-    points: 10,
-    unlocked: false,
-    progress: 0,
-  },
-  {
-    id: "wishlist_master",
-    name: "Maestro de Metas",
-    description: "Completa 5 metas de tu lista de deseos",
-    icon: "🏆",
-    category: "basic",
-    type: "wishlist_complete",
-    target: 5,
-    points: 50,
-    unlocked: false,
-    progress: 0,
-  },
-  {
-    id: "dream_achiever",
-    name: "Realizador de Sueños",
-    description: "Completa 10 metas de tu lista de deseos",
-    icon: "⭐",
-    category: "basic",
-    type: "wishlist_complete",
-    target: 10,
-    points: 100,
-    unlocked: false,
-    progress: 0,
-  },
+  // Basic Achievements
   {
     id: "first_task",
-    name: "Primer Paso",
+    title: "Primera Tarea",
     description: "Completa tu primera tarea",
     icon: "✅",
     category: "basic",
-    type: "task_complete",
-    target: 1,
-    points: 5,
-    unlocked: false,
-    progress: 0,
-  },
-  {
-    id: "productive_day",
-    name: "Día Productivo",
-    description: "Completa 5 tareas en un día",
-    icon: "🚀",
-    category: "basic",
-    type: "task_complete",
-    target: 5,
-    points: 25,
-    unlocked: false,
-    progress: 0,
+    points: 10,
+    condition: (user) => user.tasksCompleted >= 1,
   },
   {
     id: "task_master",
-    name: "Maestro de Tareas",
-    description: "Completa 50 tareas en total",
-    icon: "🎖️",
+    title: "Maestro de Tareas",
+    description: "Completa 10 tareas",
+    icon: "🏆",
     category: "basic",
-    type: "task_complete",
-    target: 50,
-    points: 200,
-    unlocked: false,
-    progress: 0,
+    points: 50,
+    condition: (user) => user.tasksCompleted >= 10,
+  },
+  {
+    id: "week_warrior",
+    title: "Guerrero Semanal",
+    description: "Completa tareas durante 7 días consecutivos",
+    icon: "⚔️",
+    category: "basic",
+    points: 100,
+    condition: (user) => user.streakDays >= 7,
   },
   {
     id: "early_bird",
-    name: "Madrugador",
-    description: "Inicia sesión antes de las 7:00 AM",
+    title: "Madrugador",
+    description: "Completa una tarea antes de las 8 AM",
     icon: "🌅",
     category: "basic",
-    type: "daily_login",
-    target: 1,
-    points: 15,
-    unlocked: false,
-    progress: 0,
+    points: 25,
+    condition: (user) => user.earlyTasksCompleted >= 1,
   },
   {
     id: "night_owl",
-    name: "Búho Nocturno",
-    description: "Completa una tarea después de las 10:00 PM",
+    title: "Búho Nocturno",
+    description: "Completa una tarea después de las 10 PM",
     icon: "🦉",
     category: "basic",
-    type: "task_complete",
-    target: 1,
-    points: 15,
-    unlocked: false,
-    progress: 0,
+    points: 25,
+    condition: (user) => user.lateTasksCompleted >= 1,
+  },
+  {
+    id: "organizer",
+    title: "Organizador",
+    description: "Crea 5 categorías diferentes",
+    icon: "📁",
+    category: "basic",
+    points: 30,
+    condition: (user) => user.categoriesCreated >= 5,
   },
 
-  // Premium achievements
+  // Premium Achievements
   {
-    id: "premium_welcome",
-    name: "Bienvenido Premium",
-    description: "Actualiza tu cuenta a Premium",
-    icon: "👑",
+    id: "premium_user",
+    title: "Usuario Premium",
+    description: "Actualiza a Premium",
+    icon: "💎",
     category: "premium",
-    type: "upgrade_premium",
-    target: 1,
-    points: 100,
-    unlocked: false,
-    progress: 0,
+    points: 200,
+    condition: (user) => user.plan === "premium" || user.plan === "pro",
+  },
+  {
+    id: "wishlist_master",
+    title: "Maestro de Deseos",
+    description: "Agrega 10 elementos a tu wishlist",
+    icon: "⭐",
+    category: "premium",
+    points: 75,
+    condition: (user) => user.wishlistItems >= 10,
   },
   {
     id: "note_taker",
-    name: "Tomador de Notas",
-    description: "Crea tu primera nota",
+    title: "Tomador de Notas",
+    description: "Crea 20 notas",
     icon: "📝",
     category: "premium",
-    type: "task_complete",
-    target: 1,
-    points: 20,
-    unlocked: false,
-    progress: 0,
+    points: 60,
+    condition: (user) => user.notesCreated >= 20,
   },
   {
-    id: "organized_mind",
-    name: "Mente Organizada",
-    description: "Crea 10 notas",
-    icon: "🧠",
+    id: "calendar_pro",
+    title: "Pro del Calendario",
+    description: "Programa 50 eventos",
+    icon: "📅",
     category: "premium",
-    type: "task_complete",
-    target: 10,
-    points: 75,
-    unlocked: false,
-    progress: 0,
+    points: 100,
+    condition: (user) => user.eventsCreated >= 50,
   },
   {
-    id: "goal_setter",
-    name: "Establecedor de Metas",
-    description: "Agrega 3 metas a tu lista de deseos",
-    icon: "🎯",
+    id: "productivity_king",
+    title: "Rey de la Productividad",
+    description: "Completa 100 tareas",
+    icon: "👑",
     category: "premium",
-    type: "wishlist_complete",
-    target: 3,
-    points: 30,
-    unlocked: false,
-    progress: 0,
+    points: 300,
+    condition: (user) => user.tasksCompleted >= 100,
   },
   {
-    id: "persistent",
-    name: "Persistente",
-    description: "Usa la aplicación durante 7 días consecutivos",
-    icon: "💪",
+    id: "month_champion",
+    title: "Campeón del Mes",
+    description: "Mantén una racha de 30 días",
+    icon: "🏅",
     category: "premium",
-    type: "daily_login",
-    target: 7,
-    points: 150,
-    unlocked: false,
-    progress: 0,
-  },
-  {
-    id: "dedicated",
-    name: "Dedicado",
-    description: "Usa la aplicación durante 30 días consecutivos",
-    icon: "🔥",
-    category: "premium",
-    type: "daily_login",
-    target: 30,
     points: 500,
-    unlocked: false,
-    progress: 0,
+    condition: (user) => user.streakDays >= 30,
   },
 
-  // Pro achievements
+  // Pro Achievements
   {
-    id: "pro_welcome",
-    name: "Bienvenido Pro",
-    description: "Actualiza tu cuenta a Pro",
-    icon: "✨",
+    id: "pro_user",
+    title: "Usuario Pro",
+    description: "Actualiza a Pro",
+    icon: "🚀",
     category: "pro",
-    type: "upgrade_pro",
-    target: 1,
-    points: 200,
-    unlocked: false,
-    progress: 0,
-  },
-  {
-    id: "ai_explorer",
-    name: "Explorador IA",
-    description: "Usa el asistente IA por primera vez",
-    icon: "🤖",
-    category: "pro",
-    type: "ai_usage",
-    target: 1,
-    points: 50,
-    unlocked: false,
-    progress: 0,
+    points: 500,
+    condition: (user) => user.plan === "pro",
   },
   {
     id: "ai_enthusiast",
-    name: "Entusiasta IA",
-    description: "Usa el asistente IA 10 veces",
-    icon: "🧠",
+    title: "Entusiasta de IA",
+    description: "Usa el asistente IA 50 veces",
+    icon: "🤖",
     category: "pro",
-    type: "ai_usage",
-    target: 10,
-    points: 150,
-    unlocked: false,
-    progress: 0,
+    points: 200,
+    condition: (user) => user.aiQueriesUsed >= 50,
   },
   {
     id: "ai_master",
-    name: "Maestro IA",
-    description: "Usa el asistente IA 50 veces",
-    icon: "🎓",
+    title: "Maestro de IA",
+    description: "Usa el asistente IA 200 veces",
+    icon: "🧠",
     category: "pro",
-    type: "ai_usage",
-    target: 50,
-    points: 500,
-    unlocked: false,
-    progress: 0,
+    points: 750,
+    condition: (user) => user.aiQueriesUsed >= 200,
   },
   {
-    id: "efficiency_expert",
-    name: "Experto en Eficiencia",
-    description: "Completa 100 tareas usando IA",
+    id: "credit_collector",
+    title: "Coleccionista de Créditos",
+    description: "Compra tu primer paquete de créditos IA",
+    icon: "💳",
+    category: "pro",
+    points: 100,
+    condition: (user) => user.creditsPurchased > 0,
+  },
+  {
+    id: "power_user",
+    title: "Usuario Avanzado",
+    description: "Usa todas las funciones Pro",
     icon: "⚡",
     category: "pro",
-    type: "task_complete",
-    target: 100,
-    points: 750,
-    unlocked: false,
-    progress: 0,
+    points: 1000,
+    condition: (user) => user.aiQueriesUsed >= 10 && user.wishlistItems >= 5 && user.notesCreated >= 10,
   },
   {
-    id: "future_visionary",
-    name: "Visionario del Futuro",
-    description: "Usa todas las funciones Pro durante una semana",
-    icon: "🔮",
+    id: "legend",
+    title: "Leyenda",
+    description: "Completa 500 tareas y mantén una racha de 100 días",
+    icon: "🌟",
     category: "pro",
-    type: "daily_login",
-    target: 7,
-    points: 1000,
-    unlocked: false,
-    progress: 0,
+    points: 2000,
+    condition: (user) => user.tasksCompleted >= 500 && user.streakDays >= 100,
   },
 ]
 
-export async function getUserAchievements(userId: string): Promise<Achievement[]> {
-  const userAchievementData = userAchievements.filter((ua) => ua.userId === userId)
+export async function getUserAchievements(userId: string) {
+  const supabase = createClient()
 
-  return ACHIEVEMENTS.map((achievement) => {
-    const userProgress = userAchievementData.find((ua) => ua.achievementId === achievement.id)
-    return {
-      ...achievement,
-      progress: userProgress?.progress || 0,
-      unlocked: userProgress?.unlocked || false,
-      unlockedAt: userProgress?.unlockedAt,
-    }
-  })
+  const { data, error } = await supabase.from("user_achievements").select("*").eq("user_id", userId)
+
+  if (error) {
+    console.error("Error fetching user achievements:", error)
+    return []
+  }
+
+  return data || []
 }
 
-export async function checkAndAwardAchievements(
-  userId: string,
-  type: Achievement["type"],
-  increment = 1,
-): Promise<Achievement[]> {
-  console.log(`🏆 Checking achievements for user ${userId}, type: ${type}, increment: ${increment}`)
+export async function checkAndAwardAchievements(userId: string, userStats: any) {
+  const supabase = createClient()
+  const userAchievements = await getUserAchievements(userId)
+  const unlockedAchievementIds = userAchievements.map((a) => a.achievement_id)
+  const newAchievements = []
 
-  const relevantAchievements = ACHIEVEMENTS.filter((a) => a.type === type)
-  const newlyUnlocked: Achievement[] = []
+  for (const achievement of ACHIEVEMENTS) {
+    if (!unlockedAchievementIds.includes(achievement.id) && achievement.condition(userStats)) {
+      // Award the achievement
+      const { error } = await supabase.from("user_achievements").insert({
+        user_id: userId,
+        achievement_id: achievement.id,
+        unlocked_at: new Date().toISOString(),
+      })
 
-  for (const achievement of relevantAchievements) {
-    let userAchievement = userAchievements.find((ua) => ua.userId === userId && ua.achievementId === achievement.id)
-
-    if (!userAchievement) {
-      userAchievement = {
-        userId,
-        achievementId: achievement.id,
-        progress: 0,
-        unlocked: false,
-      }
-      userAchievements.push(userAchievement)
-    }
-
-    if (!userAchievement.unlocked) {
-      userAchievement.progress = Math.min(userAchievement.progress + increment, achievement.target)
-
-      if (userAchievement.progress >= achievement.target) {
-        userAchievement.unlocked = true
-        userAchievement.unlockedAt = new Date().toISOString()
-
-        const unlockedAchievement = {
-          ...achievement,
-          progress: userAchievement.progress,
-          unlocked: true,
-          unlockedAt: userAchievement.unlockedAt,
-        }
-
-        newlyUnlocked.push(unlockedAchievement)
-        console.log(`🎉 Achievement unlocked: ${achievement.name}`)
+      if (!error) {
+        newAchievements.push(achievement)
       }
     }
   }
 
-  return newlyUnlocked
+  return newAchievements
 }
 
-export async function getAchievementStats(userId: string): Promise<{
-  total: number
-  unlocked: number
-  points: number
-  categories: { [key: string]: { total: number; unlocked: number } }
-}> {
-  const achievements = await getUserAchievements(userId)
-  const unlocked = achievements.filter((a) => a.unlocked)
-  const points = unlocked.reduce((sum, a) => sum + a.points, 0)
+export async function updateUserStatsAndCheckAchievements(userId: string, statUpdates: any) {
+  const supabase = createClient()
 
-  const categories = {
-    basic: { total: 0, unlocked: 0 },
-    premium: { total: 0, unlocked: 0 },
-    pro: { total: 0, unlocked: 0 },
+  // Get current user stats
+  const { data: currentUser } = await supabase.from("users").select("*").eq("id", userId).single()
+
+  if (!currentUser) return []
+
+  // Update user stats
+  const updatedStats = { ...currentUser, ...statUpdates }
+
+  await supabase.from("users").update(statUpdates).eq("id", userId)
+
+  // Check for new achievements
+  return await checkAndAwardAchievements(userId, updatedStats)
+}
+
+export function getAchievementById(id: string): Achievement | undefined {
+  return ACHIEVEMENTS.find((achievement) => achievement.id === id)
+}
+
+export function getAchievementsByCategory(category: "basic" | "premium" | "pro"): Achievement[] {
+  return ACHIEVEMENTS.filter((achievement) => achievement.category === category)
+}
+
+export function calculateTotalPoints(achievements: Achievement[]): number {
+  return achievements.reduce((total, achievement) => total + achievement.points, 0)
+}
+
+export function getAchievementProgress(user: any, achievement: Achievement): number {
+  // This is a simplified progress calculation
+  // You might want to implement more sophisticated progress tracking
+  if (achievement.condition(user)) {
+    return 100
   }
 
-  achievements.forEach((a) => {
-    categories[a.category].total++
-    if (a.unlocked) {
-      categories[a.category].unlocked++
-    }
-  })
+  // Basic progress estimation based on achievement type
+  switch (achievement.id) {
+    case "task_master":
+      return Math.min((user.tasksCompleted / 10) * 100, 100)
+    case "week_warrior":
+      return Math.min((user.streakDays / 7) * 100, 100)
+    case "wishlist_master":
+      return Math.min((user.wishlistItems / 10) * 100, 100)
+    case "note_taker":
+      return Math.min((user.notesCreated / 20) * 100, 100)
+    case "calendar_pro":
+      return Math.min((user.eventsCreated / 50) * 100, 100)
+    case "productivity_king":
+      return Math.min((user.tasksCompleted / 100) * 100, 100)
+    case "month_champion":
+      return Math.min((user.streakDays / 30) * 100, 100)
+    case "ai_enthusiast":
+      return Math.min((user.aiQueriesUsed / 50) * 100, 100)
+    case "ai_master":
+      return Math.min((user.aiQueriesUsed / 200) * 100, 100)
+    case "legend":
+      const taskProgress = Math.min((user.tasksCompleted / 500) * 50, 50)
+      const streakProgress = Math.min((user.streakDays / 100) * 50, 50)
+      return taskProgress + streakProgress
+    default:
+      return user.tasksCompleted >= 1 ? 100 : 0
+  }
+}
+
+export async function getAchievementStats(userId: string) {
+  // This function provides statistics about achievements
+  const userAchievements = await getUserAchievements(userId)
+  const unlockedAchievementIds = userAchievements.map((a) => a.achievement_id)
+
+  const basicAchievements = ACHIEVEMENTS.filter((a) => a.category === "basic")
+  const premiumAchievements = ACHIEVEMENTS.filter((a) => a.category === "premium")
+  const proAchievements = ACHIEVEMENTS.filter((a) => a.category === "pro")
+
+  const unlockedBasic = basicAchievements.filter((a) => unlockedAchievementIds.includes(a.id))
+  const unlockedPremium = premiumAchievements.filter((a) => unlockedAchievementIds.includes(a.id))
+  const unlockedPro = proAchievements.filter((a) => unlockedAchievementIds.includes(a.id))
+
+  const totalPoints = calculateTotalPoints(ACHIEVEMENTS)
+  const unlockedPoints = calculateTotalPoints([...unlockedBasic, ...unlockedPremium, ...unlockedPro])
 
   return {
-    total: achievements.length,
-    unlocked: unlocked.length,
-    points,
-    categories,
+    total: ACHIEVEMENTS.length,
+    unlocked: userAchievements.length,
+    basic: basicAchievements.length,
+    premium: premiumAchievements.length,
+    pro: proAchievements.length,
+    totalPoints,
+    unlockedPoints,
+    categories: {
+      basic: {
+        total: basicAchievements.length,
+        unlocked: unlockedBasic.length,
+        points: calculateTotalPoints(unlockedBasic),
+        totalPoints: calculateTotalPoints(basicAchievements),
+      },
+      premium: {
+        total: premiumAchievements.length,
+        unlocked: unlockedPremium.length,
+        points: calculateTotalPoints(unlockedPremium),
+        totalPoints: calculateTotalPoints(premiumAchievements),
+      },
+      pro: {
+        total: proAchievements.length,
+        unlocked: unlockedPro.length,
+        points: calculateTotalPoints(unlockedPro),
+        totalPoints: calculateTotalPoints(proAchievements),
+      },
+    },
   }
 }
+
+// Alias for backward compatibility
+export const checkAndUnlockAchievements = checkAndAwardAchievements

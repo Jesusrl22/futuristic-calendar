@@ -1,776 +1,608 @@
 "use client"
 
-import { useEffect } from "react"
-import { useState } from "react"
-import type React from "react"
-import { NotificationService } from "@/components/notification-service"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { TaskManager } from "@/components/task-manager"
+import { CalendarWidget } from "@/components/calendar-widget"
+import { NotesManager } from "@/components/notes-manager"
+import { WishlistManager } from "@/components/wishlist-manager"
+import { AiAssistant } from "@/components/ai-assistant"
+import { AchievementsDisplay } from "@/components/achievements-display"
+import { AchievementNotification } from "@/components/achievement-notification"
+import { AiCreditsDisplay } from "@/components/ai-credits-display"
+import { AiCreditsPurchase } from "@/components/ai-credits-purchase"
 import { SettingsModal } from "@/components/settings-modal"
 import { DatabaseStatus } from "@/components/database-status"
-import { AiAssistant } from "@/components/ai-assistant"
-import { TaskManager } from "@/components/task-manager"
-import { WishlistManager } from "@/components/wishlist-manager"
-import { AchievementsDisplay } from "@/components/achievements-display"
-import { getUserByEmail, createUser, updateUser, initializeAdminUser, type User } from "@/lib/database"
-import { checkAndAwardAchievements } from "@/lib/achievements"
+import { NotificationService } from "@/components/notification-service"
+import { StatsCards } from "@/components/stats-cards"
+import { useTheme } from "@/hooks/useTheme"
 import {
   Calendar,
   CheckSquare,
+  FileText,
   Heart,
-  StickyNote,
-  Settings,
-  LogOut,
-  Crown,
-  Sparkles,
-  UserIcon,
-  Shield,
-  Plus,
-  Clock,
-  TrendingUp,
-  AlertCircle,
+  Brain,
   Trophy,
+  Settings,
+  User,
+  LogOut,
+  Sun,
+  Moon,
+  Monitor,
+  Crown,
+  Star,
+  BarChart3,
+  CreditCard,
 } from "lucide-react"
+import { getUser, loginUser, registerUser, logoutUser, updateUserSubscription } from "@/lib/hybrid-database"
+import { getUserAchievements, checkAndUnlockAchievements } from "@/lib/achievements"
+import { getUserAICredits, addCreditsToUser } from "@/lib/ai-credits"
 
-interface WishlistItem {
-  id: string
-  text: string
-  description?: string
-  completed: boolean
-  created_at: string
-  updated_at: string
-}
+export default function FuturisticCalendar() {
+  // Theme management
+  const { theme, resolvedTheme, setTheme, themeConfig, mounted } = useTheme()
 
-export default function FutureTaskApp() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  // User state
+  const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("calendar")
-  const [showSettings, setShowSettings] = useState(false)
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" })
-  const [registerForm, setRegisterForm] = useState({ name: "", email: "", password: "" })
-  const [authMode, setAuthMode] = useState<"login" | "register">("login")
-  const [authError, setAuthError] = useState("")
-  const [isAuthLoading, setIsAuthLoading] = useState(false)
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([
-    {
-      id: "1",
-      text: "Aprender un nuevo idioma",
-      description: "Quiero ser fluido en francés para mi próximo viaje",
-      completed: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      text: "Correr un maratón",
-      description: "Entrenar durante 6 meses para completar mi primer maratón",
-      completed: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ])
+  const [isLoginMode, setIsLoginMode] = useState(true)
 
+  // Form states
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [name, setName] = useState("")
+  const [error, setError] = useState("")
+
+  // App states
+  const [activeTab, setActiveTab] = useState("dashboard")
+  const [showSettings, setShowSettings] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
+  const [showCreditsPurchase, setShowCreditsPurchase] = useState(false)
+  const [achievements, setAchievements] = useState([])
+  const [newAchievement, setNewAchievement] = useState(null)
+  const [aiCredits, setAiCredits] = useState(0)
+
+  // Load user on mount
   useEffect(() => {
-    const initializeApp = async () => {
+    const loadUser = async () => {
       try {
-        console.log("🚀 Initializing FutureTask app...")
-        await initializeAdminUser()
-        console.log("✅ Admin user initialized")
+        const savedUser = localStorage.getItem("currentUser")
+        if (savedUser) {
+          const userData = JSON.parse(savedUser)
+          const fullUser = await getUser(userData.id)
+          if (fullUser) {
+            setUser(fullUser)
+            await loadUserData(fullUser.id)
+          }
+        }
       } catch (error) {
-        console.error("❌ Error initializing admin user:", error)
+        console.error("Error loading user:", error)
       } finally {
         setIsLoading(false)
       }
     }
 
-    initializeApp()
-  }, [])
+    if (mounted) {
+      loadUser()
+    }
+  }, [mounted])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Load user-specific data
+  const loadUserData = async (userId) => {
+    try {
+      const [userAchievements, credits] = await Promise.all([getUserAchievements(userId), getUserAICredits(userId)])
+
+      setAchievements(userAchievements)
+      setAiCredits(credits)
+    } catch (error) {
+      console.error("Error loading user data:", error)
+    }
+  }
+
+  // Handle login
+  const handleLogin = async (e) => {
     e.preventDefault()
-    setIsAuthLoading(true)
-    setAuthError("")
-
-    console.log("🔐 Login attempt:", { email: loginForm.email })
+    setError("")
+    setIsLoading(true)
 
     try {
-      const user = await getUserByEmail(loginForm.email)
-      console.log("👤 User lookup result:", user ? "Found" : "Not found")
+      const loggedInUser = await loginUser(email, password)
+      if (loggedInUser) {
+        setUser(loggedInUser)
+        localStorage.setItem("currentUser", JSON.stringify(loggedInUser))
+        await loadUserData(loggedInUser.id)
 
-      if (user) {
-        console.log("🔑 Checking password...")
-        if (user.password === loginForm.password) {
-          console.log("✅ Login successful!")
-          setCurrentUser(user)
-          setLoginForm({ email: "", password: "" })
-          setAuthError("")
-
-          // Check for upgrade achievements
-          if (user.is_premium) {
-            await checkAndAwardAchievements(user.id, "upgrade_premium", 1)
-          }
-          if (user.is_pro) {
-            await checkAndAwardAchievements(user.id, "upgrade_pro", 1)
-          }
-        } else {
-          console.log("❌ Password incorrect")
-          setAuthError("Contraseña incorrecta")
+        // Check for achievements after login
+        const unlockedAchievements = await checkAndUnlockAchievements(loggedInUser.id, "login")
+        if (unlockedAchievements.length > 0) {
+          setNewAchievement(unlockedAchievements[0])
         }
       } else {
-        console.log("❌ User not found")
-        setAuthError("Usuario no encontrado")
+        setError("Credenciales inválidas")
       }
     } catch (error) {
-      console.error("❌ Login error:", error)
-      setAuthError("Error al iniciar sesión. Inténtalo de nuevo.")
+      setError("Error al iniciar sesión")
+      console.error("Login error:", error)
     } finally {
-      setIsAuthLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const handleRegister = async (e: React.FormEvent) => {
+  // Handle registration
+  const handleRegister = async (e) => {
     e.preventDefault()
-    setIsAuthLoading(true)
-    setAuthError("")
-
-    console.log("📝 Registration attempt:", { email: registerForm.email })
+    setError("")
+    setIsLoading(true)
 
     try {
-      const existingUser = await getUserByEmail(registerForm.email)
+      const newUser = await registerUser(email, password, name)
+      if (newUser) {
+        setUser(newUser)
+        localStorage.setItem("currentUser", JSON.stringify(newUser))
+        await loadUserData(newUser.id)
 
-      if (existingUser) {
-        console.log("❌ User already exists")
-        setAuthError("El usuario ya existe")
-        return
+        // Check for achievements after registration
+        const unlockedAchievements = await checkAndUnlockAchievements(newUser.id, "register")
+        if (unlockedAchievements.length > 0) {
+          setNewAchievement(unlockedAchievements[0])
+        }
+      } else {
+        setError("Error al crear la cuenta")
       }
-
-      console.log("✅ Creating new user...")
-      const newUser = await createUser({
-        name: registerForm.name,
-        email: registerForm.email,
-        password: registerForm.password,
-        language: "es",
-        theme: "dark",
-        is_premium: false,
-        is_pro: false,
-        onboarding_completed: false,
-        pomodoro_sessions: 0,
-        work_duration: 25,
-        short_break_duration: 5,
-        long_break_duration: 15,
-        sessions_until_long_break: 4,
-      })
-
-      console.log("✅ Registration successful!")
-      setCurrentUser(newUser)
-      setRegisterForm({ name: "", email: "", password: "" })
-      setAuthError("")
     } catch (error) {
-      console.error("❌ Registration error:", error)
-      setAuthError("Error al registrarse. Inténtalo de nuevo.")
+      setError("Error al registrarse")
+      console.error("Registration error:", error)
     } finally {
-      setIsAuthLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const handleLogout = () => {
-    console.log("👋 Logging out...")
-    setCurrentUser(null)
-    setActiveTab("calendar")
-    setAuthError("")
-    setLoginForm({ email: "", password: "" })
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logoutUser()
+      setUser(null)
+      setAchievements([])
+      setAiCredits(0)
+      localStorage.removeItem("currentUser")
+      setActiveTab("dashboard")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
-  const handleUserUpdate = async (updates: Partial<User>) => {
-    if (!currentUser) return
+  // Handle subscription upgrade
+  const handleSubscriptionUpgrade = async (plan, billing) => {
+    if (!user) return
 
     try {
-      const updatedUser = await updateUser(currentUser.id, updates)
+      const updatedUser = await updateUserSubscription(user.id, plan, billing)
       if (updatedUser) {
-        setCurrentUser(updatedUser)
+        setUser(updatedUser)
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser))
 
-        // Check for upgrade achievements
-        if (updates.is_premium && !currentUser.is_premium) {
-          await checkAndAwardAchievements(updatedUser.id, "upgrade_premium", 1)
-        }
-        if (updates.is_pro && !currentUser.is_pro) {
-          await checkAndAwardAchievements(updatedUser.id, "upgrade_pro", 1)
+        // Check for achievements after subscription upgrade
+        const unlockedAchievements = await checkAndUnlockAchievements(user.id, "subscription_upgrade")
+        if (unlockedAchievements.length > 0) {
+          setNewAchievement(unlockedAchievements[0])
         }
       }
     } catch (error) {
-      console.error("Error updating user:", error)
+      console.error("Subscription upgrade error:", error)
     }
   }
 
-  const upgradeToPremium = () => {
-    if (currentUser) {
-      handleUserUpdate({
-        is_premium: true,
-        premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      })
+  // Handle AI credits purchase
+  const handleCreditsPurchase = async (packageId, credits, price) => {
+    if (!user) return
+
+    try {
+      // In a real app, this would integrate with PayPal
+      // For demo purposes, we'll just add the credits
+      const success = await addCreditsToUser(user.id, credits)
+      if (success) {
+        setAiCredits((prev) => prev + credits)
+        setShowCreditsPurchase(false)
+
+        // Check for achievements after purchase
+        const unlockedAchievements = await checkAndUnlockAchievements(user.id, "credits_purchase")
+        if (unlockedAchievements.length > 0) {
+          setNewAchievement(unlockedAchievements[0])
+        }
+      }
+    } catch (error) {
+      console.error("Credits purchase error:", error)
     }
   }
 
-  const upgradeToPro = () => {
-    if (currentUser) {
-      handleUserUpdate({
-        is_premium: true,
-        is_pro: true,
-        premium_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-        ai_credits: 1000,
-        ai_credits_used: 0,
-        ai_total_cost_eur: 0,
-      })
-    }
+  // Handle theme change
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme)
   }
 
-  const handleAIRequest = async (request: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+  // Get user plan info
+  const getUserPlanInfo = () => {
+    if (!user) return { plan: "free", isPremium: false, isPro: false }
+
+    const isPremium = user.subscription_plan === "premium"
+    const isPro = user.subscription_plan === "pro"
 
     return {
-      response: `Esta es una respuesta simulada para: "${request}". Las funciones de IA completas requieren configuración de OpenAI.`,
-      tasks: [],
-      wishlistItems: [],
-      notes: [],
+      plan: user.subscription_plan || "free",
+      isPremium,
+      isPro,
+      isActive: user.subscription_status === "active",
     }
   }
 
-  const handleAddWishlistItem = (item: Omit<WishlistItem, "id" | "created_at" | "updated_at">) => {
-    const newItem: WishlistItem = {
-      ...item,
-      id: Date.now().toString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-    setWishlistItems((prev) => [...prev, newItem])
-  }
+  const planInfo = getUserPlanInfo()
 
-  const handleUpdateWishlistItem = (id: string, updates: Partial<WishlistItem>) => {
-    setWishlistItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...updates, updated_at: new Date().toISOString() } : item)),
-    )
-  }
-
-  const handleDeleteWishlistItem = (id: string) => {
-    setWishlistItems((prev) => prev.filter((item) => item.id !== id))
-  }
-
-  if (isLoading) {
+  // Show loading screen
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-          <div className="text-white text-xl">Cargando FutureTask...</div>
+          <p className="text-white">Cargando FutureTask...</p>
         </div>
       </div>
     )
   }
 
-  if (!currentUser) {
+  // Show login/register form if not authenticated
+  if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-slate-800/50 border-slate-700 backdrop-blur-sm">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-              <Calendar className="h-8 w-8 text-purple-400" />
+              <Calendar className="h-6 w-6 text-purple-400" />
               FutureTask
             </CardTitle>
-            <CardDescription className="text-slate-300">Tu calendario inteligente del futuro</CardDescription>
+            <CardDescription className="text-slate-300">
+              {isLoginMode ? "Inicia sesión en tu cuenta" : "Crea tu cuenta gratuita"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={authMode} onValueChange={(value) => setAuthMode(value as "login" | "register")}>
-              <TabsList className="grid w-full grid-cols-2 bg-slate-700">
-                <TabsTrigger value="login" className="text-white">
-                  Iniciar Sesión
-                </TabsTrigger>
-                <TabsTrigger value="register" className="text-white">
-                  Registrarse
-                </TabsTrigger>
-              </TabsList>
-
-              {authError && (
-                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-400" />
-                  <p className="text-red-400 text-sm">{authError}</p>
+            <form onSubmit={isLoginMode ? handleLogin : handleRegister} className="space-y-4">
+              {!isLoginMode && (
+                <div>
+                  <Label htmlFor="name" className="text-slate-200">
+                    Nombre
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
                 </div>
               )}
-
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <Label htmlFor="email" className="text-white">
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={loginForm.email}
-                      onChange={(e) => {
-                        setLoginForm({ ...loginForm, email: e.target.value })
-                        setAuthError("")
-                      }}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      placeholder="tu@email.com"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="password" className="text-white">
-                      Contraseña
-                    </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={loginForm.password}
-                      onChange={(e) => {
-                        setLoginForm({ ...loginForm, password: e.target.value })
-                        setAuthError("")
-                      }}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isAuthLoading}>
-                    {isAuthLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Iniciando...
-                      </div>
-                    ) : (
-                      "Iniciar Sesión"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name" className="text-white">
-                      Nombre
-                    </Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={registerForm.name}
-                      onChange={(e) => {
-                        setRegisterForm({ ...registerForm, name: e.target.value })
-                        setAuthError("")
-                      }}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      placeholder="Tu nombre"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-email" className="text-white">
-                      Email
-                    </Label>
-                    <Input
-                      id="register-email"
-                      type="email"
-                      value={registerForm.email}
-                      onChange={(e) => {
-                        setRegisterForm({ ...registerForm, email: e.target.value })
-                        setAuthError("")
-                      }}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      placeholder="tu@email.com"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="register-password" className="text-white">
-                      Contraseña
-                    </Label>
-                    <Input
-                      id="register-password"
-                      type="password"
-                      value={registerForm.password}
-                      onChange={(e) => {
-                        setRegisterForm({ ...registerForm, password: e.target.value })
-                        setAuthError("")
-                      }}
-                      className="bg-slate-700 border-slate-600 text-white"
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isAuthLoading}>
-                    {isAuthLoading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Registrando...
-                      </div>
-                    ) : (
-                      "Registrarse"
-                    )}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+              <div>
+                <Label htmlFor="email" className="text-slate-200">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password" className="text-slate-200">
+                  Contraseña
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+              {error && <div className="text-red-400 text-sm text-center">{error}</div>}
+              <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
+                {isLoading ? "Cargando..." : isLoginMode ? "Iniciar Sesión" : "Registrarse"}
+              </Button>
+            </form>
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setIsLoginMode(!isLoginMode)}
+                className="text-purple-400 hover:text-purple-300 text-sm"
+              >
+                {isLoginMode ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+              </button>
+            </div>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  const theme = {
-    gradient: "from-slate-900 via-purple-900 to-slate-900",
-    cardBg: "bg-slate-800/50 backdrop-blur-sm",
-    border: "border-slate-700",
-    textPrimary: "text-white",
-    textSecondary: "text-slate-300",
-    textMuted: "text-slate-400",
-    buttonPrimary: "bg-purple-600 hover:bg-purple-700",
-    buttonSecondary: "bg-slate-700 hover:bg-slate-600",
-    inputBg: "bg-slate-700 border-slate-600 text-white",
-  }
-
-  const t = (key: string) => key
-
+  // Main application interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <NotificationService>
-        <header className="border-b border-slate-700 bg-slate-800/50 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-8 w-8 text-purple-400" />
-                <h1 className="text-2xl font-bold text-white">FutureTask</h1>
+    <div className={`min-h-screen ${themeConfig.bg} transition-colors duration-200`}>
+      {/* Header */}
+      <header className={`${themeConfig.cardBg} ${themeConfig.border} border-b sticky top-0 z-50 backdrop-blur-sm`}>
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-6 w-6 text-purple-500" />
+              <h1 className={`text-xl font-bold ${themeConfig.textPrimary}`}>FutureTask</h1>
+              <DatabaseStatus />
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* AI Credits Display */}
+              {planInfo.isPro && (
+                <AiCreditsDisplay credits={aiCredits} onPurchaseCredits={() => setShowCreditsPurchase(true)} />
+              )}
+
+              {/* User Plan Badge */}
+              <Badge
+                variant={planInfo.isPro ? "default" : planInfo.isPremium ? "secondary" : "outline"}
+                className={`flex items-center gap-1 ${
+                  planInfo.isPro
+                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                    : planInfo.isPremium
+                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                      : "text-gray-600"
+                }`}
+              >
+                {planInfo.isPro ? (
+                  <Crown className="h-3 w-3" />
+                ) : planInfo.isPremium ? (
+                  <Star className="h-3 w-3" />
+                ) : (
+                  <User className="h-3 w-3" />
+                )}
+                {planInfo.plan.toUpperCase()}
+              </Badge>
+
+              {/* Theme Toggle */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                <Button
+                  variant={theme === "light" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleThemeChange("light")}
+                  className="h-8 w-8 p-0"
+                >
+                  <Sun className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={theme === "dark" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleThemeChange("dark")}
+                  className="h-8 w-8 p-0"
+                >
+                  <Moon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={theme === "system" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleThemeChange("system")}
+                  className="h-8 w-8 p-0"
+                >
+                  <Monitor className="h-4 w-4" />
+                </Button>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <UserIcon className="h-5 w-5 text-slate-300" />
-                  <span className="text-white font-medium">{currentUser.name}</span>
-                  {currentUser.email === "admin@futuretask.com" && (
-                    <Badge variant="secondary" className="bg-red-600 text-white">
-                      <Shield className="h-3 w-3 mr-1" />
-                      Admin
-                    </Badge>
-                  )}
-                  {currentUser.is_pro && (
-                    <Badge variant="secondary" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      Pro
-                    </Badge>
-                  )}
-                  {currentUser.is_premium && !currentUser.is_pro && (
-                    <Badge variant="secondary" className="bg-yellow-600 text-white">
-                      <Crown className="h-3 w-3 mr-1" />
-                      Premium
-                    </Badge>
-                  )}
-                </div>
-
-                {!currentUser.is_premium && (
-                  <Button onClick={upgradeToPremium} size="sm" className="bg-yellow-600 hover:bg-yellow-700">
-                    <Crown className="h-4 w-4 mr-1" />
-                    Premium €1.99/mes
-                  </Button>
-                )}
-                {!currentUser.is_pro && (
-                  <Button onClick={upgradeToPro} size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600">
-                    <Sparkles className="h-4 w-4 mr-1" />
-                    Pro €4.99/mes
-                  </Button>
-                )}
-
-                <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)} className="text-slate-300">
+              {/* User Menu */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAchievements(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Trophy className="h-4 w-4" />
+                  <Badge variant="secondary">{achievements.length}</Badge>
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>
                   <Settings className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-300">
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
                 </Button>
               </div>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="container mx-auto px-4 py-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-            <TabsList className="grid w-full grid-cols-6 bg-slate-800/50 backdrop-blur-sm">
-              <TabsTrigger value="calendar" className="text-white data-[state=active]:bg-purple-600">
-                <Calendar className="h-4 w-4 mr-2" />
-                <span>Calendario</span>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:grid-cols-7">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="flex items-center gap-2">
+              <CheckSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Tareas</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Calendario</span>
+            </TabsTrigger>
+            <TabsTrigger value="notes" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Notas</span>
+            </TabsTrigger>
+            {planInfo.isPremium && (
+              <TabsTrigger value="wishlist" className="flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                <span className="hidden sm:inline">Wishlist</span>
               </TabsTrigger>
-              <TabsTrigger value="tasks" className="text-white data-[state=active]:bg-purple-600">
-                <CheckSquare className="h-4 w-4 mr-2" />
-                Tareas
+            )}
+            {planInfo.isPro && (
+              <TabsTrigger value="ai" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                <span className="hidden sm:inline">IA</span>
               </TabsTrigger>
-              {currentUser.is_premium && (
-                <TabsTrigger value="wishlist" className="text-white data-[state=active]:bg-purple-600">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Objetivos
-                </TabsTrigger>
-              )}
-              {currentUser.is_premium && (
-                <TabsTrigger value="notes" className="text-white data-[state=active]:bg-purple-600">
-                  <StickyNote className="h-4 w-4 mr-2" />
-                  Notas
-                </TabsTrigger>
-              )}
-              <TabsTrigger value="achievements" className="text-white data-[state=active]:bg-yellow-600">
-                <Trophy className="h-4 w-4 mr-2" />
-                Logros
-              </TabsTrigger>
-              {currentUser.is_pro && (
-                <TabsTrigger
-                  value="ai"
-                  className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-pink-600"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  IA Assistant
-                </TabsTrigger>
-              )}
-            </TabsList>
+            )}
+            <TabsTrigger value="subscription" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">Plan</span>
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="mt-6">
-              <TabsContent value="calendar">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Calendario principal */}
-                  <div className="lg:col-span-2">
-                    <Card className={`${theme.cardBg} ${theme.border}`}>
-                      <CardHeader>
-                        <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
-                          <Calendar className="w-5 h-5 text-purple-400" />
-                          <span>Calendario</span>
-                        </CardTitle>
-                        <CardDescription className={theme.textSecondary}>
-                          {new Date().toLocaleDateString("es-ES", {
-                            weekday: "long",
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="bg-slate-900/50 rounded-lg p-4 border border-purple-500/20">
-                          <div className="grid grid-cols-7 gap-2 mb-4">
-                            {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
-                              <div key={day} className="text-center text-sm font-medium text-slate-400 py-2">
-                                {day}
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="grid grid-cols-7 gap-2">
-                            {Array.from({ length: 35 }, (_, i) => {
-                              const date = new Date()
-                              const firstDay = new Date(date.getFullYear(), date.getMonth(), 1)
-                              const startDate = new Date(firstDay)
-                              startDate.setDate(startDate.getDate() - firstDay.getDay())
-
-                              const currentDate = new Date(startDate)
-                              currentDate.setDate(startDate.getDate() + i)
-
-                              const isCurrentMonth = currentDate.getMonth() === date.getMonth()
-                              const isToday = currentDate.toDateString() === date.toDateString()
-                              const hasTasks = Math.random() > 0.7 // Simulación de tareas
-
-                              return (
-                                <button
-                                  key={i}
-                                  className={`
-                                    aspect-square p-2 rounded-lg text-sm font-medium transition-all duration-200
-                                    ${
-                                      isCurrentMonth
-                                        ? isToday
-                                          ? "bg-purple-600 text-white shadow-lg shadow-purple-500/30"
-                                          : "bg-slate-800 text-white hover:bg-slate-700"
-                                        : "text-slate-600 hover:text-slate-400"
-                                    }
-                                    ${hasTasks && isCurrentMonth ? "ring-2 ring-cyan-400/50" : ""}
-                                    hover:scale-105 active:scale-95
-                                  `}
-                                >
-                                  <div className="flex flex-col items-center justify-center h-full">
-                                    <span>{currentDate.getDate()}</span>
-                                    {hasTasks && isCurrentMonth && (
-                                      <div className="w-1 h-1 bg-cyan-400 rounded-full mt-1"></div>
-                                    )}
-                                  </div>
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Panel lateral */}
-                  <div className="space-y-6">
-                    {/* Tareas de hoy */}
-                    <Card className={`${theme.cardBg} ${theme.border}`}>
-                      <CardHeader>
-                        <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
-                          <CheckSquare className="w-5 h-5 text-green-400" />
-                          <span>Hoy</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {[
-                          { text: "Revisar emails", time: "09:00", completed: true },
-                          { text: "Reunión de equipo", time: "10:30", completed: false },
-                          { text: "Almuerzo con cliente", time: "13:00", completed: false },
-                          { text: "Presentación proyecto", time: "15:00", completed: false },
-                        ].map((task, index) => (
-                          <div
-                            key={index}
-                            className={`flex items-center space-x-3 p-2 rounded-lg ${
-                              task.completed ? "bg-green-500/10 border border-green-500/20" : "bg-slate-800/50"
-                            }`}
-                          >
-                            <div
-                              className={`w-2 h-2 rounded-full ${task.completed ? "bg-green-400" : "bg-purple-400"}`}
-                            ></div>
-                            <div className="flex-1">
-                              <p
-                                className={`text-sm ${task.completed ? "line-through text-slate-400" : theme.textPrimary}`}
-                              >
-                                {task.text}
-                              </p>
-                              <p className="text-xs text-slate-500">{task.time}</p>
-                            </div>
-                          </div>
-                        ))}
-
-                        <Button
-                          className={`w-full ${theme.buttonPrimary} mt-4`}
-                          size="sm"
-                          onClick={() => setActiveTab("tasks")}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Agregar tarea
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    {/* Próximos eventos */}
-                    <Card className={`${theme.cardBg} ${theme.border}`}>
-                      <CardHeader>
-                        <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
-                          <Clock className="w-5 h-5 text-blue-400" />
-                          <span>Próximos</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {[
-                          { text: "Dentista", date: "Mañana", time: "10:00" },
-                          { text: "Cumpleaños María", date: "Viernes", time: "Todo el día" },
-                          { text: "Viaje a Madrid", date: "Próxima semana", time: "3 días" },
-                        ].map((event, index) => (
-                          <div key={index} className="flex items-center space-x-3 p-2 rounded-lg bg-slate-800/50">
-                            <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
-                            <div className="flex-1">
-                              <p className={`text-sm ${theme.textPrimary}`}>{event.text}</p>
-                              <p className="text-xs text-slate-400">
-                                {event.date} • {event.time}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
-
-                    {/* Estadísticas rápidas */}
-                    <Card className={`${theme.cardBg} ${theme.border}`}>
-                      <CardHeader>
-                        <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
-                          <TrendingUp className="w-5 h-5 text-yellow-400" />
-                          <span>Resumen</span>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                            <div className="text-2xl font-bold text-purple-400">4</div>
-                            <div className="text-xs text-slate-400">Tareas hoy</div>
-                          </div>
-                          <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                            <div className="text-2xl font-bold text-green-400">75%</div>
-                            <div className="text-xs text-slate-400">Completado</div>
-                          </div>
-                          <div className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                            <div className="text-2xl font-bold text-blue-400">12</div>
-                            <div className="text-xs text-slate-400">Esta semana</div>
-                          </div>
-                          <div className="text-center p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                            <div className="text-2xl font-bold text-yellow-400">3</div>
-                            <div className="text-xs text-slate-400">Pendientes</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="tasks">
-                <TaskManager theme={theme} t={t} />
-              </TabsContent>
-
-              {currentUser.is_premium && (
-                <TabsContent value="wishlist">
-                  <WishlistManager
-                    wishlistItems={wishlistItems}
-                    onAddItem={handleAddWishlistItem}
-                    onUpdateItem={handleUpdateWishlistItem}
-                    onDeleteItem={handleDeleteWishlistItem}
-                    theme={theme}
-                    t={t}
-                    isPremium={currentUser.is_premium}
-                    userId={currentUser.id}
-                  />
-                </TabsContent>
-              )}
-
-              {currentUser.is_premium && (
-                <TabsContent value="notes">
-                  <Card className={`${theme.cardBg} ${theme.border}`}>
-                    <CardHeader>
-                      <CardTitle className={`${theme.textPrimary} flex items-center gap-2`}>
-                        <StickyNote className="h-5 w-5 text-blue-400" />
-                        Notas
-                      </CardTitle>
-                      <CardDescription className={theme.textSecondary}>Guarda tus ideas y pensamientos</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p className={theme.textSecondary}>
-                        Sistema de notas disponible para usuarios Premium. En desarrollo.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              )}
-
-              <TabsContent value="achievements">
-                <AchievementsDisplay user={currentUser} theme={theme} t={t} />
-              </TabsContent>
-
-              {currentUser.is_pro && (
-                <TabsContent value="ai">
-                  <AiAssistant onAIRequest={handleAIRequest} theme={theme} t={t} user={currentUser} />
-                </TabsContent>
-              )}
+          <TabsContent value="dashboard" className="space-y-6">
+            <div className="grid gap-6">
+              <StatsCards user={user} theme={themeConfig} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <TaskManager userId={user.id} theme={themeConfig} />
+                <CalendarWidget userId={user.id} theme={themeConfig} />
+              </div>
             </div>
-          </Tabs>
+          </TabsContent>
 
-          <div className="mt-8">
-            <DatabaseStatus theme={theme} />
+          <TabsContent value="tasks">
+            <TaskManager userId={user.id} theme={themeConfig} />
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <CalendarWidget userId={user.id} theme={themeConfig} />
+          </TabsContent>
+
+          <TabsContent value="notes">
+            <NotesManager userId={user.id} theme={themeConfig} />
+          </TabsContent>
+
+          {planInfo.isPremium && (
+            <TabsContent value="wishlist">
+              <WishlistManager userId={user.id} theme={themeConfig} />
+            </TabsContent>
+          )}
+
+          {planInfo.isPro && (
+            <TabsContent value="ai">
+              <AiAssistant userId={user.id} credits={aiCredits} onCreditsUpdate={setAiCredits} theme={themeConfig} />
+            </TabsContent>
+          )}
+
+          <TabsContent value="subscription">
+            <div className="space-y-6">
+              <Card className={`${themeConfig.cardBg} ${themeConfig.border}`}>
+                <CardHeader>
+                  <CardTitle className={themeConfig.textPrimary}>Tu Plan Actual</CardTitle>
+                  <CardDescription>Gestiona tu suscripción y funcionalidades</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className={`text-lg font-semibold ${themeConfig.textPrimary}`}>
+                        Plan {planInfo.plan.charAt(0).toUpperCase() + planInfo.plan.slice(1)}
+                      </h3>
+                      <p className={themeConfig.textSecondary}>
+                        {planInfo.plan === "free" && "Funcionalidades básicas"}
+                        {planInfo.plan === "premium" && "Funcionalidades avanzadas + Wishlist"}
+                        {planInfo.plan === "pro" && "Todas las funcionalidades + IA"}
+                      </p>
+                    </div>
+                    <Badge
+                      variant={planInfo.isActive ? "default" : "secondary"}
+                      className={planInfo.isPro ? "bg-gradient-to-r from-purple-500 to-blue-500" : ""}
+                    >
+                      {planInfo.isActive ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
+
+                  {planInfo.plan === "free" && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Button
+                          onClick={() => handleSubscriptionUpgrade("premium", "monthly")}
+                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                        >
+                          <Star className="h-4 w-4 mr-2" />
+                          Actualizar a Premium
+                        </Button>
+                        <Button
+                          onClick={() => handleSubscriptionUpgrade("pro", "monthly")}
+                          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                        >
+                          <Crown className="h-4 w-4 mr-2" />
+                          Actualizar a Pro
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {planInfo.isPro && (
+                    <div className="space-y-4">
+                      <AiCreditsDisplay
+                        credits={aiCredits}
+                        onPurchaseCredits={() => setShowCreditsPurchase(true)}
+                        showDetails={true}
+                        theme={themeConfig}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      {/* Modals and Overlays */}
+      {showSettings && (
+        <SettingsModal user={user} onClose={() => setShowSettings(false)} onUserUpdate={setUser} theme={themeConfig} />
+      )}
+
+      {showAchievements && (
+        <AchievementsDisplay
+          achievements={achievements}
+          onClose={() => setShowAchievements(false)}
+          theme={themeConfig}
+        />
+      )}
+
+      {showCreditsPurchase && planInfo.isPro && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className={`${themeConfig.cardBg} rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className={`text-2xl font-bold ${themeConfig.textPrimary}`}>Comprar Créditos IA</h2>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowCreditsPurchase(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </Button>
+              </div>
+              <AiCreditsPurchase
+                userId={user.id}
+                currentCredits={aiCredits}
+                onPurchase={handleCreditsPurchase}
+                theme={themeConfig}
+              />
+            </div>
           </div>
-        </main>
+        </div>
+      )}
 
-        {showSettings && <SettingsModal user={currentUser} onUpdateUser={handleUserUpdate} theme={theme} t={t} />}
-      </NotificationService>
+      {/* Achievement Notification */}
+      {newAchievement && (
+        <AchievementNotification achievement={newAchievement} onClose={() => setNewAchievement(null)} />
+      )}
+
+      {/* Notification Service */}
+      <NotificationService userId={user.id} />
     </div>
   )
 }
