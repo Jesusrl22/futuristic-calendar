@@ -1,107 +1,285 @@
-import { createClient } from "@/lib/supabase"
+"use client"
+
+import { db } from "./hybrid-database"
+
+// Types
+export interface AICreditsInfo {
+  balance: number
+  used: number
+  total: number
+  lastUsed?: string
+  monthlyUsage: number
+  estimatedDaysLeft: number
+}
 
 export interface CreditPackage {
   id: string
   name: string
   credits: number
   price: number
+  currency: string
+  description: string
   popular?: boolean
   bestValue?: boolean
-  description: string
   savings?: number
 }
 
+// Constants
+export const MIN_CUSTOM_AMOUNT = 1.0
+export const MAX_CUSTOM_AMOUNT = 999.99
+export const CREDITS_PER_EURO = 50
+
+// OpenAI Pricing (per 1M tokens)
+export const OPENAI_PRICING = {
+  "gpt-4o-mini": {
+    input: 0.15,
+    output: 0.6,
+  },
+  "gpt-4o": {
+    input: 5.0,
+    output: 15.0,
+  },
+  "gpt-4": {
+    input: 30.0,
+    output: 60.0,
+  },
+}
+
+// Credit packages
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
     id: "starter",
     name: "Starter",
     credits: 50,
-    price: 1,
-    description: "Perfecto para probar",
+    price: 1.0,
+    currency: "EUR",
+    description: "Perfecto para probar el asistente IA",
   },
   {
     id: "basic",
     name: "Básico",
-    credits: 100,
-    price: 2,
-    description: "Para uso ocasional",
+    credits: 150,
+    price: 2.5,
+    currency: "EUR",
+    description: "Para uso ocasional del asistente",
+    savings: 0.5,
   },
   {
     id: "standard",
     name: "Estándar",
-    credits: 150,
-    price: 3,
+    credits: 300,
+    price: 4.5,
+    currency: "EUR",
+    description: "Uso regular del asistente IA",
     popular: true,
-    description: "Más popular",
-    savings: 0.5,
-  },
-  {
-    id: "plus",
-    name: "Plus",
-    credits: 200,
-    price: 4,
-    description: "Uso regular",
-    savings: 1,
+    savings: 1.5,
   },
   {
     id: "premium",
     name: "Premium",
-    credits: 250,
-    price: 5,
-    bestValue: true,
-    description: "Mejor valor",
-    savings: 1.5,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    credits: 300,
-    price: 6,
-    description: "Para profesionales",
-    savings: 2,
-  },
-  {
-    id: "business",
-    name: "Business",
-    credits: 350,
-    price: 7,
-    description: "Uso intensivo",
-    savings: 2.5,
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    credits: 400,
-    price: 8,
-    description: "Máximo rendimiento",
-    savings: 3,
-  },
-  {
-    id: "ultimate",
-    name: "Ultimate",
-    credits: 450,
-    price: 9,
-    description: "Sin límites",
+    credits: 500,
+    price: 6.5,
+    currency: "EUR",
+    description: "Para usuarios frecuentes",
     savings: 3.5,
   },
   {
-    id: "mega",
-    name: "Mega",
-    credits: 500,
-    price: 10,
-    description: "El más completo",
-    savings: 4,
+    id: "pro",
+    name: "Profesional",
+    credits: 750,
+    price: 8.5,
+    currency: "EUR",
+    description: "Uso intensivo del asistente",
+    bestValue: true,
+    savings: 6.5,
+  },
+  {
+    id: "enterprise",
+    name: "Empresarial",
+    credits: 1000,
+    price: 10.0,
+    currency: "EUR",
+    description: "Para equipos y empresas",
+    savings: 10.0,
   },
 ]
 
-export const QUERY_COSTS = {
-  simple: 2,
-  complex: 8,
-  average: 5,
-  image_analysis: 10,
-  code_generation: 15,
+// Get user's current AI credits
+export async function getUserCredits(userId: string): Promise<number> {
+  try {
+    const user = await db.getUserById(userId)
+    return user?.aiCredits || 0
+  } catch (error) {
+    console.error("Error getting user credits:", error)
+    return 0
+  }
 }
 
+// Get detailed AI credits information
+export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
+  try {
+    const user = await db.getUserById(userId)
+    if (!user) {
+      return {
+        balance: 0,
+        used: 0,
+        total: 0,
+        monthlyUsage: 0,
+        estimatedDaysLeft: 0,
+      }
+    }
+
+    const balance = user.aiCredits || 0
+    const used = 0 // This would come from usage tracking
+    const total = balance + used
+    const monthlyUsage = Math.floor(used / 30) // Rough estimate
+    const estimatedDaysLeft = monthlyUsage > 0 ? Math.floor(balance / (monthlyUsage / 30)) : 999
+
+    return {
+      balance,
+      used,
+      total,
+      monthlyUsage,
+      estimatedDaysLeft,
+    }
+  } catch (error) {
+    console.error("Error getting user AI credits:", error)
+    return {
+      balance: 0,
+      used: 0,
+      total: 0,
+      monthlyUsage: 0,
+      estimatedDaysLeft: 0,
+    }
+  }
+}
+
+// Add credits to user account
+export async function addCredits(userId: string, amount: number): Promise<boolean> {
+  try {
+    const user = await db.getUserById(userId)
+    if (!user) return false
+
+    const newBalance = (user.aiCredits || 0) + amount
+    const updatedUser = await db.updateUser(userId, { aiCredits: newBalance })
+    return !!updatedUser
+  } catch (error) {
+    console.error("Error adding credits:", error)
+    return false
+  }
+}
+
+// Add AI credits (alias for compatibility)
+export async function addAICredits(userId: string, amount: number): Promise<boolean> {
+  return await addCredits(userId, amount)
+}
+
+// Alias for compatibility
+export const addCreditsToUser = addCredits
+
+// Deduct credits from user account
+export async function deductCredits(userId: string, amount: number): Promise<boolean> {
+  try {
+    const user = await db.getUserById(userId)
+    if (!user) return false
+
+    const currentBalance = user.aiCredits || 0
+    if (currentBalance < amount) return false
+
+    const newBalance = currentBalance - amount
+    const updatedUser = await db.updateUser(userId, { aiCredits: newBalance })
+    return !!updatedUser
+  } catch (error) {
+    console.error("Error deducting credits:", error)
+    return false
+  }
+}
+
+// Consume AI credits with logging
+export async function consumeAICredits(
+  userId: string,
+  amount: number,
+  operation: string,
+  details?: any,
+): Promise<boolean> {
+  try {
+    const success = await deductCredits(userId, amount)
+    if (success) {
+      // Log the usage (in a real app, you'd save this to a usage table)
+      console.log(`AI Credits consumed: ${amount} for ${operation}`, details)
+    }
+    return success
+  } catch (error) {
+    console.error("Error consuming AI credits:", error)
+    return false
+  }
+}
+
+// Purchase credits
+export async function purchaseCredits(userId: string, packageId: string): Promise<boolean> {
+  try {
+    const creditPackage = CREDIT_PACKAGES.find((pkg) => pkg.id === packageId)
+    if (!creditPackage) return false
+
+    // In a real app, you'd process payment here
+    // For demo purposes, we'll just add the credits
+    return await addCredits(userId, creditPackage.credits)
+  } catch (error) {
+    console.error("Error purchasing credits:", error)
+    return false
+  }
+}
+
+// Calculate credits needed for a query
+export function calculateCreditsNeeded(
+  inputTokens: number,
+  outputTokens: number,
+  model: keyof typeof OPENAI_PRICING = "gpt-4o-mini",
+): number {
+  const pricing = OPENAI_PRICING[model]
+  const inputCost = (inputTokens / 1000000) * pricing.input
+  const outputCost = (outputTokens / 1000000) * pricing.output
+  const totalCost = inputCost + outputCost
+
+  // Convert USD to credits (assuming 1 credit = $0.01)
+  return Math.ceil(totalCost * 100)
+}
+
+// Calculate actual cost in USD
+export function calculateActualCost(
+  inputTokens: number,
+  outputTokens: number,
+  model: keyof typeof OPENAI_PRICING = "gpt-4o-mini",
+): number {
+  const pricing = OPENAI_PRICING[model]
+  const inputCost = (inputTokens / 1000000) * pricing.input
+  const outputCost = (outputTokens / 1000000) * pricing.output
+  return inputCost + outputCost
+}
+
+// Calculate credits from euro amount
+export function calculateCreditsFromAmount(amount: number): number {
+  return Math.floor(amount * CREDITS_PER_EURO)
+}
+
+// Calculate savings for a package
+export function calculateSavings(packageData: CreditPackage): number {
+  const standardRate = packageData.credits / CREDITS_PER_EURO
+  return Math.max(0, standardRate - packageData.price)
+}
+
+// Validate custom amount
+export function validateCustomAmount(amount: number): { valid: boolean; error?: string } {
+  if (amount < MIN_CUSTOM_AMOUNT) {
+    return { valid: false, error: `El mínimo es €${MIN_CUSTOM_AMOUNT}` }
+  }
+  if (amount > MAX_CUSTOM_AMOUNT) {
+    return { valid: false, error: `El máximo es €${MAX_CUSTOM_AMOUNT}` }
+  }
+  return { valid: true }
+}
+
+// Format credits for display
 export function formatCredits(credits: number): string {
   if (credits >= 1000000) {
     return `${(credits / 1000000).toFixed(1)}M`
@@ -112,231 +290,73 @@ export function formatCredits(credits: number): string {
   return credits.toString()
 }
 
+// Format credits estimate
 export function formatCreditsEstimate(credits: number): string {
-  const simpleQueries = Math.floor(credits / QUERY_COSTS.simple)
-  const averageQueries = Math.floor(credits / QUERY_COSTS.average)
-  const complexQueries = Math.floor(credits / QUERY_COSTS.complex)
-
-  if (credits < 10) {
-    return `${simpleQueries} consultas simples`
-  } else if (credits < 50) {
-    return `${averageQueries} consultas promedio`
-  } else if (credits < 100) {
-    return `${averageQueries} consultas IA`
-  } else {
-    return `${complexQueries} consultas complejas o ${averageQueries} promedio`
-  }
+  const queries = Math.floor(credits / 5) // Assuming 5 credits per query
+  return `~${queries} consultas`
 }
 
-export function formatCreditBalance(credits: number): string {
-  const formatted = formatCredits(credits)
-  const estimate = formatCreditsEstimate(credits)
+// Format credit balance with usage estimate
+export function formatCreditBalance(balance: number): string {
+  const formatted = formatCredits(balance)
+  const estimate = formatCreditsEstimate(balance)
   return `${formatted} créditos (${estimate})`
 }
 
-export function getCreditStatusColor(credits: number): string {
-  if (credits >= 100) return "text-green-600"
-  if (credits >= 50) return "text-yellow-600"
-  if (credits >= 20) return "text-orange-600"
-  return "text-red-600"
-}
-
-export function getCreditStatusMessage(credits: number): string {
-  if (credits >= 100) return "Excelente saldo"
-  if (credits >= 50) return "Buen saldo"
-  if (credits >= 20) return "Saldo bajo"
-  return "Saldo muy bajo"
-}
-
-export function canAffordQuery(credits: number, queryType: keyof typeof QUERY_COSTS = "average"): boolean {
-  return credits >= QUERY_COSTS[queryType]
-}
-
-export function getQueryCost(queryType: keyof typeof QUERY_COSTS = "average"): number {
-  return QUERY_COSTS[queryType]
-}
-
-export async function getUserCredits(userId: string): Promise<number> {
-  try {
-    const supabase = createClient()
-    const { data, error } = await supabase.from("users").select("ai_credits").eq("id", userId).single()
-
-    if (error) {
-      console.error("Error fetching user credits:", error)
-      return 0
-    }
-
-    return data?.ai_credits || 0
-  } catch (error) {
-    console.error("Error getting user credits:", error)
-    return 0
-  }
-}
-
-export async function deductCredits(userId: string, amount: number): Promise<boolean> {
-  try {
-    const supabase = createClient()
-    const currentCredits = await getUserCredits(userId)
-
-    if (currentCredits < amount) {
-      return false
-    }
-
-    const { error } = await supabase
-      .from("users")
-      .update({ ai_credits: currentCredits - amount })
-      .eq("id", userId)
-
-    if (error) {
-      console.error("Error deducting credits:", error)
-      return false
-    }
-
-    return true
-  } catch (error) {
-    console.error("Error deducting credits:", error)
-    return false
-  }
-}
-
-export async function addCredits(userId: string, amount: number): Promise<boolean> {
-  try {
-    const supabase = createClient()
-    const currentCredits = await getUserCredits(userId)
-
-    const { error } = await supabase
-      .from("users")
-      .update({ ai_credits: currentCredits + amount })
-      .eq("id", userId)
-
-    if (error) {
-      console.error("Error adding credits:", error)
-      return false
-    }
-
-    return true
-  } catch (error) {
-    console.error("Error adding credits:", error)
-    return false
-  }
-}
-
-export async function addCreditsToUser(userId: string, amount: number): Promise<boolean> {
-  return await addCredits(userId, amount)
-}
-
-export function calculateSavings(packageId: string): number {
-  const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
-  if (!pkg) return 0
-
-  const baseRate = 0.02 // €0.02 per credit
-  const standardCost = pkg.credits * baseRate
-  const actualCost = pkg.price
-  const savings = standardCost - actualCost
-
-  return Math.max(0, savings)
-}
-
-export function calculateCreditsFromAmount(amount: number): number {
-  // Base rate: 50 credits per euro
-  return Math.floor(amount * 50)
-}
-
-export function validateCustomAmount(amount: number): { valid: boolean; message?: string } {
-  if (amount < 10) {
-    return { valid: false, message: "El mínimo es €10" }
-  }
-  if (amount > 999.99) {
-    return { valid: false, message: "El máximo es €999.99" }
-  }
-  return { valid: true }
-}
-
-export async function purchaseCredits(
-  userId: string,
-  packageId: string,
-  customAmount?: number,
-): Promise<{ success: boolean; message: string; credits?: number }> {
-  try {
-    let credits: number
-    let amount: number
-
-    if (customAmount) {
-      const validation = validateCustomAmount(customAmount)
-      if (!validation.valid) {
-        return { success: false, message: validation.message || "Cantidad inválida" }
-      }
-      credits = calculateCreditsFromAmount(customAmount)
-      amount = customAmount
-    } else {
-      const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
-      if (!pkg) {
-        return { success: false, message: "Paquete no encontrado" }
-      }
-      credits = pkg.credits
-      amount = pkg.price
-    }
-
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    // Add credits to user account
-    const success = await addCredits(userId, credits)
-
-    if (success) {
-      return {
-        success: true,
-        message: `¡Compra exitosa! Se han añadido ${credits} créditos a tu cuenta.`,
-        credits,
-      }
-    }
-
-    return { success: false, message: "Error procesando la compra. Inténtalo de nuevo." }
-  } catch (error) {
-    console.error("Error purchasing credits:", error)
-    return { success: false, message: "Error procesando la compra. Inténtalo de nuevo." }
-  }
-}
-
-export function formatCurrency(amount: number): string {
+// Format currency
+export function formatCurrency(amount: number, currency = "EUR"): string {
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
-    currency: "EUR",
+    currency,
   }).format(amount)
 }
 
-export function getPackageById(id: string): CreditPackage | undefined {
-  return CREDIT_PACKAGES.find((pkg) => pkg.id === id)
-}
-
-export function getPopularPackage(): CreditPackage | undefined {
-  return CREDIT_PACKAGES.find((pkg) => pkg.popular)
-}
-
-export function getBestValuePackage(): CreditPackage | undefined {
-  return CREDIT_PACKAGES.find((pkg) => pkg.bestValue)
-}
-
-export function getPopularPackages(): CreditPackage[] {
-  return CREDIT_PACKAGES.filter((pkg) => pkg.popular || pkg.bestValue)
-}
-
+// Format savings
 export function formatSavings(savings: number): string {
-  if (savings <= 0) return ""
-  return `Ahorras €${savings.toFixed(2)}`
+  return `Ahorra ${formatCurrency(savings)}`
 }
 
-export function getCreditUsageEstimate(credits: number): string {
-  const estimates = [
-    `Consultas simples: ~${Math.floor(credits / QUERY_COSTS.simple)}`,
-    `Consultas complejas: ~${Math.floor(credits / QUERY_COSTS.complex)}`,
-    `Análisis: ~${Math.floor(credits / QUERY_COSTS.image_analysis)}`,
-    `Generación: ~${Math.floor(credits / QUERY_COSTS.code_generation)}`,
-  ]
-
-  return estimates.join(" • ")
+// Get credit status color
+export function getCreditStatusColor(balance: number): string {
+  if (balance >= 100) return "text-green-600"
+  if (balance >= 50) return "text-yellow-600"
+  if (balance >= 20) return "text-orange-600"
+  return "text-red-600"
 }
 
-export const MIN_CUSTOM_AMOUNT = 10.0
-export const MAX_CUSTOM_AMOUNT = 999.99
-export const CREDITS_PER_EURO = 50
+// Get credit status message
+export function getCreditStatusMessage(balance: number): string {
+  if (balance >= 100) return "Excelente balance"
+  if (balance >= 50) return "Buen balance"
+  if (balance >= 20) return "Balance bajo"
+  if (balance >= 10) return "Balance muy bajo"
+  return "Sin créditos"
+}
+
+// Check if user can afford a query
+export function canAffordQuery(balance: number, estimatedCost = 5): boolean {
+  return balance >= estimatedCost
+}
+
+// Get query cost by type
+export function getQueryCost(queryType: "simple" | "complex" | "analysis" = "simple"): number {
+  const costs = {
+    simple: 3,
+    complex: 8,
+    analysis: 15,
+  }
+  return costs[queryType]
+}
+
+// Get credit packages
+export function getCreditPackages(): CreditPackage[] {
+  return CREDIT_PACKAGES
+}
+
+// Get pricing info
+export function getPricingInfo() {
+  return OPENAI_PRICING
+}
+
+// Export all functions and constants
+export { CREDIT_PACKAGES as creditPackages, OPENAI_PRICING as pricingInfo }

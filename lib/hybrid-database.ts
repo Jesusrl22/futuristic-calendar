@@ -164,7 +164,7 @@ class HybridDatabase {
             streakDays: 7,
           },
           achievements: ["first_task", "note_taker", "wishlist_creator"],
-          aiCredits: 0,
+          aiCredits: 150,
         },
         {
           id: "demo-1",
@@ -190,7 +190,7 @@ class HybridDatabase {
             streakDays: 3,
           },
           achievements: ["first_task"],
-          aiCredits: 0,
+          aiCredits: 50,
         },
       ]
 
@@ -684,4 +684,92 @@ class HybridDatabase {
   }
 }
 
-export const db = new HybridDatabase()
+// Create singleton instance
+const db = new HybridDatabase()
+
+// Export the db instance
+export { db }
+
+// Export individual functions for compatibility
+export const getUser = (id: string) => db.getUser(id)
+export const getUserByEmail = (email: string) => db.getUserByEmail(email)
+export const getUserById = (id: string) => db.getUserById(id)
+export const getAllUsers = () => db.getAllUsers()
+export const createUser = (userData: Omit<User, "id" | "createdAt" | "updatedAt">) => db.createUser(userData)
+export const updateUser = (id: string, updates: Partial<User>) => db.updateUser(id, updates)
+export const deleteUser = (id: string) => db.deleteUser(id)
+
+export const getTasks = (userId: string) => db.getTasks(userId)
+export const createTask = (taskData: Omit<Task, "id" | "createdAt" | "updatedAt">) => db.createTask(taskData)
+export const updateTask = (id: string, updates: Partial<Task>) => db.updateTask(id, updates)
+export const deleteTask = (id: string) => db.deleteTask(id)
+
+export const getNotes = (userId: string) => db.getNotes(userId)
+export const createNote = (noteData: Omit<Note, "id" | "createdAt" | "updatedAt">) => db.createNote(noteData)
+export const updateNote = (id: string, updates: Partial<Note>) => db.updateNote(id, updates)
+export const deleteNote = (id: string) => db.deleteNote(id)
+
+export const getWishlistItems = (userId: string) => db.getWishlistItems(userId)
+export const createWishlistItem = (itemData: Omit<WishlistItem, "id" | "createdAt" | "updatedAt">) =>
+  db.createWishlistItem(itemData)
+export const updateWishlistItem = (id: string, updates: Partial<WishlistItem>) => db.updateWishlistItem(id, updates)
+export const deleteWishlistItem = (id: string) => db.deleteWishlistItem(id)
+
+// Authentication helpers - THESE WERE MISSING
+export const loginUser = async (email: string, password: string): Promise<User | null> => {
+  const user = await db.getUserByEmail(email)
+  if (user && user.password === password) {
+    return user
+  }
+  return null
+}
+
+export const registerUser = async (email: string, password: string, name: string): Promise<User | null> => {
+  const existingUser = await db.getUserByEmail(email)
+  if (existingUser) {
+    return null // User already exists
+  }
+
+  return db.createUser({
+    email,
+    password,
+    name,
+    plan: "free",
+    isAdmin: false,
+    settings: {
+      theme: "system",
+      notifications: true,
+      language: "es",
+      pomodoroTime: 25,
+      shortBreakTime: 5,
+      longBreakTime: 15,
+    },
+    stats: {
+      tasksCompleted: 0,
+      notesCreated: 0,
+      wishlistItems: 0,
+      achievementsUnlocked: 0,
+      totalSessions: 0,
+      streakDays: 0,
+    },
+    achievements: [],
+    aiCredits: 50, // Free tier gets 50 credits
+  })
+}
+
+export const logoutUser = async (): Promise<void> => {
+  // In a real app, you might want to clear tokens, etc.
+  console.log("User logged out")
+}
+
+export const updateUserSubscription = async (userId: string, plan: string, billing: string): Promise<User | null> => {
+  const credits = plan === "pro" ? 1000 : plan === "premium" ? 150 : 50
+
+  return db.updateUser(userId, {
+    plan: plan as "free" | "premium" | "pro",
+    aiCredits: credits,
+  })
+}
+
+// Export as default as well for compatibility
+export default db
