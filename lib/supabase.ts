@@ -197,30 +197,28 @@ export interface Database {
   }
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Create Supabase client with environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("Supabase environment variables not found. Using fallback configuration.")
+export const createClient = () => {
+  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
 }
 
-export function createClient() {
-  return createSupabaseClient<Database>(
-    supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder-anon-key",
-  )
+// Server-side client with service role key
+export const createServerClient = () => {
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  return createSupabaseClient(supabaseUrl, supabaseServiceKey)
 }
 
-export function createServerClient() {
-  return createSupabaseClient<Database>(
-    supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder-anon-key",
-  )
+// Client-side singleton
+let clientInstance: ReturnType<typeof createSupabaseClient> | null = null
+
+export const getSupabaseClient = () => {
+  if (!clientInstance) {
+    clientInstance = createClient()
+  }
+  return clientInstance
 }
 
-export function createBrowserClient() {
-  return createSupabaseClient<Database>(
-    supabaseUrl || "https://placeholder.supabase.co",
-    supabaseAnonKey || "placeholder-anon-key",
-  )
-}
+export default createClient

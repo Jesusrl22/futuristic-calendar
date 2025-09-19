@@ -3,7 +3,9 @@ export interface SubscriptionPlan {
   id: string
   name: string
   price: number
+  priceYearly: number
   priceFormatted: string
+  priceYearlyFormatted: string
   interval: "monthly" | "yearly"
   features: string[]
   popular?: boolean
@@ -15,58 +17,71 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     id: "free",
     name: "Free",
     price: 0,
-    priceFormatted: "Gratis",
+    priceYearly: 0,
+    priceFormatted: "€0",
+    priceYearlyFormatted: "€0",
     interval: "monthly",
-    features: ["Tareas ilimitadas", "Notas básicas", "Logros básicos", "Sincronización en la nube"],
+    features: ["Tareas básicas", "Notas básicas", "Calendario básico", "Logros básicos", "Sincronización en la nube"],
   },
   {
     id: "premium_monthly",
     name: "Premium",
-    price: 4.99,
-    priceFormatted: "$4.99/mes",
+    price: 1.99,
+    priceYearly: 20,
+    priceFormatted: "€1.99/mes",
+    priceYearlyFormatted: "€20/año",
     interval: "monthly",
     features: [
       "Todo lo de Free",
       "Lista de deseos",
       "Logros premium",
-      "Temas personalizados",
+      "50 consultas IA/mes",
       "Estadísticas avanzadas",
       "Soporte prioritario",
     ],
+    savings: "Ahorra €3.88 al año",
   },
   {
     id: "premium_yearly",
     name: "Premium Anual",
-    price: 49.99,
-    priceFormatted: "$49.99/año",
+    price: 1.99,
+    priceYearly: 20,
+    priceFormatted: "€1.99/mes",
+    priceYearlyFormatted: "€20/año",
     interval: "yearly",
     features: ["Todo lo de Premium", "2 meses gratis"],
-    savings: "Ahorra $9.89",
+    savings: "Ahorra €3.88",
   },
   {
     id: "pro_monthly",
     name: "Pro",
-    price: 9.99,
-    priceFormatted: "$9.99/mes",
+    price: 4.99,
+    priceYearly: 45,
+    priceFormatted: "€4.99/mes",
+    priceYearlyFormatted: "€45/año",
     interval: "monthly",
     popular: true,
     features: [
       "Todo lo de Premium",
-      "Asistente IA",
+      "Asistente IA ilimitado",
       "Créditos IA incluidos",
       "Análisis inteligente",
       "Automatizaciones",
+      "Colaboración en equipo",
       "API access",
     ],
+    savings: "Ahorra €14.88 al año",
   },
   {
     id: "pro_yearly",
     name: "Pro Anual",
-    price: 99.99,
-    priceFormatted: "$99.99/año",
+    price: 4.99,
+    priceYearly: 45,
+    priceFormatted: "€4.99/mes",
+    priceYearlyFormatted: "€45/año",
     interval: "yearly",
     features: ["Todo lo de Pro", "2 meses gratis", "Créditos IA bonus"],
-    savings: "Ahorra $19.89",
+    savings: "Ahorra €14.88",
   },
 ]
 
@@ -94,12 +109,13 @@ export function canAccessFeature(userPlan: string, feature: string): boolean {
     custom_themes: ["premium", "pro"],
     priority_support: ["premium", "pro"],
     api_access: ["pro"],
+    team_collaboration: ["pro"],
   }
 
   const requiredPlans = featureRequirements[feature]
   if (!requiredPlans) return true // Feature available to all
 
-  return requiredPlans.includes(userPlan)
+  return requiredPlans.some((plan) => userPlan.includes(plan))
 }
 
 export async function upgradePlan(userId: string, planId: string): Promise<boolean> {

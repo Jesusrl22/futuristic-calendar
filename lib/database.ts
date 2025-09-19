@@ -1,50 +1,45 @@
+"use client"
+
 import { createClient } from "@/lib/supabase"
 
 // Types
 export interface User {
   id: string
   email: string
-  password: string
   name: string
+  password?: string
   plan: "free" | "premium" | "pro"
-  isAdmin: boolean
-  createdAt: Date
-  settings: {
-    theme: "light" | "dark" | "system"
-    notifications: boolean
-    language: "es" | "en"
-    pomodoroTime: number
-    shortBreakTime: number
-    longBreakTime: number
-  }
-  stats: {
-    tasksCompleted: number
-    notesCreated: number
-    wishlistItems: number
-    achievementsUnlocked: number
-    totalSessions: number
-    streakDays: number
-  }
-  achievements: string[]
+  billing: "monthly" | "yearly"
   aiCredits: number
+  createdAt: string
+  updatedAt: string
+  isAdmin?: boolean
+  theme?: "light" | "dark"
+  pomodoroSettings?: {
+    workDuration: number
+    shortBreak: number
+    longBreak: number
+    longBreakInterval: number
+  }
+  subscriptionExpiry?: string
   emailVerified?: boolean
-  verificationToken?: string
-  subscriptionId?: string
-  subscriptionStatus?: string
-  subscriptionExpiresAt?: Date
-  billingCycle?: "monthly" | "yearly"
+  lastLogin?: string
 }
 
 export interface Task {
   id: string
   userId: string
   title: string
-  description: string
+  description?: string
   completed: boolean
   priority: "low" | "medium" | "high"
-  dueDate: Date | null
-  createdAt: Date
-  category: string
+  dueDate?: string
+  category?: string
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+  estimatedTime?: number
+  actualTime?: number
 }
 
 export interface Note {
@@ -52,914 +47,771 @@ export interface Note {
   userId: string
   title: string
   content: string
-  createdAt: Date
-  updatedAt: Date
-  category: string
+  category?: string
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+  isPinned?: boolean
+  color?: string
 }
 
 export interface WishlistItem {
   id: string
   userId: string
   title: string
-  description: string
+  description?: string
   priority: "low" | "medium" | "high"
-  estimatedCost: number
-  category: string
-  createdAt: Date
-  achieved: boolean
+  category?: string
+  estimatedCost?: number
+  targetDate?: string
+  completed: boolean
+  createdAt: string
+  updatedAt: string
+  url?: string
+  notes?: string
 }
 
-export interface Subscription {
+export interface Achievement {
   id: string
   userId: string
-  plan: "free" | "premium" | "pro"
-  status: "active" | "cancelled" | "expired" | "pending"
-  billingCycle: "monthly" | "yearly"
-  amount: number
-  currency: string
-  paypalSubscriptionId?: string
-  createdAt: Date
-  expiresAt: Date
-  cancelledAt?: Date
-  renewalReminded?: boolean
+  type: string
+  title: string
+  description: string
+  unlockedAt: string
+  progress?: number
+  maxProgress?: number
 }
 
-// In-memory storage for fallback
+// In-memory storage as fallback
 const users: User[] = [
   {
-    id: "1",
+    id: "admin-user-id",
     email: "admin@futuretask.com",
+    name: "Admin User",
     password: "admin123",
-    name: "Administrador",
     plan: "pro",
-    isAdmin: true,
-    createdAt: new Date("2024-01-01"),
-    emailVerified: true,
-    settings: {
-      theme: "system",
-      notifications: true,
-      language: "es",
-      pomodoroTime: 25,
-      shortBreakTime: 5,
-      longBreakTime: 15,
-    },
-    stats: {
-      tasksCompleted: 45,
-      notesCreated: 23,
-      wishlistItems: 8,
-      achievementsUnlocked: 12,
-      totalSessions: 89,
-      streakDays: 7,
-    },
-    achievements: ["first_task", "task_master", "note_taker", "wishlist_creator", "streak_week"],
+    billing: "yearly",
     aiCredits: 1000,
-    subscriptionStatus: "active",
-    billingCycle: "yearly",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isAdmin: true,
+    theme: "dark",
+    pomodoroSettings: {
+      workDuration: 25,
+      shortBreak: 5,
+      longBreak: 15,
+      longBreakInterval: 4,
+    },
+    subscriptionExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    emailVerified: true,
   },
   {
-    id: "2",
+    id: "premium-user-id",
     email: "premium@futuretask.com",
+    name: "Premium User",
     password: "premium123",
-    name: "Usuario Premium",
     plan: "premium",
-    isAdmin: false,
-    createdAt: new Date("2024-01-15"),
-    emailVerified: true,
-    settings: {
-      theme: "dark",
-      notifications: true,
-      language: "es",
-      pomodoroTime: 25,
-      shortBreakTime: 5,
-      longBreakTime: 15,
-    },
-    stats: {
-      tasksCompleted: 28,
-      notesCreated: 15,
-      wishlistItems: 5,
-      achievementsUnlocked: 8,
-      totalSessions: 45,
-      streakDays: 5,
-    },
-    achievements: ["first_task", "task_master", "note_taker"],
+    billing: "monthly",
     aiCredits: 150,
-    subscriptionStatus: "active",
-    billingCycle: "monthly",
-  },
-  {
-    id: "3",
-    email: "demo@futuretask.com",
-    password: "demo123",
-    name: "Usuario Demo",
-    plan: "free",
-    isAdmin: false,
-    createdAt: new Date("2024-01-15"),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    theme: "dark",
+    pomodoroSettings: {
+      workDuration: 30,
+      shortBreak: 5,
+      longBreak: 20,
+      longBreakInterval: 3,
+    },
+    subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     emailVerified: true,
-    settings: {
-      theme: "light",
-      notifications: true,
-      language: "es",
-      pomodoroTime: 25,
-      shortBreakTime: 5,
-      longBreakTime: 15,
-    },
-    stats: {
-      tasksCompleted: 12,
-      notesCreated: 5,
-      wishlistItems: 3,
-      achievementsUnlocked: 4,
-      totalSessions: 25,
-      streakDays: 3,
-    },
-    achievements: ["first_task", "note_taker"],
+  },
+  {
+    id: "demo-user-id",
+    email: "demo@futuretask.com",
+    name: "Demo User",
+    password: "demo123",
+    plan: "free",
+    billing: "monthly",
     aiCredits: 50,
-    subscriptionStatus: "active",
-    billingCycle: "monthly",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    theme: "light",
+    pomodoroSettings: {
+      workDuration: 25,
+      shortBreak: 5,
+      longBreak: 15,
+      longBreakInterval: 4,
+    },
+    emailVerified: true,
   },
 ]
 
-const tasks: Task[] = [
-  {
-    id: "1",
-    userId: "1",
-    title: "Revisar reportes mensuales",
-    description: "Analizar los reportes de ventas del mes anterior",
-    completed: false,
-    priority: "high",
-    dueDate: new Date("2024-12-25"),
-    createdAt: new Date("2024-12-20"),
-    category: "Trabajo",
-  },
-  {
-    id: "2",
-    userId: "1",
-    title: "Planificar vacaciones",
-    description: "Buscar destinos y hacer reservas",
-    completed: false,
-    priority: "medium",
-    dueDate: new Date("2024-12-30"),
-    createdAt: new Date("2024-12-18"),
-    category: "Personal",
-  },
-  {
-    id: "3",
-    userId: "2",
-    title: "Estudiar React",
-    description: "Completar el curso de React avanzado",
-    completed: true,
-    priority: "high",
-    dueDate: new Date("2024-12-22"),
-    createdAt: new Date("2024-12-15"),
-    category: "Educación",
-  },
-]
+const tasks: Task[] = []
+const notes: Note[] = []
+const wishlistItems: WishlistItem[] = []
+const achievements: Achievement[] = []
 
-const notes: Note[] = [
-  {
-    id: "1",
-    userId: "1",
-    title: "Ideas para el proyecto",
-    content: "Lista de funcionalidades nuevas para implementar en el próximo sprint.",
-    createdAt: new Date("2024-12-20"),
-    updatedAt: new Date("2024-12-20"),
-    category: "Trabajo",
-  },
-  {
-    id: "2",
-    userId: "2",
-    title: "Receta de pasta",
-    content: "Ingredientes: pasta, tomate, albahaca, ajo, aceite de oliva.",
-    createdAt: new Date("2024-12-19"),
-    updatedAt: new Date("2024-12-19"),
-    category: "Cocina",
-  },
-]
+// Helper function to convert camelCase to snake_case
+function toSnakeCase(obj: any): any {
+  if (obj === null || typeof obj !== "object") return obj
+  if (Array.isArray(obj)) return obj.map(toSnakeCase)
 
-const wishlistItems: WishlistItem[] = [
-  {
-    id: "1",
-    userId: "1",
-    title: "MacBook Pro M3",
-    description: "Nueva laptop para desarrollo",
-    priority: "high",
-    estimatedCost: 2500,
-    category: "Tecnología",
-    createdAt: new Date("2024-12-15"),
-    achieved: false,
-  },
-  {
-    id: "2",
-    userId: "2",
-    title: "Curso de TypeScript",
-    description: "Curso avanzado de TypeScript",
-    priority: "medium",
-    estimatedCost: 99,
-    category: "Educación",
-    createdAt: new Date("2024-12-18"),
-    achieved: false,
-  },
-]
-
-const subscriptions: Subscription[] = [
-  {
-    id: "sub_1",
-    userId: "1",
-    plan: "pro",
-    status: "active",
-    billingCycle: "yearly",
-    amount: 99.99,
-    currency: "EUR",
-    createdAt: new Date("2024-01-01"),
-    expiresAt: new Date("2025-01-01"),
-  },
-  {
-    id: "sub_2",
-    userId: "2",
-    plan: "premium",
-    status: "active",
-    billingCycle: "monthly",
-    amount: 9.99,
-    currency: "EUR",
-    createdAt: new Date("2024-01-15"),
-    expiresAt: new Date("2024-12-31"),
-  },
-]
-
-// Helper function to check if Supabase is available
-async function isSupabaseAvailable(): Promise<boolean> {
-  try {
-    const supabase = createClient()
-    const { error } = await supabase.from("users").select("count", { count: "exact", head: true })
-    return !error
-  } catch {
-    return false
+  const converted: any = {}
+  for (const [key, value] of Object.entries(obj)) {
+    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+    converted[snakeKey] = toSnakeCase(value)
   }
+  return converted
 }
 
-// Database operations
-export const db = {
-  // Users
-  async getUsers(): Promise<User[]> {
+// Helper function to convert snake_case to camelCase
+function toCamelCase(obj: any): any {
+  if (obj === null || typeof obj !== "object") return obj
+  if (Array.isArray(obj)) return obj.map(toCamelCase)
+
+  const converted: any = {}
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    converted[camelKey] = toCamelCase(value)
+  }
+  return converted
+}
+
+// Database class with Supabase integration and fallback
+class HybridDatabase {
+  private supabase = createClient()
+  private useSupabase = true
+
+  constructor() {
+    // Test Supabase connection
+    this.testConnection()
+  }
+
+  private async testConnection() {
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("users").select("*")
-        if (!error && data) {
-          return data.map((user) => ({
-            ...user,
-            createdAt: new Date(user.created_at),
-            settings: user.settings || {
-              theme: "light",
-              notifications: true,
-              language: "es",
-              pomodoroTime: 25,
-              shortBreakTime: 5,
-              longBreakTime: 15,
-            },
-            stats: user.stats || {
-              tasksCompleted: 0,
-              notesCreated: 0,
-              wishlistItems: 0,
-              achievementsUnlocked: 0,
-              totalSessions: 0,
-              streakDays: 0,
-            },
-            achievements: user.achievements || [],
-            aiCredits: user.ai_credits || 0,
-          }))
-        }
+      const { error } = await this.supabase.from("users").select("count").limit(1)
+      if (error) {
+        console.warn("Supabase connection failed, using in-memory storage:", error.message)
+        this.useSupabase = false
       }
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+      console.warn("Supabase connection failed, using in-memory storage:", error)
+      this.useSupabase = false
     }
-    return users
-  },
+  }
 
+  // User operations
   async getAllUsers(): Promise<User[]> {
-    return await this.getUsers()
-  },
+    if (!this.useSupabase) {
+      return users
+    }
+
+    try {
+      const { data, error } = await this.supabase.from("users").select("*")
+      if (error) throw error
+      return data ? data.map(toCamelCase) : []
+    } catch (error) {
+      console.error("Error fetching users from Supabase:", error)
+      return users
+    }
+  }
 
   async getUserById(id: string): Promise<User | null> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("users").select("*").eq("id", id).single()
-        if (!error && data) {
-          return {
-            ...data,
-            createdAt: new Date(data.created_at),
-            settings: data.settings || {
-              theme: "light",
-              notifications: true,
-              language: "es",
-              pomodoroTime: 25,
-              shortBreakTime: 5,
-              longBreakTime: 15,
-            },
-            stats: data.stats || {
-              tasksCompleted: 0,
-              notesCreated: 0,
-              wishlistItems: 0,
-              achievementsUnlocked: 0,
-              totalSessions: 0,
-              streakDays: 0,
-            },
-            achievements: data.achievements || [],
-            aiCredits: data.ai_credits || 0,
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+    if (!this.useSupabase) {
+      return users.find((user) => user.id === id) || null
     }
-    return users.find((user) => user.id === id) || null
-  },
+
+    try {
+      const { data, error } = await this.supabase.from("users").select("*").eq("id", id).single()
+      if (error) throw error
+      return data ? toCamelCase(data) : null
+    } catch (error) {
+      console.error("Error fetching user from Supabase:", error)
+      return users.find((user) => user.id === id) || null
+    }
+  }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("users").select("*").eq("email", email).single()
-        if (!error && data) {
-          return {
-            ...data,
-            createdAt: new Date(data.created_at),
-            settings: data.settings || {
-              theme: "light",
-              notifications: true,
-              language: "es",
-              pomodoroTime: 25,
-              shortBreakTime: 5,
-              longBreakTime: 15,
-            },
-            stats: data.stats || {
-              tasksCompleted: 0,
-              notesCreated: 0,
-              wishlistItems: 0,
-              achievementsUnlocked: 0,
-              totalSessions: 0,
-              streakDays: 0,
-            },
-            achievements: data.achievements || [],
-            aiCredits: data.ai_credits || 0,
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+    if (!this.useSupabase) {
+      return users.find((user) => user.email === email) || null
     }
-    return users.find((user) => user.email === email) || null
-  },
 
-  async createUser(userData: Omit<User, "id" | "createdAt">): Promise<User> {
+    try {
+      const { data, error } = await this.supabase.from("users").select("*").eq("email", email).single()
+      if (error) throw error
+      return data ? toCamelCase(data) : null
+    } catch (error) {
+      console.error("Error fetching user by email from Supabase:", error)
+      return users.find((user) => user.email === email) || null
+    }
+  }
+
+  async createUser(userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User | null> {
     const newUser: User = {
       ...userData,
-      id: (users.length + 1).toString(),
-      createdAt: new Date(),
+      id: `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (!this.useSupabase) {
+      users.push(newUser)
+      return newUser
     }
 
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from("users")
-          .insert({
-            email: newUser.email,
-            password: newUser.password,
-            name: newUser.name,
-            plan: newUser.plan,
-            is_admin: newUser.isAdmin,
-            settings: newUser.settings,
-            stats: newUser.stats,
-            achievements: newUser.achievements,
-            ai_credits: newUser.aiCredits,
-            email_verified: newUser.emailVerified || false,
-          })
-          .select()
-          .single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            createdAt: new Date(data.created_at),
-            isAdmin: data.is_admin,
-            aiCredits: data.ai_credits,
-            emailVerified: data.email_verified,
-          }
-        }
-      }
+      const { data, error } = await this.supabase
+        .from("users")
+        .insert([toSnakeCase(newUser)])
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : newUser
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+      console.error("Error creating user in Supabase:", error)
+      users.push(newUser)
+      return newUser
     }
-
-    users.push(newUser)
-    return newUser
-  },
+  }
 
   async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const updateData: any = { ...updates }
-
-        // Map field names for Supabase
-        if (updates.isAdmin !== undefined) {
-          updateData.is_admin = updates.isAdmin
-          delete updateData.isAdmin
-        }
-        if (updates.aiCredits !== undefined) {
-          updateData.ai_credits = updates.aiCredits
-          delete updateData.aiCredits
-        }
-        if (updates.emailVerified !== undefined) {
-          updateData.email_verified = updates.emailVerified
-          delete updateData.emailVerified
-        }
-
-        const { data, error } = await supabase.from("users").update(updateData).eq("id", id).select().single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            createdAt: new Date(data.created_at),
-            isAdmin: data.is_admin,
-            aiCredits: data.ai_credits,
-            emailVerified: data.email_verified,
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString(),
     }
 
-    const userIndex = users.findIndex((user) => user.id === id)
-    if (userIndex === -1) return null
-
-    users[userIndex] = { ...users[userIndex], ...updates }
-    return users[userIndex]
-  },
-
-  // Tasks
-  async getTasks(userId: string): Promise<Task[]> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("tasks").select("*").eq("user_id", userId)
-        if (!error && data) {
-          return data.map((task) => ({
-            ...task,
-            userId: task.user_id,
-            createdAt: new Date(task.created_at),
-            dueDate: task.due_date ? new Date(task.due_date) : null,
-          }))
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+    if (!this.useSupabase) {
+      const userIndex = users.findIndex((user) => user.id === id)
+      if (userIndex === -1) return null
+      users[userIndex] = { ...users[userIndex], ...updatedData }
+      return users[userIndex]
     }
-    return tasks.filter((task) => task.userId === userId)
-  },
 
-  async createTask(taskData: Omit<Task, "id" | "createdAt">): Promise<Task> {
+    try {
+      const { data, error } = await this.supabase
+        .from("users")
+        .update(toSnakeCase(updatedData))
+        .eq("id", id)
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : null
+    } catch (error) {
+      console.error("Error updating user in Supabase:", error)
+      const userIndex = users.findIndex((user) => user.id === id)
+      if (userIndex === -1) return null
+      users[userIndex] = { ...users[userIndex], ...updatedData }
+      return users[userIndex]
+    }
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    if (!this.useSupabase) {
+      const userIndex = users.findIndex((user) => user.id === id)
+      if (userIndex === -1) return false
+      users.splice(userIndex, 1)
+      return true
+    }
+
+    try {
+      const { error } = await this.supabase.from("users").delete().eq("id", id)
+      if (error) throw error
+      return true
+    } catch (error) {
+      console.error("Error deleting user from Supabase:", error)
+      const userIndex = users.findIndex((user) => user.id === id)
+      if (userIndex === -1) return false
+      users.splice(userIndex, 1)
+      return true
+    }
+  }
+
+  // Task operations
+  async getTasksByUserId(userId: string): Promise<Task[]> {
+    if (!this.useSupabase) {
+      return tasks.filter((task) => task.userId === userId)
+    }
+
+    try {
+      const { data, error } = await this.supabase.from("tasks").select("*").eq("user_id", userId)
+      if (error) throw error
+      return data ? data.map(toCamelCase) : []
+    } catch (error) {
+      console.error("Error fetching tasks from Supabase:", error)
+      return tasks.filter((task) => task.userId === userId)
+    }
+  }
+
+  async createTask(taskData: Omit<Task, "id" | "createdAt" | "updatedAt">): Promise<Task | null> {
     const newTask: Task = {
       ...taskData,
-      id: (tasks.length + 1).toString(),
-      createdAt: new Date(),
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (!this.useSupabase) {
+      tasks.push(newTask)
+      return newTask
     }
 
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from("tasks")
-          .insert({
-            user_id: taskData.userId,
-            title: taskData.title,
-            description: taskData.description,
-            completed: taskData.completed,
-            priority: taskData.priority,
-            due_date: taskData.dueDate?.toISOString(),
-            category: taskData.category,
-          })
-          .select()
-          .single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            createdAt: new Date(data.created_at),
-            dueDate: data.due_date ? new Date(data.due_date) : null,
-          }
-        }
-      }
+      const { data, error } = await this.supabase
+        .from("tasks")
+        .insert([toSnakeCase(newTask)])
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : newTask
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+      console.error("Error creating task in Supabase:", error)
+      tasks.push(newTask)
+      return newTask
     }
-
-    tasks.push(newTask)
-    return newTask
-  },
+  }
 
   async updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const updateData: any = { ...updates }
-
-        // Map field names for Supabase
-        if (updates.userId !== undefined) {
-          updateData.user_id = updates.userId
-          delete updateData.userId
-        }
-        if (updates.dueDate !== undefined) {
-          updateData.due_date = updates.dueDate?.toISOString()
-          delete updateData.dueDate
-        }
-
-        const { data, error } = await supabase.from("tasks").update(updateData).eq("id", id).select().single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            createdAt: new Date(data.created_at),
-            dueDate: data.due_date ? new Date(data.due_date) : null,
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString(),
     }
 
-    const taskIndex = tasks.findIndex((task) => task.id === id)
-    if (taskIndex === -1) return null
+    if (!this.useSupabase) {
+      const taskIndex = tasks.findIndex((task) => task.id === id)
+      if (taskIndex === -1) return null
+      tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+      return tasks[taskIndex]
+    }
 
-    tasks[taskIndex] = { ...tasks[taskIndex], ...updates }
-    return tasks[taskIndex]
-  },
+    try {
+      const { data, error } = await this.supabase
+        .from("tasks")
+        .update(toSnakeCase(updatedData))
+        .eq("id", id)
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : null
+    } catch (error) {
+      console.error("Error updating task in Supabase:", error)
+      const taskIndex = tasks.findIndex((task) => task.id === id)
+      if (taskIndex === -1) return null
+      tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+      return tasks[taskIndex]
+    }
+  }
 
   async deleteTask(id: string): Promise<boolean> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { error } = await supabase.from("tasks").delete().eq("id", id)
-        return !error
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    if (!this.useSupabase) {
+      const taskIndex = tasks.findIndex((task) => task.id === id)
+      if (taskIndex === -1) return false
+      tasks.splice(taskIndex, 1)
+      return true
     }
 
-    const taskIndex = tasks.findIndex((task) => task.id === id)
-    if (taskIndex === -1) return false
-
-    tasks.splice(taskIndex, 1)
-    return true
-  },
-
-  // Notes
-  async getNotes(userId: string): Promise<Note[]> {
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("notes").select("*").eq("user_id", userId)
-        if (!error && data) {
-          return data.map((note) => ({
-            ...note,
-            userId: note.user_id,
-            createdAt: new Date(note.created_at),
-            updatedAt: new Date(note.updated_at),
-          }))
-        }
-      }
+      const { error } = await this.supabase.from("tasks").delete().eq("id", id)
+      if (error) throw error
+      return true
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+      console.error("Error deleting task from Supabase:", error)
+      const taskIndex = tasks.findIndex((task) => task.id === id)
+      if (taskIndex === -1) return false
+      tasks.splice(taskIndex, 1)
+      return true
     }
-    return notes.filter((note) => note.userId === userId)
-  },
+  }
 
-  async createNote(noteData: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note> {
+  // Note operations
+  async getNotesByUserId(userId: string): Promise<Note[]> {
+    if (!this.useSupabase) {
+      return notes.filter((note) => note.userId === userId)
+    }
+
+    try {
+      const { data, error } = await this.supabase.from("notes").select("*").eq("user_id", userId)
+      if (error) throw error
+      return data ? data.map(toCamelCase) : []
+    } catch (error) {
+      console.error("Error fetching notes from Supabase:", error)
+      return notes.filter((note) => note.userId === userId)
+    }
+  }
+
+  async createNote(noteData: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note | null> {
     const newNote: Note = {
       ...noteData,
-      id: (notes.length + 1).toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      id: `note-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (!this.useSupabase) {
+      notes.push(newNote)
+      return newNote
     }
 
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from("notes")
-          .insert({
-            user_id: noteData.userId,
-            title: noteData.title,
-            content: noteData.content,
-            category: noteData.category,
-          })
-          .select()
-          .single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            createdAt: new Date(data.created_at),
-            updatedAt: new Date(data.updated_at),
-          }
-        }
-      }
+      const { data, error } = await this.supabase
+        .from("notes")
+        .insert([toSnakeCase(newNote)])
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : newNote
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+      console.error("Error creating note in Supabase:", error)
+      notes.push(newNote)
+      return newNote
     }
-
-    notes.push(newNote)
-    return newNote
-  },
+  }
 
   async updateNote(id: string, updates: Partial<Note>): Promise<Note | null> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const updateData: any = { ...updates, updated_at: new Date().toISOString() }
-
-        // Map field names for Supabase
-        if (updates.userId !== undefined) {
-          updateData.user_id = updates.userId
-          delete updateData.userId
-        }
-
-        const { data, error } = await supabase.from("notes").update(updateData).eq("id", id).select().single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            createdAt: new Date(data.created_at),
-            updatedAt: new Date(data.updated_at),
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString(),
     }
 
-    const noteIndex = notes.findIndex((note) => note.id === id)
-    if (noteIndex === -1) return null
+    if (!this.useSupabase) {
+      const noteIndex = notes.findIndex((note) => note.id === id)
+      if (noteIndex === -1) return null
+      notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
+      return notes[noteIndex]
+    }
 
-    notes[noteIndex] = { ...notes[noteIndex], ...updates, updatedAt: new Date() }
-    return notes[noteIndex]
-  },
+    try {
+      const { data, error } = await this.supabase
+        .from("notes")
+        .update(toSnakeCase(updatedData))
+        .eq("id", id)
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : null
+    } catch (error) {
+      console.error("Error updating note in Supabase:", error)
+      const noteIndex = notes.findIndex((note) => note.id === id)
+      if (noteIndex === -1) return null
+      notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
+      return notes[noteIndex]
+    }
+  }
 
   async deleteNote(id: string): Promise<boolean> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { error } = await supabase.from("notes").delete().eq("id", id)
-        return !error
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    if (!this.useSupabase) {
+      const noteIndex = notes.findIndex((note) => note.id === id)
+      if (noteIndex === -1) return false
+      notes.splice(noteIndex, 1)
+      return true
     }
 
-    const noteIndex = notes.findIndex((note) => note.id === id)
-    if (noteIndex === -1) return false
-
-    notes.splice(noteIndex, 1)
-    return true
-  },
-
-  // Wishlist
-  async getWishlistItems(userId: string): Promise<WishlistItem[]> {
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("wishlist_items").select("*").eq("user_id", userId)
-        if (!error && data) {
-          return data.map((item) => ({
-            ...item,
-            userId: item.user_id,
-            estimatedCost: item.estimated_cost,
-            createdAt: new Date(item.created_at),
-          }))
-        }
-      }
+      const { error } = await this.supabase.from("notes").delete().eq("id", id)
+      if (error) throw error
+      return true
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+      console.error("Error deleting note from Supabase:", error)
+      const noteIndex = notes.findIndex((note) => note.id === id)
+      if (noteIndex === -1) return false
+      notes.splice(noteIndex, 1)
+      return true
     }
-    return wishlistItems.filter((item) => item.userId === userId)
-  },
+  }
 
-  async createWishlistItem(itemData: Omit<WishlistItem, "id" | "createdAt">): Promise<WishlistItem> {
+  // Wishlist operations
+  async getWishlistByUserId(userId: string): Promise<WishlistItem[]> {
+    if (!this.useSupabase) {
+      return wishlistItems.filter((item) => item.userId === userId)
+    }
+
+    try {
+      const { data, error } = await this.supabase.from("wishlist_items").select("*").eq("user_id", userId)
+      if (error) throw error
+      return data ? data.map(toCamelCase) : []
+    } catch (error) {
+      console.error("Error fetching wishlist from Supabase:", error)
+      return wishlistItems.filter((item) => item.userId === userId)
+    }
+  }
+
+  async createWishlistItem(
+    itemData: Omit<WishlistItem, "id" | "createdAt" | "updatedAt">,
+  ): Promise<WishlistItem | null> {
     const newItem: WishlistItem = {
       ...itemData,
-      id: (wishlistItems.length + 1).toString(),
-      createdAt: new Date(),
+      id: `wishlist-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (!this.useSupabase) {
+      wishlistItems.push(newItem)
+      return newItem
     }
 
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from("wishlist_items")
-          .insert({
-            user_id: itemData.userId,
-            title: itemData.title,
-            description: itemData.description,
-            priority: itemData.priority,
-            estimated_cost: itemData.estimatedCost,
-            category: itemData.category,
-            achieved: itemData.achieved,
-          })
-          .select()
-          .single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            estimatedCost: data.estimated_cost,
-            createdAt: new Date(data.created_at),
-          }
-        }
-      }
+      const { data, error } = await this.supabase
+        .from("wishlist_items")
+        .insert([toSnakeCase(newItem)])
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : newItem
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+      console.error("Error creating wishlist item in Supabase:", error)
+      wishlistItems.push(newItem)
+      return newItem
     }
-
-    wishlistItems.push(newItem)
-    return newItem
-  },
+  }
 
   async updateWishlistItem(id: string, updates: Partial<WishlistItem>): Promise<WishlistItem | null> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const updateData: any = { ...updates }
-
-        // Map field names for Supabase
-        if (updates.userId !== undefined) {
-          updateData.user_id = updates.userId
-          delete updateData.userId
-        }
-        if (updates.estimatedCost !== undefined) {
-          updateData.estimated_cost = updates.estimatedCost
-          delete updateData.estimatedCost
-        }
-
-        const { data, error } = await supabase.from("wishlist_items").update(updateData).eq("id", id).select().single()
-
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            estimatedCost: data.estimated_cost,
-            createdAt: new Date(data.created_at),
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    const updatedData = {
+      ...updates,
+      updatedAt: new Date().toISOString(),
     }
 
-    const itemIndex = wishlistItems.findIndex((item) => item.id === id)
-    if (itemIndex === -1) return null
+    if (!this.useSupabase) {
+      const itemIndex = wishlistItems.findIndex((item) => item.id === id)
+      if (itemIndex === -1) return null
+      wishlistItems[itemIndex] = { ...wishlistItems[itemIndex], ...updatedData }
+      return wishlistItems[itemIndex]
+    }
 
-    wishlistItems[itemIndex] = { ...wishlistItems[itemIndex], ...updates }
-    return wishlistItems[itemIndex]
-  },
+    try {
+      const { data, error } = await this.supabase
+        .from("wishlist_items")
+        .update(toSnakeCase(updatedData))
+        .eq("id", id)
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : null
+    } catch (error) {
+      console.error("Error updating wishlist item in Supabase:", error)
+      const itemIndex = wishlistItems.findIndex((item) => item.id === id)
+      if (itemIndex === -1) return null
+      wishlistItems[itemIndex] = { ...wishlistItems[itemIndex], ...updatedData }
+      return wishlistItems[itemIndex]
+    }
+  }
 
   async deleteWishlistItem(id: string): Promise<boolean> {
-    try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { error } = await supabase.from("wishlist_items").delete().eq("id", id)
-        return !error
-      }
-    } catch (error) {
-      console.warn("Supabase unavailable, using fallback storage:", error)
+    if (!this.useSupabase) {
+      const itemIndex = wishlistItems.findIndex((item) => item.id === id)
+      if (itemIndex === -1) return false
+      wishlistItems.splice(itemIndex, 1)
+      return true
     }
 
-    const itemIndex = wishlistItems.findIndex((item) => item.id === id)
-    if (itemIndex === -1) return false
-
-    wishlistItems.splice(itemIndex, 1)
-    return true
-  },
-
-  // Subscriptions
-  async getSubscriptions(): Promise<Subscription[]> {
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase.from("subscriptions").select("*")
-        if (!error && data) {
-          return data.map((sub) => ({
-            ...sub,
-            userId: sub.user_id,
-            billingCycle: sub.billing_cycle,
-            paypalSubscriptionId: sub.paypal_subscription_id,
-            createdAt: new Date(sub.created_at),
-            expiresAt: new Date(sub.expires_at),
-            cancelledAt: sub.cancelled_at ? new Date(sub.cancelled_at) : undefined,
-            renewalReminded: sub.renewal_reminded,
-          }))
+      const { error } = await this.supabase.from("wishlist_items").delete().eq("id", id)
+      if (error) throw error
+      return true
+    } catch (error) {
+      console.error("Error deleting wishlist item from Supabase:", error)
+      const itemIndex = wishlistItems.findIndex((item) => item.id === id)
+      if (itemIndex === -1) return false
+      wishlistItems.splice(itemIndex, 1)
+      return true
+    }
+  }
+
+  // Achievement operations
+  async getAchievementsByUserId(userId: string): Promise<Achievement[]> {
+    if (!this.useSupabase) {
+      return achievements.filter((achievement) => achievement.userId === userId)
+    }
+
+    try {
+      const { data, error } = await this.supabase.from("achievements").select("*").eq("user_id", userId)
+      if (error) throw error
+      return data ? data.map(toCamelCase) : []
+    } catch (error) {
+      console.error("Error fetching achievements from Supabase:", error)
+      return achievements.filter((achievement) => achievement.userId === userId)
+    }
+  }
+
+  async createAchievement(achievementData: Omit<Achievement, "id">): Promise<Achievement | null> {
+    const newAchievement: Achievement = {
+      ...achievementData,
+      id: `achievement-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    }
+
+    if (!this.useSupabase) {
+      achievements.push(newAchievement)
+      return newAchievement
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .from("achievements")
+        .insert([toSnakeCase(newAchievement)])
+        .select()
+        .single()
+      if (error) throw error
+      return data ? toCamelCase(data) : newAchievement
+    } catch (error) {
+      console.error("Error creating achievement in Supabase:", error)
+      achievements.push(newAchievement)
+      return newAchievement
+    }
+  }
+
+  // Authentication methods
+  async loginUser(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email)
+    if (user && user.password === password) {
+      // Update last login
+      await this.updateUser(user.id, { lastLogin: new Date().toISOString() })
+      return user
+    }
+    return null
+  }
+
+  async registerUser(email: string, password: string, name: string): Promise<User | null> {
+    // Check if user already exists
+    const existingUser = await this.getUserByEmail(email)
+    if (existingUser) {
+      return null
+    }
+
+    // Create new user
+    return await this.createUser({
+      email,
+      password,
+      name,
+      plan: "free",
+      billing: "monthly",
+      aiCredits: 50, // Free tier gets 50 credits
+      theme: "light",
+      pomodoroSettings: {
+        workDuration: 25,
+        shortBreak: 5,
+        longBreak: 15,
+        longBreakInterval: 4,
+      },
+      emailVerified: false,
+    })
+  }
+
+  async logoutUser(): Promise<void> {
+    // In a real app, you'd clear tokens, sessions, etc.
+    console.log("User logged out")
+  }
+
+  // Subscription management
+  async updateUserSubscription(
+    userId: string,
+    plan: "free" | "premium" | "pro",
+    billing: "monthly" | "yearly",
+  ): Promise<User | null> {
+    const credits = plan === "free" ? 50 : plan === "premium" ? 150 : 1000
+    const expiryDays = billing === "yearly" ? 365 : 30
+    const subscriptionExpiry = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toISOString()
+
+    return await this.updateUser(userId, {
+      plan,
+      billing,
+      aiCredits: credits,
+      subscriptionExpiry,
+    })
+  }
+
+  // Process expired subscriptions
+  async processExpiredSubscriptions(): Promise<void> {
+    try {
+      const allUsers = await this.getAllUsers()
+      const now = new Date()
+
+      for (const user of allUsers) {
+        if (user.subscriptionExpiry && new Date(user.subscriptionExpiry) < now && user.plan !== "free") {
+          // Downgrade to free plan
+          await this.updateUser(user.id, {
+            plan: "free",
+            aiCredits: 50,
+            subscriptionExpiry: undefined,
+          })
+          console.log(`Downgraded user ${user.email} to free plan due to expired subscription`)
         }
       }
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+      console.error("Error processing expired subscriptions:", error)
     }
-    return subscriptions
-  },
+  }
 
-  async getUserSubscription(userId: string): Promise<Subscription | null> {
+  // Send expiration warnings
+  async sendExpirationWarnings(): Promise<void> {
     try {
-      if (await isSupabaseAvailable()) {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from("subscriptions")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("status", "active")
-          .single()
+      const allUsers = await this.getAllUsers()
+      const now = new Date()
+      const warningDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
 
-        if (!error && data) {
-          return {
-            ...data,
-            userId: data.user_id,
-            billingCycle: data.billing_cycle,
-            paypalSubscriptionId: data.paypal_subscription_id,
-            createdAt: new Date(data.created_at),
-            expiresAt: new Date(data.expires_at),
-            cancelledAt: data.cancelled_at ? new Date(data.cancelled_at) : undefined,
-            renewalReminded: data.renewal_reminded,
-          }
+      for (const user of allUsers) {
+        if (
+          user.subscriptionExpiry &&
+          new Date(user.subscriptionExpiry) < warningDate &&
+          new Date(user.subscriptionExpiry) > now &&
+          user.plan !== "free"
+        ) {
+          // In a real app, you'd send an email here
+          console.log(`Sending expiration warning to ${user.email}`)
         }
       }
     } catch (error) {
-      console.warn("Supabase unavailable, using fallback data:", error)
+      console.error("Error sending expiration warnings:", error)
     }
-    return subscriptions.find((sub) => sub.userId === userId && sub.status === "active") || null
-  },
-}
-
-// Subscription management functions
-export async function processExpiredSubscriptions(): Promise<void> {
-  try {
-    const now = new Date()
-    const allSubscriptions = await db.getSubscriptions()
-
-    for (const subscription of allSubscriptions) {
-      if (subscription.status === "active" && subscription.expiresAt < now) {
-        // Mark subscription as expired
-        if (await isSupabaseAvailable()) {
-          const supabase = createClient()
-          await supabase.from("subscriptions").update({ status: "expired" }).eq("id", subscription.id)
-        }
-
-        // Downgrade user to free plan
-        await db.updateUser(subscription.userId, {
-          plan: "free",
-          aiCredits: 50, // Reset to free tier credits
-        })
-
-        console.log(`Subscription ${subscription.id} expired for user ${subscription.userId}`)
-      }
-    }
-  } catch (error) {
-    console.error("Error processing expired subscriptions:", error)
   }
 }
 
-export async function sendExpirationWarnings(): Promise<void> {
-  try {
-    const now = new Date()
-    const warningDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
-    const allSubscriptions = await db.getSubscriptions()
+// Create and export database instance
+export const db = new HybridDatabase()
 
-    for (const subscription of allSubscriptions) {
-      if (
-        subscription.status === "active" &&
-        subscription.expiresAt <= warningDate &&
-        subscription.expiresAt > now &&
-        !subscription.renewalReminded
-      ) {
-        // Send warning email (in a real app, you'd use an email service)
-        console.log(`Sending expiration warning to user ${subscription.userId}`)
+// Export individual functions for compatibility
+export const getAllUsers = () => db.getAllUsers()
+export const getUserById = (id: string) => db.getUserById(id)
+export const getUserByEmail = (email: string) => db.getUserByEmail(email)
+export const createUser = (userData: Omit<User, "id" | "createdAt" | "updatedAt">) => db.createUser(userData)
+export const updateUser = (id: string, updates: Partial<User>) => db.updateUser(id, updates)
+export const deleteUser = (id: string) => db.deleteUser(id)
 
-        // Mark as reminded
-        if (await isSupabaseAvailable()) {
-          const supabase = createClient()
-          await supabase.from("subscriptions").update({ renewal_reminded: true }).eq("id", subscription.id)
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error sending expiration warnings:", error)
-  }
-}
+export const getTasksByUserId = (userId: string) => db.getTasksByUserId(userId)
+export const createTask = (taskData: Omit<Task, "id" | "createdAt" | "updatedAt">) => db.createTask(taskData)
+export const updateTask = (id: string, updates: Partial<Task>) => db.updateTask(id, updates)
+export const deleteTask = (id: string) => db.deleteTask(id)
 
-// Export all functions
-export { db as default }
-export const getAllUsers = db.getAllUsers
-export const updateUser = db.updateUser
+export const getNotesByUserId = (userId: string) => db.getNotesByUserId(userId)
+export const createNote = (noteData: Omit<Note, "id" | "createdAt" | "updatedAt">) => db.createNote(noteData)
+export const updateNote = (id: string, updates: Partial<Note>) => db.updateNote(id, updates)
+export const deleteNote = (id: string) => db.deleteNote(id)
+
+export const getWishlistByUserId = (userId: string) => db.getWishlistByUserId(userId)
+export const createWishlistItem = (itemData: Omit<WishlistItem, "id" | "createdAt" | "updatedAt">) =>
+  db.createWishlistItem(itemData)
+export const updateWishlistItem = (id: string, updates: Partial<WishlistItem>) => db.updateWishlistItem(id, updates)
+export const deleteWishlistItem = (id: string) => db.deleteWishlistItem(id)
+
+export const getAchievementsByUserId = (userId: string) => db.getAchievementsByUserId(userId)
+export const createAchievement = (achievementData: Omit<Achievement, "id">) => db.createAchievement(achievementData)
+
+export const loginUser = (email: string, password: string) => db.loginUser(email, password)
+export const registerUser = (email: string, password: string, name: string) => db.registerUser(email, password, name)
+export const logoutUser = () => db.logoutUser()
+
+export const updateUserSubscription = (
+  userId: string,
+  plan: "free" | "premium" | "pro",
+  billing: "monthly" | "yearly",
+) => db.updateUserSubscription(userId, plan, billing)
+export const processExpiredSubscriptions = () => db.processExpiredSubscriptions()
+export const sendExpirationWarnings = () => db.sendExpirationWarnings()
+
+// Export types
+export type { User, Task, Note, WishlistItem, Achievement }
+
+// Re-export everything from hybrid-database for compatibility
+export * from "./hybrid-database"
+
+// Additional compatibility exports
+export const database = db
+export default db

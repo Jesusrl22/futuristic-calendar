@@ -1,775 +1,236 @@
-"use client"
+import { createClient } from "./supabase"
+import type { Database } from "./database.types"
 
-import { createClient } from "@supabase/supabase-js"
+type Tables = Database["public"]["Tables"]
+type Task = Tables["tasks"]["Row"]
+type Note = Tables["notes"]["Row"]
+type User = Tables["users"]["Row"]
 
-// Types
-export interface User {
-  id: string
-  email: string
-  password: string
-  name: string
-  plan: "free" | "premium" | "pro"
-  isAdmin: boolean
-  settings: {
-    theme: string
-    notifications: boolean
-    language: string
-    pomodoroTime: number
-    shortBreakTime: number
-    longBreakTime: number
-  }
-  stats: {
-    tasksCompleted: number
-    notesCreated: number
-    wishlistItems: number
-    achievementsUnlocked: number
-    totalSessions: number
-    streakDays: number
-  }
-  achievements: string[]
-  aiCredits: number
-  createdAt?: string
-  updatedAt?: string
-}
-
-export interface Task {
-  id: string
-  userId: string
-  title: string
-  description: string
-  completed: boolean
-  priority: "low" | "medium" | "high"
-  dueDate: string | null
-  category: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface Note {
-  id: string
-  userId: string
-  title: string
-  content: string
-  category: string
-  createdAt: string
-  updatedAt: string
-}
-
-export interface WishlistItem {
-  id: string
-  userId: string
-  title: string
-  description: string
-  priority: "low" | "medium" | "high"
-  estimatedCost: number
-  category: string
-  achieved: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-// Database class
-class HybridDatabase {
-  private supabase: any = null
-  private isSupabaseAvailable = false
+// Hybrid database operations that work with both Supabase and local storage
+export class HybridDatabase {
+  private supabase = createClient()
+  private isOnline = true
 
   constructor() {
-    this.initializeSupabase()
-    this.initializeLocalData()
+    this.checkConnection()
   }
 
-  private initializeSupabase() {
+  private async checkConnection() {
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-      // Validate Supabase configuration
-      if (supabaseUrl && supabaseKey && this.isValidUrl(supabaseUrl)) {
-        this.supabase = createClient(supabaseUrl, supabaseKey)
-        this.isSupabaseAvailable = true
-        console.log("✅ Supabase initialized successfully")
-      } else {
-        console.log("⚠️ Supabase not configured, using localStorage only")
-        this.isSupabaseAvailable = false
-      }
-    } catch (error) {
-      console.warn("⚠️ Supabase initialization failed, falling back to localStorage:", error)
-      this.isSupabaseAvailable = false
-    }
-  }
-
-  private isValidUrl(url: string): boolean {
-    try {
-      const urlObj = new URL(url)
-      return urlObj.protocol === "http:" || urlObj.protocol === "https:"
+      const { error } = await this.supabase.from("users").select("id").limit(1)
+      this.isOnline = !error
     } catch {
-      return false
+      this.isOnline = false
     }
   }
 
-  private initializeLocalData() {
-    if (typeof window === "undefined") return
-
-    // Initialize with demo users if no users exist
-    const existingUsers = this.getLocalData("users")
-    if (!existingUsers || existingUsers.length === 0) {
-      const demoUsers: User[] = [
-        {
-          id: "admin-1",
-          email: "admin@futuretask.com",
-          password: "admin123",
-          name: "Admin User",
-          plan: "pro",
-          isAdmin: true,
-          settings: {
-            theme: "system",
-            notifications: true,
-            language: "es",
-            pomodoroTime: 25,
-            shortBreakTime: 5,
-            longBreakTime: 15,
-          },
-          stats: {
-            tasksCompleted: 150,
-            notesCreated: 75,
-            wishlistItems: 25,
-            achievementsUnlocked: 15,
-            totalSessions: 200,
-            streakDays: 30,
-          },
-          achievements: ["first_task", "task_master", "note_taker", "wishlist_creator", "streak_week"],
-          aiCredits: 1000,
-        },
-        {
-          id: "premium-1",
-          email: "premium@futuretask.com",
-          password: "premium123",
-          name: "Premium User",
-          plan: "premium",
-          isAdmin: false,
-          settings: {
-            theme: "dark",
-            notifications: true,
-            language: "es",
-            pomodoroTime: 25,
-            shortBreakTime: 5,
-            longBreakTime: 15,
-          },
-          stats: {
-            tasksCompleted: 50,
-            notesCreated: 25,
-            wishlistItems: 10,
-            achievementsUnlocked: 8,
-            totalSessions: 75,
-            streakDays: 7,
-          },
-          achievements: ["first_task", "note_taker", "wishlist_creator"],
-          aiCredits: 150,
-        },
-        {
-          id: "demo-1",
-          email: "demo@futuretask.com",
-          password: "demo123",
-          name: "Demo User",
-          plan: "free",
-          isAdmin: false,
-          settings: {
-            theme: "light",
-            notifications: true,
-            language: "es",
-            pomodoroTime: 25,
-            shortBreakTime: 5,
-            longBreakTime: 15,
-          },
-          stats: {
-            tasksCompleted: 10,
-            notesCreated: 5,
-            wishlistItems: 0,
-            achievementsUnlocked: 2,
-            totalSessions: 15,
-            streakDays: 3,
-          },
-          achievements: ["first_task"],
-          aiCredits: 50,
-        },
-      ]
-
-      this.setLocalData("users", demoUsers)
-    }
-  }
-
-  getConnectionStatus(): boolean {
-    return this.isSupabaseAvailable
-  }
-
-  private getLocalData(key: string): any[] {
-    if (typeof window === "undefined") return []
-    try {
-      const data = localStorage.getItem(`futuretask_${key}`)
-      return data ? JSON.parse(data) : []
-    } catch {
-      return []
-    }
-  }
-
-  private setLocalData(key: string, data: any[]): void {
-    if (typeof window === "undefined") return
-    try {
-      localStorage.setItem(`futuretask_${key}`, JSON.stringify(data))
-    } catch (error) {
-      console.error("Error saving to localStorage:", error)
-    }
-  }
-
-  private generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-  }
-
-  // User methods
-  async getUser(id: string): Promise<User | null> {
-    return this.getUserById(id)
-  }
-
-  async getUserByEmail(email: string): Promise<User | null> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("users").select("*").eq("email", email).single()
-
-        if (!error && data) return data
-      }
-    } catch (error) {
-      console.warn("Supabase query failed, using localStorage:", error)
-    }
-
-    const users = this.getLocalData("users")
-    return users.find((user: User) => user.email === email) || null
-  }
-
-  async getUserById(id: string): Promise<User | null> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("users").select("*").eq("id", id).single()
-
-        if (!error && data) return data
-      }
-    } catch (error) {
-      console.warn("Supabase query failed, using localStorage:", error)
-    }
-
-    const users = this.getLocalData("users")
-    return users.find((user: User) => user.id === id) || null
-  }
-
-  async getAllUsers(): Promise<User[]> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("users").select("*").order("createdAt", { ascending: false })
-
-        if (!error && data) return data
-      }
-    } catch (error) {
-      console.warn("Supabase query failed, using localStorage:", error)
-    }
-
-    return this.getLocalData("users")
-  }
-
-  async createUser(userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-    const user: User = {
-      ...userData,
-      id: this.generateId(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("users").insert([user]).select().single()
-
-        if (!error && data) {
-          // Also save to localStorage as backup
-          const users = this.getLocalData("users")
-          users.push(user)
-          this.setLocalData("users", users)
-          return data
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase insert failed, using localStorage:", error)
-    }
-
-    // Fallback to localStorage
-    const users = this.getLocalData("users")
-    users.push(user)
-    this.setLocalData("users", users)
-    return user
-  }
-
-  async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
-    const updatedData = {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("users").update(updatedData).eq("id", id).select().single()
-
-        if (!error && data) {
-          // Also update localStorage
-          const users = this.getLocalData("users")
-          const index = users.findIndex((user: User) => user.id === id)
-          if (index !== -1) {
-            users[index] = { ...users[index], ...updatedData }
-            this.setLocalData("users", users)
-          }
-          return data
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase update failed, using localStorage:", error)
-    }
-
-    // Fallback to localStorage
-    const users = this.getLocalData("users")
-    const index = users.findIndex((user: User) => user.id === id)
-    if (index !== -1) {
-      users[index] = { ...users[index], ...updatedData }
-      this.setLocalData("users", users)
-      return users[index]
-    }
-    return null
-  }
-
-  async deleteUser(id: string): Promise<boolean> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { error } = await this.supabase.from("users").delete().eq("id", id)
-
-        if (!error) {
-          const users = this.getLocalData("users")
-          const filtered = users.filter((user: User) => user.id !== id)
-          this.setLocalData("users", filtered)
-          return true
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase delete failed, using localStorage:", error)
-    }
-
-    const users = this.getLocalData("users")
-    const filtered = users.filter((user: User) => user.id !== id)
-    this.setLocalData("users", filtered)
-    return true
-  }
-
-  // Task methods
+  // Tasks
   async getTasks(userId: string): Promise<Task[]> {
-    try {
-      if (this.isSupabaseAvailable) {
+    if (this.isOnline) {
+      try {
         const { data, error } = await this.supabase
           .from("tasks")
           .select("*")
-          .eq("userId", userId)
-          .order("createdAt", { ascending: false })
-
-        if (!error && data) return data
-      }
-    } catch (error) {
-      console.warn("Supabase query failed, using localStorage:", error)
-    }
-
-    const tasks = this.getLocalData("tasks")
-    return tasks.filter((task: Task) => task.userId === userId)
-  }
-
-  async createTask(taskData: Omit<Task, "id" | "createdAt" | "updatedAt">): Promise<Task> {
-    const task: Task = {
-      ...taskData,
-      id: this.generateId(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("tasks").insert([task]).select().single()
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
 
         if (!error && data) {
-          const tasks = this.getLocalData("tasks")
-          tasks.push(task)
-          this.setLocalData("tasks", tasks)
+          // Cache in localStorage
+          localStorage.setItem(`tasks_${userId}`, JSON.stringify(data))
           return data
         }
+      } catch (error) {
+        console.error("Error fetching tasks from Supabase:", error)
       }
-    } catch (error) {
-      console.warn("Supabase insert failed, using localStorage:", error)
     }
 
-    const tasks = this.getLocalData("tasks")
-    tasks.push(task)
-    this.setLocalData("tasks", tasks)
-    return task
+    // Fallback to localStorage
+    const cached = localStorage.getItem(`tasks_${userId}`)
+    return cached ? JSON.parse(cached) : []
   }
 
-  async updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
-    const updatedData = {
-      ...updates,
-      updatedAt: new Date().toISOString(),
+  async createTask(
+    userId: string,
+    task: Omit<Task, "id" | "user_id" | "created_at" | "updated_at">,
+  ): Promise<Task | null> {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      user_id: userId,
+      title: task.title,
+      description: task.description,
+      completed: false,
+      priority: task.priority || "medium",
+      due_date: task.due_date,
+      category: task.category,
+      tags: task.tags || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }
 
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("tasks").update(updatedData).eq("id", id).select().single()
+    if (this.isOnline) {
+      try {
+        const { data, error } = await this.supabase.from("tasks").insert([newTask]).select().single()
 
         if (!error && data) {
-          const tasks = this.getLocalData("tasks")
-          const index = tasks.findIndex((task: Task) => task.id === id)
-          if (index !== -1) {
-            tasks[index] = { ...tasks[index], ...updatedData }
-            this.setLocalData("tasks", tasks)
-          }
           return data
         }
+      } catch (error) {
+        console.error("Error creating task in Supabase:", error)
       }
-    } catch (error) {
-      console.warn("Supabase update failed, using localStorage:", error)
     }
 
-    const tasks = this.getLocalData("tasks")
-    const index = tasks.findIndex((task: Task) => task.id === id)
-    if (index !== -1) {
-      tasks[index] = { ...tasks[index], ...updatedData }
-      this.setLocalData("tasks", tasks)
-      return tasks[index]
-    }
-    return null
+    // Fallback to localStorage
+    const tasks = await this.getTasks(userId)
+    const updatedTasks = [newTask, ...tasks]
+    localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
+    return newTask
   }
 
-  async deleteTask(id: string): Promise<boolean> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { error } = await this.supabase.from("tasks").delete().eq("id", id)
-
-        if (!error) {
-          const tasks = this.getLocalData("tasks")
-          const filtered = tasks.filter((task: Task) => task.id !== id)
-          this.setLocalData("tasks", filtered)
-          return true
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase delete failed, using localStorage:", error)
-    }
-
-    const tasks = this.getLocalData("tasks")
-    const filtered = tasks.filter((task: Task) => task.id !== id)
-    this.setLocalData("tasks", filtered)
-    return true
-  }
-
-  // Note methods
-  async getNotes(userId: string): Promise<Note[]> {
-    try {
-      if (this.isSupabaseAvailable) {
+  async updateTask(userId: string, taskId: string, updates: Partial<Task>): Promise<Task | null> {
+    if (this.isOnline) {
+      try {
         const { data, error } = await this.supabase
-          .from("notes")
-          .select("*")
-          .eq("userId", userId)
-          .order("createdAt", { ascending: false })
-
-        if (!error && data) return data
-      }
-    } catch (error) {
-      console.warn("Supabase query failed, using localStorage:", error)
-    }
-
-    const notes = this.getLocalData("notes")
-    return notes.filter((note: Note) => note.userId === userId)
-  }
-
-  async createNote(noteData: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note> {
-    const note: Note = {
-      ...noteData,
-      id: this.generateId(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("notes").insert([note]).select().single()
-
-        if (!error && data) {
-          const notes = this.getLocalData("notes")
-          notes.push(note)
-          this.setLocalData("notes", notes)
-          return data
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase insert failed, using localStorage:", error)
-    }
-
-    const notes = this.getLocalData("notes")
-    notes.push(note)
-    this.setLocalData("notes", notes)
-    return note
-  }
-
-  async updateNote(id: string, updates: Partial<Note>): Promise<Note | null> {
-    const updatedData = {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("notes").update(updatedData).eq("id", id).select().single()
-
-        if (!error && data) {
-          const notes = this.getLocalData("notes")
-          const index = notes.findIndex((note: Note) => note.id === id)
-          if (index !== -1) {
-            notes[index] = { ...notes[index], ...updatedData }
-            this.setLocalData("notes", notes)
-          }
-          return data
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase update failed, using localStorage:", error)
-    }
-
-    const notes = this.getLocalData("notes")
-    const index = notes.findIndex((note: Note) => note.id === id)
-    if (index !== -1) {
-      notes[index] = { ...notes[index], ...updatedData }
-      this.setLocalData("notes", notes)
-      return notes[index]
-    }
-    return null
-  }
-
-  async deleteNote(id: string): Promise<boolean> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { error } = await this.supabase.from("notes").delete().eq("id", id)
-
-        if (!error) {
-          const notes = this.getLocalData("notes")
-          const filtered = notes.filter((note: Note) => note.id !== id)
-          this.setLocalData("notes", filtered)
-          return true
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase delete failed, using localStorage:", error)
-    }
-
-    const notes = this.getLocalData("notes")
-    const filtered = notes.filter((note: Note) => note.id !== id)
-    this.setLocalData("notes", filtered)
-    return true
-  }
-
-  // Wishlist methods
-  async getWishlistItems(userId: string): Promise<WishlistItem[]> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase
-          .from("wishlist_items")
-          .select("*")
-          .eq("userId", userId)
-          .order("createdAt", { ascending: false })
-
-        if (!error && data) return data
-      }
-    } catch (error) {
-      console.warn("Supabase query failed, using localStorage:", error)
-    }
-
-    const items = this.getLocalData("wishlist_items")
-    return items.filter((item: WishlistItem) => item.userId === userId)
-  }
-
-  async createWishlistItem(itemData: Omit<WishlistItem, "id" | "createdAt" | "updatedAt">): Promise<WishlistItem> {
-    const item: WishlistItem = {
-      ...itemData,
-      id: this.generateId(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("wishlist_items").insert([item]).select().single()
-
-        if (!error && data) {
-          const items = this.getLocalData("wishlist_items")
-          items.push(item)
-          this.setLocalData("wishlist_items", items)
-          return data
-        }
-      }
-    } catch (error) {
-      console.warn("Supabase insert failed, using localStorage:", error)
-    }
-
-    const items = this.getLocalData("wishlist_items")
-    items.push(item)
-    this.setLocalData("wishlist_items", items)
-    return item
-  }
-
-  async updateWishlistItem(id: string, updates: Partial<WishlistItem>): Promise<WishlistItem | null> {
-    const updatedData = {
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase
-          .from("wishlist_items")
-          .update(updatedData)
-          .eq("id", id)
+          .from("tasks")
+          .update({ ...updates, updated_at: new Date().toISOString() })
+          .eq("id", taskId)
+          .eq("user_id", userId)
           .select()
           .single()
 
         if (!error && data) {
-          const items = this.getLocalData("wishlist_items")
-          const index = items.findIndex((item: WishlistItem) => item.id === id)
-          if (index !== -1) {
-            items[index] = { ...items[index], ...updatedData }
-            this.setLocalData("wishlist_items", items)
-          }
           return data
         }
+      } catch (error) {
+        console.error("Error updating task in Supabase:", error)
       }
-    } catch (error) {
-      console.warn("Supabase update failed, using localStorage:", error)
     }
 
-    const items = this.getLocalData("wishlist_items")
-    const index = items.findIndex((item: WishlistItem) => item.id === id)
-    if (index !== -1) {
-      items[index] = { ...items[index], ...updatedData }
-      this.setLocalData("wishlist_items", items)
-      return items[index]
-    }
-    return null
+    // Fallback to localStorage
+    const tasks = await this.getTasks(userId)
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId ? { ...task, ...updates, updated_at: new Date().toISOString() } : task,
+    )
+    localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
+    return updatedTasks.find((t) => t.id === taskId) || null
   }
 
-  async deleteWishlistItem(id: string): Promise<boolean> {
-    try {
-      if (this.isSupabaseAvailable) {
-        const { error } = await this.supabase.from("wishlist_items").delete().eq("id", id)
+  async deleteTask(userId: string, taskId: string): Promise<boolean> {
+    if (this.isOnline) {
+      try {
+        const { error } = await this.supabase.from("tasks").delete().eq("id", taskId).eq("user_id", userId)
 
         if (!error) {
-          const items = this.getLocalData("wishlist_items")
-          const filtered = items.filter((item: WishlistItem) => item.id !== id)
-          this.setLocalData("wishlist_items", filtered)
           return true
+        }
+      } catch (error) {
+        console.error("Error deleting task in Supabase:", error)
+      }
+    }
+
+    // Fallback to localStorage
+    const tasks = await this.getTasks(userId)
+    const filteredTasks = tasks.filter((task) => task.id !== taskId)
+    localStorage.setItem(`tasks_${userId}`, JSON.stringify(filteredTasks))
+    return true
+  }
+
+  // Notes
+  async getNotes(userId: string): Promise<Note[]> {
+    if (this.isOnline) {
+      try {
+        const { data, error } = await this.supabase
+          .from("notes")
+          .select("*")
+          .eq("user_id", userId)
+          .order("updated_at", { ascending: false })
+
+        if (!error && data) {
+          localStorage.setItem(`notes_${userId}`, JSON.stringify(data))
+          return data
+        }
+      } catch (error) {
+        console.error("Error fetching notes from Supabase:", error)
+      }
+    }
+
+    const cached = localStorage.getItem(`notes_${userId}`)
+    return cached ? JSON.parse(cached) : []
+  }
+
+  async createNote(
+    userId: string,
+    note: Omit<Note, "id" | "user_id" | "created_at" | "updated_at">,
+  ): Promise<Note | null> {
+    const newNote: Note = {
+      id: crypto.randomUUID(),
+      user_id: userId,
+      title: note.title,
+      content: note.content,
+      tags: note.tags || [],
+      category: note.category,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    if (this.isOnline) {
+      try {
+        const { data, error } = await this.supabase.from("notes").insert([newNote]).select().single()
+
+        if (!error && data) {
+          return data
+        }
+      } catch (error) {
+        console.error("Error creating note in Supabase:", error)
+      }
+    }
+
+    const notes = await this.getNotes(userId)
+    const updatedNotes = [newNote, ...notes]
+    localStorage.setItem(`notes_${userId}`, JSON.stringify(updatedNotes))
+    return newNote
+  }
+
+  // Sync operations
+  async syncToServer(userId: string): Promise<void> {
+    if (!this.isOnline) return
+
+    try {
+      // Sync tasks
+      const localTasks = localStorage.getItem(`tasks_${userId}`)
+      if (localTasks) {
+        const tasks = JSON.parse(localTasks)
+        for (const task of tasks) {
+          await this.supabase.from("tasks").upsert(task)
+        }
+      }
+
+      // Sync notes
+      const localNotes = localStorage.getItem(`notes_${userId}`)
+      if (localNotes) {
+        const notes = JSON.parse(localNotes)
+        for (const note of notes) {
+          await this.supabase.from("notes").upsert(note)
         }
       }
     } catch (error) {
-      console.warn("Supabase delete failed, using localStorage:", error)
+      console.error("Error syncing to server:", error)
     }
+  }
 
-    const items = this.getLocalData("wishlist_items")
-    const filtered = items.filter((item: WishlistItem) => item.id !== id)
-    this.setLocalData("wishlist_items", filtered)
-    return true
+  // Connection status
+  getConnectionStatus(): boolean {
+    return this.isOnline
   }
 }
 
-// Create singleton instance
-const db = new HybridDatabase()
-
-// Export the db instance
-export { db }
+// Export singleton instance
+export const db = new HybridDatabase()
 
 // Export individual functions for compatibility
-export const getUser = (id: string) => db.getUser(id)
-export const getUserByEmail = (email: string) => db.getUserByEmail(email)
-export const getUserById = (id: string) => db.getUserById(id)
-export const getAllUsers = () => db.getAllUsers()
-export const createUser = (userData: Omit<User, "id" | "createdAt" | "updatedAt">) => db.createUser(userData)
-export const updateUser = (id: string, updates: Partial<User>) => db.updateUser(id, updates)
-export const deleteUser = (id: string) => db.deleteUser(id)
-
 export const getTasks = (userId: string) => db.getTasks(userId)
-export const createTask = (taskData: Omit<Task, "id" | "createdAt" | "updatedAt">) => db.createTask(taskData)
-export const updateTask = (id: string, updates: Partial<Task>) => db.updateTask(id, updates)
-export const deleteTask = (id: string) => db.deleteTask(id)
-
+export const createTask = (userId: string, task: any) => db.createTask(userId, task)
+export const updateTask = (userId: string, taskId: string, updates: any) => db.updateTask(userId, taskId, updates)
+export const deleteTask = (userId: string, taskId: string) => db.deleteTask(userId, taskId)
 export const getNotes = (userId: string) => db.getNotes(userId)
-export const createNote = (noteData: Omit<Note, "id" | "createdAt" | "updatedAt">) => db.createNote(noteData)
-export const updateNote = (id: string, updates: Partial<Note>) => db.updateNote(id, updates)
-export const deleteNote = (id: string) => db.deleteNote(id)
-
-export const getWishlistItems = (userId: string) => db.getWishlistItems(userId)
-export const createWishlistItem = (itemData: Omit<WishlistItem, "id" | "createdAt" | "updatedAt">) =>
-  db.createWishlistItem(itemData)
-export const updateWishlistItem = (id: string, updates: Partial<WishlistItem>) => db.updateWishlistItem(id, updates)
-export const deleteWishlistItem = (id: string) => db.deleteWishlistItem(id)
-
-// Authentication helpers - THESE WERE MISSING
-export const loginUser = async (email: string, password: string): Promise<User | null> => {
-  const user = await db.getUserByEmail(email)
-  if (user && user.password === password) {
-    return user
-  }
-  return null
-}
-
-export const registerUser = async (email: string, password: string, name: string): Promise<User | null> => {
-  const existingUser = await db.getUserByEmail(email)
-  if (existingUser) {
-    return null // User already exists
-  }
-
-  return db.createUser({
-    email,
-    password,
-    name,
-    plan: "free",
-    isAdmin: false,
-    settings: {
-      theme: "system",
-      notifications: true,
-      language: "es",
-      pomodoroTime: 25,
-      shortBreakTime: 5,
-      longBreakTime: 15,
-    },
-    stats: {
-      tasksCompleted: 0,
-      notesCreated: 0,
-      wishlistItems: 0,
-      achievementsUnlocked: 0,
-      totalSessions: 0,
-      streakDays: 0,
-    },
-    achievements: [],
-    aiCredits: 50, // Free tier gets 50 credits
-  })
-}
-
-export const logoutUser = async (): Promise<void> => {
-  // In a real app, you might want to clear tokens, etc.
-  console.log("User logged out")
-}
-
-export const updateUserSubscription = async (userId: string, plan: string, billing: string): Promise<User | null> => {
-  const credits = plan === "pro" ? 1000 : plan === "premium" ? 150 : 50
-
-  return db.updateUser(userId, {
-    plan: plan as "free" | "premium" | "pro",
-    aiCredits: credits,
-  })
-}
-
-// Export as default as well for compatibility
-export default db
+export const createNote = (userId: string, note: any) => db.createNote(userId, note)
+export const syncToServer = (userId: string) => db.syncToServer(userId)
