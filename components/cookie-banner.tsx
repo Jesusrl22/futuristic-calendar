@@ -16,7 +16,7 @@ interface CookiePreferences {
 }
 
 export function CookieBanner() {
-  const { t } = useLanguage()
+  const { t, mounted } = useLanguage()
   const [showBanner, setShowBanner] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [preferences, setPreferences] = useState<CookiePreferences>({
@@ -27,14 +27,21 @@ export function CookieBanner() {
   })
 
   useEffect(() => {
+    if (!mounted) return
+
     const cookieConsent = localStorage.getItem("cookieConsent")
     if (!cookieConsent) {
       setShowBanner(true)
     } else {
-      const savedPreferences = JSON.parse(cookieConsent)
-      setPreferences(savedPreferences)
+      try {
+        const savedPreferences = JSON.parse(cookieConsent)
+        setPreferences(savedPreferences)
+      } catch (error) {
+        console.warn("Error parsing cookie preferences:", error)
+        setShowBanner(true)
+      }
     }
-  }, [])
+  }, [mounted])
 
   const handleAcceptAll = () => {
     const allAccepted = {
@@ -46,6 +53,14 @@ export function CookieBanner() {
     setPreferences(allAccepted)
     localStorage.setItem("cookieConsent", JSON.stringify(allAccepted))
     setShowBanner(false)
+
+    // Enable Google Analytics
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("consent", "update", {
+        analytics_storage: "granted",
+        ad_storage: "granted",
+      })
+    }
   }
 
   const handleDeclineAll = () => {
@@ -58,12 +73,28 @@ export function CookieBanner() {
     setPreferences(onlyNecessary)
     localStorage.setItem("cookieConsent", JSON.stringify(onlyNecessary))
     setShowBanner(false)
+
+    // Disable Google Analytics
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("consent", "update", {
+        analytics_storage: "denied",
+        ad_storage: "denied",
+      })
+    }
   }
 
   const handleSavePreferences = () => {
     localStorage.setItem("cookieConsent", JSON.stringify(preferences))
     setShowBanner(false)
     setShowSettings(false)
+
+    // Update Google Analytics consent
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("consent", "update", {
+        analytics_storage: preferences.analytics ? "granted" : "denied",
+        ad_storage: preferences.marketing ? "granted" : "denied",
+      })
+    }
   }
 
   const updatePreference = (key: keyof CookiePreferences, value: boolean) => {
@@ -73,18 +104,24 @@ export function CookieBanner() {
     }))
   }
 
-  if (!showBanner) return null
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted || !showBanner) return null
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg animate-in slide-in-from-bottom duration-300">
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg animate-in slide-in-from-bottom duration-300 dark:bg-gray-900/95 dark:border-gray-700">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
             <div className="flex items-start gap-3 flex-1">
               <Cookie className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="font-semibold text-gray-900 mb-1">{t("cookieTitle")}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{t("cookieDescription")}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                  {t("cookieTitle") || "Cookie Settings"}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {t("cookieDescription") ||
+                    "We use cookies to improve your experience. By continuing to browse, you accept our use of cookies."}
+                </p>
               </div>
             </div>
 
@@ -96,13 +133,13 @@ export function CookieBanner() {
                 className="flex items-center gap-2"
               >
                 <Settings className="h-4 w-4" />
-                {t("cookieSettings")}
+                {t("cookieSettings") || "Settings"}
               </Button>
               <Button variant="outline" size="sm" onClick={handleDeclineAll}>
-                {t("cookieDecline")}
+                {t("cookieDecline") || "Decline"}
               </Button>
               <Button size="sm" onClick={handleAcceptAll} className="bg-blue-600 hover:bg-blue-700">
-                {t("cookieAccept")}
+                {t("cookieAccept") || "Accept All"}
               </Button>
             </div>
           </div>
@@ -114,9 +151,11 @@ export function CookieBanner() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Cookie className="h-5 w-5" />
-              {t("cookieSettingsTitle")}
+              {t("cookieSettingsTitle") || "Cookie Settings"}
             </DialogTitle>
-            <DialogDescription>{t("cookieSettingsDescription")}</DialogDescription>
+            <DialogDescription>
+              {t("cookieSettingsDescription") || "Manage your cookie preferences below."}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
@@ -124,8 +163,10 @@ export function CookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">{t("cookieNecessary")}</CardTitle>
-                    <CardDescription className="text-sm">{t("cookieNecessaryDesc")}</CardDescription>
+                    <CardTitle className="text-base">{t("cookieNecessary") || "Necessary Cookies"}</CardTitle>
+                    <CardDescription className="text-sm">
+                      {t("cookieNecessaryDesc") || "These cookies are essential for the website to function properly."}
+                    </CardDescription>
                   </div>
                   <Switch checked={preferences.necessary} disabled className="opacity-50" />
                 </div>
@@ -136,8 +177,10 @@ export function CookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">{t("cookieAnalytics")}</CardTitle>
-                    <CardDescription className="text-sm">{t("cookieAnalyticsDesc")}</CardDescription>
+                    <CardTitle className="text-base">{t("cookieAnalytics") || "Analytics Cookies"}</CardTitle>
+                    <CardDescription className="text-sm">
+                      {t("cookieAnalyticsDesc") || "Help us understand how visitors interact with our website."}
+                    </CardDescription>
                   </div>
                   <Switch
                     checked={preferences.analytics}
@@ -151,8 +194,10 @@ export function CookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">{t("cookieMarketing")}</CardTitle>
-                    <CardDescription className="text-sm">{t("cookieMarketingDesc")}</CardDescription>
+                    <CardTitle className="text-base">{t("cookieMarketing") || "Marketing Cookies"}</CardTitle>
+                    <CardDescription className="text-sm">
+                      {t("cookieMarketingDesc") || "Used to track visitors across websites for advertising purposes."}
+                    </CardDescription>
                   </div>
                   <Switch
                     checked={preferences.marketing}
@@ -166,8 +211,10 @@ export function CookieBanner() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-base">{t("cookiePreferences")}</CardTitle>
-                    <CardDescription className="text-sm">{t("cookiePreferencesDesc")}</CardDescription>
+                    <CardTitle className="text-base">{t("cookiePreferences") || "Preference Cookies"}</CardTitle>
+                    <CardDescription className="text-sm">
+                      {t("cookiePreferencesDesc") || "Remember your preferences and settings."}
+                    </CardDescription>
                   </div>
                   <Switch
                     checked={preferences.preferences}
@@ -180,10 +227,10 @@ export function CookieBanner() {
 
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => setShowSettings(false)}>
-              {t("cancel")}
+              {t("cancel") || "Cancel"}
             </Button>
             <Button onClick={handleSavePreferences} className="bg-blue-600 hover:bg-blue-700">
-              {t("savePreferences")}
+              {t("savePreferences") || "Save Preferences"}
             </Button>
           </div>
         </DialogContent>

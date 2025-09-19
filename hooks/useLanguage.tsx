@@ -28,6 +28,8 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Volver",
     loading: "Cargando...",
     loadingApp: "Cargando aplicación...",
+    cancel: "Cancelar",
+    savePreferences: "Guardar Preferencias",
 
     // Hero section
     heroTitle: "Organiza tu vida con IA",
@@ -106,10 +108,22 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "Todos los derechos reservados",
 
     // Cookie banner
-    cookieMessage:
+    cookieTitle: "Configuración de Cookies",
+    cookieDescription:
       "Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptas nuestro uso de cookies.",
-    acceptCookies: "Aceptar Cookies",
-    cookieSettings: "Configurar Cookies",
+    cookieAccept: "Aceptar Todas",
+    cookieDecline: "Rechazar",
+    cookieSettings: "Configuración",
+    cookieSettingsTitle: "Configuración de Cookies",
+    cookieSettingsDescription: "Gestiona tus preferencias de cookies a continuación.",
+    cookieNecessary: "Cookies Necesarias",
+    cookieNecessaryDesc: "Estas cookies son esenciales para el funcionamiento del sitio web.",
+    cookieAnalytics: "Cookies de Análisis",
+    cookieAnalyticsDesc: "Nos ayudan a entender cómo los visitantes interactúan con nuestro sitio web.",
+    cookieMarketing: "Cookies de Marketing",
+    cookieMarketingDesc: "Se utilizan para rastrear visitantes en sitios web con fines publicitarios.",
+    cookiePreferences: "Cookies de Preferencias",
+    cookiePreferencesDesc: "Recuerdan tus preferencias y configuraciones.",
   },
   en: {
     // Navigation and general
@@ -125,6 +139,8 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Back",
     loading: "Loading...",
     loadingApp: "Loading app...",
+    cancel: "Cancel",
+    savePreferences: "Save Preferences",
 
     // Hero section
     heroTitle: "Organize your life with AI",
@@ -203,9 +219,22 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "All rights reserved",
 
     // Cookie banner
-    cookieMessage: "We use cookies to improve your experience. By continuing to browse, you accept our use of cookies.",
-    acceptCookies: "Accept Cookies",
-    cookieSettings: "Cookie Settings",
+    cookieTitle: "Cookie Settings",
+    cookieDescription:
+      "We use cookies to improve your experience. By continuing to browse, you accept our use of cookies.",
+    cookieAccept: "Accept All",
+    cookieDecline: "Decline",
+    cookieSettings: "Settings",
+    cookieSettingsTitle: "Cookie Settings",
+    cookieSettingsDescription: "Manage your cookie preferences below.",
+    cookieNecessary: "Necessary Cookies",
+    cookieNecessaryDesc: "These cookies are essential for the website to function properly.",
+    cookieAnalytics: "Analytics Cookies",
+    cookieAnalyticsDesc: "Help us understand how visitors interact with our website.",
+    cookieMarketing: "Marketing Cookies",
+    cookieMarketingDesc: "Used to track visitors across websites for advertising purposes.",
+    cookiePreferences: "Preference Cookies",
+    cookiePreferencesDesc: "Remember your preferences and settings.",
   },
   fr: {
     // Navigation and general
@@ -221,6 +250,8 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Retour",
     loading: "Chargement...",
     loadingApp: "Chargement de l'application...",
+    cancel: "Annuler",
+    savePreferences: "Sauvegarder les Préférences",
 
     // Hero section
     heroTitle: "Organisez votre vie avec l'IA",
@@ -299,10 +330,22 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "Tous droits réservés",
 
     // Cookie banner
-    cookieMessage:
+    cookieTitle: "Paramètres des Cookies",
+    cookieDescription:
       "Nous utilisons des cookies pour améliorer votre expérience. En continuant à naviguer, vous acceptez notre utilisation des cookies.",
-    acceptCookies: "Accepter les Cookies",
-    cookieSettings: "Paramètres des Cookies",
+    cookieAccept: "Accepter Tout",
+    cookieDecline: "Refuser",
+    cookieSettings: "Paramètres",
+    cookieSettingsTitle: "Paramètres des Cookies",
+    cookieSettingsDescription: "Gérez vos préférences de cookies ci-dessous.",
+    cookieNecessary: "Cookies Nécessaires",
+    cookieNecessaryDesc: "Ces cookies sont essentiels au bon fonctionnement du site web.",
+    cookieAnalytics: "Cookies d'Analyse",
+    cookieAnalyticsDesc: "Nous aident à comprendre comment les visiteurs interagissent avec notre site web.",
+    cookieMarketing: "Cookies Marketing",
+    cookieMarketingDesc: "Utilisés pour suivre les visiteurs sur les sites web à des fins publicitaires.",
+    cookiePreferences: "Cookies de Préférences",
+    cookiePreferencesDesc: "Se souviennent de vos préférences et paramètres.",
   },
   de: {
     // Navigation and general
@@ -318,6 +361,8 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Zurück",
     loading: "Laden...",
     loadingApp: "App wird geladen...",
+    cancel: "Abbrechen",
+    savePreferences: "Einstellungen Speichern",
 
     // Hero section
     heroTitle: "Organisieren Sie Ihr Leben mit KI",
@@ -396,10 +441,22 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "Alle Rechte vorbehalten",
 
     // Cookie banner
-    cookieMessage:
+    cookieTitle: "Cookie-Einstellungen",
+    cookieDescription:
       "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern. Durch die weitere Nutzung akzeptieren Sie unsere Verwendung von Cookies.",
-    acceptCookies: "Cookies Akzeptieren",
-    cookieSettings: "Cookie-Einstellungen",
+    cookieAccept: "Alle Akzeptieren",
+    cookieDecline: "Ablehnen",
+    cookieSettings: "Einstellungen",
+    cookieSettingsTitle: "Cookie-Einstellungen",
+    cookieSettingsDescription: "Verwalten Sie Ihre Cookie-Präferenzen unten.",
+    cookieNecessary: "Notwendige Cookies",
+    cookieNecessaryDesc: "Diese Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich.",
+    cookieAnalytics: "Analyse-Cookies",
+    cookieAnalyticsDesc: "Helfen uns zu verstehen, wie Besucher mit unserer Website interagieren.",
+    cookieMarketing: "Marketing-Cookies",
+    cookieMarketingDesc: "Werden verwendet, um Besucher auf Websites zu Werbezwecken zu verfolgen.",
+    cookiePreferences: "Präferenz-Cookies",
+    cookiePreferencesDesc: "Merken sich Ihre Präferenzen und Einstellungen.",
   },
   it: {
     // Navigation and general
@@ -415,6 +472,8 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Indietro",
     loading: "Caricamento...",
     loadingApp: "Caricamento app...",
+    cancel: "Annulla",
+    savePreferences: "Salva Preferenze",
 
     // Hero section
     heroTitle: "Organizza la tua vita con l'IA",
@@ -493,10 +552,22 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "Tutti i diritti riservati",
 
     // Cookie banner
-    cookieMessage:
+    cookieTitle: "Impostazioni Cookie",
+    cookieDescription:
       "Utilizziamo i cookie per migliorare la tua esperienza. Continuando a navigare, accetti il nostro uso dei cookie.",
-    acceptCookies: "Accetta Cookie",
-    cookieSettings: "Impostazioni Cookie",
+    cookieAccept: "Accetta Tutti",
+    cookieDecline: "Rifiuta",
+    cookieSettings: "Impostazioni",
+    cookieSettingsTitle: "Impostazioni Cookie",
+    cookieSettingsDescription: "Gestisci le tue preferenze sui cookie qui sotto.",
+    cookieNecessary: "Cookie Necessari",
+    cookieNecessaryDesc: "Questi cookie sono essenziali per il corretto funzionamento del sito web.",
+    cookieAnalytics: "Cookie di Analisi",
+    cookieAnalyticsDesc: "Ci aiutano a capire come i visitatori interagiscono con il nostro sito web.",
+    cookieMarketing: "Cookie di Marketing",
+    cookieMarketingDesc: "Utilizzati per tracciare i visitatori sui siti web per scopi pubblicitari.",
+    cookiePreferences: "Cookie di Preferenze",
+    cookiePreferencesDesc: "Ricordano le tue preferenze e impostazioni.",
   },
   pt: {
     // Navigation and general
@@ -512,6 +583,8 @@ const translations: Record<Language, Record<string, string>> = {
     back: "Voltar",
     loading: "Carregando...",
     loadingApp: "Carregando aplicativo...",
+    cancel: "Cancelar",
+    savePreferences: "Salvar Preferências",
 
     // Hero section
     heroTitle: "Organize sua vida com IA",
@@ -590,10 +663,22 @@ const translations: Record<Language, Record<string, string>> = {
     allRightsReserved: "Todos os direitos reservados",
 
     // Cookie banner
-    cookieMessage:
+    cookieTitle: "Configurações de Cookies",
+    cookieDescription:
       "Usamos cookies para melhorar sua experiência. Ao continuar navegando, você aceita nosso uso de cookies.",
-    acceptCookies: "Aceitar Cookies",
-    cookieSettings: "Configurações de Cookies",
+    cookieAccept: "Aceitar Todos",
+    cookieDecline: "Recusar",
+    cookieSettings: "Configurações",
+    cookieSettingsTitle: "Configurações de Cookies",
+    cookieSettingsDescription: "Gerencie suas preferências de cookies abaixo.",
+    cookieNecessary: "Cookies Necessários",
+    cookieNecessaryDesc: "Estes cookies são essenciais para o funcionamento adequado do site.",
+    cookieAnalytics: "Cookies de Análise",
+    cookieAnalyticsDesc: "Nos ajudam a entender como os visitantes interagem com nosso site.",
+    cookieMarketing: "Cookies de Marketing",
+    cookieMarketingDesc: "Usados para rastrear visitantes em sites para fins publicitários.",
+    cookiePreferences: "Cookies de Preferências",
+    cookiePreferencesDesc: "Lembram suas preferências e configurações.",
   },
 }
 
@@ -602,7 +687,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 // Provider component
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("es")
+  const [language, setLanguage] = useState<Language>("en")
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -635,7 +720,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   const t = (key: string): string => {
-    return translations[language]?.[key] || translations.es[key] || key
+    return translations[language]?.[key] || translations.en[key] || key
   }
 
   const value: LanguageContextType = {
@@ -655,4 +740,11 @@ export function useLanguage(): LanguageContextType {
     throw new Error("useLanguage must be used within a LanguageProvider")
   }
   return context
+}
+
+// Global gtag type declaration
+declare global {
+  interface Window {
+    gtag: (command: string, targetId: string, config?: any) => void
+  }
 }

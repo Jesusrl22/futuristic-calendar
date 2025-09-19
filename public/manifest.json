@@ -1,0 +1,74 @@
+{
+  "name": "FutureTask - AI-Powered Productivity Calendar",
+  "short_name": "FutureTask",
+  "description": "Transform your productivity with our AI-powered calendar and task management system",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "business", "utilities"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/futuristic-dashboard.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "FutureTask Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Calendar",
+      "short_name": "Calendar",
+      "description": "Open your productivity calendar",
+      "url": "/app",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "short_name": "Tasks",
+      "description": "Manage your tasks",
+      "url": "/app?tab=tasks",
+      "icons": [
+        {
+          "src": "/favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
