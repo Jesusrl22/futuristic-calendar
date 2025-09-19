@@ -19,6 +19,7 @@ export interface CreditPackage {
   popular?: boolean
   bonus?: number
   description: string
+  savings?: string
 }
 
 export interface CreditTransaction {
@@ -46,40 +47,33 @@ export const MAX_CUSTOM_AMOUNT = 500.0
 // Credit packages with real pricing
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
-    id: "starter",
-    name: "Starter",
+    id: "credits_100",
+    name: "Paquete Básico",
     credits: 100,
     price: 2.99,
     priceFormatted: "€2.99",
     description: "Perfecto para uso ocasional",
+    popular: false,
   },
   {
-    id: "popular",
-    name: "Popular",
+    id: "credits_500",
+    name: "Paquete Popular",
     credits: 500,
     price: 9.99,
     priceFormatted: "€9.99",
-    popular: true,
-    bonus: 50,
     description: "Ideal para usuarios regulares",
+    popular: true,
+    savings: "33% de ahorro",
   },
   {
-    id: "power",
-    name: "Power User",
+    id: "credits_1000",
+    name: "Paquete Pro",
     credits: 1000,
-    price: 17.99,
-    priceFormatted: "€17.99",
-    bonus: 200,
-    description: "Para usuarios intensivos",
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    credits: 5000,
-    price: 79.99,
-    priceFormatted: "€79.99",
-    bonus: 1000,
-    description: "Para equipos y empresas",
+    price: 15.99,
+    priceFormatted: "€15.99",
+    description: "Máximo valor para power users",
+    popular: false,
+    savings: "47% de ahorro",
   },
 ]
 
@@ -206,19 +200,26 @@ export async function getUserCredits(userId: string): Promise<UserCredits> {
   }
 }
 
-export async function getUserAICredits(userId: string): Promise<number> {
-  try {
-    const user = await db.getUser(userId)
-    return user?.ai_credits || 0
-  } catch (error) {
-    console.error("Error getting user AI credits:", error)
-    return 0
-  }
+export const getUserAICredits = async (userId: string) => {
+  const credits = localStorage.getItem(`ai_credits_${userId}`)
+  return credits ? Number.parseInt(credits) : 0
 }
 
-export async function addCreditsToUser(userId: string, credits: number): Promise<void> {
-  // This would update the database
-  console.log(`Adding ${credits} credits to user ${userId}`)
+export const addCreditsToUser = async (userId: string, credits: number) => {
+  const currentCredits = await getUserAICredits(userId)
+  const newTotal = currentCredits + credits
+  localStorage.setItem(`ai_credits_${userId}`, newTotal.toString())
+  return true
+}
+
+export const useAICredits = async (userId: string, amount: number) => {
+  const currentCredits = await getUserAICredits(userId)
+  if (currentCredits >= amount) {
+    const newTotal = currentCredits - amount
+    localStorage.setItem(`ai_credits_${userId}`, newTotal.toString())
+    return true
+  }
+  return false
 }
 
 export async function consumeCredits(userId: string, credits: number, description = "AI usage"): Promise<boolean> {

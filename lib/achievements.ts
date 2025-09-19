@@ -9,7 +9,7 @@ export interface Achievement {
   maxProgress?: number
   icon?: string
   category?: string
-  rarity?: "common" | "rare" | "epic" | "legendary"
+  rarity?: "common" | "rare" | "epic" | "legendary" | "uncommon"
   points?: number
 }
 
@@ -20,7 +20,7 @@ export interface AchievementRule {
   description: string
   icon: string
   category: string
-  rarity: "common" | "rare" | "epic" | "legendary"
+  rarity: "common" | "rare" | "epic" | "legendary" | "uncommon"
   points: number
   condition: (userId: string, data?: any) => Promise<boolean>
   maxProgress?: number
@@ -34,8 +34,8 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
     id: "first_task",
     type: "task_created",
     title: "Primera Tarea",
-    description: "Crea tu primera tarea",
-    icon: "✅",
+    description: "Completa tu primera tarea",
+    icon: "🎯",
     category: "Tareas",
     rarity: "common",
     points: 10,
@@ -48,19 +48,19 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
     id: "task_master",
     type: "tasks_completed",
     title: "Maestro de Tareas",
-    description: "Completa 100 tareas",
+    description: "Completa 10 tareas",
     icon: "🏆",
     category: "Tareas",
-    rarity: "epic",
-    points: 100,
-    maxProgress: 100,
+    rarity: "rare",
+    points: 50,
+    maxProgress: 10,
     condition: async (userId: string) => {
-      // This would check if user has completed 100 tasks
+      // This would check if user has completed 10 tasks
       return false // Simplified for demo
     },
     getProgress: async (userId: string) => {
       // This would return current number of completed tasks
-      return 45 // Simplified for demo
+      return 4 // Simplified for demo
     },
   },
 
@@ -85,8 +85,8 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
     description: "Inicia sesión 7 días consecutivos",
     icon: "🔥",
     category: "General",
-    rarity: "rare",
-    points: 50,
+    rarity: "epic",
+    points: 100,
     maxProgress: 7,
     condition: async (userId: string) => {
       return false // Simplified for demo
@@ -183,14 +183,78 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
       return 12 // Simplified for demo
     },
   },
+  {
+    id: "early_bird",
+    type: "task_completed_before_8am",
+    title: "Madrugador",
+    description: "Completa una tarea antes de las 8 AM",
+    icon: "🌅",
+    category: "Productividad",
+    rarity: "uncommon",
+    points: 25,
+    condition: async (userId: string) => {
+      return false // Simplified for demo
+    },
+  },
+  {
+    id: "streak_week",
+    type: "weekly_streak",
+    title: "Racha Semanal",
+    description: "Mantén una racha de 7 días",
+    icon: "🔥",
+    category: "General",
+    rarity: "epic",
+    points: 100,
+    maxProgress: 7,
+    condition: async (userId: string) => {
+      return false // Simplified for demo
+    },
+    getProgress: async (userId: string) => {
+      return 3 // Simplified for demo
+    },
+  },
 ]
 
-// In-memory storage for achievements
-const userAchievements: Record<string, Achievement[]> = {}
+// Achievement definitions
+export const ACHIEVEMENTS = [
+  {
+    id: "first_task",
+    name: "Primera Tarea",
+    description: "Completa tu primera tarea",
+    icon: "🎯",
+    rarity: "common",
+    points: 10,
+  },
+  {
+    id: "task_master",
+    name: "Maestro de Tareas",
+    description: "Completa 10 tareas",
+    icon: "🏆",
+    rarity: "rare",
+    points: 50,
+  },
+  {
+    id: "early_bird",
+    name: "Madrugador",
+    description: "Completa una tarea antes de las 8 AM",
+    icon: "🌅",
+    rarity: "uncommon",
+    points: 25,
+  },
+  {
+    id: "streak_week",
+    name: "Racha Semanal",
+    description: "Mantén una racha de 7 días",
+    icon: "🔥",
+    rarity: "epic",
+    points: 100,
+  },
+]
 
 // Get user achievements
 export async function getUserAchievements(userId: string): Promise<Achievement[]> {
-  return userAchievements[userId] || []
+  const achievements = JSON.parse(localStorage.getItem(`achievements_${userId}`) || "[]")
+  return achievements
 }
 
 // Check and unlock achievements
@@ -233,10 +297,8 @@ export async function checkAndUnlockAchievements(
         }
 
         // Store achievement
-        if (!userAchievements[userId]) {
-          userAchievements[userId] = []
-        }
-        userAchievements[userId].push(newAchievement)
+        const updatedAchievements = [...existingAchievements, newAchievement]
+        localStorage.setItem(`achievements_${userId}`, JSON.stringify(updatedAchievements))
         unlockedAchievements.push(newAchievement)
       }
     } catch (error) {
@@ -336,16 +398,16 @@ export async function createSampleAchievements(userId: string): Promise<void> {
       userId,
       type: "task_created",
       title: "Primera Tarea",
-      description: "Crea tu primera tarea",
+      description: "Completa tu primera tarea",
       unlockedAt: new Date().toISOString(),
-      icon: "✅",
+      icon: "🎯",
       category: "Tareas",
       rarity: "common",
       points: 10,
     },
   ]
 
-  userAchievements[userId] = sampleAchievements
+  localStorage.setItem(`achievements_${userId}`, JSON.stringify(sampleAchievements))
 }
 
 export default {
@@ -356,4 +418,5 @@ export default {
   getUserLevel,
   createSampleAchievements,
   ACHIEVEMENT_RULES,
+  ACHIEVEMENTS,
 }

@@ -1,8 +1,8 @@
 import { supabase, isSupabaseConfigured } from "./supabase"
 
 // Demo users for testing
-const DEMO_USERS = {
-  "demo@futuretask.com": {
+const DEMO_USERS = [
+  {
     id: "demo-user-1",
     email: "demo@futuretask.com",
     name: "Usuario Demo",
@@ -10,8 +10,9 @@ const DEMO_USERS = {
     subscription_status: "active",
     ai_credits: 0,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-  "premium@futuretask.com": {
+  {
     id: "demo-user-2",
     email: "premium@futuretask.com",
     name: "Usuario Premium",
@@ -19,8 +20,9 @@ const DEMO_USERS = {
     subscription_status: "active",
     ai_credits: 0,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-  "pro@futuretask.com": {
+  {
     id: "demo-user-3",
     email: "pro@futuretask.com",
     name: "Usuario Pro",
@@ -28,8 +30,9 @@ const DEMO_USERS = {
     subscription_status: "active",
     ai_credits: 500,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
-}
+]
 
 class HybridDatabase {
   private currentUser: any = null
@@ -37,14 +40,14 @@ class HybridDatabase {
   constructor() {
     // Initialize with demo user if no Supabase
     if (!isSupabaseConfigured) {
-      this.currentUser = DEMO_USERS["demo@futuretask.com"]
+      this.currentUser = DEMO_USERS[0]
     }
   }
 
   // User Management
   async getUser(userId?: string): Promise<any> {
     if (!isSupabaseConfigured) {
-      return this.currentUser || DEMO_USERS["demo@futuretask.com"]
+      return this.currentUser || DEMO_USERS[0]
     }
 
     try {
@@ -69,20 +72,23 @@ class HybridDatabase {
   async loginUser(email: string, password: string): Promise<{ user: any; error: any }> {
     if (!isSupabaseConfigured) {
       // Demo login
-      const demoUser = DEMO_USERS[email as keyof typeof DEMO_USERS]
-      if (demoUser && password === "demo123") {
-        this.currentUser = demoUser
-        localStorage.setItem("currentUser", JSON.stringify(demoUser))
-        return { user: demoUser, error: null }
-      } else if (demoUser && password === "premium123") {
-        this.currentUser = DEMO_USERS["premium@futuretask.com"]
-        localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
-        return { user: this.currentUser, error: null }
-      } else if (demoUser && password === "pro123") {
-        this.currentUser = DEMO_USERS["pro@futuretask.com"]
-        localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
-        return { user: this.currentUser, error: null }
+      const demoUser = DEMO_USERS.find((u) => u.email === email)
+
+      if (demoUser) {
+        // Check password (demo passwords)
+        const validPasswords = {
+          "demo@futuretask.com": "demo123",
+          "premium@futuretask.com": "premium123",
+          "pro@futuretask.com": "pro123",
+        }
+
+        if (validPasswords[email as keyof typeof validPasswords] === password) {
+          this.currentUser = demoUser
+          localStorage.setItem("currentUser", JSON.stringify(demoUser))
+          return { user: demoUser, error: null }
+        }
       }
+
       return { user: null, error: { message: "Invalid credentials" } }
     }
 
@@ -112,7 +118,9 @@ class HybridDatabase {
         subscription_status: "active",
         ai_credits: 0,
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
+
       this.currentUser = newUser
       localStorage.setItem("currentUser", JSON.stringify(newUser))
       return { user: newUser, error: null }
@@ -168,14 +176,19 @@ class HybridDatabase {
   async updateUserSubscription(userId: string, plan: string, status: string): Promise<{ data: any; error: any }> {
     if (!isSupabaseConfigured) {
       // Update demo user
-      if (this.currentUser) {
-        this.currentUser.subscription_plan = plan
-        this.currentUser.subscription_status = status
+      const user = DEMO_USERS.find((u) => u.id === userId)
+      if (user) {
+        user.subscription_plan = plan
+        user.subscription_status = status
+        user.updated_at = new Date().toISOString()
+
+        // Add AI credits for pro plan
         if (plan === "pro") {
-          this.currentUser.ai_credits = 500
+          user.ai_credits = 500
         }
-        localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
-        return { data: this.currentUser, error: null }
+
+        localStorage.setItem("currentUser", JSON.stringify(user))
+        return { data: user, error: null }
       }
       return { data: null, error: { message: "User not found" } }
     }
@@ -221,14 +234,16 @@ class HybridDatabase {
 
   async createTask(userId: string, task: any): Promise<{ data: any; error: any }> {
     if (!isSupabaseConfigured) {
-      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      const tasks = await this.getTasks(userId)
       const newTask = {
         ...task,
         id: Date.now().toString(),
         user_id: userId,
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
-      tasks.push(newTask)
+
+      tasks.unshift(newTask)
       localStorage.setItem(`tasks_${userId}`, JSON.stringify(tasks))
       return { data: newTask, error: null }
     }
@@ -252,10 +267,10 @@ class HybridDatabase {
       const userId = this.currentUser?.id
       if (!userId) return { data: null, error: { message: "User not found" } }
 
-      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      const tasks = await this.getTasks(userId)
       const taskIndex = tasks.findIndex((t: any) => t.id === taskId)
       if (taskIndex >= 0) {
-        tasks[taskIndex] = { ...tasks[taskIndex], ...updates }
+        tasks[taskIndex] = { ...tasks[taskIndex], ...updates, updated_at: new Date().toISOString() }
         localStorage.setItem(`tasks_${userId}`, JSON.stringify(tasks))
         return { data: tasks[taskIndex], error: null }
       }
@@ -276,7 +291,7 @@ class HybridDatabase {
       const userId = this.currentUser?.id
       if (!userId) return { error: { message: "User not found" } }
 
-      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      const tasks = await this.getTasks(userId)
       const filteredTasks = tasks.filter((t: any) => t.id !== taskId)
       localStorage.setItem(`tasks_${userId}`, JSON.stringify(filteredTasks))
       return { error: null }
@@ -314,7 +329,7 @@ class HybridDatabase {
 
   async createNote(userId: string, note: any): Promise<{ data: any; error: any }> {
     if (!isSupabaseConfigured) {
-      const notes = JSON.parse(localStorage.getItem(`notes_${userId}`) || "[]")
+      const notes = await this.getNotes(userId)
       const newNote = {
         ...note,
         id: Date.now().toString(),
@@ -322,7 +337,8 @@ class HybridDatabase {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
-      notes.push(newNote)
+
+      notes.unshift(newNote)
       localStorage.setItem(`notes_${userId}`, JSON.stringify(notes))
       return { data: newNote, error: null }
     }
@@ -463,5 +479,3 @@ export const createWishlistItem = (userId: string, item: any) => hybridDb.create
 
 export const getUserAchievements = (userId: string) => hybridDb.getUserAchievements(userId)
 export const getUserStats = (userId: string) => hybridDb.getUserStats(userId)
-
-export default hybridDb
