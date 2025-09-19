@@ -34,30 +34,34 @@ function LandingPageContent() {
 
   // Intersection Observer for animations
   useEffect(() => {
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("animate")
-          }
-        })
-      },
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px",
-      },
-    )
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px",
+    }
 
-    // Observe all animation elements
-    const animatedElements = document.querySelectorAll(
-      ".fade-in-on-scroll, .slide-in-left-on-scroll, .slide-in-right-on-scroll, .scale-in-on-scroll",
-    )
+    observerRef.current = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate")
+          // Unobserve after animation to prevent re-triggering
+          observerRef.current?.unobserve(entry.target)
+        }
+      })
+    }, observerOptions)
 
-    animatedElements.forEach((el) => {
-      observerRef.current?.observe(el)
-    })
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const animatedElements = document.querySelectorAll(
+        ".fade-in-on-scroll, .slide-in-left-on-scroll, .slide-in-right-on-scroll, .scale-in-on-scroll",
+      )
+
+      animatedElements.forEach((el) => {
+        observerRef.current?.observe(el)
+      })
+    }, 100)
 
     return () => {
+      clearTimeout(timer)
       observerRef.current?.disconnect()
     }
   }, [])
@@ -109,28 +113,34 @@ function LandingPageContent() {
 
   const pricingPlans = [
     {
-      name: t("free"),
-      price: t("freePrice"),
-      period: t("perMonth"),
-      features: t("freeFeatures"),
+      name: t("free") || "Gratis",
+      price: "€0",
+      period: t("perMonth") || "/mes",
+      features: ["Tareas básicas", "Calendario simple", "5 notas", "Soporte por email"],
       popular: false,
       color: "border-gray-200",
       buttonColor: "bg-gray-600 hover:bg-gray-700",
     },
     {
-      name: t("premium"),
-      price: t("premiumPrice"),
-      period: t("perMonth"),
-      features: t("premiumFeatures"),
+      name: t("premium") || "Premium",
+      price: "€1.99",
+      period: t("perMonth") || "/mes",
+      features: ["Tareas ilimitadas", "IA básica", "100 notas", "Sincronización", "Soporte prioritario"],
       popular: true,
       color: "border-blue-500 ring-2 ring-blue-200",
       buttonColor: "bg-blue-600 hover:bg-blue-700",
     },
     {
-      name: t("pro"),
-      price: t("proPrice"),
-      period: t("perMonth"),
-      features: t("proFeatures"),
+      name: t("pro") || "Pro",
+      price: "€4.99",
+      period: t("perMonth") || "/mes",
+      features: [
+        "Todo Premium +",
+        "IA avanzada",
+        "Análisis detallado",
+        "Colaboración en equipo",
+        "Integraciones personalizadas",
+      ],
       popular: false,
       color: "border-purple-200",
       buttonColor: "bg-purple-600 hover:bg-purple-700",
@@ -163,31 +173,37 @@ function LandingPageContent() {
 
   const blogPosts = [
     {
-      slug: "maximiza-productividad-2025",
-      title: t("blogPost1Title"),
-      excerpt: t("blogPost1Excerpt"),
+      slug: "productividad-2025",
+      title: t("blogPost1Title") || "10 Estrategias para Maximizar tu Productividad en 2025",
+      excerpt:
+        t("blogPost1Excerpt") ||
+        "Descubre las técnicas más efectivas para ser más productivo en el nuevo año con herramientas de IA.",
       image: "/productivity-workspace.png",
       date: "15 Ene 2025",
-      readTime: "5 min",
+      readTime: "8 min",
       category: "Productividad",
     },
     {
-      slug: "futuro-trabajo-remoto-ia",
-      title: t("blogPost2Title"),
-      excerpt: t("blogPost2Excerpt"),
-      image: "/remote-work-setup.png",
+      slug: "futuro-trabajo-remoto",
+      title: t("blogPost2Title") || "El Futuro del Trabajo Remoto: Cómo la IA está Transformando Equipos",
+      excerpt:
+        t("blogPost2Excerpt") ||
+        "Explora cómo la inteligencia artificial está revolucionando la colaboración y gestión de equipos remotos.",
+      image: "/ai-technology.png",
       date: "12 Ene 2025",
-      readTime: "7 min",
+      readTime: "12 min",
       category: "Tecnología",
     },
     {
-      slug: "organizacion-personal-digital",
-      title: t("blogPost3Title"),
-      excerpt: t("blogPost3Excerpt"),
-      image: "/productivity-workspace.png",
+      slug: "organizacion-digital-2025",
+      title: t("blogPost3Title") || "Organización Personal en la Era Digital: Guía Completa 2025",
+      excerpt:
+        t("blogPost3Excerpt") ||
+        "Una guía completa para organizar tu vida digital y personal usando las mejores herramientas y técnicas.",
+      image: "/futuristic-dashboard.png",
       date: "10 Ene 2025",
-      readTime: "6 min",
-      category: "Trabajo Remoto",
+      readTime: "15 min",
+      category: "Organización",
     },
   ]
 
@@ -564,7 +580,7 @@ function LandingPageContent() {
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1">
                       <Star className="h-3 w-3 mr-1" />
-                      {t("mostPopular")}
+                      {t("mostPopular") || "Más Popular"}
                     </Badge>
                   </div>
                 )}
@@ -578,10 +594,17 @@ function LandingPageContent() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  <p className="text-slate-600 dark:text-slate-300 text-center">{plan.features}</p>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center text-slate-600 dark:text-slate-300">
+                        <CheckSquare className="h-4 w-4 text-green-500 mr-3 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
 
                   <Button className={`w-full ${plan.buttonColor} text-white hover-lift`} asChild>
-                    <a href="/app">{t("choosePlan")}</a>
+                    <a href="/app">{t("choosePlan") || "Elegir Plan"}</a>
                   </Button>
                 </CardContent>
               </Card>

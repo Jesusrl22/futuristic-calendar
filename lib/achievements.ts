@@ -1,488 +1,359 @@
-// Achievements System
 export interface Achievement {
   id: string
-  name: string
+  userId: string
+  type: string
+  title: string
   description: string
-  icon: string
-  category: "productivity" | "social" | "milestone" | "special"
-  difficulty: "easy" | "medium" | "hard" | "legendary"
-  points: number
-  requirements: {
-    type: string
-    target: number
-    timeframe?: string
-  }
-  unlocked?: boolean
-  unlockedAt?: Date
+  unlockedAt: string
   progress?: number
+  maxProgress?: number
+  icon?: string
+  category?: string
+  rarity?: "common" | "rare" | "epic" | "legendary"
+  points?: number
 }
 
-export const ACHIEVEMENTS: Achievement[] = [
-  // Productivity Achievements
+export interface AchievementRule {
+  id: string
+  type: string
+  title: string
+  description: string
+  icon: string
+  category: string
+  rarity: "common" | "rare" | "epic" | "legendary"
+  points: number
+  condition: (userId: string, data?: any) => Promise<boolean>
+  maxProgress?: number
+  getProgress?: (userId: string) => Promise<number>
+}
+
+// Achievement rules and definitions
+export const ACHIEVEMENT_RULES: AchievementRule[] = [
+  // Task-related achievements
   {
     id: "first_task",
-    name: "Primer Paso",
-    description: "Completa tu primera tarea",
+    type: "task_created",
+    title: "Primera Tarea",
+    description: "Crea tu primera tarea",
     icon: "✅",
-    category: "productivity",
-    difficulty: "easy",
+    category: "Tareas",
+    rarity: "common",
     points: 10,
-    requirements: {
-      type: "tasks_completed",
-      target: 1,
+    condition: async (userId: string) => {
+      // This would check if user has created at least one task
+      return true // Simplified for demo
     },
   },
   {
     id: "task_master",
-    name: "Maestro de Tareas",
+    type: "tasks_completed",
+    title: "Maestro de Tareas",
     description: "Completa 100 tareas",
     icon: "🏆",
-    category: "productivity",
-    difficulty: "medium",
+    category: "Tareas",
+    rarity: "epic",
     points: 100,
-    requirements: {
-      type: "tasks_completed",
-      target: 100,
+    maxProgress: 100,
+    condition: async (userId: string) => {
+      // This would check if user has completed 100 tasks
+      return false // Simplified for demo
+    },
+    getProgress: async (userId: string) => {
+      // This would return current number of completed tasks
+      return 45 // Simplified for demo
+    },
+  },
+
+  // Login-related achievements
+  {
+    id: "welcome",
+    type: "login",
+    title: "¡Bienvenido!",
+    description: "Inicia sesión por primera vez",
+    icon: "👋",
+    category: "General",
+    rarity: "common",
+    points: 5,
+    condition: async (userId: string) => {
+      return true // Always unlock on first login
     },
   },
   {
-    id: "productivity_beast",
-    name: "Bestia Productiva",
-    description: "Completa 1000 tareas",
-    icon: "🦁",
-    category: "productivity",
-    difficulty: "hard",
-    points: 500,
-    requirements: {
-      type: "tasks_completed",
-      target: 1000,
-    },
-  },
-  {
-    id: "streak_warrior",
-    name: "Guerrero de Rachas",
-    description: "Mantén una racha de 30 días completando tareas",
+    id: "loyal_user",
+    type: "login_streak",
+    title: "Usuario Leal",
+    description: "Inicia sesión 7 días consecutivos",
     icon: "🔥",
-    category: "productivity",
-    difficulty: "hard",
-    points: 300,
-    requirements: {
-      type: "daily_streak",
-      target: 30,
-    },
-  },
-  {
-    id: "early_bird",
-    name: "Madrugador",
-    description: "Completa 50 tareas antes de las 8 AM",
-    icon: "🌅",
-    category: "productivity",
-    difficulty: "medium",
-    points: 150,
-    requirements: {
-      type: "early_tasks",
-      target: 50,
-    },
-  },
-
-  // Social Achievements
-  {
-    id: "note_taker",
-    name: "Tomador de Notas",
-    description: "Crea 50 notas",
-    icon: "📝",
-    category: "social",
-    difficulty: "easy",
+    category: "General",
+    rarity: "rare",
     points: 50,
-    requirements: {
-      type: "notes_created",
-      target: 50,
+    maxProgress: 7,
+    condition: async (userId: string) => {
+      return false // Simplified for demo
     },
-  },
-  {
-    id: "ai_enthusiast",
-    name: "Entusiasta de IA",
-    description: "Usa el asistente IA 100 veces",
-    icon: "🤖",
-    category: "social",
-    difficulty: "medium",
-    points: 200,
-    requirements: {
-      type: "ai_queries",
-      target: 100,
+    getProgress: async (userId: string) => {
+      return 3 // Simplified for demo
     },
   },
 
-  // Milestone Achievements
+  // Subscription-related achievements
   {
-    id: "week_warrior",
-    name: "Guerrero Semanal",
-    description: "Usa la app durante 7 días consecutivos",
-    icon: "📅",
-    category: "milestone",
-    difficulty: "easy",
-    points: 75,
-    requirements: {
-      type: "login_streak",
-      target: 7,
-    },
-  },
-  {
-    id: "month_master",
-    name: "Maestro Mensual",
-    description: "Usa la app durante 30 días consecutivos",
-    icon: "🗓️",
-    category: "milestone",
-    difficulty: "medium",
-    points: 250,
-    requirements: {
-      type: "login_streak",
-      target: 30,
-    },
-  },
-  {
-    id: "year_legend",
-    name: "Leyenda Anual",
-    description: "Usa la app durante 365 días consecutivos",
-    icon: "👑",
-    category: "milestone",
-    difficulty: "legendary",
-    points: 1000,
-    requirements: {
-      type: "login_streak",
-      target: 365,
-    },
-  },
-
-  // Special Achievements
-  {
-    id: "wishlist_dreamer",
-    name: "Soñador de Deseos",
-    description: "Agrega 25 elementos a tu lista de deseos",
+    id: "premium_user",
+    type: "subscription_upgrade",
+    title: "Usuario Premium",
+    description: "Actualiza a un plan premium",
     icon: "⭐",
-    category: "special",
-    difficulty: "easy",
+    category: "Suscripción",
+    rarity: "rare",
+    points: 75,
+    condition: async (userId: string) => {
+      return true // Unlock when upgrading to premium
+    },
+  },
+  {
+    id: "pro_user",
+    type: "subscription_upgrade",
+    title: "Usuario Pro",
+    description: "Actualiza al plan Pro",
+    icon: "👑",
+    category: "Suscripción",
+    rarity: "epic",
+    points: 150,
+    condition: async (userId: string) => {
+      return true // Unlock when upgrading to pro
+    },
+  },
+
+  // AI-related achievements
+  {
+    id: "ai_explorer",
+    type: "ai_usage",
+    title: "Explorador IA",
+    description: "Usa el asistente IA por primera vez",
+    icon: "🤖",
+    category: "IA",
+    rarity: "common",
+    points: 25,
+    condition: async (userId: string) => {
+      return true // Unlock on first AI usage
+    },
+  },
+  {
+    id: "ai_power_user",
+    type: "credits_purchase",
+    title: "Usuario Avanzado IA",
+    description: "Compra créditos IA",
+    icon: "🧠",
+    category: "IA",
+    rarity: "rare",
     points: 100,
-    requirements: {
-      type: "wishlist_items",
-      target: 25,
+    condition: async (userId: string) => {
+      return true // Unlock when purchasing AI credits
+    },
+  },
+
+  // Productivity achievements
+  {
+    id: "productive_day",
+    type: "daily_productivity",
+    title: "Día Productivo",
+    description: "Completa 10 tareas en un día",
+    icon: "🚀",
+    category: "Productividad",
+    rarity: "common",
+    points: 30,
+    condition: async (userId: string) => {
+      return false // Simplified for demo
     },
   },
   {
-    id: "goal_crusher",
-    name: "Destructor de Metas",
-    description: "Completa 10 elementos de tu lista de deseos",
-    icon: "💪",
-    category: "special",
-    difficulty: "medium",
-    points: 300,
-    requirements: {
-      type: "wishlist_completed",
-      target: 10,
+    id: "productivity_master",
+    type: "weekly_productivity",
+    title: "Maestro de Productividad",
+    description: "Mantén una racha de productividad de 30 días",
+    icon: "🏅",
+    category: "Productividad",
+    rarity: "legendary",
+    points: 500,
+    maxProgress: 30,
+    condition: async (userId: string) => {
+      return false // Simplified for demo
     },
-  },
-  {
-    id: "perfectionist",
-    name: "Perfeccionista",
-    description: "Completa todas las tareas de un día sin fallar ninguna",
-    icon: "💎",
-    category: "special",
-    difficulty: "hard",
-    points: 400,
-    requirements: {
-      type: "perfect_day",
-      target: 1,
+    getProgress: async (userId: string) => {
+      return 12 // Simplified for demo
     },
   },
 ]
 
-export interface UserAchievement {
-  userId: string
-  achievementId: string
-  unlockedAt: Date
-  progress: number
-}
-
-export interface UserStats {
-  userId: string
-  tasksCompleted: number
-  notesCreated: number
-  aiQueriesUsed: number
-  loginStreak: number
-  maxLoginStreak: number
-  wishlistItems: number
-  wishlistCompleted: number
-  totalPoints: number
-  lastActive: Date
-}
-
-export interface AchievementStats {
-  totalAchievements: number
-  unlockedAchievements: number
-  totalPoints: number
-  earnedPoints: number
-  completionPercentage: number
-  recentAchievements: Achievement[]
-  nextAchievements: Achievement[]
-}
-
-// Check and award achievements
-export async function checkAchievements(userId: string, stats: UserStats): Promise<Achievement[]> {
-  const newAchievements: Achievement[] = []
-  const userAchievements = await getUserAchievements(userId)
-  const unlockedIds = userAchievements.map((ua) => ua.achievementId)
-
-  for (const achievement of ACHIEVEMENTS) {
-    if (unlockedIds.includes(achievement.id)) {
-      continue // Already unlocked
-    }
-
-    const progress = calculateAchievementProgress(achievement, stats)
-    if (progress >= achievement.requirements.target) {
-      // Achievement unlocked!
-      await unlockAchievement(userId, achievement.id)
-      newAchievements.push({
-        ...achievement,
-        unlocked: true,
-        unlockedAt: new Date(),
-        progress: achievement.requirements.target,
-      })
-    }
-  }
-
-  return newAchievements
-}
-
-// Check and unlock achievements based on action type
-export async function checkAndUnlockAchievements(userId: string, actionType: string): Promise<Achievement[]> {
-  try {
-    const stats = await getUserStats(userId)
-    const userAchievements = await getUserAchievements(userId)
-    const unlockedIds = userAchievements.map((ua) => ua.achievementId)
-    const newAchievements: Achievement[] = []
-
-    for (const achievement of ACHIEVEMENTS) {
-      if (unlockedIds.includes(achievement.id)) {
-        continue // Already unlocked
-      }
-
-      const progress = calculateAchievementProgress(achievement, stats)
-      if (progress >= achievement.requirements.target) {
-        // Achievement unlocked!
-        await unlockAchievement(userId, achievement.id)
-        newAchievements.push({
-          ...achievement,
-          unlocked: true,
-          unlockedAt: new Date(),
-          progress: achievement.requirements.target,
-        })
-      }
-    }
-
-    return newAchievements
-  } catch (error) {
-    console.error("Error checking achievements:", error)
-    return []
-  }
-}
-
-// Calculate achievement progress
-function calculateAchievementProgress(achievement: Achievement, stats: UserStats): number {
-  switch (achievement.requirements.type) {
-    case "tasks_completed":
-      return stats.tasksCompleted
-    case "notes_created":
-      return stats.notesCreated
-    case "ai_queries":
-      return stats.aiQueriesUsed
-    case "login_streak":
-    case "daily_streak":
-      return stats.loginStreak
-    case "wishlist_items":
-      return stats.wishlistItems
-    case "wishlist_completed":
-      return stats.wishlistCompleted
-    case "early_tasks":
-      // This would need additional tracking
-      return 0
-    case "perfect_day":
-      // This would need additional tracking
-      return 0
-    default:
-      return 0
-  }
-}
+// In-memory storage for achievements
+const userAchievements: Record<string, Achievement[]> = {}
 
 // Get user achievements
-export async function getUserAchievements(userId: string): Promise<UserAchievement[]> {
-  try {
-    // This would fetch from database
-    // For now, return empty array as demo
-    return []
-  } catch (error) {
-    console.error("Error getting user achievements:", error)
-    return []
-  }
+export async function getUserAchievements(userId: string): Promise<Achievement[]> {
+  return userAchievements[userId] || []
 }
 
-// Unlock achievement
-export async function unlockAchievement(userId: string, achievementId: string): Promise<void> {
-  try {
-    // This would update the database
-    console.log(`Unlocking achievement ${achievementId} for user ${userId}`)
+// Check and unlock achievements
+export async function checkAndUnlockAchievements(
+  userId: string,
+  triggerType: string,
+  data?: any,
+): Promise<Achievement[]> {
+  const unlockedAchievements: Achievement[] = []
+  const existingAchievements = await getUserAchievements(userId)
+  const existingIds = existingAchievements.map((a) => a.id)
 
-    // Award points
-    const achievement = ACHIEVEMENTS.find((a) => a.id === achievementId)
-    if (achievement) {
-      await awardPoints(userId, achievement.points)
-    }
-  } catch (error) {
-    console.error("Error unlocking achievement:", error)
-  }
-}
+  for (const rule of ACHIEVEMENT_RULES) {
+    // Skip if already unlocked
+    if (existingIds.includes(rule.id)) continue
 
-// Award points to user
-export async function awardPoints(userId: string, points: number): Promise<void> {
-  try {
-    // This would update user's total points in database
-    console.log(`Awarding ${points} points to user ${userId}`)
-  } catch (error) {
-    console.error("Error awarding points:", error)
-  }
-}
+    // Skip if trigger type doesn't match
+    if (rule.type !== triggerType && triggerType !== "check_all") continue
 
-// Get user stats
-export async function getUserStats(userId: string): Promise<UserStats> {
-  try {
-    // This would fetch from database
-    // For now, return default stats
-    return {
-      userId,
-      tasksCompleted: 0,
-      notesCreated: 0,
-      aiQueriesUsed: 0,
-      loginStreak: 1,
-      maxLoginStreak: 1,
-      wishlistItems: 0,
-      wishlistCompleted: 0,
-      totalPoints: 0,
-      lastActive: new Date(),
-    }
-  } catch (error) {
-    console.error("Error getting user stats:", error)
-    return {
-      userId,
-      tasksCompleted: 0,
-      notesCreated: 0,
-      aiQueriesUsed: 0,
-      loginStreak: 0,
-      maxLoginStreak: 0,
-      wishlistItems: 0,
-      wishlistCompleted: 0,
-      totalPoints: 0,
-      lastActive: new Date(),
+    try {
+      const shouldUnlock = await rule.condition(userId, data)
+      if (shouldUnlock) {
+        const newAchievement: Achievement = {
+          id: rule.id,
+          userId,
+          type: rule.type,
+          title: rule.title,
+          description: rule.description,
+          unlockedAt: new Date().toISOString(),
+          icon: rule.icon,
+          category: rule.category,
+          rarity: rule.rarity,
+          points: rule.points,
+        }
+
+        // Add progress if applicable
+        if (rule.maxProgress && rule.getProgress) {
+          newAchievement.progress = await rule.getProgress(userId)
+          newAchievement.maxProgress = rule.maxProgress
+        }
+
+        // Store achievement
+        if (!userAchievements[userId]) {
+          userAchievements[userId] = []
+        }
+        userAchievements[userId].push(newAchievement)
+        unlockedAchievements.push(newAchievement)
+      }
+    } catch (error) {
+      console.error(`Error checking achievement ${rule.id}:`, error)
     }
   }
+
+  return unlockedAchievements
 }
 
-// Update user stats
-export async function updateUserStats(userId: string, updates: Partial<UserStats>): Promise<void> {
-  try {
-    // This would update the database
-    console.log(`Updating stats for user ${userId}:`, updates)
-  } catch (error) {
-    console.error("Error updating user stats:", error)
-  }
-}
-
-// Get achievements by category
-export function getAchievementsByCategory(category: Achievement["category"]): Achievement[] {
-  return ACHIEVEMENTS.filter((a) => a.category === category)
-}
-
-// Get achievements by difficulty
-export function getAchievementsByDifficulty(difficulty: Achievement["difficulty"]): Achievement[] {
-  return ACHIEVEMENTS.filter((a) => a.difficulty === difficulty)
-}
-
-// Calculate total possible points
-export function getTotalPossiblePoints(): number {
-  return ACHIEVEMENTS.reduce((total, achievement) => total + achievement.points, 0)
-}
-
-// Get user achievement progress
-export async function getUserAchievementProgress(userId: string): Promise<(Achievement & { progress: number })[]> {
-  try {
-    const stats = await getUserStats(userId)
-    const userAchievements = await getUserAchievements(userId)
-    const unlockedIds = userAchievements.map((ua) => ua.achievementId)
-
-    return ACHIEVEMENTS.map((achievement) => ({
-      ...achievement,
-      unlocked: unlockedIds.includes(achievement.id),
-      progress: calculateAchievementProgress(achievement, stats),
-    }))
-  } catch (error) {
-    console.error("Error getting user achievement progress:", error)
-    return ACHIEVEMENTS.map((achievement) => ({
-      ...achievement,
-      unlocked: false,
-      progress: 0,
-    }))
-  }
-}
-
-// Get achievement statistics for a user
-export async function getAchievementStats(userId: string): Promise<AchievementStats> {
-  try {
-    const userAchievements = await getUserAchievements(userId)
-    const userProgress = await getUserAchievementProgress(userId)
-
-    const totalAchievements = ACHIEVEMENTS.length
-    const unlockedAchievements = userAchievements.length
-    const totalPoints = getTotalPossiblePoints()
-    const earnedPoints = userAchievements.reduce((total, ua) => {
-      const achievement = ACHIEVEMENTS.find((a) => a.id === ua.achievementId)
-      return total + (achievement?.points || 0)
-    }, 0)
-
-    const completionPercentage = totalAchievements > 0 ? (unlockedAchievements / totalAchievements) * 100 : 0
-
-    // Get recent achievements (last 5)
-    const recentAchievements = userAchievements
-      .sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime())
-      .slice(0, 5)
-      .map((ua) => ACHIEVEMENTS.find((a) => a.id === ua.achievementId))
-      .filter(Boolean) as Achievement[]
-
-    // Get next achievements (closest to completion)
-    const nextAchievements = userProgress
-      .filter((a) => !a.unlocked && a.progress > 0)
-      .sort((a, b) => b.progress / b.requirements.target - a.progress / a.requirements.target)
-      .slice(0, 3)
-
-    return {
-      totalAchievements,
-      unlockedAchievements,
-      totalPoints,
-      earnedPoints,
-      completionPercentage,
-      recentAchievements,
-      nextAchievements,
-    }
-  } catch (error) {
-    console.error("Error getting achievement stats:", error)
-    return {
-      totalAchievements: ACHIEVEMENTS.length,
-      unlockedAchievements: 0,
-      totalPoints: getTotalPossiblePoints(),
-      earnedPoints: 0,
-      completionPercentage: 0,
-      recentAchievements: [],
-      nextAchievements: [],
-    }
-  }
-}
-
-// Check and award achievements (alias for compatibility)
+// Alias for compatibility
 export const checkAndAwardAchievements = checkAndUnlockAchievements
+
+// Get achievement statistics
+export function getAchievementStats(achievements: Achievement[]) {
+  const totalPoints = achievements.reduce((sum, achievement) => sum + (achievement.points || 0), 0)
+  const byCategory = achievements.reduce(
+    (acc, achievement) => {
+      const category = achievement.category || "General"
+      acc[category] = (acc[category] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  const byRarity = achievements.reduce(
+    (acc, achievement) => {
+      const rarity = achievement.rarity || "common"
+      acc[rarity] = (acc[rarity] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>,
+  )
+
+  return {
+    total: achievements.length,
+    totalPoints,
+    byCategory,
+    byRarity,
+    completionRate: Math.round((achievements.length / ACHIEVEMENT_RULES.length) * 100),
+  }
+}
+
+// Get user level based on points
+export function getUserLevel(totalPoints: number): { level: number; pointsToNext: number; title: string } {
+  const levels = [
+    { level: 1, points: 0, title: "Novato" },
+    { level: 2, points: 100, title: "Principiante" },
+    { level: 3, points: 250, title: "Intermedio" },
+    { level: 4, points: 500, title: "Avanzado" },
+    { level: 5, points: 1000, title: "Experto" },
+    { level: 6, points: 2000, title: "Maestro" },
+    { level: 7, points: 4000, title: "Leyenda" },
+  ]
+
+  let currentLevel = levels[0]
+  let nextLevel = levels[1]
+
+  for (let i = 0; i < levels.length - 1; i++) {
+    if (totalPoints >= levels[i].points && totalPoints < levels[i + 1].points) {
+      currentLevel = levels[i]
+      nextLevel = levels[i + 1]
+      break
+    } else if (totalPoints >= levels[levels.length - 1].points) {
+      currentLevel = levels[levels.length - 1]
+      nextLevel = levels[levels.length - 1] // Max level
+      break
+    }
+  }
+
+  const pointsToNext = nextLevel.points - totalPoints
+
+  return {
+    level: currentLevel.level,
+    pointsToNext: Math.max(0, pointsToNext),
+    title: currentLevel.title,
+  }
+}
+
+// Create sample achievements for demo users
+export async function createSampleAchievements(userId: string): Promise<void> {
+  const sampleAchievements: Achievement[] = [
+    {
+      id: "welcome",
+      userId,
+      type: "login",
+      title: "¡Bienvenido!",
+      description: "Inicia sesión por primera vez",
+      unlockedAt: new Date().toISOString(),
+      icon: "👋",
+      category: "General",
+      rarity: "common",
+      points: 5,
+    },
+    {
+      id: "first_task",
+      userId,
+      type: "task_created",
+      title: "Primera Tarea",
+      description: "Crea tu primera tarea",
+      unlockedAt: new Date().toISOString(),
+      icon: "✅",
+      category: "Tareas",
+      rarity: "common",
+      points: 10,
+    },
+  ]
+
+  userAchievements[userId] = sampleAchievements
+}
+
+export default {
+  getUserAchievements,
+  checkAndUnlockAchievements,
+  checkAndAwardAchievements,
+  getAchievementStats,
+  getUserLevel,
+  createSampleAchievements,
+  ACHIEVEMENT_RULES,
+}

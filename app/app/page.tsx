@@ -23,6 +23,7 @@ import { StatsCards } from "@/components/stats-cards"
 import { useTheme } from "@/hooks/useTheme"
 import { LanguageProvider, useLanguage } from "@/hooks/useLanguage"
 import { LanguageSelector } from "@/components/language-selector"
+import { SubscriptionManager } from "@/components/subscription-manager"
 import {
   Calendar,
   CheckSquare,
@@ -181,11 +182,16 @@ function FuturisticCalendarContent() {
   }
 
   // Handle subscription upgrade
-  const handleSubscriptionUpgrade = async (plan, billing) => {
+  const handleSubscriptionUpgrade = async (planId, billing) => {
     if (!user) return
 
     try {
-      const updatedUser = await updateUserSubscription(user.id, plan, billing)
+      // Map plan IDs to simple names for the database
+      let planName = "free"
+      if (planId.includes("premium")) planName = "premium"
+      if (planId.includes("pro")) planName = "pro"
+
+      const updatedUser = await updateUserSubscription(user.id, planName, "active")
       if (updatedUser) {
         setUser(updatedUser)
         localStorage.setItem("currentUser", JSON.stringify(updatedUser))
@@ -231,16 +237,19 @@ function FuturisticCalendarContent() {
 
   // Get user plan info
   const getUserPlanInfo = () => {
-    if (!user) return { plan: "free", isPremium: false, isPro: false }
+    if (!user) return { plan: "free", isFree: true, isPremium: false, isPro: false }
 
-    const isPremium = user.subscription_plan === "premium"
-    const isPro = user.subscription_plan === "pro"
+    const plan = user.subscription_plan || "free"
+    const isFree = plan === "free"
+    const isPremium = plan.includes("premium")
+    const isPro = plan.includes("pro")
 
     return {
-      plan: user.subscription_plan || "free",
+      plan,
+      isFree,
       isPremium,
       isPro,
-      isActive: user.subscription_status === "active",
+      isActive: user.subscription_status === "active" || plan === "free",
     }
   }
 
@@ -482,7 +491,7 @@ function FuturisticCalendarContent() {
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">{t("notes")}</span>
             </TabsTrigger>
-            {planInfo.isPremium && (
+            {(planInfo.isPremium || planInfo.isPro) && (
               <TabsTrigger value="wishlist" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
                 <span className="hidden sm:inline">Wishlist</span>
@@ -522,9 +531,30 @@ function FuturisticCalendarContent() {
             <NotesManager userId={user.id} theme={themeConfig} />
           </TabsContent>
 
-          {planInfo.isPremium && (
+          {(planInfo.isPremium || planInfo.isPro) && (
             <TabsContent value="wishlist">
               <WishlistManager userId={user.id} theme={themeConfig} />
+            </TabsContent>
+          )}
+
+          {!planInfo.isPro && (
+            <TabsContent value="ai">
+              <Card className={`${themeConfig.cardBg} ${themeConfig.border}`}>
+                <CardContent className="text-center py-12">
+                  <Brain className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-xl font-semibold mb-2">Asistente IA Pro</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Potencia tu productividad con nuestro asistente de inteligencia artificial
+                  </p>
+                  <Button
+                    onClick={() => setActiveTab("subscription")}
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Actualizar a Pro
+                  </Button>
+                </CardContent>
+              </Card>
             </TabsContent>
           )}
 
@@ -534,67 +564,33 @@ function FuturisticCalendarContent() {
             </TabsContent>
           )}
 
-          <TabsContent value="subscription">
-            <div className="space-y-6">
+          {!planInfo.isPremium && !planInfo.isPro && (
+            <TabsContent value="wishlist">
               <Card className={`${themeConfig.cardBg} ${themeConfig.border}`}>
-                <CardHeader>
-                  <CardTitle className={themeConfig.textPrimary}>{t("yourCurrentPlan")}</CardTitle>
-                  <CardDescription>{t("manageSubscription")}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className={`text-lg font-semibold ${themeConfig.textPrimary}`}>
-                        {t("plan")} {planInfo.plan.charAt(0).toUpperCase() + planInfo.plan.slice(1)}
-                      </h3>
-                      <p className={themeConfig.textSecondary}>
-                        {planInfo.plan === "free" && t("basicFeatures")}
-                        {planInfo.plan === "premium" && t("advancedFeatures")}
-                        {planInfo.plan === "pro" && t("allFeatures")}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={planInfo.isActive ? "default" : "secondary"}
-                      className={planInfo.isPro ? "bg-gradient-to-r from-purple-500 to-blue-500" : ""}
-                    >
-                      {planInfo.isActive ? t("active") : t("inactive")}
-                    </Badge>
-                  </div>
-
-                  {planInfo.plan === "free" && (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Button
-                          onClick={() => handleSubscriptionUpgrade("premium", "monthly")}
-                          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
-                        >
-                          <Star className="h-4 w-4 mr-2" />
-                          {t("upgradeToPremium")}
-                        </Button>
-                        <Button
-                          onClick={() => handleSubscriptionUpgrade("pro", "monthly")}
-                          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-                        >
-                          <Crown className="h-4 w-4 mr-2" />
-                          {t("upgradeToPro")}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {planInfo.isPro && (
-                    <div className="space-y-4">
-                      <AiCreditsDisplay
-                        credits={aiCredits}
-                        onPurchaseCredits={() => setShowCreditsPurchase(true)}
-                        showDetails={true}
-                        theme={themeConfig}
-                      />
-                    </div>
-                  )}
+                <CardContent className="text-center py-12">
+                  <Heart className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                  <h3 className="text-xl font-semibold mb-2">Lista de Deseos Premium</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Organiza tus deseos y metas con nuestra lista de deseos avanzada
+                  </p>
+                  <Button
+                    onClick={() => setActiveTab("subscription")}
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Actualizar a Premium
+                  </Button>
                 </CardContent>
               </Card>
-            </div>
+            </TabsContent>
+          )}
+
+          <TabsContent value="subscription">
+            <SubscriptionManager
+              currentPlan={planInfo.plan}
+              onUpgrade={handleSubscriptionUpgrade}
+              onPurchaseCredits={handleCreditsPurchase}
+            />
           </TabsContent>
         </Tabs>
       </main>

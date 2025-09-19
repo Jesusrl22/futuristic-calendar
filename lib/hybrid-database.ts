@@ -1,236 +1,467 @@
-import { createClient } from "./supabase"
-import type { Database } from "./database.types"
+import { supabase, isSupabaseConfigured } from "./supabase"
 
-type Tables = Database["public"]["Tables"]
-type Task = Tables["tasks"]["Row"]
-type Note = Tables["notes"]["Row"]
-type User = Tables["users"]["Row"]
+// Demo users for testing
+const DEMO_USERS = {
+  "demo@futuretask.com": {
+    id: "demo-user-1",
+    email: "demo@futuretask.com",
+    name: "Usuario Demo",
+    subscription_plan: "free",
+    subscription_status: "active",
+    ai_credits: 0,
+    created_at: new Date().toISOString(),
+  },
+  "premium@futuretask.com": {
+    id: "demo-user-2",
+    email: "premium@futuretask.com",
+    name: "Usuario Premium",
+    subscription_plan: "premium",
+    subscription_status: "active",
+    ai_credits: 0,
+    created_at: new Date().toISOString(),
+  },
+  "pro@futuretask.com": {
+    id: "demo-user-3",
+    email: "pro@futuretask.com",
+    name: "Usuario Pro",
+    subscription_plan: "pro",
+    subscription_status: "active",
+    ai_credits: 500,
+    created_at: new Date().toISOString(),
+  },
+}
 
-// Hybrid database operations that work with both Supabase and local storage
-export class HybridDatabase {
-  private supabase = createClient()
-  private isOnline = true
+class HybridDatabase {
+  private currentUser: any = null
 
   constructor() {
-    this.checkConnection()
-  }
-
-  private async checkConnection() {
-    try {
-      const { error } = await this.supabase.from("users").select("id").limit(1)
-      this.isOnline = !error
-    } catch {
-      this.isOnline = false
+    // Initialize with demo user if no Supabase
+    if (!isSupabaseConfigured) {
+      this.currentUser = DEMO_USERS["demo@futuretask.com"]
     }
   }
 
-  // Tasks
-  async getTasks(userId: string): Promise<Task[]> {
-    if (this.isOnline) {
-      try {
-        const { data, error } = await this.supabase
-          .from("tasks")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-
-        if (!error && data) {
-          // Cache in localStorage
-          localStorage.setItem(`tasks_${userId}`, JSON.stringify(data))
-          return data
-        }
-      } catch (error) {
-        console.error("Error fetching tasks from Supabase:", error)
-      }
+  // User Management
+  async getUser(userId?: string): Promise<any> {
+    if (!isSupabaseConfigured) {
+      return this.currentUser || DEMO_USERS["demo@futuretask.com"]
     }
-
-    // Fallback to localStorage
-    const cached = localStorage.getItem(`tasks_${userId}`)
-    return cached ? JSON.parse(cached) : []
-  }
-
-  async createTask(
-    userId: string,
-    task: Omit<Task, "id" | "user_id" | "created_at" | "updated_at">,
-  ): Promise<Task | null> {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      user_id: userId,
-      title: task.title,
-      description: task.description,
-      completed: false,
-      priority: task.priority || "medium",
-      due_date: task.due_date,
-      category: task.category,
-      tags: task.tags || [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    if (this.isOnline) {
-      try {
-        const { data, error } = await this.supabase.from("tasks").insert([newTask]).select().single()
-
-        if (!error && data) {
-          return data
-        }
-      } catch (error) {
-        console.error("Error creating task in Supabase:", error)
-      }
-    }
-
-    // Fallback to localStorage
-    const tasks = await this.getTasks(userId)
-    const updatedTasks = [newTask, ...tasks]
-    localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
-    return newTask
-  }
-
-  async updateTask(userId: string, taskId: string, updates: Partial<Task>): Promise<Task | null> {
-    if (this.isOnline) {
-      try {
-        const { data, error } = await this.supabase
-          .from("tasks")
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq("id", taskId)
-          .eq("user_id", userId)
-          .select()
-          .single()
-
-        if (!error && data) {
-          return data
-        }
-      } catch (error) {
-        console.error("Error updating task in Supabase:", error)
-      }
-    }
-
-    // Fallback to localStorage
-    const tasks = await this.getTasks(userId)
-    const updatedTasks = tasks.map((task) =>
-      task.id === taskId ? { ...task, ...updates, updated_at: new Date().toISOString() } : task,
-    )
-    localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
-    return updatedTasks.find((t) => t.id === taskId) || null
-  }
-
-  async deleteTask(userId: string, taskId: string): Promise<boolean> {
-    if (this.isOnline) {
-      try {
-        const { error } = await this.supabase.from("tasks").delete().eq("id", taskId).eq("user_id", userId)
-
-        if (!error) {
-          return true
-        }
-      } catch (error) {
-        console.error("Error deleting task in Supabase:", error)
-      }
-    }
-
-    // Fallback to localStorage
-    const tasks = await this.getTasks(userId)
-    const filteredTasks = tasks.filter((task) => task.id !== taskId)
-    localStorage.setItem(`tasks_${userId}`, JSON.stringify(filteredTasks))
-    return true
-  }
-
-  // Notes
-  async getNotes(userId: string): Promise<Note[]> {
-    if (this.isOnline) {
-      try {
-        const { data, error } = await this.supabase
-          .from("notes")
-          .select("*")
-          .eq("user_id", userId)
-          .order("updated_at", { ascending: false })
-
-        if (!error && data) {
-          localStorage.setItem(`notes_${userId}`, JSON.stringify(data))
-          return data
-        }
-      } catch (error) {
-        console.error("Error fetching notes from Supabase:", error)
-      }
-    }
-
-    const cached = localStorage.getItem(`notes_${userId}`)
-    return cached ? JSON.parse(cached) : []
-  }
-
-  async createNote(
-    userId: string,
-    note: Omit<Note, "id" | "user_id" | "created_at" | "updated_at">,
-  ): Promise<Note | null> {
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      user_id: userId,
-      title: note.title,
-      content: note.content,
-      tags: note.tags || [],
-      category: note.category,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    if (this.isOnline) {
-      try {
-        const { data, error } = await this.supabase.from("notes").insert([newNote]).select().single()
-
-        if (!error && data) {
-          return data
-        }
-      } catch (error) {
-        console.error("Error creating note in Supabase:", error)
-      }
-    }
-
-    const notes = await this.getNotes(userId)
-    const updatedNotes = [newNote, ...notes]
-    localStorage.setItem(`notes_${userId}`, JSON.stringify(updatedNotes))
-    return newNote
-  }
-
-  // Sync operations
-  async syncToServer(userId: string): Promise<void> {
-    if (!this.isOnline) return
 
     try {
-      // Sync tasks
-      const localTasks = localStorage.getItem(`tasks_${userId}`)
-      if (localTasks) {
-        const tasks = JSON.parse(localTasks)
-        for (const task of tasks) {
-          await this.supabase.from("tasks").upsert(task)
-        }
-      }
+      if (userId) {
+        const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+        return error ? null : data
+      } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) return null
 
-      // Sync notes
-      const localNotes = localStorage.getItem(`notes_${userId}`)
-      if (localNotes) {
-        const notes = JSON.parse(localNotes)
-        for (const note of notes) {
-          await this.supabase.from("notes").upsert(note)
-        }
+        const { data, error } = await supabase.from("users").select("*").eq("id", user.id).single()
+        return error ? null : data
       }
     } catch (error) {
-      console.error("Error syncing to server:", error)
+      console.error("Error getting user:", error)
+      return null
     }
   }
 
-  // Connection status
-  getConnectionStatus(): boolean {
-    return this.isOnline
+  async loginUser(email: string, password: string): Promise<{ user: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      // Demo login
+      const demoUser = DEMO_USERS[email as keyof typeof DEMO_USERS]
+      if (demoUser && password === "demo123") {
+        this.currentUser = demoUser
+        localStorage.setItem("currentUser", JSON.stringify(demoUser))
+        return { user: demoUser, error: null }
+      } else if (demoUser && password === "premium123") {
+        this.currentUser = DEMO_USERS["premium@futuretask.com"]
+        localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+        return { user: this.currentUser, error: null }
+      } else if (demoUser && password === "pro123") {
+        this.currentUser = DEMO_USERS["pro@futuretask.com"]
+        localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+        return { user: this.currentUser, error: null }
+      }
+      return { user: null, error: { message: "Invalid credentials" } }
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) return { user: null, error }
+
+      const userData = await this.getUser(data.user?.id)
+      return { user: userData, error: null }
+    } catch (error) {
+      return { user: null, error }
+    }
+  }
+
+  async registerUser(email: string, password: string, name: string): Promise<{ user: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      // Demo registration - just return demo user
+      const newUser = {
+        id: `demo-${Date.now()}`,
+        email,
+        name,
+        subscription_plan: "free",
+        subscription_status: "active",
+        ai_credits: 0,
+        created_at: new Date().toISOString(),
+      }
+      this.currentUser = newUser
+      localStorage.setItem("currentUser", JSON.stringify(newUser))
+      return { user: newUser, error: null }
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (error) return { user: null, error }
+
+      // Create user profile
+      const { data: userData, error: profileError } = await supabase
+        .from("users")
+        .insert([
+          {
+            id: data.user?.id,
+            email,
+            name,
+            subscription_plan: "free",
+            subscription_status: "active",
+            ai_credits: 0,
+          },
+        ])
+        .select()
+        .single()
+
+      if (profileError) return { user: null, error: profileError }
+
+      return { user: userData, error: null }
+    } catch (error) {
+      return { user: null, error }
+    }
+  }
+
+  async logoutUser(): Promise<{ error: any }> {
+    if (!isSupabaseConfigured) {
+      this.currentUser = null
+      localStorage.removeItem("currentUser")
+      return { error: null }
+    }
+
+    try {
+      const { error } = await supabase.auth.signOut()
+      return { error }
+    } catch (error) {
+      return { error }
+    }
+  }
+
+  async updateUserSubscription(userId: string, plan: string, status: string): Promise<{ data: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      // Update demo user
+      if (this.currentUser) {
+        this.currentUser.subscription_plan = plan
+        this.currentUser.subscription_status = status
+        if (plan === "pro") {
+          this.currentUser.ai_credits = 500
+        }
+        localStorage.setItem("currentUser", JSON.stringify(this.currentUser))
+        return { data: this.currentUser, error: null }
+      }
+      return { data: null, error: { message: "User not found" } }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .update({
+          subscription_plan: plan,
+          subscription_status: status,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+        .select()
+        .single()
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  // Task Management
+  async getTasks(userId: string): Promise<any[]> {
+    if (!isSupabaseConfigured) {
+      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      return tasks
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      return error ? [] : data
+    } catch (error) {
+      console.error("Error getting tasks:", error)
+      return []
+    }
+  }
+
+  async createTask(userId: string, task: any): Promise<{ data: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      const newTask = {
+        ...task,
+        id: Date.now().toString(),
+        user_id: userId,
+        created_at: new Date().toISOString(),
+      }
+      tasks.push(newTask)
+      localStorage.setItem(`tasks_${userId}`, JSON.stringify(tasks))
+      return { data: newTask, error: null }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert([{ ...task, user_id: userId }])
+        .select()
+        .single()
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  async updateTask(taskId: string, updates: any): Promise<{ data: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      // Update in localStorage
+      const userId = this.currentUser?.id
+      if (!userId) return { data: null, error: { message: "User not found" } }
+
+      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      const taskIndex = tasks.findIndex((t: any) => t.id === taskId)
+      if (taskIndex >= 0) {
+        tasks[taskIndex] = { ...tasks[taskIndex], ...updates }
+        localStorage.setItem(`tasks_${userId}`, JSON.stringify(tasks))
+        return { data: tasks[taskIndex], error: null }
+      }
+      return { data: null, error: { message: "Task not found" } }
+    }
+
+    try {
+      const { data, error } = await supabase.from("tasks").update(updates).eq("id", taskId).select().single()
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  async deleteTask(taskId: string): Promise<{ error: any }> {
+    if (!isSupabaseConfigured) {
+      const userId = this.currentUser?.id
+      if (!userId) return { error: { message: "User not found" } }
+
+      const tasks = JSON.parse(localStorage.getItem(`tasks_${userId}`) || "[]")
+      const filteredTasks = tasks.filter((t: any) => t.id !== taskId)
+      localStorage.setItem(`tasks_${userId}`, JSON.stringify(filteredTasks))
+      return { error: null }
+    }
+
+    try {
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId)
+
+      return { error }
+    } catch (error) {
+      return { error }
+    }
+  }
+
+  // Notes Management
+  async getNotes(userId: string): Promise<any[]> {
+    if (!isSupabaseConfigured) {
+      const notes = JSON.parse(localStorage.getItem(`notes_${userId}`) || "[]")
+      return notes
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+
+      return error ? [] : data
+    } catch (error) {
+      console.error("Error getting notes:", error)
+      return []
+    }
+  }
+
+  async createNote(userId: string, note: any): Promise<{ data: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      const notes = JSON.parse(localStorage.getItem(`notes_${userId}`) || "[]")
+      const newNote = {
+        ...note,
+        id: Date.now().toString(),
+        user_id: userId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      notes.push(newNote)
+      localStorage.setItem(`notes_${userId}`, JSON.stringify(notes))
+      return { data: newNote, error: null }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("notes")
+        .insert([{ ...note, user_id: userId }])
+        .select()
+        .single()
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  // Wishlist Management
+  async getWishlistItems(userId: string): Promise<any[]> {
+    if (!isSupabaseConfigured) {
+      const wishlist = JSON.parse(localStorage.getItem(`wishlist_${userId}`) || "[]")
+      return wishlist
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      return error ? [] : data
+    } catch (error) {
+      console.error("Error getting wishlist:", error)
+      return []
+    }
+  }
+
+  async createWishlistItem(userId: string, item: any): Promise<{ data: any; error: any }> {
+    if (!isSupabaseConfigured) {
+      const wishlist = JSON.parse(localStorage.getItem(`wishlist_${userId}`) || "[]")
+      const newItem = {
+        ...item,
+        id: Date.now().toString(),
+        user_id: userId,
+        created_at: new Date().toISOString(),
+      }
+      wishlist.push(newItem)
+      localStorage.setItem(`wishlist_${userId}`, JSON.stringify(wishlist))
+      return { data: newItem, error: null }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .insert([{ ...item, user_id: userId }])
+        .select()
+        .single()
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  // Achievements Management
+  async getUserAchievements(userId: string): Promise<any[]> {
+    if (!isSupabaseConfigured) {
+      const achievements = JSON.parse(localStorage.getItem(`achievements_${userId}`) || "[]")
+      return achievements
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("user_achievements")
+        .select("*, achievements(*)")
+        .eq("user_id", userId)
+
+      return error ? [] : data
+    } catch (error) {
+      console.error("Error getting achievements:", error)
+      return []
+    }
+  }
+
+  // Statistics
+  async getUserStats(userId: string): Promise<any> {
+    if (!isSupabaseConfigured) {
+      const tasks = await this.getTasks(userId)
+      const completedTasks = tasks.filter((t) => t.completed).length
+      const totalTasks = tasks.length
+
+      return {
+        total_tasks: totalTasks,
+        completed_tasks: completedTasks,
+        completion_rate: totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0,
+        streak_days: 0,
+        total_pomodoros: 0,
+      }
+    }
+
+    try {
+      const { data, error } = await supabase.rpc("get_user_stats", { user_id: userId })
+
+      return error ? {} : data
+    } catch (error) {
+      console.error("Error getting stats:", error)
+      return {}
+    }
   }
 }
 
-// Export singleton instance
-export const db = new HybridDatabase()
+// Create singleton instance
+const hybridDb = new HybridDatabase()
 
-// Export individual functions for compatibility
-export const getTasks = (userId: string) => db.getTasks(userId)
-export const createTask = (userId: string, task: any) => db.createTask(userId, task)
-export const updateTask = (userId: string, taskId: string, updates: any) => db.updateTask(userId, taskId, updates)
-export const deleteTask = (userId: string, taskId: string) => db.deleteTask(userId, taskId)
-export const getNotes = (userId: string) => db.getNotes(userId)
-export const createNote = (userId: string, note: any) => db.createNote(userId, note)
-export const syncToServer = (userId: string) => db.syncToServer(userId)
+// Export the db instance
+export const db = hybridDb
+
+// Export functions
+export const getUser = (userId?: string) => hybridDb.getUser(userId)
+export const loginUser = (email: string, password: string) => hybridDb.loginUser(email, password)
+export const registerUser = (email: string, password: string, name: string) =>
+  hybridDb.registerUser(email, password, name)
+export const logoutUser = () => hybridDb.logoutUser()
+export const updateUserSubscription = (userId: string, plan: string, status: string) =>
+  hybridDb.updateUserSubscription(userId, plan, status)
+
+export const getTasks = (userId: string) => hybridDb.getTasks(userId)
+export const createTask = (userId: string, task: any) => hybridDb.createTask(userId, task)
+export const updateTask = (taskId: string, updates: any) => hybridDb.updateTask(taskId, updates)
+export const deleteTask = (taskId: string) => hybridDb.deleteTask(taskId)
+
+export const getNotes = (userId: string) => hybridDb.getNotes(userId)
+export const createNote = (userId: string, note: any) => hybridDb.createNote(userId, note)
+
+export const getWishlistItems = (userId: string) => hybridDb.getWishlistItems(userId)
+export const createWishlistItem = (userId: string, item: any) => hybridDb.createWishlistItem(userId, item)
+
+export const getUserAchievements = (userId: string) => hybridDb.getUserAchievements(userId)
+export const getUserStats = (userId: string) => hybridDb.getUserStats(userId)
+
+export default hybridDb
