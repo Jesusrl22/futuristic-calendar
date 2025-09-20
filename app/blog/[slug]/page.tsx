@@ -68,6 +68,144 @@ El tradicional time-blocking evoluciona con IA:
 - **Sincronización contextual**: Agrupa tareas similares para maximizar el flujo
 
 ### Ejemplo Práctico
+
+Imagina que tienes estas tareas:
+1. Escribir propuesta de proyecto (2 horas estimadas)
+2. Revisar emails (30 minutos)
+3. Llamada con cliente (1 hora)
+
+La IA de FutureTask analizaría:
+- Tu energía histórica por horas del día
+- La complejidad de cada tarea
+- Tus patrones de interrupción
+
+Y crearía un horario optimizado como:
+- 9:00-11:30: Escribir propuesta (bloque de alta energía + buffer)
+- 11:30-12:00: Revisar emails (transición)
+- 14:00-15:00: Llamada con cliente (post-almuerzo, energía media)
+
+## 3. Utiliza la Técnica Pomodoro Inteligente
+
+### Pomodoros Adaptativos
+- **25 minutos** para tareas rutinarias
+- **45 minutos** para trabajo creativo profundo
+- **15 minutos** para tareas administrativas
+- **90 minutos** para proyectos complejos
+
+### Métricas que Importan
+- **Tasa de completación**: >85% de pomodoros completados
+- **Calidad del enfoque**: Medida por interrupciones
+- **Energía residual**: Cómo te sientes después de cada sesión
+
+## 4. Automatiza las Decisiones Pequeñas
+
+### Decisiones que Puedes Automatizar
+- **Qué ropa usar**: Planifica outfits semanalmente
+- **Qué desayunar**: Menú fijo para días laborables
+- **Cuándo hacer ejercicio**: Horario fijo, no negociable
+- **Qué tareas hacer primero**: Deja que la IA decida
+
+### Beneficio Cognitivo
+Cada decisión pequeña que automatizas libera energía mental para decisiones importantes. Steve Jobs usaba el mismo outfit diariamente por esta razón.
+
+## 5. Implementa la Regla de los 2 Minutos Plus
+
+### Versión Tradicional
+Si algo toma menos de 2 minutos, hazlo inmediatamente.
+
+### Versión 2025 con IA
+- **Menos de 2 minutos**: Hazlo ahora
+- **2-5 minutos**: Programa para el próximo "bloque de tareas rápidas"
+- **5+ minutos**: Agenda específicamente con contexto y recursos
+
+### Herramientas Recomendadas
+- **Todoist** con IA para categorización automática
+- **Notion** para captura rápida con templates
+- **FutureTask** para programación inteligente
+
+## 6. Domina el Arte del "No" Estratégico
+
+### Framework RICE para Decisiones
+Evalúa cada oportunidad con:
+- **R**each: ¿A cuántas personas impacta?
+- **I**mpact: ¿Qué tan significativo es el impacto?
+- **C**onfidence: ¿Qué tan seguro estás del resultado?
+- **E**ffort: ¿Cuánto esfuerzo requiere?
+
+### Respuestas Preparadas
+- "Suena interesante, pero no se alinea con mis prioridades actuales"
+- "Mi calendario está completo hasta [fecha], ¿podemos revisarlo entonces?"
+- "No es mi área de expertise, te recomiendo hablar con [persona]"
+
+## 7. Optimiza tu Entorno Digital
+
+### Configuración de Dispositivos
+- **Teléfono**: Solo notificaciones críticas durante horas de trabajo
+- **Computadora**: Escritorio limpio, apps organizadas por frecuencia de uso
+- **Navegador**: Máximo 5 pestañas abiertas simultáneamente
+
+### Apps Esenciales para 2025
+1. **FutureTask**: Gestión integral con IA
+2. **Forest**: Mantener el enfoque
+3. **RescueTime**: Análisis de tiempo automático
+4. **Grammarly**: Comunicación eficiente
+5. **Calendly**: Programación sin fricción
+
+## 8. Practica la Recuperación Activa
+
+### Tipos de Descanso
+- **Descanso físico**: Caminar, estirar, ejercicio ligero
+- **Descanso mental**: Meditación, respiración profunda
+- **Descanso social**: Conversación casual con colegas
+- **Descanso creativo**: Dibujar, música, actividades artísticas
+
+### Protocolo 52-17
+Basado en estudios de DeskTime:
+- **52 minutos** de trabajo enfocado
+- **17 minutos** de descanso activo
+- Repetir máximo 4 ciclos por día
+
+## 9. Implementa Revisiones Sistemáticas
+
+### Revisión Diaria (5 minutos)
+- ¿Qué logré hoy?
+- ¿Qué obstáculos encontré?
+- ¿Qué haré diferente mañana?
+
+### Revisión Semanal (30 minutos)
+- Análisis de métricas de productividad
+- Ajuste de sistemas y procesos
+- Planificación de la próxima semana
+
+### Revisión Mensual (2 horas)
+- Evaluación de objetivos a largo plazo
+- Actualización de sistemas y herramientas
+- Planificación estratégica
+
+## 10. Cultiva la Mentalidad de Crecimiento Continuo
+
+### Aprendizaje Micro
+- **5 minutos diarios** leyendo sobre tu industria
+- **1 podcast** por semana sobre productividad
+- **1 curso online** por trimestre para nuevas habilidades
+
+### Experimentación Constante
+- Prueba una nueva técnica cada mes
+- Mide resultados objetivamente
+- Adopta lo que funciona, descarta lo que no
+
+### Red de Aprendizaje
+- Únete a comunidades de productividad
+- Comparte tus experimentos y resultados
+- Aprende de otros profesionales
+
+## Conclusión
+
+La productividad en 2025 no se trata de trabajar más horas, sino de trabajar de manera más inteligente. La clave está en combinar la potencia de la IA con técnicas probadas de gestión del tiempo y energía.
+
+Recuerda: la mejor técnica de productividad es la que realmente implementas y mantienes consistentemente. Comienza con 2-3 estrategias de esta lista, domínalas, y luego expande gradualmente tu arsenal de productividad.
+
+El futuro del trabajo es ahora, y con las herramientas correctas como FutureTask, puedes estar a la vanguardia de esta revolución de productividad.
     `,
   },
   "futuro-trabajo-remoto": {
@@ -229,7 +367,7 @@ La clave está en encontrar el equilibrio perfecto entre la eficiencia de la IA 
     author: {
       name: "Ana Martínez",
       role: "Consultora de Organización Digital",
-      avatar: "/professional-woman.png",
+      avatar: "/confident-business-woman.png",
     },
     tags: ["Organización", "Productividad", "Herramientas Digitales", "Sistemas"],
     relatedPosts: ["productividad-2025", "futuro-trabajo-remoto"],
@@ -468,23 +606,23 @@ export default function BlogPost() {
   const [relatedPosts, setRelatedPosts] = useState<BlogPost[]>([])
 
   useEffect(() => {
-    const post = blogPosts[slug]
-    setPost(post)
+    const currentPost = blogPosts[slug]
+    setPost(currentPost)
 
-    if (post) {
-      const relatedPosts = Object.values(blogPosts)
-        .filter((p) => p.id !== post.id)
+    if (currentPost) {
+      const related = Object.values(blogPosts)
+        .filter((p) => p.slug !== currentPost.slug)
         .slice(0, 2)
-      setRelatedPosts(relatedPosts)
+      setRelatedPosts(related)
     }
   }, [slug])
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h1 className="text-4xl font-bold mb-4">Post no encontrado</h1>
-          <Button onClick={() => router.push("/")} className="bg-purple-600 hover:bg-purple-700">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4 text-slate-900 dark:text-white">Post no encontrado</h1>
+          <Button onClick={() => router.push("/")} className="bg-blue-600 hover:bg-blue-700">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver al inicio
           </Button>
@@ -505,21 +643,71 @@ export default function BlogPost() {
         console.log("Error sharing:", error)
       }
     } else {
-      // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href)
       alert("Enlace copiado al portapapeles")
     }
   }
 
+  const formatContent = (content: string) => {
+    return content
+      .replace(/\n/g, "<br>")
+      .replace(
+        /^# (.+)$/gm,
+        '<h1 class="text-4xl font-bold text-slate-900 dark:text-white mt-12 mb-8 leading-tight">$1</h1>',
+      )
+      .replace(
+        /^## (.+)$/gm,
+        '<h2 class="text-3xl font-bold text-slate-900 dark:text-white mt-10 mb-6 leading-tight">$1</h2>',
+      )
+      .replace(
+        /^### (.+)$/gm,
+        '<h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-200 mt-8 mb-4 leading-tight">$1</h3>',
+      )
+      .replace(
+        /^#### (.+)$/gm,
+        '<h4 class="text-xl font-semibold text-slate-700 dark:text-slate-300 mt-6 mb-3 leading-tight">$1</h4>',
+      )
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-slate-900 dark:text-white">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em class="italic text-slate-700 dark:text-slate-300">$1</em>')
+      .replace(
+        /```(.+?)```/gs,
+        '<pre class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg overflow-x-auto my-6 border border-slate-200 dark:border-slate-700"><code class="text-sm text-slate-800 dark:text-slate-200 font-mono">$1</code></pre>',
+      )
+      .replace(
+        /`(.+?)`/g,
+        '<code class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-sm font-mono text-slate-800 dark:text-slate-200">$1</code>',
+      )
+      .replace(
+        /^- (.+)$/gm,
+        '<li class="ml-6 mb-2 text-slate-700 dark:text-slate-300 leading-relaxed list-disc">$1</li>',
+      )
+      .replace(
+        /^(\d+)\. (.+)$/gm,
+        '<li class="ml-6 mb-2 text-slate-700 dark:text-slate-300 leading-relaxed list-decimal">$2</li>',
+      )
+      .replace(
+        /> (.+)/g,
+        '<blockquote class="border-l-4 border-blue-500 pl-4 py-2 my-6 bg-blue-50 dark:bg-blue-900/20 italic text-slate-700 dark:text-slate-300 rounded-r-lg">$1</blockquote>',
+      )
+      .replace(
+        /\| (.+) \|/g,
+        '<tr class="border-b border-slate-200 dark:border-slate-700"><td class="px-4 py-2 text-slate-700 dark:text-slate-300">$1</td></tr>',
+      )
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Header */}
-      <header className="bg-slate-800/50 border-b border-slate-700 sticky top-0 z-50 backdrop-blur-sm">
+      <header className="bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" onClick={() => router.push("/")} className="text-white hover:text-purple-300">
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/")}
+              className="text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              {t("back")}
+              {t("back") || "Volver"}
             </Button>
             <LanguageSelector variant="compact" />
           </div>
@@ -529,36 +717,38 @@ export default function BlogPost() {
       {/* Article */}
       <article className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Breadcrumb */}
-        <nav className="text-sm text-slate-400 mb-6">
-          <span className="hover:text-white cursor-pointer" onClick={() => router.push("/")}>
-            {t("home")}
+        <nav className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <span
+            className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+            onClick={() => router.push("/")}
+          >
+            {t("home") || "Inicio"}
           </span>
           <span className="mx-2">/</span>
-          <span className="hover:text-white cursor-pointer" onClick={() => router.push("/#blog")}>
-            {t("blog")}
+          <span
+            className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+            onClick={() => router.push("/#blog")}
+          >
+            {t("blog") || "Blog"}
           </span>
           <span className="mx-2">/</span>
-          <span className="text-white">{post.title}</span>
+          <span className="text-slate-700 dark:text-slate-300">{post.title}</span>
         </nav>
 
         {/* Article Header */}
         <header className="mb-8">
           <div className="flex flex-wrap items-center gap-4 mb-4">
-            <Badge variant="secondary" className="bg-purple-600/20 text-purple-300">
+            <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200">
               {post.category}
             </Badge>
-            <div className="flex items-center text-slate-400 text-sm gap-4">
+            <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm gap-4">
               <div className="flex items-center gap-1">
                 <User className="h-4 w-4" />
                 {post.author.name}
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                {new Date(post.date).toLocaleDateString("es-ES", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {post.date}
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
@@ -567,13 +757,15 @@ export default function BlogPost() {
             </div>
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">{post.title}</h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">
+            {post.title}
+          </h1>
 
-          <p className="text-xl text-slate-300 mb-6 leading-relaxed">{post.excerpt}</p>
+          <p className="text-xl text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">{post.excerpt}</p>
 
           {/* Article Image */}
           {post.image && (
-            <div className="mb-8 rounded-lg overflow-hidden">
+            <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
               <img
                 src={post.image || "/placeholder.svg"}
                 alt={post.title}
@@ -582,19 +774,23 @@ export default function BlogPost() {
             </div>
           )}
 
-          {/* Share Button */}
-          <div className="flex items-center gap-4">
+          {/* Share Button and Tags */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <Button
               onClick={handleShare}
               variant="outline"
-              className="border-slate-600 text-slate-300 hover:bg-slate-700 bg-transparent"
+              className="border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 bg-transparent"
             >
               <Share2 className="h-4 w-4 mr-2" />
               Compartir
             </Button>
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="border-slate-600 text-slate-400">
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400"
+                >
                   #{tag}
                 </Badge>
               ))}
@@ -603,41 +799,28 @@ export default function BlogPost() {
         </header>
 
         {/* Article Content */}
-        <div className="prose prose-invert prose-lg max-w-none">
+        <div className="prose prose-lg max-w-none">
           <div
-            className="text-slate-200 leading-relaxed"
+            className="text-slate-700 dark:text-slate-300 leading-relaxed space-y-4"
             dangerouslySetInnerHTML={{
-              __html: post.content
-                .replace(/\n/g, "<br>")
-                .replace(/#{3}\s(.+)/g, '<h3 class="text-2xl font-bold text-white mt-8 mb-4">$1</h3>')
-                .replace(/#{2}\s(.+)/g, '<h2 class="text-3xl font-bold text-white mt-10 mb-6">$1</h2>')
-                .replace(/#{1}\s(.+)/g, '<h1 class="text-4xl font-bold text-white mt-12 mb-8">$1</h1>')
-                .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-                .replace(/\*(.+?)\*/g, '<em class="text-purple-300">$1</em>')
-                .replace(
-                  /```(.+?)```/gs,
-                  '<pre class="bg-slate-800 p-4 rounded-lg overflow-x-auto my-4"><code class="text-green-400">$1</code></pre>',
-                )
-                .replace(/`(.+?)`/g, '<code class="bg-slate-800 px-2 py-1 rounded text-green-400">$1</code>')
-                .replace(/^- (.+)/gm, '<li class="ml-4 mb-2">$1</li>')
-                .replace(/(\d+)\.\s(.+)/g, '<li class="ml-4 mb-2 list-decimal">$2</li>'),
+              __html: formatContent(post.content),
             }}
           />
         </div>
 
         {/* Author Bio */}
-        <div className="mt-12 p-6 bg-slate-800/50 rounded-lg border border-slate-700">
+        <div className="mt-12 p-6 bg-white/50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden">
               <img
                 src={post.author.avatar || "/placeholder.svg"}
                 alt={post.author.name}
-                className="w-full h-full rounded-full"
+                className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">{post.author.name}</h3>
-              <p className="text-slate-400">{post.author.role}</p>
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{post.author.name}</h3>
+              <p className="text-slate-600 dark:text-slate-400">{post.author.role}</p>
             </div>
           </div>
         </div>
@@ -645,30 +828,39 @@ export default function BlogPost() {
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
           <section className="mt-16">
-            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-2">
-              <BookOpen className="h-8 w-8 text-purple-400" />
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-2">
+              <BookOpen className="h-8 w-8 text-blue-500" />
               Artículos Relacionados
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               {relatedPosts.map((relatedPost) => (
                 <Card
                   key={relatedPost.slug}
-                  className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 transition-colors cursor-pointer"
+                  className="bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:bg-white/70 dark:hover:bg-slate-800/70 transition-colors cursor-pointer"
                   onClick={() => router.push(`/blog/${relatedPost.slug}`)}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="secondary" className="bg-purple-600/20 text-purple-300">
+                      <Badge
+                        variant="secondary"
+                        className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+                      >
                         {relatedPost.category}
                       </Badge>
-                      <span className="text-slate-400 text-sm">{relatedPost.readTime}</span>
+                      <span className="text-slate-500 dark:text-slate-400 text-sm">{relatedPost.readTime}</span>
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-3 line-clamp-2">{relatedPost.title}</h3>
-                    <p className="text-slate-400 mb-4 line-clamp-3">{relatedPost.excerpt}</p>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-3 line-clamp-2">
+                      {relatedPost.title}
+                    </h3>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4 line-clamp-3">{relatedPost.excerpt}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-500 text-sm">{relatedPost.author.name}</span>
-                      <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">
-                        {t("readMore")} →
+                      <span className="text-slate-500 dark:text-slate-400 text-sm">{relatedPost.author.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                      >
+                        {t("readMore") || "Leer más"} →
                       </Button>
                     </div>
                   </CardContent>
@@ -680,10 +872,7 @@ export default function BlogPost() {
 
         {/* Back to Blog */}
         <div className="mt-16 text-center">
-          <Button
-            onClick={() => router.push("/#blog")}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
-          >
+          <Button onClick={() => router.push("/#blog")} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver al Blog
           </Button>

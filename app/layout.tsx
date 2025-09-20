@@ -1,20 +1,19 @@
 import type React from "react"
-import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
+import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { NotificationService } from "@/components/notification-service"
-import { CookieBanner } from "@/components/cookie-banner"
 import { LanguageProvider } from "@/hooks/useLanguage"
+import { CookieBanner } from "@/components/cookie-banner"
 import Script from "next/script"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FutureTask - AI-Powered Productivity Calendar",
+  title: "FutureTask - Organiza tu vida con IA",
   description:
-    "Transform your productivity with our AI-powered calendar and task management system. Smart scheduling, intelligent insights, and seamless organization.",
-  keywords: "productivity, calendar, AI, task management, scheduling, organization, future task",
+    "La plataforma de productividad más avanzada del 2025. Gestiona tareas, calendario y notas con inteligencia artificial.",
+  keywords: "productividad, IA, tareas, calendario, notas, organización, futuro",
   authors: [{ name: "FutureTask Team" }],
   creator: "FutureTask",
   publisher: "FutureTask",
@@ -28,27 +27,28 @@ export const metadata: Metadata = {
     canonical: "https://future-task.com",
   },
   openGraph: {
-    title: "FutureTask - AI-Powered Productivity Calendar",
-    description: "Transform your productivity with our AI-powered calendar and task management system.",
+    title: "FutureTask - Organiza tu vida con IA",
+    description:
+      "La plataforma de productividad más avanzada del 2025. Gestiona tareas, calendario y notas con inteligencia artificial.",
     url: "https://future-task.com",
     siteName: "FutureTask",
     images: [
       {
-        url: "/futuristic-dashboard.png",
+        url: "https://future-task.com/og-image.png",
         width: 1200,
         height: 630,
-        alt: "FutureTask Dashboard",
+        alt: "FutureTask - Organiza tu vida con IA",
       },
     ],
-    locale: "en_US",
+    locale: "es_ES",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FutureTask - AI-Powered Productivity Calendar",
-    description: "Transform your productivity with our AI-powered calendar and task management system.",
-    images: ["/futuristic-dashboard.png"],
-    creator: "@futuretask",
+    title: "FutureTask - Organiza tu vida con IA",
+    description:
+      "La plataforma de productividad más avanzada del 2025. Gestiona tareas, calendario y notas con inteligencia artificial.",
+    images: ["https://future-task.com/og-image.png"],
   },
   robots: {
     index: true,
@@ -73,10 +73,31 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="FutureTask" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#3b82f6" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+      </head>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <LanguageProvider>
+            {children}
+            <CookieBanner />
+          </LanguageProvider>
+        </ThemeProvider>
+
         {/* Google Analytics */}
-        <Script src={`https://www.googletagmanager.com/gtag/js?id=G-L2KH22ZLXW`} strategy="afterInteractive" />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-L2KH22ZLXW" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -88,35 +109,6 @@ export default function RootLayout({
             });
           `}
         </Script>
-
-        {/* Favicon and App Icons */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-        {/* PWA Manifest */}
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#6366f1" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="FutureTask" />
-
-        {/* Preconnect to external domains */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-      </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <LanguageProvider>
-            <div className="min-h-screen bg-background">
-              {children}
-              <NotificationService />
-              <CookieBanner />
-            </div>
-          </LanguageProvider>
-        </ThemeProvider>
       </body>
     </html>
   )

@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Switch } from "@/components/ui/switch"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { X, Settings, Shield, Eye, BarChart3 } from "lucide-react"
 import { useLanguage } from "@/hooks/useLanguage"
-import { Cookie, Settings } from "lucide-react"
 
 interface CookiePreferences {
   necessary: boolean
@@ -15,226 +14,271 @@ interface CookiePreferences {
   preferences: boolean
 }
 
+const DEFAULT_PREFERENCES: CookiePreferences = {
+  necessary: true,
+  analytics: false,
+  marketing: false,
+  preferences: false,
+}
+
 export function CookieBanner() {
-  const { t, mounted } = useLanguage()
-  const [showBanner, setShowBanner] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [preferences, setPreferences] = useState<CookiePreferences>({
-    necessary: true,
-    analytics: false,
-    marketing: false,
-    preferences: false,
-  })
+  const { t } = useLanguage()
+  const [isVisible, setIsVisible] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
+  const [preferences, setPreferences] = useState<CookiePreferences>(DEFAULT_PREFERENCES)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!mounted) return
+    try {
+      const savedConsent = localStorage.getItem("cookie-consent")
+      const savedPreferences = localStorage.getItem("cookie-preferences")
 
-    const cookieConsent = localStorage.getItem("cookieConsent")
-    if (!cookieConsent) {
-      setShowBanner(true)
-    } else {
-      try {
-        const savedPreferences = JSON.parse(cookieConsent)
-        setPreferences(savedPreferences)
-      } catch (error) {
-        console.warn("Error parsing cookie preferences:", error)
-        setShowBanner(true)
+      if (!savedConsent) {
+        setIsVisible(true)
       }
-    }
-  }, [mounted])
 
-  const handleAcceptAll = () => {
-    const allAccepted = {
+      if (savedPreferences) {
+        try {
+          const parsed = JSON.parse(savedPreferences)
+          // Validate the structure
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            typeof parsed.necessary === "boolean" &&
+            typeof parsed.analytics === "boolean" &&
+            typeof parsed.marketing === "boolean" &&
+            typeof parsed.preferences === "boolean"
+          ) {
+            setPreferences(parsed)
+          } else {
+            // Invalid structure, reset to defaults
+            console.warn("Invalid cookie preferences structure, resetting to defaults")
+            localStorage.removeItem("cookie-preferences")
+            setPreferences(DEFAULT_PREFERENCES)
+          }
+        } catch (error) {
+          console.error("Error parsing cookie preferences:", error)
+          // Clear corrupted data
+          localStorage.removeItem("cookie-preferences")
+          setPreferences(DEFAULT_PREFERENCES)
+        }
+      }
+    } catch (error) {
+      console.error("Error loading cookie preferences:", error)
+      setPreferences(DEFAULT_PREFERENCES)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const savePreferences = (newPreferences: CookiePreferences) => {
+    try {
+      localStorage.setItem("cookie-preferences", JSON.stringify(newPreferences))
+      localStorage.setItem("cookie-consent", "true")
+      setPreferences(newPreferences)
+
+      // Update Google Analytics consent
+      if (typeof window !== "undefined" && window.gtag) {
+        window.gtag("consent", "update", {
+          analytics_storage: newPreferences.analytics ? "granted" : "denied",
+          ad_storage: newPreferences.marketing ? "granted" : "denied",
+          functionality_storage: newPreferences.preferences ? "granted" : "denied",
+          personalization_storage: newPreferences.preferences ? "granted" : "denied",
+        })
+      }
+
+      setIsVisible(false)
+    } catch (error) {
+      console.error("Error saving cookie preferences:", error)
+    }
+  }
+
+  const acceptAll = () => {
+    const allAccepted: CookiePreferences = {
       necessary: true,
       analytics: true,
       marketing: true,
       preferences: true,
     }
-    setPreferences(allAccepted)
-    localStorage.setItem("cookieConsent", JSON.stringify(allAccepted))
-    setShowBanner(false)
-
-    // Enable Google Analytics
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "granted",
-        ad_storage: "granted",
-      })
-    }
+    savePreferences(allAccepted)
   }
 
-  const handleDeclineAll = () => {
-    const onlyNecessary = {
-      necessary: true,
-      analytics: false,
-      marketing: false,
-      preferences: false,
-    }
-    setPreferences(onlyNecessary)
-    localStorage.setItem("cookieConsent", JSON.stringify(onlyNecessary))
-    setShowBanner(false)
-
-    // Disable Google Analytics
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: "denied",
-        ad_storage: "denied",
-      })
-    }
+  const acceptNecessary = () => {
+    savePreferences(DEFAULT_PREFERENCES)
   }
 
-  const handleSavePreferences = () => {
-    localStorage.setItem("cookieConsent", JSON.stringify(preferences))
-    setShowBanner(false)
-    setShowSettings(false)
-
-    // Update Google Analytics consent
-    if (typeof window !== "undefined" && window.gtag) {
-      window.gtag("consent", "update", {
-        analytics_storage: preferences.analytics ? "granted" : "denied",
-        ad_storage: preferences.marketing ? "granted" : "denied",
-      })
-    }
+  const acceptSelected = () => {
+    savePreferences(preferences)
   }
 
   const updatePreference = (key: keyof CookiePreferences, value: boolean) => {
-    setPreferences((prev) => ({
-      ...prev,
-      [key]: value,
-    }))
+    if (key === "necessary") return // Necessary cookies cannot be disabled
+    setPreferences((prev) => ({ ...prev, [key]: value }))
   }
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted || !showBanner) return null
+  if (isLoading || !isVisible) {
+    return null
+  }
 
   return (
-    <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg animate-in slide-in-from-bottom duration-300 dark:bg-gray-900/95 dark:border-gray-700">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
-            <div className="flex items-start gap-3 flex-1">
-              <Cookie className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                  {t("cookieTitle") || "Cookie Settings"}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {t("cookieDescription") ||
-                    "We use cookies to improve your experience. By continuing to browse, you accept our use of cookies."}
-                </p>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
+      <Card className="w-full max-w-2xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-2xl">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {t("cookieBanner.title") || "Configuración de Cookies"}
+              </h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsVisible(false)}
+              className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+            {t("cookieBanner.description") ||
+              "Utilizamos cookies para mejorar tu experiencia, analizar el tráfico del sitio y personalizar el contenido. Puedes elegir qué tipos de cookies aceptar."}
+          </p>
+
+          {showDetails && (
+            <div className="space-y-4 mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <div>
+                    <h3 className="font-medium text-slate-900 dark:text-white">
+                      {t("cookieBanner.necessary") || "Cookies Necesarias"}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {t("cookieBanner.necessaryDesc") || "Esenciales para el funcionamiento básico del sitio web."}
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                >
+                  {t("cookieBanner.required") || "Requeridas"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-4 w-4 text-blue-600" />
+                  <div>
+                    <h3 className="font-medium text-slate-900 dark:text-white">
+                      {t("cookieBanner.analytics") || "Cookies de Análisis"}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {t("cookieBanner.analyticsDesc") ||
+                        "Nos ayudan a entender cómo interactúas con nuestro sitio web."}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={preferences.analytics ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updatePreference("analytics", !preferences.analytics)}
+                  className="min-w-[80px]"
+                >
+                  {preferences.analytics
+                    ? t("cookieBanner.enabled") || "Activado"
+                    : t("cookieBanner.disabled") || "Desactivado"}
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Eye className="h-4 w-4 text-purple-600" />
+                  <div>
+                    <h3 className="font-medium text-slate-900 dark:text-white">
+                      {t("cookieBanner.marketing") || "Cookies de Marketing"}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {t("cookieBanner.marketingDesc") ||
+                        "Utilizadas para mostrar anuncios relevantes y medir su efectividad."}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={preferences.marketing ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updatePreference("marketing", !preferences.marketing)}
+                  className="min-w-[80px]"
+                >
+                  {preferences.marketing
+                    ? t("cookieBanner.enabled") || "Activado"
+                    : t("cookieBanner.disabled") || "Desactivado"}
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Settings className="h-4 w-4 text-orange-600" />
+                  <div>
+                    <h3 className="font-medium text-slate-900 dark:text-white">
+                      {t("cookieBanner.preferences") || "Cookies de Preferencias"}
+                    </h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {t("cookieBanner.preferencesDesc") ||
+                        "Recuerdan tus preferencias y configuraciones personalizadas."}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={preferences.preferences ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => updatePreference("preferences", !preferences.preferences)}
+                  className="min-w-[80px]"
+                >
+                  {preferences.preferences
+                    ? t("cookieBanner.enabled") || "Activado"
+                    : t("cookieBanner.disabled") || "Desactivado"}
+                </Button>
               </div>
             </div>
+          )}
 
-            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSettings(true)}
-                className="flex items-center gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                {t("cookieSettings") || "Settings"}
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleDeclineAll}>
-                {t("cookieDecline") || "Decline"}
-              </Button>
-              <Button size="sm" onClick={handleAcceptAll} className="bg-blue-600 hover:bg-blue-700">
-                {t("cookieAccept") || "Accept All"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Cookie className="h-5 w-5" />
-              {t("cookieSettingsTitle") || "Cookie Settings"}
-            </DialogTitle>
-            <DialogDescription>
-              {t("cookieSettingsDescription") || "Manage your cookie preferences below."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6 py-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{t("cookieNecessary") || "Necessary Cookies"}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {t("cookieNecessaryDesc") || "These cookies are essential for the website to function properly."}
-                    </CardDescription>
-                  </div>
-                  <Switch checked={preferences.necessary} disabled className="opacity-50" />
-                </div>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{t("cookieAnalytics") || "Analytics Cookies"}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {t("cookieAnalyticsDesc") || "Help us understand how visitors interact with our website."}
-                    </CardDescription>
-                  </div>
-                  <Switch
-                    checked={preferences.analytics}
-                    onCheckedChange={(checked) => updatePreference("analytics", checked)}
-                  />
-                </div>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{t("cookieMarketing") || "Marketing Cookies"}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {t("cookieMarketingDesc") || "Used to track visitors across websites for advertising purposes."}
-                    </CardDescription>
-                  </div>
-                  <Switch
-                    checked={preferences.marketing}
-                    onCheckedChange={(checked) => updatePreference("marketing", checked)}
-                  />
-                </div>
-              </CardHeader>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">{t("cookiePreferences") || "Preference Cookies"}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {t("cookiePreferencesDesc") || "Remember your preferences and settings."}
-                    </CardDescription>
-                  </div>
-                  <Switch
-                    checked={preferences.preferences}
-                    onCheckedChange={(checked) => updatePreference("preferences", checked)}
-                  />
-                </div>
-              </CardHeader>
-            </Card>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setShowSettings(false)}>
-              {t("cancel") || "Cancel"}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={acceptAll} className="bg-blue-600 hover:bg-blue-700 text-white flex-1">
+              {t("cookieBanner.acceptAll") || "Aceptar Todas"}
             </Button>
-            <Button onClick={handleSavePreferences} className="bg-blue-600 hover:bg-blue-700">
-              {t("savePreferences") || "Save Preferences"}
+
+            {showDetails && (
+              <Button onClick={acceptSelected} variant="outline" className="flex-1 bg-transparent">
+                {t("cookieBanner.acceptSelected") || "Aceptar Seleccionadas"}
+              </Button>
+            )}
+
+            <Button onClick={acceptNecessary} variant="outline" className="flex-1 bg-transparent">
+              {t("cookieBanner.acceptNecessary") || "Solo Necesarias"}
+            </Button>
+
+            <Button
+              onClick={() => setShowDetails(!showDetails)}
+              variant="ghost"
+              size="sm"
+              className="text-slate-600 dark:text-slate-400"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              {showDetails
+                ? t("cookieBanner.hideDetails") || "Ocultar"
+                : t("cookieBanner.showDetails") || "Personalizar"}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 text-center">
+            {t("cookieBanner.footer") ||
+              "Puedes cambiar tus preferencias en cualquier momento desde la configuración de privacidad."}
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
