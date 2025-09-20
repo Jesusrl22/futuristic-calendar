@@ -1,251 +1,290 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { CookieBanner } from "@/components/cookie-banner"
 import {
+  Menu,
+  X,
   Calendar,
-  CheckCircle,
   Brain,
-  Zap,
+  Target,
+  BarChart3,
+  Clock,
+  Trophy,
   Star,
+  CheckCircle,
   ArrowRight,
   Play,
-  Mail,
   MapPin,
-  ChevronRight,
-  BarChart3,
-  Shield,
+  Mail,
+  Heart,
 } from "lucide-react"
-import Link from "next/link"
-import { useLanguage } from "@/hooks/useLanguage"
 
 export default function HomePage() {
-  const { t } = useLanguage()
-  const [isVisible, setIsVisible] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsVisible(true)
+    setMounted(true)
   }, [])
 
-  const features = [
-    {
-      icon: <Calendar className="h-8 w-8 text-blue-500" />,
-      title: "Calendario Inteligente",
-      description: "Organiza tu tiempo con IA que aprende de tus patrones y optimiza tu agenda automáticamente.",
-    },
-    {
-      icon: <CheckCircle className="h-8 w-8 text-green-500" />,
-      title: "Gestión de Tareas",
-      description: "Crea, organiza y completa tareas con recordatorios inteligentes y priorización automática.",
-    },
-    {
-      icon: <Brain className="h-8 w-8 text-purple-500" />,
-      title: "Asistente IA",
-      description: "Tu asistente personal que te ayuda a planificar, recordar y optimizar tu productividad.",
-    },
-    {
-      icon: <Zap className="h-8 w-8 text-yellow-500" />,
-      title: "Automatización",
-      description: "Automatiza tareas repetitivas y enfócate en lo que realmente importa.",
-    },
-    {
-      icon: <BarChart3 className="h-8 w-8 text-red-500" />,
-      title: "Analytics Avanzados",
-      description: "Analiza tu productividad con métricas detalladas y reportes personalizados.",
-    },
-    {
-      icon: <Shield className="h-8 w-8 text-indigo-500" />,
-      title: "Seguridad Total",
-      description: "Tus datos están protegidos con encriptación de nivel empresarial y backups automáticos.",
-    },
-  ]
-
-  const testimonials = [
-    {
-      name: "María González",
-      role: "Directora de Marketing",
-      image: "/professional-woman-diverse.png",
-      content:
-        "FutureTask ha revolucionado mi forma de trabajar. La IA realmente entiende mis patrones y me ayuda a ser más productiva.",
-      rating: 5,
-    },
-    {
-      name: "Carlos Rodríguez",
-      role: "Emprendedor",
-      image: "/professional-man.png",
-      content: "Increíble cómo la plataforma se adapta a mi estilo de trabajo. He aumentado mi productividad un 40%.",
-      rating: 5,
-    },
-    {
-      name: "Ana Martín",
-      role: "Consultora",
-      image: "/confident-business-woman.png",
-      content:
-        "La mejor inversión que he hecho para mi productividad. El asistente IA es como tener un secretario personal.",
-      rating: 5,
-    },
-  ]
-
-  const stats = [
-    { number: "50K+", label: "Usuarios Activos" },
-    { number: "2M+", label: "Tareas Completadas" },
-    { number: "98%", label: "Satisfacción" },
-    { number: "40%", label: "Aumento Productividad" },
-  ]
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Cargando...</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Calendar className="h-5 w-5 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Navigation */}
+      <nav className="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-white" />
+                </div>
+                <span className="ml-2 text-xl font-bold text-white">FutureTask</span>
+              </div>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              FutureTask
-            </span>
-          </div>
 
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link href="#features" className="text-sm font-medium hover:text-primary transition-colors">
-              Características
-            </Link>
-            <Link href="#testimonials" className="text-sm font-medium hover:text-primary transition-colors">
-              Testimonios
-            </Link>
-            <Link href="/blog" className="text-sm font-medium hover:text-primary transition-colors">
-              Blog
-            </Link>
-            <Link href="/contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contacto
-            </Link>
-          </nav>
+            {/* Desktop Navigation */}
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-4">
+                <Link
+                  href="/"
+                  className="text-white hover:text-blue-300 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Inicio
+                </Link>
+                <Link
+                  href="#features"
+                  className="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Características
+                </Link>
+                <Link
+                  href="#pricing"
+                  className="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Precios
+                </Link>
+                <Link
+                  href="/blog"
+                  className="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Blog
+                </Link>
+                <Link
+                  href="/contact"
+                  className="text-white/80 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Contacto
+                </Link>
+              </div>
+            </div>
 
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/app">Iniciar Sesión</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/app">Comenzar Gratis</Link>
-            </Button>
+            {/* Desktop CTA */}
+            <div className="hidden md:block">
+              <div className="ml-4 flex items-center md:ml-6 space-x-3">
+                <Link href="/app">
+                  <Button variant="ghost" className="text-white hover:bg-white/10">
+                    Iniciar Sesión
+                  </Button>
+                </Link>
+                <Link href="/app">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">Comenzar Gratis</Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-white hover:bg-white/10"
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
         </div>
-      </header>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white/10 backdrop-blur-md border-t border-white/20">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+              <Link href="/" className="text-white block px-3 py-2 rounded-md text-base font-medium">
+                Inicio
+              </Link>
+              <Link
+                href="#features"
+                className="text-white/80 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Características
+              </Link>
+              <Link
+                href="#pricing"
+                className="text-white/80 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Precios
+              </Link>
+              <Link
+                href="/blog"
+                className="text-white/80 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Blog
+              </Link>
+              <Link
+                href="/contact"
+                className="text-white/80 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Contacto
+              </Link>
+              <div className="pt-4 pb-3 border-t border-white/20">
+                <div className="flex items-center px-3 space-x-3">
+                  <Link href="/app" className="flex-1">
+                    <Button variant="ghost" className="w-full text-white hover:bg-white/10">
+                      Iniciar Sesión
+                    </Button>
+                  </Link>
+                  <Link href="/app" className="flex-1">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Comenzar Gratis</Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
 
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 overflow-hidden">
-        <div className="container relative z-10">
-          <div className="text-center space-y-8 max-w-4xl mx-auto">
-            <div className="space-y-4">
-              <Badge variant="secondary" className="w-fit mx-auto">
-                🚀 Nuevo: IA Generativa Integrada
-              </Badge>
-              <h1 className="text-4xl lg:text-6xl font-bold leading-tight">
-                Organiza tu vida con{" "}
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Inteligencia Artificial
-                </span>
-              </h1>
-              <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-                La plataforma de productividad más avanzada del 2025. Gestiona tareas, calendario y notas con el poder
-                de la IA que aprende de ti.
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="text-lg px-8 py-6" asChild>
-                <Link href="/app">
+      <section className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center lg:pt-32">
+          <div className="mx-auto max-w-4xl">
+            <Badge className="mb-4 bg-blue-500/20 text-blue-300 border-blue-500/30">🚀 Potenciado por IA</Badge>
+            <h1 className="mx-auto max-w-4xl font-display text-5xl font-medium tracking-tight text-white sm:text-7xl">
+              El Futuro de la{" "}
+              <span className="relative whitespace-nowrap text-blue-400">
+                <span className="relative">Productividad</span>
+              </span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg tracking-tight text-slate-300">
+              Transforma tu forma de trabajar con inteligencia artificial avanzada. Gestiona tareas, optimiza tu tiempo
+              y alcanza tus objetivos como nunca antes.
+            </p>
+            <div className="mt-10 flex justify-center gap-x-6">
+              <Link href="/app">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg">
                   Comenzar Gratis
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent">
+                </Button>
+              </Link>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 px-8 py-3 text-lg bg-transparent"
+              >
                 <Play className="mr-2 h-5 w-5" />
                 Ver Demo
               </Button>
             </div>
+          </div>
 
-            <div className="flex items-center justify-center space-x-8 pt-8">
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="text-2xl font-bold text-primary">{stat.number}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </div>
-              ))}
-            </div>
+          {/* Dashboard Preview */}
+          <div className="mt-16 flow-root sm:mt-24">
+            <div className="relative rounded-xl bg-slate-900/50 p-2 ring-1 ring-white/10 backdrop-blur-sm">
+              <div className="rounded-lg bg-white/5 p-8 shadow-2xl ring-1 ring-white/10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Calendar Widget */}
+                  <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Calendar className="mr-2 h-5 w-5" />
+                        Calendario Inteligente
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-2 bg-blue-500/20 rounded">
+                          <span className="text-sm text-white">Reunión con equipo</span>
+                          <span className="text-xs text-blue-300">10:00</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-purple-500/20 rounded">
+                          <span className="text-sm text-white">Revisión de proyecto</span>
+                          <span className="text-xs text-purple-300">14:30</span>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-green-500/20 rounded">
+                          <span className="text-sm text-white">Sesión de enfoque</span>
+                          <span className="text-xs text-green-300">16:00</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-            {/* Dashboard Preview */}
-            <div className="relative mt-16">
-              <div className="relative max-w-4xl mx-auto">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-2xl blur-3xl"></div>
-                <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-8">
-                  <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-700">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <Calendar className="h-8 w-8 text-blue-600" />
-                          <Badge variant="secondary" className="text-xs">
-                            Hoy
-                          </Badge>
+                  {/* Tasks Widget */}
+                  <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Target className="mr-2 h-5 w-5" />
+                        Tareas Pendientes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="h-4 w-4 text-green-400" />
+                          <span className="text-sm text-white line-through opacity-60">Completar informe</span>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Calendario Inteligente</h3>
-                        <p className="text-sm text-blue-700 dark:text-blue-300">8 eventos programados</p>
-                        <div className="mt-3 space-y-2">
-                          <div className="h-2 bg-blue-200 dark:bg-blue-700 rounded-full">
-                            <div className="h-2 bg-blue-500 rounded-full w-3/4"></div>
-                          </div>
-                          <p className="text-xs text-blue-600 dark:text-blue-400">75% del día planificado</p>
+                        <div className="flex items-center space-x-2">
+                          <div className="h-4 w-4 border-2 border-white/40 rounded-full" />
+                          <span className="text-sm text-white">Preparar presentación</span>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className="flex items-center space-x-2">
+                          <div className="h-4 w-4 border-2 border-white/40 rounded-full" />
+                          <span className="text-sm text-white">Revisar documentos</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                    <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-700">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CheckCircle className="h-8 w-8 text-green-600" />
-                          <Badge variant="secondary" className="text-xs">
-                            +3
-                          </Badge>
+                  {/* Analytics Widget */}
+                  <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <BarChart3 className="mr-2 h-5 w-5" />
+                        Productividad
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-white">Hoy</span>
+                          <span className="text-sm text-green-400">+15%</span>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Tareas Completadas</h3>
-                        <p className="text-sm text-green-700 dark:text-green-300">12 de 15 tareas</p>
-                        <div className="mt-3 space-y-2">
-                          <div className="h-2 bg-green-200 dark:bg-green-700 rounded-full">
-                            <div className="h-2 bg-green-500 rounded-full w-4/5"></div>
-                          </div>
-                          <p className="text-xs text-green-600 dark:text-green-400">80% completado</p>
+                        <div className="w-full bg-white/20 rounded-full h-2">
+                          <div
+                            className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full"
+                            style={{ width: "75%" }}
+                          />
                         </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-700">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <Brain className="h-8 w-8 text-purple-600" />
-                          <Badge variant="secondary" className="text-xs">
-                            IA
-                          </Badge>
+                        <div className="flex justify-between text-xs text-slate-300">
+                          <span>6h 30m enfocado</span>
+                          <span>Meta: 8h</span>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Asistente IA</h3>
-                        <p className="text-sm text-purple-700 dark:text-purple-300">5 sugerencias nuevas</p>
-                        <div className="mt-3 space-y-2">
-                          <div className="h-2 bg-purple-200 dark:bg-purple-700 rounded-full">
-                            <div className="h-2 bg-purple-500 rounded-full w-3/5"></div>
-                          </div>
-                          <p className="text-xs text-purple-600 dark:text-purple-400">Optimizando tu día</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -254,209 +293,393 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-background/50">
-        <div className="container">
-          <div className="text-center space-y-4 mb-16">
-            <Badge variant="secondary" className="w-fit mx-auto">
-              ✨ Características
-            </Badge>
-            <h2 className="text-3xl lg:text-5xl font-bold">Todo lo que necesitas para ser más productivo</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Herramientas inteligentes que se adaptan a tu forma de trabajar y te ayudan a alcanzar tus objetivos.
+      <section id="features" className="py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-base font-semibold leading-7 text-blue-400">Características Revolucionarias</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Descubre cómo FutureTask está redefiniendo la productividad personal
+            </p>
+            <p className="mt-6 text-lg leading-8 text-slate-300">
+              Con tecnología de vanguardia y diseño intuitivo, transformamos la manera en que trabajas y alcanzas tus
+              objetivos.
             </p>
           </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="hover-lift transition-all duration-300 hover:shadow-lg">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl flex items-center justify-center mb-4">
-                    {feature.icon}
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-blue-500">
+                    <Brain className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base leading-relaxed">{feature.description}</CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                  Asistente IA Inteligente
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-slate-300">
+                  <p className="flex-auto">
+                    Tu asistente personal que aprende de tus hábitos y optimiza automáticamente tu flujo de trabajo para
+                    maximizar tu productividad.
+                  </p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-purple-500">
+                    <Calendar className="h-6 w-6 text-white" />
+                  </div>
+                  Calendario Inteligente
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-slate-300">
+                  <p className="flex-auto">
+                    Planificación automática que se adapta a tu energía y prioridades para maximizar tu productividad
+                    diaria.
+                  </p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-green-500">
+                    <Target className="h-6 w-6 text-white" />
+                  </div>
+                  Seguimiento de Objetivos
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-slate-300">
+                  <p className="flex-auto">
+                    Convierte tus sueños en realidad con seguimiento inteligente y recordatorios personalizados que te
+                    mantienen enfocado.
+                  </p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-500">
+                    <BarChart3 className="h-6 w-6 text-white" />
+                  </div>
+                  Análisis Avanzado
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-slate-300">
+                  <p className="flex-auto">
+                    Insights profundos sobre tu productividad con gráficas interactivas y recomendaciones
+                    personalizadas.
+                  </p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-red-500">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
+                  Pomodoro Inteligente
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-slate-300">
+                  <p className="flex-auto">
+                    Técnica Pomodoro adaptativa que se ajusta a tu ritmo y tipo de trabajo para máximo enfoque.
+                  </p>
+                </dd>
+              </div>
+              <div className="flex flex-col">
+                <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-white">
+                  <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-yellow-500">
+                    <Trophy className="h-6 w-6 text-white" />
+                  </div>
+                  Sistema de Logros
+                </dt>
+                <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-slate-300">
+                  <p className="flex-auto">
+                    Gamificación inteligente que te motiva a alcanzar tus metas con recompensas y desafíos
+                    personalizados.
+                  </p>
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20">
-        <div className="container">
-          <div className="text-center space-y-4 mb-16">
-            <Badge variant="secondary" className="w-fit mx-auto">
-              💬 Testimonios
-            </Badge>
-            <h2 className="text-3xl lg:text-5xl font-bold">Lo que dicen nuestros usuarios</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Miles de profesionales ya han transformado su productividad con FutureTask.
+      {/* Testimonials */}
+      <section className="py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-xl text-center">
+            <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-400">Testimonios</h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              Lo que dicen nuestros usuarios
             </p>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="hover-lift transition-all duration-300 hover:shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                      {testimonial.name.charAt(0)}
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                      <CardDescription>{testimonial.role}</CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex space-x-1">
-                    {[...Array(testimonial.rating)].map((_, i) => (
+          <div className="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
                       <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     ))}
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">"{testimonial.content}"</p>
+                  <p className="text-slate-300 mb-4">
+                    "FutureTask ha revolucionado mi productividad. La IA realmente entiende mis patrones de trabajo y me
+                    ayuda a optimizar mi día."
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">MG</span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-white font-medium">María García</p>
+                      <p className="text-slate-400 text-sm">Directora de Marketing</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
-            ))}
+
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-slate-300 mb-4">
+                    "Increíble cómo el calendario inteligente organiza automáticamente mis tareas. He aumentado mi
+                    productividad un 40%."
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">JL</span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-white font-medium">Juan López</p>
+                      <p className="text-slate-400 text-sm">Desarrollador Senior</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                  <p className="text-slate-300 mb-4">
+                    "El sistema de logros me mantiene motivada. Es como un juego, pero para mi vida profesional. ¡Me
+                    encanta!"
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">AR</span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-white font-medium">Ana Rodríguez</p>
+                      <p className="text-slate-400 text-sm">Consultora</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="container text-center">
-          <div className="max-w-3xl mx-auto space-y-8">
-            <h2 className="text-3xl lg:text-5xl font-bold text-white">¿Listo para revolucionar tu productividad?</h2>
-            <p className="text-xl text-blue-100 leading-relaxed">
-              Únete a miles de profesionales que ya han transformado su forma de trabajar con FutureTask.
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-4xl text-center">
+            <h2 className="text-base font-semibold leading-7 text-blue-400">Precios</h2>
+            <p className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">Planes Diseñados para Ti</p>
+            <p className="mt-6 text-lg leading-8 text-slate-300">
+              Elige el plan perfecto para tu nivel de productividad. Todos incluyen acceso completo a nuestras
+              características principales.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-6" asChild>
-                <Link href="/app">
-                  Comenzar Gratis
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 py-6 text-white border-white hover:bg-white hover:text-blue-600 bg-transparent"
-              >
-                Ver Precios
-              </Button>
+          </div>
+          <div className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+            {/* Free Plan */}
+            <Card className="bg-white/5 border-white/20 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white">Gratuito</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Perfecto para comenzar tu viaje de productividad
+                </CardDescription>
+                <div className="mt-6 flex items-baseline gap-x-1">
+                  <span className="text-4xl font-bold tracking-tight text-white">€0</span>
+                  <span className="text-sm font-semibold leading-6 text-slate-300">/mes</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="mt-8 space-y-3 text-sm leading-6 text-slate-300">
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Hasta 10 tareas por día
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Calendario básico
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Pomodoro timer
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Estadísticas básicas
+                  </li>
+                </ul>
+                <Button className="mt-8 w-full bg-blue-600 hover:bg-blue-700">Comenzar Gratis</Button>
+              </CardContent>
+            </Card>
+
+            {/* Premium Plan */}
+            <Card className="bg-white/10 border-blue-500/50 backdrop-blur-sm ring-2 ring-blue-500/20 relative">
+              <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white">
+                Más Popular
+              </Badge>
+              <CardHeader>
+                <CardTitle className="text-white">Premium</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Para usuarios que buscan mayor productividad
+                </CardDescription>
+                <div className="mt-6 flex items-baseline gap-x-1">
+                  <span className="text-4xl font-bold tracking-tight text-white">€9</span>
+                  <span className="text-sm font-semibold leading-6 text-slate-300">/mes</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="mt-8 space-y-3 text-sm leading-6 text-slate-300">
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Tareas ilimitadas
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    IA Assistant básico
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Calendario inteligente
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Análisis avanzado
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Sistema de logros
+                  </li>
+                </ul>
+                <Button className="mt-8 w-full bg-blue-600 hover:bg-blue-700">Elegir Premium</Button>
+              </CardContent>
+            </Card>
+
+            {/* Pro Plan */}
+            <Card className="bg-white/5 border-white/20 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white">Pro</CardTitle>
+                <CardDescription className="text-slate-300">
+                  Para profesionales que necesitan el máximo rendimiento
+                </CardDescription>
+                <div className="mt-6 flex items-baseline gap-x-1">
+                  <span className="text-4xl font-bold tracking-tight text-white">€19</span>
+                  <span className="text-sm font-semibold leading-6 text-slate-300">/mes</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="mt-8 space-y-3 text-sm leading-6 text-slate-300">
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Todo de Premium
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    IA Assistant avanzado
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Integraciones ilimitadas
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    Soporte prioritario
+                  </li>
+                  <li className="flex gap-x-3">
+                    <CheckCircle className="h-6 w-5 flex-none text-blue-400" />
+                    API access
+                  </li>
+                </ul>
+                <Button className="mt-8 w-full bg-blue-600 hover:bg-blue-700">Elegir Pro</Button>
+              </CardContent>
+            </Card>
+          </div>
+          <p className="mt-8 text-center text-sm text-slate-400">
+            Garantía de devolución de 30 días. Cancela en cualquier momento.
+          </p>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:max-w-none">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                Números que Hablan por Sí Solos
+              </h2>
+              <p className="mt-4 text-lg leading-8 text-slate-300">
+                Miles de profesionales ya confían en FutureTask para maximizar su productividad
+              </p>
             </div>
+            <dl className="mt-16 grid grid-cols-1 gap-0.5 overflow-hidden rounded-2xl text-center sm:grid-cols-2 lg:grid-cols-4">
+              <div className="flex flex-col bg-white/5 p-8">
+                <dt className="text-sm font-semibold leading-6 text-slate-300">Usuarios Activos</dt>
+                <dd className="order-first text-3xl font-bold tracking-tight text-white">50,000+</dd>
+              </div>
+              <div className="flex flex-col bg-white/5 p-8">
+                <dt className="text-sm font-semibold leading-6 text-slate-300">Tareas Completadas</dt>
+                <dd className="order-first text-3xl font-bold tracking-tight text-white">2.5M+</dd>
+              </div>
+              <div className="flex flex-col bg-white/5 p-8">
+                <dt className="text-sm font-semibold leading-6 text-slate-300">Tiempo Ahorrado</dt>
+                <dd className="order-first text-3xl font-bold tracking-tight text-white">1,200h</dd>
+              </div>
+              <div className="flex flex-col bg-white/5 p-8">
+                <dt className="text-sm font-semibold leading-6 text-slate-300">Satisfacción</dt>
+                <dd className="order-first text-3xl font-bold tracking-tight text-white">98%</dd>
+              </div>
+            </dl>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-16">
-        <div className="container">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold">FutureTask</span>
-              </div>
-              <p className="text-slate-400 leading-relaxed">
-                La plataforma de productividad más avanzada del 2025. Organiza tu vida con inteligencia artificial.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Producto</h3>
-              <ul className="space-y-2 text-slate-400">
-                <li>
-                  <Link href="#features" className="hover:text-white transition-colors">
-                    Características
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/app" className="hover:text-white transition-colors">
-                    Aplicación
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Precios
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    API
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Recursos</h3>
-              <ul className="space-y-2 text-slate-400">
-                <li>
-                  <Link href="/blog" className="hover:text-white transition-colors">
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Documentación
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Ayuda
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="hover:text-white transition-colors">
-                    Comunidad
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Contacto</h3>
-              <ul className="space-y-2 text-slate-400">
-                <li className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4" />
+      <footer className="bg-white/5 backdrop-blur-sm border-t border-white/10">
+        <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
+          <div className="flex justify-center space-x-6 md:order-2">
+            <div className="text-slate-300 text-sm">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2" />
                   <span>support@future-task.com</span>
-                </li>
-                <li className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-2" />
                   <span>Granada, España</span>
-                </li>
-                <li>
-                  <Link href="/contact" className="hover:text-white transition-colors flex items-center space-x-1">
-                    <span>Página de contacto</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400">© 2025 FutureTask. Todos los derechos reservados.</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-                Privacidad
-              </Link>
-              <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-                Términos
-              </Link>
-              <Link href="#" className="text-slate-400 hover:text-white transition-colors">
-                Cookies
-              </Link>
+          <div className="mt-8 md:order-1 md:mt-0">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+              <span className="ml-2 text-xl font-bold text-white">FutureTask</span>
             </div>
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              &copy; 2024 FutureTask. Todos los derechos reservados. Hecho con{" "}
+              <Heart className="inline h-4 w-4 text-red-500" /> en España.
+            </p>
           </div>
         </div>
       </footer>
+
+      <CookieBanner />
     </div>
   )
 }

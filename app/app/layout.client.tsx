@@ -1,29 +1,40 @@
 "use client"
 
-import type React from "react"
-
+import React, { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
 import { NotificationService } from "@/components/notification-service"
-import { Analytics } from "@/lib/analytics"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+
+function AnalyticsWrapper() {
+  const searchParams = useSearchParams()
+
+  React.useEffect(() => {
+    // Google Analytics tracking
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("config", process.env.NEXT_PUBLIC_GA_ID || "", {
+        page_title: document.title,
+        page_location: window.location.href,
+      })
+    }
+  }, [searchParams])
+
+  return null
+}
 
 export function AppLayoutClient({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const searchParams = useSearchParams()
-
   return (
     <>
-      <Analytics />
       <Suspense fallback={null}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <NotificationService />
-        </ThemeProvider>
+        <AnalyticsWrapper />
       </Suspense>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        {children}
+        <NotificationService />
+      </ThemeProvider>
     </>
   )
 }

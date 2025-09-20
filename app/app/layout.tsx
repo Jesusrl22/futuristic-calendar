@@ -1,9 +1,5 @@
 import type React from "react"
-
-import { Inter } from "next/font/google"
 import { AppLayoutClient } from "./layout.client"
-
-const inter = Inter({ subsets: ["latin"] })
 
 export default function RootLayout({
   children,
@@ -11,9 +7,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
-      <head>{/* Analytics component will be added here */}</head>
-      <body className={inter.className}>
+    <html lang="en">
+      <body>
         <AppLayoutClient>{children}</AppLayoutClient>
       </body>
     </html>

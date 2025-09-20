@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { useLanguage } from "@/hooks/useLanguage"
 import { X, Settings, Shield, BarChart3, Target, Palette } from "lucide-react"
 
 export function CookieBanner() {
-  const { t } = useLanguage()
   const [showBanner, setShowBanner] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [preferences, setPreferences] = useState({
