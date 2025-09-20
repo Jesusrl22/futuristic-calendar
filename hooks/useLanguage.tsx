@@ -32,20 +32,38 @@ const translations: Record<Language, Record<string, string>> = {
     savePreferences: "Guardar Preferencias",
 
     // Hero section
-    heroTitle: "Organiza tu vida con IA",
-    heroSubtitle: "La aplicación de productividad más avanzada con inteligencia artificial integrada",
+    heroTitle: "El Futuro de la",
+    heroTitleHighlight: "Productividad",
+    heroSubtitle: "🚀 Potenciado por IA",
     heroDescription:
-      "Gestiona tareas, calendario, notas y más con la ayuda de nuestro asistente IA. Aumenta tu productividad hasta un 300%.",
+      "Transforma tu forma de trabajar con inteligencia artificial avanzada. Gestiona tareas, optimiza tu tiempo y alcanza tus objetivos como nunca antes.",
+    startFree: "Comenzar Gratis",
+    watchDemo: "Ver Demo",
 
     // Features
-    aiAssistant: "Asistente IA",
-    aiAssistantDesc: "Tu compañero inteligente para maximizar la productividad",
+    featuresTitle: "Características Revolucionarias",
+    featuresDescription:
+      "Descubre cómo FutureTask está redefiniendo la productividad personal con tecnología de vanguardia.",
+    aiAssistant: "Asistente IA Inteligente",
+    aiAssistantDesc: "Tu asistente personal que aprende de tus hábitos y optimiza tu flujo de trabajo automáticamente.",
     smartCalendar: "Calendario Inteligente",
-    smartCalendarDesc: "Planificación automática y sugerencias personalizadas",
-    taskManagement: "Gestión de Tareas",
-    taskManagementDesc: "Organiza y prioriza con algoritmos avanzados",
+    smartCalendarDesc:
+      "Planificación automática que se adapta a tu energía y prioridades para maximizar tu productividad.",
+    taskManagement: "Seguimiento de Objetivos",
+    taskManagementDesc: "Convierte tus sueños en realidad con seguimiento inteligente y recordatorios personalizados.",
+    analytics: "Análisis Avanzado",
+    analyticsDesc:
+      "Insights profundos sobre tu productividad con gráficas interactivas y recomendaciones personalizadas.",
+    pomodoro: "Pomodoro Inteligente",
+    pomodoroDesc: "Técnica Pomodoro adaptativa que se ajusta a tu ritmo y tipo de trabajo para máximo enfoque.",
+    achievements: "Sistema de Logros",
+    achievementsDesc:
+      "Gamificación inteligente que te motiva a alcanzar tus metas con recompensas y desafíos personalizados.",
 
     // Pricing
+    pricingTitle: "Planes Diseñados para Ti",
+    pricingDescription:
+      "Elige el plan perfecto para tu nivel de productividad. Todos incluyen acceso completo a nuestras características principales.",
     free: "Gratuito",
     premium: "Premium",
     pro: "Pro",
@@ -53,6 +71,61 @@ const translations: Record<Language, Record<string, string>> = {
     yearly: "Anual",
     mostPopular: "Más Popular",
     bestValue: "Mejor Valor",
+    freeDescription: "Perfecto para comenzar tu viaje de productividad",
+    premiumDescription: "Para usuarios que buscan mayor productividad",
+    proDescription: "Para profesionales que necesitan el máximo rendimiento",
+    chooseFree: "Comenzar Gratis",
+    choosePremium: "Elegir Premium",
+    choosePro: "Elegir Pro",
+    guarantee: "Garantía de devolución de 30 días. Cancela en cualquier momento.",
+
+    // Blog
+    blogTitle: "Blog de Productividad",
+    blogDescription:
+      "Descubre las últimas tendencias, consejos y estrategias para maximizar tu productividad personal y profesional.",
+    readMore: "Leer más",
+    viewAllArticles: "Ver Todos los Artículos",
+    relatedPosts: "Artículos relacionados",
+    shareArticle: "Compartir artículo",
+    backToBlog: "Volver al blog",
+
+    // Newsletter
+    newsletterTitle: "Mantente al Día",
+    newsletterDescription:
+      "Recibe consejos semanales de productividad, actualizaciones de funciones y contenido exclusivo directamente en tu bandeja de entrada.",
+    newsletterPlaceholder: "tu@email.com",
+    newsletterCta: "Suscribirse",
+    newsletterPrivacy: "No spam. Cancela tu suscripción en cualquier momento.",
+
+    // Contact
+    contactTitle: "Contáctanos",
+    contactDescription:
+      "¿Tienes preguntas, sugerencias o necesitas ayuda? Estamos aquí para ayudarte a maximizar tu productividad.",
+    contactInfo: "Información de Contacto",
+    contactForm: "Envíanos un Mensaje",
+    contactName: "Nombre",
+    contactEmail: "Email",
+    contactSubject: "Asunto",
+    contactMessage: "Mensaje",
+    contactSend: "Enviar Mensaje",
+    followUs: "Síguenos",
+
+    // Footer
+    footerDescription: "Transformando la productividad personal con inteligencia artificial avanzada.",
+    footerProduct: "Producto",
+    footerResources: "Recursos",
+    footerCompany: "Empresa",
+    footerApp: "Aplicación",
+    footerUpdates: "Actualizaciones",
+    footerHelp: "Centro de Ayuda",
+    footerCommunity: "Comunidad",
+    footerApi: "API",
+    footerAbout: "Acerca de",
+    footerPrivacy: "Privacidad",
+    footerTerms: "Términos",
+    footerRights: "Todos los derechos reservados.",
+    footerMadeWith: "Hecho con",
+    footerInSpain: "en España",
 
     // Authentication
     signIn: "Iniciar Sesión",
@@ -79,51 +152,7 @@ const translations: Record<Language, Record<string, string>> = {
     plan: "Plan",
     settings: "Configuración",
     achievements: "Logros",
-
-    // Dashboard
     dashboard: "Panel",
-    yourCurrentPlan: "Tu Plan Actual",
-    manageSubscription: "Gestiona tu suscripción",
-    basicFeatures: "Características básicas",
-    advancedFeatures: "Características avanzadas",
-    allFeatures: "Todas las características",
-    active: "Activo",
-    inactive: "Inactivo",
-    upgradeToPremium: "Actualizar a Premium",
-    upgradeToPro: "Actualizar a Pro",
-    buyAICredits: "Comprar Créditos IA",
-
-    // Blog
-    readMore: "Leer más",
-    relatedPosts: "Artículos relacionados",
-    shareArticle: "Compartir artículo",
-    backToBlog: "Volver al blog",
-
-    // Footer
-    aboutUs: "Sobre Nosotros",
-    privacyPolicy: "Política de Privacidad",
-    termsOfService: "Términos de Servicio",
-    support: "Soporte",
-    followUs: "Síguenos",
-    allRightsReserved: "Todos los derechos reservados",
-
-    // Cookie banner
-    cookieTitle: "Configuración de Cookies",
-    cookieDescription:
-      "Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptas nuestro uso de cookies.",
-    cookieAccept: "Aceptar Todas",
-    cookieDecline: "Rechazar",
-    cookieSettings: "Configuración",
-    cookieSettingsTitle: "Configuración de Cookies",
-    cookieSettingsDescription: "Gestiona tus preferencias de cookies a continuación.",
-    cookieNecessary: "Cookies Necesarias",
-    cookieNecessaryDesc: "Estas cookies son esenciales para el funcionamiento del sitio web.",
-    cookieAnalytics: "Cookies de Análisis",
-    cookieAnalyticsDesc: "Nos ayudan a entender cómo los visitantes interactúan con nuestro sitio web.",
-    cookieMarketing: "Cookies de Marketing",
-    cookieMarketingDesc: "Se utilizan para rastrear visitantes en sitios web con fines publicitarios.",
-    cookiePreferences: "Cookies de Preferencias",
-    cookiePreferencesDesc: "Recuerdan tus preferencias y configuraciones.",
   },
   en: {
     // Navigation and general
@@ -143,20 +172,35 @@ const translations: Record<Language, Record<string, string>> = {
     savePreferences: "Save Preferences",
 
     // Hero section
-    heroTitle: "Organize your life with AI",
-    heroSubtitle: "The most advanced productivity app with integrated artificial intelligence",
+    heroTitle: "The Future of",
+    heroTitleHighlight: "Productivity",
+    heroSubtitle: "🚀 AI-Powered",
     heroDescription:
-      "Manage tasks, calendar, notes and more with the help of our AI assistant. Increase your productivity by up to 300%.",
+      "Transform the way you work with advanced artificial intelligence. Manage tasks, optimize your time, and achieve your goals like never before.",
+    startFree: "Start Free",
+    watchDemo: "Watch Demo",
 
     // Features
-    aiAssistant: "AI Assistant",
-    aiAssistantDesc: "Your intelligent companion to maximize productivity",
+    featuresTitle: "Revolutionary Features",
+    featuresDescription: "Discover how FutureTask is redefining personal productivity with cutting-edge technology.",
+    aiAssistant: "Intelligent AI Assistant",
+    aiAssistantDesc: "Your personal assistant that learns from your habits and automatically optimizes your workflow.",
     smartCalendar: "Smart Calendar",
-    smartCalendarDesc: "Automatic planning and personalized suggestions",
-    taskManagement: "Task Management",
-    taskManagementDesc: "Organize and prioritize with advanced algorithms",
+    smartCalendarDesc: "Automatic planning that adapts to your energy and priorities to maximize your productivity.",
+    taskManagement: "Goal Tracking",
+    taskManagementDesc: "Turn your dreams into reality with intelligent tracking and personalized reminders.",
+    analytics: "Advanced Analytics",
+    analyticsDesc: "Deep insights into your productivity with interactive charts and personalized recommendations.",
+    pomodoro: "Smart Pomodoro",
+    pomodoroDesc: "Adaptive Pomodoro technique that adjusts to your rhythm and type of work for maximum focus.",
+    achievements: "Achievement System",
+    achievementsDesc:
+      "Intelligent gamification that motivates you to reach your goals with rewards and personalized challenges.",
 
     // Pricing
+    pricingTitle: "Plans Designed for You",
+    pricingDescription:
+      "Choose the perfect plan for your productivity level. All include full access to our core features.",
     free: "Free",
     premium: "Premium",
     pro: "Pro",
@@ -164,6 +208,60 @@ const translations: Record<Language, Record<string, string>> = {
     yearly: "Yearly",
     mostPopular: "Most Popular",
     bestValue: "Best Value",
+    freeDescription: "Perfect to start your productivity journey",
+    premiumDescription: "For users seeking greater productivity",
+    proDescription: "For professionals who need maximum performance",
+    chooseFree: "Start Free",
+    choosePremium: "Choose Premium",
+    choosePro: "Choose Pro",
+    guarantee: "30-day money-back guarantee. Cancel anytime.",
+
+    // Blog
+    blogTitle: "Productivity Blog",
+    blogDescription:
+      "Discover the latest trends, tips and strategies to maximize your personal and professional productivity.",
+    readMore: "Read more",
+    viewAllArticles: "View All Articles",
+    relatedPosts: "Related articles",
+    shareArticle: "Share article",
+    backToBlog: "Back to blog",
+
+    // Newsletter
+    newsletterTitle: "Stay Updated",
+    newsletterDescription:
+      "Receive weekly productivity tips, feature updates and exclusive content directly in your inbox.",
+    newsletterPlaceholder: "your@email.com",
+    newsletterCta: "Subscribe",
+    newsletterPrivacy: "No spam. Unsubscribe anytime.",
+
+    // Contact
+    contactTitle: "Contact Us",
+    contactDescription: "Have questions, suggestions or need help? We're here to help you maximize your productivity.",
+    contactInfo: "Contact Information",
+    contactForm: "Send us a Message",
+    contactName: "Name",
+    contactEmail: "Email",
+    contactSubject: "Subject",
+    contactMessage: "Message",
+    contactSend: "Send Message",
+    followUs: "Follow Us",
+
+    // Footer
+    footerDescription: "Transforming personal productivity with advanced artificial intelligence.",
+    footerProduct: "Product",
+    footerResources: "Resources",
+    footerCompany: "Company",
+    footerApp: "Application",
+    footerUpdates: "Updates",
+    footerHelp: "Help Center",
+    footerCommunity: "Community",
+    footerApi: "API",
+    footerAbout: "About",
+    footerPrivacy: "Privacy",
+    footerTerms: "Terms",
+    footerRights: "All rights reserved.",
+    footerMadeWith: "Made with",
+    footerInSpain: "in Spain",
 
     // Authentication
     signIn: "Sign In",
@@ -190,51 +288,7 @@ const translations: Record<Language, Record<string, string>> = {
     plan: "Plan",
     settings: "Settings",
     achievements: "Achievements",
-
-    // Dashboard
     dashboard: "Dashboard",
-    yourCurrentPlan: "Your Current Plan",
-    manageSubscription: "Manage your subscription",
-    basicFeatures: "Basic features",
-    advancedFeatures: "Advanced features",
-    allFeatures: "All features",
-    active: "Active",
-    inactive: "Inactive",
-    upgradeToPremium: "Upgrade to Premium",
-    upgradeToPro: "Upgrade to Pro",
-    buyAICredits: "Buy AI Credits",
-
-    // Blog
-    readMore: "Read more",
-    relatedPosts: "Related articles",
-    shareArticle: "Share article",
-    backToBlog: "Back to blog",
-
-    // Footer
-    aboutUs: "About Us",
-    privacyPolicy: "Privacy Policy",
-    termsOfService: "Terms of Service",
-    support: "Support",
-    followUs: "Follow Us",
-    allRightsReserved: "All rights reserved",
-
-    // Cookie banner
-    cookieTitle: "Cookie Settings",
-    cookieDescription:
-      "We use cookies to improve your experience. By continuing to browse, you accept our use of cookies.",
-    cookieAccept: "Accept All",
-    cookieDecline: "Decline",
-    cookieSettings: "Settings",
-    cookieSettingsTitle: "Cookie Settings",
-    cookieSettingsDescription: "Manage your cookie preferences below.",
-    cookieNecessary: "Necessary Cookies",
-    cookieNecessaryDesc: "These cookies are essential for the website to function properly.",
-    cookieAnalytics: "Analytics Cookies",
-    cookieAnalyticsDesc: "Help us understand how visitors interact with our website.",
-    cookieMarketing: "Marketing Cookies",
-    cookieMarketingDesc: "Used to track visitors across websites for advertising purposes.",
-    cookiePreferences: "Preference Cookies",
-    cookiePreferencesDesc: "Remember your preferences and settings.",
   },
   fr: {
     // Navigation and general
@@ -254,20 +308,39 @@ const translations: Record<Language, Record<string, string>> = {
     savePreferences: "Sauvegarder les Préférences",
 
     // Hero section
-    heroTitle: "Organisez votre vie avec l'IA",
-    heroSubtitle: "L'application de productivité la plus avancée avec intelligence artificielle intégrée",
+    heroTitle: "L'Avenir de la",
+    heroTitleHighlight: "Productivité",
+    heroSubtitle: "🚀 Alimenté par l'IA",
     heroDescription:
-      "Gérez les tâches, le calendrier, les notes et plus encore avec l'aide de notre assistant IA. Augmentez votre productivité jusqu'à 300%.",
+      "Transformez votre façon de travailler avec l'intelligence artificielle avancée. Gérez les tâches, optimisez votre temps et atteignez vos objectifs comme jamais auparavant.",
+    startFree: "Commencer Gratuitement",
+    watchDemo: "Voir la Démo",
 
     // Features
-    aiAssistant: "Assistant IA",
-    aiAssistantDesc: "Votre compagnon intelligent pour maximiser la productivité",
+    featuresTitle: "Fonctionnalités Révolutionnaires",
+    featuresDescription:
+      "Découvrez comment FutureTask redéfinit la productivité personnelle avec une technologie de pointe.",
+    aiAssistant: "Assistant IA Intelligent",
+    aiAssistantDesc:
+      "Votre assistant personnel qui apprend de vos habitudes et optimise automatiquement votre flux de travail.",
     smartCalendar: "Calendrier Intelligent",
-    smartCalendarDesc: "Planification automatique et suggestions personnalisées",
-    taskManagement: "Gestion des Tâches",
-    taskManagementDesc: "Organisez et priorisez avec des algorithmes avancés",
+    smartCalendarDesc:
+      "Planification automatique qui s'adapte à votre énergie et priorités pour maximiser votre productivité.",
+    taskManagement: "Suivi des Objectifs",
+    taskManagementDesc: "Transformez vos rêves en réalité avec un suivi intelligent et des rappels personnalisés.",
+    analytics: "Analyses Avancées",
+    analyticsDesc:
+      "Insights profonds sur votre productivité avec des graphiques interactifs et des recommandations personnalisées.",
+    pomodoro: "Pomodoro Intelligent",
+    pomodoroDesc: "Technique Pomodoro adaptative qui s'ajuste à votre rythme et type de travail pour un focus maximum.",
+    achievements: "Système de Réalisations",
+    achievementsDesc:
+      "Gamification intelligente qui vous motive à atteindre vos objectifs avec des récompenses et défis personnalisés.",
 
     // Pricing
+    pricingTitle: "Plans Conçus pour Vous",
+    pricingDescription:
+      "Choisissez le plan parfait pour votre niveau de productivité. Tous incluent un accès complet à nos fonctionnalités principales.",
     free: "Gratuit",
     premium: "Premium",
     pro: "Pro",
@@ -275,6 +348,61 @@ const translations: Record<Language, Record<string, string>> = {
     yearly: "Annuel",
     mostPopular: "Le Plus Populaire",
     bestValue: "Meilleure Valeur",
+    freeDescription: "Parfait pour commencer votre voyage de productivité",
+    premiumDescription: "Pour les utilisateurs recherchant une plus grande productivité",
+    proDescription: "Pour les professionnels qui ont besoin de performances maximales",
+    chooseFree: "Commencer Gratuitement",
+    choosePremium: "Choisir Premium",
+    choosePro: "Choisir Pro",
+    guarantee: "Garantie de remboursement de 30 jours. Annulez à tout moment.",
+
+    // Blog
+    blogTitle: "Blog de Productivité",
+    blogDescription:
+      "Découvrez les dernières tendances, conseils et stratégies pour maximiser votre productivité personnelle et professionnelle.",
+    readMore: "Lire la suite",
+    viewAllArticles: "Voir Tous les Articles",
+    relatedPosts: "Articles connexes",
+    shareArticle: "Partager l'article",
+    backToBlog: "Retour au blog",
+
+    // Newsletter
+    newsletterTitle: "Restez Informé",
+    newsletterDescription:
+      "Recevez des conseils hebdomadaires de productivité, des mises à jour de fonctionnalités et du contenu exclusif directement dans votre boîte de réception.",
+    newsletterPlaceholder: "votre@email.com",
+    newsletterCta: "S'abonner",
+    newsletterPrivacy: "Pas de spam. Désabonnez-vous à tout moment.",
+
+    // Contact
+    contactTitle: "Contactez-nous",
+    contactDescription:
+      "Avez-vous des questions, suggestions ou besoin d'aide ? Nous sommes là pour vous aider à maximiser votre productivité.",
+    contactInfo: "Informations de Contact",
+    contactForm: "Envoyez-nous un Message",
+    contactName: "Nom",
+    contactEmail: "Email",
+    contactSubject: "Sujet",
+    contactMessage: "Message",
+    contactSend: "Envoyer le Message",
+    followUs: "Suivez-nous",
+
+    // Footer
+    footerDescription: "Transformer la productivité personnelle avec l'intelligence artificielle avancée.",
+    footerProduct: "Produit",
+    footerResources: "Ressources",
+    footerCompany: "Entreprise",
+    footerApp: "Application",
+    footerUpdates: "Mises à jour",
+    footerHelp: "Centre d'Aide",
+    footerCommunity: "Communauté",
+    footerApi: "API",
+    footerAbout: "À propos",
+    footerPrivacy: "Confidentialité",
+    footerTerms: "Conditions",
+    footerRights: "Tous droits réservés.",
+    footerMadeWith: "Fait avec",
+    footerInSpain: "en Espagne",
 
     // Authentication
     signIn: "Se Connecter",
@@ -301,51 +429,7 @@ const translations: Record<Language, Record<string, string>> = {
     plan: "Plan",
     settings: "Paramètres",
     achievements: "Réalisations",
-
-    // Dashboard
     dashboard: "Tableau de Bord",
-    yourCurrentPlan: "Votre Plan Actuel",
-    manageSubscription: "Gérez votre abonnement",
-    basicFeatures: "Fonctionnalités de base",
-    advancedFeatures: "Fonctionnalités avancées",
-    allFeatures: "Toutes les fonctionnalités",
-    active: "Actif",
-    inactive: "Inactif",
-    upgradeToPremium: "Passer à Premium",
-    upgradeToPro: "Passer à Pro",
-    buyAICredits: "Acheter des Crédits IA",
-
-    // Blog
-    readMore: "Lire la suite",
-    relatedPosts: "Articles connexes",
-    shareArticle: "Partager l'article",
-    backToBlog: "Retour au blog",
-
-    // Footer
-    aboutUs: "À Propos",
-    privacyPolicy: "Politique de Confidentialité",
-    termsOfService: "Conditions d'Utilisation",
-    support: "Support",
-    followUs: "Suivez-nous",
-    allRightsReserved: "Tous droits réservés",
-
-    // Cookie banner
-    cookieTitle: "Paramètres des Cookies",
-    cookieDescription:
-      "Nous utilisons des cookies pour améliorer votre expérience. En continuant à naviguer, vous acceptez notre utilisation des cookies.",
-    cookieAccept: "Accepter Tout",
-    cookieDecline: "Refuser",
-    cookieSettings: "Paramètres",
-    cookieSettingsTitle: "Paramètres des Cookies",
-    cookieSettingsDescription: "Gérez vos préférences de cookies ci-dessous.",
-    cookieNecessary: "Cookies Nécessaires",
-    cookieNecessaryDesc: "Ces cookies sont essentiels au bon fonctionnement du site web.",
-    cookieAnalytics: "Cookies d'Analyse",
-    cookieAnalyticsDesc: "Nous aident à comprendre comment les visiteurs interagissent avec notre site web.",
-    cookieMarketing: "Cookies Marketing",
-    cookieMarketingDesc: "Utilisés pour suivre les visiteurs sur les sites web à des fins publicitaires.",
-    cookiePreferences: "Cookies de Préférences",
-    cookiePreferencesDesc: "Se souviennent de vos préférences et paramètres.",
   },
   de: {
     // Navigation and general
@@ -365,20 +449,40 @@ const translations: Record<Language, Record<string, string>> = {
     savePreferences: "Einstellungen Speichern",
 
     // Hero section
-    heroTitle: "Organisieren Sie Ihr Leben mit KI",
-    heroSubtitle: "Die fortschrittlichste Produktivitäts-App mit integrierter künstlicher Intelligenz",
+    heroTitle: "Die Zukunft der",
+    heroTitleHighlight: "Produktivität",
+    heroSubtitle: "🚀 KI-Powered",
     heroDescription:
-      "Verwalten Sie Aufgaben, Kalender, Notizen und mehr mit Hilfe unseres KI-Assistenten. Steigern Sie Ihre Produktivität um bis zu 300%.",
+      "Transformieren Sie Ihre Arbeitsweise mit fortschrittlicher künstlicher Intelligenz. Verwalten Sie Aufgaben, optimieren Sie Ihre Zeit und erreichen Sie Ihre Ziele wie nie zuvor.",
+    startFree: "Kostenlos Starten",
+    watchDemo: "Demo Ansehen",
 
     // Features
-    aiAssistant: "KI-Assistent",
-    aiAssistantDesc: "Ihr intelligenter Begleiter zur Maximierung der Produktivität",
+    featuresTitle: "Revolutionäre Funktionen",
+    featuresDescription:
+      "Entdecken Sie, wie FutureTask die persönliche Produktivität mit modernster Technologie neu definiert.",
+    aiAssistant: "Intelligenter KI-Assistent",
+    aiAssistantDesc:
+      "Ihr persönlicher Assistent, der aus Ihren Gewohnheiten lernt und automatisch Ihren Arbeitsablauf optimiert.",
     smartCalendar: "Intelligenter Kalender",
-    smartCalendarDesc: "Automatische Planung und personalisierte Vorschläge",
-    taskManagement: "Aufgabenverwaltung",
-    taskManagementDesc: "Organisieren und priorisieren Sie mit fortschrittlichen Algorithmen",
+    smartCalendarDesc:
+      "Automatische Planung, die sich an Ihre Energie und Prioritäten anpasst, um Ihre Produktivität zu maximieren.",
+    taskManagement: "Zielverfolgung",
+    taskManagementDesc:
+      "Verwandeln Sie Ihre Träume in Realität mit intelligenter Verfolgung und personalisierten Erinnerungen.",
+    analytics: "Erweiterte Analysen",
+    analyticsDesc:
+      "Tiefe Einblicke in Ihre Produktivität mit interaktiven Diagrammen und personalisierten Empfehlungen.",
+    pomodoro: "Intelligenter Pomodoro",
+    pomodoroDesc: "Adaptive Pomodoro-Technik, die sich an Ihren Rhythmus und Arbeitstyp anpasst für maximalen Fokus.",
+    achievements: "Erfolgs-System",
+    achievementsDesc:
+      "Intelligente Gamification, die Sie motiviert, Ihre Ziele mit Belohnungen und personalisierten Herausforderungen zu erreichen.",
 
     // Pricing
+    pricingTitle: "Pläne für Sie Entwickelt",
+    pricingDescription:
+      "Wählen Sie den perfekten Plan für Ihr Produktivitätsniveau. Alle beinhalten vollen Zugang zu unseren Kernfunktionen.",
     free: "Kostenlos",
     premium: "Premium",
     pro: "Pro",
@@ -386,6 +490,61 @@ const translations: Record<Language, Record<string, string>> = {
     yearly: "Jährlich",
     mostPopular: "Am Beliebtesten",
     bestValue: "Bester Wert",
+    freeDescription: "Perfekt, um Ihre Produktivitätsreise zu beginnen",
+    premiumDescription: "Für Benutzer, die größere Produktivität suchen",
+    proDescription: "Für Profis, die maximale Leistung benötigen",
+    chooseFree: "Kostenlos Starten",
+    choosePremium: "Premium Wählen",
+    choosePro: "Pro Wählen",
+    guarantee: "30-Tage Geld-zurück-Garantie. Jederzeit kündbar.",
+
+    // Blog
+    blogTitle: "Produktivitäts-Blog",
+    blogDescription:
+      "Entdecken Sie die neuesten Trends, Tipps und Strategien zur Maximierung Ihrer persönlichen und beruflichen Produktivität.",
+    readMore: "Weiterlesen",
+    viewAllArticles: "Alle Artikel Anzeigen",
+    relatedPosts: "Verwandte Artikel",
+    shareArticle: "Artikel teilen",
+    backToBlog: "Zurück zum Blog",
+
+    // Newsletter
+    newsletterTitle: "Bleiben Sie Informiert",
+    newsletterDescription:
+      "Erhalten Sie wöchentliche Produktivitätstipps, Feature-Updates und exklusive Inhalte direkt in Ihren Posteingang.",
+    newsletterPlaceholder: "ihre@email.com",
+    newsletterCta: "Abonnieren",
+    newsletterPrivacy: "Kein Spam. Jederzeit abmelden.",
+
+    // Contact
+    contactTitle: "Kontaktieren Sie Uns",
+    contactDescription:
+      "Haben Sie Fragen, Vorschläge oder benötigen Hilfe? Wir sind hier, um Ihnen zu helfen, Ihre Produktivität zu maximieren.",
+    contactInfo: "Kontaktinformationen",
+    contactForm: "Senden Sie uns eine Nachricht",
+    contactName: "Name",
+    contactEmail: "Email",
+    contactSubject: "Betreff",
+    contactMessage: "Nachricht",
+    contactSend: "Nachricht Senden",
+    followUs: "Folgen Sie uns",
+
+    // Footer
+    footerDescription: "Persönliche Produktivität mit fortschrittlicher künstlicher Intelligenz transformieren.",
+    footerProduct: "Produkt",
+    footerResources: "Ressourcen",
+    footerCompany: "Unternehmen",
+    footerApp: "Anwendung",
+    footerUpdates: "Updates",
+    footerHelp: "Hilfe-Center",
+    footerCommunity: "Gemeinschaft",
+    footerApi: "API",
+    footerAbout: "Über uns",
+    footerPrivacy: "Datenschutz",
+    footerTerms: "Bedingungen",
+    footerRights: "Alle Rechte vorbehalten.",
+    footerMadeWith: "Gemacht mit",
+    footerInSpain: "in Spanien",
 
     // Authentication
     signIn: "Anmelden",
@@ -393,7 +552,7 @@ const translations: Record<Language, Record<string, string>> = {
     signInToAccount: "Melden Sie sich in Ihrem Konto an",
     createFreeAccount: "Erstellen Sie Ihr kostenloses Konto",
     name: "Name",
-    email: "E-Mail",
+    email: "Email",
     password: "Passwort",
     invalidCredentials: "Ungültige Anmeldedaten",
     loginError: "Anmeldefehler",
@@ -412,51 +571,7 @@ const translations: Record<Language, Record<string, string>> = {
     plan: "Plan",
     settings: "Einstellungen",
     achievements: "Erfolge",
-
-    // Dashboard
     dashboard: "Dashboard",
-    yourCurrentPlan: "Ihr Aktueller Plan",
-    manageSubscription: "Verwalten Sie Ihr Abonnement",
-    basicFeatures: "Grundfunktionen",
-    advancedFeatures: "Erweiterte Funktionen",
-    allFeatures: "Alle Funktionen",
-    active: "Aktiv",
-    inactive: "Inaktiv",
-    upgradeToPremium: "Auf Premium upgraden",
-    upgradeToPro: "Auf Pro upgraden",
-    buyAICredits: "KI-Credits kaufen",
-
-    // Blog
-    readMore: "Weiterlesen",
-    relatedPosts: "Verwandte Artikel",
-    shareArticle: "Artikel teilen",
-    backToBlog: "Zurück zum Blog",
-
-    // Footer
-    aboutUs: "Über Uns",
-    privacyPolicy: "Datenschutzrichtlinie",
-    termsOfService: "Nutzungsbedingungen",
-    support: "Support",
-    followUs: "Folgen Sie uns",
-    allRightsReserved: "Alle Rechte vorbehalten",
-
-    // Cookie banner
-    cookieTitle: "Cookie-Einstellungen",
-    cookieDescription:
-      "Wir verwenden Cookies, um Ihre Erfahrung zu verbessern. Durch die weitere Nutzung akzeptieren Sie unsere Verwendung von Cookies.",
-    cookieAccept: "Alle Akzeptieren",
-    cookieDecline: "Ablehnen",
-    cookieSettings: "Einstellungen",
-    cookieSettingsTitle: "Cookie-Einstellungen",
-    cookieSettingsDescription: "Verwalten Sie Ihre Cookie-Präferenzen unten.",
-    cookieNecessary: "Notwendige Cookies",
-    cookieNecessaryDesc: "Diese Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich.",
-    cookieAnalytics: "Analyse-Cookies",
-    cookieAnalyticsDesc: "Helfen uns zu verstehen, wie Besucher mit unserer Website interagieren.",
-    cookieMarketing: "Marketing-Cookies",
-    cookieMarketingDesc: "Werden verwendet, um Besucher auf Websites zu Werbezwecken zu verfolgen.",
-    cookiePreferences: "Präferenz-Cookies",
-    cookiePreferencesDesc: "Merken sich Ihre Präferenzen und Einstellungen.",
   },
   it: {
     // Navigation and general
@@ -476,20 +591,38 @@ const translations: Record<Language, Record<string, string>> = {
     savePreferences: "Salva Preferenze",
 
     // Hero section
-    heroTitle: "Organizza la tua vita con l'IA",
-    heroSubtitle: "L'app di produttività più avanzata con intelligenza artificiale integrata",
+    heroTitle: "Il Futuro della",
+    heroTitleHighlight: "Produttività",
+    heroSubtitle: "🚀 Alimentato dall'IA",
     heroDescription:
-      "Gestisci attività, calendario, note e altro con l'aiuto del nostro assistente IA. Aumenta la tua produttività fino al 300%.",
+      "Trasforma il tuo modo di lavorare con l'intelligenza artificiale avanzata. Gestisci attività, ottimizza il tuo tempo e raggiungi i tuoi obiettivi come mai prima d'ora.",
+    startFree: "Inizia Gratis",
+    watchDemo: "Guarda Demo",
 
     // Features
-    aiAssistant: "Assistente IA",
-    aiAssistantDesc: "Il tuo compagno intelligente per massimizzare la produttività",
+    featuresTitle: "Caratteristiche Rivoluzionarie",
+    featuresDescription:
+      "Scopri come FutureTask sta ridefinendo la produttività personale con tecnologia all'avanguardia.",
+    aiAssistant: "Assistente IA Intelligente",
+    aiAssistantDesc:
+      "Il tuo assistente personale che impara dalle tue abitudini e ottimizza automaticamente il tuo flusso di lavoro.",
     smartCalendar: "Calendario Intelligente",
-    smartCalendarDesc: "Pianificazione automatica e suggerimenti personalizzati",
-    taskManagement: "Gestione Attività",
-    taskManagementDesc: "Organizza e prioritizza con algoritmi avanzati",
+    smartCalendarDesc:
+      "Pianificazione automatica che si adatta alla tua energia e priorità per massimizzare la tua produttività.",
+    taskManagement: "Tracciamento Obiettivi",
+    taskManagementDesc: "Trasforma i tuoi sogni in realtà con tracciamento intelligente e promemoria personalizzati.",
+    analytics: "Analisi Avanzate",
+    analyticsDesc: "Approfondimenti sulla tua produttività con grafici interattivi e raccomandazioni personalizzate.",
+    pomodoro: "Pomodoro Intelligente",
+    pomodoroDesc: "Tecnica Pomodoro adattiva che si adatta al tuo ritmo e tipo di lavoro per il massimo focus.",
+    achievements: "Sistema di Risultati",
+    achievementsDesc:
+      "Gamification intelligente che ti motiva a raggiungere i tuoi obiettivi con ricompense e sfide personalizzate.",
 
     // Pricing
+    pricingTitle: "Piani Progettati per Te",
+    pricingDescription:
+      "Scegli il piano perfetto per il tuo livello di produttività. Tutti includono accesso completo alle nostre funzionalità principali.",
     free: "Gratuito",
     premium: "Premium",
     pro: "Pro",
@@ -497,6 +630,61 @@ const translations: Record<Language, Record<string, string>> = {
     yearly: "Annuale",
     mostPopular: "Più Popolare",
     bestValue: "Miglior Valore",
+    freeDescription: "Perfetto per iniziare il tuo viaggio di produttività",
+    premiumDescription: "Per utenti che cercano maggiore produttività",
+    proDescription: "Per professionisti che hanno bisogno di prestazioni massime",
+    chooseFree: "Inizia Gratis",
+    choosePremium: "Scegli Premium",
+    choosePro: "Scegli Pro",
+    guarantee: "Garanzia di rimborso di 30 giorni. Annulla in qualsiasi momento.",
+
+    // Blog
+    blogTitle: "Blog di Produttività",
+    blogDescription:
+      "Scopri le ultime tendenze, consigli e strategie per massimizzare la tua produttività personale e professionale.",
+    readMore: "Leggi di più",
+    viewAllArticles: "Visualizza Tutti gli Articoli",
+    relatedPosts: "Articoli correlati",
+    shareArticle: "Condividi articolo",
+    backToBlog: "Torna al blog",
+
+    // Newsletter
+    newsletterTitle: "Rimani Aggiornato",
+    newsletterDescription:
+      "Ricevi consigli settimanali di produttività, aggiornamenti delle funzionalità e contenuti esclusivi direttamente nella tua casella di posta.",
+    newsletterPlaceholder: "tua@email.com",
+    newsletterCta: "Iscriviti",
+    newsletterPrivacy: "Niente spam. Annulla l'iscrizione in qualsiasi momento.",
+
+    // Contact
+    contactTitle: "Contattaci",
+    contactDescription:
+      "Hai domande, suggerimenti o hai bisogno di aiuto? Siamo qui per aiutarti a massimizzare la tua produttività.",
+    contactInfo: "Informazioni di Contatto",
+    contactForm: "Inviaci un Messaggio",
+    contactName: "Nome",
+    contactEmail: "Email",
+    contactSubject: "Oggetto",
+    contactMessage: "Messaggio",
+    contactSend: "Invia Messaggio",
+    followUs: "Seguici",
+
+    // Footer
+    footerDescription: "Trasformare la produttività personale con intelligenza artificiale avanzata.",
+    footerProduct: "Prodotto",
+    footerResources: "Risorse",
+    footerCompany: "Azienda",
+    footerApp: "Applicazione",
+    footerUpdates: "Aggiornamenti",
+    footerHelp: "Centro Assistenza",
+    footerCommunity: "Comunità",
+    footerApi: "API",
+    footerAbout: "Chi siamo",
+    footerPrivacy: "Privacy",
+    footerTerms: "Termini",
+    footerRights: "Tutti i diritti riservati.",
+    footerMadeWith: "Fatto con",
+    footerInSpain: "in Spagna",
 
     // Authentication
     signIn: "Accedi",
@@ -523,51 +711,7 @@ const translations: Record<Language, Record<string, string>> = {
     plan: "Piano",
     settings: "Impostazioni",
     achievements: "Risultati",
-
-    // Dashboard
     dashboard: "Dashboard",
-    yourCurrentPlan: "Il Tuo Piano Attuale",
-    manageSubscription: "Gestisci il tuo abbonamento",
-    basicFeatures: "Caratteristiche di base",
-    advancedFeatures: "Caratteristiche avanzate",
-    allFeatures: "Tutte le caratteristiche",
-    active: "Attivo",
-    inactive: "Inattivo",
-    upgradeToPremium: "Aggiorna a Premium",
-    upgradeToPro: "Aggiorna a Pro",
-    buyAICredits: "Acquista Crediti IA",
-
-    // Blog
-    readMore: "Leggi di più",
-    relatedPosts: "Articoli correlati",
-    shareArticle: "Condividi articolo",
-    backToBlog: "Torna al blog",
-
-    // Footer
-    aboutUs: "Chi Siamo",
-    privacyPolicy: "Politica sulla Privacy",
-    termsOfService: "Termini di Servizio",
-    support: "Supporto",
-    followUs: "Seguici",
-    allRightsReserved: "Tutti i diritti riservati",
-
-    // Cookie banner
-    cookieTitle: "Impostazioni Cookie",
-    cookieDescription:
-      "Utilizziamo i cookie per migliorare la tua esperienza. Continuando a navigare, accetti il nostro uso dei cookie.",
-    cookieAccept: "Accetta Tutti",
-    cookieDecline: "Rifiuta",
-    cookieSettings: "Impostazioni",
-    cookieSettingsTitle: "Impostazioni Cookie",
-    cookieSettingsDescription: "Gestisci le tue preferenze sui cookie qui sotto.",
-    cookieNecessary: "Cookie Necessari",
-    cookieNecessaryDesc: "Questi cookie sono essenziali per il corretto funzionamento del sito web.",
-    cookieAnalytics: "Cookie di Analisi",
-    cookieAnalyticsDesc: "Ci aiutano a capire come i visitatori interagiscono con il nostro sito web.",
-    cookieMarketing: "Cookie di Marketing",
-    cookieMarketingDesc: "Utilizzati per tracciare i visitatori sui siti web per scopi pubblicitari.",
-    cookiePreferences: "Cookie di Preferenze",
-    cookiePreferencesDesc: "Ricordano le tue preferenze e impostazioni.",
   },
   pt: {
     // Navigation and general
@@ -587,20 +731,38 @@ const translations: Record<Language, Record<string, string>> = {
     savePreferences: "Salvar Preferências",
 
     // Hero section
-    heroTitle: "Organize sua vida com IA",
-    heroSubtitle: "O aplicativo de produtividade mais avançado com inteligência artificial integrada",
+    heroTitle: "O Futuro da",
+    heroTitleHighlight: "Produtividade",
+    heroSubtitle: "🚀 Alimentado por IA",
     heroDescription:
-      "Gerencie tarefas, calendário, notas e mais com a ajuda do nosso assistente IA. Aumente sua produtividade em até 300%.",
+      "Transforme sua forma de trabalhar com inteligência artificial avançada. Gerencie tarefas, otimize seu tempo e alcance seus objetivos como nunca antes.",
+    startFree: "Começar Grátis",
+    watchDemo: "Ver Demo",
 
     // Features
-    aiAssistant: "Assistente IA",
-    aiAssistantDesc: "Seu companheiro inteligente para maximizar a produtividade",
+    featuresTitle: "Recursos Revolucionários",
+    featuresDescription: "Descubra como o FutureTask está redefinindo a produtividade pessoal com tecnologia de ponta.",
+    aiAssistant: "Assistente IA Inteligente",
+    aiAssistantDesc:
+      "Seu assistente pessoal que aprende com seus hábitos e otimiza automaticamente seu fluxo de trabalho.",
     smartCalendar: "Calendário Inteligente",
-    smartCalendarDesc: "Planejamento automático e sugestões personalizadas",
-    taskManagement: "Gerenciamento de Tarefas",
-    taskManagementDesc: "Organize e priorize com algoritmos avançados",
+    smartCalendarDesc:
+      "Planejamento automático que se adapta à sua energia e prioridades para maximizar sua produtividade.",
+    taskManagement: "Rastreamento de Objetivos",
+    taskManagementDesc: "Transforme seus sonhos em realidade com rastreamento inteligente e lembretes personalizados.",
+    analytics: "Análises Avançadas",
+    analyticsDesc:
+      "Insights profundos sobre sua produtividade com gráficos interativos e recomendações personalizadas.",
+    pomodoro: "Pomodoro Inteligente",
+    pomodoroDesc: "Técnica Pomodoro adaptativa que se ajusta ao seu ritmo e tipo de trabalho para foco máximo.",
+    achievements: "Sistema de Conquistas",
+    achievementsDesc:
+      "Gamificação inteligente que te motiva a alcançar seus objetivos com recompensas e desafios personalizados.",
 
     // Pricing
+    pricingTitle: "Planos Projetados para Você",
+    pricingDescription:
+      "Escolha o plano perfeito para seu nível de produtividade. Todos incluem acesso completo aos nossos recursos principais.",
     free: "Gratuito",
     premium: "Premium",
     pro: "Pro",
@@ -608,6 +770,61 @@ const translations: Record<Language, Record<string, string>> = {
     yearly: "Anual",
     mostPopular: "Mais Popular",
     bestValue: "Melhor Valor",
+    freeDescription: "Perfeito para começar sua jornada de produtividade",
+    premiumDescription: "Para usuários que buscam maior produtividade",
+    proDescription: "Para profissionais que precisam de desempenho máximo",
+    chooseFree: "Começar Grátis",
+    choosePremium: "Escolher Premium",
+    choosePro: "Escolher Pro",
+    guarantee: "Garantia de reembolso de 30 dias. Cancele a qualquer momento.",
+
+    // Blog
+    blogTitle: "Blog de Produtividade",
+    blogDescription:
+      "Descubra as últimas tendências, dicas e estratégias para maximizar sua produtividade pessoal e profissional.",
+    readMore: "Leia mais",
+    viewAllArticles: "Ver Todos os Artigos",
+    relatedPosts: "Artigos relacionados",
+    shareArticle: "Compartilhar artigo",
+    backToBlog: "Voltar ao blog",
+
+    // Newsletter
+    newsletterTitle: "Mantenha-se Atualizado",
+    newsletterDescription:
+      "Receba dicas semanais de produtividade, atualizações de recursos e conteúdo exclusivo diretamente em sua caixa de entrada.",
+    newsletterPlaceholder: "seu@email.com",
+    newsletterCta: "Inscrever-se",
+    newsletterPrivacy: "Sem spam. Cancele a inscrição a qualquer momento.",
+
+    // Contact
+    contactTitle: "Entre em Contato",
+    contactDescription:
+      "Tem perguntas, sugestões ou precisa de ajuda? Estamos aqui para ajudá-lo a maximizar sua produtividade.",
+    contactInfo: "Informações de Contato",
+    contactForm: "Envie-nos uma Mensagem",
+    contactName: "Nome",
+    contactEmail: "Email",
+    contactSubject: "Assunto",
+    contactMessage: "Mensagem",
+    contactSend: "Enviar Mensagem",
+    followUs: "Siga-nos",
+
+    // Footer
+    footerDescription: "Transformando a produtividade pessoal com inteligência artificial avançada.",
+    footerProduct: "Produto",
+    footerResources: "Recursos",
+    footerCompany: "Empresa",
+    footerApp: "Aplicativo",
+    footerUpdates: "Atualizações",
+    footerHelp: "Central de Ajuda",
+    footerCommunity: "Comunidade",
+    footerApi: "API",
+    footerAbout: "Sobre",
+    footerPrivacy: "Privacidade",
+    footerTerms: "Termos",
+    footerRights: "Todos os direitos reservados.",
+    footerMadeWith: "Feito com",
+    footerInSpain: "na Espanha",
 
     // Authentication
     signIn: "Entrar",
@@ -634,51 +851,7 @@ const translations: Record<Language, Record<string, string>> = {
     plan: "Plano",
     settings: "Configurações",
     achievements: "Conquistas",
-
-    // Dashboard
     dashboard: "Painel",
-    yourCurrentPlan: "Seu Plano Atual",
-    manageSubscription: "Gerencie sua assinatura",
-    basicFeatures: "Recursos básicos",
-    advancedFeatures: "Recursos avançados",
-    allFeatures: "Todos os recursos",
-    active: "Ativo",
-    inactive: "Inativo",
-    upgradeToPremium: "Atualizar para Premium",
-    upgradeToPro: "Atualizar para Pro",
-    buyAICredits: "Comprar Créditos IA",
-
-    // Blog
-    readMore: "Leia mais",
-    relatedPosts: "Artigos relacionados",
-    shareArticle: "Compartilhar artigo",
-    backToBlog: "Voltar ao blog",
-
-    // Footer
-    aboutUs: "Sobre Nós",
-    privacyPolicy: "Política de Privacidade",
-    termsOfService: "Termos de Serviço",
-    support: "Suporte",
-    followUs: "Siga-nos",
-    allRightsReserved: "Todos os direitos reservados",
-
-    // Cookie banner
-    cookieTitle: "Configurações de Cookies",
-    cookieDescription:
-      "Usamos cookies para melhorar sua experiência. Ao continuar navegando, você aceita nosso uso de cookies.",
-    cookieAccept: "Aceitar Todos",
-    cookieDecline: "Recusar",
-    cookieSettings: "Configurações",
-    cookieSettingsTitle: "Configurações de Cookies",
-    cookieSettingsDescription: "Gerencie suas preferências de cookies abaixo.",
-    cookieNecessary: "Cookies Necessários",
-    cookieNecessaryDesc: "Estes cookies são essenciais para o funcionamento adequado do site.",
-    cookieAnalytics: "Cookies de Análise",
-    cookieAnalyticsDesc: "Nos ajudam a entender como os visitantes interagem com nosso site.",
-    cookieMarketing: "Cookies de Marketing",
-    cookieMarketingDesc: "Usados para rastrear visitantes em sites para fins publicitários.",
-    cookiePreferences: "Cookies de Preferências",
-    cookiePreferencesDesc: "Lembram suas preferências e configurações.",
   },
 }
 
@@ -687,7 +860,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 // Provider component
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en")
+  const [language, setLanguage] = useState<Language>("es")
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -714,13 +887,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguage(lang)
     try {
       localStorage.setItem("language", lang)
+      // Force page reload to apply language changes
+      window.location.reload()
     } catch (error) {
       console.warn("Error saving language to localStorage:", error)
     }
   }
 
   const t = (key: string): string => {
-    return translations[language]?.[key] || translations.en[key] || key
+    return translations[language]?.[key] || translations.es[key] || key
   }
 
   const value: LanguageContextType = {
@@ -740,11 +915,4 @@ export function useLanguage(): LanguageContextType {
     throw new Error("useLanguage must be used within a LanguageProvider")
   }
   return context
-}
-
-// Global gtag type declaration
-declare global {
-  interface Window {
-    gtag: (command: string, targetId: string, config?: any) => void
-  }
 }

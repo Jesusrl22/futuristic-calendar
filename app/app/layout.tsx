@@ -1,24 +1,21 @@
 import type React from "react"
+
 import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { NotificationService } from "@/components/notification-service"
-import { LanguageProvider } from "@/hooks/useLanguage"
+import { AppLayoutClient } from "./layout.client"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export default function AppLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <div className={inter.className}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <LanguageProvider>
-          <NotificationService />
-          {children}
-        </LanguageProvider>
-      </ThemeProvider>
-    </div>
+    <html lang="es" suppressHydrationWarning>
+      <head>{/* Analytics component will be added here */}</head>
+      <body className={inter.className}>
+        <AppLayoutClient>{children}</AppLayoutClient>
+      </body>
+    </html>
   )
 }

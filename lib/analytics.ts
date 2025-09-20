@@ -109,6 +109,14 @@ export const performanceMonitoring = {
   },
 }
 
+// Analytics component for easy integration
+export const Analytics = {
+  init: gtag.init,
+  pageview: gtag.pageview,
+  event: gtag.event,
+  config: ANALYTICS_CONFIG,
+}
+
 // Declare global gtag function
 declare global {
   interface Window {
