@@ -1,631 +1,701 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import {
   Users,
+  CreditCard,
+  BarChart3,
+  Settings,
   Crown,
+  Zap,
   Star,
-  User,
   Edit,
+  Trash2,
+  Plus,
+  Search,
+  Filter,
+  Download,
   DollarSign,
-  Brain,
-  Save,
-  ArrowLeft,
-  Shield,
-  Clock,
-  Infinity,
+  TrendingUp,
+  UserCheck,
+  AlertCircle,
 } from "lucide-react"
 
-interface AdminUser {
+interface User {
   id: string
   name: string
   email: string
-  subscription_plan: string
-  subscription_status: string
-  subscription_expires_at?: string
-  is_lifetime?: boolean
+  plan: "free" | "premium" | "pro"
+  subscription_status: "active" | "cancelled" | "expired"
   ai_credits: number
   created_at: string
   last_login?: string
-  pomodoro_work_duration: number
-  pomodoro_break_duration: number
-  pomodoro_long_break_duration: number
+  total_tasks: number
+  completed_tasks: number
+  is_lifetime: boolean
+  notes_count: number
+  wishlist_count: number
+}
+
+interface Subscription {
+  id: string
+  user_id: string
+  plan: "free" | "premium" | "pro"
+  status: "active" | "cancelled" | "expired"
+  billing_cycle: "monthly" | "yearly"
+  amount: number
+  next_billing_date?: string
+  created_at: string
+}
+
+interface AdminStats {
+  total_users: number
+  active_subscriptions: number
+  monthly_revenue: number
+  total_tasks: number
+  growth_rate: number
 }
 
 export default function AdminPage() {
-  const [users, setUsers] = useState<AdminUser[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const [stats, setStats] = useState<AdminStats>({
+    total_users: 0,
+    active_subscriptions: 0,
+    monthly_revenue: 0,
+    total_tasks: 0,
+    growth_rate: 0,
+  })
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterPlan, setFilterPlan] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(true)
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
-  // Sample admin data
-  const sampleUsers: AdminUser[] = [
-    {
-      id: "1",
-      name: "Demo User",
-      email: "demo@futuretask.com",
-      subscription_plan: "free",
-      subscription_status: "active",
-      ai_credits: 0,
-      created_at: "2024-01-15T10:00:00Z",
-      last_login: "2024-01-20T14:30:00Z",
-      pomodoro_work_duration: 25,
-      pomodoro_break_duration: 5,
-      pomodoro_long_break_duration: 15,
-    },
-    {
-      id: "2",
-      name: "Premium User",
-      email: "premium@futuretask.com",
-      subscription_plan: "premium",
-      subscription_status: "active",
-      subscription_expires_at: "2024-12-31T23:59:59Z",
-      ai_credits: 0,
-      created_at: "2024-01-10T09:00:00Z",
-      last_login: "2024-01-20T16:45:00Z",
-      pomodoro_work_duration: 30,
-      pomodoro_break_duration: 10,
-      pomodoro_long_break_duration: 20,
-    },
-    {
-      id: "3",
-      name: "Pro User",
-      email: "pro@futuretask.com",
-      subscription_plan: "pro",
-      subscription_status: "active",
-      subscription_expires_at: "2024-12-31T23:59:59Z",
-      ai_credits: 450,
-      created_at: "2024-01-05T08:00:00Z",
-      last_login: "2024-01-20T18:20:00Z",
-      pomodoro_work_duration: 45,
-      pomodoro_break_duration: 15,
-      pomodoro_long_break_duration: 30,
-    },
-    {
-      id: "4",
-      name: "Lifetime Pro",
-      email: "lifetime@futuretask.com",
-      subscription_plan: "pro",
-      subscription_status: "active",
-      is_lifetime: true,
-      ai_credits: 1000,
-      created_at: "2023-12-01T12:00:00Z",
-      last_login: "2024-01-20T20:10:00Z",
-      pomodoro_work_duration: 25,
-      pomodoro_break_duration: 5,
-      pomodoro_long_break_duration: 15,
-    },
-  ]
-
+  // Sample data - in a real app, this would come from your API
   useEffect(() => {
-    const loadUsers = async () => {
-      setIsLoading(true)
-      try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+    const loadData = async () => {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-        // Load from localStorage or use sample data
-        const savedUsers = localStorage.getItem("admin_users")
-        if (savedUsers) {
-          setUsers(JSON.parse(savedUsers))
-        } else {
-          setUsers(sampleUsers)
-          localStorage.setItem("admin_users", JSON.stringify(sampleUsers))
-        }
-      } catch (error) {
-        console.error("Error loading users:", error)
-      } finally {
-        setIsLoading(false)
-      }
+      const sampleUsers: User[] = [
+        {
+          id: "1",
+          name: "John Doe",
+          email: "john@example.com",
+          plan: "pro",
+          subscription_status: "active",
+          ai_credits: 850,
+          created_at: "2024-01-15T10:00:00Z",
+          last_login: "2024-01-20T14:30:00Z",
+          total_tasks: 45,
+          completed_tasks: 38,
+          is_lifetime: false,
+          notes_count: 12,
+          wishlist_count: 8,
+        },
+        {
+          id: "2",
+          name: "Jane Smith",
+          email: "jane@example.com",
+          plan: "premium",
+          subscription_status: "active",
+          ai_credits: 0,
+          created_at: "2024-01-10T09:00:00Z",
+          last_login: "2024-01-19T16:45:00Z",
+          total_tasks: 23,
+          completed_tasks: 20,
+          is_lifetime: true,
+          notes_count: 8,
+          wishlist_count: 15,
+        },
+        {
+          id: "3",
+          name: "Bob Johnson",
+          email: "bob@example.com",
+          plan: "free",
+          subscription_status: "active",
+          ai_credits: 0,
+          created_at: "2024-01-18T11:00:00Z",
+          last_login: "2024-01-20T10:15:00Z",
+          total_tasks: 8,
+          completed_tasks: 5,
+          is_lifetime: false,
+          notes_count: 3,
+          wishlist_count: 0,
+        },
+        {
+          id: "4",
+          name: "Alice Wilson",
+          email: "alice@example.com",
+          plan: "premium",
+          subscription_status: "cancelled",
+          ai_credits: 0,
+          created_at: "2023-12-01T08:00:00Z",
+          last_login: "2024-01-15T12:00:00Z",
+          total_tasks: 67,
+          completed_tasks: 54,
+          is_lifetime: false,
+          notes_count: 25,
+          wishlist_count: 12,
+        },
+      ]
+
+      const sampleSubscriptions: Subscription[] = [
+        {
+          id: "1",
+          user_id: "1",
+          plan: "pro",
+          status: "active",
+          billing_cycle: "monthly",
+          amount: 19.99,
+          next_billing_date: "2024-02-15T10:00:00Z",
+          created_at: "2024-01-15T10:00:00Z",
+        },
+        {
+          id: "2",
+          user_id: "2",
+          plan: "premium",
+          status: "active",
+          billing_cycle: "yearly",
+          amount: 99.99,
+          next_billing_date: "2025-01-10T09:00:00Z",
+          created_at: "2024-01-10T09:00:00Z",
+        },
+      ]
+
+      setUsers(sampleUsers)
+      setSubscriptions(sampleSubscriptions)
+      setStats({
+        total_users: sampleUsers.length,
+        active_subscriptions: sampleSubscriptions.filter((s) => s.status === "active").length,
+        monthly_revenue: sampleSubscriptions
+          .filter((s) => s.status === "active")
+          .reduce((sum, s) => sum + (s.billing_cycle === "yearly" ? s.amount / 12 : s.amount), 0),
+        total_tasks: sampleUsers.reduce((sum, u) => sum + u.total_tasks, 0),
+        growth_rate: 15.2,
+      })
+
+      setIsLoading(false)
     }
 
-    loadUsers()
+    loadData()
   }, [])
 
-  const saveUsers = (updatedUsers: AdminUser[]) => {
-    setUsers(updatedUsers)
-    localStorage.setItem("admin_users", JSON.stringify(updatedUsers))
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user)
+    setShowEditModal(true)
   }
 
-  const handleEditUser = (user: AdminUser) => {
-    setEditingUser({ ...user })
-    setIsEditDialogOpen(true)
+  const handleSaveUser = async (updatedUser: User) => {
+    setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
+    setShowEditModal(false)
+    setSelectedUser(null)
   }
 
-  const handleSaveUser = () => {
-    if (!editingUser) return
-
-    const updatedUsers = users.map((user) => (user.id === editingUser.id ? editingUser : user))
-    saveUsers(updatedUsers)
-    setIsEditDialogOpen(false)
-    setEditingUser(null)
-  }
-
-  const handleUserFieldChange = (field: string, value: any) => {
-    if (!editingUser) return
-    setEditingUser({ ...editingUser, [field]: value })
-  }
-
-  const getPlanBadge = (plan: string, isLifetime?: boolean) => {
-    if (isLifetime) {
-      return (
-        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-          <Infinity className="h-3 w-3 mr-1" />
-          LIFETIME
-        </Badge>
-      )
+  const handleDeleteUser = async (userId: string) => {
+    if (confirm("Are you sure you want to delete this user?")) {
+      setUsers((prev) => prev.filter((u) => u.id !== userId))
     }
+  }
 
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesPlan = filterPlan === "all" || user.plan === filterPlan
+    return matchesSearch && matchesPlan
+  })
+
+  const getPlanIcon = (plan: string) => {
     switch (plan) {
       case "pro":
-        return (
-          <Badge className="bg-gradient-to-r from-purple-500 to-blue-500 text-white">
-            <Crown className="h-3 w-3 mr-1" />
-            PRO
-          </Badge>
-        )
+        return Zap
       case "premium":
-        return (
-          <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
-            <Star className="h-3 w-3 mr-1" />
-            PREMIUM
-          </Badge>
-        )
+        return Crown
       default:
-        return (
-          <Badge variant="outline">
-            <User className="h-3 w-3 mr-1" />
-            FREE
-          </Badge>
-        )
+        return Star
     }
   }
 
-  const getStats = () => {
-    const totalUsers = users.length
-    const freeUsers = users.filter((u) => u.subscription_plan === "free").length
-    const premiumUsers = users.filter((u) => u.subscription_plan === "premium").length
-    const proUsers = users.filter((u) => u.subscription_plan === "pro").length
-    const lifetimeUsers = users.filter((u) => u.is_lifetime).length
-
-    const monthlyRevenue = premiumUsers * 1.99 + proUsers * 4.99 - lifetimeUsers * 4.99 // Lifetime users don't contribute to monthly revenue
-
-    return {
-      totalUsers,
-      freeUsers,
-      premiumUsers,
-      proUsers,
-      lifetimeUsers,
-      monthlyRevenue: monthlyRevenue.toFixed(2),
+  const getPlanColor = (plan: string) => {
+    switch (plan) {
+      case "pro":
+        return "bg-purple-100 text-purple-800"
+      case "premium":
+        return "bg-blue-100 text-blue-800"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
   }
 
-  const stats = getStats()
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-100 text-green-800"
+      case "cancelled":
+        return "bg-red-100 text-red-800"
+      case "expired":
+        return "bg-yellow-100 text-yellow-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-400">Cargando panel de administración...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading admin dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => (window.location.href = "/app")}
-                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mr-2"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Volver a App
-              </Button>
-              <Shield className="h-6 w-6 text-red-500" />
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Panel de Administración</h1>
-            </div>
-            <Badge variant="destructive" className="bg-red-500">
-              ADMIN
-            </Badge>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage users, subscriptions, and system settings</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export Data
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
           </div>
         </div>
-      </header>
 
-      <main className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="overview" className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total_users}</div>
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />+{stats.growth_rate}% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.active_subscriptions}</div>
+              <p className="text-xs text-muted-foreground">
+                {((stats.active_subscriptions / stats.total_users) * 100).toFixed(1)}% conversion rate
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.monthly_revenue.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">Recurring revenue</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.total_tasks}</div>
+              <p className="text-xs text-muted-foreground">Created by all users</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">System Status</CardTitle>
+              <AlertCircle className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">Healthy</div>
+              <p className="text-xs text-muted-foreground">All systems operational</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <Tabs defaultValue="users" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="overview">Resumen</TabsTrigger>
-            <TabsTrigger value="users">Usuarios</TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center space-x-2">
+              <Users className="h-4 w-4" />
+              <span>Users</span>
+            </TabsTrigger>
+            <TabsTrigger value="subscriptions" className="flex items-center space-x-2">
+              <CreditCard className="h-4 w-4" />
+              <span>Subscriptions</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center space-x-2">
+              <BarChart3 className="h-4 w-4" />
+              <span>Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>Settings</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Usuarios</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.totalUsers}</p>
+          <TabsContent value="users" className="space-y-4">
+            {/* Filters */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
                     </div>
-                    <Users className="h-8 w-8 text-blue-500" />
                   </div>
-                </CardContent>
-              </Card>
+                  <Select value={filterPlan} onValueChange={setFilterPlan}>
+                    <SelectTrigger className="w-40">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Plans</SelectItem>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="pro">Pro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Ingresos Mensuales</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">€{stats.monthlyRevenue}</p>
-                    </div>
-                    <DollarSign className="h-8 w-8 text-green-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Usuarios Premium</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.premiumUsers}</p>
-                    </div>
-                    <Star className="h-8 w-8 text-yellow-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Usuarios Pro</p>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{stats.proUsers}</p>
-                    </div>
-                    <Crown className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Plan Distribution */}
+            {/* Users Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Distribución de Planes</CardTitle>
-                <CardDescription>Distribución de usuarios por tipo de suscripción</CardDescription>
+                <CardTitle>Users ({filteredUsers.length})</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span>Gratuito</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-gray-500 h-2 rounded-full"
-                          style={{ width: `${(stats.freeUsers / stats.totalUsers) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium w-12">{stats.freeUsers}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      <span>Premium</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-yellow-500 h-2 rounded-full"
-                          style={{ width: `${(stats.premiumUsers / stats.totalUsers) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium w-12">{stats.premiumUsers}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Crown className="h-4 w-4 text-purple-500" />
-                      <span>Pro</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-purple-500 h-2 rounded-full"
-                          style={{ width: `${(stats.proUsers / stats.totalUsers) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium w-12">{stats.proUsers}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Infinity className="h-4 w-4 text-pink-500" />
-                      <span>Vitalicio</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-32 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-pink-500 h-2 rounded-full"
-                          style={{ width: `${(stats.lifetimeUsers / stats.totalUsers) * 100}%` }}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-medium w-12">{stats.lifetimeUsers}</span>
-                    </div>
-                  </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">User</th>
+                        <th className="text-left p-2">Plan</th>
+                        <th className="text-left p-2">Status</th>
+                        <th className="text-left p-2">Tasks</th>
+                        <th className="text-left p-2">AI Credits</th>
+                        <th className="text-left p-2">Last Login</th>
+                        <th className="text-left p-2">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((user) => {
+                        const PlanIcon = getPlanIcon(user.plan)
+                        return (
+                          <tr key={user.id} className="border-b hover:bg-muted/50">
+                            <td className="p-2">
+                              <div>
+                                <div className="font-medium">{user.name}</div>
+                                <div className="text-sm text-muted-foreground">{user.email}</div>
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <Badge className={getPlanColor(user.plan)}>
+                                <PlanIcon className="h-3 w-3 mr-1" />
+                                {user.plan.toUpperCase()}
+                                {user.is_lifetime && " (Lifetime)"}
+                              </Badge>
+                            </td>
+                            <td className="p-2">
+                              <Badge className={getStatusColor(user.subscription_status)}>
+                                {user.subscription_status}
+                              </Badge>
+                            </td>
+                            <td className="p-2">
+                              <div className="text-sm">
+                                {user.completed_tasks}/{user.total_tasks}
+                                <div className="text-xs text-muted-foreground">
+                                  {user.total_tasks > 0
+                                    ? Math.round((user.completed_tasks / user.total_tasks) * 100)
+                                    : 0}
+                                  % complete
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <div className="text-sm">
+                                {user.ai_credits}
+                                {user.plan === "pro" && <div className="text-xs text-muted-foreground">Pro user</div>}
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <div className="text-sm">
+                                {user.last_login ? new Date(user.last_login).toLocaleDateString() : "Never"}
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <div className="flex items-center space-x-2">
+                                <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
+          <TabsContent value="subscriptions" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Gestión de Usuarios</CardTitle>
-                <CardDescription>Administra las cuentas y suscripciones de los usuarios</CardDescription>
+                <CardTitle>Active Subscriptions</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Usuario</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Créditos IA</TableHead>
-                      <TableHead>Último Login</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-slate-500">{user.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getPlanBadge(user.subscription_plan, user.is_lifetime)}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={user.subscription_status === "active" ? "default" : "secondary"}
-                            className={
-                              user.subscription_status === "active"
-                                ? "bg-green-500 text-white"
-                                : "bg-gray-500 text-white"
-                            }
-                          >
-                            {user.subscription_status.toUpperCase()}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Brain className="h-4 w-4 text-purple-500" />
-                            {user.ai_credits}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {user.last_login ? new Date(user.last_login).toLocaleDateString("es-ES") : "Nunca"}
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm" onClick={() => handleEditUser(user)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-2">User</th>
+                        <th className="text-left p-2">Plan</th>
+                        <th className="text-left p-2">Billing</th>
+                        <th className="text-left p-2">Amount</th>
+                        <th className="text-left p-2">Next Billing</th>
+                        <th className="text-left p-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscriptions.map((subscription) => {
+                        const user = users.find((u) => u.id === subscription.user_id)
+                        return (
+                          <tr key={subscription.id} className="border-b">
+                            <td className="p-2">
+                              <div>
+                                <div className="font-medium">{user?.name}</div>
+                                <div className="text-sm text-muted-foreground">{user?.email}</div>
+                              </div>
+                            </td>
+                            <td className="p-2">
+                              <Badge className={getPlanColor(subscription.plan)}>
+                                {subscription.plan.toUpperCase()}
+                              </Badge>
+                            </td>
+                            <td className="p-2">
+                              <Badge variant="outline">{subscription.billing_cycle}</Badge>
+                            </td>
+                            <td className="p-2">${subscription.amount}</td>
+                            <td className="p-2">
+                              {subscription.next_billing_date
+                                ? new Date(subscription.next_billing_date).toLocaleDateString()
+                                : "N/A"}
+                            </td>
+                            <td className="p-2">
+                              <Badge className={getStatusColor(subscription.status)}>{subscription.status}</Badge>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Growth</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <BarChart3 className="h-12 w-12 mx-auto mb-4" />
+                    <p>Analytics charts would be implemented here</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4" />
+                    <p>Revenue analytics would be implemented here</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>System Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Maintenance Mode</Label>
+                      <p className="text-sm text-muted-foreground">Enable maintenance mode for system updates</p>
+                    </div>
+                    <Switch />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>New User Registrations</Label>
+                      <p className="text-sm text-muted-foreground">Allow new users to register</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Email Notifications</Label>
+                      <p className="text-sm text-muted-foreground">Send system notifications via email</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
 
-        {/* Edit User Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Editar Usuario</DialogTitle>
-              <DialogDescription>Modifica la información y suscripción del usuario</DialogDescription>
-            </DialogHeader>
-
-            {editingUser && (
-              <div className="space-y-6">
-                {/* Basic Info */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Información Básica</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Nombre</Label>
-                      <Input
-                        id="name"
-                        value={editingUser.name}
-                        onChange={(e) => handleUserFieldChange("name", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={editingUser.email}
-                        onChange={(e) => handleUserFieldChange("email", e.target.value)}
-                      />
-                    </div>
+        {/* Edit User Modal */}
+        {selectedUser && (
+          <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Edit User: {selectedUser.name}</DialogTitle>
+              </DialogHeader>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  const formData = new FormData(e.currentTarget)
+                  const updatedUser: User = {
+                    ...selectedUser,
+                    name: formData.get("name") as string,
+                    email: formData.get("email") as string,
+                    plan: formData.get("plan") as "free" | "premium" | "pro",
+                    subscription_status: formData.get("status") as "active" | "cancelled" | "expired",
+                    ai_credits: Number.parseInt(formData.get("ai_credits") as string) || 0,
+                    is_lifetime: formData.get("is_lifetime") === "on",
+                  }
+                  handleSaveUser(updatedUser)
+                }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" name="name" defaultValue={selectedUser.name} required />
                   </div>
-                </div>
-
-                {/* Subscription */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Suscripción</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="premium"
-                        checked={editingUser.subscription_plan === "premium"}
-                        onCheckedChange={(checked) =>
-                          handleUserFieldChange("subscription_plan", checked ? "premium" : "free")
-                        }
-                      />
-                      <Label htmlFor="premium" className="flex items-center gap-2">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        Premium
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="pro"
-                        checked={editingUser.subscription_plan === "pro"}
-                        onCheckedChange={(checked) =>
-                          handleUserFieldChange("subscription_plan", checked ? "pro" : "free")
-                        }
-                      />
-                      <Label htmlFor="pro" className="flex items-center gap-2">
-                        <Crown className="h-4 w-4 text-purple-500" />
-                        Pro
-                      </Label>
-                    </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" defaultValue={selectedUser.email} required />
                   </div>
-
-                  {/* Lifetime Toggle */}
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="lifetime"
-                      checked={editingUser.is_lifetime || false}
-                      onCheckedChange={(checked) => handleUserFieldChange("is_lifetime", checked)}
+                  <div>
+                    <Label htmlFor="plan">Plan</Label>
+                    <Select name="plan" defaultValue={selectedUser.plan}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="premium">Premium</SelectItem>
+                        <SelectItem value="pro">Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select name="status" defaultValue={selectedUser.subscription_status}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="ai_credits">AI Credits</Label>
+                    <Input
+                      id="ai_credits"
+                      name="ai_credits"
+                      type="number"
+                      defaultValue={selectedUser.ai_credits}
+                      min="0"
                     />
-                    <Label htmlFor="lifetime" className="flex items-center gap-2">
-                      <Infinity className="h-4 w-4 text-pink-500" />
-                      Suscripción Vitalicia
-                    </Label>
                   </div>
-
-                  {/* Expiration Date */}
-                  {!editingUser.is_lifetime && editingUser.subscription_plan !== "free" && (
-                    <div>
-                      <Label htmlFor="expires_at" className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-blue-500" />
-                        Fecha de Expiración
-                      </Label>
-                      <Input
-                        id="expires_at"
-                        type="datetime-local"
-                        value={
-                          editingUser.subscription_expires_at
-                            ? new Date(editingUser.subscription_expires_at).toISOString().slice(0, 16)
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleUserFieldChange(
-                            "subscription_expires_at",
-                            e.target.value ? new Date(e.target.value).toISOString() : undefined,
-                          )
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* AI Credits */}
-                {editingUser.subscription_plan === "pro" && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Créditos IA</h3>
-                    <div>
-                      <Label htmlFor="ai_credits">Créditos Disponibles</Label>
-                      <Input
-                        id="ai_credits"
-                        type="number"
-                        min="0"
-                        value={editingUser.ai_credits}
-                        onChange={(e) => handleUserFieldChange("ai_credits", Number.parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Pomodoro Settings */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Configuración Pomodoro</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="work_duration">Trabajo (min)</Label>
-                      <Input
-                        id="work_duration"
-                        type="number"
-                        min="1"
-                        max="60"
-                        value={editingUser.pomodoro_work_duration}
-                        onChange={(e) =>
-                          handleUserFieldChange("pomodoro_work_duration", Number.parseInt(e.target.value) || 25)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="break_duration">Descanso (min)</Label>
-                      <Input
-                        id="break_duration"
-                        type="number"
-                        min="1"
-                        max="30"
-                        value={editingUser.pomodoro_break_duration}
-                        onChange={(e) =>
-                          handleUserFieldChange("pomodoro_break_duration", Number.parseInt(e.target.value) || 5)
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="long_break_duration">Descanso Largo (min)</Label>
-                      <Input
-                        id="long_break_duration"
-                        type="number"
-                        min="1"
-                        max="60"
-                        value={editingUser.pomodoro_long_break_duration}
-                        onChange={(e) =>
-                          handleUserFieldChange("pomodoro_long_break_duration", Number.parseInt(e.target.value) || 15)
-                        }
-                      />
-                    </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="is_lifetime"
+                      name="is_lifetime"
+                      defaultChecked={selectedUser.is_lifetime}
+                    />
+                    <Label htmlFor="is_lifetime">Lifetime Subscription</Label>
                   </div>
                 </div>
 
-                {/* Save Button */}
-                <div className="flex justify-end pt-4 border-t">
-                  <Button onClick={handleSaveUser} className="bg-blue-500 hover:bg-blue-600 text-white">
-                    <Save className="h-4 w-4 mr-2" />
-                    Guardar Cambios
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
+                    Cancel
                   </Button>
+                  <Button type="submit">Save Changes</Button>
                 </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </main>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
     </div>
   )
 }
