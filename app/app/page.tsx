@@ -14,39 +14,33 @@ import { CalendarWidget } from "@/components/calendar-widget"
 import { NotesManager } from "@/components/notes-manager"
 import { WishlistManager } from "@/components/wishlist-manager"
 import { AiAssistant } from "@/components/ai-assistant"
-import { AchievementsDisplay } from "@/components/achievements-display"
+import { AchievementsBadgeViewer } from "@/components/achievements-badge-viewer"
 import { AchievementNotification } from "@/components/achievement-notification"
 import { AiCreditsDisplay } from "@/components/ai-credits-display"
 import { AiCreditsPurchase } from "@/components/ai-credits-purchase"
 import { SettingsModal } from "@/components/settings-modal"
-import { DatabaseStatus } from "@/components/database-status"
 import { NotificationService } from "@/components/notification-service"
 import { StatsCards } from "@/components/stats-cards"
+import { SubscriptionModal } from "@/components/subscription-modal"
 import { useTheme } from "@/hooks/useTheme"
 import { LanguageProvider, useLanguage } from "@/hooks/useLanguage"
 import { LanguageSelector } from "@/components/language-selector"
-import { SubscriptionManager } from "@/components/subscription-manager"
 import {
   Calendar,
-  CheckSquare,
   FileText,
   Heart,
   Brain,
   Trophy,
   Settings,
-  User,
   LogOut,
-  Sun,
-  Moon,
-  Monitor,
   Crown,
   Star,
   BarChart3,
-  CreditCard,
   ArrowLeft,
+  CreditCard,
 } from "lucide-react"
 import { loginUser, registerUser, logoutUser, updateUserSubscription } from "@/lib/hybrid-database"
-import { getUserAchievements, checkAndUnlockAchievements } from "@/lib/achievements"
+import { checkAndUnlockAchievements } from "@/lib/achievements"
 import { getUserAICredits, addCreditsToUser } from "@/lib/ai-credits"
 
 function FuturisticCalendarContent() {
@@ -69,10 +63,60 @@ function FuturisticCalendarContent() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [showSettings, setShowSettings] = useState(false)
   const [showAchievements, setShowAchievements] = useState(false)
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false)
   const [showCreditsPurchase, setShowCreditsPurchase] = useState(false)
   const [achievements, setAchievements] = useState<any[]>([])
   const [newAchievement, setNewAchievement] = useState<any>(null)
   const [aiCredits, setAiCredits] = useState(0)
+
+  // Sample achievements data
+  const sampleAchievements = [
+    {
+      id: "1",
+      name: "Primer Paso",
+      description: "Completa tu primera tarea",
+      icon: "🎯",
+      category: "basic",
+      points: 10,
+      unlocked: true,
+      progress: 1,
+      target: 1,
+      unlockedAt: new Date().toISOString(),
+    },
+    {
+      id: "2",
+      name: "Productivo",
+      description: "Completa 10 tareas",
+      icon: "⚡",
+      category: "basic",
+      points: 25,
+      unlocked: false,
+      progress: 3,
+      target: 10,
+    },
+    {
+      id: "3",
+      name: "Organizador Premium",
+      description: "Crea 5 notas",
+      icon: "📝",
+      category: "premium",
+      points: 20,
+      unlocked: false,
+      progress: 0,
+      target: 5,
+    },
+    {
+      id: "4",
+      name: "Maestro IA",
+      description: "Usa el asistente IA 50 veces",
+      icon: "🤖",
+      category: "pro",
+      points: 50,
+      unlocked: false,
+      progress: 0,
+      target: 50,
+    },
+  ]
 
   // Load user on mount
   useEffect(() => {
@@ -103,7 +147,10 @@ function FuturisticCalendarContent() {
   // Load user-specific data
   const loadUserData = async (userId: string) => {
     try {
-      const [userAchievements, credits] = await Promise.all([getUserAchievements(userId), getUserAICredits(userId)])
+      const [userAchievements, credits] = await Promise.all([
+        Promise.resolve(sampleAchievements), // Using sample data
+        getUserAICredits(userId),
+      ])
 
       setAchievements(userAchievements)
       setAiCredits(credits)
@@ -210,6 +257,21 @@ function FuturisticCalendarContent() {
     }
   }
 
+  // Handle subscription cancellation
+  const handleCancelSubscription = async () => {
+    if (!user) return
+
+    try {
+      const updatedUser = await updateUserSubscription(user.id, "free", "canceled")
+      if (updatedUser) {
+        setUser(updatedUser)
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser))
+      }
+    } catch (error) {
+      console.error("Subscription cancellation error:", error)
+    }
+  }
+
   // Handle AI credits purchase
   const handleCreditsPurchase = async (packageId: string, credits: number, price: number) => {
     if (!user) return
@@ -233,9 +295,14 @@ function FuturisticCalendarContent() {
     }
   }
 
-  // Handle theme change
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme)
+  // Handle user update
+  const handleUserUpdate = (updates: any) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates }
+      setUser(updatedUser)
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser))
+      setShowSettings(false)
+    }
   }
 
   // Get user plan info
@@ -392,7 +459,6 @@ function FuturisticCalendarContent() {
               </Button>
               <Calendar className="h-6 w-6 text-purple-500" />
               <h1 className="text-xl font-bold text-slate-900 dark:text-white">FutureTask</h1>
-              <DatabaseStatus />
             </div>
 
             <div className="flex items-center gap-4">
@@ -401,57 +467,30 @@ function FuturisticCalendarContent() {
                 <AiCreditsDisplay credits={aiCredits} onPurchaseCredits={() => setShowCreditsPurchase(true)} />
               )}
 
-              {/* User Plan Badge */}
-              <Badge
-                variant={planInfo.isPro ? "default" : planInfo.isPremium ? "secondary" : "outline"}
-                className={`flex items-center gap-1 ${
-                  planInfo.isPro
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
-                    : planInfo.isPremium
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
-                      : "text-gray-600"
-                }`}
-              >
-                {planInfo.isPro ? (
-                  <Crown className="h-3 w-3" />
-                ) : planInfo.isPremium ? (
-                  <Star className="h-3 w-3" />
-                ) : (
-                  <User className="h-3 w-3" />
-                )}
-                {planInfo.plan.toUpperCase()}
-              </Badge>
-
               {/* Language Selector */}
               <LanguageSelector variant="compact" />
 
-              {/* Theme Toggle */}
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
-                <Button
-                  variant={theme === "light" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleThemeChange("light")}
-                  className="h-8 w-8 p-0"
+              {/* Subscription Button */}
+              <Button
+                variant="outline"
+                onClick={() => setShowSubscriptionModal(true)}
+                className="flex items-center gap-2 bg-transparent"
+              >
+                <CreditCard className="h-4 w-4" />
+                <Badge
+                  className={`${
+                    planInfo.isPro
+                      ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white"
+                      : planInfo.isPremium
+                        ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                        : "bg-gray-500 text-white"
+                  } border-none`}
                 >
-                  <Sun className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={theme === "dark" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleThemeChange("dark")}
-                  className="h-8 w-8 p-0"
-                >
-                  <Moon className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={theme === "system" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleThemeChange("system")}
-                  className="h-8 w-8 p-0"
-                >
-                  <Monitor className="h-4 w-4" />
-                </Button>
-              </div>
+                  {planInfo.isPro && <Crown className="h-3 w-3 mr-1" />}
+                  {planInfo.isPremium && <Star className="h-3 w-3 mr-1" />}
+                  {planInfo.plan.toUpperCase()}
+                </Badge>
+              </Button>
 
               {/* User Menu */}
               <div className="flex items-center gap-2">
@@ -462,7 +501,7 @@ function FuturisticCalendarContent() {
                   className="flex items-center gap-2"
                 >
                   <Trophy className="h-4 w-4" />
-                  <Badge variant="secondary">{achievements.length}</Badge>
+                  <Badge variant="secondary">{achievements.filter((a) => a.unlocked).length}</Badge>
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>
                   <Settings className="h-4 w-4" />
@@ -479,18 +518,10 @@ function FuturisticCalendarContent() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:grid-cols-7">
+          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
-              <CheckSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Tareas</span>
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Calendario</span>
             </TabsTrigger>
             <TabsTrigger value="notes" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -508,10 +539,6 @@ function FuturisticCalendarContent() {
                 <span className="hidden sm:inline">IA</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="subscription" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">Plan</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="dashboard" className="space-y-6">
@@ -524,16 +551,8 @@ function FuturisticCalendarContent() {
             </div>
           </TabsContent>
 
-          <TabsContent value="tasks">
-            <TaskManager userId={user.id} />
-          </TabsContent>
-
-          <TabsContent value="calendar">
-            <CalendarWidget userId={user.id} />
-          </TabsContent>
-
           <TabsContent value="notes">
-            <NotesManager userId={user.id} />
+            <NotesManager userId={user.id} isPremium={planInfo.isPremium || planInfo.isPro} />
           </TabsContent>
 
           {(planInfo.isPremium || planInfo.isPro) && (
@@ -552,7 +571,7 @@ function FuturisticCalendarContent() {
                     Potencia tu productividad con nuestro asistente de inteligencia artificial
                   </p>
                   <Button
-                    onClick={() => setActiveTab("subscription")}
+                    onClick={() => setShowSubscriptionModal(true)}
                     className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
                   >
                     <Crown className="h-4 w-4 mr-2" />
@@ -579,7 +598,7 @@ function FuturisticCalendarContent() {
                     Organiza tus deseos y metas con nuestra lista de deseos avanzada
                   </p>
                   <Button
-                    onClick={() => setActiveTab("subscription")}
+                    onClick={() => setShowSubscriptionModal(true)}
                     className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
                   >
                     <Star className="h-4 w-4 mr-2" />
@@ -589,18 +608,27 @@ function FuturisticCalendarContent() {
               </Card>
             </TabsContent>
           )}
-
-          <TabsContent value="subscription">
-            <SubscriptionManager currentUser={user} onUpgrade={handleSubscriptionUpgrade} />
-          </TabsContent>
         </Tabs>
       </main>
 
       {/* Modals and Overlays */}
-      {showSettings && <SettingsModal user={user} onClose={() => setShowSettings(false)} onUserUpdate={setUser} />}
+      {showSettings && <SettingsModal user={user} onUpdateUser={handleUserUpdate} t={t} />}
 
       {showAchievements && (
-        <AchievementsDisplay achievements={achievements} onClose={() => setShowAchievements(false)} />
+        <AchievementsBadgeViewer
+          achievements={achievements}
+          onClose={() => setShowAchievements(false)}
+          userPlan={planInfo.plan}
+        />
+      )}
+
+      {showSubscriptionModal && (
+        <SubscriptionModal
+          currentPlan={planInfo.plan}
+          onPlanChange={handleSubscriptionUpgrade}
+          onCancelSubscription={handleCancelSubscription}
+          onClose={() => setShowSubscriptionModal(false)}
+        />
       )}
 
       {showCreditsPurchase && planInfo.isPro && (

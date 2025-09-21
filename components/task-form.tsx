@@ -4,153 +4,235 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Plus, X } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { X, Plus, Clock, Bell } from "lucide-react"
 
 interface TaskFormProps {
   onAddTask: (task: any) => void
   onClose: () => void
-  theme: any
-  t: (key: string) => string
   selectedDate: Date
 }
 
-export function TaskForm({ onAddTask, onClose, theme, t, selectedDate }: TaskFormProps) {
-  const [text, setText] = useState("")
-  const [description, setDescription] = useState("")
-  const [time, setTime] = useState("")
-  const [category, setCategory] = useState<"work" | "personal" | "health" | "learning" | "other">("personal")
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium")
+export function TaskForm({ onAddTask, onClose, selectedDate }: TaskFormProps) {
+  const [formData, setFormData] = useState({
+    text: "",
+    description: "",
+    priority: "medium" as "low" | "medium" | "high",
+    category: "personal",
+    date: selectedDate.toISOString().split("T")[0],
+    time: "",
+    notification_enabled: false,
+  })
+
+  const categories = [
+    { value: "personal", label: "Personal" },
+    { value: "trabajo", label: "Trabajo" },
+    { value: "salud", label: "Salud" },
+    { value: "educacion", label: "Educación" },
+    { value: "finanzas", label: "Finanzas" },
+    { value: "hogar", label: "Hogar" },
+    { value: "social", label: "Social" },
+    { value: "otros", label: "Otros" },
+  ]
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!text.trim()) return
+    if (!formData.text.trim()) return
 
-    const task = {
-      text: text.trim(),
-      description: description.trim() || null,
-      time: time || null,
-      category,
-      priority,
+    const newTask = {
+      ...formData,
       completed: false,
-      date: selectedDate.toISOString().split("T")[0],
-      notification_enabled: false,
+      created_at: new Date().toISOString(),
+      notification_enabled: formData.time ? formData.notification_enabled : false,
     }
 
-    onAddTask(task)
-    setText("")
-    setDescription("")
-    setTime("")
-    setCategory("personal")
-    setPriority("medium")
-    onClose()
+    onAddTask(newTask)
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
   return (
-    <Card className={`${theme.cardBg} ${theme.border}`}>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className={theme.textPrimary}>{t("addTask")}</CardTitle>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="task-text" className={theme.textSecondary}>
-              Tarea
-            </Label>
-            <Input
-              id="task-text"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={t("newTask")}
-              className={theme.inputBg}
-              required
-            />
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <Card className="w-full max-w-md bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Plus className="h-5 w-5 text-purple-500" />
+              Nueva Tarea
+            </CardTitle>
+            <CardDescription className="text-slate-600 dark:text-slate-400">
+              Para el {selectedDate.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
+            </CardDescription>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </CardHeader>
 
-          <div className="space-y-2">
-            <Label htmlFor="task-description" className={theme.textSecondary}>
-              Descripción
-            </Label>
-            <Textarea
-              id="task-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t("description")}
-              className={theme.inputBg}
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Title */}
             <div className="space-y-2">
-              <Label htmlFor="task-time" className={theme.textSecondary}>
-                Hora
+              <Label htmlFor="text" className="text-slate-700 dark:text-slate-300">
+                Título *
               </Label>
               <Input
-                id="task-time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className={theme.inputBg}
+                id="text"
+                placeholder="¿Qué necesitas hacer?"
+                value={formData.text}
+                onChange={(e) => handleInputChange("text", e.target.value)}
+                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
+                required
               />
             </div>
 
+            {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="task-priority" className={theme.textSecondary}>
-                Prioridad
+              <Label htmlFor="description" className="text-slate-700 dark:text-slate-300">
+                Descripción
               </Label>
-              <Select value={priority} onValueChange={(value: "low" | "medium" | "high") => setPriority(value)}>
-                <SelectTrigger className={theme.inputBg}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">{t("low")}</SelectItem>
-                  <SelectItem value="medium">{t("medium")}</SelectItem>
-                  <SelectItem value="high">{t("high")}</SelectItem>
-                </SelectContent>
-              </Select>
+              <Textarea
+                id="description"
+                placeholder="Detalles adicionales (opcional)"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
+                className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
+                rows={3}
+              />
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="task-category" className={theme.textSecondary}>
-              Categoría
-            </Label>
-            <Select
-              value={category}
-              onValueChange={(value: "work" | "personal" | "health" | "learning" | "other") => setCategory(value)}
-            >
-              <SelectTrigger className={theme.inputBg}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="work">{t("work")}</SelectItem>
-                <SelectItem value="personal">{t("personal")}</SelectItem>
-                <SelectItem value="health">{t("health")}</SelectItem>
-                <SelectItem value="learning">{t("learning")}</SelectItem>
-                <SelectItem value="other">{t("other")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            {/* Category and Priority */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-slate-700 dark:text-slate-300">
+                  Categoría
+                </Label>
+                <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                  <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.value} value={category.value}>
+                        {category.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex space-x-2">
-            <Button type="submit" className={`flex-1 ${theme.buttonPrimary}`}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t("addTask")}
-            </Button>
-            <Button type="button" variant="ghost" onClick={onClose} className={theme.textMuted}>
-              {t("cancel")}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+              <div className="space-y-2">
+                <Label htmlFor="priority" className="text-slate-700 dark:text-slate-300">
+                  Prioridad
+                </Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value: "low" | "medium" | "high") => handleInputChange("priority", value)}
+                >
+                  <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        Baja
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="medium">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        Media
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="high">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        Alta
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Date and Time */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-slate-700 dark:text-slate-300">
+                  Fecha
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleInputChange("date", e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time" className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  Hora
+                </Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={formData.time}
+                  onChange={(e) => handleInputChange("time", e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-slate-600"
+                />
+              </div>
+            </div>
+
+            {/* Notification Toggle */}
+            {formData.time && (
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-blue-500" />
+                  <div>
+                    <Label className="text-slate-700 dark:text-slate-300">Notificación</Label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Recibir recordatorio a las {formData.time}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={formData.notification_enabled}
+                  onCheckedChange={(checked) => handleInputChange("notification_enabled", checked)}
+                />
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button type="submit" className="bg-purple-500 hover:bg-purple-600 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Crear Tarea
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
