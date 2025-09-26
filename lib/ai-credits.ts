@@ -8,6 +8,8 @@ export interface AICreditsInfo {
   lastUsed?: string
   monthlyUsage: number
   estimatedDaysLeft: number
+  canUseAI: boolean
+  remaining: number
 }
 
 export interface CreditPackage {
@@ -128,22 +130,43 @@ export function estimateOutputTokens(expectedLength: "short" | "medium" | "long"
 }
 
 // Cost calculation functions
-export function calculateCreditsNeeded(taskType: string): number {
-  const creditCosts: Record<string, number> = {
-    simple_query: 5,
-    complex_analysis: 15,
-    content_generation: 10,
-    task_optimization: 8,
-    calendar_planning: 12,
-    note_summarization: 6,
-  }
+export function calculateCreditsNeeded(message: string): number {
+  const messageLength = message.length
+  const baseCredits = 2
 
-  return creditCosts[taskType] || 10
+  // Calculate credits based on message complexity
+  if (messageLength < 50) return baseCredits
+  if (messageLength < 200) return baseCredits + 1
+  if (messageLength < 500) return baseCredits + 2
+  return baseCredits + 3
 }
 
-export function calculateActualCost(credits: number): number {
-  // €0.02 per credit
-  return credits * 0.02
+export function calculateActualCost(
+  inputTokens: number,
+  outputTokens: number,
+): {
+  costUsd: number
+  costEur: number
+  creditsConsumed: number
+} {
+  const model = AI_MODEL_PRICING["gpt-4o-mini"]
+
+  // Calculate cost in USD
+  const inputCost = (inputTokens / 1000) * model.input
+  const outputCost = (outputTokens / 1000) * model.output
+  const costUsd = inputCost + outputCost
+
+  // Convert to EUR (approximate)
+  const costEur = costUsd * 0.92
+
+  // Convert to credits (1 credit = €0.02)
+  const creditsConsumed = Math.ceil(costEur / 0.02)
+
+  return {
+    costUsd,
+    costEur,
+    creditsConsumed: Math.max(1, creditsConsumed), // Minimum 1 credit
+  }
 }
 
 export function calculateCreditsFromAmount(amount: number): number {
@@ -161,7 +184,8 @@ export function estimateCreditsForQuery(
 ): number {
   const inputTokens = estimateInputTokens(prompt, context)
   const outputTokens = estimateOutputTokens(expectedLength)
-  return calculateCreditsNeeded(`${inputTokens}-${outputTokens}-${model}`)
+  const { creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
+  return creditsConsumed
 }
 
 // Format credits for display
@@ -189,69 +213,99 @@ export function formatCurrency(amount: number): string {
 }
 
 // User credit management
-export async function getUserCredits(userId: string): Promise<UserCredits> {
-  // This would fetch from database
-  return {
-    userId,
-    credits: 100, // Default credits
-    totalPurchased: 0,
-    totalUsed: 0,
-    lastUpdated: new Date(),
-  }
-}
-
-export const getUserAICredits = async (userId: string) => {
-  const credits = localStorage.getItem(`ai_credits_${userId}`)
-  return credits ? Number.parseInt(credits) : 0
-}
-
-export const addCreditsToUser = async (userId: string, credits: number) => {
-  const currentCredits = await getUserAICredits(userId)
-  const newTotal = currentCredits + credits
-  localStorage.setItem(`ai_credits_${userId}`, newTotal.toString())
-  return true
-}
-
-export const useAICredits = async (userId: string, amount: number) => {
-  const currentCredits = await getUserAICredits(userId)
-  if (currentCredits >= amount) {
-    const newTotal = currentCredits - amount
-    localStorage.setItem(`ai_credits_${userId}`, newTotal.toString())
-    return true
-  }
-  return false
-}
-
-export async function consumeCredits(userId: string, credits: number, description = "AI usage"): Promise<boolean> {
+export async function getUserAICredits(userId: string): Promise<AICreditsInfo> {
   try {
-    const user = await db.getUser(userId)
+    const user = await db.getUserById(userId)
+    const credits = user?.ai_credits || 0
+    const used = user?.ai_queries_used || 0
+
+    return {
+      balance: credits,
+      used: used,
+      total: credits + used,
+      remaining: credits,
+      canUseAI: credits > 0,
+      monthlyUsage: used,
+      estimatedDaysLeft: credits > 0 ? Math.floor(credits / 5) : 0, // Assuming 5 credits per day
+      lastUsed: user?.last_ai_usage || undefined,
+    }
+  } catch (error) {
+    console.error("Error getting user AI credits:", error)
+    return {
+      balance: 0,
+      used: 0,
+      total: 0,
+      remaining: 0,
+      canUseAI: false,
+      monthlyUsage: 0,
+      estimatedDaysLeft: 0,
+    }
+  }
+}
+
+export const addCreditsToUser = async (userId: string, credits: number): Promise<boolean> => {
+  try {
+    const user = await db.getUserById(userId)
     if (!user) return false
 
     const currentCredits = user.ai_credits || 0
-    if (currentCredits < credits) return false
+    const newTotal = currentCredits + credits
 
-    const newCredits = currentCredits - credits
-    await db.updateUser(userId, { ai_credits: newCredits })
+    await db.updateUser(userId, {
+      ai_credits: newTotal,
+      credits_purchased: (user.credits_purchased || 0) + credits,
+    })
+
     return true
   } catch (error) {
-    console.error("Error consuming credits:", error)
+    console.error("Error adding credits to user:", error)
     return false
   }
 }
 
-export async function consumeAICredits(userId: string, credits: number): Promise<boolean> {
-  return consumeCredits(userId, credits)
+export const consumeAICredits = async (
+  userId: string,
+  message: string,
+  response: string,
+  inputTokens: number,
+  outputTokens: number,
+  model: string,
+  requestType: string,
+): Promise<boolean> => {
+  try {
+    const user = await db.getUserById(userId)
+    if (!user) return false
+
+    const { creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
+    const currentCredits = user.ai_credits || 0
+
+    if (currentCredits < creditsConsumed) return false
+
+    const newCredits = currentCredits - creditsConsumed
+    const newQueriesUsed = (user.ai_queries_used || 0) + 1
+
+    await db.updateUser(userId, {
+      ai_credits: newCredits,
+      ai_queries_used: newQueriesUsed,
+      last_ai_usage: new Date().toISOString(),
+    })
+
+    return true
+  } catch (error) {
+    console.error("Error consuming AI credits:", error)
+    return false
+  }
 }
 
 export async function hasEnoughCredits(userId: string, requiredCredits: number): Promise<boolean> {
-  const userCredits = await getUserAICredits(userId)
-  return userCredits >= requiredCredits
+  const creditsInfo = await getUserAICredits(userId)
+  return creditsInfo.remaining >= requiredCredits
 }
 
 export async function hasSufficientCredits(userId: string, requiredCredits: number): Promise<boolean> {
   try {
-    const currentCredits = await getUserCredits(userId)
-    return currentCredits.credits >= requiredCredits
+    const creditsInfo = await getUserAICredits(userId)
+    return creditsInfo.remaining >= requiredCredits
   } catch (error) {
     console.error("Error checking credits:", error)
     return false
@@ -319,19 +373,19 @@ export function validateCustomAmount(amount: number): { valid: boolean; error?: 
 
 // Credit conversion utilities
 export function creditsToUSD(credits: number): number {
-  return credits / 1000 // 1000 credits = $1 USD
+  return (credits * 0.02) / 0.92 // Convert EUR to USD
 }
 
 export function usdToCredits(usd: number): number {
-  return Math.ceil(usd * 1000)
+  return Math.ceil((usd * 0.92) / 0.02)
 }
 
 export function creditsToEUR(credits: number): number {
-  return creditsToUSD(credits) * 0.85 // Rough EUR conversion
+  return credits * 0.02
 }
 
 export function eurToCredits(eur: number): number {
-  return usdToCredits(eur / 0.85)
+  return Math.floor(eur / 0.02)
 }
 
 // Get credit usage history
@@ -388,7 +442,8 @@ export function calculateChatCredits(
   const inputTokens = estimateTokens(inputText)
   const outputTokens = maxTokens
 
-  return calculateCreditsNeeded(`${inputTokens}-${outputTokens}-${model}`)
+  const { creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
+  return creditsConsumed
 }
 
 // Get credit balance status
@@ -523,10 +578,10 @@ export async function getCreditUsageStats(userId: string): Promise<{
     }
   }
 
-  const totalQueriesUsed = user.aiQueriesUsed || 0
-  const totalCreditsUsed = (user.creditsPurchased || 0) * 100 // Rough estimation
+  const totalQueriesUsed = user.ai_queries_used || 0
+  const totalCreditsUsed = (user.credits_purchased || 0) - (user.ai_credits || 0)
   const averageCreditsPerQuery = totalQueriesUsed > 0 ? totalCreditsUsed / totalQueriesUsed : 0
-  const totalSpent = (user.creditsPurchased || 0) * 5 // Rough estimation
+  const totalSpent = (user.credits_purchased || 0) * 0.02 // €0.02 per credit
 
   return {
     totalCreditsUsed,
@@ -546,8 +601,7 @@ function generateId(): string {
 }
 
 export async function updateUserCredits(userId: string, newAmount: number): Promise<void> {
-  // This would update the database
-  console.log(`Updating user ${userId} credits to ${newAmount}`)
+  await db.updateUser(userId, { ai_credits: newAmount })
 }
 
 export async function logCreditTransaction(transaction: CreditTransaction): Promise<void> {

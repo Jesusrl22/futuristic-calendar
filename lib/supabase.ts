@@ -90,69 +90,46 @@ export interface Database {
 const isBrowser = typeof window !== "undefined"
 
 // Get environment variables with fallbacks
-const supabaseUrl = isBrowser ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined
-const supabaseAnonKey = isBrowser ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 // Simple validation function
-const isValidSupabaseConfig = () => {
-  return Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.includes("supabase") && supabaseUrl.startsWith("http"))
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey)
+
+let supabaseClient: any = null
+
+if (isSupabaseConfigured) {
+  try {
+    supabaseClient = createSupabaseClient(supabaseUrl!, supabaseAnonKey!)
+    console.log("✅ Supabase client initialized successfully")
+  } catch (error) {
+    console.error("❌ Failed to initialize Supabase client:", error)
+    supabaseClient = null
+  }
+} else {
+  console.warn("⚠️ Supabase not configured - using memory storage fallback")
 }
 
-// Export configuration status
-export const isSupabaseConfigured = isValidSupabaseConfig()
+// Export the client as 'supabase' - this is what was missing
+export const supabase = supabaseClient
 
-// Create a simple mock client for demo mode
-const createMockClient = () => ({
-  from: (table: string) => ({
-    select: (columns?: string) => ({
-      eq: (column: string, value: any) => ({
-        single: async () => ({ data: null, error: { message: "Demo mode" } }),
-        limit: (count: number) => ({ data: [], error: { message: "Demo mode" } }),
-      }),
-      order: (column: string, options?: any) => ({ data: [], error: { message: "Demo mode" } }),
-      limit: (count: number) => ({ data: [], error: { message: "Demo mode" } }),
-    }),
-    insert: (values: any) => ({
-      select: (columns?: string) => ({
-        single: async () => ({ data: null, error: { message: "Demo mode" } }),
-      }),
-    }),
-    update: (values: any) => ({
-      eq: (column: string, value: any) => ({
-        select: (columns?: string) => ({
-          single: async () => ({ data: null, error: { message: "Demo mode" } }),
-        }),
-      }),
-    }),
-    delete: () => ({
-      eq: (column: string, value: any) => ({ error: { message: "Demo mode" } }),
-    }),
-    upsert: async (values: any) => ({ data: null, error: { message: "Demo mode" } }),
-  }),
-  auth: {
-    getUser: async () => ({ data: { user: null }, error: null }),
-    signInWithPassword: async (credentials: any) => ({
-      data: { user: null, session: null },
-      error: { message: "Demo mode" },
-    }),
-    signUp: async (credentials: any) => ({
-      data: { user: null, session: null },
-      error: { message: "Demo mode" },
-    }),
-    signOut: async () => ({ error: null }),
-    onAuthStateChange: (callback: any) => ({
-      data: { subscription: { unsubscribe: () => {} } },
-    }),
-  },
-  rpc: async (fn: string, params?: any) => ({ data: null, error: { message: "Demo mode" } }),
-})
+// Export createClient function
+export function createSupabaseClientFunction() {
+  if (!isSupabaseConfigured) {
+    console.warn("⚠️ Cannot create Supabase client - missing configuration")
+    return null
+  }
 
-// Create the client
-export const supabase =
-  isSupabaseConfigured && isBrowser ? createSupabaseClient(supabaseUrl!, supabaseAnonKey!) : createMockClient()
+  try {
+    return createSupabaseClient(supabaseUrl!, supabaseAnonKey!)
+  } catch (error) {
+    console.error("❌ Failed to create Supabase client:", error)
+    return null
+  }
+}
 
-// Export createClient for compatibility
-export const createClient = () => supabase
+// Export createClient as named export for compatibility
+export const createClient = createSupabaseClientFunction
 
 // Default export
-export default supabase
+export default supabaseClient

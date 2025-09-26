@@ -1,304 +1,190 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar } from "@/components/ui/calendar"
-import { ChevronLeft, ChevronRight, Plus, Clock } from "lucide-react"
+import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react"
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
+} from "date-fns"
+import { es } from "date-fns/locale"
 
 interface Task {
   id: string
   title: string
-  description: string
-  date: string
-  time?: string
-  category: string
   completed: boolean
-  notifications: boolean
+  priority: "low" | "medium" | "high"
+  date: Date
+  category: string
 }
 
 interface CalendarWidgetProps {
-  selectedDate: Date
-  onDateSelect: (date: Date) => void
   tasks: Task[]
-  onTaskCreate: (taskData: Omit<Task, "id">) => void
+  onDateSelect?: (date: Date) => void
+  onTaskClick?: (task: Task) => void
+  selectedDate?: Date
 }
 
-const categoryColors = {
-  work: "bg-blue-500",
-  personal: "bg-green-500",
-  health: "bg-red-500",
-  education: "bg-purple-500",
-  finance: "bg-yellow-500",
-  social: "bg-pink-500",
-  travel: "bg-indigo-500",
-  other: "bg-gray-500",
-}
+export function CalendarWidget({ tasks = [], onDateSelect, onTaskClick, selectedDate }: CalendarWidgetProps) {
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [viewDate, setViewDate] = useState(new Date())
 
-export function CalendarWidget({ selectedDate, onDateSelect, tasks, onTaskCreate }: CalendarWidgetProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [showTaskForm, setShowTaskForm] = useState(false)
+  const monthStart = startOfMonth(viewDate)
+  const monthEnd = endOfMonth(viewDate)
+  const monthDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-  // Get tasks for selected date
-  const selectedDateTasks = tasks.filter((task) => task.date === selectedDate.toISOString().split("T")[0])
-
-  // Get tasks for calendar display
+  // Get tasks for a specific date
   const getTasksForDate = (date: Date) => {
-    const dateString = date.toISOString().split("T")[0]
-    return tasks.filter((task) => task.date === dateString)
+    if (!date) return []
+    return tasks.filter((task) => task.date && isSameDay(new Date(task.date), date))
   }
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      onDateSelect(date)
-    }
+  // Navigate months
+  const previousMonth = () => {
+    setViewDate(subMonths(viewDate, 1))
   }
 
-  const handlePreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
+  const nextMonth = () => {
+    setViewDate(addMonths(viewDate, 1))
   }
 
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
+  const handleDateClick = (date: Date) => {
+    setCurrentDate(date)
+    onDateSelect?.(date)
   }
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":")
-    const hour = Number.parseInt(hours)
-    const ampm = hour >= 12 ? "PM" : "AM"
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
+  const Day = ({ date, ...props }: { date: Date } & React.HTMLAttributes<HTMLDivElement>) => {
+    if (!date) return <div {...props}>{props.children}</div>
+
+    const dayTasks = getTasksForDate(date)
+    const isSelected = selectedDate ? isSameDay(date, selectedDate) : isSameDay(date, currentDate)
+    const isCurrentMonth = isSameMonth(date, viewDate)
+    const isToday = isSameDay(date, new Date())
+
+    return (
+      <div
+        {...props}
+        onClick={() => handleDateClick(date)}
+        className={`
+          min-h-[80px] p-2 border border-white/10 cursor-pointer transition-all duration-200
+          ${isSelected ? "bg-blue-500/20 border-blue-500/50" : "hover:bg-white/5"}
+          ${!isCurrentMonth ? "opacity-50" : ""}
+          ${isToday ? "ring-2 ring-blue-400/50" : ""}
+        `}
+      >
+        <div className="flex justify-between items-start mb-1">
+          <span className={`text-sm font-medium ${isToday ? "text-blue-400" : "text-white"}`}>{format(date, "d")}</span>
+          {dayTasks.length > 0 && (
+            <Badge variant="secondary" className="text-xs px-1 py-0 h-4 bg-purple-500/20 text-purple-300">
+              {dayTasks.length}
+            </Badge>
+          )}
+        </div>
+        <div className="space-y-1">
+          {dayTasks.slice(0, 2).map((task) => (
+            <div
+              key={task.id}
+              onClick={(e) => {
+                e.stopPropagation()
+                onTaskClick?.(task)
+              }}
+              className={`
+                text-xs p-1 rounded truncate cursor-pointer transition-colors
+                ${task.priority === "high" ? "bg-red-500/20 text-red-300 hover:bg-red-500/30" : ""}
+                ${task.priority === "medium" ? "bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30" : ""}
+                ${task.priority === "low" ? "bg-green-500/20 text-green-300 hover:bg-green-500/30" : ""}
+                ${task.completed ? "opacity-60 line-through" : ""}
+              `}
+            >
+              {task.title}
+            </div>
+          ))}
+          {dayTasks.length > 2 && <div className="text-xs text-slate-400">+{dayTasks.length - 2} más</div>}
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Calendar</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium min-w-[120px] text-center">
-                {currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-              </span>
-              <Button variant="outline" size="sm" onClick={handleNextMonth}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            month={currentMonth}
-            onMonthChange={setCurrentMonth}
-            className="rounded-md border"
-            components={{
-              Day: ({ date, ...props }) => {
-                const dayTasks = getTasksForDate(date)
-                const hasCompletedTasks = dayTasks.some((task) => task.completed)
-                const hasPendingTasks = dayTasks.some((task) => !task.completed)
-
-                return (
-                  <div className="relative">
-                    <button
-                      {...props}
-                      className={`
-                        w-full h-full p-2 text-sm rounded-md transition-colors
-                        ${props.className}
-                        ${dayTasks.length > 0 ? "font-semibold" : ""}
-                      `}
-                    >
-                      {date.getDate()}
-                      {dayTasks.length > 0 && (
-                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                          {hasPendingTasks && <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>}
-                          {hasCompletedTasks && <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>}
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                )
-              },
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Selected Date Tasks */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">
-              {selectedDate.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </CardTitle>
-            <Button size="sm" onClick={() => setShowTaskForm(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
+    <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-white flex items-center">
+            <CalendarIcon className="h-5 w-5 mr-2" />
+            Calendario
+          </CardTitle>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" onClick={previousMonth} className="text-white hover:bg-white/10">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-white font-medium min-w-[120px] text-center">
+              {format(viewDate, "MMMM yyyy", { locale: es })}
+            </span>
+            <Button variant="ghost" size="sm" onClick={nextMonth} className="text-white hover:bg-white/10">
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {selectedDateTasks.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No tasks scheduled for this date</p>
-              <Button variant="outline" size="sm" className="mt-2 bg-transparent" onClick={() => setShowTaskForm(true)}>
-                Create your first task
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {selectedDateTasks
-                .sort((a, b) => {
-                  if (a.time && b.time) {
-                    return a.time.localeCompare(b.time)
-                  }
-                  if (a.time && !b.time) return -1
-                  if (!a.time && b.time) return 1
-                  return 0
-                })
-                .map((task) => (
-                  <div
-                    key={task.id}
-                    className={`p-3 rounded-lg border transition-all ${
-                      task.completed
-                        ? "bg-green-50 border-green-200 opacity-75"
-                        : "bg-white border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4
-                            className={`font-medium ${task.completed ? "line-through text-gray-500" : "text-gray-900"}`}
-                          >
-                            {task.title}
-                          </h4>
-                          <Badge
-                            variant="secondary"
-                            className={`text-xs ${categoryColors[task.category as keyof typeof categoryColors]} text-white`}
-                          >
-                            {task.category}
-                          </Badge>
-                        </div>
-                        {task.description && (
-                          <p className={`text-sm ${task.completed ? "text-gray-400" : "text-gray-600"} mb-2`}>
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
-                          {task.time && (
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{formatTime(task.time)}</span>
-                            </div>
-                          )}
-                          {task.notifications && (
-                            <Badge variant="outline" className="text-xs">
-                              Notifications On
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Simple Task Form Modal */}
-      {showTaskForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Add New Task</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const formData = new FormData(e.currentTarget)
-                  const taskData = {
-                    title: formData.get("title") as string,
-                    description: formData.get("description") as string,
-                    date: selectedDate.toISOString().split("T")[0],
-                    time: formData.get("time") as string,
-                    category: formData.get("category") as string,
-                    completed: false,
-                    notifications: formData.get("notifications") === "on",
-                  }
-                  onTaskCreate(taskData)
-                  setShowTaskForm(false)
-                }}
-                className="space-y-4"
-              >
-                <div>
-                  <label className="block text-sm font-medium mb-1">Title</label>
-                  <input
-                    name="title"
-                    type="text"
-                    required
-                    className="w-full p-2 border rounded-md"
-                    placeholder="Task title"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    name="description"
-                    className="w-full p-2 border rounded-md"
-                    rows={2}
-                    placeholder="Task description (optional)"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Time</label>
-                  <input name="time" type="time" className="w-full p-2 border rounded-md" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Category</label>
-                  <select name="category" className="w-full p-2 border rounded-md" defaultValue="personal">
-                    <option value="work">Work</option>
-                    <option value="personal">Personal</option>
-                    <option value="health">Health</option>
-                    <option value="education">Education</option>
-                    <option value="finance">Finance</option>
-                    <option value="social">Social</option>
-                    <option value="travel">Travel</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input name="notifications" type="checkbox" id="notifications" />
-                  <label htmlFor="notifications" className="text-sm">
-                    Enable notifications
-                  </label>
-                </div>
-                <div className="flex space-x-2">
-                  <Button type="submit" className="flex-1">
-                    Create Task
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setShowTaskForm(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
         </div>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent>
+        {/* Days of week header */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+            <div key={day} className="text-center text-sm font-medium text-slate-400 py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {monthDays.map((date, index) => (
+            <Day key={index} date={date} />
+          ))}
+        </div>
+
+        {/* Selected date info */}
+        {selectedDate && (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <h4 className="text-white font-medium mb-2">{format(selectedDate, "d 'de' MMMM, yyyy", { locale: es })}</h4>
+            <div className="space-y-2">
+              {getTasksForDate(selectedDate).map((task) => (
+                <div
+                  key={task.id}
+                  onClick={() => onTaskClick?.(task)}
+                  className={`
+                    p-2 rounded cursor-pointer transition-colors
+                    ${task.priority === "high" ? "bg-red-500/20 text-red-300 hover:bg-red-500/30" : ""}
+                    ${task.priority === "medium" ? "bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30" : ""}
+                    ${task.priority === "low" ? "bg-green-500/20 text-green-300 hover:bg-green-500/30" : ""}
+                    ${task.completed ? "opacity-60" : ""}
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${task.completed ? "line-through" : ""}`}>{task.title}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {task.category}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+              {getTasksForDate(selectedDate).length === 0 && (
+                <p className="text-slate-400 text-sm">No hay tareas para este día</p>
+              )}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }

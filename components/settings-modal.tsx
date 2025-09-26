@@ -1,478 +1,403 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Settings,
-  Palette,
-  Bell,
-  User,
-  Crown,
-  Zap,
-  Lock,
-  Sun,
-  Moon,
-  Monitor,
-  Waves,
-  TreePine,
-  Sparkles,
-  Sunset,
-  Cpu,
-  Gamepad2,
-  Play as Galaxy,
-  Rainbow,
-} from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { Settings, User, Palette, Globe, Bell, Crown, Timer, Zap, Target, Check, X } from "lucide-react"
+import { LanguageSelector } from "@/components/language-selector"
+import { useLanguage } from "@/hooks/useLanguage"
+import type { User as UserType } from "@/lib/hybrid-database"
 
 interface SettingsModalProps {
-  isOpen: boolean
-  onClose: () => void
-  userPlan: "free" | "premium" | "pro"
-  currentTheme: string
-  onThemeChange: (theme: string) => void
-  settings: {
-    notifications: boolean
-    emailNotifications: boolean
-    soundEnabled: boolean
-    pomodoroWorkTime: number
-    pomodoroBreakTime: number
-    pomodoroLongBreak: number
-    autoStartBreaks: boolean
-    autoStartPomodoros: boolean
-  }
-  onSettingsChange: (settings: any) => void
-  profile: {
-    name: string
-    email: string
-    bio: string
-  }
-  onProfileUpdate: (profile: any) => void
+  user?: UserType | null
+  onUserUpdate?: (updates: Partial<UserType>) => void
+  onUpgrade?: () => void
+  onCancelPlan?: () => void
 }
 
-const themes = {
-  free: [
-    { id: "light", name: "Light", icon: Sun, description: "Clean and bright" },
-    { id: "dark", name: "Dark", icon: Moon, description: "Easy on the eyes" },
-    { id: "system", name: "System", icon: Monitor, description: "Follows your device" },
-  ],
-  premium: [
-    { id: "ocean-blue", name: "Ocean Blue", icon: Waves, description: "Calm and professional", premium: true },
-    { id: "forest-green", name: "Forest Green", icon: TreePine, description: "Natural and refreshing", premium: true },
-    {
-      id: "mystic-purple",
-      name: "Mystic Purple",
-      icon: Sparkles,
-      description: "Creative and inspiring",
-      premium: true,
-    },
-    { id: "sunset-orange", name: "Sunset Orange", icon: Sunset, description: "Warm and energetic", premium: true },
-  ],
-  pro: [
-    { id: "neon-future", name: "Neon Future", icon: Cpu, description: "Futuristic and bold", pro: true },
-    { id: "cyberpunk", name: "Cyberpunk", icon: Gamepad2, description: "High-tech aesthetic", pro: true },
-    { id: "galaxy", name: "Galaxy", icon: Galaxy, description: "Cosmic and mysterious", pro: true },
-    { id: "aurora", name: "Aurora", icon: Rainbow, description: "Magical and colorful", pro: true },
-  ],
-}
+export function SettingsModal({ user, onUserUpdate, onUpgrade, onCancelPlan }: SettingsModalProps) {
+  const { t } = useLanguage()
+  const [isOpen, setIsOpen] = useState(false)
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+  })
 
-export function SettingsModal({
-  isOpen,
-  onClose,
-  userPlan,
-  currentTheme,
-  onThemeChange,
-  settings,
-  onSettingsChange,
-  profile,
-  onProfileUpdate,
-}: SettingsModalProps) {
-  const [localSettings, setLocalSettings] = useState(settings)
-  const [localProfile, setLocalProfile] = useState(profile)
-
-  useEffect(() => {
-    setLocalSettings(settings)
-  }, [settings])
-
-  useEffect(() => {
-    setLocalProfile(profile)
-  }, [profile])
-
-  const handleSettingChange = (key: string, value: any) => {
-    const newSettings = { ...localSettings, [key]: value }
-    setLocalSettings(newSettings)
-    onSettingsChange(newSettings)
-  }
-
-  const handleProfileChange = (key: string, value: string) => {
-    const newProfile = { ...localProfile, [key]: value }
-    setLocalProfile(newProfile)
-  }
-
-  const handleProfileSave = () => {
-    onProfileUpdate(localProfile)
-  }
-
-  const canUseTheme = (theme: any) => {
-    if (theme.pro && userPlan !== "pro") return false
-    if (theme.premium && userPlan === "free") return false
-    return true
-  }
-
-  const getAllThemes = () => {
-    return [...themes.free, ...themes.premium, ...themes.pro]
-  }
-
-  const getPlanBadge = (plan: "free" | "premium" | "pro") => {
-    const badges = {
-      free: { label: "Free", icon: null, color: "bg-gray-500" },
-      premium: { label: "Premium", icon: Crown, color: "bg-blue-500" },
-      pro: { label: "Pro", icon: Zap, color: "bg-purple-500" },
+  const handleSave = () => {
+    if (onUserUpdate) {
+      onUserUpdate(formData)
     }
-
-    const badge = badges[plan]
-    const Icon = badge.icon
-
-    return (
-      <Badge className={`${badge.color} text-white`}>
-        {Icon && <Icon className="h-3 w-3 mr-1" />}
-        {badge.label}
-      </Badge>
-    )
+    setIsOpen(false)
   }
+
+  const handleThemeChange = (theme: string) => {
+    if (onUserUpdate) {
+      onUserUpdate({ theme })
+    }
+  }
+
+  const handleNotificationToggle = (type: string, enabled: boolean) => {
+    // Handle notification preferences
+    console.log(`${type} notifications:`, enabled)
+  }
+
+  const themes = [
+    { id: "classic", name: "Clásico", description: "Tema por defecto", free: true },
+    { id: "dark", name: "Oscuro", description: "Tema oscuro elegante", free: true },
+    { id: "blue", name: "Azul", description: "Tema azul profesional", free: false },
+    { id: "purple", name: "Púrpura", description: "Tema púrpura moderno", free: false },
+    { id: "green", name: "Verde", description: "Tema verde natural", free: false },
+  ]
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-2">
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline">Configuración</span>
+        </Button>
+      </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Settings className="h-6 w-6" />
-            <span>Settings</span>
-            {getPlanBadge(userPlan)}
+          <DialogTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Configuración
           </DialogTitle>
+          <DialogDescription>Personaliza tu experiencia en FutureTask</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="appearance">
-              <Palette className="h-4 w-4 mr-2" />
-              Appearance
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="profile" className="gap-1">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Perfil</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="h-4 w-4 mr-2" />
-              Notifications
+            <TabsTrigger value="theme" className="gap-1">
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Tema</span>
             </TabsTrigger>
-            <TabsTrigger value="productivity">
-              <Settings className="h-4 w-4 mr-2" />
-              Productivity
+            <TabsTrigger value="language" className="gap-1">
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Idioma</span>
             </TabsTrigger>
-            <TabsTrigger value="profile">
-              <User className="h-4 w-4 mr-2" />
-              Profile
+            <TabsTrigger value="notifications" className="gap-1">
+              <Bell className="h-4 w-4" />
+              <span className="hidden sm:inline">Notif.</span>
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="gap-1">
+              <Crown className="h-4 w-4" />
+              <span className="hidden sm:inline">Plan</span>
+            </TabsTrigger>
+            <TabsTrigger value="pomodoro" className="gap-1">
+              <Timer className="h-4 w-4" />
+              <span className="hidden sm:inline">Timer</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="appearance" className="space-y-6">
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Theme Selection</CardTitle>
+                <CardTitle>Información Personal</CardTitle>
+                <CardDescription>Actualiza tu información de perfil</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Nombre</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Tu nombre"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="tu@email.com"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Plan Actual</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {user?.plan === "pro" ? "Plan Pro - Acceso completo" : "Plan Gratuito - Funciones básicas"}
+                    </p>
+                  </div>
+                  <Badge variant={user?.plan === "pro" ? "default" : "secondary"} className="gap-1">
+                    {user?.plan === "pro" ? <Zap className="h-3 w-3" /> : <Target className="h-3 w-3" />}
+                    {user?.plan === "pro" ? "Pro" : "Free"}
+                  </Badge>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={handleSave}>Guardar Cambios</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Theme Tab */}
+          <TabsContent value="theme" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Personalización Visual</CardTitle>
+                <CardDescription>Elige el tema que más te guste</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {/* Free Themes */}
-                  <div>
-                    <h4 className="font-medium mb-3 flex items-center space-x-2">
-                      <span>Free Themes</span>
-                      <Badge variant="secondary">Included</Badge>
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {themes.free.map((theme) => {
-                        const Icon = theme.icon
-                        const isSelected = currentTheme === theme.id
-
-                        return (
-                          <Card
-                            key={theme.id}
-                            className={`cursor-pointer transition-all ${
-                              isSelected ? "ring-2 ring-primary" : "hover:shadow-md"
-                            }`}
-                            onClick={() => onThemeChange(theme.id)}
-                          >
-                            <CardContent className="p-4 text-center">
-                              <Icon className="h-8 w-8 mx-auto mb-2" />
-                              <h5 className="font-medium">{theme.name}</h5>
-                              <p className="text-xs text-muted-foreground">{theme.description}</p>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {themes.map((theme) => (
+                    <div
+                      key={theme.id}
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        user?.theme === theme.id
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      } ${!theme.free && user?.plan !== "pro" ? "opacity-50" : ""}`}
+                      onClick={() => {
+                        if (theme.free || user?.plan === "pro") {
+                          handleThemeChange(theme.id)
+                        }
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{theme.name}</h4>
+                        <div className="flex items-center gap-2">
+                          {!theme.free && <Crown className="h-4 w-4 text-yellow-500" />}
+                          {user?.theme === theme.id && <Check className="h-4 w-4 text-green-500" />}
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{theme.description}</p>
+                      {!theme.free && user?.plan !== "pro" && (
+                        <p className="text-xs text-yellow-600 mt-2">Requiere Plan Pro</p>
+                      )}
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                  {/* Premium Themes */}
+          {/* Language Tab */}
+          <TabsContent value="language" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuración de Idioma</CardTitle>
+                <CardDescription>Selecciona tu idioma preferido</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-3 flex items-center space-x-2">
-                      <span>Premium Themes</span>
-                      <Badge className="bg-blue-500 text-white">
-                        <Crown className="h-3 w-3 mr-1" />
-                        Premium
-                      </Badge>
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                      {themes.premium.map((theme) => {
-                        const Icon = theme.icon
-                        const isSelected = currentTheme === theme.id
-                        const canUse = canUseTheme(theme)
-
-                        return (
-                          <Card
-                            key={theme.id}
-                            className={`relative transition-all ${
-                              isSelected
-                                ? "ring-2 ring-primary"
-                                : canUse
-                                  ? "hover:shadow-md cursor-pointer"
-                                  : "opacity-60"
-                            }`}
-                            onClick={() => canUse && onThemeChange(theme.id)}
-                          >
-                            {!canUse && (
-                              <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center z-10">
-                                <Lock className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
-                            <CardContent className="p-4 text-center">
-                              <Icon className="h-8 w-8 mx-auto mb-2" />
-                              <h5 className="font-medium">{theme.name}</h5>
-                              <p className="text-xs text-muted-foreground">{theme.description}</p>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
+                    <Label>Idioma de la Interfaz</Label>
+                    <div className="mt-2">
+                      <LanguageSelector />
                     </div>
-                    {userPlan === "free" && (
-                      <p className="text-sm text-muted-foreground mt-2">Upgrade to Premium to unlock these themes</p>
-                    )}
-                  </div>
-
-                  {/* Pro Themes */}
-                  <div>
-                    <h4 className="font-medium mb-3 flex items-center space-x-2">
-                      <span>Pro Themes</span>
-                      <Badge className="bg-purple-500 text-white">
-                        <Zap className="h-3 w-3 mr-1" />
-                        Pro
-                      </Badge>
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                      {themes.pro.map((theme) => {
-                        const Icon = theme.icon
-                        const isSelected = currentTheme === theme.id
-                        const canUse = canUseTheme(theme)
-
-                        return (
-                          <Card
-                            key={theme.id}
-                            className={`relative transition-all ${
-                              isSelected
-                                ? "ring-2 ring-primary"
-                                : canUse
-                                  ? "hover:shadow-md cursor-pointer"
-                                  : "opacity-60"
-                            }`}
-                            onClick={() => canUse && onThemeChange(theme.id)}
-                          >
-                            {!canUse && (
-                              <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center z-10">
-                                <Lock className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
-                            <CardContent className="p-4 text-center">
-                              <Icon className="h-8 w-8 mx-auto mb-2" />
-                              <h5 className="font-medium">{theme.name}</h5>
-                              <p className="text-xs text-muted-foreground">{theme.description}</p>
-                            </CardContent>
-                          </Card>
-                        )
-                      })}
-                    </div>
-                    {userPlan !== "pro" && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Upgrade to Pro to unlock these exclusive themes
-                      </p>
-                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6">
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Notification Preferences</CardTitle>
+                <CardTitle>Preferencias de Notificaciones</CardTitle>
+                <CardDescription>Controla qué notificaciones quieres recibir</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive notifications for tasks and reminders</p>
+                    <h4 className="font-medium">Recordatorios de Tareas</h4>
+                    <p className="text-sm text-muted-foreground">Recibe notificaciones cuando vencen las tareas</p>
                   </div>
-                  <Switch
-                    checked={localSettings.notifications}
-                    onCheckedChange={(checked) => handleSettingChange("notifications", checked)}
-                  />
+                  <Switch onCheckedChange={(checked) => handleNotificationToggle("tasks", checked)} />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Email Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive email updates and reminders</p>
+                    <h4 className="font-medium">Sesiones Pomodoro</h4>
+                    <p className="text-sm text-muted-foreground">Notificaciones de inicio y fin de sesiones</p>
                   </div>
-                  <Switch
-                    checked={localSettings.emailNotifications}
-                    onCheckedChange={(checked) => handleSettingChange("emailNotifications", checked)}
-                  />
+                  <Switch onCheckedChange={(checked) => handleNotificationToggle("pomodoro", checked)} />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Sound Effects</Label>
-                    <p className="text-sm text-muted-foreground">Play sounds for notifications and actions</p>
+                    <h4 className="font-medium">Logros Desbloqueados</h4>
+                    <p className="text-sm text-muted-foreground">Celebra tus logros con notificaciones</p>
                   </div>
-                  <Switch
-                    checked={localSettings.soundEnabled}
-                    onCheckedChange={(checked) => handleSettingChange("soundEnabled", checked)}
-                  />
+                  <Switch onCheckedChange={(checked) => handleNotificationToggle("achievements", checked)} />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Actualizaciones del Sistema</h4>
+                    <p className="text-sm text-muted-foreground">Información sobre nuevas funciones</p>
+                  </div>
+                  <Switch onCheckedChange={(checked) => handleNotificationToggle("updates", checked)} />
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="productivity" className="space-y-6">
+          {/* Subscription Tab */}
+          <TabsContent value="subscription" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Pomodoro Settings</CardTitle>
+                <CardTitle>Gestión de Suscripción</CardTitle>
+                <CardDescription>Administra tu plan y facturación</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <Label htmlFor="workTime">Work Time (minutes)</Label>
-                    <Input
-                      id="workTime"
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={localSettings.pomodoroWorkTime}
-                      onChange={(e) => handleSettingChange("pomodoroWorkTime", Number.parseInt(e.target.value))}
-                    />
+                    <h4 className="font-medium flex items-center gap-2">
+                      {user?.plan === "pro" ? (
+                        <>
+                          <Zap className="h-4 w-4 text-yellow-500" />
+                          Plan Pro
+                        </>
+                      ) : (
+                        <>
+                          <Target className="h-4 w-4" />
+                          Plan Gratuito
+                        </>
+                      )}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {user?.plan === "pro" ? "Acceso completo a todas las funciones" : "Funciones básicas disponibles"}
+                    </p>
                   </div>
-                  <div>
-                    <Label htmlFor="breakTime">Short Break (minutes)</Label>
-                    <Input
-                      id="breakTime"
-                      type="number"
-                      min="1"
-                      max="30"
-                      value={localSettings.pomodoroBreakTime}
-                      onChange={(e) => handleSettingChange("pomodoroBreakTime", Number.parseInt(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="longBreak">Long Break (minutes)</Label>
-                    <Input
-                      id="longBreak"
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={localSettings.pomodoroLongBreak}
-                      onChange={(e) => handleSettingChange("pomodoroLongBreak", Number.parseInt(e.target.value))}
-                    />
+                  <div className="text-right">
+                    <div className="font-medium">{user?.plan === "pro" ? "$9.99/mes" : "Gratis"}</div>
+                    {user?.plan === "pro" && <div className="text-sm text-muted-foreground">Renovación automática</div>}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Auto-start Breaks</Label>
-                    <p className="text-sm text-muted-foreground">Automatically start break timers</p>
+                {user?.plan === "pro" ? (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">Funciones Pro Activas</h4>
+                      <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                        <li>• Asistente IA ilimitado</li>
+                        <li>• Temas premium</li>
+                        <li>• Estadísticas avanzadas</li>
+                        <li>• Sincronización en la nube</li>
+                        <li>• Soporte prioritario</li>
+                      </ul>
+                    </div>
+                    <Button variant="destructive" onClick={onCancelPlan} className="w-full">
+                      <X className="h-4 w-4 mr-2" />
+                      Cancelar Suscripción
+                    </Button>
                   </div>
-                  <Switch
-                    checked={localSettings.autoStartBreaks}
-                    onCheckedChange={(checked) => handleSettingChange("autoStartBreaks", checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Auto-start Pomodoros</Label>
-                    <p className="text-sm text-muted-foreground">Automatically start work timers after breaks</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Desbloquea el Plan Pro</h4>
+                      <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 mb-4">
+                        <li>• Asistente IA ilimitado</li>
+                        <li>• Temas premium exclusivos</li>
+                        <li>• Estadísticas detalladas</li>
+                        <li>• Sincronización automática</li>
+                        <li>• Soporte prioritario 24/7</li>
+                      </ul>
+                    </div>
+                    <Button onClick={onUpgrade} className="w-full">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Actualizar a Pro - $9.99/mes
+                    </Button>
                   </div>
-                  <Switch
-                    checked={localSettings.autoStartPomodoros}
-                    onCheckedChange={(checked) => handleSettingChange("autoStartPomodoros", checked)}
-                  />
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="profile" className="space-y-6">
+          {/* Pomodoro Tab */}
+          <TabsContent value="pomodoro" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Profile Information</CardTitle>
+                <CardTitle>Configuración del Timer Pomodoro</CardTitle>
+                <CardDescription>Personaliza tus sesiones de trabajo</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Display Name</Label>
-                  <Input
-                    id="name"
-                    value={localProfile.name}
-                    onChange={(e) => handleProfileChange("name", e.target.value)}
-                    placeholder="Your display name"
-                  />
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Duración del Trabajo (minutos)</Label>
+                    <Input type="number" defaultValue="25" min="1" max="60" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Descanso Corto (minutos)</Label>
+                    <Input type="number" defaultValue="5" min="1" max="30" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Descanso Largo (minutos)</Label>
+                    <Input type="number" defaultValue="15" min="1" max="60" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sesiones hasta descanso largo</Label>
+                    <Input type="number" defaultValue="4" min="2" max="8" />
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={localProfile.email}
-                    onChange={(e) => handleProfileChange("email", e.target.value)}
-                    placeholder="your.email@example.com"
-                  />
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Inicio Automático</h4>
+                      <p className="text-sm text-muted-foreground">Iniciar automáticamente la siguiente sesión</p>
+                    </div>
+                    <Switch />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Sonidos de Notificación</h4>
+                      <p className="text-sm text-muted-foreground">Reproducir sonido al finalizar sesiones</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Modo No Molestar</h4>
+                      <p className="text-sm text-muted-foreground">Bloquear distracciones durante el trabajo</p>
+                    </div>
+                    <Switch />
+                  </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={localProfile.bio}
-                    onChange={(e) => handleProfileChange("bio", e.target.value)}
-                    placeholder="Tell us about yourself..."
-                    rows={3}
-                  />
+                <div className="flex justify-end">
+                  <Button>Guardar Configuración</Button>
                 </div>
-
-                <Button onClick={handleProfileSave} className="w-full">
-                  Save Profile
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        <div className="flex justify-end mt-6">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   )

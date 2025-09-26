@@ -2,19 +2,18 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { LanguageProvider } from "@/hooks/useLanguage"
 import { CookieBanner } from "@/components/cookie-banner"
-import Script from "next/script"
+import { NotificationProvider } from "@/components/notification-service"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: {
-    default: "FutureTask - Calendario Inteligente del Futuro",
-    template: "%s | FutureTask",
-  },
+  title: "FutureTask - Calendario Inteligente con IA",
   description:
-    "Revoluciona tu productividad con nuestro calendario inteligente potenciado por IA. Gestión de tareas, análisis predictivo y organización futurista.",
-  keywords: ["calendario", "productividad", "IA", "tareas", "organización", "futuro", "inteligente"],
+    "Organiza tu vida con nuestro calendario futurista potenciado por inteligencia artificial. Gestiona tareas, notas y objetivos de manera eficiente.",
+  keywords: "calendario, productividad, IA, tareas, organización, planificación",
   authors: [{ name: "FutureTask Team" }],
   creator: "FutureTask",
   publisher: "FutureTask",
@@ -23,7 +22,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://future-task.com"),
+  metadataBase: new URL("https://futuretask.vercel.app"),
   alternates: {
     canonical: "/",
     languages: {
@@ -32,26 +31,27 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    type: "website",
-    locale: "es_ES",
-    url: "https://future-task.com",
-    title: "FutureTask - Calendario Inteligente del Futuro",
-    description: "Revoluciona tu productividad con nuestro calendario inteligente potenciado por IA.",
+    title: "FutureTask - Calendario Inteligente con IA",
+    description: "Organiza tu vida con nuestro calendario futurista potenciado por inteligencia artificial.",
+    url: "https://futuretask.vercel.app",
     siteName: "FutureTask",
     images: [
       {
-        url: "/og-image.png",
+        url: "/futuristic-dashboard.png",
         width: 1200,
         height: 630,
-        alt: "FutureTask - Calendario Inteligente",
+        alt: "FutureTask Dashboard",
       },
     ],
+    locale: "es_ES",
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FutureTask - Calendario Inteligente del Futuro",
-    description: "Revoluciona tu productividad con nuestro calendario inteligente potenciado por IA.",
-    images: ["/og-image.png"],
+    title: "FutureTask - Calendario Inteligente con IA",
+    description: "Organiza tu vida con nuestro calendario futurista potenciado por inteligencia artificial.",
+    images: ["/futuristic-dashboard.png"],
+    creator: "@futuretask",
   },
   robots: {
     index: true,
@@ -65,21 +65,16 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "google-site-verification-code",
+    google: "your-google-verification-code",
   },
+  category: "productivity",
   icons: {
     icon: [
+      { url: "/favicon.ico" },
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
-    other: [
-      {
-        rel: "mask-icon",
-        url: "/safari-pinned-tab.svg",
-        color: "#3b82f6",
-      },
-    ],
   },
   manifest: "/manifest.json",
     generator: 'v0.app'
@@ -92,62 +87,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        <meta name="theme-color" content="#3b82f6" />
-        <meta name="msapplication-TileColor" content="#3b82f6" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
       <body className={inter.className} suppressHydrationWarning>
-        {/* Google Analytics */}
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', {
-                  page_path: window.location.pathname,
-                });
-              `}
-            </Script>
-          </>
-        )}
-
-        {children}
-        <CookieBanner />
-
-        {/* Structured Data */}
-        <Script
-          id="structured-data"
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebApplication",
-              name: "FutureTask",
-              description: "Calendario inteligente potenciado por IA para máxima productividad",
-              url: "https://future-task.com",
-              applicationCategory: "ProductivityApplication",
-              operatingSystem: "Web",
-              offers: {
-                "@type": "Offer",
-                price: "0",
-                priceCurrency: "EUR",
-              },
-              author: {
-                "@type": "Organization",
-                name: "FutureTask Team",
-              },
-            }),
-          }}
-        />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <LanguageProvider>
+            <NotificationProvider>
+              {children}
+              <CookieBanner />
+            </NotificationProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

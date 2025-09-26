@@ -1,892 +1,837 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Calendar, Search, Clock, Eye, MessageCircle, ArrowRight, Star, Mail } from "lucide-react"
+import { Calendar, Clock, User, ArrowRight, Star, Eye, MessageCircle } from "lucide-react"
+import Link from "next/link"
 
-export default function BlogPage() {
+interface BlogPost {
+  id: string
+  title: string
+  excerpt: string
+  content: string
+  author: string
+  date: string
+  readTime: string
+  category: string
+  tags: string[]
+  image: string
+  featured: boolean
+  views: number
+  comments: number
+  likes: number
+}
+
+const blogPosts: BlogPost[] = [
+  {
+    id: "productividad-2025",
+    title: "Las 10 Mejores Estrategias de Productividad para 2025",
+    excerpt:
+      "Descubre las técnicas más efectivas para maximizar tu productividad en el nuevo año, desde la gestión del tiempo hasta la automatización de tareas.",
+    content: `# Las 10 Mejores Estrategias de Productividad para 2025
+
+La productividad no se trata solo de hacer más cosas, sino de hacer las cosas correctas de manera más eficiente. En 2025, con la evolución constante de la tecnología y los métodos de trabajo, es crucial adaptar nuestras estrategias para mantenernos competitivos y equilibrados.
+
+## 1. Técnica Pomodoro Avanzada
+
+La técnica Pomodoro tradicional ha evolucionado. Ahora incorporamos:
+- **Pomodoros adaptativos**: Ajusta la duración según la complejidad de la tarea
+- **Análisis de rendimiento**: Utiliza datos para optimizar tus intervalos
+- **Integración con IA**: Herramientas que predicen tu mejor momento para cada tipo de trabajo
+
+### Implementación práctica:
+- Comienza con sesiones de 25 minutos
+- Analiza tu rendimiento durante 2 semanas
+- Ajusta los intervalos según tus patrones de energía
+- Utiliza aplicaciones como Forest o Focus Keeper para seguimiento
+
+## 2. Gestión de Energía Personal
+
+Más importante que la gestión del tiempo es la gestión de tu energía:
+
+### Identifica tus picos de energía:
+- **Matutinos**: Tareas creativas y estratégicas
+- **Vespertinos**: Reuniones y comunicación
+- **Nocturnos**: Planificación y reflexión
+
+### Herramientas recomendadas:
+- **RescueTime** ($12/mes): Análisis automático de tiempo
+- **Toggl Track** (Gratis - $18/mes): Seguimiento manual detallado
+- **Clockify** (Gratis): Gestión de tiempo para equipos
+
+## 3. Automatización Inteligente
+
+La automatización en 2025 va más allá de simples scripts:
+
+### Áreas clave para automatizar:
+1. **Gestión de emails**: Filtros inteligentes y respuestas automáticas
+2. **Programación de reuniones**: Calendly, Acuity Scheduling
+3. **Gestión de redes sociales**: Buffer, Hootsuite
+4. **Facturación y contabilidad**: QuickBooks, FreshBooks
+
+### ROI de la automatización:
+- Ahorro promedio: 2-4 horas diarias
+- Reducción de errores: 85%
+- Mejora en satisfacción laboral: 67%
+
+## 4. Método Getting Things Done (GTD) 3.0
+
+David Allen actualizó su metodología para la era digital:
+
+### Los 5 pasos actualizados:
+1. **Capturar**: Utiliza herramientas multiplataforma
+2. **Clarificar**: IA para categorización automática
+3. **Organizar**: Sistemas adaptativos
+4. **Reflexionar**: Análisis predictivo
+5. **Comprometerse**: Gamificación y accountability
+
+### Herramientas GTD modernas:
+- **Todoist** ($4-6/mes): IA integrada
+- **Notion** ($8-16/mes): Base de datos completa
+- **Obsidian** (Gratis-$50/año): Gestión de conocimiento
+
+## 5. Técnica de Time Blocking Inteligente
+
+El time blocking tradicional se combina ahora con IA:
+
+### Características del Time Blocking 3.0:
+- **Bloques adaptativos**: Se ajustan según interrupciones
+- **Predicción de duración**: IA estima tiempo real necesario
+- **Optimización automática**: Reorganiza según prioridades
+
+### Implementación paso a paso:
+1. Audita tu tiempo actual durante 1 semana
+2. Identifica patrones y desperdicios
+3. Crea bloques temáticos (deep work, comunicación, admin)
+4. Utiliza herramientas como Clockwise o Motion
+5. Revisa y ajusta semanalmente
+
+## 6. Minimalismo Digital Estratégico
+
+No se trata de eliminar tecnología, sino de usarla estratégicamente:
+
+### Principios del minimalismo digital:
+- **Una herramienta por función**: Evita redundancias
+- **Notificaciones intencionales**: Solo lo esencial
+- **Espacios digitales limpios**: Organización visual
+
+### Auditoría digital mensual:
+- Revisa aplicaciones instaladas
+- Elimina duplicados y no utilizadas
+- Optimiza configuraciones de notificaciones
+- Limpia archivos y organiza carpetas
+
+## 7. Método PARA para Gestión de Información
+
+Tiago Forte revolucionó la organización de información:
+
+### Los 4 componentes:
+- **Projects**: Resultados específicos con deadline
+- **Areas**: Estándares a mantener
+- **Resources**: Temas de interés futuro
+- **Archive**: Elementos inactivos de las categorías anteriores
+
+### Herramientas PARA:
+- **Notion** ($8-16/mes): Implementación completa
+- **Obsidian** (Gratis-$50/año): Conexiones entre ideas
+- **Roam Research** ($15/mes): Pensamiento en red
+
+## 8. Técnicas de Deep Work Avanzadas
+
+Cal Newport expandió su concepto con nuevas estrategias:
+
+### Modalidades de Deep Work:
+1. **Monástica**: Eliminación total de distracciones
+2. **Bimodal**: Períodos alternos de deep work y colaboración
+3. **Rítmica**: Rutinas diarias consistentes
+4. **Periodística**: Flexibilidad para cambiar rápidamente
+
+### Métricas de Deep Work:
+- Tiempo total en deep work: Mínimo 3-4 horas diarias
+- Calidad de output: Medible por resultados específicos
+- Satisfacción personal: Encuestas semanales de bienestar
+
+## 9. Gestión de Decisiones con IA
+
+La fatiga de decisión es un problema real. La IA puede ayudar:
+
+### Herramientas de apoyo a decisiones:
+- **Crystal** ($49/mes): Análisis de personalidad para comunicación
+- **Otter.ai** ($8.33-20/mes): Transcripción y análisis de reuniones
+- **Grammarly** ($12-15/mes): Optimización de comunicación escrita
+
+### Framework de decisiones:
+1. **Categoriza decisiones**: Reversibles vs irreversibles
+2. **Establece criterios**: Matriz de decisión ponderada
+3. **Utiliza datos**: Análisis cuantitativo cuando sea posible
+4. **Documenta**: Aprende de decisiones pasadas
+
+## 10. Biohacking para Productividad
+
+La optimización personal va más allá del trabajo:
+
+### Elementos clave del biohacking productivo:
+- **Sueño optimizado**: 7-9 horas de calidad
+- **Nutrición estratégica**: Comidas que sostienen energía
+- **Ejercicio funcional**: 150 minutos semanales mínimo
+- **Mindfulness**: 10-20 minutos diarios de meditación
+
+### Herramientas de biohacking:
+- **Oura Ring** ($299): Seguimiento de sueño y recuperación
+- **Whoop** ($30/mes): Análisis de strain y recovery
+- **Headspace** ($12.99/mes): Meditación guiada
+- **MyFitnessPal** (Gratis-$19.99/mes): Seguimiento nutricional
+
+## Métricas de Éxito y Seguimiento
+
+### KPIs de productividad personal:
+1. **Tiempo en deep work**: Objetivo 25-30 horas semanales
+2. **Tareas completadas vs planificadas**: Meta 80%+
+3. **Tiempo de respuesta a emails**: Máximo 24 horas
+4. **Proyectos completados a tiempo**: Meta 90%+
+5. **Satisfacción personal**: Escala 1-10, objetivo 7+
+
+### Herramientas de análisis:
+- **Toggl Track**: Análisis detallado de tiempo
+- **RescueTime**: Patrones automáticos de uso
+- **Google Analytics**: Para creadores de contenido
+- **Notion Dashboard**: Métricas personalizadas
+
+## Plan de Implementación de 90 Días
+
+### Días 1-30: Fundación
+- Implementa técnica Pomodoro avanzada
+- Audita y optimiza herramientas digitales
+- Establece rutinas de deep work
+
+### Días 31-60: Optimización
+- Integra automatización en procesos clave
+- Implementa sistema PARA
+- Comienza biohacking básico
+
+### Días 61-90: Maestría
+- Refina todos los sistemas
+- Analiza métricas y ajusta
+- Planifica mejoras continuas
+
+## Conclusión
+
+La productividad en 2025 requiere un enfoque holístico que combine tecnología avanzada con principios fundamentales de gestión personal. No se trata de adoptar todas las estrategias de una vez, sino de implementar gradualmente aquellas que mejor se adapten a tu estilo de trabajo y objetivos personales.
+
+El éxito no se mide solo en tareas completadas, sino en la calidad de vida que logras mantener mientras alcanzas tus metas profesionales. La verdadera productividad es sostenible, satisfactoria y alineada con tus valores personales.
+
+### Recursos Adicionales
+
+- **Libros recomendados**: "Deep Work" de Cal Newport, "Getting Things Done" de David Allen
+- **Podcasts**: "The Tim Ferriss Show", "The Productivity Show"
+- **Comunidades**: r/productivity, ProductHunt Makers
+- **Cursos**: "Building a Second Brain" de Tiago Forte
+
+Recuerda: la mejor estrategia de productividad es aquella que puedes mantener consistentemente a largo plazo.`,
+    author: "María González",
+    date: "2024-12-15",
+    readTime: "12 min",
+    category: "Productividad",
+    tags: ["productividad", "estrategias", "2025", "eficiencia"],
+    image: "/productivity-workspace-2025.jpg",
+    featured: true,
+    views: 2847,
+    comments: 23,
+    likes: 156,
+  },
+  {
+    id: "ia-trabajo-remoto",
+    title: "Cómo la IA está Revolucionando el Trabajo Remoto",
+    excerpt:
+      "Explora las herramientas de inteligencia artificial que están transformando la forma en que trabajamos desde casa y mejorando la colaboración virtual.",
+    content: `# Cómo la IA está Revolucionando el Trabajo Remoto
+
+El trabajo remoto ha evolucionado dramáticamente desde 2020, y la inteligencia artificial está siendo el catalizador principal de esta transformación. En 2024, vemos cómo la IA no solo facilita el trabajo a distancia, sino que lo hace más eficiente, colaborativo y humano.
+
+## El Estado Actual del Trabajo Remoto
+
+### Estadísticas Clave 2024:
+- **42%** de la fuerza laboral estadounidense trabaja remotamente a tiempo completo
+- **82%** de las empresas planean mantener políticas de trabajo híbrido
+- **67%** de los trabajadores reportan mayor productividad trabajando desde casa
+- **$11,000** es el ahorro promedio anual por empleado remoto para las empresas
+
+### Desafíos Persistentes:
+1. **Comunicación asíncrona**: Diferencias de zona horaria y estilos de comunicación
+2. **Aislamiento social**: Falta de interacción humana espontánea
+3. **Gestión de proyectos**: Coordinación compleja entre equipos distribuidos
+4. **Onboarding virtual**: Integración efectiva de nuevos empleados
+5. **Cultura empresarial**: Mantener valores y cohesión del equipo
+
+## Herramientas de IA para Comunicación
+
+### 1. Asistentes de Reuniones Inteligentes
+
+**Otter.ai** ($8.33-20/mes por usuario)
+- Transcripción en tiempo real con 95% de precisión
+- Identificación automática de speakers
+- Resúmenes automáticos de puntos clave
+- Integración con Zoom, Teams, Google Meet
+
+**Fireflies.ai** ($10-19/mes por usuario)
+- Análisis de sentimientos en reuniones
+- Extracción automática de action items
+- Métricas de participación y engagement
+- CRM integration automático
+
+**Grain** ($15-25/mes por usuario)
+- Clips automáticos de momentos importantes
+- Biblioteca searchable de reuniones
+- Coaching automático basado en conversaciones
+- Analytics de performance en ventas
+
+### 2. Traducción y Comunicación Multiidioma
+
+**DeepL Pro** ($6.99-22.99/mes)
+- Traducción contextual superior a Google Translate
+- Integración con herramientas de productividad
+- Traducción de documentos completos
+- API para integraciones personalizadas
+
+**Microsoft Translator** (Incluido en Office 365)
+- Traducción en tiempo real en Teams
+- Subtítulos automáticos multiidioma
+- Traducción de presentaciones PowerPoint
+- Conversaciones grupales traducidas
+
+### ROI de Herramientas de Comunicación:
+- Reducción de tiempo en reuniones: 25-30%
+- Mejora en follow-up de action items: 60%
+- Reducción de malentendidos: 40%
+- Ahorro en costos de traducción: $2,000-5,000 anuales por equipo
+
+## IA para Gestión de Proyectos
+
+### 1. Planificación Inteligente
+
+**Monday.com AI** ($8-16/mes por usuario)
+- Predicción automática de timelines
+- Identificación de cuellos de botella
+- Asignación inteligente de recursos
+- Alertas proactivas de riesgos
+
+**Asana Intelligence** ($10.99-24.99/mes por usuario)
+- Goals tracking automático
+- Workload balancing
+- Smart project templates
+- Predictive insights
+
+**Motion** ($34/mes por usuario)
+- Calendar scheduling automático
+- Task prioritization dinámica
+- Meeting optimization
+- Deadline prediction
+
+### 2. Análisis Predictivo
+
+**Forecast** ($29/mes por usuario)
+- Resource planning con IA
+- Budget forecasting
+- Risk assessment automático
+- Performance analytics
+
+### Métricas de Impacto:
+- Mejora en on-time delivery: 35%
+- Reducción en project overruns: 28%
+- Optimización de resource allocation: 42%
+- Incremento en team satisfaction: 31%
+
+## Automatización de Tareas Repetitivas
+
+### 1. Procesamiento de Documentos
+
+**Zapier** ($19.99-599/mes)
+- 5,000+ integraciones disponibles
+- Workflows complejos sin código
+- AI-powered data extraction
+- Error handling automático
+
+**Microsoft Power Automate** ($15-40/mes por usuario)
+- Integración nativa con Office 365
+- AI Builder para document processing
+- Approval workflows automáticos
+- Desktop automation (RPA)
+
+**UiPath** ($420-1,320/mes por robot)
+- Enterprise-grade RPA
+- AI-powered document understanding
+- Process mining y optimization
+- Citizen developer tools
+
+### 2. Gestión de Emails y Comunicación
+
+**SaneBox** ($7-36/mes)
+- Email prioritization automática
+- Snooze inteligente de emails
+- Unsubscribe automation
+- Email analytics y insights
+
+**Boomerang** ($4.98-14.98/mes)
+- Email scheduling inteligente
+- Response tracking automático
+- AI writing assistant
+- Meeting scheduling integration
+
+### ROI de Automatización:
+- Ahorro de tiempo por empleado: 2.5 horas diarias
+- Reducción de errores manuales: 78%
+- Mejora en response time: 65%
+- Costo-beneficio: 300-500% ROI en primer año
+
+## IA para Bienestar y Productividad Personal
+
+### 1. Gestión de Tiempo y Energía
+
+**RescueTime** ($12/mes)
+- Tracking automático de actividades
+- Productivity scoring
+- Distraction blocking
+- Detailed analytics y reports
+
+**Time Doctor** ($7-20/mes por usuario)
+- Screenshot monitoring opcional
+- Website y app tracking
+- Payroll integration
+- Team productivity analytics
+
+**Clockify** (Gratis - $9.99/mes por usuario)
+- Time tracking manual y automático
+- Project profitability analysis
+- Team scheduling
+- Invoicing integration
+
+### 2. Wellness y Mental Health
+
+**Headspace for Work** ($12.99-16.99/mes por usuario)
+- Meditation programs específicos para trabajo
+- Sleep stories para mejor descanso
+- Focus music y soundscapes
+- Stress y anxiety management
+
+**Calm for Business** ($6-8/mes por usuario)
+- Daily mindfulness sessions
+- Masterclasses sobre bienestar
+- Sleep programs
+- Analytics de usage y engagement
+
+**Lyra Health** ($3-6/mes por empleado)
+- AI-powered mental health screening
+- Personalized therapy matching
+- Crisis intervention protocols
+- ROI tracking y reporting
+
+### Impacto en Bienestar:
+- Reducción en burnout: 34%
+- Mejora en work-life balance: 41%
+- Incremento en job satisfaction: 28%
+- Reducción en sick days: 23%
+
+## Herramientas de Colaboración Avanzada
+
+### 1. Espacios de Trabajo Virtuales
+
+**Gather** ($7/mes por usuario)
+- Virtual office spaces
+- Spatial audio y video
+- Interactive whiteboards
+- Custom space design
+
+**Mozilla Hubs** (Gratis)
+- VR/AR meeting spaces
+- 3D collaboration environments
+- Cross-platform compatibility
+- Open source y customizable
+
+**Horizon Workrooms** (Gratis con Oculus)
+- VR meetings inmersivos
+- Shared whiteboards y documents
+- Spatial audio natural
+- Mixed reality capabilities
+
+### 2. Brainstorming y Creatividad
+
+**Miro** ($8-16/mes por usuario)
+- AI-powered template suggestions
+- Smart clustering de ideas
+- Automated documentation
+- Integration with 100+ tools
+
+**Figma** ($12-45/mes por usuario)
+- Real-time collaborative design
+- AI-powered design suggestions
+- Version control automático
+- Developer handoff tools
+
+**Conceptboard** ($6-9.50/mes por usuario)
+- Infinite canvas collaboration
+- AI-powered content organization
+- Video conferencing integration
+- Project management features
+
+### ROI de Colaboración:
+- Reducción en meeting time: 30%
+- Mejora en creative output: 45%
+- Faster decision making: 38%
+- Incremento en innovation metrics: 52%
+
+## Seguridad y Privacidad en IA
+
+### Consideraciones Clave:
+
+1. **Data Privacy**
+   - GDPR y CCPA compliance
+   - Data encryption en tránsito y reposo
+   - User consent management
+   - Right to deletion
+
+2. **AI Bias y Fairness**
+   - Algorithmic auditing regular
+   - Diverse training datasets
+   - Bias detection tools
+   - Inclusive design principles
+
+3. **Transparency**
+   - Explainable AI decisions
+   - Clear data usage policies
+   - Regular security audits
+   - Employee training programs
+
+### Herramientas de Seguridad:
+
+**1Password Business** ($8/mes por usuario)
+- Password management centralizado
+- Secure document sharing
+- Access monitoring y alerts
+- Integration with SSO providers
+
+**Okta** ($2-15/mes por usuario)
+- Identity y access management
+- Single sign-on (SSO)
+- Multi-factor authentication
+- User lifecycle management
+
+**CrowdStrike** ($8.99-22.99/mes por endpoint)
+- AI-powered threat detection
+- Endpoint protection
+- Incident response automation
+- Threat intelligence
+
+## Casos de Estudio Exitosos
+
+### Caso 1: GitLab - 100% Remote desde 2014
+
+**Implementación de IA:**
+- Slack bots para automated standups
+- AI-powered code review (GitLab AI)
+- Predictive analytics para sprint planning
+- Automated documentation generation
+
+**Resultados:**
+- 1,300+ empleados en 65+ países
+- $268M en revenue (2023)
+- 4.8/5 employee satisfaction
+- 25% faster development cycles
+
+### Caso 2: Zapier - Remote-First Culture
+
+**Herramientas IA Utilizadas:**
+- Own platform para workflow automation
+- AI-powered customer support
+- Predictive hiring algorithms
+- Automated performance reviews
+
+**Métricas de Éxito:**
+- 400+ empleados, 100% remote
+- $140M+ ARR
+- 94% employee retention rate
+- 40% reduction en support tickets
+
+### Caso 3: Automattic (WordPress.com)
+
+**Estrategia de IA:**
+- AI-powered content moderation
+- Automated translation (1,800+ employees)
+- Predictive analytics para product development
+- AI-assisted customer support
+
+**Impacto:**
+- 2,000+ empleados en 95+ países
+- $500M+ revenue
+- 18 años de remote-first operation
+- 90%+ employee satisfaction
+
+## Implementación Práctica: Roadmap de 6 Meses
+
+### Mes 1-2: Assessment y Planning
+- Audit de herramientas actuales
+- Identificación de pain points
+- ROI analysis de soluciones IA
+- Team training y change management
+
+### Mes 3-4: Pilot Programs
+- Implementación de 2-3 herramientas clave
+- A/B testing con grupos pequeños
+- Feedback collection y iteration
+- Security y compliance review
+
+### Mes 5-6: Scale y Optimization
+- Rollout completo a toda la organización
+- Advanced features y customization
+- Metrics tracking y reporting
+- Continuous improvement processes
+
+## Métricas de Éxito para IA en Trabajo Remoto
+
+### Productividad:
+- **Tasks completed per day**: Incremento del 25-40%
+- **Time to completion**: Reducción del 20-35%
+- **Quality scores**: Mejora del 15-25%
+- **Rework percentage**: Reducción del 30-50%
+
+### Colaboración:
+- **Meeting effectiveness**: Incremento del 35%
+- **Cross-team projects**: Incremento del 28%
+- **Knowledge sharing**: Incremento del 45%
+- **Decision speed**: Mejora del 40%
+
+### Bienestar:
+- **Work-life balance score**: Incremento del 30%
+- **Stress levels**: Reducción del 25%
+- **Job satisfaction**: Incremento del 35%
+- **Retention rate**: Incremento del 20%
+
+### Financieros:
+- **Cost per employee**: Reducción del $8,000-12,000 anual
+- **Productivity ROI**: 250-400%
+- **Tool consolidation savings**: $2,000-5,000 por empleado
+- **Reduced turnover costs**: $15,000-25,000 por posición
+
+## Tendencias Futuras (2025-2027)
+
+### 1. AI Companions Personalizados
+- Asistentes virtuales específicos por rol
+- Emotional intelligence integration
+- Predictive wellness interventions
+- Personalized learning paths
+
+### 2. Immersive Collaboration
+- VR/AR mainstream adoption
+- Haptic feedback integration
+- Brain-computer interfaces
+- Holographic meetings
+
+### 3. Autonomous Work Management
+- Self-organizing teams
+- AI project managers
+- Predictive resource allocation
+- Automated performance optimization
+
+### 4. Hyper-Personalization
+- Individual productivity optimization
+- Custom workflow creation
+- Adaptive user interfaces
+- Predictive task scheduling
+
+## Conclusión
+
+La IA está transformando fundamentalmente cómo trabajamos remotamente, no solo automatizando tareas sino creando nuevas formas de colaboración, comunicación y creatividad. Las organizaciones que adopten estas tecnologías de manera estratégica y humana-céntrica tendrán ventajas competitivas significativas.
+
+El futuro del trabajo remoto no es solo sobre tecnología, sino sobre cómo la tecnología puede amplificar las capacidades humanas y crear experiencias de trabajo más satisfactorias, productivas y equilibradas.
+
+### Próximos Pasos:
+
+1. **Evalúa tu stack tecnológico actual**
+2. **Identifica 2-3 áreas de mayor impacto**
+3. **Comienza con pilots pequeños y medibles**
+4. **Invierte en training y change management**
+5. **Mide, aprende y escala gradualmente**
+
+La revolución del trabajo remoto impulsada por IA apenas está comenzando. Las organizaciones que actúen ahora estarán mejor posicionadas para el futuro del trabajo.`,
+    author: "Carlos Rodríguez",
+    date: "2024-12-10",
+    readTime: "15 min",
+    category: "Tecnología",
+    tags: ["IA", "trabajo remoto", "tecnología", "futuro"],
+    image: "/remote-work-ai-technology.jpg",
+    featured: true,
+    views: 1923,
+    comments: 18,
+    likes: 89,
+  },
+  {
+    id: "organizacion-digital",
+    title: "Organización Digital: Herramientas y Métodos para 2025",
+    excerpt:
+      "Una guía completa sobre las mejores herramientas y metodologías para organizar tu vida digital y maximizar tu eficiencia personal.",
+    content: `# Organización Digital: Herramientas y Métodos para 2025
+
+En la era digital actual, la organización efectiva de nuestros recursos digitales es tan importante como la organización de nuestro espacio físico. Con el crecimiento exponencial de información, aplicaciones y dispositivos, necesitamos sistemas robustos para mantener todo bajo control.
+
+## El Problema de la Sobrecarga Digital
+
+### Estadísticas Alarmantes:
+- El trabajador promedio revisa su email **74 veces por día**
+- Gastamos **2.5 horas diarias** cambiando entre aplicaciones
+- **68%** de los profesionales reportan sentirse abrumados por la información
+- Perdemos **21 minutos** recuperando el foco después de cada interrupción
+
+### Costos de la Desorganización Digital:
+- **$997 billones** en pérdidas de productividad global anualmente
+- **40%** del tiempo se gasta buscando información
+- **25%** de los emails importantes se pierden o ignoran
+- **67%** de los proyectos fallan por mala organización de información
+
+## Fundamentos de la Organización Digital
+
+### Principios Clave:
+
+1. **Principio de Lugar Único**: Cada tipo de información debe tener un hogar específico
+2. **Regla de los 2 Minutos**: Si toma menos de 2 minutos, hazlo inmediatamente
+3. **Captura Universal**: Todo debe ser capturado en un sistema confiable
+4. **Revisión Regular**: Los sistemas requieren mantenimiento constante
+5. **Simplicidad Escalable**: Comienza simple, escala según necesidades
+
+### Arquitectura de Información Personal:
+
+- **Notion**: Organiza proyectos, notas y tareas en un solo lugar
+- **Todoist**: Gestiona tareas diarias y proyectos
+- **Microsoft OneDrive**: Almacena y organiza documentos
+- **Evernote**: Captura y organiza ideas y notas
+- **Google Drive**: Almacena y comparte archivos
+- **Trello**: Organiza proyectos en tableros y listas
+- **Asana**: Gestión de proyectos avanzada
+- **Monday.com**: Tablero de gestión de proyectos
+- **Slack**: Comunicación y colaboración en equipo
+- **Microsoft Teams**: Comunicación y colaboración empresarial
+
+## Implementación Práctica
+
+### Paso 1: Evalúa tus necesidades actuales
+- Identifica qué tipo de información necesitas organizar
+- Determina cuántas aplicaciones utilizas y cuáles son redundantes
+
+### Paso 2: Selecciona las herramientas adecuadas
+- **Notion**: Para proyectos y notas
+- **Todoist**: Para tareas diarias
+- **Microsoft OneDrive**: Para documentos
+- **Evernote**: Para ideas y notas
+- **Google Drive**: Para archivos compartidos
+- **Trello**: Para proyectos simples
+- **Asana**: Para proyectos complejos
+- **Monday.com**: Para tableros de gestión
+- **Slack**: Para comunicación interna
+- **Microsoft Teams**: Para reuniones y colaboración empresarial
+
+### Paso 3: Configura y personaliza
+- Personaliza las plantillas y vistas según tus necesidades
+- Configura las integraciones entre herramientas para fluidez
+
+### Paso 4: Mantén la organización constante
+- Realiza revisiones regulares de tus sistemas
+- Ajusta y optimiza según sea necesario
+
+## Conclusión
+
+La organización digital es una habilidad esencial en la era digital actual. Con las herramientas y metodologías adecuadas, puedes maximizar tu eficiencia personal y profesional, reduciendo la sobrecarga digital y mejorando tu productividad.
+
+### Recursos Adicionales
+
+- **Libros recomendados**: "The Art of Simple" de David Allen, "Digital Minimalism" de Cal Newport
+- **Podcasts**: "The Minimalists", "Digital Minimalism"
+- **Comunidades**: r/digitalminimalism, Minimalist Mastery
+- **Cursos**: "Digital Minimalism: The Life-Changing Benefits of Less" de Cal Newport
+
+Recuerda: la organización digital no es solo sobre herramientas, sino sobre cómo las utilizas para crear un espacio de trabajo más ordenado y eficiente.`,
+    author: "Ana López",
+    date: "2024-12-12",
+    readTime: "10 min",
+    category: "Organización",
+    tags: ["organización digital", "herramientas", "metodologías", "2025"],
+    image: "/digital-organization-tools.jpg",
+    featured: true,
+    views: 1789,
+    comments: 15,
+    likes: 76,
+  },
+]
+
+const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-
-  const blogPosts = [
-    {
-      id: 1,
-      title: "10 Técnicas de Productividad que Cambiarán tu Vida en 2024",
-      excerpt:
-        "Descubre las estrategias más efectivas para maximizar tu productividad personal y profesional. Desde la técnica Pomodoro hasta el time-blocking.",
-      content: `La productividad no se trata de trabajar más horas, sino de trabajar de manera más inteligente. En este artículo, exploraremos 10 técnicas probadas que pueden transformar completamente tu enfoque hacia el trabajo y la vida personal.
-
-## 1. La Técnica Pomodoro Avanzada
-
-La técnica Pomodoro tradicional utiliza intervalos de 25 minutos, pero la versión avanzada se adapta a tu ritmo natural. Algunos días puedes necesitar sesiones de 45 minutos, otros de 15. La clave está en escuchar a tu cuerpo y mente.
-
-## 2. Time Blocking Estratégico
-
-En lugar de simplemente bloquear tiempo para tareas, asigna bloques específicos según tu energía natural. Reserva las mañanas para trabajo creativo y las tardes para tareas administrativas.
-
-## 3. La Regla de los Dos Minutos
-
-Si una tarea toma menos de dos minutos, hazla inmediatamente. Esta simple regla puede eliminar el 40% de tu lista de pendientes.
-
-## 4. Batch Processing
-
-Agrupa tareas similares y hazlas en bloques. Responde todos los emails de una vez, haz todas las llamadas juntas, procesa todos los documentos en una sesión.
-
-## 5. El Método Getting Things Done (GTD)
-
-Captura todo en un sistema confiable, clarifica qué significa cada elemento, organiza por contexto y proyecto, revisa regularmente y ejecuta con confianza.
-
-La implementación de estas técnicas requiere práctica y paciencia, pero los resultados son transformadores.`,
-      author: "María González",
-      date: "2024-01-15",
-      category: "Productividad",
-      tags: ["productividad", "técnicas", "pomodoro", "gtd"],
-      readTime: "8 min",
-      views: 2847,
-      comments: 23,
-      featured: true,
-      image: "/placeholder.svg?height=400&width=600&text=Técnicas+de+Productividad",
-    },
-    {
-      id: 2,
-      title: "Cómo la Inteligencia Artificial Está Revolucionando la Gestión del Tiempo",
-      excerpt:
-        "Explora cómo las herramientas de IA pueden predecir tus patrones de productividad y optimizar automáticamente tu calendario para máxima eficiencia.",
-      content: `La inteligencia artificial está transformando la manera en que gestionamos nuestro tiempo. Ya no se trata solo de calendarios digitales, sino de sistemas inteligentes que aprenden de nuestros hábitos y optimizan nuestro día automáticamente.
-
-## El Poder del Aprendizaje Automático
-
-Los algoritmos de machine learning pueden analizar miles de puntos de datos sobre tu comportamiento laboral: cuándo eres más productivo, qué tipo de tareas requieren más energía, cuánto tiempo realmente tomas para completar diferentes actividades.
-
-## Predicción de Patrones
-
-La IA puede identificar patrones que nosotros no vemos. Por ejemplo, puede detectar que eres 30% más productivo los martes por la mañana, o que las reuniones después del almuerzo tienden a ser menos efectivas.
-
-## Optimización Automática
-
-Basándose en estos patrones, la IA puede:
-- Sugerir los mejores momentos para tareas específicas
-- Reorganizar automáticamente tu calendario cuando surgen imprevistos
-- Predecir cuánto tiempo necesitarás realmente para cada tarea
-- Identificar momentos óptimos para descansos
-
-## El Futuro de la Productividad
-
-Estamos entrando en una era donde nuestros asistentes digitales no solo organizan nuestro tiempo, sino que lo optimizan continuamente basándose en datos reales de rendimiento.`,
-      author: "Carlos Rodríguez",
-      date: "2024-01-12",
-      category: "IA",
-      tags: ["inteligencia artificial", "automatización", "calendario", "optimización"],
-      readTime: "6 min",
-      views: 1923,
-      comments: 18,
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "El Arte del Deep Work: Cómo Lograr Concentración Profunda en un Mundo Distraído",
-      excerpt:
-        "En una era de notificaciones constantes, aprende a cultivar la capacidad de concentración profunda que te permitirá producir trabajo de alta calidad.",
-      content: `El concepto de "Deep Work", popularizado por Cal Newport, se refiere a la capacidad de concentrarse sin distracción en una tarea cognitivamente demandante. En nuestro mundo hiperconectado, esta habilidad se ha vuelto tanto más rara como más valiosa.
-
-## ¿Qué es el Deep Work?
-
-El Deep Work es trabajo profesional realizado en un estado de concentración libre de distracciones que empuja tus capacidades cognitivas a su límite. Estas actividades crean nuevo valor, mejoran tu habilidad y son difíciles de replicar.
-
-## Los Cuatro Tipos de Deep Work
-
-### 1. Filosofía Monástica
-Eliminación radical de todas las distracciones. Ideal para escritores, investigadores o cualquiera que pueda permitirse largos períodos de aislamiento.
-
-### 2. Filosofía Bimodal
-Alternancia entre períodos de deep work y períodos de colaboración. Puedes dedicar días completos o incluso semanas al trabajo profundo.
-
-### 3. Filosofía Rítmica
-Establecimiento de una rutina regular de deep work. Por ejemplo, todas las mañanas de 6 a 9 AM son sagradas para trabajo profundo.
-
-### 4. Filosofía Periodística
-Capacidad de cambiar al modo deep work cuando sea necesario. Requiere mucha práctica y disciplina mental.
-
-## Estrategias Prácticas
-
-1. **Crea rituales**: Establece rutinas específicas que señalen el inicio del trabajo profundo
-2. **Elimina distracciones**: Usa bloqueadores de sitios web, pon el teléfono en modo avión
-3. **Entrena tu concentración**: Como un músculo, la concentración se fortalece con la práctica
-4. **Mide tu progreso**: Lleva registro de cuánto tiempo pasas en deep work cada día
-
-El deep work no es solo una técnica de productividad, es una filosofía de vida que puede transformar la calidad de tu trabajo y tu satisfacción profesional.`,
-      author: "Ana Martín",
-      date: "2024-01-10",
-      category: "Concentración",
-      tags: ["deep work", "concentración", "productividad", "cal newport"],
-      readTime: "10 min",
-      views: 3156,
-      comments: 31,
-      featured: true,
-    },
-    {
-      id: 4,
-      title: "Gestión de Energía vs Gestión de Tiempo: El Cambio de Paradigma",
-      excerpt:
-        "Descubre por qué gestionar tu energía es más importante que gestionar tu tiempo, y cómo alinear tus tareas con tus ritmos naturales.",
-      content: `Durante décadas nos han enseñado a gestionar el tiempo, pero el tiempo es un recurso finito e inflexible. Todos tenemos las mismas 24 horas al día. La verdadera diferencia está en cómo gestionamos nuestra energía.
-
-## Los Cuatro Tipos de Energía
-
-### 1. Energía Física
-Tu capacidad corporal para realizar trabajo. Incluye tu nivel de fitness, nutrición, sueño y salud general.
-
-### 2. Energía Emocional
-Tu capacidad para mantener emociones positivas y manejar las negativas. Afecta directamente tu motivación y resistencia.
-
-### 3. Energía Mental
-Tu capacidad para concentrarte, procesar información y tomar decisiones. Se agota con el uso y se restaura con el descanso.
-
-### 4. Energía Espiritual
-Tu conexión con un propósito más grande. Proporciona la motivación y resistencia para perseverar en momentos difíciles.
-
-## Estrategias de Gestión de Energía
-
-### Mapea tu Energía Natural
-Lleva un registro durante una semana de tus niveles de energía cada hora. Identifica patrones: ¿cuándo eres más creativo? ¿cuándo tienes más energía física?
-
-### Alinea Tareas con Energía
-- **Alta energía mental**: Trabajo creativo, resolución de problemas complejos
-- **Media energía**: Reuniones, comunicación, planificación
-- **Baja energía**: Tareas administrativas, organización, limpieza
-
-### Rituales de Renovación
-- **Física**: Ejercicio regular, alimentación saludable, sueño de calidad
-- **Emocional**: Tiempo con seres queridos, actividades que disfrutes
-- **Mental**: Meditación, lectura, aprendizaje
-- **Espiritual**: Reflexión, conexión con valores, servicio a otros
-
-## El Resultado
-
-Cuando gestionas tu energía efectivamente, no solo eres más productivo, sino que también experimentas mayor satisfacción y menor estrés en tu trabajo diario.`,
-      author: "David López",
-      date: "2024-01-08",
-      category: "Bienestar",
-      tags: ["energía", "gestión", "bienestar", "productividad"],
-      readTime: "7 min",
-      views: 2134,
-      comments: 19,
-      featured: false,
-    },
-    {
-      id: 5,
-      title: "Minimalismo Digital: Cómo Reducir el Ruido Tecnológico para Aumentar tu Productividad",
-      excerpt:
-        "Aprende a crear un entorno digital limpio y enfocado que apoye tus objetivos en lugar de distraerte de ellos.",
-      content: `El minimalismo digital no se trata de rechazar la tecnología, sino de ser más intencional sobre cómo la usamos. Se trata de crear un entorno digital que sirva a tus objetivos en lugar de sabotearlos.
-
-## Los Principios del Minimalismo Digital
-
-### 1. Filosofía de Valor
-Cada herramienta digital debe aportar valor significativo a tu vida. No basta con que sea útil; debe ser esencial.
-
-### 2. Optimización sobre Conveniencia
-Elige herramientas que optimicen lo que valoras, no necesariamente las más convenientes.
-
-### 3. Intencionalidad sobre Impulso
-Usa la tecnología de manera intencional, no como respuesta a impulsos o aburrimiento.
-
-## Estrategias Prácticas
-
-### Auditoría Digital
-1. Lista todas las aplicaciones en tu teléfono y computadora
-2. Categorízalas: Esencial, Útil, Entretenimiento, Problemática
-3. Elimina las problemáticas, limita el entretenimiento, optimiza las útiles
-
-### Diseño de Fricción
-Añade fricción a comportamientos que quieres reducir:
-- Elimina aplicaciones de redes sociales del teléfono
-- Usa bloqueadores de sitios web durante horas de trabajo
-- Configura tu teléfono en escala de grises
-
-### Batching Digital
-Agrupa actividades digitales similares:
-- Revisa email solo 2-3 veces al día
-- Dedica tiempo específico para redes sociales
-- Procesa todas las notificaciones de una vez
-
-El objetivo no es usar menos tecnología, sino usarla de manera más intencional y efectiva.`,
-      author: "Laura Fernández",
-      date: "2024-01-05",
-      category: "Minimalismo",
-      tags: ["minimalismo digital", "tecnología", "distracciones", "enfoque"],
-      readTime: "6 min",
-      views: 1876,
-      comments: 15,
-      featured: false,
-    },
-    {
-      id: 6,
-      title: "La Ciencia del Sueño y su Impacto en la Productividad",
-      excerpt:
-        "Explora cómo la calidad de tu sueño afecta directamente tu rendimiento cognitivo y descubre estrategias para optimizar tu descanso.",
-      content: `El sueño no es tiempo perdido; es una inversión en tu productividad del día siguiente. La investigación científica ha demostrado que la calidad del sueño tiene un impacto directo y medible en nuestro rendimiento cognitivo.
-
-## Los Ciclos del Sueño
-
-### Fase 1: Sueño Ligero
-Transición entre vigilia y sueño. Dura 5-10 minutos.
-
-### Fase 2: Sueño Profundo Ligero
-Representa el 45-55% del sueño total. Importante para la consolidación de memoria.
-
-### Fase 3: Sueño Profundo
-Crucial para la recuperación física y mental. Representa el 15-20% del sueño.
-
-### Fase REM
-Esencial para la creatividad y procesamiento emocional. Representa el 20-25% del sueño.
-
-## Impacto en la Productividad
-
-### Memoria y Aprendizaje
-Durante el sueño, el cerebro consolida las memorias del día, transfiriendo información de la memoria a corto plazo a la de largo plazo.
-
-### Toma de Decisiones
-La privación de sueño afecta la corteza prefrontal, reduciendo nuestra capacidad para tomar decisiones racionales.
-
-### Creatividad
-El sueño REM es crucial para la creatividad, permitiendo que el cerebro haga conexiones nuevas e inesperadas.
-
-## Estrategias de Optimización
-
-### Higiene del Sueño
-- Mantén un horario consistente
-- Crea un ambiente oscuro y fresco
-- Evita pantallas 1 hora antes de dormir
-- Limita la cafeína después de las 2 PM
-
-### Técnicas Avanzadas
-- **Napping estratégico**: Siestas de 10-20 minutos para recuperar energía
-- **Sleep tracking**: Usa dispositivos para monitorear la calidad del sueño
-- **Cronotipos**: Identifica si eres matutino o nocturno y ajusta tu horario
-
-Invertir en la calidad de tu sueño es una de las mejores inversiones que puedes hacer en tu productividad.`,
-      author: "Dr. Miguel Santos",
-      date: "2024-01-03",
-      category: "Salud",
-      tags: ["sueño", "productividad", "salud", "ciencia"],
-      readTime: "8 min",
-      views: 2567,
-      comments: 22,
-      featured: false,
-    },
-    {
-      id: 7,
-      title: "Automatización Personal: Cómo Crear Sistemas que Trabajen por Ti",
-      excerpt:
-        "Descubre cómo automatizar tareas repetitivas y crear sistemas que te permitan enfocarte en lo que realmente importa.",
-      content: `La automatización personal no se trata solo de usar herramientas tecnológicas, sino de crear sistemas y procesos que reduzcan la fricción en tu vida diaria y te permitan enfocarte en actividades de alto valor.
-
-## Principios de la Automatización Personal
-
-### 1. Identifica Tareas Repetitivas
-Busca actividades que realizas regularmente y que siguen un patrón predecible.
-
-### 2. Evalúa el ROI de Tiempo
-Calcula cuánto tiempo inviertes en automatizar vs. cuánto tiempo ahorrarás a largo plazo.
-
-### 3. Comienza Simple
-No necesitas automatizar todo de una vez. Comienza con las tareas más frecuentes y molestas.
-
-## Áreas Clave para Automatizar
-
-### Finanzas Personales
-- Transferencias automáticas a ahorros
-- Pago automático de facturas
-- Categorización automática de gastos
-- Alertas de presupuesto
-
-### Comunicación
-- Respuestas automáticas de email
-- Plantillas para mensajes frecuentes
-- Programación de publicaciones en redes sociales
-- Filtros automáticos de email
-
-### Gestión de Información
-- Agregadores de noticias
-- Sincronización automática de archivos
-- Backup automático de datos
-- Organización automática de fotos
-
-### Salud y Bienestar
-- Recordatorios de medicamentos
-- Seguimiento automático de ejercicio
-- Pedidos automáticos de suplementos
-- Programación de citas médicas
-
-## Herramientas Recomendadas
-
-### Nivel Básico
-- **IFTTT**: Conecta diferentes servicios web
-- **Zapier**: Automatización más avanzada entre aplicaciones
-- **Calendly**: Programación automática de reuniones
-
-### Nivel Intermedio
-- **Notion**: Base de datos personal automatizada
-- **Airtable**: Hojas de cálculo inteligentes
-- **Shortcuts (iOS)**: Automatización móvil
-
-### Nivel Avanzado
-- **Python scripts**: Automatización personalizada
-- **APIs**: Integración directa entre servicios
-- **Webhooks**: Automatización en tiempo real
-
-La clave está en encontrar el equilibrio entre automatización y control personal.`,
-      author: "Elena Ruiz",
-      date: "2024-01-01",
-      category: "Automatización",
-      tags: ["automatización", "sistemas", "eficiencia", "herramientas"],
-      readTime: "9 min",
-      views: 1654,
-      comments: 17,
-      featured: false,
-    },
-    {
-      id: 8,
-      title: "Gestión de Proyectos Personales: Del Caos a la Claridad",
-      excerpt:
-        "Aprende metodologías probadas para gestionar tus proyectos personales de manera efectiva, desde la concepción hasta la ejecución.",
-      content: `La gestión de proyectos no es solo para el ámbito profesional. Aplicar metodologías estructuradas a tus proyectos personales puede ser la diferencia entre el éxito y el abandono.
-
-## Definición de Proyecto Personal
-
-Un proyecto personal es cualquier iniciativa con:
-- Un objetivo específico y medible
-- Un plazo definido
-- Recursos limitados
-- Múltiples tareas interconectadas
-
-Ejemplos: aprender un idioma, escribir un libro, renovar la casa, cambiar de carrera.
-
-## Metodologías Adaptadas
-
-### Getting Things Done (GTD) para Proyectos
-1. **Captura**: Registra todas las ideas relacionadas con el proyecto
-2. **Clarifica**: Define el resultado deseado y los próximos pasos
-3. **Organiza**: Estructura las tareas por contexto y prioridad
-4. **Reflexiona**: Revisa el progreso regularmente
-5. **Ejecuta**: Actúa con confianza
-
-### Kanban Personal
-Usa tres columnas básicas:
-- **Por Hacer**: Tareas identificadas pero no iniciadas
-- **En Progreso**: Tareas actualmente en desarrollo (máximo 3)
-- **Completado**: Tareas finalizadas
-
-### Scrum Adaptado
-- **Sprints de 1-2 semanas**: Períodos de trabajo enfocado
-- **Daily standups personales**: Reflexión diaria de 5 minutos
-- **Sprint reviews**: Evaluación semanal del progreso
-- **Retrospectivas**: Análisis de qué funcionó y qué no
-
-## Herramientas Recomendadas
-
-### Digitales
-- **Notion**: Para proyectos complejos con múltiples componentes
-- **Trello**: Kanban visual simple y efectivo
-- **Todoist**: Gestión de tareas con fechas y proyectos
-- **Obsidian**: Para proyectos que requieren mucha investigación
-
-### Analógicas
-- **Bullet Journal**: Sistema flexible en papel
-- **Tableros físicos**: Kanban con post-its
-- **Calendarios de pared**: Visualización temporal
-
-## Claves del Éxito
-
-1. **Comienza pequeño**: Mejor un proyecto pequeño completado que uno grande abandonado
-2. **Mantén momentum**: Trabaja en el proyecto regularmente, aunque sea poco tiempo
-3. **Celebra hitos**: Reconoce el progreso para mantener la motivación
-4. **Ajusta sobre la marcha**: Los proyectos personales deben ser flexibles
-
-La gestión efectiva de proyectos personales puede transformar tus aspiraciones en realidades tangibles.`,
-      author: "Roberto Jiménez",
-      date: "2023-12-28",
-      category: "Gestión",
-      tags: ["proyectos", "gestión", "metodologías", "organización"],
-      readTime: "7 min",
-      views: 1432,
-      comments: 12,
-      featured: false,
-    },
-    {
-      id: 9,
-      title: "El Poder de los Hábitos Atómicos en la Productividad Diaria",
-      excerpt:
-        "Descubre cómo pequeños cambios en tus hábitos diarios pueden generar resultados extraordinarios a largo plazo.",
-      content: `Los hábitos atómicos, concepto popularizado por James Clear, son pequeños cambios que parecen insignificantes pero que, cuando se acumulan, generan resultados extraordinarios.
-
-## La Anatomía de un Hábito
-
-Todo hábito sigue un ciclo de cuatro pasos:
-
-### 1. Señal (Cue)
-El disparador que inicia el comportamiento. Puede ser:
-- **Tiempo**: "Después de despertarme"
-- **Ubicación**: "Cuando entro a la oficina"
-- **Evento anterior**: "Después de tomar café"
-- **Estado emocional**: "Cuando me siento estresado"
-
-### 2. Anhelo (Craving)
-La motivación detrás del hábito. No deseamos el hábito en sí, sino el cambio de estado que proporciona.
-
-### 3. Respuesta (Response)
-El hábito actual que realizas. Puede ser un pensamiento o una acción.
-
-### 4. Recompensa (Reward)
-El beneficio que obtienes del hábito. Satisface el anhelo y enseña al cerebro a recordar este ciclo.
-
-## Las Cuatro Leyes del Cambio de Comportamiento
-
-### Para Crear Buenos Hábitos:
-
-#### 1. Hazlo Obvio
-- **Diseño del entorno**: Coloca señales visuales
-- **Stacking de hábitos**: "Después de [hábito actual], haré [nuevo hábito]"
-- **Implementación de intenciones**: "Haré [comportamiento] a las [tiempo] en [lugar]"
-
-#### 2. Hazlo Atractivo
-- **Bundling de tentaciones**: Combina algo que necesitas hacer con algo que quieres hacer
-- **Únete a una cultura**: Rodéate de personas que ya tienen el hábito deseado
-- **Crea un ritual motivacional**: Haz algo que disfrutes inmediatamente antes del hábito
-
-#### 3. Hazlo Fácil
-- **Regla de los 2 minutos**: Cuando empiezas un nuevo hábito, debe tomar menos de 2 minutos
-- **Reduce la fricción**: Disminuye los pasos entre tú y tus buenos hábitos
-- **Prepara el entorno**: Diseña tu entorno para que los buenos hábitos sean más fáciles
-
-#### 4. Hazlo Satisfactorio
-- **Refuerzo inmediato**: Usa recompensas inmediatas para hábitos con beneficios a largo plazo
-- **Tracking de hábitos**: Lleva registro visual de tu progreso
-- **Nunca falles dos veces**: Si fallas un día, asegúrate de volver al hábito al día siguiente
-
-### Para Eliminar Malos Hábitos:
-
-1. **Hazlo Invisible**: Elimina las señales
-2. **Hazlo Poco Atractivo**: Resalta los beneficios de evitarlo
-3. **Hazlo Difícil**: Aumenta la fricción
-4. **Hazlo Insatisfactorio**: Crea consecuencias inmediatas
-
-## Hábitos Atómicos para Productividad
-
-### Mañana
-- **2 minutos de planificación**: Revisa las 3 tareas más importantes del día
-- **Preparación la noche anterior**: Deja la ropa y materiales listos
-- **Rutina de activación**: Secuencia que te pone en modo productivo
-
-### Durante el día
-- **Pomodoros de 25 minutos**: Trabajo enfocado con descansos regulares
-- **Captura inmediata**: Anota ideas y tareas tan pronto como surjan
-- **Revisión cada 2 horas**: Evalúa progreso y ajusta si es necesario
-
-### Noche
-- **Reflexión de 5 minutos**: ¿Qué funcionó? ¿Qué mejorar mañana?
-- **Preparación del día siguiente**: Deja todo listo para empezar bien
-- **Desconexión digital**: 1 hora antes de dormir sin pantallas
-
-El poder está en la consistencia, no en la perfección.`,
-      author: "Patricia Morales",
-      date: "2023-12-25",
-      category: "Hábitos",
-      tags: ["hábitos", "james clear", "productividad", "cambio"],
-      readTime: "11 min",
-      views: 3421,
-      comments: 28,
-      featured: true,
-    },
-    {
-      id: 10,
-      title: "Trabajo Remoto Efectivo: Estrategias para Mantener la Productividad desde Casa",
-      excerpt:
-        "Guía completa para optimizar tu productividad trabajando desde casa, incluyendo configuración del espacio y gestión de distracciones.",
-      content: `El trabajo remoto ha pasado de ser una excepción a convertirse en la norma para millones de profesionales. Sin embargo, mantener la productividad desde casa requiere estrategias específicas y disciplina personal.
-
-## Configuración del Espacio de Trabajo
-
-### Elementos Esenciales
-
-#### Ergonomía
-- **Silla adecuada**: Soporte lumbar y altura ajustable
-- **Escritorio**: Altura correcta para evitar tensión en cuello y hombros
-- **Monitor**: A la altura de los ojos, brazo de distancia
-- **Iluminación**: Luz natural complementada con luz artificial adecuada
-
-#### Tecnología
-- **Internet confiable**: Conexión estable y rápida
-- **Audio de calidad**: Auriculares con cancelación de ruido
-- **Cámara web**: Para videollamadas profesionales
-- **Backup de energía**: UPS para cortes de luz
-
-### Psicología del Espacio
-
-#### Separación Física
-Crea una separación clara entre espacio de trabajo y espacio personal, incluso en espacios pequeños.
-
-#### Ritual de Inicio y Cierre
-Establece rutinas que marquen el inicio y fin de la jornada laboral.
-
-## Gestión de Distracciones
-
-### Distracciones Externas
-- **Ruido**: Usa auriculares con cancelación de ruido o ruido blanco
-- **Interrupciones familiares**: Establece horarios y señales claras
-- **Notificaciones**: Desactiva notificaciones no esenciales durante horas de trabajo
-
-### Distracciones Internas
-- **Procrastinación**: Usa técnicas como Pomodoro para mantener enfoque
-- **Multitasking**: Enfócate en una tarea a la vez
-- **Perfectionism**: Establece estándares realistas y deadlines
-
-## Comunicación Efectiva
-
-### Herramientas de Comunicación
-- **Síncronas**: Videollamadas, llamadas telefónicas
-- **Asíncronas**: Email, mensajes, documentos compartidos
-- **Colaborativas**: Pizarras digitales, documentos en tiempo real
-
-### Mejores Prácticas
-- **Sobrecomunica**: En remoto, más comunicación es mejor que menos
-- **Sé específico**: Usa ejemplos concretos y plazos claros
-- **Documenta todo**: Mantén registro de decisiones y acuerdos
-
-## Mantenimiento del Bienestar
-
-### Salud Física
-- **Movimiento regular**: Levántate cada hora, haz estiramientos
-- **Ejercicio**: Mantén rutina de actividad física
-- **Alimentación**: Evita comer en el escritorio, mantén horarios regulares
-
-### Salud Mental
-- **Conexión social**: Programa interacciones regulares con colegas
-- **Límites claros**: Respeta horarios de trabajo y descanso
-- **Espacio personal**: Mantén tiempo para hobbies y relajación
-
-## Productividad Avanzada
-
-### Time Blocking
-Asigna bloques específicos de tiempo para diferentes tipos de trabajo:
-- **Deep work**: 2-4 horas de trabajo concentrado
-- **Comunicación**: 1-2 horas para emails y reuniones
-- **Administración**: 30-60 minutos para tareas organizativas
-
-### Batch Processing
-Agrupa tareas similares:
-- **Todas las llamadas en la mañana**
-- **Emails en momentos específicos**
-- **Trabajo creativo en horas de mayor energía**
-
-### Medición y Ajuste
-- **Tracking de tiempo**: Usa herramientas para entender dónde va tu tiempo
-- **Métricas de productividad**: Define KPIs personales
-- **Revisión semanal**: Evalúa qué funcionó y qué necesita ajuste
-
-El trabajo remoto efectivo no es solo sobre tecnología, sino sobre crear sistemas y hábitos que sostengan tu productividad a largo plazo.`,
-      author: "Fernando Castro",
-      date: "2023-12-22",
-      category: "Trabajo Remoto",
-      tags: ["trabajo remoto", "productividad", "home office", "bienestar"],
-      readTime: "12 min",
-      views: 2876,
-      comments: 24,
-      featured: false,
-    },
-  ]
-
-  const categories = [
-    "all",
-    "Productividad",
-    "IA",
-    "Concentración",
-    "Bienestar",
-    "Minimalismo",
-    "Salud",
-    "Automatización",
-    "Gestión",
-    "Hábitos",
-    "Trabajo Remoto",
-  ]
-
-  const filteredPosts = useMemo(() => {
-    return blogPosts.filter((post) => {
-      const matchesSearch =
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-
-      const matchesCategory = selectedCategory === "all" || post.category === selectedCategory
-
-      return matchesSearch && matchesCategory
-    })
-  }, [searchTerm, selectedCategory, blogPosts])
-
-  const featuredPosts = blogPosts.filter((post) => post.featured)
+  const [filteredPosts, setFilteredPosts] = useState(blogPosts)
+
+  useEffect(() => {
+    const results = blogPosts.filter((post) => post.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    setFilteredPosts(results)
+  }, [searchTerm])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Navigation */}
-      <nav className="bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center text-white hover:text-blue-300 transition-colors">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Volver al Inicio
-            </Link>
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-white" />
+    <div className="p-4">
+      <div className="mb-4">
+        <Input
+          type="text"
+          placeholder="Buscar posts..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full"
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredPosts.map((post) => (
+          <Card key={post.id} className="overflow-hidden">
+            <CardHeader>
+              <CardTitle>{post.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4" />
+                  <span>{post.author}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>{post.date}</span>
+                </div>
               </div>
-              <span className="ml-2 text-xl font-bold text-white">FutureTask</span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white sm:text-5xl mb-4">Blog de Productividad</h1>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Descubre las últimas tendencias, consejos y estrategias para maximizar tu productividad personal y
-            profesional.
-          </p>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="mb-8 space-y-4">
-          <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
-            <Input
-              type="text"
-              placeholder="Buscar artículos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-            />
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2">
-            {categories.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className={
-                  selectedCategory === category
-                    ? "bg-blue-600 hover:bg-blue-700 text-white"
-                    : "border-white/20 text-white hover:bg-white/10"
-                }
-              >
-                {category === "all" ? "Todos" : category}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Featured Posts */}
-        {selectedCategory === "all" && searchTerm === "" && (
-          <div className="mb-12">
-            <div className="flex items-center mb-6">
-              <Star className="h-6 w-6 text-yellow-400 mr-2" />
-              <h2 className="text-2xl font-bold text-white">Artículos Destacados</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="bg-white/10 border-white/20 backdrop-blur-sm hover:bg-white/15 transition-all duration-300 group"
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
-                        <Star className="h-3 w-3 mr-1" />
-                        Destacado
-                      </Badge>
-                      <Badge variant="outline" className="border-white/20 text-white">
-                        {post.category}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-white group-hover:text-blue-300 transition-colors line-clamp-2">
-                      {post.title}
-                    </CardTitle>
-                    <CardDescription className="text-slate-300 line-clamp-3">{post.excerpt}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {post.readTime}
-                        </div>
-                        <div className="flex items-center">
-                          <Eye className="h-4 w-4 mr-1" />
-                          {post.views.toLocaleString()}
-                        </div>
-                        <div className="flex items-center">
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          {post.comments}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-slate-400">
-                        Por {post.author} • {new Date(post.date).toLocaleDateString("es-ES")}
-                      </div>
-                      <Link href={`/blog/${post.id}`}>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                        >
-                          Leer más
-                          <ArrowRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* All Posts */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">
-              {searchTerm || selectedCategory !== "all" ? "Resultados de Búsqueda" : "Todos los Artículos"}
-            </h2>
-            <div className="text-slate-400 text-sm">
-              {filteredPosts.length} artículo{filteredPosts.length !== 1 ? "s" : ""} encontrado
-              {filteredPosts.length !== 1 ? "s" : ""}
-            </div>
-          </div>
-
-          {filteredPosts.length === 0 ? (
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardContent className="text-center py-12">
-                <Search className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No se encontraron artículos</h3>
-                <p className="text-slate-300 mb-4">
-                  Intenta con otros términos de búsqueda o selecciona una categoría diferente.
-                </p>
-                <Button
-                  onClick={() => {
-                    setSearchTerm("")
-                    setSelectedCategory("all")
-                  }}
-                  variant="outline"
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
-                  Ver todos los artículos
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="bg-white/10 border-white/20 backdrop-blur-sm hover:bg-white/15 transition-all duration-300 group"
-                >
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="outline" className="border-white/20 text-white">
-                        {post.category}
-                      </Badge>
-                      {post.featured && (
-                        <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
-                          <Star className="h-3 w-3 mr-1" />
-                          Destacado
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-white group-hover:text-blue-300 transition-colors line-clamp-2">
-                      {post.title}
-                    </CardTitle>
-                    <CardDescription className="text-slate-300 line-clamp-3">{post.excerpt}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {post.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="bg-white/10 text-slate-300 text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {post.tags.length > 3 && (
-                        <Badge variant="secondary" className="bg-white/10 text-slate-300 text-xs">
-                          +{post.tags.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-slate-400 mb-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {post.readTime}
-                        </div>
-                        <div className="flex items-center">
-                          <Eye className="h-4 w-4 mr-1" />
-                          {post.views.toLocaleString()}
-                        </div>
-                        <div className="flex items-center">
-                          <MessageCircle className="h-4 w-4 mr-1" />
-                          {post.comments}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-slate-400">
-                        Por {post.author} • {new Date(post.date).toLocaleDateString("es-ES")}
-                      </div>
-                      <Link href={`/blog/${post.id}`}>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                        >
-                          Leer más
-                          <ArrowRight className="h-4 w-4 ml-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Newsletter CTA */}
-        <Card className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-blue-500/30 backdrop-blur-sm">
-          <CardContent className="text-center py-12">
-            <Mail className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-white mb-2">Mantente al Día</h3>
-            <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-              Recibe consejos semanales de productividad, actualizaciones de funciones y contenido exclusivo
-              directamente en tu bandeja de entrada.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="tu@email.com"
-                className="bg-white/10 border-white/20 text-white placeholder:text-slate-400"
-              />
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">Suscribirse</Button>
-            </div>
-            <p className="text-slate-400 text-sm mt-4">No spam. Cancela tu suscripción en cualquier momento.</p>
-          </CardContent>
-        </Card>
+              <p className="text-sm text-muted-foreground">{post.excerpt}</p>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4" />
+                  <span>{post.readTime}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Eye className="h-4 w-4" />
+                  <span>{post.views}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>{post.comments}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Star className="h-4 w-4" />
+                  <span>{post.likes}</span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <Link href={`/blog/${post.id}`}>
+                  <Button variant="outline" className="flex items-center space-x-2 bg-transparent">
+                    Leer más
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )
 }
+
+export default BlogPage
