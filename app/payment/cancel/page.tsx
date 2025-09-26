@@ -1,141 +1,90 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { XCircle, ArrowLeft, CreditCard, HelpCircle } from "lucide-react"
+import { XCircle, Home, CreditCard } from "lucide-react"
+import Link from "next/link"
 
 export default function PaymentCancelPage() {
-  const router = useRouter()
-
-  const theme = {
-    gradient: "from-slate-900 via-purple-900 to-slate-900",
-    cardBg: "bg-slate-800/50 backdrop-blur-sm",
-    border: "border-slate-700",
-    textPrimary: "text-white",
-    textSecondary: "text-slate-300",
-    textMuted: "text-slate-400",
-    buttonPrimary: "bg-purple-600 hover:bg-purple-700",
-    buttonSecondary: "bg-slate-700 hover:bg-slate-600",
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full space-y-6">
-        {/* Cancel Header */}
-        <div className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="w-20 h-20 bg-orange-500/20 rounded-full flex items-center justify-center border-2 border-orange-500/30">
-              <XCircle className="w-10 h-10 text-orange-400" />
+      <div className="max-w-2xl w-full">
+        <Card className="bg-gradient-to-br from-slate-900/80 to-purple-900/50 backdrop-blur-sm border-slate-700">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto mb-4 w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center">
+              <XCircle className="h-8 w-8 text-white" />
             </div>
-          </div>
-          <h1 className={`text-3xl font-bold ${theme.textPrimary}`}>Pago Cancelado</h1>
-          <p className={`text-lg ${theme.textSecondary}`}>
-            Has cancelado el proceso de pago. No se ha realizado ningún cargo a tu cuenta.
-          </p>
-        </div>
-
-        {/* Information Card */}
-        <Card className={`${theme.cardBg} ${theme.border}`}>
-          <CardHeader>
-            <CardTitle className={`${theme.textPrimary} flex items-center space-x-2`}>
-              <HelpCircle className="w-5 h-5 text-orange-400" />
-              <span>¿Qué pasó?</span>
-            </CardTitle>
+            <CardTitle className="text-3xl font-bold text-white mb-2">Pago Cancelado</CardTitle>
+            <p className="text-slate-300 text-lg">Has cancelado el proceso de pago</p>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
-                <div>
-                  <p className={`${theme.textSecondary}`}>
-                    El pago fue cancelado antes de completarse, por lo que no se realizó ningún cargo.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
-                <div>
-                  <p className={`${theme.textSecondary}`}>
-                    No se añadieron créditos a tu cuenta y tu saldo permanece sin cambios.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-orange-400 rounded-full mt-2"></div>
-                <div>
-                  <p className={`${theme.textSecondary}`}>
-                    Puedes intentar realizar la compra nuevamente cuando estés listo.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Reasons for Cancellation */}
-        <Card className={`${theme.cardBg} ${theme.border}`}>
-          <CardHeader>
-            <CardTitle className={`${theme.textPrimary}`}>Posibles razones para la cancelación</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`p-4 rounded-lg bg-slate-800/30 border ${theme.border}`}>
-                <h4 className={`font-medium ${theme.textPrimary} mb-2`}>Cambio de opinión</h4>
-                <p className={`text-sm ${theme.textSecondary}`}>Decidiste no completar la compra en este momento.</p>
-              </div>
-              <div className={`p-4 rounded-lg bg-slate-800/30 border ${theme.border}`}>
-                <h4 className={`font-medium ${theme.textPrimary} mb-2`}>Problema técnico</h4>
-                <p className={`text-sm ${theme.textSecondary}`}>Hubo un error durante el proceso de pago en PayPal.</p>
-              </div>
-              <div className={`p-4 rounded-lg bg-slate-800/30 border ${theme.border}`}>
-                <h4 className={`font-medium ${theme.textPrimary} mb-2`}>Método de pago</h4>
-                <p className={`text-sm ${theme.textSecondary}`}>
-                  Problemas con la tarjeta o cuenta de PayPal seleccionada.
-                </p>
-              </div>
-              <div className={`p-4 rounded-lg bg-slate-800/30 border ${theme.border}`}>
-                <h4 className={`font-medium ${theme.textPrimary} mb-2`}>Revisión necesaria</h4>
-                <p className={`text-sm ${theme.textSecondary}`}>Quisiste revisar los detalles antes de confirmar.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            onClick={() => router.push("/")}
-            className={`flex-1 ${theme.buttonPrimary} flex items-center justify-center space-x-2`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver al inicio</span>
-          </Button>
-          <Button
-            onClick={() => router.push("/?tab=credits")}
-            variant="outline"
-            className={`flex-1 ${theme.buttonSecondary} flex items-center justify-center space-x-2`}
-          >
-            <CreditCard className="w-4 h-4" />
-            <span>Intentar de nuevo</span>
-          </Button>
-        </div>
-
-        {/* Help Section */}
-        <Card className={`${theme.cardBg} ${theme.border}`}>
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <h3 className={`font-medium ${theme.textPrimary}`}>¿Necesitas ayuda?</h3>
-              <p className={`text-sm ${theme.textSecondary}`}>
-                Si experimentaste problemas técnicos o tienes preguntas sobre los créditos IA, contáctanos:
+          <CardContent className="space-y-6">
+            {/* Información */}
+            <div className="bg-orange-900/20 rounded-lg p-6 border border-orange-700">
+              <h3 className="text-xl font-semibold text-orange-300 mb-4">¿Qué ha pasado?</h3>
+              <p className="text-orange-200 mb-4">
+                El proceso de pago ha sido cancelado y no se ha realizado ningún cargo a tu cuenta.
               </p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
-                <a href="mailto:support@future-task.com" className="text-purple-400 hover:underline text-sm">
-                  support@future-task.com
-                </a>
-                <span className={`text-sm ${theme.textMuted} hidden sm:inline`}>•</span>
-                <span className={`text-sm ${theme.textMuted}`}>Respuesta en menos de 24 horas</span>
+              <ul className="text-sm text-orange-200 space-y-2">
+                <li>• No se ha procesado ningún pago</li>
+                <li>• No se han añadido créditos a tu cuenta</li>
+                <li>• Puedes intentar la compra nuevamente cuando quieras</li>
+              </ul>
+            </div>
+
+            {/* Razones comunes */}
+            <div className="bg-slate-800/50 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-300 mb-3">Razones comunes de cancelación:</h4>
+              <ul className="text-sm text-slate-400 space-y-1">
+                <li>• Decidiste no completar la compra</li>
+                <li>• Cerraste la ventana de PayPal</li>
+                <li>• Problemas técnicos durante el proceso</li>
+                <li>• Cambio de método de pago</li>
+              </ul>
+            </div>
+
+            {/* Botones de acción */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                asChild
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              >
+                <Link href="/app">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Intentar de Nuevo
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800 bg-transparent"
+              >
+                <Link href="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  Volver al Inicio
+                </Link>
+              </Button>
+            </div>
+
+            {/* Ayuda */}
+            <div className="text-center pt-4 border-t border-slate-700">
+              <p className="text-sm text-slate-400 mb-2">¿Necesitas ayuda con el proceso de pago?</p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button variant="link" className="text-purple-400 hover:text-purple-300">
+                  Ver Preguntas Frecuentes
+                </Button>
+                <Button variant="link" className="text-purple-400 hover:text-purple-300">
+                  Contactar Soporte
+                </Button>
               </div>
+            </div>
+
+            {/* Información de seguridad */}
+            <div className="bg-green-900/20 rounded-lg p-4 border border-green-700">
+              <p className="text-sm text-green-300 text-center">
+                🔒 Todos nuestros pagos son procesados de forma segura por PayPal
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -1,11 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Loader2, Shield, CheckCircle, AlertCircle } from "lucide-react"
-import { CREDIT_PACKAGES } from "@/lib/ai-credits"
+import { Card, CardContent } from "@/components/ui/card"
+import { Loader2, Shield, CheckCircle } from "lucide-react"
+
+interface PayPalPaymentProps {
+  packageId: string
+  amount: number
+  currency: string
+  onSuccess: (details: any) => void
+  onError: (error: any) => void
+  onCancel: () => void
+}
 
 declare global {
   interface Window {
@@ -13,202 +20,186 @@ declare global {
   }
 }
 
-interface PayPalPaymentProps {
-  userId: string
-  packageIndex: number
-  onSuccess: (credits: number) => void
-  onCancel?: () => void
-  onError?: (error: string) => void
-  theme: any
-}
-
-export function PayPalPayment({ userId, packageIndex, onSuccess, onCancel, onError, theme }: PayPalPaymentProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [paypalLoaded, setPaypalLoaded] = useState(false)
+export default function PayPalPayment({
+  packageId,
+  amount,
+  currency,
+  onSuccess,
+  onError,
+  onCancel,
+}: PayPalPaymentProps) {
+  const [isLoading, setIsLoading] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "error">("idle")
-  const [sdkError, setSdkError] = useState<string | null>(null)
-
-  const creditPackage = CREDIT_PACKAGES[packageIndex]
+  const [paypalLoaded, setPaypalLoaded] = useState(false)
 
   useEffect(() => {
-    loadPayPalSDK()
-  }, [])
-
-  useEffect(() => {
-    if (paypalLoaded && creditPackage) {
-      renderPayPalButton()
-    }
-  }, [paypalLoaded, creditPackage])
-
-  const loadPayPalSDK = () => {
-    if (window.paypal) {
-      setPaypalLoaded(true)
-      return
-    }
-
-    if (document.querySelector('script[src*="paypal.com/sdk"]')) {
-      const checkPayPal = setInterval(() => {
+    const loadPayPalScript = async () => {
+      try {
+        // Verificar si PayPal ya está cargado
         if (window.paypal) {
           setPaypalLoaded(true)
-          clearInterval(checkPayPal)
+          setIsLoading(false)
+          return
         }
-      }, 100)
-      return
+
+        // Cargar el script de PayPal
+        const script = document.createElement("script")
+        script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=${currency}&intent=capture`
+        script.async = true
+
+        script.onload = () => {
+          setPaypalLoaded(true)
+          setIsLoading(false)
+        }
+
+        script.onerror = () => {
+          setError("Error al cargar PayPal")
+          setIsLoading(false)
+        }
+
+        document.body.appendChild(script)
+      } catch (err) {
+        console.error("Error loading PayPal script:", err)
+        setError("Error al cargar PayPal")
+        setIsLoading(false)
+      }
     }
 
-    const script = document.createElement("script")
-    script.src = `https://www.paypal.com/sdk/js?client-id=AfTXM0fv3XQWk88Wf2wa4kOesH5tUoLpJDGfBQwZC0Re5H1yUhOhamMA_Akr3keDwPkAaaEf79BXLNLl&currency=EUR&intent=capture&enable-funding=venmo,paylater`
-    script.async = true
+    loadPayPalScript()
+  }, [currency])
 
-    script.onload = () => {
-      console.log("✅ PayPal SDK loaded successfully")
-      setPaypalLoaded(true)
-      setSdkError(null)
+  useEffect(() => {
+    if (paypalLoaded && window.paypal && !isLoading) {
+      renderPayPalButtons()
     }
+  }, [paypalLoaded, isLoading, packageId, amount, currency])
 
-    script.onerror = () => {
-      console.error("❌ Failed to load PayPal SDK")
-      setSdkError("Failed to load PayPal SDK")
-      setPaypalLoaded(false)
-    }
+  const renderPayPalButtons = () => {
+    const paypalButtonContainer = document.getElementById("paypal-button-container")
+    if (!paypalButtonContainer) return
 
-    document.body.appendChild(script)
-  }
-
-  const renderPayPalButton = () => {
-    if (!window.paypal || !creditPackage) {
-      console.error("PayPal SDK not loaded or invalid package")
-      return
-    }
-
-    const paypalButtonContainer = document.getElementById(`paypal-button-${packageIndex}`)
-    if (!paypalButtonContainer) {
-      console.error("PayPal button container not found")
-      return
-    }
-
+    // Limpiar contenedor anterior
     paypalButtonContainer.innerHTML = ""
 
-    try {
-      window.paypal
-        .Buttons({
-          style: {
-            layout: "vertical",
-            color: "blue",
-            shape: "rect",
-            label: "paypal",
-            height: 45,
-            tagline: false,
-          },
+    window.paypal
+      .Buttons({
+        style: {
+          layout: "vertical",
+          color: "blue",
+          shape: "rect",
+          label: "paypal",
+          height: 50,
+        },
 
-          createOrder: async () => {
-            console.log("🔄 Creating PayPal order...")
-            setIsLoading(true)
-            setPaymentStatus("processing")
+        createOrder: async () => {
+          try {
+            setIsProcessing(true)
             setError(null)
 
-            try {
-              const response = await fetch("/api/paypal/create-order", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  packageIndex,
-                  userId,
-                }),
-              })
+            const response = await fetch("/api/paypal/create-order", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                packageId,
+                amount,
+                currency,
+              }),
+            })
 
-              const data = await response.json()
+            const data = await response.json()
 
-              if (!response.ok) {
-                throw new Error(data.error || `HTTP ${response.status}`)
-              }
-
-              console.log("✅ PayPal order created:", data.orderID)
-              return data.orderID
-            } catch (error) {
-              console.error("❌ Error creating PayPal order:", error)
-              const errorMessage = error instanceof Error ? error.message : "Error creating order"
-              setError(errorMessage)
-              setPaymentStatus("error")
-              setIsLoading(false)
-              onError?.(errorMessage)
-              throw error
+            if (!response.ok) {
+              throw new Error(data.error || "Error al crear la orden")
             }
-          },
 
-          onApprove: async (data: any) => {
-            console.log("🔄 PayPal payment approved, capturing...")
+            return data.id
+          } catch (err) {
+            console.error("Error creating order:", err)
+            setError(err instanceof Error ? err.message : "Error al crear la orden")
+            setIsProcessing(false)
+            throw err
+          }
+        },
 
-            try {
-              const response = await fetch("/api/paypal/capture-order", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  orderID: data.orderID,
-                }),
-              })
+        onApprove: async (data: any) => {
+          try {
+            setIsProcessing(true)
 
-              const result = await response.json()
+            const response = await fetch("/api/paypal/capture-order", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                orderId: data.orderID,
+                packageId,
+              }),
+            })
 
-              if (!response.ok) {
-                throw new Error(result.error || `HTTP ${response.status}`)
-              }
+            const result = await response.json()
 
-              console.log("✅ PayPal payment captured successfully:", result)
-              setPaymentStatus("success")
-              setError(null)
-              onSuccess(result.credits)
-            } catch (error) {
-              console.error("❌ Error capturing PayPal payment:", error)
-              const errorMessage = error instanceof Error ? error.message : "Error processing payment"
-              setError(errorMessage)
-              setPaymentStatus("error")
-              onError?.(errorMessage)
-            } finally {
-              setIsLoading(false)
+            if (!response.ok) {
+              throw new Error(result.error || "Error al procesar el pago")
             }
-          },
 
-          onCancel: (data: any) => {
-            console.log("❌ PayPal payment cancelled:", data)
-            setIsLoading(false)
-            setPaymentStatus("idle")
-            setError(null)
-            onCancel?.()
-          },
+            onSuccess(result)
+          } catch (err) {
+            console.error("Error capturing order:", err)
+            setError(err instanceof Error ? err.message : "Error al procesar el pago")
+            onError(err)
+          } finally {
+            setIsProcessing(false)
+          }
+        },
 
-          onError: (err: any) => {
-            console.error("❌ PayPal error:", err)
-            const errorMessage = "Payment processing error"
-            setError(errorMessage)
-            setPaymentStatus("error")
-            setIsLoading(false)
-            onError?.(errorMessage)
-          },
-        })
-        .render(`#paypal-button-${packageIndex}`)
-        .catch((error: any) => {
-          console.error("❌ Error rendering PayPal button:", error)
-          setSdkError("Failed to render PayPal button")
-        })
-    } catch (error) {
-      console.error("❌ Error setting up PayPal button:", error)
-      setSdkError("Failed to setup PayPal button")
-    }
+        onCancel: () => {
+          setIsProcessing(false)
+          onCancel()
+        },
+
+        onError: (err: any) => {
+          console.error("PayPal error:", err)
+          setError("Error en el procesamiento del pago")
+          setIsProcessing(false)
+          onError(err)
+        },
+      })
+      .render("#paypal-button-container")
   }
 
-  if (!creditPackage) {
+  if (isLoading) {
     return (
-      <Card className={`${theme.cardBg} ${theme.border}`}>
+      <Card className="w-full bg-slate-900/50 backdrop-blur-sm border-slate-700">
         <CardContent className="p-6">
-          <div className="flex items-center space-x-2 text-red-400">
-            <AlertCircle className="w-4 h-4" />
-            <span className="text-sm">Package not found</span>
+          <div className="flex items-center justify-center space-x-2">
+            <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
+            <span className="text-slate-300">Cargando PayPal...</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full bg-red-900/20 backdrop-blur-sm border-red-700">
+        <CardContent className="p-6">
+          <div className="text-center">
+            <p className="text-red-400 mb-4">{error}</p>
+            <Button
+              onClick={() => {
+                setError(null)
+                setIsLoading(true)
+                window.location.reload()
+              }}
+              variant="outline"
+              className="border-red-600 text-red-400 hover:bg-red-900/30"
+            >
+              Reintentar
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -216,134 +207,55 @@ export function PayPalPayment({ userId, packageIndex, onSuccess, onCancel, onErr
   }
 
   return (
-    <Card className={`${theme.cardBg} ${theme.border} relative overflow-hidden`}>
-      {creditPackage.popular && (
-        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
-          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 text-xs font-bold">
-            POPULAR
-          </Badge>
-        </div>
-      )}
-
-      <CardHeader className="pb-4">
-        <CardTitle className={`${theme.textPrimary} text-lg flex items-center justify-between`}>
-          <span>{creditPackage.credits} Créditos IA</span>
-          <span className="text-2xl font-bold">{creditPackage.price}</span>
-        </CardTitle>
-        <div className="space-y-2">
-          <p className={`text-sm ${theme.textSecondary}`}>{creditPackage.description}</p>
-          <p className={`text-xs ${theme.textMuted}`}>{creditPackage.estimatedRequests}</p>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Payment Status Messages */}
-        {paymentStatus === "processing" && (
-          <div className="flex items-center space-x-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-            <span className={`text-sm ${theme.textPrimary}`}>Procesando pago...</span>
+    <Card className="w-full bg-slate-900/50 backdrop-blur-sm border-slate-700">
+      <CardContent className="p-6">
+        {/* Información de seguridad */}
+        <div className="mb-6 p-4 bg-green-900/20 rounded-lg border border-green-700">
+          <div className="flex items-center space-x-2 mb-2">
+            <Shield className="h-5 w-5 text-green-400" />
+            <span className="text-green-400 font-medium">Pago Seguro</span>
           </div>
-        )}
+          <p className="text-sm text-green-300">Procesado por PayPal con encriptación SSL de 256 bits</p>
+        </div>
 
-        {paymentStatus === "success" && (
-          <div className="flex items-center space-x-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-            <CheckCircle className="w-4 h-4 text-green-400" />
-            <span className={`text-sm ${theme.textPrimary}`}>¡Pago completado exitosamente!</span>
+        {/* Resumen del pedido */}
+        <div className="mb-6 p-4 bg-slate-800/50 rounded-lg">
+          <h3 className="text-lg font-semibold text-white mb-2">Resumen del Pedido</h3>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-300">Total a pagar:</span>
+            <span className="text-2xl font-bold text-purple-400">
+              {amount.toFixed(2)} {currency}
+            </span>
           </div>
-        )}
+        </div>
 
-        {(error || sdkError) && (
-          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-            <div className="flex items-center space-x-2 mb-2">
-              <AlertCircle className="w-4 h-4 text-red-400" />
-              <span className={`text-sm font-medium ${theme.textPrimary}`}>Error de pago</span>
+        {/* Botones de PayPal */}
+        <div className="relative">
+          <div id="paypal-button-container" className="min-h-[50px]"></div>
+
+          {isProcessing && (
+            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-400 mx-auto mb-2" />
+                <p className="text-slate-300">Procesando pago...</p>
+              </div>
             </div>
-            <p className="text-sm text-red-400">{error || sdkError}</p>
-            {(error || sdkError) && (
-              <Button
-                onClick={() => {
-                  setError(null)
-                  setSdkError(null)
-                  setPaymentStatus("idle")
-                  if (!paypalLoaded) {
-                    loadPayPalSDK()
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                className="mt-2 text-red-400 border-red-400 hover:bg-red-500/10"
-              >
-                Reintentar
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* PayPal Button Container */}
-        <div className="space-y-3">
-          <div id={`paypal-button-${packageIndex}`} className="min-h-[45px]">
-            {!paypalLoaded && !sdkError && (
-              <div className={`flex items-center justify-center p-4 border border-dashed ${theme.border} rounded-lg`}>
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                <span className={`text-sm ${theme.textMuted}`}>Cargando PayPal...</span>
-              </div>
-            )}
-
-            {sdkError && (
-              <div
-                className={`flex flex-col items-center justify-center p-4 border border-dashed border-red-500/20 rounded-lg`}
-              >
-                <AlertCircle className="w-6 h-6 text-red-400 mb-2" />
-                <span className={`text-sm text-red-400 text-center mb-2`}>Error cargando PayPal</span>
-                <Button
-                  onClick={loadPayPalSDK}
-                  variant="outline"
-                  size="sm"
-                  className="text-red-400 border-red-400 hover:bg-red-500/10 bg-transparent"
-                >
-                  Reintentar
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Security Info */}
-          <div className={`flex items-center justify-center space-x-2 text-xs ${theme.textMuted}`}>
-            <Shield className="w-3 h-3" />
-            <span>Pago seguro procesado por PayPal</span>
-          </div>
+          )}
         </div>
 
-        {/* Package Details */}
-        <div className={`text-xs ${theme.textMuted} space-y-1 pt-2 border-t ${theme.border}`}>
-          <div className="flex justify-between">
-            <span>Costo IA:</span>
-            <span>{creditPackage.aiCost}</span>
+        {/* Información adicional */}
+        <div className="mt-6 text-center">
+          <div className="flex items-center justify-center space-x-4 text-sm text-slate-400">
+            <div className="flex items-center space-x-1">
+              <CheckCircle className="h-4 w-4" />
+              <span>Sin suscripciones</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <CheckCircle className="h-4 w-4" />
+              <span>Créditos sin caducidad</span>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span>Comisión servicio:</span>
-            <span>{creditPackage.profit}</span>
-          </div>
-          <div className="flex justify-between font-semibold">
-            <span>Total:</span>
-            <span>{creditPackage.price}</span>
-          </div>
-        </div>
-
-        {/* Value Indicators */}
-        <div className="space-y-2">
-          <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
-            <CheckCircle className="w-3 h-3 text-green-400" />
-            <span>Créditos añadidos instantáneamente</span>
-          </div>
-          <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
-            <CheckCircle className="w-3 h-3 text-green-400" />
-            <span>Sin fecha de caducidad</span>
-          </div>
-          <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
-            <CheckCircle className="w-3 h-3 text-green-400" />
-            <span>Costo transparente por consulta</span>
-          </div>
+          <p className="mt-2 text-xs text-slate-500">Al completar la compra, aceptas nuestros términos y condiciones</p>
         </div>
       </CardContent>
     </Card>

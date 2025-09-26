@@ -1,15 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { processCreditPurchase, getCreditPackage } from "@/lib/ai-credits"
 
-const PAYPAL_CLIENT_ID =
-  process.env.PAYPAL_CLIENT_ID || "AfTXM0fv3XQWk88Wf2wa4kOesH5tUoLpJDGfBQwZC0Re5H1yUhOhamMA_Akr3keDwPkAaaEf79BXLNLl"
-const PAYPAL_CLIENT_SECRET =
-  process.env.PAYPAL_CLIENT_SECRET || "EM7layvX1KuwV0MFzui1w0PIm_nqLddGlS8GGIMQdaJnOXnztcfFMyaVUWc-WsCOY_sARPZ4wcxt_usq"
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET
 const PAYPAL_BASE_URL =
   process.env.NODE_ENV === "production" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
-
-// Initialize Supabase client
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64")
@@ -23,123 +18,71 @@ async function getPayPalAccessToken() {
     body: "grant_type=client_credentials",
   })
 
-  if (!response.ok) {
-    throw new Error(`PayPal auth failed: ${response.status}`)
-  }
-
   const data = await response.json()
   return data.access_token
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { orderID } = await req.json()
+    const { orderId, packageId } = await request.json()
 
-    console.log("🔄 Capturing PayPal order:", orderID)
-
-    if (!orderID) {
-      return NextResponse.json({ error: "Order ID is required" }, { status: 400 })
+    if (!orderId || !packageId) {
+      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 })
     }
 
+    // Obtener token de acceso de PayPal
     const accessToken = await getPayPalAccessToken()
-    console.log("🔑 PayPal access token obtained for capture")
 
-    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderID}/capture`, {
+    // Capturar la orden en PayPal
+    const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderId}/capture`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
-        "PayPal-Request-Id": `capture-${orderID}-${Date.now()}`,
+        "Content-Type": "application/json",
       },
     })
 
     const captureData = await response.json()
-    console.log("📄 PayPal capture response:", JSON.stringify(captureData, null, 2))
 
-    if (response.ok && captureData.status === "COMPLETED") {
-      // Extract payment details
-      const purchaseUnit = captureData.purchase_units?.[0]
-      const capture = purchaseUnit?.payments?.captures?.[0]
-      const customData = purchaseUnit?.custom_id ? JSON.parse(purchaseUnit.custom_id) : null
-
-      if (!customData || !customData.userId || !customData.credits) {
-        console.error("❌ Invalid custom data in PayPal response")
-        return NextResponse.json({ error: "Invalid payment data" }, { status: 400 })
-      }
-
-      console.log("💰 Payment details:", {
-        userId: customData.userId,
-        credits: customData.credits,
-        amount: capture?.amount?.value,
-        currency: capture?.amount?.currency_code,
-        captureId: capture?.id,
-      })
-
-      try {
-        // Add credits to user account in Supabase
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("ai_credits")
-          .eq("id", customData.userId)
-          .single()
-
-        if (userError) {
-          console.error("❌ Error fetching user:", userError)
-          return NextResponse.json({ error: "User not found" }, { status: 404 })
-        }
-
-        const currentCredits = userData.ai_credits || 0
-        const newCredits = currentCredits + customData.credits
-
-        // Update user credits
-        const { error: updateError } = await supabase
-          .from("users")
-          .update({ ai_credits: newCredits })
-          .eq("id", customData.userId)
-
-        if (updateError) {
-          console.error("❌ Error updating user credits:", updateError)
-          return NextResponse.json({ error: "Failed to update credits" }, { status: 500 })
-        }
-
-        console.log("✅ Credits added successfully:", {
-          userId: customData.userId,
-          previousCredits: currentCredits,
-          addedCredits: customData.credits,
-          newTotal: newCredits,
-        })
-
-        return NextResponse.json({
-          success: true,
-          credits: customData.credits,
-          totalCredits: newCredits,
-          transactionId: capture?.id,
-          amount: capture?.amount?.value,
-          currency: capture?.amount?.currency_code,
-        })
-      } catch (dbError) {
-        console.error("❌ Database error:", dbError)
-        return NextResponse.json({ error: "Database error" }, { status: 500 })
-      }
-    } else {
-      console.error("❌ PayPal capture failed:", captureData)
-      return NextResponse.json(
-        {
-          error: captureData.message || "Payment capture failed",
-          details: captureData.details || [],
-          status: captureData.status,
-        },
-        { status: 400 },
-      )
+    if (!response.ok) {
+      console.error("PayPal capture failed:", captureData)
+      return NextResponse.json({ error: "Error al procesar el pago" }, { status: 500 })
     }
+
+    // Verificar que el pago fue exitoso
+    if (captureData.status !== "COMPLETED") {
+      return NextResponse.json({ error: "El pago no se completó correctamente" }, { status: 400 })
+    }
+
+    // Obtener información del paquete
+    const creditPackage = getCreditPackage(packageId)
+    if (!creditPackage) {
+      return NextResponse.json({ error: "Paquete de créditos no encontrado" }, { status: 400 })
+    }
+
+    // Obtener ID del usuario (en una implementación real, esto vendría del token de autenticación)
+    const userId = "demo-user" // Temporal para demo
+
+    // Procesar la compra de créditos
+    const success = await processCreditPurchase(userId, packageId, captureData.id)
+
+    if (!success) {
+      console.error("Failed to process credit purchase")
+      return NextResponse.json({ error: "Error al procesar los créditos" }, { status: 500 })
+    }
+
+    console.log(`✅ Payment captured and credits added: ${creditPackage.credits} credits for user ${userId}`)
+
+    return NextResponse.json({
+      success: true,
+      orderId: captureData.id,
+      credits: creditPackage.credits,
+      amount: creditPackage.price,
+      currency: creditPackage.currency,
+      status: captureData.status,
+    })
   } catch (error) {
-    console.error("❌ PayPal capture error:", error)
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    )
+    console.error("Error capturing PayPal order:", error)
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }
