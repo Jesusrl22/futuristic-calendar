@@ -16,12 +16,13 @@ export interface CreditPackage {
   id: string
   name: string
   credits: number
-  price: number
-  priceFormatted: string
+  price: string
+  priceValue: number
   popular?: boolean
-  bonus?: number
   description: string
-  savings?: string
+  estimatedRequests: string
+  aiCost: string
+  profit: string
 }
 
 export interface CreditTransaction {
@@ -49,33 +50,52 @@ export const MAX_CUSTOM_AMOUNT = 500.0
 // Credit packages with real pricing
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
-    id: "credits_100",
+    id: "credits_50",
     name: "Paquete Básico",
-    credits: 100,
-    price: 2.99,
-    priceFormatted: "€2.99",
+    credits: 50,
+    price: "€2.99",
+    priceValue: 2.99,
     description: "Perfecto para uso ocasional",
+    estimatedRequests: "~25 consultas IA",
+    aiCost: "€2.00",
+    profit: "€0.99",
+    popular: false,
+  },
+  {
+    id: "credits_100",
+    name: "Paquete Popular",
+    credits: 100,
+    price: "€4.99",
+    priceValue: 4.99,
+    description: "Ideal para usuarios regulares",
+    estimatedRequests: "~50 consultas IA",
+    aiCost: "€3.50",
+    profit: "€1.49",
+    popular: true,
+  },
+  {
+    id: "credits_250",
+    name: "Paquete Pro",
+    credits: 250,
+    price: "€9.99",
+    priceValue: 9.99,
+    description: "Para usuarios intensivos",
+    estimatedRequests: "~125 consultas IA",
+    aiCost: "€7.50",
+    profit: "€2.49",
     popular: false,
   },
   {
     id: "credits_500",
-    name: "Paquete Popular",
+    name: "Paquete Premium",
     credits: 500,
-    price: 9.99,
-    priceFormatted: "€9.99",
-    description: "Ideal para usuarios regulares",
-    popular: true,
-    savings: "33% de ahorro",
-  },
-  {
-    id: "credits_1000",
-    name: "Paquete Pro",
-    credits: 1000,
-    price: 15.99,
-    priceFormatted: "€15.99",
+    price: "€17.99",
+    priceValue: 17.99,
     description: "Máximo valor para power users",
+    estimatedRequests: "~250 consultas IA",
+    aiCost: "€14.00",
+    profit: "€3.99",
     popular: false,
-    savings: "47% de ahorro",
   },
 ]
 
@@ -323,15 +343,14 @@ export function getAllCreditPackages(): CreditPackage[] {
 
 export function validateCreditPurchase(packageId: string, amount: number): boolean {
   const package_ = getCreditPackage(packageId)
-  return package_ !== null && package_.price === amount
+  return package_ !== null && package_.priceValue === amount
 }
 
 export function getRecommendedPackage(monthlyQueries: number): CreditPackage {
   const estimatedCreditsNeeded = monthlyQueries * 50 // Rough estimation
 
   for (const pkg of CREDIT_PACKAGES) {
-    const totalCredits = pkg.credits + (pkg.bonus || 0)
-    if (totalCredits >= estimatedCreditsNeeded) {
+    if (pkg.credits >= estimatedCreditsNeeded) {
       return pkg
     }
   }
@@ -419,10 +438,10 @@ export async function processCreditPurchase(
     }
 
     // Add credits to user account
-    const success = await addCreditsToUser(userId, package_.credits + (package_.bonus || 0))
+    const success = await addCreditsToUser(userId, package_.credits)
 
     if (success) {
-      return { success: true, credits: package_.credits + (package_.bonus || 0) }
+      return { success: true, credits: package_.credits }
     } else {
       return { success: false, error: "Failed to add credits" }
     }
@@ -552,7 +571,7 @@ export async function purchaseCredits(userId: string, packageId: string): Promis
     console.log(`Purchasing ${package_.credits} credits for user ${userId}`)
 
     // Add credits to user account
-    await addCreditsToUser(userId, package_.credits + (package_.bonus || 0))
+    await addCreditsToUser(userId, package_.credits)
 
     return true
   } catch (error) {
@@ -609,4 +628,5 @@ export async function logCreditTransaction(transaction: CreditTransaction): Prom
   console.log("Logging transaction:", transaction)
 }
 
+// Alias for backward compatibility
 export const addAICredits = addCreditsToUser

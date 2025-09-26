@@ -1,270 +1,271 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import {
-  CREDIT_PACKAGES,
-  formatCredits,
-  formatCreditsEstimate,
-  calculateCreditsFromAmount,
-  validateCustomAmount,
-  purchaseCredits,
-  formatCurrency,
-} from "@/lib/ai-credits"
-import { Loader2, CreditCard, Zap, Star, Crown } from "lucide-react"
+import { Sparkles, CreditCard, Zap, Star, ArrowRight, CheckCircle, AlertCircle } from "lucide-react"
+import { PayPalPayment } from "./paypal-payment"
+import { CREDIT_PACKAGES, getUserAICredits, type AICreditsInfo } from "@/lib/ai-credits"
 
-interface AiCreditsPurchaseProps {
+interface AICreditsPurchaseProps {
   userId: string
-  onPurchaseComplete?: (credits: number) => void
+  onCreditsUpdated: (newCredits: number) => void
+  theme: any
 }
 
-export function AiCreditsPurchase({ userId, onPurchaseComplete }: AiCreditsPurchaseProps) {
-  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
-  const [customAmount, setCustomAmount] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [purchaseStatus, setPurchaseStatus] = useState<"idle" | "success" | "error">("idle")
+export function AICreditsPurchase({ userId, onCreditsUpdated, theme }: AICreditsPurchaseProps) {
+  const [selectedPackage, setSelectedPackage] = useState<number | null>(null)
+  const [creditsInfo, setCreditsInfo] = useState<AICreditsInfo | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [purchaseSuccess, setPurchaseSuccess] = useState<{ credits: number; package: string } | null>(null)
 
-  const handlePackagePurchase = async (packageId: string) => {
-    setIsLoading(true)
-    setPurchaseStatus("idle")
+  useEffect(() => {
+    loadCreditsInfo()
+  }, [userId])
 
+  const loadCreditsInfo = async () => {
     try {
-      const success = await purchaseCredits(userId, packageId)
-      if (success) {
-        setPurchaseStatus("success")
-        const pkg = CREDIT_PACKAGES.find((p) => p.id === packageId)
-        if (pkg && onPurchaseComplete) {
-          onPurchaseComplete(pkg.credits)
-        }
-      } else {
-        setPurchaseStatus("error")
-      }
+      const info = await getUserAICredits(userId)
+      setCreditsInfo(info)
     } catch (error) {
-      setPurchaseStatus("error")
+      console.error("Error loading credits info:", error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleCustomPurchase = async () => {
-    const amount = Number.parseFloat(customAmount)
-    const validation = validateCustomAmount(amount)
+  const handlePurchaseSuccess = async (credits: number) => {
+    const packageInfo = CREDIT_PACKAGES[selectedPackage!]
+    setPurchaseSuccess({ credits, package: packageInfo.name })
 
-    if (!validation.valid) {
-      setPurchaseStatus("error")
-      return
-    }
+    // Reload credits info
+    await loadCreditsInfo()
+    onCreditsUpdated(credits)
 
-    setIsLoading(true)
-    setPurchaseStatus("idle")
-
-    try {
-      const success = await purchaseCredits(userId, "", amount)
-      if (success) {
-        setPurchaseStatus("success")
-        const credits = calculateCreditsFromAmount(amount)
-        if (onPurchaseComplete) {
-          onPurchaseComplete(credits)
-        }
-      } else {
-        setPurchaseStatus("error")
-      }
-    } catch (error) {
-      setPurchaseStatus("error")
-    } finally {
-      setIsLoading(false)
-    }
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      setPurchaseSuccess(null)
+      setSelectedPackage(null)
+    }, 5000)
   }
 
-  const customCredits = customAmount ? calculateCreditsFromAmount(Number.parseFloat(customAmount) || 0) : 0
-  const customValidation = customAmount ? validateCustomAmount(Number.parseFloat(customAmount) || 0) : { valid: true }
+  const handlePurchaseCancel = () => {
+    setSelectedPackage(null)
+  }
+
+  const handlePurchaseError = (error: string) => {
+    console.error("Purchase error:", error)
+    // Error is handled by the PayPalPayment component
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto mb-4"></div>
+          <p className={`${theme.textSecondary}`}>Cargando información de créditos...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2">Comprar Créditos IA</h2>
-        <p className="text-muted-foreground">Elige el paquete perfecto para tus necesidades de IA</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center space-x-2">
+          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+        </div>
+        <div>
+          <h2 className={`text-2xl font-bold ${theme.textPrimary} mb-2`}>Comprar Créditos IA</h2>
+          <p className={`${theme.textSecondary} max-w-2xl mx-auto`}>
+            Potencia tu productividad con nuestro asistente IA. Solo pagas por lo que usas, sin suscripciones ni
+            compromisos.
+          </p>
+        </div>
       </div>
 
-      {purchaseStatus === "success" && (
-        <Card className="mb-6 border-green-200 bg-green-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-green-700">
-              <Zap className="h-5 w-5" />
-              <span className="font-medium">¡Compra exitosa! Tus créditos han sido añadidos.</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {purchaseStatus === "error" && (
-        <Card className="mb-6 border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-red-700">
-              <span className="font-medium">Error en la compra. Por favor, inténtalo de nuevo.</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Tabs defaultValue="packages" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="packages">Paquetes Predefinidos</TabsTrigger>
-          <TabsTrigger value="custom">Cantidad Personalizada</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="packages" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-            {CREDIT_PACKAGES.map((pkg) => (
-              <Card
-                key={pkg.id}
-                className={`relative cursor-pointer transition-all hover:shadow-lg ${
-                  selectedPackage === pkg.id ? "ring-2 ring-primary" : ""
-                } ${pkg.popular ? "border-blue-200" : ""} ${pkg.bestValue ? "border-green-200" : ""}`}
-                onClick={() => setSelectedPackage(pkg.id)}
-              >
-                {pkg.popular && (
-                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500">
-                    <Star className="h-3 w-3 mr-1" />
-                    Popular
-                  </Badge>
-                )}
-                {pkg.bestValue && (
-                  <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-500">
-                    <Crown className="h-3 w-3 mr-1" />
-                    Mejor Valor
-                  </Badge>
-                )}
-
-                <CardHeader className="text-center pb-2">
-                  <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                  <div className="text-2xl font-bold text-primary">{formatCurrency(pkg.price)}</div>
-                </CardHeader>
-
-                <CardContent className="text-center space-y-2">
-                  <div className="text-xl font-semibold">{formatCredits(pkg.credits)} créditos</div>
-                  <div className="text-sm text-muted-foreground">{formatCreditsEstimate(pkg.credits)}</div>
-                  <div className="text-xs text-muted-foreground">{pkg.description}</div>
-                  {pkg.savings && (
-                    <div className="text-xs text-green-600 font-medium">Ahorra {formatCurrency(pkg.savings)}</div>
-                  )}
-
-                  <Button
-                    className="w-full mt-4"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handlePackagePurchase(pkg.id)
-                    }}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <CreditCard className="h-4 w-4 mr-2" />
-                    )}
-                    Comprar
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card className="bg-muted/50">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <h3 className="font-semibold">¿Cómo funcionan los créditos?</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="font-medium">Consulta Simple</div>
-                    <div className="text-muted-foreground">2 créditos</div>
-                  </div>
-                  <div>
-                    <div className="font-medium">Consulta Promedio</div>
-                    <div className="text-muted-foreground">5 créditos</div>
-                  </div>
-                  <div>
-                    <div className="font-medium">Consulta Compleja</div>
-                    <div className="text-muted-foreground">8-15 créditos</div>
-                  </div>
+      {/* Current Credits Info */}
+      {creditsInfo && (
+        <Card className={`${theme.cardBg} ${theme.border}`}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-500/20 rounded-full flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className={`font-semibold ${theme.textPrimary}`}>Créditos Actuales</h3>
+                  <p className={`text-sm ${theme.textSecondary}`}>{creditsInfo.remaining} créditos disponibles</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="custom" className="space-y-6">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle>Cantidad Personalizada</CardTitle>
-              <CardDescription>Elige la cantidad exacta que necesitas (mínimo €10)</CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Cantidad en Euros</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="10.00"
-                  min="10"
-                  max="999.99"
-                  step="0.01"
-                  value={customAmount}
-                  onChange={(e) => setCustomAmount(e.target.value)}
-                />
-                {!customValidation.valid && <p className="text-sm text-red-600">{customValidation.message}</p>}
+              <div className="text-right">
+                <div className={`text-2xl font-bold ${theme.textPrimary}`}>{creditsInfo.remaining}</div>
+                <div className={`text-xs ${theme.textMuted}`}>~{Math.floor(creditsInfo.remaining / 2)} consultas</div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-              {customAmount && customValidation.valid && (
-                <div className="p-4 bg-muted rounded-lg space-y-2">
-                  <div className="flex justify-between">
-                    <span>Créditos:</span>
-                    <span className="font-semibold">{formatCredits(customCredits)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Estimación:</span>
-                    <span className="text-sm text-muted-foreground">{formatCreditsEstimate(customCredits)}</span>
-                  </div>
+      {/* Success Message */}
+      {purchaseSuccess && (
+        <Card className="bg-green-500/10 border-green-500/20">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-8 h-8 text-green-400" />
+              <div>
+                <h3 className={`font-semibold ${theme.textPrimary}`}>¡Compra Exitosa!</h3>
+                <p className={`text-sm ${theme.textSecondary}`}>
+                  Se han añadido {purchaseSuccess.credits} créditos a tu cuenta ({purchaseSuccess.package})
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Package Selection */}
+      {selectedPackage === null ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {CREDIT_PACKAGES.map((pkg, index) => (
+            <Card
+              key={pkg.id}
+              className={`${theme.cardBg} ${theme.border} relative overflow-hidden cursor-pointer transition-all duration-200 hover:scale-105 ${
+                pkg.popular ? "ring-2 ring-purple-500" : ""
+              }`}
+              onClick={() => setSelectedPackage(index)}
+            >
+              {pkg.popular && (
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 text-xs font-bold">
+                    POPULAR
+                  </Badge>
                 </div>
               )}
 
-              <Button
-                className="w-full"
-                onClick={handleCustomPurchase}
-                disabled={!customAmount || !customValidation.valid || isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <CreditCard className="h-4 w-4 mr-2" />
-                )}
-                Comprar {customAmount && formatCurrency(Number.parseFloat(customAmount) || 0)}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-muted/50">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <h3 className="font-semibold">Ventajas de la Cantidad Personalizada</h3>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>• Paga exactamente lo que necesitas</p>
-                  <p>• 50 créditos por cada euro</p>
-                  <p>• Sin comprometerte a paquetes grandes</p>
-                  <p>• Perfecto para necesidades específicas</p>
+              <CardHeader className="pb-4">
+                <CardTitle className={`${theme.textPrimary} text-lg flex items-center justify-between`}>
+                  <span>{pkg.credits} Créditos</span>
+                  <span className="text-2xl font-bold">{pkg.price}</span>
+                </CardTitle>
+                <div className="space-y-2">
+                  <p className={`text-sm ${theme.textSecondary}`}>{pkg.description}</p>
+                  <p className={`text-xs ${theme.textMuted}`}>{pkg.estimatedRequests}</p>
                 </div>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Seleccionar
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+
+                {/* Package Details */}
+                <div className={`text-xs ${theme.textMuted} space-y-1 pt-2 border-t ${theme.border}`}>
+                  <div className="flex justify-between">
+                    <span>Costo IA:</span>
+                    <span>{pkg.aiCost}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Comisión servicio:</span>
+                    <span>{pkg.profit}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total:</span>
+                    <span>{pkg.price}</span>
+                  </div>
+                </div>
+
+                {/* Value Indicators */}
+                <div className="space-y-2">
+                  <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
+                    <CheckCircle className="w-3 h-3 text-green-400" />
+                    <span>Créditos instantáneos</span>
+                  </div>
+                  <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
+                    <CheckCircle className="w-3 h-3 text-green-400" />
+                    <span>Sin caducidad</span>
+                  </div>
+                  <div className={`flex items-center space-x-2 text-xs ${theme.textSecondary}`}>
+                    <CheckCircle className="w-3 h-3 text-green-400" />
+                    <span>Precio transparente</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Payment Component */
+        <div className="max-w-md mx-auto">
+          <div className="mb-4 text-center">
+            <Button
+              variant="outline"
+              onClick={() => setSelectedPackage(null)}
+              className={`${theme.border} ${theme.textSecondary}`}
+            >
+              ← Cambiar paquete
+            </Button>
+          </div>
+
+          <PayPalPayment
+            userId={userId}
+            packageIndex={selectedPackage}
+            onSuccess={handlePurchaseSuccess}
+            onCancel={handlePurchaseCancel}
+            onError={handlePurchaseError}
+            theme={theme}
+          />
+        </div>
+      )}
+
+      {/* Information Section */}
+      <Card className={`${theme.cardBg} ${theme.border}`}>
+        <CardHeader>
+          <CardTitle className={`${theme.textPrimary} text-lg flex items-center space-x-2`}>
+            <Star className="w-5 h-5 text-yellow-500" />
+            <span>¿Cómo funcionan los créditos?</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <h3 className={`font-medium ${theme.textPrimary} mb-2`}>Sistema justo</h3>
+              <p className={`text-sm ${theme.textSecondary}`}>
+                Solo pagas por los tokens que realmente usas. Consultas simples cuestan menos.
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+              <h3 className={`font-medium ${theme.textPrimary} mb-2`}>Transparente</h3>
+              <p className={`text-sm ${theme.textSecondary}`}>
+                Ves el costo exacto de cada consulta antes de enviarla.
+              </p>
+            </div>
+            <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+              <h3 className={`font-medium ${theme.textPrimary} mb-2`}>Sin caducidad</h3>
+              <p className={`text-sm ${theme.textSecondary}`}>Tus créditos no caducan nunca. Úsalos cuando quieras.</p>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+            <div className="flex items-start space-x-2">
+              <AlertCircle className="w-5 h-5 text-yellow-400 mt-0.5" />
+              <div>
+                <h3 className={`font-medium ${theme.textPrimary} mb-1`}>Importante</h3>
+                <p className={`text-sm ${theme.textSecondary}`}>
+                  Los créditos se añaden automáticamente a tu cuenta después del pago exitoso. Puedes usar el asistente
+                  IA inmediatamente después de la compra.
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-
-export default AiCreditsPurchase
