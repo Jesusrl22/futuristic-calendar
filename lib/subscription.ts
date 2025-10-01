@@ -89,6 +89,14 @@ export function getAnnualSavingsPercentage(tier: SubscriptionTier): number {
   return Math.round(((monthlyTotal - annualPrice) / monthlyTotal) * 100)
 }
 
+// Calculate yearly savings (alias for calculateAnnualSavings)
+export function getYearlySavings(tier: SubscriptionTier): number {
+  const plan = subscriptionPlans[tier]
+  const monthlyTotal = plan.price.monthly * 12
+  const annualPrice = plan.price.annual
+  return monthlyTotal - annualPrice
+}
+
 // Get plan features
 export function getPlanFeatures(tier: SubscriptionTier): string[] {
   return subscriptionPlans[tier].features
@@ -101,10 +109,7 @@ export function getPlanPrice(tier: SubscriptionTier, cycle: BillingCycle): numbe
 
 // Calculate annual savings
 export function calculateAnnualSavings(tier: SubscriptionTier): number {
-  const plan = subscriptionPlans[tier]
-  const monthlyTotal = plan.price.monthly * 12
-  const annualPrice = plan.price.annual
-  return monthlyTotal - annualPrice
+  return getYearlySavings(tier)
 }
 
 // Check if plan includes AI credits
@@ -236,4 +241,9 @@ export function validateSubscriptionData(data: {
     valid: errors.length === 0,
     errors,
   }
+}
+
+// Check if user can purchase AI credits
+export function canPurchaseAICredits(tier: SubscriptionTier): boolean {
+  return true // All plans can purchase credits
 }
