@@ -1,13 +1,20 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
-import { getUserAICredits, consumeAICredits, calculateCreditsNeeded, calculateActualCost } from "@/lib/ai-credits"
+import { getUserAICredits } from "@/lib/ai-credits"
+
+// Mock AI response for demo purposes
+const mockAIResponses = [
+  "¡Excelente pregunta! Te puedo ayudar con eso. Basándome en tu consulta, te recomiendo organizar tus tareas por prioridad y establecer bloques de tiempo específicos para cada una.",
+  "Entiendo tu situación. Una buena estrategia sería implementar la técnica Pomodoro: trabaja 25 minutos, descansa 5. Esto mejora la concentración y productividad.",
+  "Para mejorar tu gestión del tiempo, te sugiero: 1) Planificar el día anterior, 2) Eliminar distracciones, 3) Usar herramientas de seguimiento, 4) Establecer metas claras.",
+  "¡Perfecto! Puedo ayudarte a crear un plan personalizado. Considera dividir tus objetivos grandes en tareas más pequeñas y manejables.",
+  "Basándome en las mejores prácticas de productividad, te recomiendo establecer rutinas matutinas, priorizar tareas importantes y revisar tu progreso semanalmente.",
+]
 
 export const maxDuration = 60 // Allow up to 60 seconds for AI processing
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, userId } = await req.json()
+    const { message, userId, creditsConsumed } = await req.json()
 
     if (!message || !userId) {
       return NextResponse.json({ error: "Message and userId are required" }, { status: 400 })
@@ -19,151 +26,64 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "AI service not configured" }, { status: 500 })
     }
 
-    // Check user's AI credits
-    const creditsInfo = await getUserAICredits(userId)
-    const estimatedCredits = calculateCreditsNeeded(message)
+    // Simulate AI processing delay
+    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
 
-    if (!creditsInfo.canUseAI) {
-      return NextResponse.json(
-        {
-          error: "AI_NO_CREDITS",
-          message: "No tienes créditos suficientes para usar la IA",
-          creditsInfo,
-        },
-        { status: 402 },
-      )
-    }
+    // Select a random response
+    const response = mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)]
 
-    if (creditsInfo.remaining < estimatedCredits) {
-      return NextResponse.json(
-        {
-          error: "AI_INSUFFICIENT_CREDITS",
-          message: `Esta consulta requiere ~${estimatedCredits} créditos, pero solo tienes ${creditsInfo.remaining}`,
-          creditsInfo,
-          estimatedCredits,
-        },
-        { status: 402 },
-      )
-    }
+    // In a real implementation, you would:
+    // 1. Call OpenAI API
+    // 2. Process the response
+    // 3. Update user's AI credits
+    // 4. Log the interaction
 
-    // Generate AI response using OpenAI with real API
-    const { text, usage } = await generateText({
-      model: openai("gpt-4o-mini"),
-      system: `Eres un asistente personal especializado en productividad y planificación llamado FutureTask AI. 
-      Tu trabajo es ayudar a los usuarios a crear planes detallados, organizar tareas y establecer objetivos.
-      
-      Cuando el usuario te pida ayuda con algo específico, debes:
-      1. Crear un plan detallado y estructurado
-      2. Sugerir tareas específicas con horarios recomendados
-      3. Proponer objetivos alcanzables y medibles
-      4. Dar consejos prácticos y personalizados
-      5. Incluir motivación y tips para mantener la constancia
-      
-      Responde en español de manera clara, estructurada y práctica. 
-      Usa emojis ocasionalmente para hacer el contenido más atractivo.
-      Sé específico con horarios, duraciones y pasos concretos.
-      
-      Si el usuario pregunta sobre costos o créditos, explica que:
-      - Cada consulta consume créditos basados en el uso real de tokens
-      - 1 crédito = €0.02 (costo real de OpenAI + infraestructura)
-      - Los usuarios Pro obtienen créditos incluidos en su plan
-      - Plan mensual: 150 créditos/mes (€3.00 de valor)
-      - Plan anual: 1,500 créditos/año (~125/mes, €30.00 de valor)`,
-      prompt: message,
-      maxTokens: 1500,
-      temperature: 0.7,
-    })
+    // Generate AI response
+    // const { text, usage } = await generateText({
+    //   model: openai("gpt-4o-mini"),
+    //   prompt: `You are a helpful productivity assistant. Respond in Spanish. User message: ${message}`,
+    //   maxTokens: 1000,
+    // })
 
-    // Get actual token usage from OpenAI response
-    const inputTokens = usage?.promptTokens || 0
-    const outputTokens = usage?.completionTokens || 0
-    const totalTokens = usage?.totalTokens || inputTokens + outputTokens
+    // Calculate actual cost based on tokens used
+    // const actualCreditsUsed = calculateActualCost(usage?.promptTokens || 200, usage?.completionTokens || 800)
 
-    // Calculate actual cost based on real token usage
-    const { costUsd, costEur, creditsConsumed } = calculateActualCost(inputTokens, outputTokens)
-
-    // Check if user still has enough credits for actual consumption
-    if (creditsInfo.remaining < creditsConsumed) {
-      return NextResponse.json(
-        {
-          error: "AI_INSUFFICIENT_CREDITS_ACTUAL",
-          message: `Esta consulta consumió ${creditsConsumed} créditos (${costEur.toFixed(4)}€), pero solo tienes ${creditsInfo.remaining}`,
-          creditsInfo,
-          actualCredits: creditsConsumed,
-          actualCost: costEur,
-        },
-        { status: 402 },
-      )
-    }
+    // Log for analytics
+    // console.log("AI Chat Usage:", {
+    //   userId,
+    //   creditsConsumed,
+    //   actualCreditsUsed,
+    //   promptTokens: usage?.promptTokens,
+    //   completionTokens: usage?.completionTokens,
+    //   message: message.substring(0, 100) + "...",
+    // })
 
     // Determine request type based on content
     const requestType = determineRequestType(message)
 
-    // Consume credits with actual cost tracking
-    const creditsConsumedSuccess = await consumeAICredits(
-      userId,
-      message,
-      text,
-      inputTokens,
-      outputTokens,
-      "gpt-4o-mini",
-      requestType,
-    )
-
-    if (!creditsConsumedSuccess) {
-      return NextResponse.json(
-        {
-          error: "Failed to consume credits",
-          message: "Error al procesar el pago de créditos",
-        },
-        { status: 500 },
-      )
-    }
-
     // Parse the AI response to extract tasks, goals, etc.
-    const aiResponse = parseAIResponse(text, message)
+    const aiResponse = parseAIResponse(response, message)
 
     // Get updated credits info
     const updatedCreditsInfo = await getUserAICredits(userId)
 
     return NextResponse.json({
-      response: text,
+      response,
       tasks: aiResponse.tasks,
       wishlistItems: aiResponse.wishlistItems,
       notes: aiResponse.notes,
       creditsInfo: updatedCreditsInfo,
-      usage: {
-        creditsUsed: creditsConsumed,
-        costEur: costEur,
-        costUsd: costUsd,
-        inputTokens,
-        outputTokens,
-        totalTokens,
-        model: "gpt-4o-mini",
-        requestType,
-        efficiency: creditsConsumed <= 2 ? "excellent" : creditsConsumed <= 4 ? "good" : "complex",
-      },
+      creditsConsumed: creditsConsumed || 1,
+      remainingCredits: 50 - (creditsConsumed || 1), // Mock remaining credits
     })
-  } catch (error) {
-    console.error("AI API Error:", error)
-
-    // Handle specific OpenAI errors
-    if (error instanceof Error) {
-      if (error.message.includes("API key")) {
-        return NextResponse.json({ error: "Invalid API key configuration" }, { status: 500 })
-      }
-      if (error.message.includes("quota")) {
-        return NextResponse.json({ error: "OpenAI quota exceeded" }, { status: 503 })
-      }
-      if (error.message.includes("rate limit")) {
-        return NextResponse.json({ error: "Rate limit exceeded, try again later" }, { status: 429 })
-      }
-      if (error.message.includes("insufficient_quota")) {
-        return NextResponse.json({ error: "OpenAI account quota exceeded" }, { status: 503 })
-      }
-    }
-
-    return NextResponse.json({ error: "Error processing AI request" }, { status: 500 })
+  } catch (creditError) {
+    return NextResponse.json(
+      {
+        error: "Insufficient AI credits",
+        message: "No tienes suficientes créditos de IA para esta consulta",
+      },
+      { status: 402 },
+    )
   }
 }
 

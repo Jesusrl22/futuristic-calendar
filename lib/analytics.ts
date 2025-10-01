@@ -29,6 +29,43 @@ let analyticsConfig: AnalyticsConfig = {
 
 let userProperties: UserProperties = {}
 
+declare global {
+  interface Window {
+    gtag: (command: string, targetId: string, config?: Record<string, any>) => void
+    dataLayer: any[]
+  }
+}
+
+export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID
+
+// Initialize Google Analytics
+export const initGA = () => {
+  if (!GA_TRACKING_ID) {
+    console.warn("Google Analytics ID not found")
+    return
+  }
+
+  // Load gtag script
+  const script = document.createElement("script")
+  script.async = true
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`
+  document.head.appendChild(script)
+
+  // Initialize gtag
+  window.gtag =
+    window.gtag ||
+    (() => {
+      ;(window as any).dataLayer = (window as any).dataLayer || []
+      ;(window as any).dataLayer.push(arguments)
+    })
+
+  window.gtag("js", new Date())
+  window.gtag("config", GA_TRACKING_ID, {
+    page_title: document.title,
+    page_location: window.location.href,
+  })
+}
+
 // Initialize analytics
 export function initializeAnalytics(config: AnalyticsConfig = {}) {
   analyticsConfig = { ...analyticsConfig, ...config }
@@ -61,7 +98,16 @@ export function initializeAnalytics(config: AnalyticsConfig = {}) {
 }
 
 // Track page views
-export function trackPageView(path: string, title?: string) {
+export const trackPageView = (url: string) => {
+  if (!GA_TRACKING_ID || !window.gtag) return
+
+  window.gtag("config", GA_TRACKING_ID, {
+    page_path: url,
+  })
+}
+
+// Track page views
+export function trackPageViewOld(path: string, title?: string) {
   if (typeof window === "undefined") return
 
   try {
@@ -81,8 +127,19 @@ export function trackPageView(path: string, title?: string) {
   }
 }
 
+// Track events
+export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
+  if (!GA_TRACKING_ID || !window.gtag) return
+
+  window.gtag("event", action, {
+    event_category: category,
+    event_label: label,
+    value: value,
+  })
+}
+
 // Track custom events
-export function trackEvent(event: AnalyticsEvent) {
+export function trackEventOld(event: AnalyticsEvent) {
   if (typeof window === "undefined") return
 
   try {
@@ -159,8 +216,18 @@ export function trackError(error: string, category = "error", label?: string) {
   })
 }
 
+// Track conversions (purchases, sign-ups, etc.)
+export const trackConversion = (eventName: string, parameters?: Record<string, any>) => {
+  if (!GA_TRACKING_ID || !window.gtag) return
+
+  window.gtag("event", eventName, {
+    currency: "EUR",
+    ...parameters,
+  })
+}
+
 // Track conversions
-export function trackConversion(type: string, value?: number, currency = "USD") {
+export function trackConversionOld(type: string, value?: number, currency = "USD") {
   trackEvent({
     action: "conversion",
     category: "ecommerce",
@@ -197,7 +264,12 @@ export function trackSubscription(action: string, plan: string, billing?: string
 }
 
 // Track AI usage
-export function trackAIUsage(feature: string, creditsUsed?: number) {
+export const trackAIUsage = (feature: string) => {
+  trackEvent("ai_usage", "artificial_intelligence", feature)
+}
+
+// Track AI usage
+export function trackAIUsageOld(feature: string, creditsUsed?: number) {
   trackEvent({
     action: "ai_usage",
     category: "ai",
@@ -218,7 +290,7 @@ export function trackTaskAction(action: string, taskType?: string) {
 // Track productivity metrics
 export function trackProductivityMetric(metric: string, value: number, unit?: string) {
   trackEvent({
-    action: "productivity_metric",
+    action: metric,
     category: "productivity",
     label: `${metric}${unit ? `:${unit}` : ""}`,
     value,
@@ -321,14 +393,7 @@ export const analytics = {
   trackSettingsChange,
   trackSearch,
   trackDataAction,
+  initGA,
 }
 
 export default analytics
-
-// Type declarations for global gtag
-declare global {
-  interface Window {
-    gtag: (...args: any[]) => void
-    dataLayer: any[]
-  }
-}

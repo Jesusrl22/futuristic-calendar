@@ -1,268 +1,263 @@
-import { supabase } from "./supabase"
+import { hybridDb } from "./hybrid-database"
 
-// Tipos de datos
-export interface CreditPackage {
+export interface AICreditPack {
   id: string
   name: string
   credits: number
-  price: number
-  currency: string
+  priceBase: number
+  priceVAT: number
+  priceFinal: number
   popular?: boolean
   description: string
-  features: string[]
+  bestValue?: boolean
 }
 
-export interface UserCredits {
-  userId: string
-  credits: number
-  totalSpent: number
-  lastPurchase?: string
-}
-
-// Paquetes de créditos disponibles
-export const CREDIT_PACKAGES: CreditPackage[] = [
+export const aiCreditPacks: AICreditPack[] = [
   {
-    id: "basic",
-    name: "Básico",
-    credits: 50,
-    price: 2.99,
-    currency: "EUR",
-    description: "Perfecto para empezar",
-    features: ["50 créditos IA", "Sin caducidad", "Soporte básico"],
+    id: "starter",
+    name: "Starter",
+    credits: 100,
+    priceBase: 2.47,
+    priceVAT: 0.52,
+    priceFinal: 2.99,
+    description: "Perfecto para probar las funciones de IA",
   },
   {
     id: "popular",
     name: "Popular",
-    credits: 100,
-    price: 4.99,
-    currency: "EUR",
-    popular: true,
-    description: "La opción más elegida",
-    features: ["100 créditos IA", "Sin caducidad", "Soporte prioritario", "20% descuento"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    credits: 250,
-    price: 9.99,
-    currency: "EUR",
-    description: "Para usuarios avanzados",
-    features: ["250 créditos IA", "Sin caducidad", "Soporte premium", "35% descuento"],
-  },
-  {
-    id: "premium",
-    name: "Premium",
     credits: 500,
-    price: 17.99,
-    currency: "EUR",
-    description: "Máximo valor",
-    features: ["500 créditos IA", "Sin caducidad", "Soporte VIP", "40% descuento"],
+    priceBase: 8.26,
+    priceVAT: 1.73,
+    priceFinal: 9.99,
+    popular: true,
+    description: "Ideal para uso regular de IA",
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    credits: 1000,
+    priceBase: 14.87,
+    priceVAT: 3.12,
+    priceFinal: 17.99,
+    bestValue: true,
+    description: "Para usuarios intensivos de IA",
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    credits: 2500,
+    priceBase: 33.05,
+    priceVAT: 6.94,
+    priceFinal: 39.99,
+    description: "Para equipos y uso empresarial",
   },
 ]
 
-// Precios de modelos IA (tokens por crédito)
-export const AI_MODEL_PRICING = {
-  "gpt-4": { input: 0.03, output: 0.06 },
-  "gpt-3.5-turbo": { input: 0.001, output: 0.002 },
-  "claude-3": { input: 0.015, output: 0.075 },
+// Export as CREDIT_PACKAGES for compatibility
+export const CREDIT_PACKAGES = aiCreditPacks
+
+export const AI_COSTS = {
+  SIMPLE_CHAT: 1,
+  COMPLEX_CHAT: 2,
+  TASK_GENERATION: 2,
+  SMART_SUGGESTIONS: 1,
+  CONTENT_ANALYSIS: 3,
+  SCHEDULE_OPTIMIZATION: 4,
+  ADVANCED_PLANNING: 5,
 }
 
-// Función para calcular el costo real basado en tokens
-export function calculateActualCost(tokens: number, model = "gpt-3.5-turbo"): number {
-  const pricing = AI_MODEL_PRICING[model as keyof typeof AI_MODEL_PRICING] || AI_MODEL_PRICING["gpt-3.5-turbo"]
-  return Math.ceil(tokens * pricing.input * 1000) // Convertir a créditos
+export const OPENAI_COSTS = {
+  GPT4_MINI_INPUT: 0.00015,
+  GPT4_MINI_OUTPUT: 0.0006,
+  AVERAGE_INPUT_TOKENS: 200,
+  AVERAGE_OUTPUT_TOKENS: 800,
 }
 
-// Función para añadir créditos a un usuario
-export async function addCreditsToUser(userId: string, credits: number): Promise<boolean> {
-  try {
-    if (!supabase) {
-      console.warn("Supabase not configured, using memory storage")
-      return true
-    }
-
-    const { data, error } = await supabase
-      .from("users")
-      .update({
-        ai_credits: supabase.raw(`ai_credits + ${credits}`),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId)
-      .select()
-
-    if (error) {
-      console.error("Error adding credits:", error)
-      return false
-    }
-
-    console.log(`✅ Added ${credits} credits to user ${userId}`)
-    return true
-  } catch (error) {
-    console.error("Error in addCreditsToUser:", error)
-    return false
+export const calculateRealCost = (
+  inputTokens = OPENAI_COSTS.AVERAGE_INPUT_TOKENS,
+  outputTokens = OPENAI_COSTS.AVERAGE_OUTPUT_TOKENS,
+) => {
+  const inputCost = (inputTokens / 1000) * OPENAI_COSTS.GPT4_MINI_INPUT
+  const outputCost = (outputTokens / 1000) * OPENAI_COSTS.GPT4_MINI_OUTPUT
+  const totalUSD = inputCost + outputCost
+  const totalEUR = totalUSD * 0.92
+  return {
+    inputCost,
+    outputCost,
+    totalUSD,
+    totalEUR,
   }
 }
 
-// Función para consumir créditos
-export async function consumeAICredits(userId: string, credits: number): Promise<boolean> {
-  try {
-    if (!supabase) {
-      console.warn("Supabase not configured, using memory storage")
-      return true
-    }
+export const CREDIT_VALUE_EUR = 2 / 500
 
-    // Verificar que tiene suficientes créditos
-    const { data: user, error: fetchError } = await supabase
-      .from("users")
-      .select("ai_credits")
-      .eq("id", userId)
-      .single()
+export const calculateCreditsNeeded = (message: string, responseLength?: number): number => {
+  const messageLength = message.length
+  const estimatedResponseLength = responseLength || messageLength * 2
 
-    if (fetchError || !user || user.ai_credits < credits) {
-      console.error("Insufficient credits or user not found")
-      return false
-    }
+  if (messageLength < 50) {
+    return AI_COSTS.SIMPLE_CHAT
+  }
 
-    // Consumir créditos
-    const { error } = await supabase
-      .from("users")
-      .update({
-        ai_credits: user.ai_credits - credits,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userId)
+  if (messageLength < 200) {
+    return AI_COSTS.SIMPLE_CHAT
+  }
 
-    if (error) {
-      console.error("Error consuming credits:", error)
-      return false
-    }
+  if (messageLength < 500) {
+    return AI_COSTS.COMPLEX_CHAT
+  }
 
-    console.log(`✅ Consumed ${credits} credits from user ${userId}`)
-    return true
-  } catch (error) {
-    console.error("Error in consumeAICredits:", error)
-    return false
+  return AI_COSTS.COMPLEX_CHAT + 1
+}
+
+export const calculateActualCost = (inputTokens: number, outputTokens: number) => {
+  const realCost = calculateRealCost(inputTokens, outputTokens)
+  const creditsNeeded = Math.ceil(realCost.totalEUR / CREDIT_VALUE_EUR)
+
+  return Math.max(1, Math.min(10, creditsNeeded))
+}
+
+export const getCostBreakdown = () => {
+  const realCost = calculateRealCost()
+  const creditsPerMessage = calculateActualCost(OPENAI_COSTS.AVERAGE_INPUT_TOKENS, OPENAI_COSTS.AVERAGE_OUTPUT_TOKENS)
+  const creditValue = CREDIT_VALUE_EUR
+  const margin = creditValue * creditsPerMessage - realCost.totalEUR
+  const marginPercentage = (margin / realCost.totalEUR) * 100
+
+  return {
+    realCostEUR: realCost.totalEUR,
+    creditsPerMessage,
+    creditValue,
+    revenuePerMessage: creditValue * creditsPerMessage,
+    marginPerMessage: margin,
+    marginPercentage,
+    messagesPerEuro: Math.floor(1 / (creditValue * creditsPerMessage)),
   }
 }
 
-// Función para obtener créditos del usuario
-export async function getUserAICredits(userId: string): Promise<number> {
-  try {
-    if (!supabase) {
-      console.warn("Supabase not configured, returning default credits")
-      return 10 // Créditos por defecto para demo
-    }
-
-    const { data, error } = await supabase.from("users").select("ai_credits").eq("id", userId).single()
-
-    if (error || !data) {
-      console.error("Error fetching user credits:", error)
-      return 0
-    }
-
-    return data.ai_credits || 0
-  } catch (error) {
-    console.error("Error in getUserAICredits:", error)
-    return 0
-  }
-}
-
-// Función para verificar si tiene suficientes créditos
-export async function hasEnoughCredits(userId: string, requiredCredits: number): Promise<boolean> {
-  const currentCredits = await getUserAICredits(userId)
-  return currentCredits >= requiredCredits
-}
-
-// Función para obtener un paquete por ID
-export function getCreditPackage(packageId: string): CreditPackage | null {
-  return CREDIT_PACKAGES.find((pkg) => pkg.id === packageId) || null
-}
-
-// Función para obtener todos los paquetes
-export function getAllCreditPackages(): CreditPackage[] {
-  return CREDIT_PACKAGES
-}
-
-// Función para procesar compra de créditos
-export async function processCreditPurchase(userId: string, packageId: string, paymentId: string): Promise<boolean> {
-  try {
-    const creditPackage = getCreditPackage(packageId)
-    if (!creditPackage) {
-      console.error("Invalid package ID:", packageId)
-      return false
-    }
-
-    // Añadir créditos al usuario
-    const success = await addCreditsToUser(userId, creditPackage.credits)
-
-    if (success && supabase) {
-      // Registrar la transacción
-      await supabase.from("credit_transactions").insert({
-        user_id: userId,
-        package_id: packageId,
-        credits: creditPackage.credits,
-        amount: creditPackage.price,
-        currency: creditPackage.currency,
-        payment_id: paymentId,
-        status: "completed",
-        created_at: new Date().toISOString(),
-      })
-    }
-
-    return success
-  } catch (error) {
-    console.error("Error processing credit purchase:", error)
-    return false
-  }
-}
-
-// Función para validar compra
-export function validateCreditPurchase(packageId: string, amount: number): boolean {
-  const creditPackage = getCreditPackage(packageId)
-  return creditPackage ? creditPackage.price === amount : false
-}
-
-// Funciones de utilidad
-export function formatCredits(credits: number): string {
-  return credits.toLocaleString("es-ES")
-}
-
-export function formatCurrency(amount: number, currency = "EUR"): string {
+export const formatPrice = (price: number): string => {
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
-    currency: currency,
-  }).format(amount)
+    currency: "EUR",
+  }).format(price)
 }
 
-export function calculateCreditsNeeded(text: string, model = "gpt-3.5-turbo"): number {
-  const estimatedTokens = Math.ceil(text.length / 4) // Aproximación: 4 caracteres = 1 token
-  return calculateActualCost(estimatedTokens, model)
+export const getPricePerCredit = (pack: AICreditPack): number => {
+  return pack.priceFinal / pack.credits
 }
 
-export function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 4)
+export const getBestValuePack = (): AICreditPack => {
+  return aiCreditPacks.reduce((best, current) => {
+    const bestPricePerCredit = getPricePerCredit(best)
+    const currentPricePerCredit = getPricePerCredit(current)
+    return currentPricePerCredit < bestPricePerCredit ? current : best
+  })
 }
 
-// Alias para compatibilidad
-export const addAICredits = addCreditsToUser
-export const creditPackages = CREDIT_PACKAGES
-export const pricingInfo = AI_MODEL_PRICING
+export const calculateVAT = (basePrice: number, vatRate = 0.21): number => {
+  return Math.round(basePrice * vatRate * 100) / 100
+}
 
-// Exportación por defecto
-export default {
-  CREDIT_PACKAGES,
-  AI_MODEL_PRICING,
-  calculateActualCost,
-  addCreditsToUser,
-  consumeAICredits,
-  getUserAICredits,
-  hasEnoughCredits,
-  getCreditPackage,
-  getAllCreditPackages,
-  processCreditPurchase,
-  validateCreditPurchase,
-  formatCredits,
-  formatCurrency,
-  calculateCreditsNeeded,
-  estimateTokens,
+export const calculatePriceWithVAT = (basePrice: number, vatRate = 0.21): number => {
+  return Math.round(basePrice * (1 + vatRate) * 100) / 100
+}
+
+export const getPackById = (packId: string): AICreditPack | undefined => {
+  return aiCreditPacks.find((pack) => pack.id === packId)
+}
+
+export const getCreditPackage = getPackById
+
+export const estimateCreditDuration = (credits: number, messagesPerDay: number): number => {
+  const averageCreditsPerMessage = 1.5
+  const creditsPerDay = messagesPerDay * averageCreditsPerMessage
+  return Math.floor(credits / creditsPerDay)
+}
+
+export const getRecommendedPack = (messagesPerDay: number): AICreditPack => {
+  const creditsNeededPerMonth = messagesPerDay * 30 * 1.5
+
+  if (creditsNeededPerMonth <= 100) return aiCreditPacks[0]
+  if (creditsNeededPerMonth <= 500) return aiCreditPacks[1]
+  if (creditsNeededPerMonth <= 1000) return aiCreditPacks[2]
+  return aiCreditPacks[3]
+}
+
+export const consumeAICredits = async (userId: string, creditsToConsume: number): Promise<number> => {
+  try {
+    const user = await hybridDb.getCurrentUser()
+    if (!user) {
+      throw new Error("User not found")
+    }
+
+    const currentCredits = user.ai_credits || 0
+    if (currentCredits < creditsToConsume) {
+      throw new Error("Insufficient AI credits")
+    }
+
+    const newCredits = currentCredits - creditsToConsume
+    await hybridDb.updateUser(userId, { ai_credits: newCredits })
+
+    return newCredits
+  } catch (error) {
+    console.error("Error consuming AI credits:", error)
+    throw error
+  }
+}
+
+export const addCreditsToUser = async (userId: string, creditsToAdd: number): Promise<number> => {
+  try {
+    const user = await hybridDb.getCurrentUser()
+    if (!user) {
+      throw new Error("User not found")
+    }
+
+    const currentCredits = user.ai_credits || 0
+    const newCredits = currentCredits + creditsToAdd
+    await hybridDb.updateUser(userId, { ai_credits: newCredits })
+
+    return newCredits
+  } catch (error) {
+    console.error("Error adding AI credits:", error)
+    throw error
+  }
+}
+
+export const processCreditPurchase = async (
+  userId: string,
+  packId: string,
+): Promise<{ success: boolean; newCredits: number }> => {
+  try {
+    const pack = getPackById(packId)
+    if (!pack) {
+      throw new Error("Credit pack not found")
+    }
+
+    const newCredits = await addCreditsToUser(userId, pack.credits)
+
+    return {
+      success: true,
+      newCredits,
+    }
+  } catch (error) {
+    console.error("Error processing credit purchase:", error)
+    return {
+      success: false,
+      newCredits: 0,
+    }
+  }
+}
+
+// Get user AI credits
+export async function getUserAICredits(userId: string): Promise<number> {
+  try {
+    const user = await hybridDb.getUserById(userId)
+    if (!user) {
+      return 0
+    }
+    return user.ai_credits || 0
+  } catch (error) {
+    console.error("Error getting user AI credits:", error)
+    return 0
+  }
 }

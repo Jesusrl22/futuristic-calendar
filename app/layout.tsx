@@ -4,16 +4,18 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LanguageProvider } from "@/hooks/useLanguage"
+import { Toaster } from "@/components/toaster"
 import { CookieBanner } from "@/components/cookie-banner"
-import { NotificationProvider } from "@/components/notification-service"
+import { AnalyticsProvider } from "@/components/analytics-provider"
+import { Suspense } from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "FutureTask - Calendario Inteligente con IA",
   description:
-    "Organiza tu vida con nuestro calendario futurista potenciado por inteligencia artificial. Gestiona tareas, notas y objetivos de manera eficiente.",
-  keywords: "calendario, productividad, IA, tareas, organización, planificación",
+    "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
+  keywords: ["calendario", "productividad", "IA", "inteligencia artificial", "tareas", "notas", "pomodoro"],
   authors: [{ name: "FutureTask Team" }],
   creator: "FutureTask",
   publisher: "FutureTask",
@@ -22,25 +24,30 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://futuretask.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.vercel.app"),
   alternates: {
     canonical: "/",
     languages: {
       "es-ES": "/es",
       "en-US": "/en",
+      "fr-FR": "/fr",
+      "de-DE": "/de",
+      "it-IT": "/it",
+      "pt-PT": "/pt",
     },
   },
   openGraph: {
     title: "FutureTask - Calendario Inteligente con IA",
-    description: "Organiza tu vida con nuestro calendario futurista potenciado por inteligencia artificial.",
-    url: "https://futuretask.vercel.app",
+    description:
+      "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
+    url: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.vercel.app",
     siteName: "FutureTask",
     images: [
       {
-        url: "/futuristic-dashboard.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "FutureTask Dashboard",
+        alt: "FutureTask - Calendario Inteligente con IA",
       },
     ],
     locale: "es_ES",
@@ -49,8 +56,9 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "FutureTask - Calendario Inteligente con IA",
-    description: "Organiza tu vida con nuestro calendario futurista potenciado por inteligencia artificial.",
-    images: ["/futuristic-dashboard.png"],
+    description:
+      "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
+    images: ["/og-image.png"],
     creator: "@futuretask",
   },
   robots: {
@@ -64,10 +72,6 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-verification-code",
-  },
-  category: "productivity",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -82,18 +86,33 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon-16x16.png" type="image/png" sizes="16x16" />
+        <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#7c3aed" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="FutureTask" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="msapplication-TileColor" content="#7c3aed" />
+      </head>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <LanguageProvider>
-            <NotificationProvider>
-              {children}
-              <CookieBanner />
-            </NotificationProvider>
+            <Suspense fallback={null}>
+              <AnalyticsProvider />
+            </Suspense>
+            {children}
+            <Toaster />
+            <CookieBanner />
           </LanguageProvider>
         </ThemeProvider>
       </body>

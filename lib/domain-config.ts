@@ -1,53 +1,44 @@
-// Domain configuration for future-task.com
 export const DOMAIN_CONFIG = {
-  // Production domain
-  domain: "future-task.com",
-  url: "https://future-task.com",
-
-  // Get full URL for any path
-  getFullUrl: (path = "") => {
-    return `https://future-task.com${path}`
-  },
-
-  // API endpoints
-  api: {
-    base: "https://future-task.com/api",
-    health: "https://future-task.com/api/health",
-    sitemap: "https://future-task.com/sitemap.xml",
-    robots: "https://future-task.com/robots.txt",
+  name: "FutureTask",
+  domain: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.vercel.app",
+  url: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.vercel.app",
+  description: "El futuro de la productividad con IA",
+  keywords: ["productividad", "tareas", "calendario", "IA", "organización"],
+  author: "FutureTask Team",
+  twitter: "@futuretask",
+  social: {
+    twitter: "@futuretask",
+    github: "https://github.com/futuretask",
   },
 }
 
-// SEO Configuration
 export const SEO_CONFIG = {
-  title: "FutureTask - AI-Powered Productivity Calendar",
+  title: "FutureTask - El Futuro de la Productividad",
   description:
-    "Transform your productivity with our AI-powered calendar and task management system. Smart scheduling, intelligent insights, and seamless organization.",
-  keywords: "productivity, calendar, AI, task management, scheduling, organization, future task",
+    "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
+  keywords: ["productividad", "tareas", "calendario", "IA", "organización", "gestión del tiempo"],
   author: "FutureTask Team",
-
-  // Open Graph
   openGraph: {
-    title: "FutureTask - AI-Powered Productivity Calendar",
-    description: "Transform your productivity with our AI-powered calendar and task management system.",
-    siteName: "FutureTask",
-    locale: "en_US",
+    title: "FutureTask - El Futuro de la Productividad",
+    description:
+      "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
     type: "website" as const,
+    locale: "es_ES",
+    siteName: "FutureTask",
   },
-
-  // Twitter
   twitter: {
     card: "summary_large_image" as const,
-    title: "FutureTask - AI-Powered Productivity Calendar",
-    description: "Transform your productivity with our AI-powered calendar and task management system.",
+    title: "FutureTask - El Futuro de la Productividad",
+    description:
+      "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
     creator: "@futuretask",
   },
 }
 
-// Social media links
-export const SOCIAL_LINKS = {
-  twitter: "https://twitter.com/futuretask",
-  linkedin: "https://linkedin.com/company/futuretask",
-  github: "https://github.com/futuretask",
-  email: "hello@future-task.com",
+export function getDomainConfig() {
+  return DOMAIN_CONFIG
+}
+
+export function getSEOConfig() {
+  return SEO_CONFIG
 }

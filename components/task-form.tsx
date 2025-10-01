@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,8 +11,10 @@ import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Clock, Bell, Tag, Plus, Edit, Trash2, X } from "lucide-react"
-import { format } from "date-fns"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { CalendarIcon, Clock, Bell, Tag, Plus, Edit, Trash2 } from "lucide-react"
+import { format, isValid, parseISO } from "date-fns"
+import { es } from "date-fns/locale"
 
 interface Task {
   id: string
@@ -33,12 +33,13 @@ interface Task {
 }
 
 interface TaskFormProps {
+  isOpen: boolean
+  onClose: () => void
   selectedDate: Date
   onTaskCreated: (taskData: any) => void
   editingTask?: Task | null
   onTaskUpdated?: (taskId: string, updates: Partial<Task>) => void
   onTaskDeleted?: (taskId: string) => void
-  onCancelEdit?: () => void
 }
 
 const categories = [
@@ -58,13 +59,34 @@ const priorities = [
   { value: "high", label: "Alta", color: "bg-red-500" },
 ]
 
+// Helper function to safely parse dates
+const safeParseDate = (dateString: string | undefined | null): Date | null => {
+  if (!dateString) return null
+
+  try {
+    // Try parsing as ISO string first
+    const parsed = parseISO(dateString)
+    if (isValid(parsed)) return parsed
+
+    // Try creating a new Date object
+    const date = new Date(dateString)
+    if (isValid(date)) return date
+
+    return null
+  } catch (error) {
+    console.warn("Invalid date string:", dateString, error)
+    return null
+  }
+}
+
 export function TaskForm({
+  isOpen,
+  onClose,
   selectedDate,
   onTaskCreated,
   editingTask,
   onTaskUpdated,
   onTaskDeleted,
-  onCancelEdit,
 }: TaskFormProps) {
   const [formData, setFormData] = useState({
     title: "",
@@ -74,99 +96,138 @@ export function TaskForm({
     category: "personal",
     priority: "medium" as "low" | "medium" | "high",
     notifications: false,
-    estimatedTime: 30,
+    estimatedTime: "",
   })
 
-  // Update form when editing task changes
+  // Validate selectedDate
+  const validSelectedDate = isValid(selectedDate) ? selectedDate : new Date()
+
+  // Update form when editing task changes or selectedDate changes
   useEffect(() => {
     if (editingTask) {
+      const taskDate = editingTask.dueDate ? safeParseDate(editingTask.dueDate) : validSelectedDate
+      const validDate = taskDate && isValid(taskDate) ? taskDate : validSelectedDate
+
+      let timeString = ""
+      if (editingTask.dueDate) {
+        const parsedDate = safeParseDate(editingTask.dueDate)
+        if (parsedDate && isValid(parsedDate)) {
+          try {
+            timeString = format(parsedDate, "HH:mm")
+          } catch (error) {
+            console.warn("Error formatting time:", error)
+            timeString = ""
+          }
+        }
+      }
+
       setFormData({
         title: editingTask.title,
         description: editingTask.description || "",
-        date: editingTask.dueDate ? new Date(editingTask.dueDate) : selectedDate,
-        time: editingTask.dueDate ? new Date(editingTask.dueDate).toTimeString().slice(0, 5) : "",
+        date: validDate,
+        time: timeString,
         category: editingTask.category || "personal",
         priority: editingTask.priority,
-        notifications: false, // Reset notifications for editing
-        estimatedTime: editingTask.estimatedTime || 30,
+        notifications: false,
+        estimatedTime: editingTask.estimatedTime ? editingTask.estimatedTime.toString() : "",
       })
     } else {
-      // Reset form when not editing
       setFormData({
         title: "",
         description: "",
-        date: selectedDate,
+        date: validSelectedDate,
         time: "",
         category: "personal",
         priority: "medium",
         notifications: false,
-        estimatedTime: 30,
+        estimatedTime: "",
       })
     }
-  }, [editingTask, selectedDate])
+  }, [editingTask, validSelectedDate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validate form data
+    if (!formData.title.trim()) {
+      alert("El título es requerido")
+      return
+    }
+
+    // Create a valid date object
+    let dueDate = new Date(formData.date)
+
+    // Ensure we have a valid date
+    if (!isValid(dueDate)) {
+      dueDate = new Date()
+    }
+
+    if (formData.time) {
+      try {
+        const [hours, minutes] = formData.time.split(":")
+        const hoursNum = Number.parseInt(hours, 10)
+        const minutesNum = Number.parseInt(minutes, 10)
+
+        if (!isNaN(hoursNum) && !isNaN(minutesNum)) {
+          dueDate.setHours(hoursNum, minutesNum, 0, 0)
+        } else {
+          dueDate.setHours(0, 0, 0, 0)
+        }
+      } catch (error) {
+        console.warn("Error parsing time:", error)
+        dueDate.setHours(0, 0, 0, 0)
+      }
+    } else {
+      dueDate.setHours(0, 0, 0, 0)
+    }
+
     const taskData = {
-      title: formData.title,
-      description: formData.description,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
       date: formData.date.toISOString().split("T")[0],
       time: formData.time || undefined,
       category: formData.category,
       priority: formData.priority,
       notifications: formData.notifications,
-      estimatedTime: formData.estimatedTime,
+      estimatedTime: formData.estimatedTime ? Number.parseInt(formData.estimatedTime, 10) : undefined,
+      dueDate: dueDate.toISOString(),
     }
 
     try {
       if (editingTask && onTaskUpdated) {
-        // Update existing task
         await onTaskUpdated(editingTask.id, {
-          title: formData.title,
-          description: formData.description,
-          dueDate: formData.date.toISOString(),
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          dueDate: dueDate.toISOString(),
           category: formData.category,
           priority: formData.priority,
-          estimatedTime: formData.estimatedTime,
+          estimatedTime: formData.estimatedTime ? Number.parseInt(formData.estimatedTime, 10) : undefined,
         })
       } else {
-        // Create new task
         await onTaskCreated(taskData)
       }
 
-      // Reset form only if not editing
-      if (!editingTask) {
-        setFormData({
-          title: "",
-          description: "",
-          date: selectedDate,
-          time: "",
-          category: "personal",
-          priority: "medium",
-          notifications: false,
-          estimatedTime: 30,
-        })
-      }
+      onClose()
     } catch (error) {
       console.error("Error saving task:", error)
+      alert("Error al guardar la tarea. Por favor, inténtalo de nuevo.")
     }
   }
 
   const handleDelete = async () => {
     if (editingTask && onTaskDeleted && window.confirm("¿Estás seguro de que quieres eliminar esta tarea?")) {
-      await onTaskDeleted(editingTask.id)
-    }
-  }
-
-  const handleCancel = () => {
-    if (onCancelEdit) {
-      onCancelEdit()
+      try {
+        await onTaskDeleted(editingTask.id)
+        onClose()
+      } catch (error) {
+        console.error("Error deleting task:", error)
+        alert("Error al eliminar la tarea. Por favor, inténtalo de nuevo.")
+      }
     }
   }
 
   const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
+    if (date && isValid(date)) {
       setFormData({ ...formData, date })
     }
   }
@@ -174,87 +235,89 @@ export function TaskForm({
   const selectedCategory = categories.find((cat) => cat.value === formData.category)
   const selectedPriority = priorities.find((pri) => pri.value === formData.priority)
 
+  // Safe format function for preview
+  const safeFormatDate = (date: Date, formatString: string, options?: any): string => {
+    try {
+      if (!date || !isValid(date)) return "Fecha inválida"
+      return format(date, formatString, options)
+    } catch (error) {
+      console.warn("Error formatting date:", error)
+      return "Fecha inválida"
+    }
+  }
+
   return (
-    <Card className="bg-white/10 backdrop-blur-sm border border-white/20">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between text-white">
-          <div className="flex items-center space-x-2">
-            {editingTask ? <Edit className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-            <span>{editingTask ? "Editar Tarea" : "Nueva Tarea"}</span>
-          </div>
-          {editingTask && (
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="text-white hover:bg-white/10">
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {editingTask ? <Edit className="h-5 w-5 text-blue-600" /> : <Plus className="h-5 w-5 text-green-600" />}
+              <span>{editingTask ? "Editar Tarea" : "Nueva Tarea"}</span>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-white">
-              Título de la Tarea *
-            </Label>
+            <Label htmlFor="title">Título de la Tarea *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="¿Qué necesitas hacer?"
               required
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
             />
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-white">
-              Descripción
-            </Label>
+            <Label htmlFor="description">Descripción</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Añade más detalles sobre esta tarea..."
               rows={3}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
             />
           </div>
 
           {/* Date and Time Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Date Picker */}
             <div className="space-y-2">
-              <Label className="text-white">Fecha *</Label>
+              <Label>Fecha *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  >
+                  <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.date ? format(formData.date, "PPP") : "Selecciona una fecha"}
+                    {formData.date && isValid(formData.date)
+                      ? safeFormatDate(formData.date, "PPP", { locale: es })
+                      : "Selecciona una fecha"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={formData.date} onSelect={handleDateSelect} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={formData.date}
+                    onSelect={handleDateSelect}
+                    initialFocus
+                    locale={es}
+                  />
                 </PopoverContent>
               </Popover>
             </div>
 
-            {/* Time Picker */}
             <div className="space-y-2">
-              <Label htmlFor="time" className="text-white">
-                Hora
-              </Label>
+              <Label htmlFor="time">Hora (opcional)</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/60" />
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   id="time"
                   type="time"
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="pl-10 bg-white/10 border-white/20 text-white"
+                  className="pl-10"
                 />
               </div>
             </div>
@@ -262,14 +325,13 @@ export function TaskForm({
 
           {/* Category and Priority Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Category Selection */}
             <div className="space-y-2">
-              <Label className="text-white">Categoría *</Label>
+              <Label>Categoría *</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectTrigger>
                   <SelectValue>
                     {selectedCategory && (
                       <div className="flex items-center space-x-2">
@@ -292,14 +354,13 @@ export function TaskForm({
               </Select>
             </div>
 
-            {/* Priority Selection */}
             <div className="space-y-2">
-              <Label className="text-white">Prioridad *</Label>
+              <Label>Prioridad *</Label>
               <Select
                 value={formData.priority}
                 onValueChange={(value: "low" | "medium" | "high") => setFormData({ ...formData, priority: value })}
               >
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectTrigger>
                   <SelectValue>
                     {selectedPriority && (
                       <div className="flex items-center space-x-2">
@@ -325,9 +386,7 @@ export function TaskForm({
 
           {/* Estimated Time */}
           <div className="space-y-2">
-            <Label htmlFor="estimatedTime" className="text-white">
-              Tiempo Estimado (minutos)
-            </Label>
+            <Label htmlFor="estimatedTime">Tiempo Estimado (opcional, en minutos)</Label>
             <Input
               id="estimatedTime"
               type="number"
@@ -335,21 +394,22 @@ export function TaskForm({
               max="480"
               step="5"
               value={formData.estimatedTime}
-              onChange={(e) => setFormData({ ...formData, estimatedTime: Number.parseInt(e.target.value) || 30 })}
-              className="bg-white/10 border-white/20 text-white"
+              onChange={(e) => setFormData({ ...formData, estimatedTime: e.target.value })}
+              placeholder="Ej: 30, 60, 120..."
             />
+            <p className="text-xs text-gray-500">Deja vacío si no quieres especificar un tiempo estimado</p>
           </div>
 
           {/* Notifications Toggle */}
           {formData.time && !editingTask && (
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
-                <Bell className="h-5 w-5 text-white/60" />
+                <Bell className="h-5 w-5 text-gray-500" />
                 <div>
-                  <Label htmlFor="notifications" className="text-sm font-medium text-white">
+                  <Label htmlFor="notifications" className="text-sm font-medium">
                     Activar Notificaciones
                   </Label>
-                  <p className="text-xs text-white/60">Recibe un recordatorio 15 minutos antes</p>
+                  <p className="text-xs text-gray-500">Recibe un recordatorio 15 minutos antes</p>
                 </div>
               </div>
               <Switch
@@ -361,44 +421,50 @@ export function TaskForm({
           )}
 
           {/* Task Preview */}
-          <div className="p-4 bg-white/5 rounded-lg">
-            <h4 className="font-medium mb-2 flex items-center space-x-2 text-white">
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium mb-2 flex items-center space-x-2">
               <Tag className="h-4 w-4" />
               <span>Vista Previa de la Tarea</span>
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">Título:</span>
-                <span className="text-white/80">{formData.title || "Tarea sin título"}</span>
+                <span className="font-medium">Título:</span>
+                <span className="text-gray-700">{formData.title || "Tarea sin título"}</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">Fecha:</span>
-                <span className="text-white/80">{format(formData.date, "PPP")}</span>
+                <span className="font-medium">Fecha:</span>
+                <span className="text-gray-700">
+                  {formData.date && isValid(formData.date)
+                    ? safeFormatDate(formData.date, "PPP", { locale: es })
+                    : "Fecha inválida"}
+                </span>
                 {formData.time && (
                   <>
-                    <span className="font-medium text-white">Hora:</span>
-                    <span className="text-white/80">{formData.time}</span>
+                    <span className="font-medium">Hora:</span>
+                    <span className="text-gray-700">{formData.time}</span>
                   </>
                 )}
               </div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">Categoría:</span>
+                <span className="font-medium">Categoría:</span>
                 <Badge className={`${selectedCategory?.color} text-white text-xs`}>
                   {selectedCategory?.icon} {selectedCategory?.label}
                 </Badge>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">Prioridad:</span>
+                <span className="font-medium">Prioridad:</span>
                 <Badge className={`${selectedPriority?.color} text-white text-xs`}>{selectedPriority?.label}</Badge>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">Tiempo estimado:</span>
-                <span className="text-white/80">{formData.estimatedTime} minutos</span>
-              </div>
+              {formData.estimatedTime && (
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">Tiempo estimado:</span>
+                  <span className="text-gray-700">{formData.estimatedTime} minutos</span>
+                </div>
+              )}
               {formData.notifications && !editingTask && (
                 <div className="flex items-center space-x-2">
-                  <Bell className="h-3 w-3 text-white/60" />
-                  <span className="text-xs text-white/60">Notificaciones activadas</span>
+                  <Bell className="h-3 w-3 text-gray-500" />
+                  <span className="text-xs text-gray-500">Notificaciones activadas</span>
                 </div>
               )}
             </div>
@@ -406,33 +472,21 @@ export function TaskForm({
 
           {/* Action Buttons */}
           <div className="flex space-x-3">
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="flex-1">
               {editingTask ? <Edit className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               {editingTask ? "Actualizar Tarea" : "Crear Tarea"}
             </Button>
             {editingTask && (
-              <>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCancel}
-                  className="border-white/20 text-white hover:bg-white/10 bg-transparent"
-                >
-                  Cancelar
-                </Button>
-              </>
+              <Button type="button" variant="destructive" onClick={handleDelete}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
             )}
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }

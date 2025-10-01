@@ -1,606 +1,925 @@
-import { supabase, isSupabaseConfigured } from "./supabase"
+import { createClient } from "@supabase/supabase-js"
 
-// Types
-export interface User {
-  id: string
-  email: string
-  name: string
-  plan: "free" | "pro"
-  aiCredits: number
-  createdAt: Date
-  updatedAt: Date
-  isEmailVerified?: boolean
-  subscriptionId?: string
-  subscriptionStatus?: string
-  subscriptionExpiresAt?: Date
+// Browser-compatible UUID generation
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
-export interface Task {
+interface User {
   id: string
-  userId: string
+  name: string
+  email: string
+  language: string
+  theme: string
+  is_premium: boolean
+  is_pro: boolean
+  plan?: string
+  premium_expiry?: string
+  onboarding_completed: boolean
+  pomodoro_sessions: number
+  work_duration: number
+  short_break_duration: number
+  long_break_duration: number
+  sessions_until_long_break: number
+  ai_credits: number
+  ai_credits_used: number
+  ai_credits_reset_date?: string
+  ai_total_tokens_used: number
+  ai_total_cost_eur: number
+  ai_monthly_limit: number
+  ai_plan_type: string
+  subscription_status?: string
+  subscription_end_date?: string
+  subscription_tier?: string
+  created_at: string
+  updated_at: string
+}
+
+interface Task {
+  id: string
+  user_id: string
   title: string
   description?: string
   completed: boolean
   priority: "low" | "medium" | "high"
-  dueDate?: Date
-  createdAt: Date
-  updatedAt: Date
   category?: string
-  tags?: string[]
+  date?: string
+  due_date?: string
+  created_at: string
+  updated_at: string
+  estimatedTime?: number
 }
 
-export interface Note {
+interface Note {
   id: string
-  userId: string
+  user_id: string
   title: string
   content: string
-  createdAt: Date
-  updatedAt: Date
-  tags?: string[]
-  category?: string
+  created_at: string
+  updated_at: string
 }
 
-export interface WishlistItem {
+interface WishlistItem {
   id: string
-  userId: string
+  user_id: string
   title: string
   description?: string
   priority: "low" | "medium" | "high"
-  completed: boolean
-  createdAt: Date
-  updatedAt: Date
-  category?: string
-  estimatedCost?: number
+  created_at: string
+  updated_at: string
 }
 
-// Memory storage fallback
-const memoryStorage = {
-  users: new Map<string, User>(),
-  tasks: new Map<string, Task>(),
-  notes: new Map<string, Note>(),
-  wishlist: new Map<string, WishlistItem>(),
-}
+class HybridDatabase {
+  private supabase: any
+  private isSupabaseAvailable = false
+  private currentUser: User | null = null
+  private userCache = new Map<string, User>()
 
-// Utility functions
-function generateId(): string {
-  return Math.random().toString(36).substr(2, 9)
-}
-
-function convertToSnakeCase(obj: any): any {
-  if (obj === null || obj === undefined) return obj
-  if (Array.isArray(obj)) return obj.map(convertToSnakeCase)
-  if (typeof obj !== "object") return obj
-
-  const converted: any = {}
-  for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
-    converted[snakeKey] = convertToSnakeCase(value)
-  }
-  return converted
-}
-
-function convertToCamelCase(obj: any): any {
-  if (obj === null || obj === undefined) return obj
-  if (Array.isArray(obj)) return obj.map(convertToCamelCase)
-  if (typeof obj !== "object") return obj
-
-  const converted: any = {}
-  for (const [key, value] of Object.entries(obj)) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-    converted[camelKey] = convertToCamelCase(value)
-  }
-  return converted
-}
-
-// Database operations
-export class HybridDatabase {
-  // User operations
-  static async createUser(userData: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
-    const user: User = {
-      id: generateId(),
-      ...userData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("users")
-          .insert([convertToSnakeCase(user)])
-          .select()
-          .single()
-
-        if (error) throw error
-        console.log("✅ User created in Supabase:", data)
-        return convertToCamelCase(data)
-      } catch (error) {
-        console.error("❌ Failed to create user in Supabase:", error)
+  constructor() {
+    try {
+      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        this.supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+        this.isSupabaseAvailable = true
+        console.log("✅ Supabase client initialized")
+      } else {
+        console.warn("⚠️ Supabase environment variables not found")
       }
+    } catch (error) {
+      console.warn("⚠️ Supabase not available, using localStorage fallback:", error)
+      this.isSupabaseAvailable = false
     }
-
-    // Fallback to memory storage
-    memoryStorage.users.set(user.id, user)
-    console.log("💾 User created in memory storage:", user)
-    return user
   }
 
-  static async getUserById(id: string): Promise<User | null> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase.from("users").select("*").eq("id", id).single()
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      console.log("🔍 Getting current user from database...")
 
-        if (error && error.code !== "PGRST116") throw error
-        if (data) {
-          console.log("✅ User found in Supabase:", data)
-          return convertToCamelCase(data)
+      const isDemoUser = localStorage.getItem("isDemoUser")
+      if (isDemoUser === "true") {
+        const storedUser = localStorage.getItem("currentUser")
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser)
+            this.currentUser = user
+            console.log("✅ Demo user loaded:", user.name)
+            return user
+          } catch (error) {
+            console.error("❌ Error parsing demo user:", error)
+            localStorage.removeItem("isDemoUser")
+            localStorage.removeItem("currentUser")
+          }
         }
-      } catch (error) {
-        console.error("❌ Failed to get user from Supabase:", error)
       }
-    }
 
-    // Fallback to memory storage
-    const user = memoryStorage.users.get(id) || null
-    console.log("💾 User retrieved from memory storage:", user)
-    return user
+      if (this.isSupabaseAvailable && isDemoUser !== "true") {
+        console.log("🔍 Getting user from Supabase...")
+
+        const {
+          data: { user },
+          error: authError,
+        } = await this.supabase.auth.getUser()
+
+        if (authError) {
+          console.error("❌ Auth error:", authError)
+          this.currentUser = null
+          this.userCache.clear()
+          return null
+        }
+
+        if (!user) {
+          console.log("❌ No authenticated user found")
+          this.currentUser = null
+          this.userCache.clear()
+          return null
+        }
+
+        console.log("✅ Authenticated user found:", user.email)
+
+        return await this.getUserById(user.id)
+      }
+
+      if (isDemoUser !== "true") {
+        console.log("💾 Using localStorage fallback")
+        const userData = localStorage.getItem("currentUser")
+        if (userData) {
+          try {
+            const user = JSON.parse(userData)
+            this.currentUser = user
+            console.log("✅ User loaded from localStorage:", user.name)
+            return user
+          } catch (error) {
+            console.error("❌ Error parsing user data from localStorage:", error)
+            localStorage.removeItem("currentUser")
+          }
+        }
+      }
+
+      console.log("❌ No user found")
+      this.currentUser = null
+      return null
+    } catch (error) {
+      console.error("❌ Error getting current user:", error)
+      this.currentUser = null
+      return null
+    }
   }
 
-  static async updateUser(id: string, updates: Partial<User>): Promise<User | null> {
-    const updateData = {
-      ...updates,
-      updatedAt: new Date(),
+  async getUserById(userId: string): Promise<User | null> {
+    try {
+      if (this.isSupabaseAvailable) {
+        const { data, error } = await this.supabase.from("users").select("*").eq("id", userId).maybeSingle()
+
+        if (error) {
+          console.error("❌ Error fetching user:", error)
+          return null
+        }
+
+        if (data) {
+          this.currentUser = data
+          this.userCache.set(userId, data)
+          return data
+        }
+      }
+
+      return null
+    } catch (error) {
+      console.error("❌ Error in getUserById:", error)
+      return null
+    }
+  }
+
+  async createUser(userData: Partial<User>): Promise<User> {
+    const newUser: User = {
+      id: userData.id || generateUUID(),
+      name: userData.name || "Demo User",
+      email: userData.email || "demo@example.com",
+      language: userData.language || "es",
+      theme: userData.theme || "default",
+      is_premium: userData.is_premium || false,
+      is_pro: userData.is_pro || false,
+      plan: userData.plan || "free",
+      premium_expiry: userData.premium_expiry,
+      onboarding_completed: userData.onboarding_completed || true,
+      pomodoro_sessions: userData.pomodoro_sessions || 0,
+      work_duration: userData.work_duration || 25,
+      short_break_duration: userData.short_break_duration || 5,
+      long_break_duration: userData.long_break_duration || 15,
+      sessions_until_long_break: userData.sessions_until_long_break || 4,
+      ai_credits: userData.ai_credits || 0,
+      ai_credits_used: userData.ai_credits_used || 0,
+      ai_credits_reset_date: userData.ai_credits_reset_date,
+      ai_total_tokens_used: userData.ai_total_tokens_used || 0,
+      ai_total_cost_eur: userData.ai_total_cost_eur || 0,
+      ai_monthly_limit: userData.ai_monthly_limit || 0,
+      ai_plan_type: userData.ai_plan_type || "none",
+      subscription_status: userData.subscription_status,
+      subscription_end_date: userData.subscription_end_date,
+      subscription_tier: userData.subscription_tier || "free",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     }
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("users")
-          .update(convertToSnakeCase(updateData))
-          .eq("id", id)
-          .select()
-          .single()
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      console.log("💾 Saving demo user to localStorage...")
+      localStorage.setItem("currentUser", JSON.stringify(newUser))
+      this.currentUser = newUser
+      return newUser
+    }
 
-        if (error) throw error
-        console.log("✅ User updated in Supabase:", data)
-        return convertToCamelCase(data)
+    if (this.isSupabaseAvailable) {
+      try {
+        console.log("💾 Saving user to Supabase...")
+        const { data, error } = await this.supabase.from("users").upsert(newUser).select().single()
+
+        if (error) {
+          console.error("❌ Error creating user in Supabase:", error)
+          throw error
+        }
+
+        console.log("✅ User saved to Supabase:", data.name)
+        this.currentUser = data
+        this.userCache.set(data.id, data)
+        return data
       } catch (error) {
-        console.error("❌ Failed to update user in Supabase:", error)
+        console.error("❌ Supabase error, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
       }
     }
 
-    // Fallback to memory storage
-    const existingUser = memoryStorage.users.get(id)
-    if (existingUser) {
-      const updatedUser = { ...existingUser, ...updateData }
-      memoryStorage.users.set(id, updatedUser)
-      console.log("💾 User updated in memory storage:", updatedUser)
+    console.log("💾 Saving user to localStorage...")
+    localStorage.setItem("currentUser", JSON.stringify(newUser))
+    this.currentUser = newUser
+    return newUser
+  }
+
+  async updateUser(userId: string, updates: Partial<User>): Promise<User> {
+    const updatedData = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    }
+
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const currentUser = this.currentUser
+      if (currentUser && currentUser.id === userId) {
+        const updatedUser = { ...currentUser, ...updatedData }
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser))
+        this.currentUser = updatedUser
+        return updatedUser
+      }
+      throw new Error("Demo user not found")
+    }
+
+    if (this.isSupabaseAvailable) {
+      try {
+        const { data, error } = await this.supabase.from("users").update(updatedData).eq("id", userId).select().single()
+
+        if (error) throw error
+
+        this.currentUser = data
+        this.userCache.set(userId, data)
+        return data
+      } catch (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
+      }
+    }
+
+    const currentUser = this.currentUser
+    if (currentUser && currentUser.id === userId) {
+      const updatedUser = { ...currentUser, ...updatedData }
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser))
+      this.currentUser = updatedUser
       return updatedUser
     }
 
-    return null
+    throw new Error("User not found")
   }
 
-  // Task operations
-  static async createTask(taskData: Omit<Task, "id" | "createdAt" | "updatedAt">): Promise<Task> {
-    const task: Task = {
-      id: generateId(),
+  clearUserCache(): void {
+    console.log("🗑️ Clearing user cache")
+    this.currentUser = null
+    this.userCache.clear()
+  }
+
+  async logout(): Promise<void> {
+    try {
+      const isDemoUser = localStorage.getItem("isDemoUser")
+
+      if (isDemoUser === "true") {
+        localStorage.clear()
+      } else if (this.isSupabaseAvailable) {
+        await this.supabase.auth.signOut()
+      }
+
+      this.clearUserCache()
+    } catch (error) {
+      console.error("Error logging out:", error)
+      localStorage.clear()
+      this.clearUserCache()
+    }
+  }
+
+  async getTasks(userId: string): Promise<Task[]> {
+    try {
+      const isDemoUser = localStorage.getItem("isDemoUser")
+      if (isDemoUser === "true") {
+        const tasks = localStorage.getItem(`tasks_${userId}`)
+        return tasks ? JSON.parse(tasks) : []
+      }
+
+      if (this.isSupabaseAvailable) {
+        const { data, error } = await this.supabase
+          .from("tasks")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+
+        if (error) throw error
+        return data || []
+      }
+    } catch (error) {
+      console.error("Supabase error loading tasks, falling back to localStorage:", error)
+      this.isSupabaseAvailable = false
+    }
+
+    const tasks = localStorage.getItem(`tasks_${userId}`)
+    return tasks ? JSON.parse(tasks) : []
+  }
+
+  async createTask(
+    userId: string,
+    taskData: Omit<Task, "id" | "user_id" | "created_at" | "updated_at">,
+  ): Promise<Task> {
+    const now = new Date().toISOString()
+    const newTask: Task = {
+      id: generateUUID(),
+      user_id: userId,
+      created_at: now,
+      updated_at: now,
+      date: taskData.due_date ? taskData.due_date.split("T")[0] : now.split("T")[0],
       ...taskData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     }
 
-    if (isSupabaseConfigured && supabase) {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const existingTasks = await this.getTasks(userId)
+      const updatedTasks = [newTask, ...existingTasks]
+      localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
+      return newTask
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await supabase
-          .from("tasks")
-          .insert([convertToSnakeCase(task)])
-          .select()
-          .single()
+        const { data, error } = await this.supabase.from("tasks").insert(newTask).select().single()
 
         if (error) throw error
-        console.log("✅ Task created in Supabase:", data)
-        return convertToCamelCase(data)
+        return data
       } catch (error) {
-        console.error("❌ Failed to create task in Supabase:", error)
+        console.error("Supabase error creating task, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
       }
     }
 
-    // Fallback to memory storage
-    memoryStorage.tasks.set(task.id, task)
-    console.log("💾 Task created in memory storage:", task)
-    return task
+    const existingTasks = await this.getTasks(userId)
+    const updatedTasks = [newTask, ...existingTasks]
+    localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
+    return newTask
   }
 
-  static async getTasksByUserId(userId: string): Promise<Task[]> {
-    if (isSupabaseConfigured && supabase) {
+  async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
+    const updatedData = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (updatedData.due_date) {
+      updatedData.date = updatedData.due_date.split("T")[0]
+    }
+
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const allKeys = Object.keys(localStorage)
+      for (const key of allKeys) {
+        if (key.startsWith("tasks_")) {
+          const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
+          const taskIndex = tasks.findIndex((t) => t.id === taskId)
+          if (taskIndex !== -1) {
+            tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+            localStorage.setItem(key, JSON.stringify(tasks))
+            return tasks[taskIndex]
+          }
+        }
+      }
+      throw new Error("Task not found")
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await supabase
-          .from("tasks")
+        const { data, error } = await this.supabase.from("tasks").update(updatedData).eq("id", taskId).select().single()
+
+        if (error) throw error
+        return data
+      } catch (error) {
+        console.error("Supabase error updating task, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
+      }
+    }
+
+    const allKeys = Object.keys(localStorage)
+    for (const key of allKeys) {
+      if (key.startsWith("tasks_")) {
+        const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
+        const taskIndex = tasks.findIndex((t) => t.id === taskId)
+        if (taskIndex !== -1) {
+          tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+          localStorage.setItem(key, JSON.stringify(tasks))
+          return tasks[taskIndex]
+        }
+      }
+    }
+
+    throw new Error("Task not found")
+  }
+
+  async deleteTask(taskId: string): Promise<void> {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const allKeys = Object.keys(localStorage)
+      for (const key of allKeys) {
+        if (key.startsWith("tasks_")) {
+          const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
+          const filteredTasks = tasks.filter((t) => t.id !== taskId)
+          if (filteredTasks.length !== tasks.length) {
+            localStorage.setItem(key, JSON.stringify(filteredTasks))
+            return
+          }
+        }
+      }
+      return
+    }
+
+    if (this.isSupabaseAvailable) {
+      try {
+        const { error } = await this.supabase.from("tasks").delete().eq("id", taskId)
+
+        if (error) throw error
+        return
+      } catch (error) {
+        console.error("Supabase error deleting task, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
+      }
+    }
+
+    const allKeys = Object.keys(localStorage)
+    for (const key of allKeys) {
+      if (key.startsWith("tasks_")) {
+        const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
+        const filteredTasks = tasks.filter((t) => t.id !== taskId)
+        if (filteredTasks.length !== tasks.length) {
+          localStorage.setItem(key, JSON.stringify(filteredTasks))
+          return
+        }
+      }
+    }
+  }
+
+  async getNotes(userId: string): Promise<Note[]> {
+    try {
+      const isDemoUser = localStorage.getItem("isDemoUser")
+      if (isDemoUser === "true") {
+        const notes = localStorage.getItem(`notes_${userId}`)
+        return notes ? JSON.parse(notes) : []
+      }
+
+      if (this.isSupabaseAvailable) {
+        const { data, error } = await this.supabase
+          .from("notes")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
 
         if (error) throw error
-        console.log("✅ Tasks retrieved from Supabase:", data?.length || 0)
-        return data ? data.map(convertToCamelCase) : []
-      } catch (error) {
-        console.error("❌ Failed to get tasks from Supabase:", error)
+        return data || []
       }
+    } catch (error) {
+      console.error("Supabase error loading notes, falling back to localStorage:", error)
+      this.isSupabaseAvailable = false
     }
 
-    // Fallback to memory storage
-    const tasks = Array.from(memoryStorage.tasks.values())
-      .filter((task) => task.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-
-    console.log("💾 Tasks retrieved from memory storage:", tasks.length)
-    return tasks
+    const notes = localStorage.getItem(`notes_${userId}`)
+    return notes ? JSON.parse(notes) : []
   }
 
-  static async updateTask(id: string, updates: Partial<Task>): Promise<Task | null> {
-    const updateData = {
-      ...updates,
-      updatedAt: new Date(),
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("tasks")
-          .update(convertToSnakeCase(updateData))
-          .eq("id", id)
-          .select()
-          .single()
-
-        if (error) throw error
-        console.log("✅ Task updated in Supabase:", data)
-        return convertToCamelCase(data)
-      } catch (error) {
-        console.error("❌ Failed to update task in Supabase:", error)
-      }
-    }
-
-    // Fallback to memory storage
-    const existingTask = memoryStorage.tasks.get(id)
-    if (existingTask) {
-      const updatedTask = { ...existingTask, ...updateData }
-      memoryStorage.tasks.set(id, updatedTask)
-      console.log("💾 Task updated in memory storage:", updatedTask)
-      return updatedTask
-    }
-
-    return null
-  }
-
-  static async deleteTask(id: string): Promise<boolean> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { error } = await supabase.from("tasks").delete().eq("id", id)
-
-        if (error) throw error
-        console.log("✅ Task deleted from Supabase:", id)
-        return true
-      } catch (error) {
-        console.error("❌ Failed to delete task from Supabase:", error)
-      }
-    }
-
-    // Fallback to memory storage
-    const deleted = memoryStorage.tasks.delete(id)
-    console.log("💾 Task deleted from memory storage:", deleted)
-    return deleted
-  }
-
-  // Note operations
-  static async createNote(noteData: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note> {
-    const note: Note = {
-      id: generateId(),
+  async createNote(noteData: Omit<Note, "id" | "created_at" | "updated_at">): Promise<Note> {
+    const newNote: Note = {
+      id: generateUUID(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...noteData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     }
 
-    if (isSupabaseConfigured && supabase) {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const existingNotes = await this.getNotes(noteData.user_id)
+      const updatedNotes = [newNote, ...existingNotes]
+      localStorage.setItem(`notes_${noteData.user_id}`, JSON.stringify(updatedNotes))
+      return newNote
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await supabase
-          .from("notes")
-          .insert([convertToSnakeCase(note)])
-          .select()
-          .single()
+        const { data, error } = await this.supabase.from("notes").insert(newNote).select().single()
 
         if (error) throw error
-        console.log("✅ Note created in Supabase:", data)
-        return convertToCamelCase(data)
+        return data
       } catch (error) {
-        console.error("❌ Failed to create note in Supabase:", error)
+        console.error("Supabase error creating note, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
       }
     }
 
-    // Fallback to memory storage
-    memoryStorage.notes.set(note.id, note)
-    console.log("💾 Note created in memory storage:", note)
-    return note
+    const existingNotes = await this.getNotes(noteData.user_id)
+    const updatedNotes = [newNote, ...existingNotes]
+    localStorage.setItem(`notes_${noteData.user_id}`, JSON.stringify(updatedNotes))
+    return newNote
   }
 
-  static async getNotesByUserId(userId: string): Promise<Note[]> {
-    if (isSupabaseConfigured && supabase) {
+  async updateNote(noteId: string, updates: Partial<Note>): Promise<Note> {
+    const updatedData = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    }
+
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const allKeys = Object.keys(localStorage)
+      for (const key of allKeys) {
+        if (key.startsWith("notes_")) {
+          const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
+          const noteIndex = notes.findIndex((n) => n.id === noteId)
+          if (noteIndex !== -1) {
+            notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
+            localStorage.setItem(key, JSON.stringify(notes))
+            return notes[noteIndex]
+          }
+        }
+      }
+      throw new Error("Note not found")
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await supabase
-          .from("notes")
+        const { data, error } = await this.supabase.from("notes").update(updatedData).eq("id", noteId).select().single()
+
+        if (error) throw error
+        return data
+      } catch (error) {
+        console.error("Supabase error updating note, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
+      }
+    }
+
+    const allKeys = Object.keys(localStorage)
+    for (const key of allKeys) {
+      if (key.startsWith("notes_")) {
+        const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
+        const noteIndex = notes.findIndex((n) => n.id === noteId)
+        if (noteIndex !== -1) {
+          notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
+          localStorage.setItem(key, JSON.stringify(notes))
+          return notes[noteIndex]
+        }
+      }
+    }
+
+    throw new Error("Note not found")
+  }
+
+  async deleteNote(noteId: string): Promise<void> {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const allKeys = Object.keys(localStorage)
+      for (const key of allKeys) {
+        if (key.startsWith("notes_")) {
+          const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
+          const filteredNotes = notes.filter((n) => n.id !== noteId)
+          if (filteredNotes.length !== notes.length) {
+            localStorage.setItem(key, JSON.stringify(filteredNotes))
+            return
+          }
+        }
+      }
+      return
+    }
+
+    if (this.isSupabaseAvailable) {
+      try {
+        const { error } = await this.supabase.from("notes").delete().eq("id", noteId)
+
+        if (error) throw error
+        return
+      } catch (error) {
+        console.error("Supabase error deleting note, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
+      }
+    }
+
+    const allKeys = Object.keys(localStorage)
+    for (const key of allKeys) {
+      if (key.startsWith("notes_")) {
+        const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
+        const filteredNotes = notes.filter((n) => n.id !== noteId)
+        if (filteredNotes.length !== notes.length) {
+          localStorage.setItem(key, JSON.stringify(filteredNotes))
+          return
+        }
+      }
+    }
+  }
+
+  async getWishlistItems(userId: string): Promise<WishlistItem[]> {
+    try {
+      const isDemoUser = localStorage.getItem("isDemoUser")
+      if (isDemoUser === "true") {
+        const items = localStorage.getItem(`wishlist_${userId}`)
+        return items ? JSON.parse(items) : []
+      }
+
+      if (this.isSupabaseAvailable) {
+        const { data, error } = await this.supabase
+          .from("wishlist_items")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
 
         if (error) throw error
-        console.log("✅ Notes retrieved from Supabase:", data?.length || 0)
-        return data ? data.map(convertToCamelCase) : []
-      } catch (error) {
-        console.error("❌ Failed to get notes from Supabase:", error)
+        return data || []
       }
+    } catch (error) {
+      console.error("Supabase error loading wishlist, falling back to localStorage:", error)
+      this.isSupabaseAvailable = false
     }
 
-    // Fallback to memory storage
-    const notes = Array.from(memoryStorage.notes.values())
-      .filter((note) => note.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-
-    console.log("💾 Notes retrieved from memory storage:", notes.length)
-    return notes
+    const items = localStorage.getItem(`wishlist_${userId}`)
+    return items ? JSON.parse(items) : []
   }
 
-  static async updateNote(id: string, updates: Partial<Note>): Promise<Note | null> {
-    const updateData = {
-      ...updates,
-      updatedAt: new Date(),
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("notes")
-          .update(convertToSnakeCase(updateData))
-          .eq("id", id)
-          .select()
-          .single()
-
-        if (error) throw error
-        console.log("✅ Note updated in Supabase:", data)
-        return convertToCamelCase(data)
-      } catch (error) {
-        console.error("❌ Failed to update note in Supabase:", error)
-      }
-    }
-
-    // Fallback to memory storage
-    const existingNote = memoryStorage.notes.get(id)
-    if (existingNote) {
-      const updatedNote = { ...existingNote, ...updateData }
-      memoryStorage.notes.set(id, updatedNote)
-      console.log("💾 Note updated in memory storage:", updatedNote)
-      return updatedNote
-    }
-
-    return null
-  }
-
-  static async deleteNote(id: string): Promise<boolean> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { error } = await supabase.from("notes").delete().eq("id", id)
-
-        if (error) throw error
-        console.log("✅ Note deleted from Supabase:", id)
-        return true
-      } catch (error) {
-        console.error("❌ Failed to delete note from Supabase:", error)
-      }
-    }
-
-    // Fallback to memory storage
-    const deleted = memoryStorage.notes.delete(id)
-    console.log("💾 Note deleted from memory storage:", deleted)
-    return deleted
-  }
-
-  // Wishlist operations
-  static async createWishlistItem(
-    itemData: Omit<WishlistItem, "id" | "createdAt" | "updatedAt">,
-  ): Promise<WishlistItem> {
-    const item: WishlistItem = {
-      id: generateId(),
+  async createWishlistItem(itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">): Promise<WishlistItem> {
+    const newItem: WishlistItem = {
+      id: generateUUID(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...itemData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     }
 
-    if (isSupabaseConfigured && supabase) {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const existingItems = await this.getWishlistItems(itemData.user_id)
+      const updatedItems = [newItem, ...existingItems]
+      localStorage.setItem(`wishlist_${itemData.user_id}`, JSON.stringify(updatedItems))
+      return newItem
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await supabase
-          .from("wishlist_items")
-          .insert([convertToSnakeCase(item)])
-          .select()
-          .single()
+        const { data, error } = await this.supabase.from("wishlist_items").insert(newItem).select().single()
 
         if (error) throw error
-        console.log("✅ Wishlist item created in Supabase:", data)
-        return convertToCamelCase(data)
+        return data
       } catch (error) {
-        console.error("❌ Failed to create wishlist item in Supabase:", error)
+        console.error("Supabase error creating wishlist item, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
       }
     }
 
-    // Fallback to memory storage
-    memoryStorage.wishlist.set(item.id, item)
-    console.log("💾 Wishlist item created in memory storage:", item)
-    return item
+    const existingItems = await this.getWishlistItems(itemData.user_id)
+    const updatedItems = [newItem, ...existingItems]
+    localStorage.setItem(`wishlist_${itemData.user_id}`, JSON.stringify(updatedItems))
+    return newItem
   }
 
-  static async getWishlistByUserId(userId: string): Promise<WishlistItem[]> {
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from("wishlist_items")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-
-        if (error) throw error
-        console.log("✅ Wishlist items retrieved from Supabase:", data?.length || 0)
-        return data ? data.map(convertToCamelCase) : []
-      } catch (error) {
-        console.error("❌ Failed to get wishlist items from Supabase:", error)
-      }
-    }
-
-    // Fallback to memory storage
-    const items = Array.from(memoryStorage.wishlist.values())
-      .filter((item) => item.userId === userId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-
-    console.log("💾 Wishlist items retrieved from memory storage:", items.length)
-    return items
-  }
-
-  static async updateWishlistItem(id: string, updates: Partial<WishlistItem>): Promise<WishlistItem | null> {
-    const updateData = {
+  async updateWishlistItem(itemId: string, updates: Partial<WishlistItem>): Promise<WishlistItem> {
+    const updatedData = {
       ...updates,
-      updatedAt: new Date(),
+      updated_at: new Date().toISOString(),
     }
 
-    if (isSupabaseConfigured && supabase) {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const allKeys = Object.keys(localStorage)
+      for (const key of allKeys) {
+        if (key.startsWith("wishlist_")) {
+          const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
+          const itemIndex = items.findIndex((i) => i.id === itemId)
+          if (itemIndex !== -1) {
+            items[itemIndex] = { ...items[itemIndex], ...updatedData }
+            localStorage.setItem(key, JSON.stringify(items))
+            return items[itemIndex]
+          }
+        }
+      }
+      throw new Error("Wishlist item not found")
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await this.supabase
           .from("wishlist_items")
-          .update(convertToSnakeCase(updateData))
-          .eq("id", id)
+          .update(updatedData)
+          .eq("id", itemId)
           .select()
           .single()
 
         if (error) throw error
-        console.log("✅ Wishlist item updated in Supabase:", data)
-        return convertToCamelCase(data)
+        return data
       } catch (error) {
-        console.error("❌ Failed to update wishlist item in Supabase:", error)
+        console.error("Supabase error updating wishlist item, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
       }
     }
 
-    // Fallback to memory storage
-    const existingItem = memoryStorage.wishlist.get(id)
-    if (existingItem) {
-      const updatedItem = { ...existingItem, ...updateData }
-      memoryStorage.wishlist.set(id, updatedItem)
-      console.log("💾 Wishlist item updated in memory storage:", updatedItem)
-      return updatedItem
+    const allKeys = Object.keys(localStorage)
+    for (const key of allKeys) {
+      if (key.startsWith("wishlist_")) {
+        const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
+        const itemIndex = items.findIndex((i) => i.id === itemId)
+        if (itemIndex !== -1) {
+          items[itemIndex] = { ...items[itemIndex], ...updatedData }
+          localStorage.setItem(key, JSON.stringify(items))
+          return items[itemIndex]
+        }
+      }
     }
 
-    return null
+    throw new Error("Wishlist item not found")
   }
 
-  static async deleteWishlistItem(id: string): Promise<boolean> {
-    if (isSupabaseConfigured && supabase) {
+  async deleteWishlistItem(itemId: string): Promise<void> {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const allKeys = Object.keys(localStorage)
+      for (const key of allKeys) {
+        if (key.startsWith("wishlist_")) {
+          const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
+          const filteredItems = items.filter((i) => i.id !== itemId)
+          if (filteredItems.length !== items.length) {
+            localStorage.setItem(key, JSON.stringify(filteredItems))
+            return
+          }
+        }
+      }
+      return
+    }
+
+    if (this.isSupabaseAvailable) {
       try {
-        const { error } = await supabase.from("wishlist_items").delete().eq("id", id)
+        const { error } = await this.supabase.from("wishlist_items").delete().eq("id", itemId)
 
         if (error) throw error
-        console.log("✅ Wishlist item deleted from Supabase:", id)
-        return true
+        return
       } catch (error) {
-        console.error("❌ Failed to delete wishlist item from Supabase:", error)
+        console.error("Supabase error deleting wishlist item, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
       }
     }
 
-    // Fallback to memory storage
-    const deleted = memoryStorage.wishlist.delete(id)
-    console.log("💾 Wishlist item deleted from memory storage:", deleted)
-    return deleted
+    const allKeys = Object.keys(localStorage)
+    for (const key of allKeys) {
+      if (key.startsWith("wishlist_")) {
+        const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
+        const filteredItems = items.filter((i) => i.id !== itemId)
+        if (filteredItems.length !== items.length) {
+          localStorage.setItem(key, JSON.stringify(filteredItems))
+          return
+        }
+      }
+    }
   }
 
-  // Initialize demo user
-  static async initializeDemoUser(): Promise<User> {
-    const demoUserId = "demo-user"
-
-    // Check if demo user already exists
-    let demoUser = await this.getUserById(demoUserId)
-
-    if (!demoUser) {
-      // Create demo user
-      demoUser = await this.createUser({
-        id: demoUserId,
-        email: "demo@futuretask.com",
-        name: "Usuario Demo",
-        plan: "free",
-        aiCredits: 10,
-        isEmailVerified: true,
-      })
-
-      // Create some demo tasks
-      await this.createTask({
-        userId: demoUserId,
-        title: "Bienvenido a FutureTask",
-        description: "Explora todas las funcionalidades de nuestra aplicación",
-        completed: false,
-        priority: "high",
-        category: "Personal",
-        tags: ["bienvenida", "tutorial"],
-      })
-
-      await this.createTask({
-        userId: demoUserId,
-        title: "Configurar tu perfil",
-        description: "Personaliza tu experiencia en FutureTask",
-        completed: false,
-        priority: "medium",
-        category: "Configuración",
-      })
-
-      // Create demo note
-      await this.createNote({
-        userId: demoUserId,
-        title: "Mis primeras notas",
-        content:
-          "Esta es tu primera nota en FutureTask. Puedes usar este espacio para guardar ideas, recordatorios o cualquier información importante.",
-        category: "Personal",
-        tags: ["notas", "inicio"],
-      })
-
-      // Create demo wishlist item
-      await this.createWishlistItem({
-        userId: demoUserId,
-        title: "Aprender una nueva habilidad",
-        description: "Dedicar tiempo a desarrollar una nueva competencia profesional",
-        priority: "medium",
-        completed: false,
-        category: "Desarrollo Personal",
-        estimatedCost: 0,
-      })
-
-      console.log("✅ Demo user and data initialized successfully")
+  async clearAllData(): Promise<void> {
+    const isDemoUser = localStorage.getItem("isDemoUser")
+    if (isDemoUser === "true") {
+      const keysToRemove = Object.keys(localStorage).filter(
+        (key) =>
+          key.startsWith("tasks_") || key.startsWith("notes_") || key.startsWith("wishlist_") || key === "currentUser",
+      )
+      keysToRemove.forEach((key) => localStorage.removeItem(key))
+      this.clearUserCache()
+      return
     }
 
-    return demoUser
+    if (this.isSupabaseAvailable) {
+      try {
+        const user = this.currentUser
+        if (user) {
+          await Promise.all([
+            this.supabase.from("tasks").delete().eq("user_id", user.id),
+            this.supabase.from("notes").delete().eq("user_id", user.id),
+            this.supabase.from("wishlist_items").delete().eq("user_id", user.id),
+          ])
+        }
+        return
+      } catch (error) {
+        console.error("Supabase error clearing data, falling back to localStorage:", error)
+        this.isSupabaseAvailable = false
+      }
+    }
+
+    const keysToRemove = Object.keys(localStorage).filter(
+      (key) =>
+        key.startsWith("tasks_") || key.startsWith("notes_") || key.startsWith("wishlist_") || key === "currentUser",
+    )
+    keysToRemove.forEach((key) => localStorage.removeItem(key))
+    this.clearUserCache()
+  }
+
+  async createDemoData(userId: string): Promise<void> {
+    console.log("🎯 Creating demo data for user:", userId)
+
+    const demoTasks = [
+      {
+        user_id: userId,
+        title: "Revisar emails matutinos",
+        description: "Revisar y responder emails importantes",
+        completed: false,
+        priority: "medium" as const,
+        category: "trabajo",
+        due_date: new Date().toISOString(),
+        estimatedTime: 30,
+      },
+      {
+        user_id: userId,
+        title: "Planificar reunión de equipo",
+        description: "Preparar agenda y materiales",
+        completed: true,
+        priority: "high" as const,
+        category: "trabajo",
+        due_date: new Date(Date.now() + 86400000).toISOString(),
+        estimatedTime: 60,
+      },
+      {
+        user_id: userId,
+        title: "Actualizar documentación",
+        description: "Revisar y actualizar docs del proyecto",
+        completed: false,
+        priority: "low" as const,
+        category: "trabajo",
+        estimatedTime: 45,
+      },
+    ]
+
+    const demoNotes = [
+      {
+        user_id: userId,
+        title: "Ideas para el proyecto",
+        content:
+          "- Implementar notificaciones push\n- Mejorar la interfaz de usuario\n- Añadir integración con calendario",
+      },
+      {
+        user_id: userId,
+        title: "Notas de la reunión",
+        content: "Puntos clave discutidos:\n1. Objetivos del Q4\n2. Recursos necesarios\n3. Timeline del proyecto",
+      },
+    ]
+
+    const demoWishlist = [
+      {
+        user_id: userId,
+        title: "Aprender TypeScript avanzado",
+        description: "Profundizar en tipos avanzados y patrones",
+        priority: "high" as const,
+      },
+      {
+        user_id: userId,
+        title: "Configurar CI/CD pipeline",
+        description: "Automatizar despliegues y testing",
+        priority: "medium" as const,
+      },
+    ]
+
+    try {
+      await Promise.all([
+        ...demoTasks.map((task) => this.createTask(userId, task)),
+        ...demoNotes.map((note) => this.createNote(note)),
+        ...demoWishlist.map((item) => this.createWishlistItem(item)),
+      ])
+      console.log("✅ Demo data created successfully")
+    } catch (error) {
+      console.error("❌ Error creating demo data:", error)
+    }
   }
 }
 
-// Initialize demo user on module load
-if (typeof window !== "undefined") {
-  HybridDatabase.initializeDemoUser().catch(console.error)
-}
-
-export default HybridDatabase
-
-// Export db instance for compatibility
-export const db = HybridDatabase
-
-// Export updateUserSubscription function
-export async function updateUserSubscription(
-  userId: string,
-  subscriptionData: {
-    subscriptionId?: string
-    subscriptionStatus?: string
-    subscriptionExpiresAt?: Date
-    plan?: "free" | "pro"
-  },
-): Promise<User | null> {
-  return await HybridDatabase.updateUser(userId, subscriptionData)
-}
+export const hybridDb = new HybridDatabase()
+export const db = hybridDb // Export as 'db' alias
+export type { User, Task, Note, WishlistItem }

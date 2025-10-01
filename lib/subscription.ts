@@ -1,164 +1,239 @@
-// Subscription Management System
+export type SubscriptionTier = "free" | "premium" | "pro"
+export type BillingCycle = "monthly" | "annual"
+
 export interface SubscriptionPlan {
-  id: string
   name: string
-  price: number
-  priceYearly: number
-  priceFormatted: string
-  priceYearlyFormatted: string
-  interval: "monthly" | "yearly"
+  tier: SubscriptionTier
+  price: {
+    monthly: number
+    annual: number
+  }
   features: string[]
+  aiCredits: number
   popular?: boolean
-  savings?: string
+  paypalPlanId?: {
+    monthly?: string
+    annual?: string
+  }
 }
 
-export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  {
-    id: "free",
-    name: "Gratuito",
-    price: 0,
-    priceYearly: 0,
-    priceFormatted: "€0",
-    priceYearlyFormatted: "€0",
-    interval: "monthly",
+export const subscriptionPlans: Record<SubscriptionTier, SubscriptionPlan> = {
+  free: {
+    name: "Gratis",
+    tier: "free",
+    price: { monthly: 0, annual: 0 },
     features: [
-      "Tareas básicas ilimitadas",
+      "Sin créditos IA (compra packs por separado)",
       "Calendario básico",
-      "Pomodoro básico (25/5/15 min)",
-      "Temas básicos (claro/oscuro)",
-      "Logros e insignias básicas",
-      "Sincronización en la nube",
-      "Soporte por email",
+      "Tareas ilimitadas",
+      "Temporizador Pomodoro",
+      "Notas personales",
     ],
+    aiCredits: 0,
   },
-  {
-    id: "premium_monthly",
+  premium: {
     name: "Premium",
-    price: 1.99,
-    priceYearly: 20,
-    priceFormatted: "€1.99/mes",
-    priceYearlyFormatted: "€20/año",
-    interval: "monthly",
+    tier: "premium",
+    price: { monthly: 9.99, annual: 99.99 },
     features: [
-      "Todo lo del plan Gratuito",
-      "Ajustes avanzados de Pomodoro",
-      "Temas premium y personalización",
-      "Lista de deseos completa",
-      "Notas avanzadas con etiquetas",
-      "Logros e insignias premium",
-      "Gráficas de rendimiento avanzadas",
-      "Estadísticas detalladas",
+      "Sin créditos IA (compra packs por separado)",
+      "Sincronización en la nube",
+      "Análisis de productividad",
+      "Temas personalizados",
+      "Exportar datos",
       "Soporte prioritario",
     ],
-    savings: "Ahorra €3.88 al año",
-  },
-  {
-    id: "premium_yearly",
-    name: "Premium Anual",
-    price: 1.99,
-    priceYearly: 20,
-    priceFormatted: "€1.67/mes",
-    priceYearlyFormatted: "€20/año",
-    interval: "yearly",
-    features: ["Todo lo del plan Premium", "2 meses gratis", "Descuento del 17%"],
-    savings: "Ahorra €3.88",
-  },
-  {
-    id: "pro_monthly",
-    name: "Pro",
-    price: 4.99,
-    priceYearly: 45,
-    priceFormatted: "€4.99/mes",
-    priceYearlyFormatted: "€45/año",
-    interval: "monthly",
+    aiCredits: 0,
     popular: true,
+    paypalPlanId: {
+      monthly: "P-PREMIUM-MONTHLY",
+      annual: "P-PREMIUM-ANNUAL",
+    },
+  },
+  pro: {
+    name: "Pro",
+    tier: "pro",
+    price: { monthly: 19.99, annual: 199.99 },
     features: [
-      "Todo lo del plan Premium",
-      "Asistente IA completo",
-      "500 créditos IA mensuales",
-      "Análisis inteligente de productividad",
-      "Sugerencias personalizadas por IA",
-      "Automatizaciones inteligentes",
-      "Predicciones de rendimiento",
-      "Integración con APIs externas",
-      "Soporte premium 24/7",
+      "500 créditos IA al mes",
+      "Asistente IA avanzado",
+      "IA para tareas automáticas",
+      "Análisis predictivo",
+      "Integraciones avanzadas",
+      "Soporte VIP",
+      "API access",
+      "Equipos y colaboración",
     ],
-    savings: "Ahorra €14.88 al año",
+    aiCredits: 500,
+    paypalPlanId: {
+      monthly: "P-PRO-MONTHLY",
+      annual: "P-PRO-ANNUAL",
+    },
   },
-  {
-    id: "pro_yearly",
-    name: "Pro Anual",
-    price: 4.99,
-    priceYearly: 45,
-    priceFormatted: "€3.75/mes",
-    priceYearlyFormatted: "€45/año",
-    interval: "yearly",
-    features: ["Todo lo del plan Pro", "3 meses gratis", "1000 créditos IA bonus", "Descuento del 25%"],
-    savings: "Ahorra €14.88",
-  },
-]
-
-export interface UserSubscription {
-  id: string
-  userId: string
-  planId: string
-  status: "active" | "canceled" | "expired" | "trial"
-  currentPeriodStart: Date
-  currentPeriodEnd: Date
-  cancelAtPeriodEnd: boolean
-  trialEnd?: Date
 }
 
-export function getPlanFeatures(planId: string): string[] {
-  const plan = SUBSCRIPTION_PLANS.find((p) => p.id === planId)
-  return plan?.features || []
+// Format price with currency
+export function formatPrice(price: number, currency = "EUR"): string {
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: currency,
+  }).format(price)
 }
 
-export function canAccessFeature(userPlan: string, feature: string): boolean {
-  const featureRequirements: Record<string, string[]> = {
-    // Free features (available to all)
-    basic_tasks: ["free", "premium", "pro"],
-    basic_calendar: ["free", "premium", "pro"],
-    basic_pomodoro: ["free", "premium", "pro"],
-    basic_themes: ["free", "premium", "pro"],
-    basic_achievements: ["free", "premium", "pro"],
-    cloud_sync: ["free", "premium", "pro"],
+// Get annual savings percentage
+export function getAnnualSavingsPercentage(tier: SubscriptionTier): number {
+  const plan = subscriptionPlans[tier]
+  const monthlyTotal = plan.price.monthly * 12
+  const annualPrice = plan.price.annual
+  if (monthlyTotal === 0) return 0
+  return Math.round(((monthlyTotal - annualPrice) / monthlyTotal) * 100)
+}
 
-    // Premium features
-    advanced_pomodoro: ["premium", "pro"],
-    premium_themes: ["premium", "pro"],
-    wishlist: ["premium", "pro"],
-    advanced_notes: ["premium", "pro"],
-    premium_achievements: ["premium", "pro"],
-    advanced_stats: ["premium", "pro"],
-    performance_charts: ["premium", "pro"],
-    priority_support: ["premium", "pro"],
+// Get plan features
+export function getPlanFeatures(tier: SubscriptionTier): string[] {
+  return subscriptionPlans[tier].features
+}
 
-    // Pro features
-    ai_assistant: ["pro"],
-    ai_credits: ["pro"],
-    ai_analysis: ["pro"],
-    ai_suggestions: ["pro"],
-    ai_automations: ["pro"],
-    performance_predictions: ["pro"],
-    api_integrations: ["pro"],
-    premium_support: ["pro"],
+// Get plan price
+export function getPlanPrice(tier: SubscriptionTier, cycle: BillingCycle): number {
+  return subscriptionPlans[tier].price[cycle]
+}
+
+// Calculate annual savings
+export function calculateAnnualSavings(tier: SubscriptionTier): number {
+  const plan = subscriptionPlans[tier]
+  const monthlyTotal = plan.price.monthly * 12
+  const annualPrice = plan.price.annual
+  return monthlyTotal - annualPrice
+}
+
+// Check if plan includes AI credits
+export function planIncludesAICredits(tier: SubscriptionTier): boolean {
+  return tier === "pro"
+}
+
+// Get monthly AI credits for a plan
+export function getMonthlyAICredits(tier: SubscriptionTier): number {
+  return subscriptionPlans[tier].aiCredits
+}
+
+// Get plan by ID (tier)
+export function getPlanById(planId: string): SubscriptionPlan | undefined {
+  const tier = planId as SubscriptionTier
+  return subscriptionPlans[tier]
+}
+
+// Get PayPal plan ID
+export function getPayPalPlanId(tier: SubscriptionTier, cycle: BillingCycle): string | undefined {
+  const plan = subscriptionPlans[tier]
+  return plan.paypalPlanId?.[cycle]
+}
+
+// Get subscription price based on tier and billing cycle
+export function getSubscriptionPrice(tier: SubscriptionTier, cycle: BillingCycle): number {
+  const plan = subscriptionPlans[tier]
+  return cycle === "monthly" ? plan.price.monthly : plan.price.annual
+}
+
+// Get plan by name
+export function getPlanByName(name: string): SubscriptionPlan | undefined {
+  return Object.values(subscriptionPlans).find((plan) => plan.name.toLowerCase() === name.toLowerCase())
+}
+
+// Get AI credits for a tier
+export function getAICredits(tier: SubscriptionTier): number {
+  return subscriptionPlans[tier].aiCredits
+}
+
+// Check if user has access to a feature
+export function hasFeatureAccess(userTier: SubscriptionTier, requiredTier: SubscriptionTier): boolean {
+  const tierOrder: SubscriptionTier[] = ["free", "premium", "pro"]
+  const userIndex = tierOrder.indexOf(userTier)
+  const requiredIndex = tierOrder.indexOf(requiredTier)
+  return userIndex >= requiredIndex
+}
+
+// Calculate prorated amount for plan changes
+export function calculateProratedAmount(
+  currentTier: SubscriptionTier,
+  newTier: SubscriptionTier,
+  cycle: BillingCycle,
+  daysRemaining: number,
+): number {
+  const currentPrice = getSubscriptionPrice(currentTier, cycle)
+  const newPrice = getSubscriptionPrice(newTier, cycle)
+  const totalDays = cycle === "monthly" ? 30 : 365
+
+  const unusedAmount = (currentPrice / totalDays) * daysRemaining
+  const newAmount = (newPrice / totalDays) * daysRemaining
+
+  return Math.max(0, newAmount - unusedAmount)
+}
+
+// Get subscription status display text
+export function getSubscriptionStatus(
+  tier: SubscriptionTier,
+  isActive: boolean,
+  expiresAt?: string,
+): {
+  text: string
+  color: string
+} {
+  if (!isActive) {
+    return {
+      text: "Inactiva",
+      color: "text-gray-500",
+    }
   }
 
-  const requiredPlans = featureRequirements[feature]
-  if (!requiredPlans) return true // Feature available to all
+  if (tier === "free") {
+    return {
+      text: "Plan Gratuito",
+      color: "text-blue-600",
+    }
+  }
 
-  return requiredPlans.some((plan) => userPlan.includes(plan))
+  if (expiresAt) {
+    const daysUntilExpiry = Math.floor((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+
+    if (daysUntilExpiry < 0) {
+      return {
+        text: "Expirada",
+        color: "text-red-600",
+      }
+    }
+
+    if (daysUntilExpiry <= 7) {
+      return {
+        text: `Expira en ${daysUntilExpiry} días`,
+        color: "text-orange-600",
+      }
+    }
+  }
+
+  return {
+    text: "Activa",
+    color: "text-green-600",
+  }
 }
 
-export async function upgradePlan(userId: string, planId: string): Promise<boolean> {
-  // This would integrate with payment processor
-  console.log(`Upgrading user ${userId} to plan ${planId}`)
-  return true
-}
+// Validate subscription data
+export function validateSubscriptionData(data: {
+  tier: string
+  cycle: string
+}): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
 
-export async function cancelSubscription(userId: string): Promise<boolean> {
-  // This would cancel the subscription at period end
-  console.log(`Canceling subscription for user ${userId}`)
-  return true
+  if (!["free", "premium", "pro"].includes(data.tier)) {
+    errors.push("Plan de suscripción inválido")
+  }
+
+  if (!["monthly", "annual"].includes(data.cycle)) {
+    errors.push("Ciclo de facturación inválido")
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  }
 }

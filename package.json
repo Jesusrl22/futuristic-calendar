@@ -9,7 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@ai-sdk/openai": "latest",
+    "@ai-sdk/openai": "2.0.30",
     "@radix-ui/react-checkbox": "latest",
     "@radix-ui/react-dialog": "latest",
     "@radix-ui/react-label": "latest",
@@ -25,12 +25,14 @@
     "@supabase/supabase-js": "latest",
     "@vercel/analytics": "1.5.0",
     "@vercel/speed-insights": "1.2.0",
-    "ai": "latest",
-    "bcryptjs": "latest",
+    "ai": "4.3.19",
+    "antd": "5.27.4",
+    "bcryptjs": "3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "crypto": "latest",
+    "crypto": "1.0.1",
     "date-fns": "latest",
+    "framer-motion": "12.23.22",
     "geist": "1.5.1",
     "lucide-react": "^0.454.0",
     "next": "14.2.16",
@@ -39,9 +41,9 @@
     "react": "^18",
     "react-day-picker": "latest",
     "react-dom": "^18",
+    "react-paypal-button-v2": "2.6.3",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "latest"
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@types/node": "^22",

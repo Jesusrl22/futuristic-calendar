@@ -1,129 +1,262 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Settings, User, Palette, Globe, Bell, Crown, Timer, Zap, Target, Check, X } from "lucide-react"
-import { LanguageSelector } from "@/components/language-selector"
-import { useLanguage } from "@/hooks/useLanguage"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { User, Bell, Palette, Shield, Timer, Moon, Sun, Smartphone, Trash2, Download } from "lucide-react"
 import type { User as UserType } from "@/lib/hybrid-database"
 
 interface SettingsModalProps {
-  user?: UserType | null
-  onUserUpdate?: (updates: Partial<UserType>) => void
-  onUpgrade?: () => void
-  onCancelPlan?: () => void
+  isOpen: boolean
+  onClose: () => void
+  user: UserType | null
+  onUserUpdate: (updates: Partial<UserType>) => void
 }
 
-export function SettingsModal({ user, onUserUpdate, onUpgrade, onCancelPlan }: SettingsModalProps) {
-  const { t } = useLanguage()
-  const [isOpen, setIsOpen] = useState(false)
-  const [formData, setFormData] = useState({
+interface PomodoroSettings {
+  workDuration: number
+  shortBreak: number
+  longBreak: number
+  longBreakInterval: number
+  autoStartBreaks: boolean
+  autoStartPomodoros: boolean
+  enableSounds: boolean
+  enableTickingSound: boolean
+  volume: number
+}
+
+interface NotificationSettings {
+  taskReminders: boolean
+  pomodoroNotifications: boolean
+  achievementNotifications: boolean
+  emailNotifications: boolean
+  pushNotifications: boolean
+  soundEnabled: boolean
+  vibrationEnabled: boolean
+}
+
+interface ThemeSettings {
+  theme: "light" | "dark" | "system"
+  accentColor: string
+  fontSize: "small" | "medium" | "large"
+  compactMode: boolean
+  animations: boolean
+}
+
+interface PrivacySettings {
+  dataCollection: boolean
+  analytics: boolean
+  crashReports: boolean
+  personalizedAds: boolean
+  shareUsageData: boolean
+}
+
+export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState("profile")
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Profile settings
+  const [profileData, setProfileData] = useState({
     name: user?.name || "",
     email: user?.email || "",
+    timezone: user?.timezone || "America/Mexico_City",
+    language: user?.language || "es",
   })
 
-  const handleSave = () => {
-    if (onUserUpdate) {
-      onUserUpdate(formData)
+  // Pomodoro settings
+  const [pomodoroSettings, setPomodoroSettings] = useState<PomodoroSettings>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("pomodoroSettings")
+      if (saved) {
+        return JSON.parse(saved)
+      }
     }
-    setIsOpen(false)
-  }
+    return {
+      workDuration: 25,
+      shortBreak: 5,
+      longBreak: 15,
+      longBreakInterval: 4,
+      autoStartBreaks: false,
+      autoStartPomodoros: false,
+      enableSounds: true,
+      enableTickingSound: false,
+      volume: 50,
+    }
+  })
 
-  const handleThemeChange = (theme: string) => {
-    if (onUserUpdate) {
-      onUserUpdate({ theme })
+  // Notification settings
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("notificationSettings")
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    }
+    return {
+      taskReminders: true,
+      pomodoroNotifications: true,
+      achievementNotifications: true,
+      emailNotifications: false,
+      pushNotifications: true,
+      soundEnabled: true,
+      vibrationEnabled: true,
+    }
+  })
+
+  // Theme settings
+  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("themeSettings")
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    }
+    return {
+      theme: "dark",
+      accentColor: "purple",
+      fontSize: "medium",
+      compactMode: false,
+      animations: true,
+    }
+  })
+
+  // Privacy settings
+  const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("privacySettings")
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    }
+    return {
+      dataCollection: true,
+      analytics: true,
+      crashReports: true,
+      personalizedAds: false,
+      shareUsageData: false,
+    }
+  })
+
+  // Save settings to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pomodoroSettings", JSON.stringify(pomodoroSettings))
+    }
+  }, [pomodoroSettings])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("notificationSettings", JSON.stringify(notificationSettings))
+    }
+  }, [notificationSettings])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("themeSettings", JSON.stringify(themeSettings))
+    }
+  }, [themeSettings])
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("privacySettings", JSON.stringify(privacySettings))
+    }
+  }, [privacySettings])
+
+  const handleSaveProfile = async () => {
+    if (!user) return
+    setIsLoading(true)
+    try {
+      await onUserUpdate(profileData)
+    } catch (error) {
+      console.error("Error updating profile:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleNotificationToggle = (type: string, enabled: boolean) => {
-    // Handle notification preferences
-    console.log(`${type} notifications:`, enabled)
+  const handleExportData = () => {
+    const data = {
+      profile: profileData,
+      pomodoro: pomodoroSettings,
+      notifications: notificationSettings,
+      theme: themeSettings,
+      privacy: privacySettings,
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "futuretask-settings.json"
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
-  const themes = [
-    { id: "classic", name: "Clásico", description: "Tema por defecto", free: true },
-    { id: "dark", name: "Oscuro", description: "Tema oscuro elegante", free: true },
-    { id: "blue", name: "Azul", description: "Tema azul profesional", free: false },
-    { id: "purple", name: "Púrpura", description: "Tema púrpura moderno", free: false },
-    { id: "green", name: "Verde", description: "Tema verde natural", free: false },
-  ]
+  const handleDeleteAccount = () => {
+    if (confirm("¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.")) {
+      // In a real app, this would call an API to delete the account
+      console.log("Account deletion requested")
+    }
+  }
+
+  if (!user) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
-          <Settings className="h-4 w-4" />
-          <span className="hidden sm:inline">Configuración</span>
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+            <User className="h-5 w-5" />
             Configuración
           </DialogTitle>
           <DialogDescription>Personaliza tu experiencia en FutureTask</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="profile" className="gap-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="profile" className="flex items-center gap-1">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Perfil</span>
             </TabsTrigger>
-            <TabsTrigger value="theme" className="gap-1">
+            <TabsTrigger value="pomodoro" className="flex items-center gap-1">
+              <Timer className="h-4 w-4" />
+              <span className="hidden sm:inline">Pomodoro</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-1">
+              <Bell className="h-4 w-4" />
+              <span className="hidden sm:inline">Notificaciones</span>
+            </TabsTrigger>
+            <TabsTrigger value="theme" className="flex items-center gap-1">
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Tema</span>
             </TabsTrigger>
-            <TabsTrigger value="language" className="gap-1">
-              <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">Idioma</span>
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-1">
-              <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Notif.</span>
-            </TabsTrigger>
-            <TabsTrigger value="subscription" className="gap-1">
-              <Crown className="h-4 w-4" />
-              <span className="hidden sm:inline">Plan</span>
-            </TabsTrigger>
-            <TabsTrigger value="pomodoro" className="gap-1">
-              <Timer className="h-4 w-4" />
-              <span className="hidden sm:inline">Timer</span>
+            <TabsTrigger value="privacy" className="flex items-center gap-1">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Privacidad</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-4">
+          <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Información Personal</CardTitle>
                 <CardDescription>Actualiza tu información de perfil</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre</Label>
                     <Input
                       id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Tu nombre"
+                      value={profileData.name}
+                      onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -131,89 +264,174 @@ export function SettingsModal({ user, onUserUpdate, onUpgrade, onCancelPlan }: S
                     <Input
                       id="email"
                       type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="tu@email.com"
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                     />
                   </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Plan Actual</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {user?.plan === "pro" ? "Plan Pro - Acceso completo" : "Plan Gratuito - Funciones básicas"}
-                    </p>
-                  </div>
-                  <Badge variant={user?.plan === "pro" ? "default" : "secondary"} className="gap-1">
-                    {user?.plan === "pro" ? <Zap className="h-3 w-3" /> : <Target className="h-3 w-3" />}
-                    {user?.plan === "pro" ? "Pro" : "Free"}
-                  </Badge>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button onClick={handleSave}>Guardar Cambios</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Theme Tab */}
-          <TabsContent value="theme" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Personalización Visual</CardTitle>
-                <CardDescription>Elige el tema que más te guste</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {themes.map((theme) => (
-                    <div
-                      key={theme.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        user?.theme === theme.id
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      } ${!theme.free && user?.plan !== "pro" ? "opacity-50" : ""}`}
-                      onClick={() => {
-                        if (theme.free || user?.plan === "pro") {
-                          handleThemeChange(theme.id)
-                        }
-                      }}
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Zona Horaria</Label>
+                    <Select
+                      value={profileData.timezone}
+                      onValueChange={(value) => setProfileData({ ...profileData, timezone: value })}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">{theme.name}</h4>
-                        <div className="flex items-center gap-2">
-                          {!theme.free && <Crown className="h-4 w-4 text-yellow-500" />}
-                          {user?.theme === theme.id && <Check className="h-4 w-4 text-green-500" />}
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{theme.description}</p>
-                      {!theme.free && user?.plan !== "pro" && (
-                        <p className="text-xs text-yellow-600 mt-2">Requiere Plan Pro</p>
-                      )}
-                    </div>
-                  ))}
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="America/Mexico_City">Ciudad de México (GMT-6)</SelectItem>
+                        <SelectItem value="America/New_York">Nueva York (GMT-5)</SelectItem>
+                        <SelectItem value="Europe/Madrid">Madrid (GMT+1)</SelectItem>
+                        <SelectItem value="Asia/Tokyo">Tokio (GMT+9)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Idioma</Label>
+                    <Select
+                      value={profileData.language}
+                      onValueChange={(value) => setProfileData({ ...profileData, language: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="es">Español</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="fr">Français</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+                <Button onClick={handleSaveProfile} disabled={isLoading}>
+                  {isLoading ? "Guardando..." : "Guardar Cambios"}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Language Tab */}
-          <TabsContent value="language" className="space-y-4">
+          {/* Pomodoro Tab */}
+          <TabsContent value="pomodoro" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Configuración de Idioma</CardTitle>
-                <CardDescription>Selecciona tu idioma preferido</CardDescription>
+                <CardTitle>Configuración del Pomodoro</CardTitle>
+                <CardDescription>Personaliza tus sesiones de trabajo y descanso</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Idioma de la Interfaz</Label>
-                    <div className="mt-2">
-                      <LanguageSelector />
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Duración del trabajo (minutos)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={pomodoroSettings.workDuration}
+                        onChange={(e) =>
+                          setPomodoroSettings({
+                            ...pomodoroSettings,
+                            workDuration: Number.parseInt(e.target.value) || 25,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Descanso corto (minutos)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="30"
+                        value={pomodoroSettings.shortBreak}
+                        onChange={(e) =>
+                          setPomodoroSettings({
+                            ...pomodoroSettings,
+                            shortBreak: Number.parseInt(e.target.value) || 5,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Descanso largo (minutos)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={pomodoroSettings.longBreak}
+                        onChange={(e) =>
+                          setPomodoroSettings({
+                            ...pomodoroSettings,
+                            longBreak: Number.parseInt(e.target.value) || 15,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Intervalo para descanso largo</Label>
+                      <Input
+                        type="number"
+                        min="2"
+                        max="10"
+                        value={pomodoroSettings.longBreakInterval}
+                        onChange={(e) =>
+                          setPomodoroSettings({
+                            ...pomodoroSettings,
+                            longBreakInterval: Number.parseInt(e.target.value) || 4,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Iniciar descansos automáticamente</Label>
+                      <Switch
+                        checked={pomodoroSettings.autoStartBreaks}
+                        onCheckedChange={(checked) =>
+                          setPomodoroSettings({ ...pomodoroSettings, autoStartBreaks: checked })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Iniciar pomodoros automáticamente</Label>
+                      <Switch
+                        checked={pomodoroSettings.autoStartPomodoros}
+                        onCheckedChange={(checked) =>
+                          setPomodoroSettings({ ...pomodoroSettings, autoStartPomodoros: checked })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Habilitar sonidos</Label>
+                      <Switch
+                        checked={pomodoroSettings.enableSounds}
+                        onCheckedChange={(checked) =>
+                          setPomodoroSettings({ ...pomodoroSettings, enableSounds: checked })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Sonido de tic-tac</Label>
+                      <Switch
+                        checked={pomodoroSettings.enableTickingSound}
+                        onCheckedChange={(checked) =>
+                          setPomodoroSettings({ ...pomodoroSettings, enableTickingSound: checked })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Volumen ({pomodoroSettings.volume}%)</Label>
+                      <Input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={pomodoroSettings.volume}
+                        onChange={(e) =>
+                          setPomodoroSettings({
+                            ...pomodoroSettings,
+                            volume: Number.parseInt(e.target.value),
+                          })
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -222,182 +440,264 @@ export function SettingsModal({ user, onUserUpdate, onUpgrade, onCancelPlan }: S
           </TabsContent>
 
           {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-4">
+          <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Preferencias de Notificaciones</CardTitle>
-                <CardDescription>Controla qué notificaciones quieres recibir</CardDescription>
+                <CardTitle>Configuración de Notificaciones</CardTitle>
+                <CardDescription>Controla cómo y cuándo recibes notificaciones</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Recordatorios de Tareas</h4>
-                    <p className="text-sm text-muted-foreground">Recibe notificaciones cuando vencen las tareas</p>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Recordatorios de tareas</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Recibe notificaciones sobre tareas próximas a vencer
+                      </p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.taskReminders}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, taskReminders: checked })
+                      }
+                    />
                   </div>
-                  <Switch onCheckedChange={(checked) => handleNotificationToggle("tasks", checked)} />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Sesiones Pomodoro</h4>
-                    <p className="text-sm text-muted-foreground">Notificaciones de inicio y fin de sesiones</p>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Notificaciones de Pomodoro</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Alertas cuando terminen las sesiones de trabajo y descanso
+                      </p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.pomodoroNotifications}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, pomodoroNotifications: checked })
+                      }
+                    />
                   </div>
-                  <Switch onCheckedChange={(checked) => handleNotificationToggle("pomodoro", checked)} />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Logros Desbloqueados</h4>
-                    <p className="text-sm text-muted-foreground">Celebra tus logros con notificaciones</p>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Notificaciones de logros</Label>
+                      <p className="text-sm text-muted-foreground">Celebra cuando desbloquees nuevos logros</p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.achievementNotifications}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, achievementNotifications: checked })
+                      }
+                    />
                   </div>
-                  <Switch onCheckedChange={(checked) => handleNotificationToggle("achievements", checked)} />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Actualizaciones del Sistema</h4>
-                    <p className="text-sm text-muted-foreground">Información sobre nuevas funciones</p>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Notificaciones por email</Label>
+                      <p className="text-sm text-muted-foreground">Recibe resúmenes y actualizaciones por correo</p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.emailNotifications}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, emailNotifications: checked })
+                      }
+                    />
                   </div>
-                  <Switch onCheckedChange={(checked) => handleNotificationToggle("updates", checked)} />
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Sonido habilitado</Label>
+                      <p className="text-sm text-muted-foreground">Reproducir sonidos con las notificaciones</p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.soundEnabled}
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, soundEnabled: checked })
+                      }
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Subscription Tab */}
-          <TabsContent value="subscription" className="space-y-4">
+          {/* Theme Tab */}
+          <TabsContent value="theme" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Gestión de Suscripción</CardTitle>
-                <CardDescription>Administra tu plan y facturación</CardDescription>
+                <CardTitle>Configuración de Tema</CardTitle>
+                <CardDescription>Personaliza la apariencia de la aplicación</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium flex items-center gap-2">
-                      {user?.plan === "pro" ? (
-                        <>
-                          <Zap className="h-4 w-4 text-yellow-500" />
-                          Plan Pro
-                        </>
-                      ) : (
-                        <>
-                          <Target className="h-4 w-4" />
-                          Plan Gratuito
-                        </>
-                      )}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {user?.plan === "pro" ? "Acceso completo a todas las funciones" : "Funciones básicas disponibles"}
-                    </p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Tema</Label>
+                    <Select
+                      value={themeSettings.theme}
+                      onValueChange={(value: "light" | "dark" | "system") =>
+                        setThemeSettings({ ...themeSettings, theme: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="light">
+                          <div className="flex items-center gap-2">
+                            <Sun className="h-4 w-4" />
+                            Claro
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="dark">
+                          <div className="flex items-center gap-2">
+                            <Moon className="h-4 w-4" />
+                            Oscuro
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="system">
+                          <div className="flex items-center gap-2">
+                            <Smartphone className="h-4 w-4" />
+                            Sistema
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">{user?.plan === "pro" ? "$9.99/mes" : "Gratis"}</div>
-                    {user?.plan === "pro" && <div className="text-sm text-muted-foreground">Renovación automática</div>}
+
+                  <div className="space-y-2">
+                    <Label>Color de acento</Label>
+                    <Select
+                      value={themeSettings.accentColor}
+                      onValueChange={(value) => setThemeSettings({ ...themeSettings, accentColor: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="purple">Púrpura</SelectItem>
+                        <SelectItem value="blue">Azul</SelectItem>
+                        <SelectItem value="green">Verde</SelectItem>
+                        <SelectItem value="red">Rojo</SelectItem>
+                        <SelectItem value="orange">Naranja</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tamaño de fuente</Label>
+                    <Select
+                      value={themeSettings.fontSize}
+                      onValueChange={(value: "small" | "medium" | "large") =>
+                        setThemeSettings({ ...themeSettings, fontSize: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Pequeña</SelectItem>
+                        <SelectItem value="medium">Mediana</SelectItem>
+                        <SelectItem value="large">Grande</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label>Modo compacto</Label>
+                    <Switch
+                      checked={themeSettings.compactMode}
+                      onCheckedChange={(checked) => setThemeSettings({ ...themeSettings, compactMode: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label>Animaciones</Label>
+                    <Switch
+                      checked={themeSettings.animations}
+                      onCheckedChange={(checked) => setThemeSettings({ ...themeSettings, animations: checked })}
+                    />
                   </div>
                 </div>
-
-                {user?.plan === "pro" ? (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                      <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">Funciones Pro Activas</h4>
-                      <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                        <li>• Asistente IA ilimitado</li>
-                        <li>• Temas premium</li>
-                        <li>• Estadísticas avanzadas</li>
-                        <li>• Sincronización en la nube</li>
-                        <li>• Soporte prioritario</li>
-                      </ul>
-                    </div>
-                    <Button variant="destructive" onClick={onCancelPlan} className="w-full">
-                      <X className="h-4 w-4 mr-2" />
-                      Cancelar Suscripción
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Desbloquea el Plan Pro</h4>
-                      <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 mb-4">
-                        <li>• Asistente IA ilimitado</li>
-                        <li>• Temas premium exclusivos</li>
-                        <li>• Estadísticas detalladas</li>
-                        <li>• Sincronización automática</li>
-                        <li>• Soporte prioritario 24/7</li>
-                      </ul>
-                    </div>
-                    <Button onClick={onUpgrade} className="w-full">
-                      <Crown className="h-4 w-4 mr-2" />
-                      Actualizar a Pro - $9.99/mes
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Pomodoro Tab */}
-          <TabsContent value="pomodoro" className="space-y-4">
+          {/* Privacy Tab */}
+          <TabsContent value="privacy" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Configuración del Timer Pomodoro</CardTitle>
-                <CardDescription>Personaliza tus sesiones de trabajo</CardDescription>
+                <CardTitle>Configuración de Privacidad</CardTitle>
+                <CardDescription>Controla cómo se usan tus datos</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Duración del Trabajo (minutos)</Label>
-                    <Input type="number" defaultValue="25" min="1" max="60" />
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Recopilación de datos</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permitir la recopilación de datos para mejorar la experiencia
+                      </p>
+                    </div>
+                    <Switch
+                      checked={privacySettings.dataCollection}
+                      onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, dataCollection: checked })}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Descanso Corto (minutos)</Label>
-                    <Input type="number" defaultValue="5" min="1" max="30" />
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Análisis de uso</Label>
+                      <p className="text-sm text-muted-foreground">Ayúdanos a entender cómo usas la aplicación</p>
+                    </div>
+                    <Switch
+                      checked={privacySettings.analytics}
+                      onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, analytics: checked })}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Descanso Largo (minutos)</Label>
-                    <Input type="number" defaultValue="15" min="1" max="60" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Sesiones hasta descanso largo</Label>
-                    <Input type="number" defaultValue="4" min="2" max="8" />
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label>Reportes de errores</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Enviar reportes automáticos de errores para mejorar la estabilidad
+                      </p>
+                    </div>
+                    <Switch
+                      checked={privacySettings.crashReports}
+                      onCheckedChange={(checked) => setPrivacySettings({ ...privacySettings, crashReports: checked })}
+                    />
                   </div>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Inicio Automático</h4>
-                      <p className="text-sm text-muted-foreground">Iniciar automáticamente la siguiente sesión</p>
-                    </div>
-                    <Switch />
+                  <h4 className="font-semibold">Gestión de Datos</h4>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleExportData}
+                      className="flex items-center gap-2 bg-transparent"
+                    >
+                      <Download className="h-4 w-4" />
+                      Exportar Datos
+                    </Button>
+                    <Button variant="destructive" onClick={handleDeleteAccount} className="flex items-center gap-2">
+                      <Trash2 className="h-4 w-4" />
+                      Eliminar Cuenta
+                    </Button>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Sonidos de Notificación</h4>
-                      <p className="text-sm text-muted-foreground">Reproducir sonido al finalizar sesiones</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">Modo No Molestar</h4>
-                      <p className="text-sm text-muted-foreground">Bloquear distracciones durante el trabajo</p>
-                    </div>
-                    <Switch />
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button>Guardar Configuración</Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Cerrar
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )

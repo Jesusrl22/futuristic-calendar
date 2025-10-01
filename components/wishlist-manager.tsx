@@ -1,47 +1,47 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Heart,
   Plus,
-  Search,
-  Euro,
-  Tag,
+  Edit,
   Trash2,
-  Edit3,
+  Calendar,
+  Tag,
+  Search,
+  Star,
   Crown,
   Lock,
-  Star,
-  ShoppingCart,
-  Gift,
+  Smartphone,
   Home,
-  Gamepad2,
-  Book,
   Shirt,
+  BookOpen,
+  Gift,
+  Plane,
+  Car,
+  Music,
+  MoreHorizontal,
+  Sparkles,
 } from "lucide-react"
-
-interface WishlistItem {
-  id: string
-  name: string
-  description: string
-  price: number
-  currency: string
-  category: string
-  priority: "low" | "medium" | "high"
-  url?: string
-  imageUrl?: string
-  notes: string
-  createdAt: string
-  userId: string
-}
+import { hybridDb, type WishlistItem } from "@/lib/hybrid-database"
 
 interface WishlistManagerProps {
   userId: string
@@ -49,513 +49,633 @@ interface WishlistManagerProps {
   onUpgrade: () => void
 }
 
+const CATEGORIES = [
+  { id: "tecnologia", label: "Tecnología", icon: Smartphone },
+  { id: "hogar", label: "Hogar", icon: Home },
+  { id: "ropa", label: "Ropa", icon: Shirt },
+  { id: "libros", label: "Libros", icon: BookOpen },
+  { id: "regalos", label: "Regalos", icon: Gift },
+  { id: "viajes", label: "Viajes", icon: Plane },
+  { id: "vehiculos", label: "Vehículos", icon: Car },
+  { id: "musica", label: "Música", icon: Music },
+  { id: "otros", label: "Otros", icon: MoreHorizontal },
+]
+
+const PRIORITY_COLORS = {
+  high: "bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-700 border-red-300",
+  medium: "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-700 border-yellow-300",
+  low: "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 border-green-300",
+}
+
+const PRIORITY_LABELS = {
+  high: "Alta",
+  medium: "Media",
+  low: "Baja",
+}
+
+const PREMIUM_LIMIT = 100
+
 export function WishlistManager({ userId, isPremium, onUpgrade }: WishlistManagerProps) {
-  const [items, setItems] = useState<WishlistItem[]>([])
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingItem, setEditingItem] = useState<WishlistItem | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState<string>("all")
-  const [filterPriority, setFilterPriority] = useState<"all" | "low" | "medium" | "high">("all")
+  const [filterPriority, setFilterPriority] = useState<string>("all")
+  const [activeTab, setActiveTab] = useState("all")
 
   // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "",
-    currency: "EUR",
     category: "otros",
-    priority: "medium" as "low" | "medium" | "high",
-    url: "",
+    priority: "medium" as "high" | "medium" | "low",
+    targetDate: "",
     notes: "",
   })
 
-  // Load items from localStorage
   useEffect(() => {
-    const savedItems = localStorage.getItem(`wishlist_${userId}`)
-    if (savedItems) {
-      try {
-        setItems(JSON.parse(savedItems))
-      } catch (error) {
-        console.error("Error loading wishlist:", error)
-      }
+    if (isPremium) {
+      loadWishlistItems()
+    } else {
+      setIsLoading(false)
     }
-  }, [userId])
+  }, [userId, isPremium])
 
-  // Save items to localStorage
-  useEffect(() => {
-    localStorage.setItem(`wishlist_${userId}`, JSON.stringify(items))
-  }, [items, userId])
+  const loadWishlistItems = async () => {
+    try {
+      setIsLoading(true)
+      const items = await hybridDb.getWishlistItems(userId)
+      setWishlistItems(items)
+    } catch (error) {
+      console.error("Error loading wishlist items:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-  const handleAddItem = () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     if (!isPremium) {
       onUpgrade()
       return
     }
 
-    if (!formData.name.trim()) return
-
-    const newItem: WishlistItem = {
-      id: Date.now().toString(),
-      name: formData.name,
-      description: formData.description,
-      price: Number.parseFloat(formData.price) || 0,
-      currency: formData.currency,
-      category: formData.category,
-      priority: formData.priority,
-      url: formData.url,
-      notes: formData.notes,
-      createdAt: new Date().toISOString(),
-      userId,
+    // Check limits
+    if (!editingItem && wishlistItems.length >= PREMIUM_LIMIT) {
+      return
     }
 
-    setItems((prev) => [newItem, ...prev])
-    resetForm()
-  }
-
-  const handleEditItem = () => {
-    if (!editingItem) return
-
-    const updatedItem: WishlistItem = {
-      ...editingItem,
-      name: formData.name,
-      description: formData.description,
-      price: Number.parseFloat(formData.price) || 0,
-      currency: formData.currency,
-      category: formData.category,
-      priority: formData.priority,
-      url: formData.url,
-      notes: formData.notes,
+    try {
+      if (editingItem) {
+        await hybridDb.updateWishlistItem(editingItem.id, formData)
+      } else {
+        await hybridDb.createWishlistItem(userId, formData)
+      }
+      await loadWishlistItems()
+      handleCloseForm()
+    } catch (error) {
+      console.error("Error saving wishlist item:", error)
     }
-
-    setItems((prev) => prev.map((item) => (item.id === editingItem.id ? updatedItem : item)))
-    resetForm()
   }
 
-  const handleDeleteItem = (itemId: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== itemId))
-  }
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      currency: "EUR",
-      category: "otros",
-      priority: "medium",
-      url: "",
-      notes: "",
-    })
-    setEditingItem(null)
-    setShowForm(false)
-  }
-
-  const openEditForm = (item: WishlistItem) => {
+  const handleEdit = (item: WishlistItem) => {
+    setEditingItem(item)
     setFormData({
       name: item.name,
-      description: item.description,
-      price: item.price.toString(),
-      currency: item.currency,
+      description: item.description || "",
       category: item.category,
       priority: item.priority,
-      url: item.url || "",
-      notes: item.notes,
+      targetDate: item.targetDate ? item.targetDate.split("T")[0] : "",
+      notes: item.notes || "",
     })
-    setEditingItem(item)
     setShowForm(true)
   }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500"
-      case "medium":
-        return "bg-yellow-500"
-      case "low":
-        return "bg-green-500"
-      default:
-        return "bg-gray-500"
+  const handleDelete = async (itemId: string) => {
+    if (confirm("¿Estás seguro de que quieres eliminar este deseo?")) {
+      try {
+        await hybridDb.deleteWishlistItem(itemId)
+        await loadWishlistItems()
+      } catch (error) {
+        console.error("Error deleting wishlist item:", error)
+      }
     }
   }
 
-  const getCategoryIcon = (category: string) => {
-    const icons = {
-      tecnologia: Gamepad2,
-      hogar: Home,
-      ropa: Shirt,
-      libros: Book,
-      regalos: Gift,
-      otros: ShoppingCart,
-    }
-    return icons[category as keyof typeof icons] || ShoppingCart
+  const handleCloseForm = () => {
+    setShowForm(false)
+    setEditingItem(null)
+    setFormData({
+      name: "",
+      description: "",
+      category: "otros",
+      priority: "medium",
+      targetDate: "",
+      notes: "",
+    })
   }
 
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      tecnologia: "bg-blue-500",
-      hogar: "bg-green-500",
-      ropa: "bg-purple-500",
-      libros: "bg-orange-500",
-      regalos: "bg-pink-500",
-      otros: "bg-gray-500",
-    }
-    return colors[category as keyof typeof colors] || "bg-gray-500"
-  }
-
-  const filteredItems = items.filter((item) => {
+  // Filter items
+  const filteredItems = wishlistItems.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+
     const matchesCategory = filterCategory === "all" || item.category === filterCategory
     const matchesPriority = filterPriority === "all" || item.priority === filterPriority
 
-    return matchesSearch && matchesCategory && matchesPriority
+    const matchesTab =
+      activeTab === "all" ||
+      (activeTab === "high" && item.priority === "high") ||
+      (activeTab === "upcoming" && item.targetDate && new Date(item.targetDate) > new Date())
+
+    return matchesSearch && matchesCategory && matchesPriority && matchesTab
   })
 
-  const stats = {
-    total: items.length,
-    totalValue: items.reduce((sum, item) => sum + item.price, 0),
-    categories: [...new Set(items.map((item) => item.category))].length,
-    highPriority: items.filter((item) => item.priority === "high").length,
+  // Get unique categories from items
+  const usedCategories = Array.from(new Set(wishlistItems.map((item) => item.category)))
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando lista de deseos...</p>
+        </div>
+      </div>
+    )
   }
 
-  const categories = [...new Set(items.map((item) => item.category))]
-
+  // Show premium upgrade screen if not premium
   if (!isPremium) {
     return (
-      <Card className="text-center p-8">
-        <CardContent>
-          <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Función Premium</h3>
-          <p className="text-gray-600 mb-4">La lista de deseos está disponible para usuarios Premium y Pro</p>
-          <Button onClick={onUpgrade} className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-            <Crown className="w-4 h-4 mr-2" />
-            Actualizar a Premium
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg">
+            <Heart className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              Lista de Deseos
+            </h2>
+            <p className="text-gray-600 text-sm">Función Premium</p>
+          </div>
+        </div>
+
+        {/* Premium Upgrade Card */}
+        <Card className="border-2 border-dashed border-pink-300 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+          <CardContent className="pt-12 pb-12">
+            <div className="text-center max-w-md mx-auto">
+              <div className="mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Lista de Deseos Premium</h3>
+                <p className="text-gray-600 mb-6">
+                  Organiza y planifica todos tus deseos y metas con nuestra función premium
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-gray-700">Deseos ilimitados organizados por categorías</span>
+                </div>
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Star className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-gray-700">Sistema de prioridades y fechas objetivo</span>
+                </div>
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Tag className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-gray-700">Notas personales y seguimiento de progreso</span>
+                </div>
+                <div className="flex items-center gap-3 text-left">
+                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Search className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-gray-700">Filtros avanzados y búsqueda inteligente</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  onClick={onUpgrade}
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg"
+                >
+                  <Crown className="w-5 h-5 mr-2" />
+                  Actualizar a Premium
+                </Button>
+                <p className="text-xs text-gray-500">Desde €1.99/mes • Cancela cuando quieras</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Heart className="w-6 h-6 text-pink-600" />
-          <h2 className="text-2xl font-bold">Lista de Deseos</h2>
-          <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-            <Crown className="w-3 h-3 mr-1" />
-            Premium
-          </Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg">
+            <Heart className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              Lista de Deseos
+            </h2>
+            <p className="text-gray-600 text-sm">
+              {wishlistItems.length}/{PREMIUM_LIMIT} deseos (Premium)
+            </p>
+          </div>
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Agregar Deseo
-        </Button>
+        <Dialog open={showForm} onOpenChange={setShowForm}>
+          <DialogTrigger asChild>
+            <Button
+              className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg"
+              disabled={!editingItem && wishlistItems.length >= PREMIUM_LIMIT}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nuevo Deseo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-pink-500" />
+                {editingItem ? "Editar Deseo" : "Nuevo Deseo"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingItem ? "Modifica los detalles de tu deseo" : "Añade algo nuevo a tu lista de deseos"}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="¿Qué deseas?"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Descripción</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Detalles adicionales..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">Categoría</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          <div className="flex items-center gap-2">
+                            <category.icon className="w-4 h-4" />
+                            {category.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Prioridad</Label>
+                  <Select
+                    value={formData.priority}
+                    onValueChange={(value: "high" | "medium" | "low") => setFormData({ ...formData, priority: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-red-500" />
+                          Alta
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="medium">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-yellow-500" />
+                          Media
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="low">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-green-500" />
+                          Baja
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="targetDate">Fecha objetivo (opcional)</Label>
+                <Input
+                  id="targetDate"
+                  type="date"
+                  value={formData.targetDate}
+                  onChange={(e) => setFormData({ ...formData, targetDate: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notas personales</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  placeholder="¿Por qué lo deseas? ¿Cómo planeas conseguirlo?"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={handleCloseForm}>
+                  Cancelar
+                </Button>
+                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-500 text-white">
+                  {editingItem ? "Actualizar" : "Crear"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-pink-300/20">
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Heart className="w-5 h-5 text-pink-600" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-gray-600">Total Items</p>
+                <p className="text-sm font-medium text-pink-600">Total Deseos</p>
+                <p className="text-2xl font-bold text-pink-700">{wishlistItems.length}</p>
               </div>
+              <Heart className="h-8 w-8 text-pink-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-300/20">
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Euro className="w-5 h-5 text-green-600" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">€{stats.totalValue.toFixed(2)}</p>
-                <p className="text-sm text-gray-600">Valor Total</p>
+                <p className="text-sm font-medium text-purple-600">Categorías</p>
+                <p className="text-2xl font-bold text-purple-700">{usedCategories.length}</p>
               </div>
+              <Tag className="h-8 w-8 text-purple-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-300/20">
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Tag className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.categories}</p>
-                <p className="text-sm text-gray-600">Categorías</p>
+                <p className="text-sm font-medium text-red-600">Alta Prioridad</p>
+                <p className="text-2xl font-bold text-red-700">
+                  {wishlistItems.filter((item) => item.priority === "high").length}
+                </p>
               </div>
+              <Star className="h-8 w-8 text-red-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-300/20">
           <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Star className="w-5 h-5 text-yellow-600" />
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{stats.highPriority}</p>
-                <p className="text-sm text-gray-600">Alta Prioridad</p>
+                <p className="text-sm font-medium text-green-600">Con Fecha</p>
+                <p className="text-2xl font-bold text-green-700">
+                  {wishlistItems.filter((item) => item.targetDate).length}
+                </p>
               </div>
+              <Calendar className="h-8 w-8 text-green-400" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Buscar deseos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />
+            Todos ({wishlistItems.length})
+          </TabsTrigger>
+          <TabsTrigger value="high" className="flex items-center gap-2">
+            <Star className="w-4 h-4" />
+            Prioridad Alta ({wishlistItems.filter((item) => item.priority === "high").length})
+          </TabsTrigger>
+          <TabsTrigger value="upcoming" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Con Fecha ({wishlistItems.filter((item) => item.targetDate).length})
+          </TabsTrigger>
+        </TabsList>
 
-            <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filterPriority} onValueChange={(value: any) => setFilterPriority(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Prioridad" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
-                <SelectItem value="medium">Media</SelectItem>
-                <SelectItem value="low">Baja</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems.length === 0 ? (
-          <Card className="col-span-full">
-            <CardContent className="p-8 text-center">
-              <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No hay deseos que coincidan con los filtros</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredItems.map((item) => {
-            const CategoryIcon = getCategoryIcon(item.category)
-
-            return (
-              <Card key={item.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-lg">{item.name}</h3>
-                        {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Button variant="ghost" size="sm" onClick={() => openEditForm(item)}>
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl font-bold text-green-600">€{item.price.toFixed(2)}</div>
-                      <div className="flex items-center space-x-2">
-                        <Badge className={`${getPriorityColor(item.priority)} text-white`}>{item.priority}</Badge>
-                        <Badge className={`${getCategoryColor(item.category)} text-white`}>
-                          <CategoryIcon className="w-3 h-3 mr-1" />
-                          {item.category}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {item.notes && <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded text-sm">{item.notes}</div>}
-
-                    {item.url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full bg-transparent"
-                        onClick={() => window.open(item.url, "_blank")}
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        Ver Producto
-                      </Button>
-                    )}
-
-                    <div className="text-xs text-gray-500">
-                      Agregado: {new Date(item.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })
-        )}
-      </div>
-
-      {/* Form Modal */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingItem ? "Editar Deseo" : "Agregar Nuevo Deseo"}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Nombre *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Nombre del producto"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="description">Descripción</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Descripción del producto"
-                rows={2}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="price">Precio</Label>
+        {/* Filters */}
+        <Card className="mt-4">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
-                  placeholder="0.00"
+                  placeholder="Buscar deseos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
                 />
               </div>
-              <div>
-                <Label htmlFor="currency">Moneda</Label>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label htmlFor="category">Categoría</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tecnologia">Tecnología</SelectItem>
-                    <SelectItem value="hogar">Hogar</SelectItem>
-                    <SelectItem value="ropa">Ropa</SelectItem>
-                    <SelectItem value="libros">Libros</SelectItem>
-                    <SelectItem value="regalos">Regalos</SelectItem>
-                    <SelectItem value="otros">Otros</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="priority">Prioridad</Label>
-                <Select
-                  value={formData.priority}
-                  onValueChange={(value: any) => setFormData((prev) => ({ ...prev, priority: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Baja</SelectItem>
-                    <SelectItem value="medium">Media</SelectItem>
-                    <SelectItem value="high">Alta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  {CATEGORIES.filter((cat) => usedCategories.includes(cat.id)).map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      <div className="flex items-center gap-2">
+                        <category.icon className="w-4 h-4" />
+                        {category.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <div>
-              <Label htmlFor="url">URL del Producto</Label>
-              <Input
-                id="url"
-                type="url"
-                value={formData.url}
-                onChange={(e) => setFormData((prev) => ({ ...prev, url: e.target.value }))}
-                placeholder="https://..."
-              />
+              <Select value={filterPriority} onValueChange={setFilterPriority}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las prioridades</SelectItem>
+                  <SelectItem value="high">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-red-500" />
+                      Alta
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="medium">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      Media
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="low">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-green-500" />
+                      Baja
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <Label htmlFor="notes">Notas</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-                placeholder="Notas adicionales..."
-                rows={2}
-              />
-            </div>
+        <TabsContent value={activeTab} className="space-y-4">
+          {filteredItems.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-12">
+                  <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                    {searchTerm || filterCategory !== "all" || filterPriority !== "all"
+                      ? "No se encontraron deseos"
+                      : "Tu lista de deseos está vacía"}
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    {searchTerm || filterCategory !== "all" || filterPriority !== "all"
+                      ? "Intenta ajustar los filtros de búsqueda"
+                      : "Comienza agregando tus primeros deseos y metas"}
+                  </p>
+                  {!searchTerm &&
+                    filterCategory === "all" &&
+                    filterPriority === "all" &&
+                    wishlistItems.length < PREMIUM_LIMIT && (
+                      <Button
+                        onClick={() => setShowForm(true)}
+                        className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Agregar Primer Deseo
+                      </Button>
+                    )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredItems.map((item) => {
+                const CategoryIcon = CATEGORIES.find((cat) => cat.id === item.category)?.icon || MoreHorizontal
+                return (
+                  <Card
+                    key={item.id}
+                    className="hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="p-2 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-lg">
+                            <CategoryIcon className="h-5 w-5 text-pink-600" />
+                          </div>
+                          <CardTitle className="text-lg line-clamp-2 flex-1">{item.name}</CardTitle>
+                        </div>
+                        <div className="flex gap-1 ml-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(item)}
+                            className="hover:bg-blue-100"
+                          >
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(item.id)}
+                            className="hover:bg-red-100"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                      {item.description && (
+                        <CardDescription className="line-clamp-2 text-gray-600">{item.description}</CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className={`${PRIORITY_COLORS[item.priority]} font-medium`}>
+                          <Star className="w-3 h-3 mr-1" />
+                          {PRIORITY_LABELS[item.priority]}
+                        </Badge>
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          <Tag className="w-3 h-3 mr-1" />
+                          {CATEGORIES.find((cat) => cat.id === item.category)?.label || item.category}
+                        </Badge>
+                      </div>
 
-            <div className="flex space-x-2">
-              <Button
-                onClick={editingItem ? handleEditItem : handleAddItem}
-                className="flex-1"
-                disabled={!formData.name.trim()}
-              >
-                {editingItem ? "Actualizar" : "Agregar"}
-              </Button>
-              <Button variant="outline" onClick={resetForm}>
-                Cancelar
-              </Button>
+                      {item.targetDate && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 p-2 rounded-lg">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span>Meta: {new Date(item.targetDate).toLocaleDateString()}</span>
+                        </div>
+                      )}
+
+                      {item.notes && (
+                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg line-clamp-3">
+                          <p className="font-medium text-gray-700 mb-1">Notas:</p>
+                          {item.notes}
+                        </div>
+                      )}
+
+                      <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
+                        Añadido el {new Date(item.createdAt).toLocaleDateString()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

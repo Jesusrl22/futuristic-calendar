@@ -1,470 +1,540 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState, useRef, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { CalendarWidget } from "@/components/calendar-widget"
+import { TaskManager } from "@/components/task-manager"
+import { PomodoroTimer } from "@/components/pomodoro-timer"
+import { StatsCards } from "@/components/stats-cards"
+import { WishlistManager } from "@/components/wishlist-manager"
+import { NotesManager } from "@/components/notes-manager"
+import { AiAssistant } from "@/components/ai-assistant"
+import { SettingsModal } from "@/components/settings-modal"
+import { SubscriptionManager } from "@/components/subscription-manager"
+import { AchievementsDisplay } from "@/components/achievements-display"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import {
   Calendar,
   CheckSquare,
-  BookOpen,
-  Heart,
-  Trophy,
-  Settings,
-  Zap,
+  Clock,
+  BarChart3,
   Star,
-  Activity,
-  Timer,
-  LogOut,
+  FileText,
+  Settings,
+  Menu,
+  X,
+  Loader2,
+  CreditCard,
+  Trophy,
+  Sparkles,
+  Bot,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Toaster } from "@/components/toaster"
+import { LanguageSelector } from "@/components/language-selector"
+import { useLanguage } from "@/hooks/useLanguage"
 
-// Import components
-import { CalendarWidget } from "@/components/calendar-widget"
-import { TaskManager } from "@/components/task-manager"
-import { NotesManager } from "@/components/notes-manager"
-import { WishlistManager } from "@/components/wishlist-manager"
-import { AchievementsDisplay } from "@/components/achievements-display"
-import { PomodoroTimer } from "@/components/pomodoro-timer"
-import { SettingsModal } from "@/components/settings-modal"
-import { SubscriptionModal } from "@/components/subscription-modal"
-import { StatsCards } from "@/components/stats-cards"
-import { AIAssistant } from "@/components/ai-assistant"
-
-export default function AppPage() {
-  // State management
-  const [user, setUser] = useState(null)
-  const [tasks, setTasks] = useState([])
-  const [notes, setNotes] = useState([])
-  const [wishlist, setWishlist] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState("dashboard")
-  const [showSettings, setShowSettings] = useState(false)
-  const [showSubscription, setShowSubscription] = useState(false)
-  const [aiCredits, setAiCredits] = useState(0)
-
+function AppContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { t } = useLanguage()
+  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("calendar")
 
-  // Theme configuration
-  const theme = {
-    cardBg: "bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-sm",
-    border: "border-slate-700/50",
-    textPrimary: "text-white",
-    textSecondary: "text-slate-300",
-    textMuted: "text-slate-400",
-  }
+  // Prevent infinite loops
+  const hasRedirectedRef = useRef(false)
+  const hasLoadedRef = useRef(false)
 
-  // Initialize user and data
   useEffect(() => {
-    const initializeApp = async () => {
-      try {
-        setIsLoading(true)
+    if (hasLoadedRef.current || hasRedirectedRef.current) return
+    hasLoadedRef.current = true
 
-        // Get user from localStorage
-        const storedUser = localStorage.getItem("user")
-        if (!storedUser) {
-          router.push("/")
+    let mounted = true
+
+    const loadUser = async () => {
+      try {
+        const isDemo = searchParams?.get("demo") === "true"
+
+        // Si es modo demo, crear usuario demo
+        if (isDemo) {
+          console.log("🎯 Demo mode activated")
+          const demoUser = {
+            id: "demo-user",
+            email: "demo@futuretask.app",
+            full_name: "Usuario Demo",
+            name: "Usuario Demo",
+            subscription_tier: "pro",
+            plan: "pro",
+            billing_cycle: "monthly",
+            ai_credits: 500,
+            theme_preference: "light",
+            pomodoro_work_duration: 25,
+            pomodoro_break_duration: 5,
+            pomodoro_long_break_duration: 15,
+            pomodoro_sessions_until_long_break: 4,
+            isDemo: true,
+          }
+
+          if (mounted) {
+            setUser(demoUser)
+            setLoading(false)
+          }
           return
         }
 
-        const userData = JSON.parse(storedUser)
-        setUser(userData)
-        setAiCredits(userData.aiCredits || 50)
+        // Si NO es modo demo, verificar autenticación real
+        console.log("🔍 Checking authentication...")
 
-        // Load user data from localStorage or initialize empty
-        const storedTasks = localStorage.getItem(`tasks_${userData.id}`)
-        const storedNotes = localStorage.getItem(`notes_${userData.id}`)
-        const storedWishlist = localStorage.getItem(`wishlist_${userData.id}`)
+        // Verificar sesión con timeout
+        const sessionPromise = supabase.auth.getSession()
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
 
-        setTasks(storedTasks ? JSON.parse(storedTasks) : [])
-        setNotes(storedNotes ? JSON.parse(storedNotes) : [])
-        setWishlist(storedWishlist ? JSON.parse(storedWishlist) : [])
+        let session
+        try {
+          const result = (await Promise.race([sessionPromise, timeoutPromise])) as any
+          session = result?.data?.session
+        } catch (error) {
+          console.error("❌ Session check failed:", error)
+          if (mounted && !hasRedirectedRef.current) {
+            hasRedirectedRef.current = true
+            setLoading(false)
+            router.replace("/login")
+          }
+          return
+        }
+
+        // Si no hay sesión, redirigir a login
+        if (!session?.user) {
+          console.log("❌ No session found, redirecting to login")
+          if (mounted && !hasRedirectedRef.current) {
+            hasRedirectedRef.current = true
+            setLoading(false)
+            router.replace("/login")
+          }
+          return
+        }
+
+        console.log("✅ Session found:", session.user.email)
+
+        // Cargar datos del usuario desde la base de datos
+        try {
+          const userDataPromise = supabase.from("users").select("*").eq("id", session.user.id).single()
+
+          const userTimeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("User data timeout")), 5000),
+          )
+
+          const { data: userData, error } = (await Promise.race([userDataPromise, userTimeoutPromise])) as any
+
+          if (error && error.code !== "PGRST116") {
+            console.error("Error loading user data:", error)
+          }
+
+          if (mounted) {
+            if (userData) {
+              console.log("✅ User data loaded from database")
+              // Free y Premium = 0 créditos por defecto, Pro = 500 o los que tenga guardados
+              const aiCredits =
+                userData.subscription_tier === "free" || userData.subscription_tier === "premium"
+                  ? userData.ai_credits || 0
+                  : userData.ai_credits || 500
+              setUser({
+                ...userData,
+                ai_credits: aiCredits,
+              })
+            } else {
+              console.log("⚠️ No user data in database, using session data")
+              setUser({
+                id: session.user.id,
+                email: session.user.email,
+                full_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Usuario",
+                name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Usuario",
+                subscription_tier: "free",
+                plan: "free",
+                billing_cycle: "monthly",
+                ai_credits: 0,
+                theme_preference: "light",
+                pomodoro_work_duration: 25,
+                pomodoro_break_duration: 5,
+                pomodoro_long_break_duration: 15,
+                pomodoro_sessions_until_long_break: 4,
+              })
+            }
+            setLoading(false)
+          }
+        } catch (userError) {
+          console.error("Failed to load user data:", userError)
+          if (mounted) {
+            setUser({
+              id: session.user.id,
+              email: session.user.email,
+              full_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Usuario",
+              name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Usuario",
+              subscription_tier: "free",
+              plan: "free",
+              billing_cycle: "monthly",
+              ai_credits: 0,
+              theme_preference: "light",
+              pomodoro_work_duration: 25,
+              pomodoro_break_duration: 5,
+              pomodoro_long_break_duration: 15,
+              pomodoro_sessions_until_long_break: 4,
+            })
+            setLoading(false)
+          }
+        }
       } catch (error) {
-        console.error("Error initializing app:", error)
-        router.push("/")
-      } finally {
-        setIsLoading(false)
+        console.error("Error loading app:", error)
+        if (mounted && !hasRedirectedRef.current) {
+          hasRedirectedRef.current = true
+          setLoading(false)
+          router.replace("/login")
+        }
       }
     }
 
-    initializeApp()
-  }, [router])
+    loadUser()
 
-  // Save data to localStorage
-  const saveToStorage = useCallback(
-    (key, data) => {
-      if (user) {
-        localStorage.setItem(`${key}_${user.id}`, JSON.stringify(data))
-      }
-    },
-    [user],
-  )
+    return () => {
+      mounted = false
+    }
+  }, [router, searchParams])
 
-  // Data management functions
-  const handleTasksChange = useCallback(
-    (newTasks) => {
-      setTasks(newTasks)
-      saveToStorage("tasks", newTasks)
-    },
-    [saveToStorage],
-  )
+  const handleLogout = async () => {
+    if (user?.isDemo) {
+      router.push("/")
+      return
+    }
 
-  const handleNotesChange = useCallback(
-    (newNotes) => {
-      setNotes(newNotes)
-      saveToStorage("notes", newNotes)
-    },
-    [saveToStorage],
-  )
-
-  const handleWishlistChange = useCallback(
-    (newWishlist) => {
-      setWishlist(newWishlist)
-      saveToStorage("wishlist", newWishlist)
-    },
-    [saveToStorage],
-  )
-
-  // User update functions
-  const handleUserUpdate = useCallback(
-    (updates) => {
-      if (!user) return
-
-      const updatedUser = { ...user, ...updates }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-
-      if (updates.aiCredits !== undefined) {
-        setAiCredits(updates.aiCredits)
-      }
-    },
-    [user],
-  )
-
-  const handlePlanChange = useCallback(
-    (newPlan) => {
-      const credits = newPlan === "pro" ? 1000 : 50
-      handleUserUpdate({
-        plan: newPlan,
-        aiCredits: credits,
-      })
-      setShowSubscription(false)
-    },
-    [handleUserUpdate],
-  )
-
-  const handleCancelPlan = useCallback(() => {
-    handlePlanChange("free")
-  }, [handlePlanChange])
-
-  const handleLogout = () => {
-    localStorage.removeItem("user")
-    router.push("/")
+    try {
+      await supabase.auth.signOut()
+      router.push("/")
+    } catch (error) {
+      console.error("Error logging out:", error)
+      router.push("/")
+    }
   }
 
-  // Stats calculations
-  const stats = {
-    totalTasks: tasks.length,
-    completedTasks: tasks.filter((t) => t.completed).length,
-    totalNotes: notes.length,
-    totalWishlist: wishlist.length,
-    completionRate: tasks.length > 0 ? Math.round((tasks.filter((t) => t.completed).length / tasks.length) * 100) : 0,
+  const handleUpdateCredits = (newCredits: number) => {
+    setUser((prev: any) => ({ ...prev, ai_credits: newCredits }))
   }
 
-  // Loading state
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto"></div>
-          <p className="text-white text-lg">Cargando tu espacio de trabajo...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-gray-600 dark:text-gray-400">{t("common.loading")}</p>
         </div>
       </div>
     )
   }
 
+  if (!user) {
+    return null
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
-      <header className="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-                <Calendar className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between sticky top-0 z-50">
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-6 w-6 text-blue-600" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">FutureTask</h1>
+          {user?.isDemo && (
+            <span className="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">DEMO</span>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          <LanguageSelector />
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex h-[calc(100vh-73px)] lg:h-screen">
+        {/* Sidebar */}
+        <aside
+          className={`
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40
+          w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+          transition-transform duration-300 ease-in-out
+          flex flex-col
+          lg:top-0 top-[73px]
+        `}
+        >
+          {/* Desktop Logo */}
+          <div className="hidden lg:flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-8 w-8 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">FutureTask</h1>
+            </div>
+            <LanguageSelector />
+          </div>
+
+          {/* User Info */}
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+                {user?.full_name?.charAt(0) || user?.name?.charAt(0) || "U"}
               </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold text-white">FutureTask</h1>
-                <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Tu asistente de productividad</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {user?.full_name || user?.name || t("common.user")}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* AI Credits Display */}
-              <div className="flex items-center gap-2 bg-slate-800/50 rounded-lg px-2 sm:px-3 py-1 sm:py-2">
-                <Zap className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
-                <span className="text-xs sm:text-sm text-white font-medium">{aiCredits}</span>
-                <span className="text-xs text-slate-400 hidden sm:inline">créditos</span>
+            {user?.isDemo && (
+              <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                <p className="text-xs text-yellow-800 dark:text-yellow-200 flex items-center">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Modo Demo - Todas las funciones desbloqueadas
+                </p>
               </div>
-
-              {/* User Info */}
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="hidden sm:block text-right">
-                  <p className="text-sm font-medium text-white">{user?.name || "Usuario"}</p>
-                  <div className="flex items-center gap-1">
-                    <Badge variant={user?.plan === "pro" ? "default" : "secondary"} className="text-xs">
-                      {user?.plan === "pro" ? "Pro" : "Free"}
-                    </Badge>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowSettings(true)}
-                  className="text-white hover:bg-slate-800/50"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:bg-slate-800/50">
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+            )}
+            <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+              <span className="capitalize">Plan: {user?.subscription_tier || user?.plan || "free"}</span>
+              <span>Créditos IA: {user?.ai_credits || 0}</span>
             </div>
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-4 sm:py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-          {/* Tab Navigation - Responsive */}
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 bg-slate-800/50 backdrop-blur-sm">
-            <TabsTrigger value="dashboard" className="text-white text-xs sm:text-sm">
-              <Activity className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">📊</span>
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="text-white text-xs sm:text-sm">
-              <CheckSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Tareas</span>
-              <span className="sm:hidden">✓</span>
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="text-white text-xs sm:text-sm">
-              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Calendario</span>
-              <span className="sm:hidden">📅</span>
-            </TabsTrigger>
-            <TabsTrigger value="notes" className="text-white text-xs sm:text-sm">
-              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Notas</span>
-              <span className="sm:hidden">📝</span>
-            </TabsTrigger>
-            <TabsTrigger value="wishlist" className="text-white text-xs sm:text-sm">
-              <Heart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Wishlist</span>
-              <span className="sm:hidden">❤️</span>
-            </TabsTrigger>
-            <TabsTrigger value="achievements" className="text-white text-xs sm:text-sm">
-              <Trophy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Logros</span>
-              <span className="sm:hidden">🏆</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-4 sm:space-y-6">
-            {/* Welcome Section */}
-            <Card className={`${theme.cardBg} ${theme.border} shadow-xl`}>
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                      ¡Bienvenido, {user?.name || "Usuario"}! 👋
-                    </h2>
-                    <p className="text-slate-300 text-sm sm:text-base">
-                      Aquí tienes un resumen de tu productividad hoy
-                    </p>
-                  </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Button
-                      onClick={() => setShowSubscription(true)}
-                      className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700 text-white flex-1 sm:flex-none"
-                    >
-                      <Star className="h-4 w-4 mr-2" />
-                      {user?.plan === "pro" ? "Gestionar Plan" : "Upgrade Pro"}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Stats Cards */}
-            <StatsCards
-              stats={{
-                totalTasks: stats.totalTasks,
-                completedTasks: stats.completedTasks,
-                totalNotes: stats.totalNotes,
-                totalWishlist: stats.totalWishlist,
-                completionRate: stats.completionRate,
+          {/* Navigation */}
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            <button
+              onClick={() => {
+                setActiveTab("calendar")
+                setIsSidebarOpen(false)
               }}
-              theme={theme}
-            />
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "calendar"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Calendar className="h-5 w-5" />
+              <span className="font-medium">Calendario</span>
+            </button>
 
-            {/* Quick Actions & Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {/* Quick Actions */}
-              <Card className={`${theme.cardBg} ${theme.border} shadow-xl`}>
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Zap className="h-5 w-5 text-yellow-400" />
-                    Acciones Rápidas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button
-                    onClick={() => setActiveTab("tasks")}
-                    variant="outline"
-                    className="w-full justify-start bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700/50"
-                  >
-                    <CheckSquare className="h-4 w-4 mr-2" />
-                    Crear Nueva Tarea
-                  </Button>
-                  <Button
-                    onClick={() => setActiveTab("notes")}
-                    variant="outline"
-                    className="w-full justify-start bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700/50"
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Escribir Nota
-                  </Button>
-                  <Button
-                    onClick={() => setActiveTab("calendar")}
-                    variant="outline"
-                    className="w-full justify-start bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700/50"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Ver Calendario
-                  </Button>
-                </CardContent>
-              </Card>
+            <button
+              onClick={() => {
+                setActiveTab("tasks")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "tasks"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <CheckSquare className="h-5 w-5" />
+              <span className="font-medium">Tareas</span>
+            </button>
 
-              {/* Recent Activity */}
-              <Card className={`${theme.cardBg} ${theme.border} shadow-xl`}>
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-green-400" />
-                    Actividad Reciente
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {tasks.slice(0, 3).map((task, index) => (
-                      <div key={task.id || index} className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/30">
-                        <div className={`w-2 h-2 rounded-full ${task.completed ? "bg-green-400" : "bg-yellow-400"}`} />
-                        <span className="text-sm text-slate-300 flex-1 truncate">{task.title}</span>
-                        <span className="text-xs text-slate-500">{task.completed ? "Completada" : "Pendiente"}</span>
-                      </div>
-                    ))}
-                    {tasks.length === 0 && (
-                      <p className="text-slate-400 text-sm text-center py-4">No hay actividad reciente</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <button
+              onClick={() => {
+                setActiveTab("pomodoro")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "pomodoro"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Clock className="h-5 w-5" />
+              <span className="font-medium">Pomodoro</span>
+            </button>
 
-            {/* Pomodoro Section */}
-            <Card className={`${theme.cardBg} ${theme.border} shadow-xl`}>
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Timer className="h-5 w-5 text-red-400" />
-                  Técnica Pomodoro
-                </CardTitle>
-                <CardDescription className="text-slate-300">
-                  Mejora tu concentración con sesiones de trabajo enfocado
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <PomodoroTimer
-                  userId={user?.id || "demo-user"}
-                  theme={theme}
-                  onSessionComplete={() => {
-                    console.log("Pomodoro session completed!")
-                  }}
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
+            <button
+              onClick={() => {
+                setActiveTab("stats")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "stats"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <BarChart3 className="h-5 w-5" />
+              <span className="font-medium">Estadísticas</span>
+            </button>
 
-          {/* Tasks Tab */}
-          <TabsContent value="tasks">
-            <TaskManager
-              userId={user?.id || "demo-user"}
-              tasks={tasks}
-              onTasksChange={handleTasksChange}
-              theme={theme}
-            />
-          </TabsContent>
+            <button
+              onClick={() => {
+                setActiveTab("wishlist")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "wishlist"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Star className="h-5 w-5" />
+              <span className="font-medium">Lista de Deseos</span>
+            </button>
 
-          {/* Calendar Tab */}
-          <TabsContent value="calendar">
-            <CalendarWidget userId={user?.id || "demo-user"} tasks={tasks} theme={theme} />
-          </TabsContent>
+            <button
+              onClick={() => {
+                setActiveTab("notes")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "notes"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <FileText className="h-5 w-5" />
+              <span className="font-medium">Notas</span>
+            </button>
 
-          {/* Notes Tab */}
-          <TabsContent value="notes">
-            <NotesManager
-              userId={user?.id || "demo-user"}
-              notes={notes}
-              onNotesChange={handleNotesChange}
-              theme={theme}
-            />
-          </TabsContent>
+            <button
+              onClick={() => {
+                setActiveTab("ai")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "ai"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Bot className="h-5 w-5" />
+              <span className="font-medium">Asistente IA</span>
+              {user?.ai_credits > 0 && (
+                <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full">
+                  {user.ai_credits}
+                </span>
+              )}
+            </button>
 
-          {/* Wishlist Tab */}
-          <TabsContent value="wishlist">
-            <WishlistManager
-              userId={user?.id || "demo-user"}
-              wishlist={wishlist}
-              onWishlistChange={handleWishlistChange}
-              theme={theme}
-            />
-          </TabsContent>
+            {!user?.isDemo && (
+              <button
+                onClick={() => {
+                  setActiveTab("subscription")
+                  setIsSidebarOpen(false)
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  activeTab === "subscription"
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                }`}
+              >
+                <CreditCard className="h-5 w-5" />
+                <span className="font-medium">Suscripción</span>
+              </button>
+            )}
 
-          {/* Achievements Tab */}
-          <TabsContent value="achievements">
-            <AchievementsDisplay userId={user?.id || "demo-user"} user={user} theme={theme} />
-          </TabsContent>
-        </Tabs>
-      </main>
+            <button
+              onClick={() => {
+                setActiveTab("achievements")
+                setIsSidebarOpen(false)
+              }}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                activeTab === "achievements"
+                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              }`}
+            >
+              <Trophy className="h-5 w-5" />
+              <span className="font-medium">Logros</span>
+            </button>
+          </nav>
 
-      {/* AI Assistant - Fixed Position */}
-      <AIAssistant
-        userId={user?.id || "demo-user"}
-        isPro={user?.plan === "pro"}
-        aiCredits={aiCredits}
-        onUpgrade={() => setShowSubscription(true)}
-        compact={true}
-      />
+          {/* Settings & Logout */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start bg-transparent"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Configuración
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-red-600 hover:text-red-700 bg-transparent"
+              onClick={handleLogout}
+            >
+              {user?.isDemo ? "Salir del Demo" : "Cerrar Sesión"}
+            </Button>
+          </div>
+        </aside>
 
-      {/* Modals */}
-      {showSettings && (
-        <SettingsModal
-          user={user}
-          onUserUpdate={handleUserUpdate}
-          onUpgrade={() => setShowSubscription(true)}
-          onCancelPlan={handleCancelPlan}
-        />
-      )}
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto p-4 lg:p-6">
+          <div className="max-w-7xl mx-auto">
+            {activeTab === "calendar" && <CalendarWidget userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "tasks" && <TaskManager userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "pomodoro" && (
+              <PomodoroTimer
+                userId={user?.id}
+                workDuration={user?.pomodoro_work_duration || 25}
+                breakDuration={user?.pomodoro_break_duration || 5}
+                longBreakDuration={user?.pomodoro_long_break_duration || 15}
+                sessionsUntilLongBreak={user?.pomodoro_sessions_until_long_break || 4}
+                isDemo={user?.isDemo}
+              />
+            )}
+            {activeTab === "stats" && <StatsCards userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "wishlist" && <WishlistManager userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "notes" && <NotesManager userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "ai" && (
+              <AiAssistant
+                userId={user?.id}
+                credits={user?.ai_credits || 0}
+                onCreditsUpdate={handleUpdateCredits}
+                userPlan={user?.subscription_tier || user?.plan || "free"}
+              />
+            )}
+            {activeTab === "subscription" && !user?.isDemo && (
+              <SubscriptionManager
+                userId={user?.id}
+                currentPlan={user?.subscription_tier || user?.plan || "free"}
+                billingCycle={user?.billing_cycle || user?.billing || "monthly"}
+              />
+            )}
+            {activeTab === "achievements" && <AchievementsDisplay userId={user?.id} isDemo={user?.isDemo} />}
+          </div>
+        </main>
+      </div>
 
-      {showSubscription && (
-        <SubscriptionModal
-          currentPlan={user?.plan || "free"}
-          onClose={() => setShowSubscription(false)}
-          onPlanChange={handlePlanChange}
+      {/* Settings Modal */}
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} user={user} />
+
+      {/* Toast Notifications */}
+      <Toaster />
+
+      {/* Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
     </div>
+  )
+}
+
+export default function AppPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      }
+    >
+      <AppContent />
+    </Suspense>
   )
 }

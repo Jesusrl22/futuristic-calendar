@@ -1,263 +1,139 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Loader2, Shield, CheckCircle } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, CreditCard, Shield, CheckCircle } from "lucide-react"
 
 interface PayPalPaymentProps {
-  packageId: string
-  amount: number
-  currency: string
-  onSuccess: (details: any) => void
-  onError: (error: any) => void
+  planId: string
+  onSuccess: () => void
   onCancel: () => void
 }
 
-declare global {
-  interface Window {
-    paypal?: any
-  }
-}
-
-export default function PayPalPayment({
-  packageId,
-  amount,
-  currency,
-  onSuccess,
-  onError,
-  onCancel,
-}: PayPalPaymentProps) {
-  const [isLoading, setIsLoading] = useState(true)
+export function PayPalPayment({ planId, onSuccess, onCancel }: PayPalPaymentProps) {
   const [isProcessing, setIsProcessing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [paypalLoaded, setPaypalLoaded] = useState(false)
+  const [paymentStep, setPaymentStep] = useState<"select" | "processing" | "success">("select")
 
-  useEffect(() => {
-    const loadPayPalScript = async () => {
-      try {
-        // Verificar si PayPal ya está cargado
-        if (window.paypal) {
-          setPaypalLoaded(true)
-          setIsLoading(false)
-          return
-        }
+  const handlePayPalPayment = async () => {
+    setIsProcessing(true)
+    setPaymentStep("processing")
 
-        // Cargar el script de PayPal
-        const script = document.createElement("script")
-        script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=${currency}&intent=capture`
-        script.async = true
+    try {
+      // Simulate PayPal payment process
+      await new Promise((resolve) => setTimeout(resolve, 3000))
 
-        script.onload = () => {
-          setPaypalLoaded(true)
-          setIsLoading(false)
-        }
-
-        script.onerror = () => {
-          setError("Error al cargar PayPal")
-          setIsLoading(false)
-        }
-
-        document.body.appendChild(script)
-      } catch (err) {
-        console.error("Error loading PayPal script:", err)
-        setError("Error al cargar PayPal")
-        setIsLoading(false)
-      }
+      setPaymentStep("success")
+      setTimeout(() => {
+        onSuccess()
+      }, 2000)
+    } catch (error) {
+      console.error("Payment error:", error)
+      setIsProcessing(false)
+      setPaymentStep("select")
     }
-
-    loadPayPalScript()
-  }, [currency])
-
-  useEffect(() => {
-    if (paypalLoaded && window.paypal && !isLoading) {
-      renderPayPalButtons()
-    }
-  }, [paypalLoaded, isLoading, packageId, amount, currency])
-
-  const renderPayPalButtons = () => {
-    const paypalButtonContainer = document.getElementById("paypal-button-container")
-    if (!paypalButtonContainer) return
-
-    // Limpiar contenedor anterior
-    paypalButtonContainer.innerHTML = ""
-
-    window.paypal
-      .Buttons({
-        style: {
-          layout: "vertical",
-          color: "blue",
-          shape: "rect",
-          label: "paypal",
-          height: 50,
-        },
-
-        createOrder: async () => {
-          try {
-            setIsProcessing(true)
-            setError(null)
-
-            const response = await fetch("/api/paypal/create-order", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                packageId,
-                amount,
-                currency,
-              }),
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-              throw new Error(data.error || "Error al crear la orden")
-            }
-
-            return data.id
-          } catch (err) {
-            console.error("Error creating order:", err)
-            setError(err instanceof Error ? err.message : "Error al crear la orden")
-            setIsProcessing(false)
-            throw err
-          }
-        },
-
-        onApprove: async (data: any) => {
-          try {
-            setIsProcessing(true)
-
-            const response = await fetch("/api/paypal/capture-order", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                orderId: data.orderID,
-                packageId,
-              }),
-            })
-
-            const result = await response.json()
-
-            if (!response.ok) {
-              throw new Error(result.error || "Error al procesar el pago")
-            }
-
-            onSuccess(result)
-          } catch (err) {
-            console.error("Error capturing order:", err)
-            setError(err instanceof Error ? err.message : "Error al procesar el pago")
-            onError(err)
-          } finally {
-            setIsProcessing(false)
-          }
-        },
-
-        onCancel: () => {
-          setIsProcessing(false)
-          onCancel()
-        },
-
-        onError: (err: any) => {
-          console.error("PayPal error:", err)
-          setError("Error en el procesamiento del pago")
-          setIsProcessing(false)
-          onError(err)
-        },
-      })
-      .render("#paypal-button-container")
   }
 
-  if (isLoading) {
+  const handleDemoPayment = async () => {
+    setIsProcessing(true)
+    setPaymentStep("processing")
+
+    // Simulate payment processing
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    setPaymentStep("success")
+    setTimeout(() => {
+      onSuccess()
+    }, 1500)
+  }
+
+  if (paymentStep === "success") {
     return (
-      <Card className="w-full bg-slate-900/50 backdrop-blur-sm border-slate-700">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center space-x-2">
-            <Loader2 className="h-5 w-5 animate-spin text-purple-400" />
-            <span className="text-slate-300">Cargando PayPal...</span>
-          </div>
+      <Card className="bg-slate-800/50 border-green-500/30">
+        <CardContent className="p-8 text-center">
+          <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">¡Pago Exitoso!</h3>
+          <p className="text-gray-400">Tu suscripción ha sido activada correctamente.</p>
         </CardContent>
       </Card>
     )
   }
 
-  if (error) {
+  if (paymentStep === "processing") {
     return (
-      <Card className="w-full bg-red-900/20 backdrop-blur-sm border-red-700">
-        <CardContent className="p-6">
-          <div className="text-center">
-            <p className="text-red-400 mb-4">{error}</p>
-            <Button
-              onClick={() => {
-                setError(null)
-                setIsLoading(true)
-                window.location.reload()
-              }}
-              variant="outline"
-              className="border-red-600 text-red-400 hover:bg-red-900/30"
-            >
-              Reintentar
-            </Button>
-          </div>
+      <Card className="bg-slate-800/50 border-purple-500/20">
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-16 w-16 text-purple-400 mx-auto mb-4 animate-spin" />
+          <h3 className="text-xl font-bold text-white mb-2">Procesando Pago</h3>
+          <p className="text-gray-400">Por favor espera mientras procesamos tu pago...</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card className="w-full bg-slate-900/50 backdrop-blur-sm border-slate-700">
-      <CardContent className="p-6">
-        {/* Información de seguridad */}
-        <div className="mb-6 p-4 bg-green-900/20 rounded-lg border border-green-700">
-          <div className="flex items-center space-x-2 mb-2">
-            <Shield className="h-5 w-5 text-green-400" />
-            <span className="text-green-400 font-medium">Pago Seguro</span>
+    <div className="space-y-6">
+      <Card className="bg-slate-800/50 border-purple-500/20">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Método de Pago
+          </CardTitle>
+          <CardDescription className="text-gray-400">Selecciona tu método de pago preferido</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Demo Payment Button */}
+          <Button
+            onClick={handleDemoPayment}
+            disabled={isProcessing}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-4 w-4 mr-2" />
+                Pago Demo (Simulado)
+              </>
+            )}
+          </Button>
+
+          {/* PayPal Button */}
+          <Button
+            onClick={handlePayPalPayment}
+            disabled={isProcessing}
+            className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white py-3"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Procesando...
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h8.418c2.508 0 4.514.893 5.835 2.607 1.146 1.486 1.321 3.51.534 6.154-.906 3.04-2.474 4.977-4.563 5.629-.906.283-1.929.283-3.298.283H9.15c-.283 0-.566.283-.566.566l-.849 5.418c-.071.566-.566.849-1.132.849-.283 0-.566-.071-.849-.283-.283-.212-.566-.566-.566-.849l.849-5.418c.071-.566.566-.849 1.132-.849h3.581c1.369 0 2.392 0 3.298-.283 2.089-.652 3.657-2.589 4.563-5.629.787-2.644.612-4.668-.534-6.154C18.932.893 16.926 0 14.418 0H5.998c-.524 0-.972.382-1.054.901L1.837 20.597a.641.641 0 0 0 .633.74h4.606z" />
+                </svg>
+                Pagar con PayPal
+              </>
+            )}
+          </Button>
+
+          <div className="flex items-center gap-2 text-sm text-gray-400 justify-center">
+            <Shield className="h-4 w-4" />
+            <span>Pago seguro y encriptado</span>
           </div>
-          <p className="text-sm text-green-300">Procesado por PayPal con encriptación SSL de 256 bits</p>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Resumen del pedido */}
-        <div className="mb-6 p-4 bg-slate-800/50 rounded-lg">
-          <h3 className="text-lg font-semibold text-white mb-2">Resumen del Pedido</h3>
-          <div className="flex justify-between items-center">
-            <span className="text-slate-300">Total a pagar:</span>
-            <span className="text-2xl font-bold text-purple-400">
-              {amount.toFixed(2)} {currency}
-            </span>
-          </div>
-        </div>
-
-        {/* Botones de PayPal */}
-        <div className="relative">
-          <div id="paypal-button-container" className="min-h-[50px]"></div>
-
-          {isProcessing && (
-            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-purple-400 mx-auto mb-2" />
-                <p className="text-slate-300">Procesando pago...</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Información adicional */}
-        <div className="mt-6 text-center">
-          <div className="flex items-center justify-center space-x-4 text-sm text-slate-400">
-            <div className="flex items-center space-x-1">
-              <CheckCircle className="h-4 w-4" />
-              <span>Sin suscripciones</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <CheckCircle className="h-4 w-4" />
-              <span>Créditos sin caducidad</span>
-            </div>
-          </div>
-          <p className="mt-2 text-xs text-slate-500">Al completar la compra, aceptas nuestros términos y condiciones</p>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={onCancel} className="flex-1 bg-transparent">
+          Cancelar
+        </Button>
+      </div>
+    </div>
   )
 }

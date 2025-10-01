@@ -1,15 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
+import { createClient } from "@/lib/supabase"
 
-const PAYPAL_CLIENT_ID =
-  process.env.PAYPAL_CLIENT_ID || "AfTXM0fv3XQWk88Wf2wa4kOesH5tUoLpJDGfBQwZC0Re5H1yUhOhamMA_Akr3keDwPkAaaEf79BXLNLl"
-const PAYPAL_CLIENT_SECRET =
-  process.env.PAYPAL_CLIENT_SECRET || "EM7layvX1KuwV0MFzui1w0PIm_nqLddGlS8GGIMQdaJnOXnztcfFMyaVUWc-WsCOY_sARPZ4wcxt_usq"
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET
+const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID
 const PAYPAL_BASE_URL =
   process.env.NODE_ENV === "production" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
 
-// Initialize Supabase client
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+const supabase = createClient()
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64")
@@ -73,10 +71,9 @@ export async function POST(req: NextRequest) {
       id: webhookData.id,
     })
 
-    // Verify webhook signature if webhook ID is configured
-    const webhookId = process.env.PAYPAL_WEBHOOK_ID
-    if (webhookId) {
-      const isValid = await verifyWebhookSignature(req.headers, body, webhookId)
+    // Verificar firma del webhook si está configurado
+    if (PAYPAL_WEBHOOK_ID) {
+      const isValid = await verifyWebhookSignature(req.headers, body, PAYPAL_WEBHOOK_ID)
       if (!isValid) {
         console.error("❌ Invalid webhook signature")
         return NextResponse.json({ error: "Invalid signature" }, { status: 401 })
@@ -84,7 +81,7 @@ export async function POST(req: NextRequest) {
       console.log("✅ Webhook signature verified")
     }
 
-    // Handle different webhook events
+    // Procesar diferentes tipos de eventos
     switch (webhookData.event_type) {
       case "PAYMENT.CAPTURE.COMPLETED":
         await handlePaymentCaptureCompleted(webhookData)
@@ -114,7 +111,7 @@ export async function POST(req: NextRequest) {
         console.log(`ℹ️ Unhandled webhook event: ${webhookData.event_type}`)
     }
 
-    // Log webhook event
+    // Registrar evento del webhook
     await supabase.from("webhook_events").insert({
       event_type: webhookData.event_type,
       resource_type: webhookData.resource_type,
@@ -149,10 +146,16 @@ async function handlePaymentCaptureCompleted(webhookData: any) {
       customData,
     })
 
-    if (customData?.userId && customData?.credits) {
-      // This should already be handled by the capture-order endpoint
-      // But we can add additional verification here
-      console.log("✅ Payment capture webhook processed")
+    if (customData?.userId) {
+      // Actualizar estado de la transacción
+      await supabase
+        .from("payment_transactions")
+        .update({
+          status: "completed",
+          paypal_capture_id: capture.id,
+          processed_at: new Date().toISOString(),
+        })
+        .eq("paypal_order_id", capture.supplementary_data?.related_ids?.order_id)
     }
   } catch (error) {
     console.error("❌ Error handling payment capture completed:", error)
@@ -167,15 +170,15 @@ async function handlePaymentCaptureDenied(webhookData: any) {
       reason: capture.status_details?.reason,
     })
 
-    // Log failed payment
-    await supabase.from("payment_transactions").insert({
-      paypal_capture_id: capture.id,
-      status: "failed",
-      failure_reason: capture.status_details?.reason || "Payment denied",
-      amount: Number.parseFloat(capture.amount?.value || "0"),
-      currency: capture.amount?.currency_code || "EUR",
-      type: "credit_purchase",
-    })
+    // Actualizar estado de la transacción
+    await supabase
+      .from("payment_transactions")
+      .update({
+        status: "failed",
+        failure_reason: capture.status_details?.reason || "Payment denied",
+        processed_at: new Date().toISOString(),
+      })
+      .eq("paypal_capture_id", capture.id)
   } catch (error) {
     console.error("❌ Error handling payment capture denied:", error)
   }
@@ -190,13 +193,12 @@ async function handleSubscriptionActivated(webhookData: any) {
       status: subscription.status,
     })
 
-    // Update user subscription status
+    // Actualizar estado de suscripción del usuario
     const { error } = await supabase
       .from("users")
       .update({
         subscription_status: "active",
-        subscription_id: subscription.id,
-        subscription_plan_id: subscription.plan_id,
+        paypal_subscription_id: subscription.id,
         subscription_activated_at: new Date().toISOString(),
       })
       .eq("paypal_subscription_id", subscription.id)
@@ -217,7 +219,7 @@ async function handleSubscriptionCancelled(webhookData: any) {
       reason: subscription.status_change_note,
     })
 
-    // Update user subscription status
+    // Actualizar estado de suscripción del usuario
     const { error } = await supabase
       .from("users")
       .update({
@@ -243,7 +245,7 @@ async function handleSubscriptionSuspended(webhookData: any) {
       reason: subscription.status_change_note,
     })
 
-    // Update user subscription status
+    // Actualizar estado de suscripción del usuario
     const { error } = await supabase
       .from("users")
       .update({
@@ -268,7 +270,7 @@ async function handleSubscriptionPaymentFailed(webhookData: any) {
       failureReason: subscription.status_change_note,
     })
 
-    // Log payment failure
+    // Registrar fallo de pago
     await supabase.from("subscription_events").insert({
       subscription_id: subscription.id,
       event_type: "payment_failed",

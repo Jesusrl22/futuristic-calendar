@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getCreditPackage } from "@/lib/ai-credits"
+import { getPackById } from "@/lib/ai-credits"
 
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET
 const PAYPAL_BASE_URL =
-  process.env.NODE_ENV === "production" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com"
+  process.env.NODE_ENV === "production" ? "https://api.paypal.com" : "https://api.sandbox.paypal.com"
 
 async function getPayPalAccessToken() {
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64")
@@ -24,42 +24,62 @@ async function getPayPalAccessToken() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { packageId, amount, currency } = await request.json()
+    const { packId, userId } = await request.json()
 
-    // Validar datos
-    if (!packageId || !amount || !currency) {
-      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 })
+    if (!packId || !userId) {
+      return NextResponse.json({ error: "Pack ID and User ID are required" }, { status: 400 })
     }
 
-    // Verificar que el paquete existe y el precio coincide
-    const creditPackage = getCreditPackage(packageId)
-    if (!creditPackage || creditPackage.price !== amount) {
-      return NextResponse.json({ error: "Paquete inválido o precio incorrecto" }, { status: 400 })
+    const creditPack = getPackById(packId)
+    if (!creditPack) {
+      return NextResponse.json({ error: "Credit pack not found" }, { status: 404 })
     }
 
-    // Obtener token de acceso de PayPal
     const accessToken = await getPayPalAccessToken()
 
-    // Crear orden en PayPal
     const orderData = {
       intent: "CAPTURE",
       purchase_units: [
         {
-          reference_id: packageId,
+          reference_id: `credits_${packId}_${userId}`,
           amount: {
-            currency_code: currency,
-            value: amount.toFixed(2),
+            currency_code: "EUR",
+            value: creditPack.priceFinal.toFixed(2),
+            breakdown: {
+              item_total: {
+                currency_code: "EUR",
+                value: creditPack.priceBase.toFixed(2),
+              },
+              tax_total: {
+                currency_code: "EUR",
+                value: (creditPack.priceFinal - creditPack.priceBase).toFixed(2),
+              },
+            },
           },
-          description: `${creditPackage.name} - ${creditPackage.credits} créditos IA`,
+          items: [
+            {
+              name: `${creditPack.name} - ${creditPack.credits} Créditos IA`,
+              description: creditPack.description,
+              unit_amount: {
+                currency_code: "EUR",
+                value: creditPack.priceBase.toFixed(2),
+              },
+              tax: {
+                currency_code: "EUR",
+                value: (creditPack.priceFinal - creditPack.priceBase).toFixed(2),
+              },
+              quantity: "1",
+              category: "DIGITAL_GOODS",
+            },
+          ],
         },
       ],
       application_context: {
-        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/cancel`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?type=credits&pack=${packId}`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel`,
         brand_name: "FutureTask",
         locale: "es-ES",
         landing_page: "BILLING",
-        shipping_preference: "NO_SHIPPING",
         user_action: "PAY_NOW",
       },
     }
@@ -76,18 +96,15 @@ export async function POST(request: NextRequest) {
     const order = await response.json()
 
     if (!response.ok) {
-      console.error("PayPal order creation failed:", order)
-      return NextResponse.json({ error: "Error al crear la orden en PayPal" }, { status: 500 })
+      throw new Error(`PayPal API error: ${order.message || "Unknown error"}`)
     }
 
-    console.log("✅ PayPal order created:", order.id)
-
     return NextResponse.json({
-      id: order.id,
-      status: order.status,
+      orderId: order.id,
+      approvalUrl: order.links.find((link: any) => link.rel === "approve")?.href,
     })
   } catch (error) {
-    console.error("Error creating PayPal order:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    console.error("PayPal Create Order Error:", error)
+    return NextResponse.json({ error: "Failed to create PayPal order" }, { status: 500 })
   }
 }
