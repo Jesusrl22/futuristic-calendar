@@ -205,16 +205,16 @@ function AppContent() {
 
   const handleLogout = async () => {
     if (user?.isDemo) {
-      router.push("/")
+      router.push("/login")
       return
     }
 
     try {
       await supabase.auth.signOut()
-      router.push("/")
+      router.push("/login")
     } catch (error) {
       console.error("Error logging out:", error)
-      router.push("/")
+      router.push("/login")
     }
   }
 

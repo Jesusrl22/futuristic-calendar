@@ -1,12 +1,18 @@
+"use client"
+
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-console.log("🔧 Supabase Config:", {
-  url: supabaseUrl ? "Configurada" : "No configurada",
-  key: supabaseAnonKey ? "Configurada" : "No configurada",
-})
+if (typeof window !== "undefined") {
+  console.log("🔧 Supabase Config:", {
+    url: supabaseUrl || "❌ No configurada",
+    urlValid: supabaseUrl?.startsWith("https://") ? "✅ Válida" : "❌ Inválida",
+    key: supabaseAnonKey ? `✅ ${supabaseAnonKey.substring(0, 20)}...` : "❌ No configurada",
+    keyLength: supabaseAnonKey?.length || 0,
+  })
+}
 
 // Create a singleton instance
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
@@ -19,6 +25,7 @@ export function createClient() {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
+          storage: typeof window !== "undefined" ? window.localStorage : undefined,
         },
         global: {
           headers: {
@@ -26,7 +33,9 @@ export function createClient() {
           },
         },
       })
-      console.log("✅ Supabase client created successfully")
+      if (typeof window !== "undefined") {
+        console.log("✅ Supabase client created successfully")
+      }
     } catch (error) {
       console.error("❌ Error creating Supabase client:", error)
       supabaseInstance = null
@@ -35,7 +44,9 @@ export function createClient() {
 
   // Return a mock client if Supabase is not available
   if (!supabaseInstance) {
-    console.log("ℹ️ Using mock Supabase client (Demo mode)")
+    if (typeof window !== "undefined") {
+      console.log("ℹ️ Using mock Supabase client (Demo mode)")
+    }
     return createMockSupabaseClient()
   }
 
@@ -113,18 +124,29 @@ export const supabase = createClient()
 // Check if Supabase is available
 export async function checkSupabaseConnection(): Promise<boolean> {
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.log("❌ Supabase credentials not configured")
+    return false
+  }
+
+  if (!supabaseUrl.startsWith("https://")) {
+    console.log("❌ Supabase URL is invalid")
     return false
   }
 
   try {
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000))
+    // Try to get session first (lightweight check)
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
-    const healthCheck = supabase.from("users").select("count", { count: "exact", head: true })
+    if (sessionError) {
+      console.warn("⚠️ Supabase session check failed:", sessionError.message)
+      return false
+    }
 
-    await Promise.race([healthCheck, timeout])
+    // If we can check the session, consider it available
+    console.log("✅ Supabase connection available")
     return true
-  } catch (error) {
-    console.warn("⚠️ Supabase connection check failed:", error)
+  } catch (error: any) {
+    console.warn("⚠️ Supabase connection check failed:", error?.message || error)
     return false
   }
 }
