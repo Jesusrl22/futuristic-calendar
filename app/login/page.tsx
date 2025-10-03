@@ -3,289 +3,365 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AlertCircle, Rocket, Database, Globe } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { supabase } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isDatabaseAvailable, setIsDatabaseAvailable] = useState<boolean | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  // LOGIN
+  const [loginEmail, setLoginEmail] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
+
+  // REGISTER
+  const [registerEmail, setRegisterEmail] = useState("")
+  const [registerPassword, setRegisterPassword] = useState("")
+  const [registerName, setRegisterName] = useState("")
 
   useEffect(() => {
-    console.log("🚀 [v758] Login Page Mounted")
-    console.log("🌐 Current URL:", window.location.href)
-    console.log("📦 Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
-
-    checkDatabaseConnection()
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("🔐 FutureTask v761 - Login Page")
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("📍 URL:", window.location.href)
+    console.log("🌐 Environment:", process.env.NODE_ENV)
+    console.log("⏰ Loaded at:", new Date().toISOString())
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
   }, [])
 
-  const checkDatabaseConnection = async () => {
-    try {
-      console.log("🔍 [v758] Testing database connection...")
-      const { data, error } = await supabase.from("users").select("count").limit(1)
-
-      if (error) {
-        console.error("❌ [v758] Database connection failed:", error.message)
-        setIsDatabaseAvailable(false)
-      } else {
-        console.log("✅ [v758] Database connection successful")
-        setIsDatabaseAvailable(true)
-      }
-    } catch (err) {
-      console.error("❌ [v758] Database check error:", err)
-      setIsDatabaseAvailable(false)
-    }
-  }
-
-  const handleDemoLogin = () => {
-    console.log("🎮 [v758] Demo Mode activated")
-    const demoUser = {
-      id: "demo-user-" + Date.now(),
-      email: "demo@future-task.com",
-      name: "Demo User",
-      isPremium: false,
-      isDemoMode: true,
-      createdAt: new Date().toISOString(),
-    }
-
-    localStorage.setItem("user", JSON.stringify(demoUser))
-    console.log("✅ [v758] Demo user saved to localStorage")
-    router.push("/app")
-  }
-
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-
-    console.log("🔐 [v758] Login attempt:", { email })
+    setSuccess(null)
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      console.log("🔐 [v761] Login attempt:", { email: loginEmail, timestamp: new Date().toISOString() })
+
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
       })
 
-      if (signInError) {
-        console.error("❌ [v758] Login error:", signInError.message)
+      console.log("📥 [v761] Login response:", {
+        success: !!data.user,
+        error: authError?.message,
+        userId: data.user?.id,
+      })
 
-        if (signInError.message.includes("fetch")) {
+      if (authError) {
+        console.error("❌ [v761] Login error:", authError.message)
+
+        if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError(
-            "⚠️ Cannot connect to database. The preview environment blocks external requests. Please use Demo Mode or deploy to production.",
+            "⚠️ Error de conexión con la base de datos. Por favor, verifica tu conexión a internet e intenta de nuevo.",
           )
+        } else if (authError.message.includes("Invalid login credentials")) {
+          setError("❌ Email o contraseña incorrectos. Por favor, verifica tus credenciales.")
+        } else if (authError.message.includes("Email not confirmed")) {
+          setError("📧 Por favor, confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.")
         } else {
-          setError(signInError.message)
+          setError(`Error: ${authError.message}`)
         }
         return
       }
 
-      console.log("✅ [v758] Login successful")
-      router.push("/app")
+      if (data.user) {
+        console.log("✅ [v761] Login successful:", {
+          userId: data.user.id,
+          email: data.user.email,
+          timestamp: new Date().toISOString(),
+        })
+        setSuccess("✅ ¡Inicio de sesión exitoso! Redirigiendo...")
+
+        setTimeout(() => {
+          console.log("🔄 [v761] Redirecting to /app")
+          router.push("/app")
+          router.refresh()
+        }, 1500)
+      }
     } catch (err) {
-      console.error("❌ [v758] Unexpected login error:", err)
-      setError("An unexpected error occurred. Please try Demo Mode.")
+      console.error("💥 [v761] Unexpected error:", err)
+      setError("Error inesperado. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-
-    const formData = new FormData(e.currentTarget)
-    const email = formData.get("email") as string
-    const password = formData.get("password") as string
-
-    console.log("📝 [v758] Registration attempt:", { email })
+    setSuccess(null)
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
+      console.log("📝 [v761] Registration attempt:", {
+        email: registerEmail,
+        name: registerName,
+        timestamp: new Date().toISOString(),
       })
 
-      if (signUpError) {
-        console.error("❌ [v758] Registration error:", signUpError.message)
+      // Validaciones básicas
+      if (!registerEmail || !registerPassword || !registerName) {
+        setError("Por favor, completa todos los campos")
+        setIsLoading(false)
+        return
+      }
 
-        if (signUpError.message.includes("fetch")) {
+      if (registerPassword.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres")
+        setIsLoading(false)
+        return
+      }
+
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: registerEmail,
+        password: registerPassword,
+        options: {
+          data: {
+            name: registerName,
+          },
+          emailRedirectTo: `${window.location.origin}/app`,
+        },
+      })
+
+      console.log("📥 [v761] Register response:", {
+        success: !!data.user,
+        error: authError?.message,
+        userId: data.user?.id,
+      })
+
+      if (authError) {
+        console.error("❌ [v761] Registration error:", authError.message)
+
+        if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError(
-            "⚠️ Cannot connect to database. The preview environment blocks external requests. Please use Demo Mode or deploy to production.",
+            "⚠️ Error de conexión con la base de datos. Por favor, verifica tu conexión a internet e intenta de nuevo.",
           )
+        } else if (authError.message.includes("already registered")) {
+          setError("❌ Este email ya está registrado. Por favor, inicia sesión.")
         } else {
-          setError(signUpError.message)
+          setError(`Error: ${authError.message}`)
         }
         return
       }
 
-      console.log("✅ [v758] Registration successful")
-      alert("✅ Registration successful! Please check your email to verify your account.")
+      if (data.user) {
+        console.log("✅ [v761] Registration successful:", {
+          userId: data.user.id,
+          email: data.user.email,
+          timestamp: new Date().toISOString(),
+        })
+        setSuccess("✅ ¡Registro exitoso! Por favor, verifica tu email antes de iniciar sesión.")
+
+        // Limpiar formulario
+        setRegisterEmail("")
+        setRegisterPassword("")
+        setRegisterName("")
+      }
     } catch (err) {
-      console.error("❌ [v758] Unexpected registration error:", err)
-      setError("An unexpected error occurred. Please try Demo Mode.")
+      console.error("💥 [v761] Unexpected error:", err)
+      setError("Error inesperado. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black p-4">
-      <Card className="w-full max-w-md bg-gray-900/50 backdrop-blur-xl border-gray-700">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <Rocket className="h-12 w-12 text-cyan-400" />
-          </div>
-          <CardTitle className="text-2xl text-center text-white">FutureTask</CardTitle>
-          <CardDescription className="text-center text-gray-400">
-            Your AI-powered productivity companion
-          </CardDescription>
-          <div className="flex items-center justify-center gap-2 text-xs text-gray-500 pt-2">
-            <Globe className="h-3 w-3" />
-            <span>v758 • Build: 2025-01-03</span>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {/* Database Status Alert */}
-          {isDatabaseAvailable === false && (
-            <Alert className="mb-4 bg-yellow-900/20 border-yellow-600">
-              <Database className="h-4 w-4 text-yellow-500" />
-              <AlertDescription className="text-yellow-200">
-                🔒 Preview environment detected. Database connections are blocked.
-                <br />
-                <strong>Use Demo Mode</strong> to test the app, or deploy to production.
-              </AlertDescription>
-            </Alert>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
+      {/* Version indicator */}
+      <div className="fixed top-4 left-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg z-50">
+        v761
+      </div>
 
-          {/* Error Alert */}
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Demo Mode Button - Prominent */}
-          <Button
-            onClick={handleDemoLogin}
-            className="w-full mb-6 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-semibold py-6"
-            size="lg"
-          >
-            <Rocket className="mr-2 h-5 w-5" />🎮 Try Demo Mode (No Login Required)
-          </Button>
-
-          <div className="relative mb-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-700" />
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+        {/* Left side - Branding */}
+        <div className="text-white space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-gray-900 px-2 text-gray-400">Or continue with email</span>
+            <h1 className="text-4xl font-bold">FutureTask</h1>
+          </div>
+
+          <p className="text-xl text-gray-300">El futuro de la productividad con IA</p>
+
+          <div className="space-y-4 pt-8">
+            <div className="flex items-start gap-3">
+              <Calendar className="w-6 h-6 text-purple-400 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-lg">Calendario Inteligente</h3>
+                <p className="text-gray-400">Organiza tus tareas con IA avanzada</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Brain className="w-6 h-6 text-blue-400 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-lg">Asistente IA</h3>
+                <p className="text-gray-400">Planifica y optimiza tu tiempo automáticamente</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <TrendingUp className="w-6 h-6 text-green-400 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-lg">Análisis de Productividad</h3>
+                <p className="text-gray-400">Estadísticas y logros para mejorar cada día</p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-800">
-              <TabsTrigger value="login" className="data-[state=active]:bg-gray-700">
-                Login
-              </TabsTrigger>
-              <TabsTrigger value="register" className="data-[state=active]:bg-gray-700">
-                Register
-              </TabsTrigger>
-            </TabsList>
+        {/* Right side - Login/Register Form */}
+        <Card className="w-full shadow-2xl">
+          <CardHeader>
+            <CardTitle className="text-2xl">Bienvenido a FutureTask</CardTitle>
+            <CardDescription>Inicia sesión o crea tu cuenta para comenzar</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email" className="text-gray-300">
-                    Email
-                  </Label>
-                  <Input
-                    id="login-email"
-                    name="email"
-                    type="email"
-                    placeholder="demo@future-task.com"
-                    required
-                    disabled={isLoading || isDatabaseAvailable === false}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="login-password" className="text-gray-300">
-                    Password
-                  </Label>
-                  <Input
-                    id="login-password"
-                    name="password"
-                    type="password"
-                    required
-                    disabled={isLoading || isDatabaseAvailable === false}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gray-700 hover:bg-gray-600"
-                  disabled={isLoading || isDatabaseAvailable === false}
-                >
-                  {isLoading ? "Logging in..." : "Login"}
-                </Button>
-              </form>
-            </TabsContent>
+            {success && (
+              <Alert className="mb-4 bg-green-50 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-100 dark:border-green-800">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
 
-            <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-email" className="text-gray-300">
-                    Email
-                  </Label>
-                  <Input
-                    id="register-email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                    disabled={isLoading || isDatabaseAvailable === false}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-password" className="text-gray-300">
-                    Password
-                  </Label>
-                  <Input
-                    id="register-password"
-                    name="password"
-                    type="password"
-                    required
-                    disabled={isLoading || isDatabaseAvailable === false}
-                    className="bg-gray-800 border-gray-700 text-white"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full bg-gray-700 hover:bg-gray-600"
-                  disabled={isLoading || isDatabaseAvailable === false}
-                >
-                  {isLoading ? "Creating account..." : "Create Account"}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                <TabsTrigger value="register">Registrarse</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      autoComplete="email"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Contraseña</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      autoComplete="current-password"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Iniciando sesión...
+                      </>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="register">
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-name">Nombre</Label>
+                    <Input
+                      id="register-name"
+                      type="text"
+                      placeholder="Tu nombre"
+                      value={registerName}
+                      onChange={(e) => setRegisterName(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      autoComplete="name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">Email</Label>
+                    <Input
+                      id="register-email"
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      autoComplete="email"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Contraseña</Label>
+                    <Input
+                      id="register-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
+                    <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creando cuenta...
+                      </>
+                    ) : (
+                      "Crear Cuenta"
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

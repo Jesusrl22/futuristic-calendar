@@ -5,23 +5,31 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-console.log("🔧 [v758] Supabase Configuration Check:")
-console.log("📍 URL exists:", !!supabaseUrl)
-console.log("📍 URL value:", supabaseUrl)
-console.log("🔑 Key exists:", !!supabaseAnonKey)
-console.log("🔑 Key length:", supabaseAnonKey?.length || 0)
+// Version 761 - Enhanced logging and validation
+console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+console.log("🚀 FutureTask v761 - Supabase Initialization")
+console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+console.log("📍 URL:", supabaseUrl ? `${supabaseUrl.substring(0, 40)}...` : "❌ MISSING")
+console.log("🔑 Key:", supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "❌ MISSING")
 console.log("🌐 Environment:", process.env.NODE_ENV)
-console.log("⏰ Build timestamp:", new Date().toISOString())
+console.log("⏰ Timestamp:", new Date().toISOString())
+console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-// Validación estricta
-if (!supabaseUrl || supabaseUrl === "undefined" || !supabaseUrl.includes("supabase.co")) {
-  console.error("❌ [v758] CRITICAL: Invalid Supabase URL!")
-  throw new Error("Invalid Supabase URL configuration")
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ [v761] CRITICAL: Missing Supabase environment variables")
+  throw new Error("Missing Supabase environment variables")
 }
 
-if (!supabaseAnonKey || supabaseAnonKey === "undefined" || supabaseAnonKey.length < 100) {
-  console.error("❌ [v758] CRITICAL: Invalid Supabase Anon Key!")
-  throw new Error("Invalid Supabase Anon Key configuration")
+// Strict URL validation
+try {
+  const url = new URL(supabaseUrl)
+  if (!url.hostname.includes("supabase.co")) {
+    throw new Error("Invalid Supabase domain")
+  }
+  console.log("✅ [v761] Valid Supabase URL")
+} catch (error) {
+  console.error("❌ [v761] Invalid Supabase URL:", supabaseUrl)
+  throw new Error("Invalid Supabase URL")
 }
 
 // Create a singleton instance
@@ -36,10 +44,16 @@ export function createClient() {
           autoRefreshToken: true,
           detectSessionInUrl: true,
         },
+        global: {
+          headers: {
+            "x-app-version": "761",
+            "x-client-info": "futuretask-web",
+          },
+        },
       })
-      console.log("✅ Supabase client created successfully [v758]")
+      console.log("✅ [v761] Supabase client created successfully")
     } catch (error) {
-      console.error("❌ Error creating Supabase client:", error)
+      console.error("❌ [v761] Error creating Supabase client:", error)
       supabaseInstance = null
     }
   }
@@ -56,13 +70,15 @@ export const supabase = createClient()
 
 // Check if Supabase is available
 export async function checkSupabaseConnection(): Promise<boolean> {
+  console.log("🔍 [v761] Checking Supabase connection...")
+
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.log("❌ Supabase credentials not configured")
+    console.log("❌ [v761] Supabase credentials not configured")
     return false
   }
 
   if (!supabaseUrl.startsWith("https://")) {
-    console.log("❌ Supabase URL is invalid")
+    console.log("❌ [v761] Supabase URL is invalid")
     return false
   }
 
@@ -70,14 +86,14 @@ export async function checkSupabaseConnection(): Promise<boolean> {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError) {
-      console.warn("⚠️ Supabase session check failed:", sessionError.message)
+      console.warn("⚠️ [v761] Supabase session check failed:", sessionError.message)
       return false
     }
 
-    console.log("✅ Supabase connection available [v758]")
+    console.log("✅ [v761] Supabase connection available")
     return true
   } catch (error: any) {
-    console.warn("⚠️ Supabase connection check failed:", error?.message || error)
+    console.warn("⚠️ [v761] Supabase connection check failed:", error?.message || error)
     return false
   }
 }
