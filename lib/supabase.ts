@@ -5,11 +5,15 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-console.log("🔧 Supabase Config:", {
-  url: supabaseUrl,
-  hasKey: !!supabaseAnonKey,
-  keyPrefix: supabaseAnonKey?.substring(0, 10),
-})
+// Log para debugging en producción
+if (typeof window !== "undefined") {
+  console.log("🔧 Supabase Config (v755):", {
+    url: supabaseUrl?.substring(0, 30) + "...",
+    hasKey: !!supabaseAnonKey,
+    keyPrefix: supabaseAnonKey?.substring(0, 10),
+    environment: process.env.NODE_ENV,
+  })
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("❌ Missing Supabase environment variables")
@@ -19,6 +23,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Validar que la URL sea válida
 try {
   new URL(supabaseUrl)
+  console.log("✅ Valid Supabase URL")
 } catch (error) {
   console.error("❌ Invalid Supabase URL:", supabaseUrl)
   throw new Error("Invalid Supabase URL")
@@ -37,6 +42,7 @@ export function createClient() {
           detectSessionInUrl: true,
         },
       })
+      console.log("✅ Supabase client created successfully (v755)")
     } catch (error) {
       console.error("❌ Error creating Supabase client:", error)
       supabaseInstance = null
@@ -52,8 +58,6 @@ export function createClient() {
 
 // Export singleton instance
 export const supabase = createClient()
-
-console.log("✅ Supabase client created successfully")
 
 // Check if Supabase is available
 export async function checkSupabaseConnection(): Promise<boolean> {

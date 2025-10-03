@@ -35,14 +35,14 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("🔐 Attempting login with:", { email: loginEmail })
+      console.log("🔐 [v755] Attempting login with:", { email: loginEmail })
 
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: loginEmail,
         password: loginPassword,
       })
 
-      console.log("📥 Login response:", { data, error: authError })
+      console.log("📥 [v755] Login response:", { data, error: authError })
 
       if (authError) {
         console.error("❌ Login error:", authError.message)
@@ -68,6 +68,7 @@ export default function LoginPage() {
         setTimeout(() => {
           console.log("🔄 Redirecting to /app")
           router.push("/app")
+          router.refresh()
         }, 1500)
       }
     } catch (err) {
@@ -85,7 +86,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("📝 Attempting registration with:", { email: registerEmail, name: registerName })
+      console.log("📝 [v755] Attempting registration with:", { email: registerEmail, name: registerName })
 
       // Validaciones básicas
       if (!registerEmail || !registerPassword || !registerName) {
@@ -107,10 +108,11 @@ export default function LoginPage() {
           data: {
             name: registerName,
           },
+          emailRedirectTo: `${window.location.origin}/app`,
         },
       })
 
-      console.log("📥 Register response:", { data, error: authError })
+      console.log("📥 [v755] Register response:", { data, error: authError })
 
       if (authError) {
         console.error("❌ Register error:", authError.message)
@@ -146,6 +148,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
+      {/* Version indicator - solo en desarrollo */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">v755</div>
+      )}
+
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         {/* Left side - Branding */}
         <div className="text-white space-y-6">
@@ -188,7 +195,7 @@ export default function LoginPage() {
         {/* Right side - Login/Register Form */}
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Bienvenido</CardTitle>
+            <CardTitle>Bienvenido a FutureTask</CardTitle>
             <CardDescription>Inicia sesión o crea tu cuenta para comenzar</CardDescription>
           </CardHeader>
           <CardContent>
@@ -200,14 +207,14 @@ export default function LoginPage() {
             )}
 
             {success && (
-              <Alert className="mb-4 bg-green-50 text-green-900 border-green-200">
+              <Alert className="mb-4 bg-green-50 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-100 dark:border-green-800">
                 <CheckCircle2 className="h-4 w-4" />
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
 
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
                 <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="register">Registrarse</TabsTrigger>
               </TabsList>
@@ -224,6 +231,7 @@ export default function LoginPage() {
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="email"
                     />
                   </div>
 
@@ -237,6 +245,7 @@ export default function LoginPage() {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="current-password"
                     />
                   </div>
 
@@ -262,6 +271,7 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterName(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="name"
                     />
                   </div>
 
@@ -275,6 +285,7 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterEmail(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="email"
                     />
                   </div>
 
@@ -289,6 +300,7 @@ export default function LoginPage() {
                       required
                       disabled={isLoading}
                       minLength={6}
+                      autoComplete="new-password"
                     />
                     <p className="text-xs text-gray-500">Mínimo 6 caracteres</p>
                   </div>

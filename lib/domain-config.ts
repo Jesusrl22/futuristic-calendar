@@ -1,4 +1,4 @@
-// Configuración del dominio - Versión actualizada
+// VERSIÓN 755 - NUEVO DEPLOY
 export const DOMAIN_CONFIG = {
   name: "FutureTask",
   domain: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.com",
@@ -11,8 +11,8 @@ export const DOMAIN_CONFIG = {
     twitter: "@futuretask",
     github: "https://github.com/futuretask",
   },
-  // Timestamp para forzar nueva versión
-  buildVersion: "2025-01-03T11:45:00Z",
+  buildVersion: "755.0.0",
+  buildDate: "2025-01-03T12:00:00Z",
 }
 
 export const SEO_CONFIG = {
