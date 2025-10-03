@@ -12,7 +12,7 @@ import { Suspense } from "react"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "FutureTask - Calendario Inteligente con IA",
+  title: "FutureTask v761 - Calendario Inteligente con IA",
   description:
     "Organiza tu vida, potencia tu trabajo y alcanza tus objetivos con la ayuda de la inteligencia artificial más avanzada",
   keywords: ["calendario", "productividad", "IA", "inteligencia artificial", "tareas", "notas", "pomodoro"],
@@ -81,6 +81,10 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.json",
+  other: {
+    "build-version": "761",
+    "build-timestamp": "2025-01-03T12:05:00.000Z",
+  },
     generator: 'v0.app'
 }
 
@@ -103,6 +107,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="FutureTask" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#7c3aed" />
+        <meta name="app-version" content="761" />
+        <meta name="build-timestamp" content="2025-01-03T12:05:00.000Z" />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>

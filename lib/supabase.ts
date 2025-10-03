@@ -1,19 +1,20 @@
 "use client"
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { APP_VERSION } from "./version"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Version 761 - Enhanced logging and validation
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-console.log("🚀 FutureTask v761 - Supabase Initialization")
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-console.log("📍 URL:", supabaseUrl ? `${supabaseUrl.substring(0, 40)}...` : "❌ MISSING")
-console.log("🔑 Key:", supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : "❌ MISSING")
-console.log("🌐 Environment:", process.env.NODE_ENV)
-console.log("⏰ Timestamp:", new Date().toISOString())
-console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+console.log("╔═══════════════════════════════════════════╗")
+console.log("║   Supabase Client Initialization v761    ║")
+console.log("╚═══════════════════════════════════════════╝")
+console.log(`📍 URL: ${supabaseUrl ? supabaseUrl.substring(0, 40) + "..." : "❌ MISSING"}`)
+console.log(`🔑 Key: ${supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + "..." : "❌ MISSING"}`)
+console.log(`📦 Version: ${APP_VERSION.full}`)
+console.log(`🌐 Environment: ${process.env.NODE_ENV}`)
+console.log(`⏰ Time: ${new Date().toISOString()}`)
+console.log("═══════════════════════════════════════════")
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("❌ [v761] CRITICAL: Missing Supabase environment variables")
@@ -46,8 +47,8 @@ export function createClient() {
         },
         global: {
           headers: {
-            "x-app-version": "761",
-            "x-client-info": "futuretask-web",
+            "x-app-version": APP_VERSION.full,
+            "x-client-info": "futuretask-web-v761",
           },
         },
       })
@@ -65,10 +66,8 @@ export function createClient() {
   return supabaseInstance
 }
 
-// Export singleton instance
 export const supabase = createClient()
 
-// Check if Supabase is available
 export async function checkSupabaseConnection(): Promise<boolean> {
   console.log("🔍 [v761] Checking Supabase connection...")
 

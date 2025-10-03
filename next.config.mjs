@@ -1,49 +1,43 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    appDir: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
+  env: {
+    BUILD_VERSION: "761",
+    BUILD_TIMESTAMP: new Date().toISOString(),
   },
   images: {
-    domains: ['localhost', 'future-task.com', 'www.future-task.com'],
-    unoptimized: true,
+    domains: ["blob.v0.app", "placeholder.svg"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "blob.v0.app",
+      },
+    ],
+    unoptimized: true, // Added from updates
   },
-  env: {
-    CUSTOM_KEY: 'my-value',
+  eslint: {
+    ignoreDuringBuilds: true, // Added from updates
   },
-  // Custom domain configuration
+  typescript: {
+    ignoreBuildErrors: true, // Added from updates
+  },
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: "/:path*",
         headers: [
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-App-Version",
+            value: "761",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            key: "X-Build-Time",
+            value: new Date().toISOString(),
           },
         ],
-      },
-    ]
-  },
-  async redirects() {
-    return [
-      {
-        source: '/home',
-        destination: '/',
-        permanent: true,
       },
     ]
   },

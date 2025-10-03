@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase } from "@/lib/supabase"
+import { getVersionString } from "@/lib/version"
 import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -18,24 +18,21 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-
-  // LOGIN
   const [loginEmail, setLoginEmail] = useState("")
   const [loginPassword, setLoginPassword] = useState("")
-
-  // REGISTER
   const [registerEmail, setRegisterEmail] = useState("")
   const [registerPassword, setRegisterPassword] = useState("")
   const [registerName, setRegisterName] = useState("")
 
   useEffect(() => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    console.log("🔐 FutureTask v761 - Login Page")
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    console.log("📍 URL:", window.location.href)
-    console.log("🌐 Environment:", process.env.NODE_ENV)
-    console.log("⏰ Loaded at:", new Date().toISOString())
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("╔═══════════════════════════════════════════╗")
+    console.log("║      FutureTask Login Page v761          ║")
+    console.log("╚═══════════════════════════════════════════╝")
+    console.log(`📍 URL: ${window.location.href}`)
+    console.log(`📦 Version: ${getVersionString()}`)
+    console.log(`🌐 Environment: ${process.env.NODE_ENV}`)
+    console.log(`⏰ Loaded at: ${new Date().toISOString()}`)
+    console.log("═══════════════════════════════════════════")
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -45,7 +42,10 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("🔐 [v761] Login attempt:", { email: loginEmail, timestamp: new Date().toISOString() })
+      console.log("🔐 [v761] Login attempt:", {
+        email: loginEmail,
+        timestamp: new Date().toISOString(),
+      })
 
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: loginEmail,
@@ -62,13 +62,11 @@ export default function LoginPage() {
         console.error("❌ [v761] Login error:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
-          setError(
-            "⚠️ Error de conexión con la base de datos. Por favor, verifica tu conexión a internet e intenta de nuevo.",
-          )
+          setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
         } else if (authError.message.includes("Invalid login credentials")) {
-          setError("❌ Email o contraseña incorrectos. Por favor, verifica tus credenciales.")
+          setError("❌ Email o contraseña incorrectos.")
         } else if (authError.message.includes("Email not confirmed")) {
-          setError("📧 Por favor, confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.")
+          setError("📧 Por favor, confirma tu email antes de iniciar sesión.")
         } else {
           setError(`Error: ${authError.message}`)
         }
@@ -110,7 +108,6 @@ export default function LoginPage() {
         timestamp: new Date().toISOString(),
       })
 
-      // Validaciones básicas
       if (!registerEmail || !registerPassword || !registerName) {
         setError("Por favor, completa todos los campos")
         setIsLoading(false)
@@ -144,9 +141,7 @@ export default function LoginPage() {
         console.error("❌ [v761] Registration error:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
-          setError(
-            "⚠️ Error de conexión con la base de datos. Por favor, verifica tu conexión a internet e intenta de nuevo.",
-          )
+          setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
         } else if (authError.message.includes("already registered")) {
           setError("❌ Este email ya está registrado. Por favor, inicia sesión.")
         } else {
@@ -161,9 +156,8 @@ export default function LoginPage() {
           email: data.user.email,
           timestamp: new Date().toISOString(),
         })
-        setSuccess("✅ ¡Registro exitoso! Por favor, verifica tu email antes de iniciar sesión.")
+        setSuccess("✅ ¡Registro exitoso! Por favor, verifica tu email.")
 
-        // Limpiar formulario
         setRegisterEmail("")
         setRegisterPassword("")
         setRegisterName("")
@@ -178,13 +172,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
-      {/* Version indicator */}
-      <div className="fixed top-4 left-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg z-50">
-        v761
+      <div className="fixed top-4 left-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg z-50 animate-pulse">
+        {getVersionString()}
       </div>
 
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
-        {/* Left side - Branding */}
         <div className="text-white space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center">
@@ -222,7 +214,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Right side - Login/Register Form */}
         <Card className="w-full shadow-2xl">
           <CardHeader>
             <CardTitle className="text-2xl">Bienvenido a FutureTask</CardTitle>
