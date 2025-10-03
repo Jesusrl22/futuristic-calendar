@@ -1,4 +1,4 @@
-// Configuración del dominio - Versión actualizada con timestamp para forzar rebuild
+// Configuración del dominio - Versión actualizada
 export const DOMAIN_CONFIG = {
   name: "FutureTask",
   domain: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.com",
@@ -12,7 +12,7 @@ export const DOMAIN_CONFIG = {
     github: "https://github.com/futuretask",
   },
   // Timestamp para forzar nueva versión
-  buildVersion: "2025-01-03T11:30:00Z",
+  buildVersion: "2025-01-03T11:45:00Z",
 }
 
 export const SEO_CONFIG = {
