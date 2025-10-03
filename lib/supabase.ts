@@ -5,29 +5,23 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Log para debugging - Version 758
-if (typeof window !== "undefined") {
-  console.log("🔧 Supabase Config [v758]:", {
-    url: supabaseUrl?.substring(0, 30) + "...",
-    hasKey: !!supabaseAnonKey,
-    keyPrefix: supabaseAnonKey?.substring(0, 10),
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-  })
+console.log("🔧 [v758] Supabase Configuration Check:")
+console.log("📍 URL exists:", !!supabaseUrl)
+console.log("📍 URL value:", supabaseUrl)
+console.log("🔑 Key exists:", !!supabaseAnonKey)
+console.log("🔑 Key length:", supabaseAnonKey?.length || 0)
+console.log("🌐 Environment:", process.env.NODE_ENV)
+console.log("⏰ Build timestamp:", new Date().toISOString())
+
+// Validación estricta
+if (!supabaseUrl || supabaseUrl === "undefined" || !supabaseUrl.includes("supabase.co")) {
+  console.error("❌ [v758] CRITICAL: Invalid Supabase URL!")
+  throw new Error("Invalid Supabase URL configuration")
 }
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("❌ Missing Supabase environment variables")
-  throw new Error("Missing Supabase environment variables")
-}
-
-// Validar que la URL sea válida
-try {
-  new URL(supabaseUrl)
-  console.log("✅ Valid Supabase URL [v758]")
-} catch (error) {
-  console.error("❌ Invalid Supabase URL:", supabaseUrl)
-  throw new Error("Invalid Supabase URL")
+if (!supabaseAnonKey || supabaseAnonKey === "undefined" || supabaseAnonKey.length < 100) {
+  console.error("❌ [v758] CRITICAL: Invalid Supabase Anon Key!")
+  throw new Error("Invalid Supabase Anon Key configuration")
 }
 
 // Create a singleton instance
