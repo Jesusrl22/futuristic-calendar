@@ -1,4 +1,4 @@
-// VERSIÓN 755 - NUEVO DEPLOY
+// VERSIÓN 758 - Sistema de autenticación actualizado
 export const DOMAIN_CONFIG = {
   name: "FutureTask",
   domain: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.com",
@@ -11,8 +11,8 @@ export const DOMAIN_CONFIG = {
     twitter: "@futuretask",
     github: "https://github.com/futuretask",
   },
-  buildVersion: "755.0.0",
-  buildDate: "2025-01-03T12:00:00Z",
+  buildVersion: "758.0.0",
+  buildDate: "2025-01-03T12:15:00Z",
 }
 
 export const SEO_CONFIG = {

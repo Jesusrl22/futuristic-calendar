@@ -5,13 +5,14 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// Log para debugging en producción
+// Log para debugging - Version 758
 if (typeof window !== "undefined") {
-  console.log("🔧 Supabase Config (v755):", {
+  console.log("🔧 Supabase Config [v758]:", {
     url: supabaseUrl?.substring(0, 30) + "...",
     hasKey: !!supabaseAnonKey,
     keyPrefix: supabaseAnonKey?.substring(0, 10),
     environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
   })
 }
 
@@ -23,7 +24,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Validar que la URL sea válida
 try {
   new URL(supabaseUrl)
-  console.log("✅ Valid Supabase URL")
+  console.log("✅ Valid Supabase URL [v758]")
 } catch (error) {
   console.error("❌ Invalid Supabase URL:", supabaseUrl)
   throw new Error("Invalid Supabase URL")
@@ -42,7 +43,7 @@ export function createClient() {
           detectSessionInUrl: true,
         },
       })
-      console.log("✅ Supabase client created successfully (v755)")
+      console.log("✅ Supabase client created successfully [v758]")
     } catch (error) {
       console.error("❌ Error creating Supabase client:", error)
       supabaseInstance = null
@@ -79,7 +80,7 @@ export async function checkSupabaseConnection(): Promise<boolean> {
       return false
     }
 
-    console.log("✅ Supabase connection available")
+    console.log("✅ Supabase connection available [v758]")
     return true
   } catch (error: any) {
     console.warn("⚠️ Supabase connection check failed:", error?.message || error)

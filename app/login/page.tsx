@@ -35,21 +35,21 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("🔐 [v755] Attempting login with:", { email: loginEmail })
+      console.log("🔐 [v758] Attempting login with:", { email: loginEmail })
 
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: loginEmail,
         password: loginPassword,
       })
 
-      console.log("📥 [v755] Login response:", { data, error: authError })
+      console.log("📥 [v758] Login response:", { data, error: authError })
 
       if (authError) {
         console.error("❌ Login error:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError(
-            "Error de conexión. Esto puede ocurrir en el entorno de preview. Por favor, despliega en producción para usar autenticación real.",
+            "Error de conexión con la base de datos. Por favor, verifica tu conexión a internet e intenta de nuevo.",
           )
         } else if (authError.message.includes("Invalid login credentials")) {
           setError("Email o contraseña incorrectos. Por favor, verifica tus credenciales.")
@@ -62,7 +62,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        console.log("✅ Login successful, user:", data.user.id)
+        console.log("✅ [v758] Login successful, user:", data.user.id)
         setSuccess("¡Inicio de sesión exitoso! Redirigiendo...")
 
         setTimeout(() => {
@@ -86,7 +86,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("📝 [v755] Attempting registration with:", { email: registerEmail, name: registerName })
+      console.log("📝 [v758] Attempting registration with:", { email: registerEmail, name: registerName })
 
       // Validaciones básicas
       if (!registerEmail || !registerPassword || !registerName) {
@@ -112,14 +112,14 @@ export default function LoginPage() {
         },
       })
 
-      console.log("📥 [v755] Register response:", { data, error: authError })
+      console.log("📥 [v758] Register response:", { data, error: authError })
 
       if (authError) {
         console.error("❌ Register error:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError(
-            "Error de conexión. Esto puede ocurrir en el entorno de preview. Por favor, despliega en producción para usar autenticación real.",
+            "Error de conexión con la base de datos. Por favor, verifica tu conexión a internet e intenta de nuevo.",
           )
         } else if (authError.message.includes("already registered")) {
           setError("Este email ya está registrado. Por favor, inicia sesión.")
@@ -130,7 +130,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        console.log("✅ Registration successful, user:", data.user.id)
+        console.log("✅ [v758] Registration successful, user:", data.user.id)
         setSuccess("¡Registro exitoso! Por favor, verifica tu email antes de iniciar sesión.")
 
         // Limpiar formulario
@@ -148,9 +148,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
-      {/* Version indicator - solo en desarrollo */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">v755</div>
+      {/* Version indicator - solo visible en preview */}
+      {typeof window !== "undefined" && window.location.hostname.includes("vusercontent.net") && (
+        <div className="fixed top-4 left-4 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold z-50">
+          v758
+        </div>
       )}
 
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
