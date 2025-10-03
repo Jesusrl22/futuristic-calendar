@@ -1,169 +1,349 @@
 "use client"
+
+import type React from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarDays, Sparkles, Rocket, CheckCircle2, Zap } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calendar, Loader2, AlertCircle, CheckCircle2, Mail, Lock, User } from "lucide-react"
+import { LanguageSelector } from "@/components/language-selector"
+import { useLanguage } from "@/hooks/useLanguage"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t } = useLanguage()
 
-  const handleDemo = () => {
-    // Store demo user in localStorage
-    localStorage.setItem(
-      "demoUser",
-      JSON.stringify({
-        id: "demo-user",
-        name: "Usuario Demo",
-        email: "demo@futuretask.com",
-        subscription_plan: "premium",
-        plan: "premium",
-        ai_credits: 100,
-        theme: "dark",
-        isDemo: true,
-      }),
-    )
-    router.push("/app")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+
+  // Login form
+  const [loginEmail, setLoginEmail] = useState("")
+  const [loginPassword, setLoginPassword] = useState("")
+
+  // Register form
+  const [registerEmail, setRegisterEmail] = useState("")
+  const [registerPassword, setRegisterPassword] = useState("")
+  const [registerName, setRegisterName] = useState("")
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("")
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
+    setSuccess("")
+
+    console.log("🔐 Attempting login with:", loginEmail)
+    console.log("🌍 Environment:", {
+      hostname: typeof window !== "undefined" ? window.location.hostname : "unknown",
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    })
+
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      })
+
+      console.log("📥 Login response:", { data, error: signInError })
+
+      if (signInError) {
+        console.error("❌ Login error:", signInError)
+        if (signInError.message.includes("Invalid login credentials")) {
+          setError("Email o contraseña incorrectos")
+        } else if (signInError.message.includes("Email not confirmed")) {
+          setError("Por favor, confirma tu email antes de iniciar sesión")
+        } else {
+          setError(signInError.message)
+        }
+        setIsLoading(false)
+        return
+      }
+
+      if (data?.user) {
+        console.log("✅ Login successful, user:", data.user.email)
+        setSuccess("¡Inicio de sesión exitoso! Redirigiendo...")
+
+        // Wait a bit and then redirect
+        setTimeout(() => {
+          console.log("🔄 Redirecting to /app...")
+          router.push("/app")
+          router.refresh()
+        }, 1000)
+      } else {
+        console.warn("⚠️ No user data received")
+        setError("No se recibieron datos del usuario")
+        setIsLoading(false)
+      }
+    } catch (err: any) {
+      console.error("❌ Login exception:", err)
+      setError(`Error: ${err.message || "Error desconocido"}`)
+      setIsLoading(false)
+    }
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
+    setSuccess("")
+
+    if (registerPassword !== registerConfirmPassword) {
+      setError("Las contraseñas no coinciden")
+      setIsLoading(false)
+      return
+    }
+
+    if (registerPassword.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres")
+      setIsLoading(false)
+      return
+    }
+
+    console.log("📝 Attempting registration with:", registerEmail)
+
+    try {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: registerEmail,
+        password: registerPassword,
+        options: {
+          data: {
+            full_name: registerName,
+            name: registerName,
+          },
+          emailRedirectTo: `${window.location.origin}/app`,
+        },
+      })
+
+      console.log("📥 Registration response:", { data, error: signUpError })
+
+      if (signUpError) {
+        console.error("❌ Registration error:", signUpError)
+        setError(signUpError.message)
+        setIsLoading(false)
+        return
+      }
+
+      if (data?.user) {
+        console.log("✅ Registration successful, user:", data.user.email)
+        if (data.user.identities?.length === 0) {
+          setError("Este email ya está registrado. Por favor, inicia sesión.")
+        } else {
+          setSuccess(
+            "¡Registro exitoso! Hemos enviado un email de verificación. Por favor, revisa tu bandeja de entrada.",
+          )
+          // Clear form
+          setRegisterEmail("")
+          setRegisterPassword("")
+          setRegisterName("")
+          setRegisterConfirmPassword("")
+        }
+      }
+      setIsLoading(false)
+    } catch (err: any) {
+      console.error("❌ Registration exception:", err)
+      setError(`Error: ${err.message || "Error desconocido"}`)
+      setIsLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 dark:from-gray-900 dark:via-purple-900 dark:to-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-        {/* Left side - Branding */}
-        <div className="hidden lg:flex flex-col justify-center space-y-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl">
-              <CalendarDays className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              FutureTask
-            </h1>
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Tu asistente de productividad con IA</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Organiza tus tareas, gestiona tu tiempo y alcanza tus objetivos con la ayuda de inteligencia artificial.
-          </p>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Asistente IA</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Obtén sugerencias inteligentes para tus tareas
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <CalendarDays className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Calendario Inteligente</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Visualiza y organiza todas tus actividades</p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
-                <Rocket className="h-5 w-5 text-pink-600 dark:text-pink-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Modo Pomodoro</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Mejora tu concentración y productividad</p>
-              </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
+
+      <div className="w-full max-w-md space-y-6">
+        {/* Logo and Title */}
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <div className="p-3 bg-blue-600 rounded-2xl">
+              <Calendar className="h-12 w-12 text-white" />
             </div>
           </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">FutureTask</h1>
+          <p className="text-gray-600 dark:text-gray-400">Tu asistente de productividad con IA</p>
         </div>
 
-        {/* Right side - Demo Mode */}
-        <div className="space-y-6">
-          <Card className="w-full shadow-2xl border-2 border-purple-200 dark:border-purple-800">
-            <CardHeader className="space-y-1">
-              <div className="flex items-center justify-center lg:hidden mb-4">
-                <div className="p-3 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl">
-                  <CalendarDays className="h-8 w-8 text-white" />
-                </div>
-              </div>
-              <CardTitle className="text-2xl text-center">Bienvenido a FutureTask</CardTitle>
-              <CardDescription className="text-center">
-                Explora todas las funcionalidades en modo demostración
-              </CardDescription>
+        {/* Auth Tabs */}
+        <Card className="shadow-xl">
+          <Tabs defaultValue="login" className="w-full">
+            <CardHeader>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                <TabsTrigger value="register">Registrarse</TabsTrigger>
+              </TabsList>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950">
-                <AlertDescription className="text-blue-800 dark:text-blue-200">
-                  <strong>ℹ️ Entorno de Preview</strong>
-                  <p className="mt-2">
-                    Estás en el entorno de preview de v0. La autenticación con base de datos está deshabilitada por
-                    restricciones de red.
-                  </p>
-                  <p className="mt-2 font-semibold">
-                    👉 Usa el <span className="text-purple-600 dark:text-purple-400">Modo Demo</span> para probar todas
-                    las funcionalidades completas de la aplicación.
-                  </p>
-                </AlertDescription>
-              </Alert>
 
-              {/* Demo Features */}
-              <div className="space-y-3 p-4 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
-                <h3 className="font-semibold text-lg text-center text-purple-900 dark:text-purple-100">
-                  ✨ Funcionalidades del Modo Demo
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                    <span>Gestión completa de tareas y calendario</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                    <span>Asistente IA con 100 créditos gratuitos</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                    <span>Timer Pomodoro y estadísticas</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                    <span>Notas y lista de deseos</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-sm">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
-                    <span>Todas las funcionalidades Premium</span>
-                  </div>
-                </div>
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="mx-6 mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start space-x-2">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
               </div>
+            )}
 
-              {/* Demo Mode Button - Extra Prominent */}
-              <Button
-                onClick={handleDemo}
-                className="w-full h-16 text-xl bg-gradient-to-r from-purple-600 via-blue-600 to-pink-600 hover:from-purple-700 hover:via-blue-700 hover:to-pink-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-                size="lg"
-              >
-                <Zap className="mr-2 h-6 w-6" />🚀 Entrar al Modo Demo
-              </Button>
-
-              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                No requiere registro ni configuración. Todos los datos se guardan localmente en tu navegador.
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Additional Info Card */}
-          <Card className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-gray-200 dark:border-gray-700">
-            <CardContent className="pt-6">
-              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <p>
-                  <strong>💡 Nota:</strong> Este es un entorno de demostración. Para usar la aplicación con
-                  autenticación real y base de datos persistente, necesitarás desplegarla en tu propio servidor.
-                </p>
-                <p className="text-xs">
-                  Puedes descargar el código y desplegarlo en Vercel, Netlify o cualquier otra plataforma compatible con
-                  Next.js.
-                </p>
+            {success && (
+              <div className="mx-6 mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center space-x-2">
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500 flex-shrink-0" />
+                <p className="text-sm text-green-800 dark:text-green-200">{success}</p>
               </div>
-            </CardContent>
-          </Card>
+            )}
+
+            {/* Login Tab */}
+            <TabsContent value="login">
+              <form onSubmit={handleLogin}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="tu@email.com"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Contraseña</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Iniciando sesión...
+                      </>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
+
+            {/* Register Tab */}
+            <TabsContent value="register">
+              <form onSubmit={handleRegister}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-name">Nombre</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-name"
+                        type="text"
+                        placeholder="Tu nombre"
+                        value={registerName}
+                        onChange={(e) => setRegisterName(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-email"
+                        type="email"
+                        placeholder="tu@email.com"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">Contraseña</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={registerPassword}
+                        onChange={(e) => setRegisterPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-confirm-password">Confirmar Contraseña</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="register-confirm-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={registerConfirmPassword}
+                        onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                        required
+                        disabled={isLoading}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creando cuenta...
+                      </>
+                    ) : (
+                      "Crear Cuenta"
+                    )}
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+          <p>
+            Al continuar, aceptas nuestros{" "}
+            <a href="/terms" className="text-blue-600 hover:underline">
+              Términos de Servicio
+            </a>{" "}
+            y{" "}
+            <a href="/privacy" className="text-blue-600 hover:underline">
+              Política de Privacidad
+            </a>
+          </p>
         </div>
       </div>
     </div>

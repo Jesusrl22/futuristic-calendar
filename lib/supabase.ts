@@ -42,80 +42,11 @@ export function createClient() {
     }
   }
 
-  // Return a mock client if Supabase is not available
   if (!supabaseInstance) {
-    if (typeof window !== "undefined") {
-      console.log("ℹ️ Using mock Supabase client (Demo mode)")
-    }
-    return createMockSupabaseClient()
+    throw new Error("Supabase client could not be initialized. Check your environment variables.")
   }
 
   return supabaseInstance
-}
-
-// Mock Supabase client for demo mode
-function createMockSupabaseClient() {
-  return {
-    auth: {
-      getSession: async () => ({
-        data: { session: null },
-        error: null,
-      }),
-      signInWithPassword: async () => ({
-        data: { user: null, session: null },
-        error: { message: "Demo mode - use demo login" },
-      }),
-      signUp: async () => ({
-        data: { user: null, session: null },
-        error: { message: "Demo mode - use demo login" },
-      }),
-      signOut: async () => ({
-        error: null,
-      }),
-      onAuthStateChange: () => ({
-        data: { subscription: { unsubscribe: () => {} } },
-      }),
-    },
-    from: (table: string) => ({
-      select: () => ({
-        eq: () => ({
-          single: async () => ({
-            data: null,
-            error: { message: "Demo mode - no database access" },
-          }),
-        }),
-        limit: () => ({
-          single: async () => ({
-            data: null,
-            error: { message: "Demo mode - no database access" },
-          }),
-        }),
-      }),
-      insert: () => ({
-        select: () => ({
-          single: async () => ({
-            data: null,
-            error: { message: "Demo mode - no database access" },
-          }),
-        }),
-      }),
-      update: () => ({
-        eq: () => ({
-          select: () => ({
-            single: async () => ({
-              data: null,
-              error: { message: "Demo mode - no database access" },
-            }),
-          }),
-        }),
-      }),
-      delete: () => ({
-        eq: async () => ({
-          error: { message: "Demo mode - no database access" },
-        }),
-      }),
-    }),
-  } as any
 }
 
 // Export singleton instance
@@ -134,7 +65,6 @@ export async function checkSupabaseConnection(): Promise<boolean> {
   }
 
   try {
-    // Try to get session first (lightweight check)
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError) {
@@ -142,7 +72,6 @@ export async function checkSupabaseConnection(): Promise<boolean> {
       return false
     }
 
-    // If we can check the session, consider it available
     console.log("✅ Supabase connection available")
     return true
   } catch (error: any) {
