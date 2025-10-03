@@ -1,7 +1,7 @@
 export const DOMAIN_CONFIG = {
   name: "FutureTask",
-  domain: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.vercel.app",
-  url: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.vercel.app",
+  domain: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.com",
+  url: process.env.NEXT_PUBLIC_BASE_URL || "https://future-task.com",
   description: "El futuro de la productividad con IA",
   keywords: ["productividad", "tareas", "calendario", "IA", "organización"],
   author: "FutureTask Team",
