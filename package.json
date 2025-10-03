@@ -1,6 +1,6 @@
 {
   "name": "futuretask-calendar",
-  "version": "426.0.0",
+  "version": "427.0.0",
   "private": true,
   "scripts": {
     "build": "next build",

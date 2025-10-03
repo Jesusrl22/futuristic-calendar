@@ -2,16 +2,26 @@
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-if (typeof window !== "undefined") {
-  console.log("🔧 Supabase Config:", {
-    url: supabaseUrl || "❌ No configurada",
-    urlValid: supabaseUrl?.startsWith("https://") ? "✅ Válida" : "❌ Inválida",
-    key: supabaseAnonKey ? `✅ ${supabaseAnonKey.substring(0, 20)}...` : "❌ No configurada",
-    keyLength: supabaseAnonKey?.length || 0,
-  })
+console.log("🔧 Supabase Config:", {
+  url: supabaseUrl,
+  hasKey: !!supabaseAnonKey,
+  keyPrefix: supabaseAnonKey?.substring(0, 10),
+})
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Missing Supabase environment variables")
+  throw new Error("Missing Supabase environment variables")
+}
+
+// Validar que la URL sea válida
+try {
+  new URL(supabaseUrl)
+} catch (error) {
+  console.error("❌ Invalid Supabase URL:", supabaseUrl)
+  throw new Error("Invalid Supabase URL")
 }
 
 // Create a singleton instance
@@ -25,17 +35,8 @@ export function createClient() {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-          storage: typeof window !== "undefined" ? window.localStorage : undefined,
-        },
-        global: {
-          headers: {
-            "X-Client-Info": "futuretask-web",
-          },
         },
       })
-      if (typeof window !== "undefined") {
-        console.log("✅ Supabase client created successfully")
-      }
     } catch (error) {
       console.error("❌ Error creating Supabase client:", error)
       supabaseInstance = null
@@ -51,6 +52,8 @@ export function createClient() {
 
 // Export singleton instance
 export const supabase = createClient()
+
+console.log("✅ Supabase client created successfully")
 
 // Check if Supabase is available
 export async function checkSupabaseConnection(): Promise<boolean> {
