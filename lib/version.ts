@@ -1,29 +1,34 @@
-// Version tracking for deployment verification
+// FutureTask Version Management System
+// This file provides centralized version information
+
 export const APP_VERSION = {
-  major: 7,
-  minor: 6,
-  patch: 1,
-  build: 761,
-  timestamp: "2025-01-03T12:05:00.000Z",
-  full: "761.0.1",
+  major: 761,
+  minor: 0,
+  patch: 2,
+  full: "761.0.2",
+  buildDate: "2025-01-03T12:10:00.000Z",
+  name: "FutureTask",
 }
 
 export function getVersionString(): string {
-  return `v${APP_VERSION.full} (Build ${APP_VERSION.build})`
+  return `v${APP_VERSION.full}`
 }
 
-export function logVersionInfo() {
+export function getFullVersionInfo() {
+  return {
+    version: APP_VERSION.full,
+    buildDate: APP_VERSION.buildDate,
+    name: APP_VERSION.name,
+  }
+}
+
+// Client-safe logging (no process.env references)
+export function logVersion() {
   console.log("╔═══════════════════════════════════════════╗")
-  console.log("║     FutureTask Application v761          ║")
+  console.log(`║   ${APP_VERSION.name} v${APP_VERSION.full}`)
   console.log("╚═══════════════════════════════════════════╝")
-  console.log(`📦 Version: ${getVersionString()}`)
-  console.log(`⏰ Build Time: ${APP_VERSION.timestamp}`)
-  console.log(`🌐 Environment: ${process.env.NODE_ENV}`)
-  console.log(`🔧 Next.js: ${process.env.npm_package_dependencies_next || "14.0.4"}`)
+  console.log(`📦 Version: ${APP_VERSION.full}`)
+  console.log(`🏗️  Build Date: ${APP_VERSION.buildDate}`)
+  console.log(`⏰ Current Time: ${new Date().toISOString()}`)
   console.log("═══════════════════════════════════════════")
-}
-
-// Auto-log on import
-if (typeof window !== "undefined") {
-  logVersionInfo()
 }

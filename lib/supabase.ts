@@ -12,7 +12,6 @@ console.log("╚═════════════════════�
 console.log(`📍 URL: ${supabaseUrl ? supabaseUrl.substring(0, 40) + "..." : "❌ MISSING"}`)
 console.log(`🔑 Key: ${supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + "..." : "❌ MISSING"}`)
 console.log(`📦 Version: ${APP_VERSION.full}`)
-console.log(`🌐 Environment: ${process.env.NODE_ENV}`)
 console.log(`⏰ Time: ${new Date().toISOString()}`)
 console.log("═══════════════════════════════════════════")
 

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase } from "@/lib/supabase"
-import { getVersionString } from "@/lib/version"
+import { getVersionString, logVersion } from "@/lib/version"
 import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -25,14 +25,9 @@ export default function LoginPage() {
   const [registerName, setRegisterName] = useState("")
 
   useEffect(() => {
-    console.log("╔═══════════════════════════════════════════╗")
-    console.log("║      FutureTask Login Page v761          ║")
-    console.log("╚═══════════════════════════════════════════╝")
+    logVersion()
     console.log(`📍 URL: ${window.location.href}`)
-    console.log(`📦 Version: ${getVersionString()}`)
-    console.log(`🌐 Environment: ${process.env.NODE_ENV}`)
     console.log(`⏰ Loaded at: ${new Date().toISOString()}`)
-    console.log("═══════════════════════════════════════════")
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
