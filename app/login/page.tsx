@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase } from "@/lib/supabase"
 import { getVersionString, logVersion } from "@/lib/version"
-import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
+import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2, Rocket } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
@@ -26,8 +26,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     logVersion()
-    console.log(`📍 URL: ${window.location.href}`)
-    console.log(`⏰ Loaded at: ${new Date().toISOString()}`)
+    console.log(`📍 Current URL: ${window.location.href}`)
+    console.log(`⏰ Page loaded: ${new Date().toISOString()}`)
+    console.log("🔥 FutureTask v762 - MAJOR UPDATE DEPLOYED")
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -37,7 +38,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("🔐 [v761] Login attempt:", {
+      console.log("🔐 [v762] Login attempt initiated:", {
         email: loginEmail,
         timestamp: new Date().toISOString(),
       })
@@ -47,14 +48,14 @@ export default function LoginPage() {
         password: loginPassword,
       })
 
-      console.log("📥 [v761] Login response:", {
+      console.log("📥 [v762] Authentication response:", {
         success: !!data.user,
         error: authError?.message,
         userId: data.user?.id,
       })
 
       if (authError) {
-        console.error("❌ [v761] Login error:", authError.message)
+        console.error("❌ [v762] Authentication failed:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
@@ -69,7 +70,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        console.log("✅ [v761] Login successful:", {
+        console.log("✅ [v762] Login successful - redirecting:", {
           userId: data.user.id,
           email: data.user.email,
           timestamp: new Date().toISOString(),
@@ -77,13 +78,13 @@ export default function LoginPage() {
         setSuccess("✅ ¡Inicio de sesión exitoso! Redirigiendo...")
 
         setTimeout(() => {
-          console.log("🔄 [v761] Redirecting to /app")
+          console.log("🔄 [v762] Navigating to application dashboard")
           router.push("/app")
           router.refresh()
         }, 1500)
       }
     } catch (err) {
-      console.error("💥 [v761] Unexpected error:", err)
+      console.error("💥 [v762] Unexpected error occurred:", err)
       setError("Error inesperado. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
@@ -97,7 +98,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("📝 [v761] Registration attempt:", {
+      console.log("📝 [v762] Registration attempt initiated:", {
         email: registerEmail,
         name: registerName,
         timestamp: new Date().toISOString(),
@@ -126,14 +127,14 @@ export default function LoginPage() {
         },
       })
 
-      console.log("📥 [v761] Register response:", {
+      console.log("📥 [v762] Registration response:", {
         success: !!data.user,
         error: authError?.message,
         userId: data.user?.id,
       })
 
       if (authError) {
-        console.error("❌ [v761] Registration error:", authError.message)
+        console.error("❌ [v762] Registration failed:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
@@ -146,7 +147,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        console.log("✅ [v761] Registration successful:", {
+        console.log("✅ [v762] Registration successful:", {
           userId: data.user.id,
           email: data.user.email,
           timestamp: new Date().toISOString(),
@@ -158,7 +159,7 @@ export default function LoginPage() {
         setRegisterName("")
       }
     } catch (err) {
-      console.error("💥 [v761] Unexpected error:", err)
+      console.error("💥 [v762] Unexpected error occurred:", err)
       setError("Error inesperado. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
@@ -167,17 +168,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
-      <div className="fixed top-4 left-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg z-50 animate-pulse">
-        {getVersionString()}
+      {/* Version Badge - HIGHLY VISIBLE */}
+      <div className="fixed top-4 left-4 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white px-6 py-3 rounded-full text-base font-black shadow-2xl z-50 animate-pulse border-2 border-white">
+        <div className="flex items-center gap-2">
+          <Rocket className="w-5 h-5 animate-bounce" />
+          <span>{getVersionString()}</span>
+          <span className="text-xs bg-white text-purple-900 px-2 py-1 rounded-full">LIVE</span>
+        </div>
       </div>
 
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         <div className="text-white space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h1 className="text-4xl font-bold">FutureTask</h1>
+            <div>
+              <h1 className="text-4xl font-bold">FutureTask</h1>
+              <p className="text-sm text-purple-300">Versión {getVersionString()}</p>
+            </div>
           </div>
 
           <p className="text-xl text-gray-300">El futuro de la productividad con IA</p>
@@ -209,7 +218,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Card className="w-full shadow-2xl">
+        <Card className="w-full shadow-2xl border-2 border-purple-500/20">
           <CardHeader>
             <CardTitle className="text-2xl">Bienvenido a FutureTask</CardTitle>
             <CardDescription>Inicia sesión o crea tu cuenta para comenzar</CardDescription>
