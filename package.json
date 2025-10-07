@@ -1,11 +1,10 @@
 {
   "name": "futuretask-calendar",
-  "version": "762.0.0",
+  "version": "763.0.0",
   "private": true,
   "scripts": {
-    "build": "next build && echo 'Build 762 completed successfully'",
+    "build": "next build",
     "dev": "next dev",
-    "postinstall": "echo '🚀 FutureTask v762 - Dependencies installed'",
     "lint": "next lint",
     "start": "next start"
   },

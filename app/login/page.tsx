@@ -28,7 +28,7 @@ export default function LoginPage() {
     logVersion()
     console.log(`📍 Current URL: ${window.location.href}`)
     console.log(`⏰ Page loaded: ${new Date().toISOString()}`)
-    console.log("🔥 FutureTask v762 - MAJOR UPDATE DEPLOYED")
+    console.log("🔥 FutureTask v763 - DEPLOYED")
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,7 +38,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("🔐 [v762] Login attempt initiated:", {
+      console.log("🔐 [v763] Login attempt initiated:", {
         email: loginEmail,
         timestamp: new Date().toISOString(),
       })
@@ -48,14 +48,14 @@ export default function LoginPage() {
         password: loginPassword,
       })
 
-      console.log("📥 [v762] Authentication response:", {
+      console.log("📥 [v763] Authentication response:", {
         success: !!data.user,
         error: authError?.message,
         userId: data.user?.id,
       })
 
       if (authError) {
-        console.error("❌ [v762] Authentication failed:", authError.message)
+        console.error("❌ [v763] Authentication failed:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
@@ -70,7 +70,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        console.log("✅ [v762] Login successful - redirecting:", {
+        console.log("✅ [v763] Login successful - redirecting:", {
           userId: data.user.id,
           email: data.user.email,
           timestamp: new Date().toISOString(),
@@ -78,13 +78,13 @@ export default function LoginPage() {
         setSuccess("✅ ¡Inicio de sesión exitoso! Redirigiendo...")
 
         setTimeout(() => {
-          console.log("🔄 [v762] Navigating to application dashboard")
+          console.log("🔄 [v763] Navigating to application dashboard")
           router.push("/app")
           router.refresh()
         }, 1500)
       }
     } catch (err) {
-      console.error("💥 [v762] Unexpected error occurred:", err)
+      console.error("💥 [v763] Unexpected error occurred:", err)
       setError("Error inesperado. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
@@ -98,7 +98,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("📝 [v762] Registration attempt initiated:", {
+      console.log("📝 [v763] Registration attempt initiated:", {
         email: registerEmail,
         name: registerName,
         timestamp: new Date().toISOString(),
@@ -127,14 +127,14 @@ export default function LoginPage() {
         },
       })
 
-      console.log("📥 [v762] Registration response:", {
+      console.log("📥 [v763] Registration response:", {
         success: !!data.user,
         error: authError?.message,
         userId: data.user?.id,
       })
 
       if (authError) {
-        console.error("❌ [v762] Registration failed:", authError.message)
+        console.error("❌ [v763] Registration failed:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
@@ -147,7 +147,7 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        console.log("✅ [v762] Registration successful:", {
+        console.log("✅ [v763] Registration successful:", {
           userId: data.user.id,
           email: data.user.email,
           timestamp: new Date().toISOString(),
@@ -159,7 +159,7 @@ export default function LoginPage() {
         setRegisterName("")
       }
     } catch (err) {
-      console.error("💥 [v762] Unexpected error occurred:", err)
+      console.error("💥 [v763] Unexpected error occurred:", err)
       setError("Error inesperado. Por favor, intenta de nuevo.")
     } finally {
       setIsLoading(false)
@@ -168,7 +168,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
-      {/* Version Badge - HIGHLY VISIBLE */}
+      {/* Version Badge */}
       <div className="fixed top-4 left-4 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white px-6 py-3 rounded-full text-base font-black shadow-2xl z-50 animate-pulse border-2 border-white">
         <div className="flex items-center gap-2">
           <Rocket className="w-5 h-5 animate-bounce" />

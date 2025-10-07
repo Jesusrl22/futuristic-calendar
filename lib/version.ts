@@ -1,11 +1,10 @@
-// FutureTask Version 762 - Critical Build Identifier
 export const APP_VERSION = {
-  major: 762,
+  major: 763,
   minor: 0,
   patch: 0,
-  full: "762.0.0",
-  buildDate: "2025-01-06T12:15:00.000Z",
-  buildId: "BUILD_762_CRITICAL_UPDATE",
+  full: "763.0.0",
+  buildDate: "2025-01-06T12:30:00.000Z",
+  buildId: "BUILD_763",
   name: "FutureTask",
 }
 
