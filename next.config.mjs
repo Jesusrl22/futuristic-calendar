@@ -1,45 +1,67 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    BUILD_VERSION: "761",
-    BUILD_TIMESTAMP: new Date().toISOString(),
-  },
+  reactStrictMode: true,
   images: {
-    domains: ["blob.v0.app", "placeholder.svg"],
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "**.supabase.co",
+        protocol: 'https',
+        hostname: 'fqhkqwdcyqudzcwxdaqh.supabase.co',
       },
       {
-        protocol: "https",
-        hostname: "blob.v0.app",
+        protocol: 'https',
+        hostname: 'blob.v0.app',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
       },
     ],
-    unoptimized: true, // Added from updates
-  },
-  eslint: {
-    ignoreDuringBuilds: true, // Added from updates
-  },
-  typescript: {
-    ignoreBuildErrors: true, // Added from updates
+    domains: ['fqhkqwdcyqudzcwxdaqh.supabase.co', 'blob.v0.app'],
   },
   async headers() {
     return [
       {
-        source: "/:path*",
+        source: '/:path*',
         headers: [
           {
-            key: "X-App-Version",
-            value: "761",
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
-            key: "X-Build-Time",
-            value: new Date().toISOString(),
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },
     ]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+    ]
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
   },
 }
 

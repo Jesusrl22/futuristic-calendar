@@ -1,4 +1,11 @@
 {
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron/process-subscriptions",
@@ -32,6 +39,10 @@
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "on"
         }
       ]
     }
@@ -45,5 +56,15 @@
       "source": "/robots.txt",
       "destination": "/api/robots"
     }
-  ]
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_BASE_URL": "https://future-task.com"
+  }
 }

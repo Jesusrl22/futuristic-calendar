@@ -1,13 +1,19 @@
-import { APP_VERSION } from "./version"
-
 export const DOMAIN_CONFIG = {
   production: "future-task.com",
+  staging: "staging.future-task.com",
   development: "localhost:3000",
-  preview: process.env.NEXT_PUBLIC_VERCEL_URL || "preview.vercel.app",
 }
 
 export function getCurrentDomain(): string {
   if (typeof window === "undefined") {
+    if (process.env.VERCEL_ENV === "production") {
+      return DOMAIN_CONFIG.production
+    }
+
+    if (process.env.VERCEL_URL) {
+      return process.env.VERCEL_URL
+    }
+
     return DOMAIN_CONFIG.development
   }
 
@@ -21,16 +27,31 @@ export function getCurrentDomain(): string {
     return hostname
   }
 
-  return DOMAIN_CONFIG.production
+  if (hostname === "future-task.com" || hostname === "www.future-task.com") {
+    return DOMAIN_CONFIG.production
+  }
+
+  return hostname
 }
 
 export function getBaseUrl(): string {
   const domain = getCurrentDomain()
-  const protocol = domain.includes("localhost") ? "http" : "https"
-  return `${protocol}://${domain}`
+
+  if (domain.includes("localhost") || domain.includes("127.0.0.1")) {
+    return `http://${domain}`
+  }
+
+  return `https://${domain}`
 }
 
-console.log("🌐 Domain Configuration")
-console.log(`📦 Version: ${APP_VERSION.full}`)
-console.log(`🏠 Base URL: ${getBaseUrl()}`)
-console.log(`⏰ Timestamp: ${new Date().toISOString()}`)
+export function isProduction(): boolean {
+  if (typeof window !== "undefined") {
+    return window.location.hostname === "future-task.com" || window.location.hostname === "www.future-task.com"
+  }
+  return process.env.VERCEL_ENV === "production"
+}
+
+console.log("🌐 Domain Configuration Loaded")
+console.log(`🏠 Current Domain: ${getCurrentDomain()}`)
+console.log(`🔗 Base URL: ${getBaseUrl()}`)
+console.log(`🚀 Is Production: ${isProduction()}`)
