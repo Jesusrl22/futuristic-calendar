@@ -1,10 +1,10 @@
 export const APP_VERSION = {
-  major: 763,
+  major: 764,
   minor: 0,
   patch: 0,
-  full: "763.0.0",
-  buildDate: "2025-01-06T12:30:00.000Z",
-  buildId: "BUILD_763",
+  full: "764.0.0",
+  buildDate: "2025-01-06T13:00:00.000Z",
+  buildId: "BUILD_764",
   name: "FutureTask",
 }
 
@@ -21,13 +21,13 @@ export function getFullVersionInfo() {
   }
 }
 
-export function logVersion() {
+export function logVersion(): void {
   console.log("╔═══════════════════════════════════════════╗")
-  console.log(`║   🚀 ${APP_VERSION.name} ${APP_VERSION.full} 🚀   ║`)
+  console.log(`║      FutureTask v${APP_VERSION.full}      ║`)
   console.log("╚═══════════════════════════════════════════╝")
-  console.log(`📦 Version: ${APP_VERSION.full}`)
+  console.log(`📦 Version: v${APP_VERSION.full}`)
   console.log(`🆔 Build ID: ${APP_VERSION.buildId}`)
-  console.log(`🏗️  Build Date: ${APP_VERSION.buildDate}`)
+  console.log(`🏗️  Build: ${APP_VERSION.buildDate}`)
   console.log(`⏰ Current Time: ${new Date().toISOString()}`)
   console.log("═══════════════════════════════════════════")
 }

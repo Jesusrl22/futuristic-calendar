@@ -9,8 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { supabase } from "@/lib/supabase"
-import { getVersionString, logVersion } from "@/lib/version"
-import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2, Rocket } from "lucide-react"
+import { logVersion } from "@/lib/version"
+import { Sparkles, Calendar, Brain, TrendingUp, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function LoginPage() {
@@ -28,7 +28,6 @@ export default function LoginPage() {
     logVersion()
     console.log(`📍 Current URL: ${window.location.href}`)
     console.log(`⏰ Page loaded: ${new Date().toISOString()}`)
-    console.log("🔥 FutureTask v763 - DEPLOYED")
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,7 +37,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("🔐 [v763] Login attempt initiated:", {
+      console.log("🔐 Login attempt initiated:", {
         email: loginEmail,
         timestamp: new Date().toISOString(),
       })
@@ -48,14 +47,15 @@ export default function LoginPage() {
         password: loginPassword,
       })
 
-      console.log("📥 [v763] Authentication response:", {
+      console.log("📥 Authentication response:", {
         success: !!data.user,
         error: authError?.message,
         userId: data.user?.id,
+        session: !!data.session,
       })
 
       if (authError) {
-        console.error("❌ [v763] Authentication failed:", authError.message)
+        console.error("❌ Authentication failed:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
@@ -66,11 +66,12 @@ export default function LoginPage() {
         } else {
           setError(`Error: ${authError.message}`)
         }
+        setIsLoading(false)
         return
       }
 
-      if (data.user) {
-        console.log("✅ [v763] Login successful - redirecting:", {
+      if (data.user && data.session) {
+        console.log("✅ Login successful - redirecting:", {
           userId: data.user.id,
           email: data.user.email,
           timestamp: new Date().toISOString(),
@@ -78,15 +79,25 @@ export default function LoginPage() {
         setSuccess("✅ ¡Inicio de sesión exitoso! Redirigiendo...")
 
         setTimeout(() => {
-          console.log("🔄 [v763] Navigating to application dashboard")
-          router.push("/app")
-          router.refresh()
-        }, 1500)
+          try {
+            router.push("/app")
+            setTimeout(() => {
+              if (window.location.pathname !== "/app") {
+                window.location.href = "/app"
+              }
+            }, 500)
+          } catch (redirectError) {
+            console.error("❌ Redirect error:", redirectError)
+            window.location.href = "/app"
+          }
+        }, 1000)
+      } else {
+        setError("Error al iniciar sesión. Por favor, intenta de nuevo.")
+        setIsLoading(false)
       }
     } catch (err) {
-      console.error("💥 [v763] Unexpected error occurred:", err)
+      console.error("💥 Unexpected error occurred:", err)
       setError("Error inesperado. Por favor, intenta de nuevo.")
-    } finally {
       setIsLoading(false)
     }
   }
@@ -98,7 +109,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      console.log("📝 [v763] Registration attempt initiated:", {
+      console.log("📝 Registration attempt initiated:", {
         email: registerEmail,
         name: registerName,
         timestamp: new Date().toISOString(),
@@ -127,14 +138,14 @@ export default function LoginPage() {
         },
       })
 
-      console.log("📥 [v763] Registration response:", {
+      console.log("📥 Registration response:", {
         success: !!data.user,
         error: authError?.message,
         userId: data.user?.id,
       })
 
       if (authError) {
-        console.error("❌ [v763] Registration failed:", authError.message)
+        console.error("❌ Registration failed:", authError.message)
 
         if (authError.message.includes("Failed to fetch") || authError.message.includes("fetch")) {
           setError("⚠️ Error de conexión. Por favor, verifica tu conexión a internet.")
@@ -143,11 +154,12 @@ export default function LoginPage() {
         } else {
           setError(`Error: ${authError.message}`)
         }
+        setIsLoading(false)
         return
       }
 
       if (data.user) {
-        console.log("✅ [v763] Registration successful:", {
+        console.log("✅ Registration successful:", {
           userId: data.user.id,
           email: data.user.email,
           timestamp: new Date().toISOString(),
@@ -157,36 +169,24 @@ export default function LoginPage() {
         setRegisterEmail("")
         setRegisterPassword("")
         setRegisterName("")
+        setIsLoading(false)
       }
     } catch (err) {
-      console.error("💥 [v763] Unexpected error occurred:", err)
+      console.error("💥 Unexpected error occurred:", err)
       setError("Error inesperado. Por favor, intenta de nuevo.")
-    } finally {
       setIsLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center p-4">
-      {/* Version Badge */}
-      <div className="fixed top-4 left-4 bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 text-white px-6 py-3 rounded-full text-base font-black shadow-2xl z-50 animate-pulse border-2 border-white">
-        <div className="flex items-center gap-2">
-          <Rocket className="w-5 h-5 animate-bounce" />
-          <span>{getVersionString()}</span>
-          <span className="text-xs bg-white text-purple-900 px-2 py-1 rounded-full">LIVE</span>
-        </div>
-      </div>
-
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         <div className="text-white space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
               <Sparkles className="w-6 h-6" />
             </div>
-            <div>
-              <h1 className="text-4xl font-bold">FutureTask</h1>
-              <p className="text-sm text-purple-300">Versión {getVersionString()}</p>
-            </div>
+            <h1 className="text-4xl font-bold">FutureTask</h1>
           </div>
 
           <p className="text-xl text-gray-300">El futuro de la productividad con IA</p>

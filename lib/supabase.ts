@@ -6,18 +6,10 @@ import { APP_VERSION } from "./version"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-console.log("╔═══════════════════════════════════════════╗")
-console.log("║   Supabase Client Initialization v761    ║")
-console.log("╚═══════════════════════════════════════════╝")
-console.log(`📍 URL: ${supabaseUrl ? supabaseUrl.substring(0, 40) + "..." : "❌ MISSING"}`)
-console.log(`🔑 Key: ${supabaseAnonKey ? supabaseAnonKey.substring(0, 20) + "..." : "❌ MISSING"}`)
-console.log(`📦 Version: ${APP_VERSION.full}`)
-console.log(`⏰ Time: ${new Date().toISOString()}`)
-console.log("═══════════════════════════════════════════")
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("❌ [v761] CRITICAL: Missing Supabase environment variables")
-  throw new Error("Missing Supabase environment variables")
+  console.error("❌ Missing Supabase environment variables")
+  console.error("NEXT_PUBLIC_SUPABASE_URL:", !!supabaseUrl)
+  console.error("NEXT_PUBLIC_SUPABASE_ANON_KEY:", !!supabaseAnonKey)
 }
 
 // Strict URL validation
@@ -26,9 +18,9 @@ try {
   if (!url.hostname.includes("supabase.co")) {
     throw new Error("Invalid Supabase domain")
   }
-  console.log("✅ [v761] Valid Supabase URL")
+  console.log("✅ Valid Supabase URL")
 } catch (error) {
-  console.error("❌ [v761] Invalid Supabase URL:", supabaseUrl)
+  console.error("❌ Invalid Supabase URL:", supabaseUrl)
   throw new Error("Invalid Supabase URL")
 }
 
@@ -48,12 +40,13 @@ export function createClient() {
           headers: {
             "x-app-version": APP_VERSION.full,
             "x-client-info": "futuretask-web-v761",
+            "X-Build-Id": APP_VERSION.buildId,
           },
         },
       })
-      console.log("✅ [v761] Supabase client created successfully")
+      console.log("✅ Supabase client created successfully")
     } catch (error) {
-      console.error("❌ [v761] Error creating Supabase client:", error)
+      console.error("❌ Error creating Supabase client:", error)
       supabaseInstance = null
     }
   }
@@ -68,15 +61,15 @@ export function createClient() {
 export const supabase = createClient()
 
 export async function checkSupabaseConnection(): Promise<boolean> {
-  console.log("🔍 [v761] Checking Supabase connection...")
+  console.log("🔍 Checking Supabase connection...")
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.log("❌ [v761] Supabase credentials not configured")
+    console.log("❌ Supabase credentials not configured")
     return false
   }
 
   if (!supabaseUrl.startsWith("https://")) {
-    console.log("❌ [v761] Supabase URL is invalid")
+    console.log("❌ Supabase URL is invalid")
     return false
   }
 
@@ -84,14 +77,14 @@ export async function checkSupabaseConnection(): Promise<boolean> {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
 
     if (sessionError) {
-      console.warn("⚠️ [v761] Supabase session check failed:", sessionError.message)
+      console.warn("⚠️ Supabase session check failed:", sessionError.message)
       return false
     }
 
-    console.log("✅ [v761] Supabase connection available")
+    console.log("✅ Supabase connection available")
     return true
   } catch (error: any) {
-    console.warn("⚠️ [v761] Supabase connection check failed:", error?.message || error)
+    console.warn("⚠️ Supabase connection check failed:", error?.message || error)
     return false
   }
 }
@@ -242,3 +235,8 @@ export interface Database {
     }
   }
 }
+
+console.log("🔌 Supabase client initialized")
+console.log(`📦 Version: ${APP_VERSION.full}`)
+console.log(`🌐 Supabase URL: ${supabaseUrl}`)
+console.log(`⏰ Timestamp: ${new Date().toISOString()}`)

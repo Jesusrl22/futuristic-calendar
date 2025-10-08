@@ -6,7 +6,7 @@ export async function GET() {
     version: APP_VERSION.full,
     buildId: APP_VERSION.buildId,
     buildDate: APP_VERSION.buildDate,
+    name: APP_VERSION.name,
     timestamp: new Date().toISOString(),
-    status: "active",
   })
 }
