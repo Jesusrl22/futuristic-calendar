@@ -1,27 +1,27 @@
 export type SubscriptionTier = "free" | "premium" | "pro"
-export type BillingCycle = "monthly" | "annual"
+export type BillingCycle = "monthly" | "yearly"
 
 export interface SubscriptionPlan {
+  id: string
   name: string
-  tier: SubscriptionTier
   price: {
     monthly: number
-    annual: number
+    yearly: number
   }
   features: string[]
-  aiCredits: number
+  aiCredits: string
   popular?: boolean
   paypalPlanId?: {
     monthly?: string
-    annual?: string
+    yearly?: string
   }
 }
 
-export const subscriptionPlans: Record<SubscriptionTier, SubscriptionPlan> = {
-  free: {
+export const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: "free",
     name: "Gratis",
-    tier: "free",
-    price: { monthly: 0, annual: 0 },
+    price: { monthly: 0, yearly: 0 },
     features: [
       "Sin créditos IA (compra packs por separado)",
       "Calendario básico",
@@ -29,12 +29,12 @@ export const subscriptionPlans: Record<SubscriptionTier, SubscriptionPlan> = {
       "Temporizador Pomodoro",
       "Notas personales",
     ],
-    aiCredits: 0,
+    aiCredits: "0",
   },
-  premium: {
+  {
+    id: "premium",
     name: "Premium",
-    tier: "premium",
-    price: { monthly: 9.99, annual: 99.99 },
+    price: { monthly: 9.99, yearly: 99.99 },
     features: [
       "Sin créditos IA (compra packs por separado)",
       "Sincronización en la nube",
@@ -43,17 +43,17 @@ export const subscriptionPlans: Record<SubscriptionTier, SubscriptionPlan> = {
       "Exportar datos",
       "Soporte prioritario",
     ],
-    aiCredits: 0,
+    aiCredits: "0",
     popular: true,
     paypalPlanId: {
       monthly: "P-PREMIUM-MONTHLY",
-      annual: "P-PREMIUM-ANNUAL",
+      yearly: "P-PREMIUM-YEARLY",
     },
   },
-  pro: {
+  {
+    id: "pro",
     name: "Pro",
-    tier: "pro",
-    price: { monthly: 19.99, annual: 199.99 },
+    price: { monthly: 19.99, yearly: 199.99 },
     features: [
       "500 créditos IA al mes",
       "Asistente IA avanzado",
@@ -64,13 +64,13 @@ export const subscriptionPlans: Record<SubscriptionTier, SubscriptionPlan> = {
       "API access",
       "Equipos y colaboración",
     ],
-    aiCredits: 500,
+    aiCredits: "500/mes",
     paypalPlanId: {
       monthly: "P-PRO-MONTHLY",
-      annual: "P-PRO-ANNUAL",
+      yearly: "P-PRO-YEARLY",
     },
   },
-}
+]
 
 // Format price with currency
 export function formatPrice(price: number, currency = "EUR"): string {
@@ -80,93 +80,98 @@ export function formatPrice(price: number, currency = "EUR"): string {
   }).format(price)
 }
 
-// Get annual savings percentage
-export function getAnnualSavingsPercentage(tier: SubscriptionTier): number {
-  const plan = subscriptionPlans[tier]
+// Get yearly savings for a plan
+export function getYearlySavings(plan: SubscriptionPlan): number {
   const monthlyTotal = plan.price.monthly * 12
-  const annualPrice = plan.price.annual
-  if (monthlyTotal === 0) return 0
-  return Math.round(((monthlyTotal - annualPrice) / monthlyTotal) * 100)
+  const yearlyPrice = plan.price.yearly
+  return monthlyTotal - yearlyPrice
 }
 
-// Calculate yearly savings (alias for calculateAnnualSavings)
-export function getYearlySavings(tier: SubscriptionTier): number {
-  const plan = subscriptionPlans[tier]
+// Get plan by ID
+export function getPlanById(planId: string): SubscriptionPlan | undefined {
+  return subscriptionPlans.find((plan) => plan.id === planId)
+}
+
+// Get annual savings percentage
+export function getAnnualSavingsPercentage(planId: string): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
   const monthlyTotal = plan.price.monthly * 12
-  const annualPrice = plan.price.annual
-  return monthlyTotal - annualPrice
+  const yearlyPrice = plan.price.yearly
+  if (monthlyTotal === 0) return 0
+  return Math.round(((monthlyTotal - yearlyPrice) / monthlyTotal) * 100)
 }
 
 // Get plan features
-export function getPlanFeatures(tier: SubscriptionTier): string[] {
-  return subscriptionPlans[tier].features
+export function getPlanFeatures(planId: string): string[] {
+  const plan = getPlanById(planId)
+  return plan?.features || []
 }
 
 // Get plan price
-export function getPlanPrice(tier: SubscriptionTier, cycle: BillingCycle): number {
-  return subscriptionPlans[tier].price[cycle]
+export function getPlanPrice(planId: string, cycle: BillingCycle): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  return cycle === "monthly" ? plan.price.monthly : plan.price.yearly
 }
 
 // Calculate annual savings
-export function calculateAnnualSavings(tier: SubscriptionTier): number {
-  return getYearlySavings(tier)
+export function calculateAnnualSavings(planId: string): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  return getYearlySavings(plan)
 }
 
 // Check if plan includes AI credits
-export function planIncludesAICredits(tier: SubscriptionTier): boolean {
-  return tier === "pro"
+export function planIncludesAICredits(planId: string): boolean {
+  return planId === "pro"
 }
 
 // Get monthly AI credits for a plan
-export function getMonthlyAICredits(tier: SubscriptionTier): number {
-  return subscriptionPlans[tier].aiCredits
-}
-
-// Get plan by ID (tier)
-export function getPlanById(planId: string): SubscriptionPlan | undefined {
-  const tier = planId as SubscriptionTier
-  return subscriptionPlans[tier]
+export function getMonthlyAICredits(planId: string): number {
+  const plan = getPlanById(planId)
+  if (!plan || plan.id !== "pro") return 0
+  return 500
 }
 
 // Get PayPal plan ID
-export function getPayPalPlanId(tier: SubscriptionTier, cycle: BillingCycle): string | undefined {
-  const plan = subscriptionPlans[tier]
-  return plan.paypalPlanId?.[cycle]
+export function getPayPalPlanId(planId: string, cycle: BillingCycle): string | undefined {
+  const plan = getPlanById(planId)
+  return plan?.paypalPlanId?.[cycle]
 }
 
 // Get subscription price based on tier and billing cycle
-export function getSubscriptionPrice(tier: SubscriptionTier, cycle: BillingCycle): number {
-  const plan = subscriptionPlans[tier]
-  return cycle === "monthly" ? plan.price.monthly : plan.price.annual
+export function getSubscriptionPrice(planId: string, cycle: BillingCycle): number {
+  return getPlanPrice(planId, cycle)
 }
 
 // Get plan by name
 export function getPlanByName(name: string): SubscriptionPlan | undefined {
-  return Object.values(subscriptionPlans).find((plan) => plan.name.toLowerCase() === name.toLowerCase())
+  return subscriptionPlans.find((plan) => plan.name.toLowerCase() === name.toLowerCase())
 }
 
 // Get AI credits for a tier
-export function getAICredits(tier: SubscriptionTier): number {
-  return subscriptionPlans[tier].aiCredits
+export function getAICredits(planId: string): number {
+  return getMonthlyAICredits(planId)
 }
 
 // Check if user has access to a feature
-export function hasFeatureAccess(userTier: SubscriptionTier, requiredTier: SubscriptionTier): boolean {
-  const tierOrder: SubscriptionTier[] = ["free", "premium", "pro"]
-  const userIndex = tierOrder.indexOf(userTier)
-  const requiredIndex = tierOrder.indexOf(requiredTier)
+export function hasFeatureAccess(userPlanId: string, requiredPlanId: string): boolean {
+  const tierOrder = ["free", "premium", "pro"]
+  const userIndex = tierOrder.indexOf(userPlanId)
+  const requiredIndex = tierOrder.indexOf(requiredPlanId)
   return userIndex >= requiredIndex
 }
 
 // Calculate prorated amount for plan changes
 export function calculateProratedAmount(
-  currentTier: SubscriptionTier,
-  newTier: SubscriptionTier,
+  currentPlanId: string,
+  newPlanId: string,
   cycle: BillingCycle,
   daysRemaining: number,
 ): number {
-  const currentPrice = getSubscriptionPrice(currentTier, cycle)
-  const newPrice = getSubscriptionPrice(newTier, cycle)
+  const currentPrice = getSubscriptionPrice(currentPlanId, cycle)
+  const newPrice = getSubscriptionPrice(newPlanId, cycle)
   const totalDays = cycle === "monthly" ? 30 : 365
 
   const unusedAmount = (currentPrice / totalDays) * daysRemaining
@@ -177,7 +182,7 @@ export function calculateProratedAmount(
 
 // Get subscription status display text
 export function getSubscriptionStatus(
-  tier: SubscriptionTier,
+  planId: string,
   isActive: boolean,
   expiresAt?: string,
 ): {
@@ -191,7 +196,7 @@ export function getSubscriptionStatus(
     }
   }
 
-  if (tier === "free") {
+  if (planId === "free") {
     return {
       text: "Plan Gratuito",
       color: "text-blue-600",
@@ -233,7 +238,7 @@ export function validateSubscriptionData(data: {
     errors.push("Plan de suscripción inválido")
   }
 
-  if (!["monthly", "annual"].includes(data.cycle)) {
+  if (!["monthly", "yearly"].includes(data.cycle)) {
     errors.push("Ciclo de facturación inválido")
   }
 
@@ -244,6 +249,6 @@ export function validateSubscriptionData(data: {
 }
 
 // Check if user can purchase AI credits
-export function canPurchaseAICredits(tier: SubscriptionTier): boolean {
+export function canPurchaseAICredits(planId: string): boolean {
   return true // All plans can purchase credits
 }

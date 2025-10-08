@@ -1,7 +1,15 @@
 "use client"
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { APP_VERSION } from "./version"
+
+// Version tracking
+const APP_VERSION = {
+  major: 7,
+  minor: 6,
+  patch: 9,
+  full: "7.6.9",
+  buildId: Date.now().toString(),
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -39,7 +47,7 @@ export function createClient() {
         global: {
           headers: {
             "x-app-version": APP_VERSION.full,
-            "x-client-info": "futuretask-web-v761",
+            "x-client-info": "futuretask-web-v769",
             "X-Build-Id": APP_VERSION.buildId,
           },
         },
@@ -58,7 +66,13 @@ export function createClient() {
   return supabaseInstance
 }
 
+// Export the singleton instance
 export const supabase = createClient()
+
+// Export getSupabaseClient function
+export function getSupabaseClient() {
+  return supabase
+}
 
 export async function checkSupabaseConnection(): Promise<boolean> {
   console.log("🔍 Checking Supabase connection...")
@@ -98,11 +112,18 @@ export interface Database {
           name: string
           email: string
           subscription_plan: "free" | "premium" | "pro"
+          subscription_tier: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
           plan: "free" | "premium" | "pro"
           ai_credits: number
           theme: "light" | "dark"
+          theme_preference: "light" | "dark"
           subscription_status: string
           subscription_id: string | null
+          billing_cycle: "monthly" | "yearly"
+          pomodoro_work_duration: number
+          pomodoro_break_duration: number
+          pomodoro_long_break_duration: number
+          pomodoro_sessions_until_long_break: number
           created_at: string
           updated_at: string
         }
@@ -111,11 +132,18 @@ export interface Database {
           name: string
           email: string
           subscription_plan?: "free" | "premium" | "pro"
+          subscription_tier?: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
           plan?: "free" | "premium" | "pro"
           ai_credits?: number
           theme?: "light" | "dark"
+          theme_preference?: "light" | "dark"
           subscription_status?: string
           subscription_id?: string | null
+          billing_cycle?: "monthly" | "yearly"
+          pomodoro_work_duration?: number
+          pomodoro_break_duration?: number
+          pomodoro_long_break_duration?: number
+          pomodoro_sessions_until_long_break?: number
           created_at?: string
           updated_at?: string
         }
@@ -124,11 +152,18 @@ export interface Database {
           name?: string
           email?: string
           subscription_plan?: "free" | "premium" | "pro"
+          subscription_tier?: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
           plan?: "free" | "premium" | "pro"
           ai_credits?: number
           theme?: "light" | "dark"
+          theme_preference?: "light" | "dark"
           subscription_status?: string
           subscription_id?: string | null
+          billing_cycle?: "monthly" | "yearly"
+          pomodoro_work_duration?: number
+          pomodoro_break_duration?: number
+          pomodoro_long_break_duration?: number
+          pomodoro_sessions_until_long_break?: number
           created_at?: string
           updated_at?: string
         }
@@ -141,7 +176,9 @@ export interface Database {
           description: string | null
           completed: boolean
           priority: "low" | "medium" | "high"
+          status: string
           category: string | null
+          tags: string[] | null
           due_date: string | null
           created_at: string
           updated_at: string
@@ -153,7 +190,9 @@ export interface Database {
           description?: string | null
           completed?: boolean
           priority?: "low" | "medium" | "high"
+          status?: string
           category?: string | null
+          tags?: string[] | null
           due_date?: string | null
           created_at?: string
           updated_at?: string
@@ -165,7 +204,9 @@ export interface Database {
           description?: string | null
           completed?: boolean
           priority?: "low" | "medium" | "high"
+          status?: string
           category?: string | null
+          tags?: string[] | null
           due_date?: string | null
           created_at?: string
           updated_at?: string
@@ -230,6 +271,61 @@ export interface Database {
           priority?: "low" | "medium" | "high"
           created_at?: string
           updated_at?: string
+        }
+      }
+      achievements: {
+        Row: {
+          id: string
+          user_id: string
+          achievement_type: string
+          title: string
+          description: string
+          icon: string
+          unlocked_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          achievement_type: string
+          title: string
+          description: string
+          icon: string
+          unlocked_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          achievement_type?: string
+          title?: string
+          description?: string
+          icon?: string
+          unlocked_at?: string
+          created_at?: string
+        }
+      }
+      pomodoro_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          duration: number
+          completed: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          duration: number
+          completed?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          duration?: number
+          completed?: boolean
+          created_at?: string
         }
       }
     }

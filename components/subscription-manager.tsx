@@ -41,7 +41,7 @@ export function SubscriptionManager({ currentPlan = "free", onUpgrade }: Subscri
         <span className={`text-sm ${isYearly ? "text-white" : "text-gray-400"}`}>Anual</span>
         {isYearly && (
           <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
-            Ahorra hasta €14.88
+            Ahorra hasta €40
           </Badge>
         )}
       </div>
@@ -92,9 +92,7 @@ export function SubscriptionManager({ currentPlan = "free", onUpgrade }: Subscri
                     <div className="text-sm text-green-400">Ahorras {formatPrice(savings)} al año</div>
                   )}
                 </div>
-                <CardDescription className="text-purple-300">
-                  {plan.aiCredits} créditos IA {plan.id !== "free" ? "por mes" : "únicos"}
-                </CardDescription>
+                <CardDescription className="text-purple-300">{plan.aiCredits}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
@@ -121,14 +119,14 @@ export function SubscriptionManager({ currentPlan = "free", onUpgrade }: Subscri
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t("subscription.loading")}
+                      Cargando...
                     </>
                   ) : isCurrentPlan ? (
                     "Plan Actual"
                   ) : plan.id === "free" ? (
                     "Gratis"
                   ) : (
-                    `${t("subscription.upgrade")} ${isYearly ? "Anual" : "Mensual"}`
+                    `Actualizar ${isYearly ? "Anual" : "Mensual"}`
                   )}
                 </Button>
               </CardContent>

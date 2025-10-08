@@ -9,7 +9,7 @@ import { PomodoroTimer } from "@/components/pomodoro-timer"
 import { StatsCards } from "@/components/stats-cards"
 import { WishlistManager } from "@/components/wishlist-manager"
 import { NotesManager } from "@/components/notes-manager"
-import { AiAssistant } from "@/components/ai-assistant"
+import { AIAssistant } from "@/components/ai-assistant"
 import { SettingsModal } from "@/components/settings-modal"
 import { SubscriptionManager } from "@/components/subscription-manager"
 import { AchievementsDisplay } from "@/components/achievements-display"
@@ -44,7 +44,6 @@ function AppContent() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("calendar")
 
-  // Prevent infinite loops
   const hasRedirectedRef = useRef(false)
   const hasLoadedRef = useRef(false)
 
@@ -58,7 +57,6 @@ function AppContent() {
       try {
         const isDemo = searchParams?.get("demo") === "true"
 
-        // Si es modo demo, crear usuario demo
         if (isDemo) {
           console.log("🎯 Demo mode activated")
           const demoUser = {
@@ -85,10 +83,8 @@ function AppContent() {
           return
         }
 
-        // Si NO es modo demo, verificar autenticación real
         console.log("🔍 Checking authentication...")
 
-        // Verificar sesión con timeout
         const sessionPromise = supabase.auth.getSession()
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
 
@@ -106,7 +102,6 @@ function AppContent() {
           return
         }
 
-        // Si no hay sesión, redirigir a login
         if (!session?.user) {
           console.log("❌ No session found, redirecting to login")
           if (mounted && !hasRedirectedRef.current) {
@@ -119,7 +114,6 @@ function AppContent() {
 
         console.log("✅ Session found:", session.user.email)
 
-        // Cargar datos del usuario desde la base de datos
         try {
           const userDataPromise = supabase.from("users").select("*").eq("id", session.user.id).single()
 
@@ -136,7 +130,6 @@ function AppContent() {
           if (mounted) {
             if (userData) {
               console.log("✅ User data loaded from database")
-              // Free y Premium = 0 créditos por defecto, Pro = 500 o los que tenga guardados
               const aiCredits =
                 userData.subscription_tier === "free" || userData.subscription_tier === "premium"
                   ? userData.ai_credits || 0
@@ -239,7 +232,6 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      {/* Mobile Header */}
       <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-2">
           <Calendar className="h-6 w-6 text-blue-600" />
@@ -257,7 +249,6 @@ function AppContent() {
       </div>
 
       <div className="flex h-[calc(100vh-73px)] lg:h-screen">
-        {/* Sidebar */}
         <aside
           className={`
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -268,7 +259,6 @@ function AppContent() {
           lg:top-0 top-[73px]
         `}
         >
-          {/* Desktop Logo */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-2">
               <Calendar className="h-8 w-8 text-blue-600" />
@@ -277,7 +267,6 @@ function AppContent() {
             <LanguageSelector />
           </div>
 
-          {/* User Info */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
@@ -304,7 +293,6 @@ function AppContent() {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             <button
               onClick={() => {
@@ -449,7 +437,6 @@ function AppContent() {
             </button>
           </nav>
 
-          {/* Settings & Logout */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
             <Button
               variant="outline"
@@ -469,7 +456,6 @@ function AppContent() {
           </div>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 overflow-auto p-4 lg:p-6">
           <div className="max-w-7xl mx-auto">
             {activeTab === "calendar" && <CalendarWidget userId={user?.id} isDemo={user?.isDemo} />}
@@ -488,11 +474,12 @@ function AppContent() {
             {activeTab === "wishlist" && <WishlistManager userId={user?.id} isDemo={user?.isDemo} />}
             {activeTab === "notes" && <NotesManager userId={user?.id} isDemo={user?.isDemo} />}
             {activeTab === "ai" && (
-              <AiAssistant
+              <AIAssistant
                 userId={user?.id}
                 credits={user?.ai_credits || 0}
                 onCreditsUpdate={handleUpdateCredits}
                 userPlan={user?.subscription_tier || user?.plan || "free"}
+                onUpgrade={() => setActiveTab("subscription")}
               />
             )}
             {activeTab === "subscription" && !user?.isDemo && (
@@ -507,13 +494,10 @@ function AppContent() {
         </main>
       </div>
 
-      {/* Settings Modal */}
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} user={user} />
 
-      {/* Toast Notifications */}
       <Toaster />
 
-      {/* Backdrop */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden"
