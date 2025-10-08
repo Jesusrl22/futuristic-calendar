@@ -1,13 +1,10 @@
 {
   "name": "futuristic-calendar",
-  "version": "770.0.0",
+  "version": "771.0.0",
   "private": true,
   "scripts": {
     "build": "next build",
-    "deploy": "npx vercel --prod",
-    "deploy:preview": "npx vercel",
     "dev": "next dev",
-    "postinstall": "echo '✅ Dependencies installed successfully'",
     "lint": "next lint",
     "start": "next start"
   },

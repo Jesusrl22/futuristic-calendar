@@ -9,38 +9,30 @@ export function getCurrentDomain(): string {
     if (process.env.VERCEL_ENV === "production") {
       return DOMAIN_CONFIG.production
     }
-
     if (process.env.VERCEL_URL) {
       return process.env.VERCEL_URL
     }
-
     return DOMAIN_CONFIG.development
   }
 
   const hostname = window.location.hostname
-
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     return DOMAIN_CONFIG.development
   }
-
   if (hostname.includes("vercel.app")) {
     return hostname
   }
-
   if (hostname === "future-task.com" || hostname === "www.future-task.com") {
     return DOMAIN_CONFIG.production
   }
-
   return hostname
 }
 
 export function getBaseUrl(): string {
   const domain = getCurrentDomain()
-
   if (domain.includes("localhost") || domain.includes("127.0.0.1")) {
     return `http://${domain}`
   }
-
   return `https://${domain}`
 }
 
@@ -50,8 +42,3 @@ export function isProduction(): boolean {
   }
   return process.env.VERCEL_ENV === "production"
 }
-
-console.log("🌐 Domain Configuration Loaded")
-console.log(`🏠 Current Domain: ${getCurrentDomain()}`)
-console.log(`🔗 Base URL: ${getBaseUrl()}`)
-console.log(`🚀 Is Production: ${isProduction()}`)

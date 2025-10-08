@@ -11,10 +11,6 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'blob.v0.app',
       },
-      {
-        protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
-      },
     ],
     domains: ['fqhkqwdcyqudzcwxdaqh.supabase.co', 'blob.v0.app'],
   },
@@ -31,31 +27,9 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
         ],
       },
     ]
-  },
-  async redirects() {
-    return [
-      {
-        source: '/home',
-        destination: '/',
-        permanent: true,
-      },
-    ]
-  },
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
   },
   typescript: {
     ignoreBuildErrors: false,
