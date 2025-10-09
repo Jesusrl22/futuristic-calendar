@@ -4,8 +4,17 @@ export const DOMAIN_CONFIG = {
   development: "localhost:3000",
 }
 
+export function isProduction(): boolean {
+  if (typeof window !== "undefined") {
+    return window.location.hostname === "future-task.com" || window.location.hostname === "www.future-task.com"
+  }
+  // En servidor, Vercel proporciona VERCEL_ENV automáticamente (no necesitas configurarlo)
+  return process.env.VERCEL_ENV === "production"
+}
+
 export function getCurrentDomain(): string {
   if (typeof window === "undefined") {
+    // Lado del servidor
     if (process.env.VERCEL_ENV === "production") {
       return DOMAIN_CONFIG.production
     }
@@ -15,6 +24,7 @@ export function getCurrentDomain(): string {
     return DOMAIN_CONFIG.development
   }
 
+  // Lado del cliente
   const hostname = window.location.hostname
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     return DOMAIN_CONFIG.development
@@ -34,11 +44,4 @@ export function getBaseUrl(): string {
     return `http://${domain}`
   }
   return `https://${domain}`
-}
-
-export function isProduction(): boolean {
-  if (typeof window !== "undefined") {
-    return window.location.hostname === "future-task.com" || window.location.hostname === "www.future-task.com"
-  }
-  return process.env.VERCEL_ENV === "production"
 }
