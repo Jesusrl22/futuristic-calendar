@@ -1,15 +1,69 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, Sparkles, TrendingUp, Zap, CheckCircle2, Users, Globe, Clock, Target, Shield } from "lucide-react"
+import {
+  Calendar,
+  Sparkles,
+  TrendingUp,
+  Zap,
+  CheckCircle2,
+  Users,
+  Globe,
+  Clock,
+  Target,
+  Shield,
+  Menu,
+} from "lucide-react"
+import { LanguageSelector } from "@/components/language-selector"
 
 export default function Home() {
   return (
     <div className="min-h-screen gradient-bg">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-purple-500/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-xl flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <span className="text-xl font-bold text-white">FutureTask</span>
+            </Link>
+
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/blog" className="text-gray-300 hover:text-white transition">
+                Blog
+              </Link>
+              <Link href="/contact" className="text-gray-300 hover:text-white transition">
+                Contacto
+              </Link>
+              <Link href="/privacy" className="text-gray-300 hover:text-white transition">
+                Privacidad
+              </Link>
+              <Link href="/terms" className="text-gray-300 hover:text-white transition">
+                Términos
+              </Link>
+            </nav>
+
+            <div className="flex items-center gap-4">
+              <LanguageSelector variant="button" showName={false} className="hidden sm:block" />
+              <Link href="/login">
+                <Button className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700">
+                  Iniciar Sesión
+                </Button>
+              </Link>
+              <Button variant="ghost" size="icon" className="md:hidden text-white">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pt-32 pb-20">
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/30 to-transparent"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center space-y-8">
             <div className="flex justify-center animate-float">
               <div className="p-4 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-2xl shadow-2xl">
@@ -257,26 +311,59 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-purple-500/20 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-6 w-6 text-purple-400" />
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-cyan-400 rounded-lg flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
                 <span className="text-xl font-bold text-white">FutureTask</span>
               </div>
-              <p className="text-gray-400 text-sm">El futuro de la productividad con IA</p>
+              <p className="text-gray-400 text-sm">
+                El futuro de la productividad con IA. Organiza tu vida, potencia tu trabajo y alcanza tus objetivos.
+              </p>
+              <div className="flex gap-2">
+                <LanguageSelector variant="select" showFlag={true} showName={false} className="w-32" />
+              </div>
             </div>
 
             <div>
               <h3 className="text-white font-semibold mb-4">Producto</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/blog" className="text-gray-400 hover:text-purple-400 transition">
+                  <Link href="/blog" className="text-gray-400 hover:text-purple-400 transition text-sm">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link href="/login" className="text-gray-400 hover:text-purple-400 transition">
+                  <Link href="/login" className="text-gray-400 hover:text-purple-400 transition text-sm">
                     Comenzar
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="text-gray-400 hover:text-purple-400 transition text-sm">
+                    Contacto
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/privacy" className="text-gray-400 hover:text-purple-400 transition text-sm">
+                    Política de Privacidad
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="text-gray-400 hover:text-purple-400 transition text-sm">
+                    Términos de Servicio
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="text-gray-400 hover:text-purple-400 transition text-sm">
+                    Política de Cookies
                   </Link>
                 </li>
               </ul>
@@ -286,31 +373,38 @@ export default function Home() {
               <h3 className="text-white font-semibold mb-4">Empresa</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/contact" className="text-gray-400 hover:text-purple-400 transition">
-                    Contacto
-                  </Link>
+                  <p className="text-gray-400 text-sm">FutureTask Inc.</p>
                 </li>
                 <li>
-                  <Link href="/privacy" className="text-gray-400 hover:text-purple-400 transition">
-                    Privacidad
-                  </Link>
+                  <p className="text-gray-400 text-sm">© 2025 Todos los derechos reservados</p>
                 </li>
                 <li>
-                  <Link href="/terms" className="text-gray-400 hover:text-purple-400 transition">
-                    Términos
-                  </Link>
+                  <a
+                    href="mailto:info@future-task.com"
+                    className="text-gray-400 hover:text-purple-400 transition text-sm"
+                  >
+                    info@future-task.com
+                  </a>
                 </li>
               </ul>
             </div>
-
-            <div>
-              <h3 className="text-white font-semibold mb-4">Síguenos</h3>
-              <p className="text-gray-400 text-sm">Mantente al día con las últimas actualizaciones y novedades</p>
-            </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-purple-500/20 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 FutureTask. Todos los derechos reservados.</p>
+          <div className="pt-8 border-t border-purple-500/20">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+              <p>© 2025 FutureTask. Todos los derechos reservados.</p>
+              <div className="flex gap-6">
+                <Link href="/privacy" className="hover:text-white transition">
+                  Privacidad
+                </Link>
+                <Link href="/terms" className="hover:text-white transition">
+                  Términos
+                </Link>
+                <Link href="/cookies" className="hover:text-white transition">
+                  Cookies
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
