@@ -1,560 +1,796 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, CheckCircle2, Clock, Sparkles, Target, Zap, Globe, ChevronDown, Menu, X, LogIn } from "lucide-react"
+import {
+  Check,
+  Calendar,
+  Clock,
+  Brain,
+  Zap,
+  Trophy,
+  Globe,
+  ChevronDown,
+  Menu,
+  X,
+  Target,
+  MessageSquare,
+  Sparkles,
+} from "lucide-react"
+import Link from "next/link"
+import { useState, useEffect } from "react"
+import Image from "next/image"
 
 type Language = "es" | "en" | "fr" | "de" | "it" | "pt"
 
-export default function LandingPage() {
-  const [language, setLanguage] = useState<Language>("es")
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [languageMenuOpen, setLanguageMenuOpen] = useState(false)
-
-  const languageNames = {
-    es: "Español",
-    en: "English",
-    fr: "Français",
-    de: "Deutsch",
-    it: "Italiano",
-    pt: "Português",
-  }
-
-  const content = {
-    es: {
-      login: "Iniciar Sesión",
-      register: "Registrarse",
+const translations = {
+  es: {
+    nav: {
       features: "Características",
       pricing: "Precios",
       blog: "Blog",
       contact: "Contacto",
-      heroTitle: "Organiza tu vida con inteligencia artificial",
-      heroSubtitle: "La plataforma definitiva para gestionar tareas, notas y objetivos con el poder de la IA",
-      heroCta: "Comenzar Gratis",
-      heroCtaSecondary: "Ver Funcionalidades",
-      featuresTitle: "Características Poderosas",
-      featuresSubtitle: "Todo lo que necesitas para maximizar tu productividad",
-      aiAssistantTitle: "Asistente IA",
-      aiAssistantDesc: "Organiza tus tareas automáticamente con inteligencia artificial avanzada",
-      smartCalendarTitle: "Calendario Inteligente",
-      smartCalendarDesc: "Visualiza y planifica tu tiempo de manera eficiente con recordatorios inteligentes",
-      pomodoroTitle: "Técnica Pomodoro",
-      pomodoroDesc: "Mejora tu concentración con sesiones de trabajo cronometradas",
-      notesTitle: "Notas Inteligentes",
-      notesDesc: "Captura ideas rápidamente con organización automática",
-      achievementsTitle: "Sistema de Logros",
-      achievementsDesc: "Mantén tu motivación con insignias y estadísticas de progreso",
-      multiplatformTitle: "Multiplataforma",
-      multiplatformDesc: "Accede desde cualquier dispositivo con sincronización en tiempo real",
-      pricingTitle: "Planes para cada necesidad",
-      pricingSubtitle: "Elige el plan perfecto para ti",
-      freeName: "Gratis",
-      freePrice: "0",
-      freeDesc: "Perfecto para comenzar",
-      freeCta: "Comenzar Gratis",
-      premiumName: "Premium",
-      premiumPrice: "9.99",
-      premiumDesc: "Para usuarios avanzados",
-      premiumCta: "Comenzar Premium",
-      proName: "Pro",
-      proPrice: "19.99",
-      proDesc: "Para equipos y empresas",
-      proCta: "Comenzar Pro",
-      ctaTitle: "¿Listo para aumentar tu productividad?",
-      ctaSubtitle: "Únete a miles de usuarios que ya optimizan su tiempo con FutureTask",
-      ctaButton: "Comenzar Ahora - Es Gratis",
-      footerProduct: "Producto",
-      footerFeatures: "Características",
-      footerPricing: "Precios",
-      footerBlog: "Blog",
-      footerCompany: "Empresa",
-      footerAbout: "Sobre nosotros",
-      footerContact: "Contacto",
-      footerLegal: "Legal",
-      footerPrivacy: "Privacidad",
-      footerTerms: "Términos",
-      footerCookies: "Cookies",
-      footerSupport: "Soporte",
-      footerDocs: "Documentación",
-      footerHelp: "Centro de Ayuda",
-      footerCopyright: "© 2025 FutureTask. Todos los derechos reservados.",
-      footerDescription: "La plataforma definitiva para gestionar tu productividad con IA",
-      freeFeatures: ["50 tareas por mes", "10 notas", "Calendario básico", "Pomodoro timer", "Soporte por email"],
-      premiumFeatures: [
-        "Tareas ilimitadas",
-        "Notas ilimitadas",
-        "Asistente IA avanzado",
-        "100 créditos IA/mes",
-        "Calendario inteligente",
-        "Sistema de logros",
-        "Soporte prioritario",
-      ],
-      proFeatures: [
-        "Todo de Premium",
-        "500 créditos IA/mes",
-        "Colaboración en equipo",
-        "Integraciones avanzadas",
-        "API access",
-        "Soporte 24/7",
-        "Informes personalizados",
-      ],
+      login: "Iniciar Sesión",
     },
-    en: {
-      login: "Login",
-      register: "Sign Up",
+    hero: {
+      badge: "Lanzamiento 2025",
+      title: "Tu Calendario Inteligente con IA",
+      subtitle:
+        "Organiza tu vida, alcanza tus metas y maximiza tu productividad con asistencia de inteligencia artificial",
+      cta: "Comenzar Gratis",
+      demo: "Ver Demo",
+    },
+    features: {
+      title: "Características Potentes",
+      subtitle: "Todo lo que necesitas para ser más productivo",
+      calendar: {
+        title: "Calendario Inteligente",
+        description: "Organiza tus tareas y eventos con un calendario visual e intuitivo",
+      },
+      pomodoro: {
+        title: "Temporizador Pomodoro",
+        description: "Técnica de gestión del tiempo para maximizar tu concentración",
+      },
+      ai: {
+        title: "Asistente IA",
+        description: "Obtén sugerencias personalizadas y optimiza tu planificación",
+      },
+      notes: {
+        title: "Notas Rápidas",
+        description: "Captura ideas y pensamientos importantes al instante",
+      },
+      goals: {
+        title: "Seguimiento de Metas",
+        description: "Define y alcanza tus objetivos con recordatorios inteligentes",
+      },
+      achievements: {
+        title: "Logros y Gamificación",
+        description: "Mantén tu motivación con badges y recompensas",
+      },
+    },
+    pricing: {
+      title: "Planes para Todos",
+      subtitle: "Elige el plan que mejor se adapte a tus necesidades",
+      monthly: "Mensual",
+      yearly: "Anual",
+      free: {
+        name: "Gratis",
+        price: "0",
+        period: "/mes",
+        description: "Perfecto para comenzar",
+        cta: "Comenzar Gratis",
+        features: [
+          "Calendario básico",
+          "Temporizador Pomodoro",
+          "Hasta 50 tareas",
+          "Notas ilimitadas",
+          "Sincronización básica",
+        ],
+      },
+      premium: {
+        name: "Premium",
+        price: "4.99",
+        period: "/mes",
+        description: "Para usuarios avanzados",
+        cta: "Empezar Premium",
+        popular: "Más Popular",
+        features: [
+          "Todo en Gratis, más:",
+          "Tareas ilimitadas",
+          "Asistente IA básico",
+          "Temas personalizados",
+          "Exportar datos",
+          "Soporte prioritario",
+        ],
+      },
+      pro: {
+        name: "Pro",
+        price: "9.99",
+        period: "/mes",
+        description: "Para profesionales exigentes",
+        cta: "Empezar Pro",
+        features: [
+          "Todo en Premium, más:",
+          "IA avanzada ilimitada",
+          "Análisis de productividad",
+          "Integraciones avanzadas",
+          "API personalizada",
+          "Soporte 24/7",
+        ],
+      },
+    },
+    cta: {
+      title: "¿Listo para ser más productivo?",
+      subtitle: "Únete a miles de usuarios que ya están optimizando su tiempo",
+      button: "Comenzar Ahora Gratis",
+    },
+    footer: {
+      product: "Producto",
+      features: "Características",
+      pricing: "Precios",
+      blog: "Blog",
+      legal: "Legal",
+      privacy: "Privacidad",
+      terms: "Términos",
+      cookies: "Cookies",
+      support: "Soporte",
+      contact: "Contacto",
+      docs: "Documentación",
+      rights: "© 2025 Calendario IA. Todos los derechos reservados.",
+      language: "Idioma",
+    },
+  },
+  en: {
+    nav: {
       features: "Features",
       pricing: "Pricing",
       blog: "Blog",
       contact: "Contact",
-      heroTitle: "Organize your life with artificial intelligence",
-      heroSubtitle: "The ultimate platform to manage tasks, notes and goals with the power of AI",
-      heroCta: "Start Free",
-      heroCtaSecondary: "View Features",
-      featuresTitle: "Powerful Features",
-      featuresSubtitle: "Everything you need to maximize your productivity",
-      aiAssistantTitle: "AI Assistant",
-      aiAssistantDesc: "Organize your tasks automatically with advanced artificial intelligence",
-      smartCalendarTitle: "Smart Calendar",
-      smartCalendarDesc: "Visualize and plan your time efficiently with smart reminders",
-      pomodoroTitle: "Pomodoro Technique",
-      pomodoroDesc: "Improve your focus with timed work sessions",
-      notesTitle: "Smart Notes",
-      notesDesc: "Capture ideas quickly with automatic organization",
-      achievementsTitle: "Achievement System",
-      achievementsDesc: "Stay motivated with badges and progress statistics",
-      multiplatformTitle: "Multiplatform",
-      multiplatformDesc: "Access from any device with real-time sync",
-      pricingTitle: "Plans for every need",
-      pricingSubtitle: "Choose the perfect plan for you",
-      freeName: "Free",
-      freePrice: "0",
-      freeDesc: "Perfect to get started",
-      freeCta: "Start Free",
-      premiumName: "Premium",
-      premiumPrice: "9.99",
-      premiumDesc: "For advanced users",
-      premiumCta: "Start Premium",
-      proName: "Pro",
-      proPrice: "19.99",
-      proDesc: "For teams and businesses",
-      proCta: "Start Pro",
-      ctaTitle: "Ready to boost your productivity?",
-      ctaSubtitle: "Join thousands of users already optimizing their time with FutureTask",
-      ctaButton: "Start Now - It's Free",
-      footerProduct: "Product",
-      footerFeatures: "Features",
-      footerPricing: "Pricing",
-      footerBlog: "Blog",
-      footerCompany: "Company",
-      footerAbout: "About",
-      footerContact: "Contact",
-      footerLegal: "Legal",
-      footerPrivacy: "Privacy",
-      footerTerms: "Terms",
-      footerCookies: "Cookies",
-      footerSupport: "Support",
-      footerDocs: "Documentation",
-      footerHelp: "Help Center",
-      footerCopyright: "© 2025 FutureTask. All rights reserved.",
-      footerDescription: "The ultimate platform to manage your productivity with AI",
-      freeFeatures: ["50 tasks per month", "10 notes", "Basic calendar", "Pomodoro timer", "Email support"],
-      premiumFeatures: [
-        "Unlimited tasks",
-        "Unlimited notes",
-        "Advanced AI assistant",
-        "100 AI credits/month",
-        "Smart calendar",
-        "Achievement system",
-        "Priority support",
-      ],
-      proFeatures: [
-        "Everything in Premium",
-        "500 AI credits/month",
-        "Team collaboration",
-        "Advanced integrations",
-        "API access",
-        "24/7 support",
-        "Custom reports",
-      ],
+      login: "Log In",
     },
-    fr: {
-      login: "Connexion",
-      register: "S'inscrire",
+    hero: {
+      badge: "2025 Launch",
+      title: "Your Smart AI Calendar",
+      subtitle: "Organize your life, achieve your goals, and maximize productivity with AI assistance",
+      cta: "Start Free",
+      demo: "Watch Demo",
+    },
+    features: {
+      title: "Powerful Features",
+      subtitle: "Everything you need to be more productive",
+      calendar: {
+        title: "Smart Calendar",
+        description: "Organize your tasks and events with a visual and intuitive calendar",
+      },
+      pomodoro: {
+        title: "Pomodoro Timer",
+        description: "Time management technique to maximize your focus",
+      },
+      ai: {
+        title: "AI Assistant",
+        description: "Get personalized suggestions and optimize your planning",
+      },
+      notes: {
+        title: "Quick Notes",
+        description: "Capture important ideas and thoughts instantly",
+      },
+      goals: {
+        title: "Goal Tracking",
+        description: "Set and achieve your objectives with smart reminders",
+      },
+      achievements: {
+        title: "Achievements & Gamification",
+        description: "Stay motivated with badges and rewards",
+      },
+    },
+    pricing: {
+      title: "Plans for Everyone",
+      subtitle: "Choose the plan that best fits your needs",
+      monthly: "Monthly",
+      yearly: "Yearly",
+      free: {
+        name: "Free",
+        price: "0",
+        period: "/month",
+        description: "Perfect to get started",
+        cta: "Start Free",
+        features: ["Basic calendar", "Pomodoro Timer", "Up to 50 tasks", "Unlimited notes", "Basic sync"],
+      },
+      premium: {
+        name: "Premium",
+        price: "4.99",
+        period: "/month",
+        description: "For advanced users",
+        cta: "Start Premium",
+        popular: "Most Popular",
+        features: [
+          "Everything in Free, plus:",
+          "Unlimited tasks",
+          "Basic AI assistant",
+          "Custom themes",
+          "Export data",
+          "Priority support",
+        ],
+      },
+      pro: {
+        name: "Pro",
+        price: "9.99",
+        period: "/month",
+        description: "For demanding professionals",
+        cta: "Start Pro",
+        features: [
+          "Everything in Premium, plus:",
+          "Unlimited advanced AI",
+          "Productivity analytics",
+          "Advanced integrations",
+          "Custom API",
+          "24/7 support",
+        ],
+      },
+    },
+    cta: {
+      title: "Ready to be more productive?",
+      subtitle: "Join thousands of users already optimizing their time",
+      button: "Start Now Free",
+    },
+    footer: {
+      product: "Product",
+      features: "Features",
+      pricing: "Pricing",
+      blog: "Blog",
+      legal: "Legal",
+      privacy: "Privacy",
+      terms: "Terms",
+      cookies: "Cookies",
+      support: "Support",
+      contact: "Contact",
+      docs: "Documentation",
+      rights: "© 2025 AI Calendar. All rights reserved.",
+      language: "Language",
+    },
+  },
+  fr: {
+    nav: {
       features: "Fonctionnalités",
       pricing: "Tarifs",
       blog: "Blog",
       contact: "Contact",
-      heroTitle: "Organisez votre vie avec l'intelligence artificielle",
-      heroSubtitle: "La plateforme ultime pour gérer les tâches, les notes et les objectifs avec la puissance de l'IA",
-      heroCta: "Commencer Gratuitement",
-      heroCtaSecondary: "Voir les Fonctionnalités",
-      featuresTitle: "Fonctionnalités Puissantes",
-      featuresSubtitle: "Tout ce dont vous avez besoin pour maximiser votre productivité",
-      aiAssistantTitle: "Assistant IA",
-      aiAssistantDesc: "Organisez vos tâches automatiquement avec l'intelligence artificielle avancée",
-      smartCalendarTitle: "Calendrier Intelligent",
-      smartCalendarDesc: "Visualisez et planifiez votre temps efficacement avec des rappels intelligents",
-      pomodoroTitle: "Technique Pomodoro",
-      pomodoroDesc: "Améliorez votre concentration avec des sessions de travail chronométrées",
-      notesTitle: "Notes Intelligentes",
-      notesDesc: "Capturez rapidement des idées avec une organisation automatique",
-      achievementsTitle: "Système de Réalisations",
-      achievementsDesc: "Restez motivé avec des badges et des statistiques de progression",
-      multiplatformTitle: "Multiplateforme",
-      multiplatformDesc: "Accédez depuis n'importe quel appareil avec synchronisation en temps réel",
-      pricingTitle: "Des plans pour tous les besoins",
-      pricingSubtitle: "Choisissez le plan parfait pour vous",
-      freeName: "Gratuit",
-      freePrice: "0",
-      freeDesc: "Parfait pour commencer",
-      freeCta: "Commencer Gratuitement",
-      premiumName: "Premium",
-      premiumPrice: "9.99",
-      premiumDesc: "Pour les utilisateurs avancés",
-      premiumCta: "Commencer Premium",
-      proName: "Pro",
-      proPrice: "19.99",
-      proDesc: "Pour les équipes et les entreprises",
-      proCta: "Commencer Pro",
-      ctaTitle: "Prêt à booster votre productivité?",
-      ctaSubtitle: "Rejoignez des milliers d'utilisateurs qui optimisent déjà leur temps avec FutureTask",
-      ctaButton: "Commencer Maintenant - C'est Gratuit",
-      footerProduct: "Produit",
-      footerFeatures: "Fonctionnalités",
-      footerPricing: "Tarifs",
-      footerBlog: "Blog",
-      footerCompany: "Entreprise",
-      footerAbout: "À propos",
-      footerContact: "Contact",
-      footerLegal: "Légal",
-      footerPrivacy: "Confidentialité",
-      footerTerms: "Conditions",
-      footerCookies: "Cookies",
-      footerSupport: "Support",
-      footerDocs: "Documentation",
-      footerHelp: "Centre d'Aide",
-      footerCopyright: "© 2025 FutureTask. Tous droits réservés.",
-      footerDescription: "La plateforme ultime pour gérer votre productivité avec l'IA",
-      freeFeatures: ["50 tâches par mois", "10 notes", "Calendrier de base", "Minuteur Pomodoro", "Support par e-mail"],
-      premiumFeatures: [
-        "Tâches illimitées",
-        "Notes illimitées",
-        "Assistant IA avancé",
-        "100 crédits IA/mois",
-        "Calendrier intelligent",
-        "Système de réalisations",
-        "Support prioritaire",
-      ],
-      proFeatures: [
-        "Tout de Premium",
-        "500 crédits IA/mois",
-        "Collaboration d'équipe",
-        "Intégrations avancées",
-        "Accès API",
-        "Support 24/7",
-        "Rapports personnalisés",
-      ],
+      login: "Connexion",
     },
-    de: {
-      login: "Anmelden",
-      register: "Registrieren",
+    hero: {
+      badge: "Lancement 2025",
+      title: "Votre Calendrier Intelligent avec IA",
+      subtitle:
+        "Organisez votre vie, atteignez vos objectifs et maximisez votre productivité avec l'assistance de l'IA",
+      cta: "Commencer Gratuitement",
+      demo: "Voir la Démo",
+    },
+    features: {
+      title: "Fonctionnalités Puissantes",
+      subtitle: "Tout ce dont vous avez besoin pour être plus productif",
+      calendar: {
+        title: "Calendrier Intelligent",
+        description: "Organisez vos tâches et événements avec un calendrier visuel et intuitif",
+      },
+      pomodoro: {
+        title: "Minuteur Pomodoro",
+        description: "Technique de gestion du temps pour maximiser votre concentration",
+      },
+      ai: {
+        title: "Assistant IA",
+        description: "Obtenez des suggestions personnalisées et optimisez votre planification",
+      },
+      notes: {
+        title: "Notes Rapides",
+        description: "Capturez instantanément des idées et pensées importantes",
+      },
+      goals: {
+        title: "Suivi des Objectifs",
+        description: "Définissez et atteignez vos objectifs avec des rappels intelligents",
+      },
+      achievements: {
+        title: "Succès et Gamification",
+        description: "Restez motivé avec des badges et récompenses",
+      },
+    },
+    pricing: {
+      title: "Plans pour Tous",
+      subtitle: "Choisissez le plan qui correspond le mieux à vos besoins",
+      monthly: "Mensuel",
+      yearly: "Annuel",
+      free: {
+        name: "Gratuit",
+        price: "0",
+        period: "/mois",
+        description: "Parfait pour commencer",
+        cta: "Commencer Gratuitement",
+        features: [
+          "Calendrier de base",
+          "Minuteur Pomodoro",
+          "Jusqu'à 50 tâches",
+          "Notes illimitées",
+          "Synchronisation de base",
+        ],
+      },
+      premium: {
+        name: "Premium",
+        price: "4.99",
+        period: "/mois",
+        description: "Pour utilisateurs avancés",
+        cta: "Commencer Premium",
+        popular: "Plus Populaire",
+        features: [
+          "Tout dans Gratuit, plus:",
+          "Tâches illimitées",
+          "Assistant IA de base",
+          "Thèmes personnalisés",
+          "Exporter les données",
+          "Support prioritaire",
+        ],
+      },
+      pro: {
+        name: "Pro",
+        price: "9.99",
+        period: "/mois",
+        description: "Pour professionnels exigeants",
+        cta: "Commencer Pro",
+        features: [
+          "Tout dans Premium, plus:",
+          "IA avancée illimitée",
+          "Analyses de productivité",
+          "Intégrations avancées",
+          "API personnalisée",
+          "Support 24/7",
+        ],
+      },
+    },
+    cta: {
+      title: "Prêt à être plus productif?",
+      subtitle: "Rejoignez des milliers d'utilisateurs qui optimisent déjà leur temps",
+      button: "Commencer Maintenant Gratuitement",
+    },
+    footer: {
+      product: "Produit",
+      features: "Fonctionnalités",
+      pricing: "Tarifs",
+      blog: "Blog",
+      legal: "Légal",
+      privacy: "Confidentialité",
+      terms: "Conditions",
+      cookies: "Cookies",
+      support: "Support",
+      contact: "Contact",
+      docs: "Documentation",
+      rights: "© 2025 Calendrier IA. Tous droits réservés.",
+      language: "Langue",
+    },
+  },
+  de: {
+    nav: {
       features: "Funktionen",
       pricing: "Preise",
       blog: "Blog",
       contact: "Kontakt",
-      heroTitle: "Organisieren Sie Ihr Leben mit künstlicher Intelligenz",
-      heroSubtitle: "Die ultimative Plattform zur Verwaltung von Aufgaben, Notizen und Zielen mit der Kraft der KI",
-      heroCta: "Kostenlos Starten",
-      heroCtaSecondary: "Funktionen Ansehen",
-      featuresTitle: "Leistungsstarke Funktionen",
-      featuresSubtitle: "Alles, was Sie brauchen, um Ihre Produktivität zu maximieren",
-      aiAssistantTitle: "KI-Assistent",
-      aiAssistantDesc: "Organisieren Sie Ihre Aufgaben automatisch mit fortschrittlicher künstlicher Intelligenz",
-      smartCalendarTitle: "Intelligenter Kalender",
-      smartCalendarDesc: "Visualisieren und planen Sie Ihre Zeit effizient mit intelligenten Erinnerungen",
-      pomodoroTitle: "Pomodoro-Technik",
-      pomodoroDesc: "Verbessern Sie Ihre Konzentration mit zeitgesteuerten Arbeitssitzungen",
-      notesTitle: "Intelligente Notizen",
-      notesDesc: "Erfassen Sie Ideen schnell mit automatischer Organisation",
-      achievementsTitle: "Erfolgssystem",
-      achievementsDesc: "Bleiben Sie motiviert mit Abzeichen und Fortschrittsstatistiken",
-      multiplatformTitle: "Multiplattform",
-      multiplatformDesc: "Zugriff von jedem Gerät mit Echtzeit-Synchronisation",
-      pricingTitle: "Pläne für jeden Bedarf",
-      pricingSubtitle: "Wählen Sie den perfekten Plan für Sie",
-      freeName: "Kostenlos",
-      freePrice: "0",
-      freeDesc: "Perfekt zum Einstieg",
-      freeCta: "Kostenlos Starten",
-      premiumName: "Premium",
-      premiumPrice: "9.99",
-      premiumDesc: "Für fortgeschrittene Benutzer",
-      premiumCta: "Premium Starten",
-      proName: "Pro",
-      proPrice: "19.99",
-      proDesc: "Für Teams und Unternehmen",
-      proCta: "Pro Starten",
-      ctaTitle: "Bereit, Ihre Produktivität zu steigern?",
-      ctaSubtitle: "Schließen Sie sich Tausenden von Benutzern an, die ihre Zeit bereits mit FutureTask optimieren",
-      ctaButton: "Jetzt Starten - Es ist Kostenlos",
-      footerProduct: "Produkt",
-      footerFeatures: "Funktionen",
-      footerPricing: "Preise",
-      footerBlog: "Blog",
-      footerCompany: "Unternehmen",
-      footerAbout: "Über uns",
-      footerContact: "Kontakt",
-      footerLegal: "Rechtliches",
-      footerPrivacy: "Datenschutz",
-      footerTerms: "Bedingungen",
-      footerCookies: "Cookies",
-      footerSupport: "Support",
-      footerDocs: "Dokumentation",
-      footerHelp: "Hilfecenter",
-      footerCopyright: "© 2025 FutureTask. Alle Rechte vorbehalten.",
-      footerDescription: "Die ultimative Plattform zur Verwaltung Ihrer Produktivität mit KI",
-      freeFeatures: ["50 Aufgaben pro Monat", "10 Notizen", "Basis-Kalender", "Pomodoro-Timer", "E-Mail-Support"],
-      premiumFeatures: [
-        "Unbegrenzte Aufgaben",
-        "Unbegrenzte Notizen",
-        "Erweiterter KI-Assistent",
-        "100 KI-Credits/Monat",
-        "Intelligenter Kalender",
-        "Erfolgssystem",
-        "Prioritäts-Support",
-      ],
-      proFeatures: [
-        "Alles von Premium",
-        "500 KI-Credits/Monat",
-        "Team-Zusammenarbeit",
-        "Erweiterte Integrationen",
-        "API-Zugang",
-        "24/7 Support",
-        "Benutzerdefinierte Berichte",
-      ],
+      login: "Anmelden",
     },
-    it: {
-      login: "Accedi",
-      register: "Registrati",
+    hero: {
+      badge: "Start 2025",
+      title: "Ihr Intelligenter KI-Kalender",
+      subtitle:
+        "Organisieren Sie Ihr Leben, erreichen Sie Ihre Ziele und maximieren Sie Ihre Produktivität mit KI-Unterstützung",
+      cta: "Kostenlos Starten",
+      demo: "Demo Ansehen",
+    },
+    features: {
+      title: "Leistungsstarke Funktionen",
+      subtitle: "Alles, was Sie brauchen, um produktiver zu sein",
+      calendar: {
+        title: "Intelligenter Kalender",
+        description: "Organisieren Sie Ihre Aufgaben und Termine mit einem visuellen und intuitiven Kalender",
+      },
+      pomodoro: {
+        title: "Pomodoro-Timer",
+        description: "Zeitmanagement-Technik zur Maximierung Ihrer Konzentration",
+      },
+      ai: {
+        title: "KI-Assistent",
+        description: "Erhalten Sie personalisierte Vorschläge und optimieren Sie Ihre Planung",
+      },
+      notes: {
+        title: "Schnellnotizen",
+        description: "Erfassen Sie wichtige Ideen und Gedanken sofort",
+      },
+      goals: {
+        title: "Zielverfolgung",
+        description: "Setzen und erreichen Sie Ihre Ziele mit intelligenten Erinnerungen",
+      },
+      achievements: {
+        title: "Erfolge & Gamification",
+        description: "Bleiben Sie motiviert mit Abzeichen und Belohnungen",
+      },
+    },
+    pricing: {
+      title: "Pläne für Jeden",
+      subtitle: "Wählen Sie den Plan, der am besten zu Ihren Bedürfnissen passt",
+      monthly: "Monatlich",
+      yearly: "Jährlich",
+      free: {
+        name: "Kostenlos",
+        price: "0",
+        period: "/Monat",
+        description: "Perfekt zum Einstieg",
+        cta: "Kostenlos Starten",
+        features: [
+          "Basis-Kalender",
+          "Pomodoro-Timer",
+          "Bis zu 50 Aufgaben",
+          "Unbegrenzte Notizen",
+          "Basis-Synchronisation",
+        ],
+      },
+      premium: {
+        name: "Premium",
+        price: "4.99",
+        period: "/Monat",
+        description: "Für fortgeschrittene Benutzer",
+        cta: "Premium Starten",
+        popular: "Am Beliebtesten",
+        features: [
+          "Alles in Kostenlos, plus:",
+          "Unbegrenzte Aufgaben",
+          "Basis-KI-Assistent",
+          "Benutzerdefinierte Themes",
+          "Daten exportieren",
+          "Prioritäts-Support",
+        ],
+      },
+      pro: {
+        name: "Pro",
+        price: "9.99",
+        period: "/Monat",
+        description: "Für anspruchsvolle Profis",
+        cta: "Pro Starten",
+        features: [
+          "Alles in Premium, plus:",
+          "Unbegrenzte erweiterte KI",
+          "Produktivitätsanalysen",
+          "Erweiterte Integrationen",
+          "Benutzerdefinierte API",
+          "24/7 Support",
+        ],
+      },
+    },
+    cta: {
+      title: "Bereit, produktiver zu sein?",
+      subtitle: "Schließen Sie sich Tausenden von Benutzern an, die ihre Zeit bereits optimieren",
+      button: "Jetzt Kostenlos Starten",
+    },
+    footer: {
+      product: "Produkt",
+      features: "Funktionen",
+      pricing: "Preise",
+      blog: "Blog",
+      legal: "Rechtliches",
+      privacy: "Datenschutz",
+      terms: "Bedingungen",
+      cookies: "Cookies",
+      support: "Support",
+      contact: "Kontakt",
+      docs: "Dokumentation",
+      rights: "© 2025 KI-Kalender. Alle Rechte vorbehalten.",
+      language: "Sprache",
+    },
+  },
+  it: {
+    nav: {
       features: "Funzionalità",
       pricing: "Prezzi",
       blog: "Blog",
       contact: "Contatto",
-      heroTitle: "Organizza la tua vita con l'intelligenza artificiale",
-      heroSubtitle: "La piattaforma definitiva per gestire attività, note e obiettivi con il potere dell'IA",
-      heroCta: "Inizia Gratis",
-      heroCtaSecondary: "Vedi Funzionalità",
-      featuresTitle: "Funzionalità Potenti",
-      featuresSubtitle: "Tutto ciò di cui hai bisogno per massimizzare la tua produttività",
-      aiAssistantTitle: "Assistente IA",
-      aiAssistantDesc: "Organizza le tue attività automaticamente con intelligenza artificiale avanzata",
-      smartCalendarTitle: "Calendario Intelligente",
-      smartCalendarDesc: "Visualizza e pianifica il tuo tempo in modo efficiente con promemoria intelligenti",
-      pomodoroTitle: "Tecnica Pomodoro",
-      pomodoroDesc: "Migliora la tua concentrazione con sessioni di lavoro temporizzate",
-      notesTitle: "Note Intelligenti",
-      notesDesc: "Cattura rapidamente le idee con organizzazione automatica",
-      achievementsTitle: "Sistema di Risultati",
-      achievementsDesc: "Rimani motivato con badge e statistiche di progresso",
-      multiplatformTitle: "Multipiattaforma",
-      multiplatformDesc: "Accedi da qualsiasi dispositivo con sincronizzazione in tempo reale",
-      pricingTitle: "Piani per ogni esigenza",
-      pricingSubtitle: "Scegli il piano perfetto per te",
-      freeName: "Gratuito",
-      freePrice: "0",
-      freeDesc: "Perfetto per iniziare",
-      freeCta: "Inizia Gratis",
-      premiumName: "Premium",
-      premiumPrice: "9.99",
-      premiumDesc: "Per utenti avanzati",
-      premiumCta: "Inizia Premium",
-      proName: "Pro",
-      proPrice: "19.99",
-      proDesc: "Per team e aziende",
-      proCta: "Inizia Pro",
-      ctaTitle: "Pronto a migliorare la tua produttività?",
-      ctaSubtitle: "Unisciti a migliaia di utenti che stanno già ottimizzando il loro tempo con FutureTask",
-      ctaButton: "Inizia Ora - È Gratis",
-      footerProduct: "Prodotto",
-      footerFeatures: "Funzionalità",
-      footerPricing: "Prezzi",
-      footerBlog: "Blog",
-      footerCompany: "Azienda",
-      footerAbout: "Chi siamo",
-      footerContact: "Contatto",
-      footerLegal: "Legale",
-      footerPrivacy: "Privacy",
-      footerTerms: "Termini",
-      footerCookies: "Cookie",
-      footerSupport: "Supporto",
-      footerDocs: "Documentazione",
-      footerHelp: "Centro Assistenza",
-      footerCopyright: "© 2025 FutureTask. Tutti i diritti riservati.",
-      footerDescription: "La piattaforma definitiva per gestire la tua produttività con l'IA",
-      freeFeatures: ["50 attività al mese", "10 note", "Calendario base", "Timer Pomodoro", "Supporto email"],
-      premiumFeatures: [
-        "Attività illimitate",
-        "Note illimitate",
-        "Assistente IA avanzato",
-        "100 crediti IA/mese",
-        "Calendario intelligente",
-        "Sistema di risultati",
-        "Supporto prioritario",
-      ],
-      proFeatures: [
-        "Tutto di Premium",
-        "500 crediti IA/mese",
-        "Collaborazione team",
-        "Integrazioni avanzate",
-        "Accesso API",
-        "Supporto 24/7",
-        "Report personalizzati",
-      ],
+      login: "Accedi",
     },
-    pt: {
-      login: "Entrar",
-      register: "Registrar",
-      features: "Funcionalidades",
+    hero: {
+      badge: "Lancio 2025",
+      title: "Il Tuo Calendario Intelligente con IA",
+      subtitle:
+        "Organizza la tua vita, raggiungi i tuoi obiettivi e massimizza la produttività con l'assistenza dell'IA",
+      cta: "Inizia Gratis",
+      demo: "Guarda la Demo",
+    },
+    features: {
+      title: "Funzionalità Potenti",
+      subtitle: "Tutto ciò di cui hai bisogno per essere più produttivo",
+      calendar: {
+        title: "Calendario Intelligente",
+        description: "Organizza i tuoi compiti ed eventi con un calendario visivo e intuitivo",
+      },
+      pomodoro: {
+        title: "Timer Pomodoro",
+        description: "Tecnica di gestione del tempo per massimizzare la concentrazione",
+      },
+      ai: {
+        title: "Assistente IA",
+        description: "Ottieni suggerimenti personalizzati e ottimizza la tua pianificazione",
+      },
+      notes: {
+        title: "Note Rapide",
+        description: "Cattura idee e pensieri importanti all'istante",
+      },
+      goals: {
+        title: "Monitoraggio Obiettivi",
+        description: "Definisci e raggiungi i tuoi obiettivi con promemoria intelligenti",
+      },
+      achievements: {
+        title: "Successi e Gamification",
+        description: "Mantieni la motivazione con badge e ricompense",
+      },
+    },
+    pricing: {
+      title: "Piani per Tutti",
+      subtitle: "Scegli il piano più adatto alle tue esigenze",
+      monthly: "Mensile",
+      yearly: "Annuale",
+      free: {
+        name: "Gratuito",
+        price: "0",
+        period: "/mese",
+        description: "Perfetto per iniziare",
+        cta: "Inizia Gratis",
+        features: [
+          "Calendario base",
+          "Timer Pomodoro",
+          "Fino a 50 attività",
+          "Note illimitate",
+          "Sincronizzazione base",
+        ],
+      },
+      premium: {
+        name: "Premium",
+        price: "4.99",
+        period: "/mese",
+        description: "Per utenti avanzati",
+        cta: "Inizia Premium",
+        popular: "Più Popolare",
+        features: [
+          "Tutto in Gratuito, più:",
+          "Attività illimitate",
+          "Assistente IA base",
+          "Temi personalizzati",
+          "Esporta dati",
+          "Supporto prioritario",
+        ],
+      },
+      pro: {
+        name: "Pro",
+        price: "9.99",
+        period: "/mese",
+        description: "Per professionisti esigenti",
+        cta: "Inizia Pro",
+        features: [
+          "Tutto in Premium, più:",
+          "IA avanzata illimitata",
+          "Analisi produttività",
+          "Integrazioni avanzate",
+          "API personalizzata",
+          "Supporto 24/7",
+        ],
+      },
+    },
+    cta: {
+      title: "Pronto per essere più produttivo?",
+      subtitle: "Unisciti a migliaia di utenti che stanno già ottimizzando il loro tempo",
+      button: "Inizia Ora Gratis",
+    },
+    footer: {
+      product: "Prodotto",
+      features: "Funzionalità",
+      pricing: "Prezzi",
+      blog: "Blog",
+      legal: "Legale",
+      privacy: "Privacy",
+      terms: "Termini",
+      cookies: "Cookie",
+      support: "Supporto",
+      contact: "Contatto",
+      docs: "Documentazione",
+      rights: "© 2025 Calendario IA. Tutti i diritti riservati.",
+      language: "Lingua",
+    },
+  },
+  pt: {
+    nav: {
+      features: "Recursos",
       pricing: "Preços",
       blog: "Blog",
       contact: "Contato",
-      heroTitle: "Organize sua vida com inteligência artificial",
-      heroSubtitle: "A plataforma definitiva para gerenciar tarefas, notas e objetivos com o poder da IA",
-      heroCta: "Começar Grátis",
-      heroCtaSecondary: "Ver Funcionalidades",
-      featuresTitle: "Funcionalidades Poderosas",
-      featuresSubtitle: "Tudo o que você precisa para maximizar sua produtividade",
-      aiAssistantTitle: "Assistente IA",
-      aiAssistantDesc: "Organize suas tarefas automaticamente com inteligência artificial avançada",
-      smartCalendarTitle: "Calendário Inteligente",
-      smartCalendarDesc: "Visualize e planeje seu tempo de forma eficiente com lembretes inteligentes",
-      pomodoroTitle: "Técnica Pomodoro",
-      pomodoroDesc: "Melhore seu foco com sessões de trabalho cronometradas",
-      notesTitle: "Notas Inteligentes",
-      notesDesc: "Capture ideias rapidamente com organização automática",
-      achievementsTitle: "Sistema de Conquistas",
-      achievementsDesc: "Mantenha-se motivado com emblemas e estatísticas de progresso",
-      multiplatformTitle: "Multiplataforma",
-      multiplatformDesc: "Acesse de qualquer dispositivo com sincronização em tempo real",
-      pricingTitle: "Planos para cada necessidade",
-      pricingSubtitle: "Escolha o plano perfeito para você",
-      freeName: "Grátis",
-      freePrice: "0",
-      freeDesc: "Perfeito para começar",
-      freeCta: "Começar Grátis",
-      premiumName: "Premium",
-      premiumPrice: "9.99",
-      premiumDesc: "Para usuários avançados",
-      premiumCta: "Começar Premium",
-      proName: "Pro",
-      proPrice: "19.99",
-      proDesc: "Para equipes e empresas",
-      proCta: "Começar Pro",
-      ctaTitle: "Pronto para aumentar sua produtividade?",
-      ctaSubtitle: "Junte-se a milhares de usuários que já estão otimizando seu tempo com FutureTask",
-      ctaButton: "Começar Agora - É Grátis",
-      footerProduct: "Produto",
-      footerFeatures: "Funcionalidades",
-      footerPricing: "Preços",
-      footerBlog: "Blog",
-      footerCompany: "Empresa",
-      footerAbout: "Sobre",
-      footerContact: "Contato",
-      footerLegal: "Legal",
-      footerPrivacy: "Privacidade",
-      footerTerms: "Termos",
-      footerCookies: "Cookies",
-      footerSupport: "Suporte",
-      footerDocs: "Documentação",
-      footerHelp: "Centro de Ajuda",
-      footerCopyright: "© 2025 FutureTask. Todos os direitos reservados.",
-      footerDescription: "A plataforma definitiva para gerenciar sua produtividade com IA",
-      freeFeatures: ["50 tarefas por mês", "10 notas", "Calendário básico", "Timer Pomodoro", "Suporte por email"],
-      premiumFeatures: [
-        "Tarefas ilimitadas",
-        "Notas ilimitadas",
-        "Assistente IA avançado",
-        "100 créditos IA/mês",
-        "Calendário inteligente",
-        "Sistema de conquistas",
-        "Suporte prioritário",
-      ],
-      proFeatures: [
-        "Tudo do Premium",
-        "500 créditos IA/mês",
-        "Colaboração em equipe",
-        "Integrações avançadas",
-        "Acesso API",
-        "Suporte 24/7",
-        "Relatórios personalizados",
-      ],
+      login: "Entrar",
     },
-  }
+    hero: {
+      badge: "Lançamento 2025",
+      title: "Seu Calendário Inteligente com IA",
+      subtitle: "Organize sua vida, alcance seus objetivos e maximize sua produtividade com assistência de IA",
+      cta: "Começar Grátis",
+      demo: "Ver Demo",
+    },
+    features: {
+      title: "Recursos Poderosos",
+      subtitle: "Tudo o que você precisa para ser mais produtivo",
+      calendar: {
+        title: "Calendário Inteligente",
+        description: "Organize suas tarefas e eventos com um calendário visual e intuitivo",
+      },
+      pomodoro: {
+        title: "Timer Pomodoro",
+        description: "Técnica de gestão de tempo para maximizar sua concentração",
+      },
+      ai: {
+        title: "Assistente IA",
+        description: "Obtenha sugestões personalizadas e otimize seu planejamento",
+      },
+      notes: {
+        title: "Notas Rápidas",
+        description: "Capture ideias e pensamentos importantes instantaneamente",
+      },
+      goals: {
+        title: "Acompanhamento de Metas",
+        description: "Defina e alcance seus objetivos com lembretes inteligentes",
+      },
+      achievements: {
+        title: "Conquistas e Gamificação",
+        description: "Mantenha sua motivação com badges e recompensas",
+      },
+    },
+    pricing: {
+      title: "Planos para Todos",
+      subtitle: "Escolha o plano que melhor se adapta às suas necessidades",
+      monthly: "Mensal",
+      yearly: "Anual",
+      free: {
+        name: "Grátis",
+        price: "0",
+        period: "/mês",
+        description: "Perfeito para começar",
+        cta: "Começar Grátis",
+        features: ["Calendário básico", "Timer Pomodoro", "Até 50 tarefas", "Notas ilimitadas", "Sincronização básica"],
+      },
+      premium: {
+        name: "Premium",
+        price: "4.99",
+        period: "/mês",
+        description: "Para usuários avançados",
+        cta: "Começar Premium",
+        popular: "Mais Popular",
+        features: [
+          "Tudo no Grátis, mais:",
+          "Tarefas ilimitadas",
+          "Assistente IA básico",
+          "Temas personalizados",
+          "Exportar dados",
+          "Suporte prioritário",
+        ],
+      },
+      pro: {
+        name: "Pro",
+        price: "9.99",
+        period: "/mês",
+        description: "Para profissionais exigentes",
+        cta: "Começar Pro",
+        features: [
+          "Tudo no Premium, mais:",
+          "IA avançada ilimitada",
+          "Análise de produtividade",
+          "Integrações avançadas",
+          "API personalizada",
+          "Suporte 24/7",
+        ],
+      },
+    },
+    cta: {
+      title: "Pronto para ser mais produtivo?",
+      subtitle: "Junte-se a milhares de usuários que já estão otimizando seu tempo",
+      button: "Começar Agora Grátis",
+    },
+    footer: {
+      product: "Produto",
+      features: "Recursos",
+      pricing: "Preços",
+      blog: "Blog",
+      legal: "Legal",
+      privacy: "Privacidade",
+      terms: "Termos",
+      cookies: "Cookies",
+      support: "Suporte",
+      contact: "Contato",
+      docs: "Documentação",
+      rights: "© 2025 Calendário IA. Todos os direitos reservados.",
+      language: "Idioma",
+    },
+  },
+}
 
-  const t = content[language]
+const languages = [
+  { code: "es" as Language, name: "Español", flag: "🇪🇸" },
+  { code: "en" as Language, name: "English", flag: "🇬🇧" },
+  { code: "fr" as Language, name: "Français", flag: "🇫🇷" },
+  { code: "de" as Language, name: "Deutsch", flag: "🇩🇪" },
+  { code: "it" as Language, name: "Italiano", flag: "🇮🇹" },
+  { code: "pt" as Language, name: "Português", flag: "🇵🇹" },
+]
+
+export default function LandingPage() {
+  const [language, setLanguage] = useState<Language>("es")
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [langMenuOpen, setLangMenuOpen] = useState(false)
+  const t = translations[language]
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const currentLang = languages.find((l) => l.code === language) || languages[0]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-purple-500/20">
-        <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                FutureTask
-              </span>
-            </Link>
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      {/* Navigation */}
+      <nav
+        className={`fixed w-full z-50 transition-all duration-300 ${
+          isScrolled ? "bg-white/95 backdrop-blur-sm shadow-md" : "bg-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-8 w-8 text-blue-600" />
+              <span className="text-xl font-bold text-gray-900">Calendario IA</span>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-slate-300 hover:text-white transition-colors">
-                {t.features}
+              <a href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">
+                {t.nav.features}
               </a>
-              <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">
-                {t.pricing}
+              <a href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">
+                {t.nav.pricing}
               </a>
-              <Link href="/blog" className="text-slate-300 hover:text-white transition-colors">
-                {t.blog}
+              <Link href="/blog" className="text-gray-600 hover:text-blue-600 transition-colors">
+                {t.nav.blog}
               </Link>
-              <Link href="/contact" className="text-slate-300 hover:text-white transition-colors">
-                {t.contact}
+              <Link href="/contact" className="text-gray-600 hover:text-blue-600 transition-colors">
+                {t.nav.contact}
               </Link>
-            </div>
 
-            {/* Actions */}
-            <div className="hidden md:flex items-center space-x-4">
-              {/* Language Selector */}
+              {/* Language Selector Desktop */}
               <div className="relative">
                 <button
-                  onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
-                  className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors"
+                  onClick={() => setLangMenuOpen(!langMenuOpen)}
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <Globe className="w-4 h-4 text-white" />
-                  <span className="text-sm font-medium text-white">{language.toUpperCase()}</span>
-                  <ChevronDown className="w-4 h-4 text-white" />
+                  <Globe className="h-4 w-4" />
+                  <span className="text-sm">{currentLang.flag}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
                 </button>
 
-                {languageMenuOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-40 bg-slate-800 rounded-lg border border-purple-500/20 shadow-xl z-50">
-                    {(Object.keys(languageNames) as Language[]).map((lang) => (
+                {langMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                    {languages.map((lang) => (
                       <button
-                        key={lang}
+                        key={lang.code}
                         onClick={() => {
-                          setLanguage(lang)
-                          setLanguageMenuOpen(false)
+                          setLanguage(lang.code)
+                          setLangMenuOpen(false)
                         }}
-                        className={`w-full text-left px-4 py-2 hover:bg-slate-700 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          language === lang ? "bg-slate-700 text-purple-400" : "text-white"
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 ${
+                          language === lang.code ? "bg-blue-50 text-blue-600" : "text-gray-700"
                         }`}
                       >
-                        {languageNames[lang]}
+                        <span>{lang.flag}</span>
+                        <span>{lang.name}</span>
                       </button>
                     ))}
                   </div>
@@ -562,200 +798,168 @@ export default function LandingPage() {
               </div>
 
               <Link href="/login">
-                <Button variant="ghost" className="text-white">
-                  <LogIn className="w-4 h-4 mr-2" />
-                  {t.login}
-                </Button>
-              </Link>
-
-              <Link href="/login">
-                <Button className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700">
-                  {t.register}
-                </Button>
+                <Button variant="outline">{t.nav.login}</Button>
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 space-y-4 border-t border-purple-500/20">
-              <a
-                href="#features"
-                className="block text-slate-300 hover:text-white transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t.features}
-              </a>
-              <a
-                href="#pricing"
-                className="block text-slate-300 hover:text-white transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t.pricing}
-              </a>
-              <Link
-                href="/blog"
-                className="block text-slate-300 hover:text-white transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t.blog}
-              </Link>
-              <Link
-                href="/contact"
-                className="block text-slate-300 hover:text-white transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t.contact}
-              </Link>
-              <div className="pt-4 border-t border-purple-500/20 space-y-2">
-                <div className="space-y-2">
-                  {(Object.keys(languageNames) as Language[]).map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => {
-                        setLanguage(lang)
-                        setMobileMenuOpen(false)
-                      }}
-                      className={`flex items-center space-x-2 w-full px-3 py-2 rounded-lg transition-colors ${
-                        language === lang ? "bg-slate-700 text-purple-400" : "text-slate-300 hover:text-white"
-                      }`}
-                    >
-                      <Globe className="w-4 h-4" />
-                      <span>{languageNames[lang]}</span>
-                    </button>
-                  ))}
-                </div>
-                <Link href="/login" className="block" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full text-white justify-start">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    {t.login}
-                  </Button>
+            <div className="md:hidden py-4 border-t border-gray-200">
+              <div className="flex flex-col space-y-4">
+                <a href="#features" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  {t.nav.features}
+                </a>
+                <a href="#pricing" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  {t.nav.pricing}
+                </a>
+                <Link href="/blog" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  {t.nav.blog}
                 </Link>
-                <Link href="/login" className="block" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-cyan-600">{t.register}</Button>
+                <Link href="/contact" className="text-gray-600 hover:text-blue-600 transition-colors">
+                  {t.nav.contact}
+                </Link>
+
+                {/* Language Selection Mobile */}
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="text-sm font-semibold text-gray-500 mb-2">{t.footer.language}</div>
+                  <div className="space-y-2">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          setLanguage(lang.code)
+                          setMobileMenuOpen(false)
+                        }}
+                        className={`w-full px-4 py-2 rounded-lg text-left flex items-center space-x-2 ${
+                          language === lang.code ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <span>{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <Link href="/login" className="pt-2">
+                  <Button className="w-full">{t.nav.login}</Button>
                 </Link>
               </div>
             </div>
           )}
-        </nav>
-      </header>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto text-center">
-          <Badge className="mb-6 bg-purple-500/20 text-purple-300 border-purple-500/30">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Potenciado por IA
+        <div className="max-w-7xl mx-auto text-center">
+          <Badge className="mb-6 px-4 py-2 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200">
+            <Sparkles className="h-4 w-4 mr-2 inline" />
+            {t.hero.badge}
           </Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
-            {t.heroTitle}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            {t.hero.title}
           </h1>
-          <p className="text-lg sm:text-xl text-slate-300 mb-12 max-w-3xl mx-auto">{t.heroSubtitle}</p>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">{t.hero.subtitle}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/login">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-lg px-8 py-6"
-              >
-                {t.heroCta}
+              <Button size="lg" className="text-lg px-8 py-6">
+                {t.hero.cta}
+                <Zap className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <a href="#features">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-purple-500/50 text-white hover:bg-purple-500/10 text-lg px-8 py-6 bg-transparent"
-              >
-                {t.heroCtaSecondary}
-              </Button>
-            </a>
+          </div>
+
+          {/* Hero Image */}
+          <div className="mt-16 relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-10" />
+            <Image
+              src="/futuristic-dashboard.png"
+              alt="Dashboard Preview"
+              width={1200}
+              height={600}
+              className="rounded-2xl shadow-2xl border border-gray-200"
+              priority
+            />
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto">
+      <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-white">{t.featuresTitle}</h2>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto">{t.featuresSubtitle}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{t.features.title}</h2>
+            <p className="text-xl text-gray-600">{t.features.subtitle}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 hover:border-purple-500/50 transition-all">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-white">{t.aiAssistantTitle}</CardTitle>
+                <Calendar className="h-12 w-12 text-blue-600 mb-4" />
+                <CardTitle>{t.features.calendar.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-300">{t.aiAssistantDesc}</p>
+                <CardDescription>{t.features.calendar.description}</CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 hover:border-purple-500/50 transition-all">
+            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center mb-4">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-white">{t.smartCalendarTitle}</CardTitle>
+                <Clock className="h-12 w-12 text-green-600 mb-4" />
+                <CardTitle>{t.features.pomodoro.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-300">{t.smartCalendarDesc}</p>
+                <CardDescription>{t.features.pomodoro.description}</CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 hover:border-purple-500/50 transition-all">
+            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-500 rounded-lg flex items-center justify-center mb-4">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-white">{t.pomodoroTitle}</CardTitle>
+                <Brain className="h-12 w-12 text-purple-600 mb-4" />
+                <CardTitle>{t.features.ai.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-300">{t.pomodoroDesc}</p>
+                <CardDescription>{t.features.ai.description}</CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 hover:border-purple-500/50 transition-all">
+            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-cyan-500 rounded-lg flex items-center justify-center mb-4">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-white">{t.notesTitle}</CardTitle>
+                <MessageSquare className="h-12 w-12 text-orange-600 mb-4" />
+                <CardTitle>{t.features.notes.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-300">{t.notesDesc}</p>
+                <CardDescription>{t.features.notes.description}</CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 hover:border-purple-500/50 transition-all">
+            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mb-4">
-                  <CheckCircle2 className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-white">{t.achievementsTitle}</CardTitle>
+                <Target className="h-12 w-12 text-red-600 mb-4" />
+                <CardTitle>{t.features.goals.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-300">{t.achievementsDesc}</p>
+                <CardDescription>{t.features.goals.description}</CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 hover:border-purple-500/50 transition-all">
+            <Card className="border-2 hover:border-blue-500 transition-all hover:shadow-lg">
               <CardHeader>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mb-4">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-white">{t.multiplatformTitle}</CardTitle>
+                <Trophy className="h-12 w-12 text-yellow-600 mb-4" />
+                <CardTitle>{t.features.achievements.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-300">{t.multiplatformDesc}</p>
+                <CardDescription>{t.features.achievements.description}</CardDescription>
               </CardContent>
             </Card>
           </div>
@@ -763,91 +967,93 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto">
+      <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-white">{t.pricingTitle}</h2>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto">{t.pricingSubtitle}</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{t.pricing.title}</h2>
+            <p className="text-xl text-gray-600">{t.pricing.subtitle}</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8">
             {/* Free Plan */}
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
+            <Card className="border-2 hover:shadow-lg transition-all">
               <CardHeader>
-                <CardTitle className="text-white">{t.freeName}</CardTitle>
-                <CardDescription className="text-slate-400">{t.freeDesc}</CardDescription>
+                <CardTitle className="text-2xl">{t.pricing.free.name}</CardTitle>
+                <CardDescription>{t.pricing.free.description}</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">${t.freePrice}</span>
-                  <span className="text-slate-400">/mes</span>
+                  <span className="text-4xl font-bold">€{t.pricing.free.price}</span>
+                  <span className="text-gray-500">{t.pricing.free.period}</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {t.freeFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start text-slate-300">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
+              <CardContent className="space-y-4">
+                <Link href="/login" className="block">
+                  <Button variant="outline" className="w-full bg-transparent">
+                    {t.pricing.free.cta}
+                  </Button>
+                </Link>
+                <ul className="space-y-3">
+                  {t.pricing.free.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-600">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <Link href="/login">
-                  <Button className="w-full bg-slate-700 hover:bg-slate-600">{t.freeCta}</Button>
-                </Link>
               </CardContent>
             </Card>
 
             {/* Premium Plan */}
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/50 relative">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <Badge className="bg-gradient-to-r from-purple-600 to-cyan-600">Popular</Badge>
-              </div>
+            <Card className="border-2 border-blue-500 hover:shadow-xl transition-all relative">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white">
+                {t.pricing.premium.popular}
+              </Badge>
               <CardHeader>
-                <CardTitle className="text-white">{t.premiumName}</CardTitle>
-                <CardDescription className="text-slate-400">{t.premiumDesc}</CardDescription>
+                <CardTitle className="text-2xl">{t.pricing.premium.name}</CardTitle>
+                <CardDescription>{t.pricing.premium.description}</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">${t.premiumPrice}</span>
-                  <span className="text-slate-400">/mes</span>
+                  <span className="text-4xl font-bold">€{t.pricing.premium.price}</span>
+                  <span className="text-gray-500">{t.pricing.premium.period}</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {t.premiumFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start text-slate-300">
-                      <CheckCircle2 className="w-5 h-5 text-purple-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
+              <CardContent className="space-y-4">
+                <Link href="/login" className="block">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700">{t.pricing.premium.cta}</Button>
+                </Link>
+                <ul className="space-y-3">
+                  {t.pricing.premium.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-600">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <Link href="/login">
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700">
-                    {t.premiumCta}
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
 
             {/* Pro Plan */}
-            <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
+            <Card className="border-2 hover:shadow-lg transition-all">
               <CardHeader>
-                <CardTitle className="text-white">{t.proName}</CardTitle>
-                <CardDescription className="text-slate-400">{t.proDesc}</CardDescription>
+                <CardTitle className="text-2xl">{t.pricing.pro.name}</CardTitle>
+                <CardDescription>{t.pricing.pro.description}</CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-white">${t.proPrice}</span>
-                  <span className="text-slate-400">/mes</span>
+                  <span className="text-4xl font-bold">€{t.pricing.pro.price}</span>
+                  <span className="text-gray-500">{t.pricing.pro.period}</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  {t.proFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start text-slate-300">
-                      <CheckCircle2 className="w-5 h-5 text-cyan-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span>{feature}</span>
+              <CardContent className="space-y-4">
+                <Link href="/login" className="block">
+                  <Button variant="outline" className="w-full bg-transparent">
+                    {t.pricing.pro.cta}
+                  </Button>
+                </Link>
+                <ul className="space-y-3">
+                  {t.pricing.pro.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-gray-600">{feature}</span>
                     </li>
                   ))}
                 </ul>
-                <Link href="/login">
-                  <Button className="w-full bg-slate-700 hover:bg-slate-600">{t.proCta}</Button>
-                </Link>
               </CardContent>
             </Card>
           </div>
@@ -855,155 +1061,106 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto">
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20 text-center">
-            <CardHeader>
-              <CardTitle className="text-3xl sm:text-4xl font-bold text-white mb-4">{t.ctaTitle}</CardTitle>
-              <CardDescription className="text-lg text-slate-300 max-w-2xl mx-auto">{t.ctaSubtitle}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/login">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-lg px-8 py-6"
-                >
-                  {t.ctaButton}
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-blue-600">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">{t.cta.title}</h2>
+          <p className="text-xl text-blue-100 mb-8">{t.cta.subtitle}</p>
+          <Link href="/login">
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
+              {t.cta.button}
+              <Zap className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900/50 border-t border-purple-500/20 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
-            {/* Brand */}
-            <div className="lg:col-span-1">
-              <Link href="/" className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  FutureTask
-                </span>
-              </Link>
-              <p className="text-slate-400 text-sm mb-4">{t.footerDescription}</p>
-              <div className="relative">
-                <button
-                  onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
-                  className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors"
-                >
-                  <Globe className="w-4 h-4" />
-                  <span className="text-sm">{languageNames[language]}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-
-                {languageMenuOpen && (
-                  <div className="absolute bottom-full left-0 mb-2 w-40 bg-slate-800 rounded-lg border border-purple-500/20 shadow-xl z-50">
-                    {(Object.keys(languageNames) as Language[]).map((lang) => (
-                      <button
-                        key={lang}
-                        onClick={() => {
-                          setLanguage(lang)
-                          setLanguageMenuOpen(false)
-                        }}
-                        className={`w-full text-left px-4 py-2 hover:bg-slate-700 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                          language === lang ? "bg-slate-700 text-purple-400" : "text-white"
-                        }`}
-                      >
-                        {languageNames[lang]}
-                      </button>
-                    ))}
-                  </div>
-                )}
+      <footer className="bg-gray-900 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <Calendar className="h-8 w-8 text-blue-500" />
+                <span className="text-xl font-bold text-white">Calendario IA</span>
               </div>
+              <p className="text-sm text-gray-400">{t.hero.subtitle}</p>
             </div>
 
-            {/* Product */}
             <div>
-              <h3 className="font-semibold text-white mb-4">{t.footerProduct}</h3>
+              <h3 className="text-white font-semibold mb-4">{t.footer.product}</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#features" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerFeatures}
+                  <a href="#features" className="hover:text-white transition-colors">
+                    {t.footer.features}
                   </a>
                 </li>
                 <li>
-                  <a href="#pricing" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerPricing}
+                  <a href="#pricing" className="hover:text-white transition-colors">
+                    {t.footer.pricing}
                   </a>
                 </li>
                 <li>
-                  <Link href="/blog" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerBlog}
+                  <Link href="/blog" className="hover:text-white transition-colors">
+                    {t.footer.blog}
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Company */}
             <div>
-              <h3 className="font-semibold text-white mb-4">{t.footerCompany}</h3>
+              <h3 className="text-white font-semibold mb-4">{t.footer.legal}</h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#about" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerAbout}
-                  </a>
+                  <Link href="/privacy" className="hover:text-white transition-colors">
+                    {t.footer.privacy}
+                  </Link>
                 </li>
                 <li>
-                  <Link href="/contact" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerContact}
+                  <Link href="/terms" className="hover:text-white transition-colors">
+                    {t.footer.terms}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" className="hover:text-white transition-colors">
+                    {t.footer.cookies}
                   </Link>
                 </li>
               </ul>
             </div>
 
-            {/* Legal */}
             <div>
-              <h3 className="font-semibold text-white mb-4">{t.footerLegal}</h3>
+              <h3 className="text-white font-semibold mb-4">{t.footer.support}</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/privacy" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerPrivacy}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerTerms}
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/cookies" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerCookies}
+                  <Link href="/contact" className="hover:text-white transition-colors">
+                    {t.footer.contact}
                   </Link>
                 </li>
               </ul>
-            </div>
 
-            {/* Support */}
-            <div>
-              <h3 className="font-semibold text-white mb-4">{t.footerSupport}</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a href="#docs" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerDocs}
-                  </a>
-                </li>
-                <li>
-                  <a href="#help" className="text-slate-400 hover:text-white transition-colors text-sm">
-                    {t.footerHelp}
-                  </a>
-                </li>
-              </ul>
+              {/* Language selector in footer */}
+              <div className="mt-6">
+                <h4 className="text-white font-semibold mb-2">{t.footer.language}</h4>
+                <div className="flex flex-wrap gap-2">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => setLanguage(lang.code)}
+                      className={`px-2 py-1 rounded text-sm ${
+                        language === lang.code ? "bg-blue-600 text-white" : "bg-gray-800 hover:bg-gray-700"
+                      }`}
+                      title={lang.name}
+                    >
+                      {lang.flag}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Bottom */}
-          <div className="pt-8 border-t border-purple-500/20 text-center">
-            <p className="text-slate-400 text-sm">{t.footerCopyright}</p>
+          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
+            <p>{t.footer.rights}</p>
           </div>
         </div>
       </footer>
