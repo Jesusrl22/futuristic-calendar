@@ -1,156 +1,174 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { supabase } from "@/lib/supabase"
+import type { User } from "@supabase/supabase-js"
 
-interface User {
+export interface UserData {
   id: string
-  email: string
   name: string
+  email: string
+  subscription_plan: "free" | "premium" | "pro"
+  subscription_tier: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
   plan: "free" | "premium" | "pro"
   ai_credits: number
+  theme: "light" | "dark"
+  theme_preference: "light" | "dark"
   subscription_status: string
-  subscription_id?: string
-  subscription_plan?: string
-  is_premium?: boolean
-  is_pro?: boolean
+  subscription_id: string | null
+  billing_cycle: "monthly" | "yearly"
+  pomodoro_work_duration: number
+  pomodoro_break_duration: number
+  pomodoro_long_break_duration: number
+  pomodoro_sessions_until_long_break: number
+  created_at: string
+  updated_at: string
 }
 
-export function useUser() {
-  const [user, setUser] = useState<User | null>(null)
+interface UserContextType {
+  user: UserData | null
+  authUser: User | null
+  loading: boolean
+  error: string | null
+  refreshUser: () => Promise<void>
+  updateUser: (updates: Partial<UserData>) => Promise<UserData | null>
+  signOut: () => Promise<void>
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined)
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<UserData | null>(null)
+  const [authUser, setAuthUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const supabase = createClient()
+  async function loadUser() {
+    try {
+      setLoading(true)
+      setError(null)
 
-    const getUser = async () => {
-      try {
-        console.log("🔍 Getting current user...")
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession()
 
-        // Check if demo user first
-        const isDemoUser = localStorage.getItem("isDemoUser")
-        if (isDemoUser === "true") {
-          const storedUser = localStorage.getItem("currentUser")
-          if (storedUser) {
-            try {
-              const user = JSON.parse(storedUser)
-              setUser({
-                id: user.id,
-                email: user.email,
-                name: user.name || user.email,
-                plan: user.plan || user.subscription_plan || "free",
-                ai_credits: user.ai_credits || 0,
-                subscription_status: user.subscription_status || "inactive",
-                subscription_id: user.subscription_id,
-                is_premium: user.is_premium || false,
-                is_pro: user.is_pro || false,
-              })
-              console.log("✅ Demo user loaded:", user.name)
-              setLoading(false)
-              return
-            } catch (error) {
-              console.error("❌ Error parsing demo user:", error)
-              localStorage.removeItem("isDemoUser")
-              localStorage.removeItem("currentUser")
-            }
-          }
-        }
-
-        // Get authenticated user
-        const {
-          data: { user: authUser },
-          error: authError,
-        } = await supabase.auth.getUser()
-
-        if (authError) {
-          console.error("❌ Auth error:", authError)
-          setUser(null)
-          setLoading(false)
-          return
-        }
-
-        if (!authUser) {
-          console.log("❌ No authenticated user found")
-          setUser(null)
-          setLoading(false)
-          return
-        }
-
-        console.log("✅ Authenticated user found:", authUser.email)
-
-        // Fetch user data from database using maybeSingle to avoid errors
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("*")
-          .eq("id", authUser.id)
-          .maybeSingle()
-
-        if (userError) {
-          console.error("❌ Error fetching user data:", userError)
-          // Create a basic user object from auth data if database fetch fails
-          setUser({
-            id: authUser.id,
-            email: authUser.email || "",
-            name: authUser.email || "User",
-            plan: "free",
-            ai_credits: 0,
-            subscription_status: "inactive",
-          })
-          setLoading(false)
-          return
-        }
-
-        if (!userData) {
-          console.log("⚠️ No user data found in database, user may need to complete registration")
-          // Create a basic user object from auth data
-          setUser({
-            id: authUser.id,
-            email: authUser.email || "",
-            name: authUser.email || "User",
-            plan: "free",
-            ai_credits: 0,
-            subscription_status: "inactive",
-          })
-          setLoading(false)
-          return
-        }
-
-        console.log("✅ User data loaded:", userData.name)
-        setUser({
-          id: userData.id,
-          email: userData.email,
-          name: userData.name || userData.email,
-          plan: userData.plan || userData.subscription_plan || "free",
-          ai_credits: userData.ai_credits || 0,
-          subscription_status: userData.subscription_status || "inactive",
-          subscription_id: userData.subscription_id,
-          is_premium: userData.is_premium || false,
-          is_pro: userData.is_pro || false,
-        })
-      } catch (error) {
-        console.error("❌ Error in useUser:", error)
-        setUser(null)
-      } finally {
+      if (sessionError) {
+        console.error("Session error:", sessionError)
+        setError(sessionError.message)
         setLoading(false)
+        return
       }
+
+      if (!session) {
+        console.log("No active session")
+        setUser(null)
+        setAuthUser(null)
+        setLoading(false)
+        return
+      }
+
+      setAuthUser(session.user)
+
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .maybeSingle()
+
+      if (userError) {
+        console.error("Error loading user data:", userError)
+        setError(userError.message)
+      }
+
+      if (userData) {
+        setUser(userData)
+      } else {
+        console.log("No user data found, creating new user profile")
+
+        const newUser = {
+          id: session.user.id,
+          email: session.user.email || "",
+          name: session.user.user_metadata?.name || "Usuario",
+          subscription_plan: "free" as const,
+          subscription_tier: "free" as const,
+          plan: "free" as const,
+          ai_credits: 10,
+          theme: "dark" as const,
+          theme_preference: "dark" as const,
+          subscription_status: "active",
+          subscription_id: null,
+          billing_cycle: "monthly" as const,
+          pomodoro_work_duration: 25,
+          pomodoro_break_duration: 5,
+          pomodoro_long_break_duration: 15,
+          pomodoro_sessions_until_long_break: 4,
+        }
+
+        const { data: createdUser, error: createError } = await supabase.from("users").insert(newUser).select().single()
+
+        if (createError) {
+          console.error("Error creating user:", createError)
+          setError(createError.message)
+        } else if (createdUser) {
+          setUser(createdUser)
+        }
+      }
+    } catch (err: any) {
+      console.error("Unexpected error loading user:", err)
+      setError(err?.message || "Error loading user")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function updateUser(updates: Partial<UserData>): Promise<UserData | null> {
+    if (!authUser) {
+      throw new Error("No authenticated user")
     }
 
-    getUser()
+    const { data, error } = await supabase
+      .from("users")
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", authUser.id)
+      .select()
+      .single()
 
-    // Listen for auth changes
+    if (error) {
+      throw error
+    }
+
+    if (data) {
+      setUser(data)
+      return data
+    }
+
+    return null
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    setUser(null)
+    setAuthUser(null)
+  }
+
+  useEffect(() => {
+    loadUser()
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("🔄 Auth state changed:", event)
+      console.log("Auth state changed:", event)
 
-      if (event === "SIGNED_OUT" || !session) {
-        console.log("👋 User signed out")
+      if (event === "SIGNED_IN" && session?.user) {
+        await loadUser()
+      } else if (event === "SIGNED_OUT") {
         setUser(null)
+        setAuthUser(null)
         setLoading(false)
-      } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-        console.log("🔐 User signed in, refreshing data")
-        setLoading(true)
-        getUser()
       }
     })
 
@@ -159,5 +177,27 @@ export function useUser() {
     }
   }, [])
 
-  return { user, loading, setUser }
+  return (
+    <UserContext.Provider
+      value={{
+        user,
+        authUser,
+        loading,
+        error,
+        updateUser,
+        signOut,
+        refreshUser: loadUser,
+      }}
+    >
+      {children}
+    </UserContext.Provider>
+  )
+}
+
+export function useUser() {
+  const context = useContext(UserContext)
+  if (context === undefined) {
+    throw new Error("useUser must be used within a UserProvider")
+  }
+  return context
 }

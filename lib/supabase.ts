@@ -2,106 +2,86 @@
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-// Version tracking
-const APP_VERSION = {
-  major: 7,
-  minor: 6,
-  patch: 9,
-  full: "7.6.9",
-  buildId: Date.now().toString(),
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+console.log("🔍 Checking Supabase configuration...")
+console.log("URL:", supabaseUrl || "NOT SET")
+console.log("Key:", supabaseAnonKey ? "SET" : "NOT SET")
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("❌ Missing Supabase environment variables")
-  console.error("NEXT_PUBLIC_SUPABASE_URL:", !!supabaseUrl)
-  console.error("NEXT_PUBLIC_SUPABASE_ANON_KEY:", !!supabaseAnonKey)
-}
-
-// Strict URL validation
-try {
-  const url = new URL(supabaseUrl)
-  if (!url.hostname.includes("supabase.co")) {
-    throw new Error("Invalid Supabase domain")
-  }
-  console.log("✅ Valid Supabase URL")
-} catch (error) {
-  console.error("❌ Invalid Supabase URL:", supabaseUrl)
-  throw new Error("Invalid Supabase URL")
-}
-
-// Create a singleton instance
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
 
 export function createClient() {
-  if (!supabaseInstance && supabaseUrl && supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseAnonKey || !supabaseUrl.startsWith("https://")) {
+    console.warn("⚠️ Supabase not configured properly")
+
+    // Return a mock client with all required methods
+    return {
+      auth: {
+        getSession: async () => ({
+          data: { session: null },
+          error: null,
+        }),
+        onAuthStateChange: (callback: any) => ({
+          data: { subscription: { unsubscribe: () => {} } },
+        }),
+        signInWithPassword: async () => ({
+          data: { session: null, user: null },
+          error: new Error("Supabase not configured"),
+        }),
+        signUp: async () => ({
+          data: { session: null, user: null },
+          error: new Error("Supabase not configured"),
+        }),
+        signOut: async () => ({ error: null }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: null, error: null }),
+            maybeSingle: async () => ({ data: null, error: null }),
+          }),
+        }),
+        insert: () => ({
+          select: () => ({
+            single: async () => ({ data: null, error: null }),
+          }),
+        }),
+        update: () => ({
+          eq: () => ({
+            select: () => ({
+              single: async () => ({ data: null, error: null }),
+            }),
+          }),
+        }),
+        delete: () => ({
+          eq: () => ({ error: null }),
+        }),
+      }),
+    } as any
+  }
+
+  if (!supabaseInstance) {
     try {
       supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-        },
-        global: {
-          headers: {
-            "x-app-version": APP_VERSION.full,
-            "x-client-info": "futuretask-web-v769",
-            "X-Build-Id": APP_VERSION.buildId,
-          },
+          storageKey: "futuretask-auth",
         },
       })
       console.log("✅ Supabase client created successfully")
     } catch (error) {
       console.error("❌ Error creating Supabase client:", error)
-      supabaseInstance = null
+      throw error
     }
-  }
-
-  if (!supabaseInstance) {
-    throw new Error("Supabase client could not be initialized. Check your environment variables.")
   }
 
   return supabaseInstance
 }
 
-// Export the singleton instance
 export const supabase = createClient()
-
-// Export getSupabaseClient function
-export function getSupabaseClient() {
-  return supabase
-}
-
-export async function checkSupabaseConnection(): Promise<boolean> {
-  console.log("🔍 Checking Supabase connection...")
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.log("❌ Supabase credentials not configured")
-    return false
-  }
-
-  if (!supabaseUrl.startsWith("https://")) {
-    console.log("❌ Supabase URL is invalid")
-    return false
-  }
-
-  try {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-
-    if (sessionError) {
-      console.warn("⚠️ Supabase session check failed:", sessionError.message)
-      return false
-    }
-
-    console.log("✅ Supabase connection available")
-    return true
-  } catch (error: any) {
-    console.warn("⚠️ Supabase connection check failed:", error?.message || error)
-    return false
-  }
-}
 
 export interface Database {
   public: {
@@ -331,8 +311,3 @@ export interface Database {
     }
   }
 }
-
-console.log("🔌 Supabase client initialized")
-console.log(`📦 Version: ${APP_VERSION.full}`)
-console.log(`🌐 Supabase URL: ${supabaseUrl}`)
-console.log(`⏰ Timestamp: ${new Date().toISOString()}`)
