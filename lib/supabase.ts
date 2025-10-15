@@ -15,7 +15,6 @@ export function createClient() {
   if (!supabaseUrl || !supabaseAnonKey || !supabaseUrl.startsWith("https://")) {
     console.warn("⚠️ Supabase not configured properly")
 
-    // Return a mock client with all required methods
     return {
       auth: {
         getSession: async () => ({

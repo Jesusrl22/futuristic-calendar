@@ -1,47 +1,23 @@
-export const DOMAIN_CONFIG = {
-  production: "future-task.com",
-  staging: "staging.future-task.com",
-  development: "localhost:3000",
+export function getBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin
+  }
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+
+  return "http://localhost:3000"
+}
+
+export function isDevelopment(): boolean {
+  return getBaseUrl().includes("localhost") || getBaseUrl().includes("127.0.0.1")
 }
 
 export function isProduction(): boolean {
-  if (typeof window !== "undefined") {
-    return window.location.hostname === "future-task.com" || window.location.hostname === "www.future-task.com"
-  }
-  // En servidor, Vercel proporciona VERCEL_ENV automáticamente (no necesitas configurarlo)
-  return process.env.VERCEL_ENV === "production"
-}
-
-export function getCurrentDomain(): string {
-  if (typeof window === "undefined") {
-    // Lado del servidor
-    if (process.env.VERCEL_ENV === "production") {
-      return DOMAIN_CONFIG.production
-    }
-    if (process.env.VERCEL_URL) {
-      return process.env.VERCEL_URL
-    }
-    return DOMAIN_CONFIG.development
-  }
-
-  // Lado del cliente
-  const hostname = window.location.hostname
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return DOMAIN_CONFIG.development
-  }
-  if (hostname.includes("vercel.app")) {
-    return hostname
-  }
-  if (hostname === "future-task.com" || hostname === "www.future-task.com") {
-    return DOMAIN_CONFIG.production
-  }
-  return hostname
-}
-
-export function getBaseUrl(): string {
-  const domain = getCurrentDomain()
-  if (domain.includes("localhost") || domain.includes("127.0.0.1")) {
-    return `http://${domain}`
-  }
-  return `https://${domain}`
+  return !isDevelopment()
 }
