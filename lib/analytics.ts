@@ -24,19 +24,19 @@ interface UserProperties {
 
 // Global analytics state
 let analyticsConfig: AnalyticsConfig = {
-  debug: process.env.NODE_ENV === "development",
+  debug: false,
 }
 
-let userProperties: UserProperties = {}
+const userProperties: UserProperties = {}
 
 declare global {
   interface Window {
-    gtag: (command: string, targetId: string, config?: Record<string, any>) => void
-    dataLayer: any[]
+    gtag?: (command: string, targetId: string, config?: Record<string, any>) => void
+    dataLayer?: any[]
   }
 }
 
-export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID
+export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID || ""
 
 // Initialize Google Analytics
 export const initGA = () => {
@@ -54,9 +54,9 @@ export const initGA = () => {
   // Initialize gtag
   window.gtag =
     window.gtag ||
-    (() => {
+    ((...args: any[]) => {
       ;(window as any).dataLayer = (window as any).dataLayer || []
-      ;(window as any).dataLayer.push(arguments)
+      ;(window as any).dataLayer.push(args)
     })
 
   window.gtag("js", new Date())
@@ -98,122 +98,69 @@ export function initializeAnalytics(config: AnalyticsConfig = {}) {
 }
 
 // Track page views
-export const trackPageView = (url: string) => {
-  if (!GA_TRACKING_ID || !window.gtag) return
-
-  window.gtag("config", GA_TRACKING_ID, {
-    page_path: url,
-  })
+export const pageview = (url: string) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("config", GA_TRACKING_ID, {
+      page_path: url,
+    })
+  }
 }
 
-// Track page views
-export function trackPageViewOld(path: string, title?: string) {
-  if (typeof window === "undefined") return
-
-  try {
-    // Google Analytics
-    if (window.gtag && analyticsConfig.trackingId) {
-      window.gtag("config", analyticsConfig.trackingId, {
-        page_path: path,
-        page_title: title || document.title,
-      })
-    }
-
-    if (analyticsConfig.debug) {
-      console.log("Page view tracked:", { path, title })
-    }
-  } catch (error) {
-    console.error("Error tracking page view:", error)
-  }
+// Track page views (alias)
+export function trackPageView(url: string) {
+  pageview(url)
 }
 
 // Track events
 export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
-  if (!GA_TRACKING_ID || !window.gtag) return
-
-  window.gtag("event", action, {
-    event_category: category,
-    event_label: label,
-    value: value,
-  })
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", action, {
+      event_category: category,
+      event_label: label,
+      value: value,
+    })
+  }
 }
 
-// Track custom events
-export function trackEventOld(event: AnalyticsEvent) {
-  if (typeof window === "undefined") return
-
-  try {
-    // Google Analytics
-    if (window.gtag) {
-      window.gtag("event", event.action, {
-        event_category: event.category,
-        event_label: event.label,
-        value: event.value,
-        ...userProperties,
-      })
-    }
-
-    if (analyticsConfig.debug) {
-      console.log("Event tracked:", event)
-    }
-  } catch (error) {
-    console.error("Error tracking event:", error)
+// Track events (alternative signature)
+export const event = ({
+  action,
+  category,
+  label,
+  value,
+}: { action: string; category: string; label?: string; value?: number }) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", action, {
+      event_category: category,
+      event_label: label,
+      value: value,
+    })
   }
 }
 
 // Set user properties
-export function setUserProperties(properties: UserProperties) {
-  userProperties = { ...userProperties, ...properties }
-
-  if (typeof window === "undefined") return
-
-  try {
-    // Google Analytics
-    if (window.gtag) {
-      window.gtag("config", analyticsConfig.trackingId, {
-        user_id: properties.userId,
-        custom_map: {
-          plan: properties.plan,
-          language: properties.language,
-          theme: properties.theme,
-        },
-      })
-    }
-
-    if (analyticsConfig.debug) {
-      console.log("User properties set:", properties)
-    }
-  } catch (error) {
-    console.error("Error setting user properties:", error)
+export const setUserProperties = (userId: string, properties: Record<string, any>) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("config", GA_TRACKING_ID, {
+      user_id: userId,
+      ...properties,
+    })
   }
 }
 
 // Track user actions
 export function trackUserAction(action: string, category = "user", label?: string, value?: number) {
-  trackEvent({
-    action,
-    category,
-    label,
-    value,
-  })
+  trackEvent(action, category, label, value)
 }
 
 // Track feature usage
 export function trackFeatureUsage(feature: string, action = "use", label?: string) {
-  trackEvent({
-    action,
-    category: "feature",
-    label: `${feature}${label ? `:${label}` : ""}`,
-  })
+  trackEvent(action, "feature", `${feature}${label ? `:${label}` : ""}`)
 }
 
 // Track errors
 export function trackError(error: string, category = "error", label?: string) {
-  trackEvent({
-    action: "error",
-    category,
-    label: `${error}${label ? `:${label}` : ""}`,
-  })
+  trackEvent("error", category, `${error}${label ? `:${label}` : ""}`)
 }
 
 // Track conversions (purchases, sign-ups, etc.)
@@ -226,141 +173,94 @@ export const trackConversion = (eventName: string, parameters?: Record<string, a
   })
 }
 
-// Track conversions
-export function trackConversionOld(type: string, value?: number, currency = "USD") {
-  trackEvent({
-    action: "conversion",
-    category: "ecommerce",
-    label: type,
-    value,
-  })
-
-  // Google Analytics Enhanced Ecommerce
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", "purchase", {
-      transaction_id: `conv_${Date.now()}`,
-      value,
-      currency,
-      items: [
-        {
-          item_id: type,
-          item_name: type,
-          category: "subscription",
-          quantity: 1,
-          price: value,
-        },
-      ],
-    })
-  }
-}
-
 // Track subscription events
 export function trackSubscription(action: string, plan: string, billing?: string) {
-  trackEvent({
-    action,
-    category: "subscription",
-    label: `${plan}${billing ? `:${billing}` : ""}`,
-  })
+  trackEvent(action, "subscription", `${plan}${billing ? `:${billing}` : ""}`)
 }
 
 // Track AI usage
-export const trackAIUsage = (feature: string) => {
-  trackEvent("ai_usage", "artificial_intelligence", feature)
-}
-
-// Track AI usage
-export function trackAIUsageOld(feature: string, creditsUsed?: number) {
-  trackEvent({
-    action: "ai_usage",
-    category: "ai",
-    label: feature,
-    value: creditsUsed,
-  })
+export const trackAIUsage = (feature: string, creditsUsed?: number) => {
+  trackEvent("ai_usage", "ai", feature, creditsUsed)
 }
 
 // Track task management
 export function trackTaskAction(action: string, taskType?: string) {
-  trackEvent({
-    action,
-    category: "tasks",
-    label: taskType,
-  })
+  trackEvent(action, "tasks", taskType)
 }
 
 // Track productivity metrics
 export function trackProductivityMetric(metric: string, value: number, unit?: string) {
-  trackEvent({
-    action: metric,
-    category: "productivity",
-    label: `${metric}${unit ? `:${unit}` : ""}`,
-    value,
-  })
+  trackEvent(metric, "productivity", `${metric}${unit ? `:${unit}` : ""}`, value)
 }
 
 // Track pomodoro sessions
 export function trackPomodoroSession(action: string, duration?: number) {
-  trackEvent({
-    action,
-    category: "pomodoro",
-    label: action,
-    value: duration,
-  })
+  trackEvent(action, "pomodoro", action, duration)
 }
 
 // Track note actions
 export function trackNoteAction(action: string, noteType?: string) {
-  trackEvent({
-    action,
-    category: "notes",
-    label: noteType,
-  })
+  trackEvent(action, "notes", noteType)
 }
 
 // Track wishlist actions
 export function trackWishlistAction(action: string, itemType?: string) {
-  trackEvent({
-    action,
-    category: "wishlist",
-    label: itemType,
-  })
+  trackEvent(action, "wishlist", itemType)
 }
 
 // Track achievement unlocks
 export function trackAchievement(achievementType: string, points?: number) {
-  trackEvent({
-    action: "achievement_unlocked",
-    category: "achievements",
-    label: achievementType,
-    value: points,
-  })
+  trackEvent("achievement_unlocked", "achievements", achievementType, points)
 }
 
 // Track settings changes
 export function trackSettingsChange(setting: string, value: string) {
-  trackEvent({
-    action: "settings_change",
-    category: "settings",
-    label: `${setting}:${value}`,
-  })
+  trackEvent("settings_change", "settings", `${setting}:${value}`)
 }
 
 // Track search queries
 export function trackSearch(query: string, category = "search") {
-  trackEvent({
-    action: "search",
-    category,
-    label: query,
-  })
+  trackEvent("search", category, query)
 }
 
 // Track export/import actions
 export function trackDataAction(action: string, dataType: string, count?: number) {
-  trackEvent({
-    action,
-    category: "data",
-    label: dataType,
-    value: count,
-  })
+  trackEvent(action, "data", dataType, count)
+}
+
+// Track exceptions
+export const trackException = (description: string, fatal = false) => {
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", "exception", {
+      description,
+      fatal,
+    })
+  }
+}
+
+// Track button clicks
+export const trackButtonClick = (buttonName: string) => {
+  trackEvent("click", "button", buttonName)
+}
+
+// Track form submissions
+export const trackFormSubmit = (formName: string) => {
+  trackEvent("submit", "form", formName)
+}
+
+// Track sign-ups
+export const trackSignup = () => {
+  trackEvent("signup", "user", "new_user")
+}
+
+// Track logins
+export const trackLogin = () => {
+  trackEvent("login", "user", "returning_user")
+}
+
+// Track purchases
+export const trackPurchase = (value: number, currency = "USD") => {
+  trackEvent("purchase", "ecommerce", "subscription", value)
 }
 
 // Initialize analytics on module load
@@ -375,7 +275,9 @@ if (typeof window !== "undefined") {
 // Export analytics instance for direct access
 export const analytics = {
   initialize: initializeAnalytics,
+  pageview,
   trackPageView,
+  event,
   trackEvent,
   setUserProperties,
   trackUserAction,
@@ -394,6 +296,12 @@ export const analytics = {
   trackSearch,
   trackDataAction,
   initGA,
+  trackException,
+  trackButtonClick,
+  trackFormSubmit,
+  trackSignup,
+  trackLogin,
+  trackPurchase,
 }
 
 export default analytics

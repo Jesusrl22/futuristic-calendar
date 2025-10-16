@@ -1,151 +1,112 @@
-"use client"
-
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
+console.log("🔍 Checking Supabase configuration...")
+console.log("URL:", supabaseUrl)
+console.log("Key:", supabaseAnonKey ? "SET" : "NOT SET")
 
 export function createClient() {
-  if (!supabaseUrl || !supabaseAnonKey || !supabaseUrl.startsWith("https://")) {
-    console.warn("⚠️ Supabase not configured properly")
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("⚠️ Supabase credentials not found, using mock client")
+    return createMockClient()
+  }
 
-    return {
+  try {
+    const client = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        getSession: async () => ({
-          data: { session: null },
-          error: null,
-        }),
-        onAuthStateChange: (callback: any) => ({
-          data: { subscription: { unsubscribe: () => {} } },
-        }),
-        signInWithPassword: async () => ({
-          data: { session: null, user: null },
-          error: new Error("Supabase not configured"),
-        }),
-        signUp: async () => ({
-          data: { session: null, user: null },
-          error: new Error("Supabase not configured"),
-        }),
-        signOut: async () => ({ error: null }),
-        getUser: async () => ({
-          data: { user: null },
-          error: new Error("Supabase not configured"),
-        }),
+        persistSession: true,
+        autoRefreshToken: true,
       },
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            single: async () => ({ data: null, error: null }),
-            maybeSingle: async () => ({ data: null, error: null }),
-            order: () => ({ data: null, error: null }),
-          }),
-          order: () => ({ data: null, error: null }),
+    })
+    console.log("✅ Supabase client created successfully")
+    return client
+  } catch (error) {
+    console.error("❌ Error creating Supabase client:", error)
+    return createMockClient()
+  }
+}
+
+function createMockClient() {
+  return {
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      onAuthStateChange: (callback: any) => {
+        return { data: { subscription: { unsubscribe: () => {} } } }
+      },
+      signInWithPassword: async () => ({ data: { session: null, user: null }, error: { message: "Mock client" } }),
+      signUp: async () => ({ data: { session: null, user: null }, error: { message: "Mock client" } }),
+      signOut: async () => ({ error: null }),
+    },
+    from: (table: string) => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({ data: null, error: { message: "Mock client" } }),
+          maybeSingle: async () => ({ data: null, error: null }),
         }),
-        insert: () => ({
-          select: () => ({
-            single: async () => ({ data: null, error: null }),
-          }),
-        }),
-        update: () => ({
-          eq: () => ({
-            select: () => ({
-              single: async () => ({ data: null, error: null }),
-            }),
-          }),
-        }),
-        delete: () => ({
-          eq: () => ({ error: null }),
+        order: () => ({
+          limit: async () => ({ data: [], error: null }),
         }),
       }),
-    } as any
-  }
-
-  if (!supabaseInstance) {
-    try {
-      supabaseInstance = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-          storageKey: "futuretask-auth",
-        },
-      })
-    } catch (error) {
-      console.error("❌ Error creating Supabase client:", error)
-      throw error
-    }
-  }
-
-  return supabaseInstance
+      insert: () => ({
+        select: () => ({
+          single: async () => ({ data: null, error: { message: "Mock client" } }),
+        }),
+      }),
+      upsert: () => ({
+        select: () => ({
+          single: async () => ({ data: null, error: { message: "Mock client" } }),
+        }),
+      }),
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            single: async () => ({ data: null, error: { message: "Mock client" } }),
+          }),
+        }),
+      }),
+      delete: () => ({
+        eq: async () => ({ error: null }),
+      }),
+    }),
+  } as any
 }
 
 export const supabase = createClient()
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
         Row: {
           id: string
-          name: string
           email: string
-          subscription_plan: "free" | "premium" | "pro"
-          subscription_tier: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
-          plan: "free" | "premium" | "pro"
-          ai_credits: number
-          theme: "light" | "dark"
-          theme_preference: "light" | "dark"
+          name: string | null
+          subscription_tier: string
           subscription_status: string
-          subscription_id: string | null
-          billing_cycle: "monthly" | "yearly"
-          pomodoro_work_duration: number
-          pomodoro_break_duration: number
-          pomodoro_long_break_duration: number
-          pomodoro_sessions_until_long_break: number
+          subscription_end_date: string | null
+          ai_credits: number
           created_at: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          name: string
+          id: string
           email: string
-          subscription_plan?: "free" | "premium" | "pro"
-          subscription_tier?: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
-          plan?: "free" | "premium" | "pro"
-          ai_credits?: number
-          theme?: "light" | "dark"
-          theme_preference?: "light" | "dark"
+          name?: string | null
+          subscription_tier?: string
           subscription_status?: string
-          subscription_id?: string | null
-          billing_cycle?: "monthly" | "yearly"
-          pomodoro_work_duration?: number
-          pomodoro_break_duration?: number
-          pomodoro_long_break_duration?: number
-          pomodoro_sessions_until_long_break?: number
-          created_at?: string
-          updated_at?: string
+          subscription_end_date?: string | null
+          ai_credits?: number
         }
         Update: {
           id?: string
-          name?: string
           email?: string
-          subscription_plan?: "free" | "premium" | "pro"
-          subscription_tier?: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
-          plan?: "free" | "premium" | "pro"
-          ai_credits?: number
-          theme?: "light" | "dark"
-          theme_preference?: "light" | "dark"
+          name?: string | null
+          subscription_tier?: string
           subscription_status?: string
-          subscription_id?: string | null
-          billing_cycle?: "monthly" | "yearly"
-          pomodoro_work_duration?: number
-          pomodoro_break_duration?: number
-          pomodoro_long_break_duration?: number
-          pomodoro_sessions_until_long_break?: number
-          created_at?: string
-          updated_at?: string
+          subscription_end_date?: string | null
+          ai_credits?: number
         }
       }
       tasks: {
@@ -155,10 +116,7 @@ export interface Database {
           title: string
           description: string | null
           completed: boolean
-          priority: "low" | "medium" | "high"
-          status: string
-          category: string | null
-          tags: string[] | null
+          priority: string
           due_date: string | null
           created_at: string
           updated_at: string
@@ -169,13 +127,8 @@ export interface Database {
           title: string
           description?: string | null
           completed?: boolean
-          priority?: "low" | "medium" | "high"
-          status?: string
-          category?: string | null
-          tags?: string[] | null
+          priority?: string
           due_date?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
@@ -183,129 +136,8 @@ export interface Database {
           title?: string
           description?: string | null
           completed?: boolean
-          priority?: "low" | "medium" | "high"
-          status?: string
-          category?: string | null
-          tags?: string[] | null
+          priority?: string
           due_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      notes: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          content: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          content: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          content?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      wishlist_items: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          description: string | null
-          price: number | null
-          url: string | null
-          priority: "low" | "medium" | "high"
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          description?: string | null
-          price?: number | null
-          url?: string | null
-          priority?: "low" | "medium" | "high"
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          description?: string | null
-          price?: number | null
-          url?: string | null
-          priority?: "low" | "medium" | "high"
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      achievements: {
-        Row: {
-          id: string
-          user_id: string
-          achievement_type: string
-          title: string
-          description: string
-          icon: string
-          unlocked_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          achievement_type: string
-          title: string
-          description: string
-          icon: string
-          unlocked_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          achievement_type?: string
-          title?: string
-          description?: string
-          icon?: string
-          unlocked_at?: string
-          created_at?: string
-        }
-      }
-      pomodoro_sessions: {
-        Row: {
-          id: string
-          user_id: string
-          duration: number
-          completed: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          duration: number
-          completed?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          duration?: number
-          completed?: boolean
-          created_at?: string
         }
       }
     }
