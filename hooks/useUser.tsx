@@ -8,22 +8,21 @@ interface User {
   id: string
   name: string
   email: string
-  language: string
-  theme: string
-  is_premium: boolean
-  is_pro: boolean
-  premium_expiry: string | null
-  onboarding_completed: boolean
-  pomodoro_sessions: number
-  work_duration: number
-  short_break_duration: number
-  long_break_duration: number
-  sessions_until_long_break: number
-  email_verified: boolean
-  subscription_status: string
+  subscription_plan: string
+  subscription_tier: string
   plan: string
   ai_credits: number
-  ai_credits_used: number
+  theme: string
+  theme_preference: string
+  subscription_status: string
+  subscription_id: string | null
+  billing_cycle: string
+  pomodoro_work_duration: number
+  pomodoro_break_duration: number
+  pomodoro_long_break_duration: number
+  pomodoro_sessions_until_long_break: number
+  created_at: string
+  updated_at: string
 }
 
 interface UserContextType {
@@ -45,20 +44,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         data: { session },
       } = await supabase.auth.getSession()
 
-      console.log("Auth state changed:", session ? "SIGNED_IN" : "INITIAL_SESSION")
-
       if (!session?.user) {
-        console.log("No active session")
         setUser(null)
         setLoading(false)
         return
       }
 
-      const { data: userData, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("email", session.user.email)
-        .maybeSingle()
+      const { data: userData, error } = await supabase.from("users").select("*").eq("id", session.user.id).maybeSingle()
 
       if (error) {
         console.error("Error loading user:", error)
@@ -69,24 +61,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (!userData) {
         const newUser = {
+          id: session.user.id,
           name: session.user.email?.split("@")[0] || "User",
           email: session.user.email || "",
-          language: "es",
-          theme: "default",
-          is_premium: false,
-          is_pro: false,
-          premium_expiry: null,
-          onboarding_completed: false,
-          pomodoro_sessions: 0,
-          work_duration: 25,
-          short_break_duration: 5,
-          long_break_duration: 15,
-          sessions_until_long_break: 4,
-          email_verified: true,
-          subscription_status: "inactive",
+          subscription_plan: "free",
+          subscription_tier: "free",
           plan: "free",
           ai_credits: 10,
-          ai_credits_used: 0,
+          theme: "dark",
+          theme_preference: "dark",
+          subscription_status: "active",
+          subscription_id: null,
+          billing_cycle: "monthly",
+          pomodoro_work_duration: 25,
+          pomodoro_break_duration: 5,
+          pomodoro_long_break_duration: 15,
+          pomodoro_sessions_until_long_break: 4,
         }
 
         const { data: createdUser, error: createError } = await supabase

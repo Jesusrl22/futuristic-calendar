@@ -5,15 +5,6 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-console.log("🔍 Checking Supabase configuration...")
-console.log("URL:", supabaseUrl)
-console.log("Key:", supabaseAnonKey ? "SET" : "NOT SET")
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("❌ Missing Supabase credentials")
-  console.error("Please check your .env.local file")
-}
-
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
 
 export function createClient() {
@@ -38,13 +29,19 @@ export function createClient() {
           error: new Error("Supabase not configured"),
         }),
         signOut: async () => ({ error: null }),
+        getUser: async () => ({
+          data: { user: null },
+          error: new Error("Supabase not configured"),
+        }),
       },
       from: () => ({
         select: () => ({
           eq: () => ({
             single: async () => ({ data: null, error: null }),
             maybeSingle: async () => ({ data: null, error: null }),
+            order: () => ({ data: null, error: null }),
           }),
+          order: () => ({ data: null, error: null }),
         }),
         insert: () => ({
           select: () => ({
@@ -75,7 +72,6 @@ export function createClient() {
           storageKey: "futuretask-auth",
         },
       })
-      console.log("✅ Supabase client created successfully")
     } catch (error) {
       console.error("❌ Error creating Supabase client:", error)
       throw error
