@@ -6,8 +6,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
 console.log("🔍 Checking Supabase configuration...")
-console.log("URL:", supabaseUrl || "NOT SET")
+console.log("URL:", supabaseUrl)
 console.log("Key:", supabaseAnonKey ? "SET" : "NOT SET")
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Missing Supabase credentials")
+  console.error("Please check your .env.local file")
+}
 
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null
 

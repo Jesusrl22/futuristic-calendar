@@ -1,158 +1,115 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import type React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
-import type { User } from "@supabase/supabase-js"
 
-export interface UserData {
+interface User {
   id: string
   name: string
   email: string
-  subscription_plan: "free" | "premium" | "pro"
-  subscription_tier: "free" | "premium" | "pro" | "premium-yearly" | "pro-yearly"
-  plan: "free" | "premium" | "pro"
-  ai_credits: number
-  theme: "light" | "dark"
-  theme_preference: "light" | "dark"
+  language: string
+  theme: string
+  is_premium: boolean
+  is_pro: boolean
+  premium_expiry: string | null
+  onboarding_completed: boolean
+  pomodoro_sessions: number
+  work_duration: number
+  short_break_duration: number
+  long_break_duration: number
+  sessions_until_long_break: number
+  email_verified: boolean
   subscription_status: string
-  subscription_id: string | null
-  billing_cycle: "monthly" | "yearly"
-  pomodoro_work_duration: number
-  pomodoro_break_duration: number
-  pomodoro_long_break_duration: number
-  pomodoro_sessions_until_long_break: number
-  created_at: string
-  updated_at: string
+  plan: string
+  ai_credits: number
+  ai_credits_used: number
 }
 
 interface UserContextType {
-  user: UserData | null
-  authUser: User | null
+  user: User | null
   loading: boolean
-  error: string | null
+  updateUser: (updates: Partial<User>) => Promise<void>
   refreshUser: () => Promise<void>
-  updateUser: (updates: Partial<UserData>) => Promise<UserData | null>
-  signOut: () => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserData | null>(null)
-  const [authUser, setAuthUser] = useState<User | null>(null)
+export function UserProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  async function loadUser() {
+  const loadUser = async () => {
     try {
-      setLoading(true)
-      setError(null)
-
       const {
         data: { session },
-        error: sessionError,
       } = await supabase.auth.getSession()
 
-      if (sessionError) {
-        console.error("Session error:", sessionError)
-        setError(sessionError.message)
-        setLoading(false)
-        return
-      }
+      console.log("Auth state changed:", session ? "SIGNED_IN" : "INITIAL_SESSION")
 
-      if (!session) {
+      if (!session?.user) {
         console.log("No active session")
         setUser(null)
-        setAuthUser(null)
         setLoading(false)
         return
       }
 
-      setAuthUser(session.user)
-
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error } = await supabase
         .from("users")
         .select("*")
-        .eq("id", session.user.id)
+        .eq("email", session.user.email)
         .maybeSingle()
 
-      if (userError) {
-        console.error("Error loading user data:", userError)
-        setError(userError.message)
+      if (error) {
+        console.error("Error loading user:", error)
+        setUser(null)
+        setLoading(false)
+        return
       }
 
-      if (userData) {
-        setUser(userData)
-      } else {
-        console.log("No user data found, creating new user profile")
-
+      if (!userData) {
         const newUser = {
-          id: session.user.id,
+          name: session.user.email?.split("@")[0] || "User",
           email: session.user.email || "",
-          name: session.user.user_metadata?.name || "Usuario",
-          subscription_plan: "free" as const,
-          subscription_tier: "free" as const,
-          plan: "free" as const,
+          language: "es",
+          theme: "default",
+          is_premium: false,
+          is_pro: false,
+          premium_expiry: null,
+          onboarding_completed: false,
+          pomodoro_sessions: 0,
+          work_duration: 25,
+          short_break_duration: 5,
+          long_break_duration: 15,
+          sessions_until_long_break: 4,
+          email_verified: true,
+          subscription_status: "inactive",
+          plan: "free",
           ai_credits: 10,
-          theme: "dark" as const,
-          theme_preference: "dark" as const,
-          subscription_status: "active",
-          subscription_id: null,
-          billing_cycle: "monthly" as const,
-          pomodoro_work_duration: 25,
-          pomodoro_break_duration: 5,
-          pomodoro_long_break_duration: 15,
-          pomodoro_sessions_until_long_break: 4,
+          ai_credits_used: 0,
         }
 
-        const { data: createdUser, error: createError } = await supabase.from("users").insert(newUser).select().single()
+        const { data: createdUser, error: createError } = await supabase
+          .from("users")
+          .insert([newUser])
+          .select()
+          .single()
 
         if (createError) {
           console.error("Error creating user:", createError)
-          setError(createError.message)
-        } else if (createdUser) {
+          setUser(null)
+        } else {
           setUser(createdUser)
         }
+      } else {
+        setUser(userData)
       }
-    } catch (err: any) {
-      console.error("Unexpected error loading user:", err)
-      setError(err?.message || "Error loading user")
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      setUser(null)
     } finally {
       setLoading(false)
     }
-  }
-
-  async function updateUser(updates: Partial<UserData>): Promise<UserData | null> {
-    if (!authUser) {
-      throw new Error("No authenticated user")
-    }
-
-    const { data, error } = await supabase
-      .from("users")
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", authUser.id)
-      .select()
-      .single()
-
-    if (error) {
-      throw error
-    }
-
-    if (data) {
-      setUser(data)
-      return data
-    }
-
-    return null
-  }
-
-  async function signOut() {
-    await supabase.auth.signOut()
-    setUser(null)
-    setAuthUser(null)
   }
 
   useEffect(() => {
@@ -160,16 +117,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event)
-
-      if (event === "SIGNED_IN" && session?.user) {
-        await loadUser()
-      } else if (event === "SIGNED_OUT") {
-        setUser(null)
-        setAuthUser(null)
-        setLoading(false)
-      }
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadUser()
     })
 
     return () => {
@@ -177,21 +126,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  return (
-    <UserContext.Provider
-      value={{
-        user,
-        authUser,
-        loading,
-        error,
-        updateUser,
-        signOut,
-        refreshUser: loadUser,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
-  )
+  const updateUser = async (updates: Partial<User>) => {
+    if (!user) return
+
+    const { error } = await supabase.from("users").update(updates).eq("id", user.id)
+
+    if (!error) {
+      setUser({ ...user, ...updates })
+    }
+  }
+
+  const refreshUser = async () => {
+    await loadUser()
+  }
+
+  return <UserContext.Provider value={{ user, loading, updateUser, refreshUser }}>{children}</UserContext.Provider>
 }
 
 export function useUser() {
