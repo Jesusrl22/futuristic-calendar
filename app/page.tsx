@@ -1,467 +1,465 @@
 "use client"
 
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Brain, Calendar, Clock, Trophy, Menu, X, Sparkles, Target } from "lucide-react"
-import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Check, Sparkles, Calendar, Brain, Zap, Shield, ArrowRight, Star } from "lucide-react"
+import Link from "next/link"
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
-      <header className="border-b border-purple-500/20 bg-slate-950/80 backdrop-blur-md fixed w-full top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                FutureTask
-              </span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-purple-300 hover:text-purple-100 transition-colors">
-                Features
-              </a>
-              <a href="#pricing" className="text-purple-300 hover:text-purple-100 transition-colors">
-                Pricing
-              </a>
-              <Link href="/blog" className="text-purple-300 hover:text-purple-100 transition-colors">
-                Blog
-              </Link>
-              <Link href="/login">
-                <Button variant="ghost" className="text-purple-300 hover:text-purple-100 hover:bg-purple-900/50">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden text-purple-300">
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+      <header className="border-b border-white/10 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-8 w-8 text-purple-400" />
+            <span className="text-2xl font-bold text-white">TaskFlow AI</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="#features" className="text-gray-300 hover:text-white transition-colors">
+              Features
+            </a>
+            <a href="#pricing" className="text-gray-300 hover:text-white transition-colors">
+              Pricing
+            </a>
+            <a href="#testimonials" className="text-gray-300 hover:text-white transition-colors">
+              Testimonials
+            </a>
           </nav>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 space-y-4">
-              <a
-                href="#features"
-                className="block text-purple-300 hover:text-purple-100 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Features
-              </a>
-              <a
-                href="#pricing"
-                className="block text-purple-300 hover:text-purple-100 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Pricing
-              </a>
-              <Link
-                href="/blog"
-                className="block text-purple-300 hover:text-purple-100 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Blog
-              </Link>
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="ghost" className="w-full text-purple-300 hover:text-purple-100 hover:bg-purple-900/50">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <Link href="/login">
+              <Button variant="ghost" className="text-white hover:text-purple-400">
+                Login
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">Get Started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Add padding to account for fixed header */}
-      <div className="h-20"></div>
-
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-8">
-            <div className="inline-block">
-              <span className="px-4 py-2 rounded-full bg-purple-900/50 text-purple-300 text-sm font-medium border border-purple-500/30">
-                ✨ AI-Powered Productivity
-              </span>
-            </div>
-            <h1 className="text-5xl lg:text-7xl font-bold leading-tight">
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                Organize Your Life
-              </span>
-              <br />
-              <span className="text-white">With AI Intelligence</span>
-            </h1>
-            <p className="text-xl text-purple-200 leading-relaxed">
-              Transform your productivity with intelligent task management, AI-powered insights, and seamless calendar
-              integration. Perfect for professionals who want to achieve more.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/login">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-8"
-                >
-                  Start Free Trial
-                </Button>
-              </Link>
-              <a href="#features">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto border-purple-500/50 text-purple-300 hover:bg-purple-900/50 text-lg px-8 bg-transparent"
-                >
-                  Learn More
-                </Button>
-              </a>
-            </div>
-            <div className="flex items-center gap-6 text-purple-300">
-              <div className="flex items-center gap-2">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-purple-600 border-2 border-slate-950"></div>
-                  <div className="w-8 h-8 rounded-full bg-pink-600 border-2 border-slate-950"></div>
-                  <div className="w-8 h-8 rounded-full bg-purple-500 border-2 border-slate-950"></div>
-                </div>
-                <span className="text-sm">10,000+ users</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-yellow-400">★★★★★</span>
-                <span className="text-sm ml-1">4.9/5 rating</span>
-              </div>
-            </div>
+      <section className="container mx-auto px-4 py-20 text-center">
+        <Badge className="mb-4 bg-purple-600/20 text-purple-300 border-purple-500/50">
+          <Sparkles className="h-3 w-3 mr-1" />
+          AI-Powered Productivity
+        </Badge>
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in">
+          Organize Your Life
+          <br />
+          <span className="text-gradient bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+            with AI
+          </span>
+        </h1>
+        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          Transform your productivity with an intelligent calendar that learns from your habits and helps you achieve
+          more.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link href="/login">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-8">
+              Start Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </Link>
+          <Button
+            size="lg"
+            variant="outline"
+            className="border-purple-500 text-white hover:bg-purple-500/10 bg-transparent"
+          >
+            Watch Demo
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-purple-400 mb-2">50K+</div>
+            <div className="text-gray-400">Active Users</div>
           </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl blur-3xl opacity-20"></div>
-            <div className="relative bg-slate-900/80 border border-purple-500/30 rounded-2xl p-8 backdrop-blur-sm">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                    <Target className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <div className="h-4 bg-purple-500/30 rounded w-32 mb-2"></div>
-                    <div className="h-3 bg-purple-500/20 rounded w-24"></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-12 bg-purple-900/30 rounded-lg border border-purple-500/20"></div>
-                  <div className="h-12 bg-purple-900/30 rounded-lg border border-purple-500/20"></div>
-                  <div className="h-12 bg-purple-900/30 rounded-lg border border-purple-500/20"></div>
-                </div>
-              </div>
-            </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-cyan-400 mb-2">95%</div>
+            <div className="text-gray-400">Satisfaction Rate</div>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-purple-400 mb-2">2M+</div>
+            <div className="text-gray-400">Tasks Completed</div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Powerful Features
-          </h2>
-          <p className="text-xl text-purple-200">Everything you need to stay productive and organized</p>
-        </div>
+      <section id="features" className="py-20 bg-black/20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Powerful Features</h2>
+            <p className="text-gray-400 text-lg">Everything you need to stay organized and productive</p>
+          </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-slate-900/50 border-purple-500/30 hover:border-purple-500/60 transition-all">
-            <CardContent className="p-6 space-y-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white">AI Assistant</h3>
-              <p className="text-purple-200">Smart task suggestions and intelligent prioritization powered by AI</p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <CardHeader>
+                <div className="h-12 w-12 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4">
+                  <Brain className="h-6 w-6 text-purple-400" />
+                </div>
+                <CardTitle className="text-white">AI Assistant</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Get intelligent suggestions and automated task management powered by advanced AI
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-          <Card className="bg-slate-900/50 border-purple-500/30 hover:border-purple-500/60 transition-all">
-            <CardContent className="p-6 space-y-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white">Smart Calendar</h3>
-              <p className="text-purple-200">Integrated calendar with automatic scheduling and reminders</p>
-            </CardContent>
-          </Card>
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <CardHeader>
+                <div className="h-12 w-12 bg-cyan-600/20 rounded-lg flex items-center justify-center mb-4">
+                  <Calendar className="h-6 w-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-white">Smart Calendar</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Visual calendar that adapts to your schedule and prioritizes what matters most
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-          <Card className="bg-slate-900/50 border-purple-500/30 hover:border-purple-500/60 transition-all">
-            <CardContent className="p-6 space-y-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white">Pomodoro Timer</h3>
-              <p className="text-purple-200">Stay focused with built-in Pomodoro technique timer</p>
-            </CardContent>
-          </Card>
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <CardHeader>
+                <div className="h-12 w-12 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-purple-400" />
+                </div>
+                <CardTitle className="text-white">Pomodoro Timer</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Built-in focus timer to help you maintain productivity and avoid burnout
+                </CardDescription>
+              </CardHeader>
+            </Card>
 
-          <Card className="bg-slate-900/50 border-purple-500/30 hover:border-purple-500/60 transition-all">
-            <CardContent className="p-6 space-y-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-xl font-bold text-white">Achievements</h3>
-              <p className="text-purple-200">Track your progress and unlock achievements as you complete tasks</p>
-            </CardContent>
-          </Card>
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <CardHeader>
+                <div className="h-12 w-12 bg-cyan-600/20 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-white">Secure & Private</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Your data is encrypted and protected with enterprise-grade security
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <CardHeader>
+                <div className="h-12 w-12 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4">
+                  <Sparkles className="h-6 w-6 text-purple-400" />
+                </div>
+                <CardTitle className="text-white">Achievements</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Unlock badges and track your productivity journey with gamification
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
+              <CardHeader>
+                <div className="h-12 w-12 bg-cyan-600/20 rounded-lg flex items-center justify-center mb-4">
+                  <Star className="h-6 w-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-white">Analytics</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Detailed insights into your productivity patterns and habits
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="container mx-auto px-4 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Simple Pricing
-          </h2>
-          <p className="text-xl text-purple-200">Choose the plan that fits your needs</p>
-        </div>
+      <section id="pricing" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">Simple Pricing</h2>
+            <p className="text-gray-400 text-lg">Choose the plan that fits your needs</p>
+          </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {/* Free Plan */}
-          <Card className="bg-slate-900/50 border-purple-500/30 hover:border-purple-500/60 transition-all">
-            <CardContent className="p-8 space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Free</h3>
-                <div className="text-4xl font-bold text-purple-400 mb-4">
-                  $0<span className="text-lg text-purple-300">/month</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Free Plan */}
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white text-2xl">Free</CardTitle>
+                <CardDescription className="text-gray-400">Perfect for getting started</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-white">$0</span>
+                  <span className="text-gray-400">/month</span>
                 </div>
-                <p className="text-purple-200">Perfect to get started</p>
-              </div>
-              <ul className="space-y-3">
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Basic calendar
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Up to 50 tasks
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Pomodoro timer
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> 10 AI credits/month
-                </li>
-              </ul>
-              <Link href="/login">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">Get Started</Button>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Up to 50 tasks
+                  </li>
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Basic calendar
+                  </li>
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Pomodoro timer
+                  </li>
+                </ul>
+                <Link href="/login">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700">Get Started</Button>
+                </Link>
+              </CardContent>
+            </Card>
 
-          {/* Premium Plan */}
-          <Card className="bg-slate-900/50 border-purple-500 hover:border-purple-400 transition-all relative">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                Most Popular
-              </span>
-            </div>
-            <CardContent className="p-8 space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Premium</h3>
-                <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
-                  $9.99<span className="text-lg">/month</span>
-                </div>
-                <p className="text-purple-200">For power users</p>
+            {/* Pro Plan */}
+            <Card className="bg-gradient-to-b from-purple-600/20 to-cyan-600/20 border-purple-500/50 backdrop-blur-sm relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="bg-purple-600 text-white">Most Popular</Badge>
               </div>
-              <ul className="space-y-3">
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Everything in Free
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Unlimited tasks
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Advanced AI features
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> 100 AI credits/month
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Priority support
-                </li>
-              </ul>
-              <Link href="/login">
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                  Start Free Trial
+              <CardHeader>
+                <CardTitle className="text-white text-2xl">Pro</CardTitle>
+                <CardDescription className="text-gray-300">For power users</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-white">$9.99</span>
+                  <span className="text-gray-300">/month</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center text-gray-200">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Unlimited tasks
+                  </li>
+                  <li className="flex items-center text-gray-200">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    AI Assistant
+                  </li>
+                  <li className="flex items-center text-gray-200">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Advanced analytics
+                  </li>
+                  <li className="flex items-center text-gray-200">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Priority support
+                  </li>
+                </ul>
+                <Link href="/login">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700">Start Free Trial</Button>
+                </Link>
+              </CardContent>
+            </Card>
+
+            {/* Enterprise Plan */}
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white text-2xl">Enterprise</CardTitle>
+                <CardDescription className="text-gray-400">For teams and organizations</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold text-white">Custom</span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Everything in Pro
+                  </li>
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Team collaboration
+                  </li>
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Custom integrations
+                  </li>
+                  <li className="flex items-center text-gray-300">
+                    <Check className="h-5 w-5 text-purple-400 mr-2" />
+                    Dedicated support
+                  </li>
+                </ul>
+                <Button
+                  variant="outline"
+                  className="w-full border-purple-500 text-white hover:bg-purple-500/10 bg-transparent"
+                >
+                  Contact Sales
                 </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Pro Plan */}
-          <Card className="bg-slate-900/50 border-purple-500/30 hover:border-purple-500/60 transition-all">
-            <CardContent className="p-8 space-y-6">
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
-                <div className="text-4xl font-bold text-purple-400 mb-4">
-                  $19.99<span className="text-lg text-purple-300">/month</span>
-                </div>
-                <p className="text-purple-200">For teams & professionals</p>
-              </div>
-              <ul className="space-y-3">
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Everything in Premium
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Team collaboration
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Unlimited AI credits
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> Custom integrations
-                </li>
-                <li className="flex items-center text-purple-200">
-                  <span className="mr-2">✓</span> 24/7 support
-                </li>
-              </ul>
-              <Link href="/login">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">Contact Sales</Button>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-3xl p-12 border border-purple-500/30">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                10K+
-              </div>
-              <div className="text-purple-200">Active Users</div>
-            </div>
-            <div>
-              <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                1M+
-              </div>
-              <div className="text-purple-200">Tasks Completed</div>
-            </div>
-            <div>
-              <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                99%
-              </div>
-              <div className="text-purple-200">Satisfaction Rate</div>
-            </div>
+      {/* Testimonials */}
+      <section id="testimonials" className="py-20 bg-black/20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">What Our Users Say</h2>
+            <p className="text-gray-400 text-lg">Join thousands of satisfied users</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-4">
+                  "TaskFlow AI has completely transformed how I manage my day. The AI suggestions are spot-on!"
+                </p>
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                    SM
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-white font-semibold">Sarah Martinez</div>
+                    <div className="text-gray-400 text-sm">Product Manager</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-4">
+                  "The Pomodoro timer and achievements system keep me motivated. Best productivity app I've used."
+                </p>
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
+                    JD
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-white font-semibold">James Davidson</div>
+                    <div className="text-gray-400 text-sm">Software Engineer</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="flex mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  ))}
+                </div>
+                <p className="text-gray-300 mb-4">
+                  "Simple, elegant, and powerful. TaskFlow AI helps me stay on top of everything without the overwhelm."
+                </p>
+                <div className="flex items-center">
+                  <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                    EC
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-white font-semibold">Emma Chen</div>
+                    <div className="text-gray-400 text-sm">Freelance Designer</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="text-center space-y-8 max-w-3xl mx-auto">
-          <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            Ready to Transform Your Productivity?
-          </h2>
-          <p className="text-xl text-purple-200">Join thousands of professionals who trust FutureTask</p>
+      <section className="py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">Ready to Transform Your Productivity?</h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who are already achieving more with TaskFlow AI
+          </p>
           <Link href="/login">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-lg px-12 py-6"
-            >
-              Get Started for Free
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-8">
+              Start Your Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-purple-500/20 bg-slate-950/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-4 gap-8">
+      <footer className="border-t border-white/10 py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  FutureTask
-                </span>
+                <Calendar className="h-6 w-6 text-purple-400" />
+                <span className="text-xl font-bold text-white">TaskFlow AI</span>
               </div>
-              <p className="text-purple-300 text-sm">AI-powered task management for the modern professional</p>
+              <p className="text-gray-400">AI-powered productivity for the modern world</p>
             </div>
             <div>
-              <h4 className="font-bold text-white mb-4">Product</h4>
-              <ul className="space-y-2 text-purple-300 text-sm">
+              <h3 className="text-white font-semibold mb-4">Product</h3>
+              <ul className="space-y-2">
                 <li>
-                  <a href="#features" className="hover:text-purple-100">
+                  <a href="#features" className="text-gray-400 hover:text-white">
                     Features
                   </a>
                 </li>
                 <li>
-                  <a href="#pricing" className="hover:text-purple-100">
+                  <a href="#pricing" className="text-gray-400 hover:text-white">
                     Pricing
                   </a>
                 </li>
                 <li>
-                  <Link href="/blog" className="hover:text-purple-100">
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    Updates
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-gray-400 hover:text-white">
+                    About
+                  </a>
+                </li>
+                <li>
+                  <Link href="/blog" className="text-gray-400 hover:text-white">
                     Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="text-gray-400 hover:text-white">
+                    Contact
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-white mb-4">Legal</h4>
-              <ul className="space-y-2 text-purple-300 text-sm">
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2">
                 <li>
-                  <Link href="/privacy" className="hover:text-purple-100">
+                  <Link href="/privacy" className="text-gray-400 hover:text-white">
                     Privacy
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-purple-100">
+                  <Link href="/terms" className="text-gray-400 hover:text-white">
                     Terms
                   </Link>
                 </li>
                 <li>
-                  <Link href="/cookies" className="hover:text-purple-100">
+                  <Link href="/cookies" className="text-gray-400 hover:text-white">
                     Cookies
                   </Link>
                 </li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">Connect</h4>
-              <ul className="space-y-2 text-purple-300 text-sm">
-                <li>
-                  <Link href="/contact" className="hover:text-purple-100">
-                    Contact
-                  </Link>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-purple-100">
-                    Twitter
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-purple-100">
-                    LinkedIn
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
-          <div className="border-t border-purple-500/20 mt-8 pt-8 text-center text-purple-300 text-sm">
-            <p>&copy; 2025 FutureTask. All rights reserved.</p>
+          <div className="border-t border-white/10 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 TaskFlow AI. All rights reserved.</p>
           </div>
         </div>
       </footer>
