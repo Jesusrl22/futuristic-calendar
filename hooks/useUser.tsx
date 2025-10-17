@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 
@@ -20,26 +18,17 @@ const UserContext = createContext<UserContextType>({
   refreshUser: async () => {},
 })
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
+export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [dbUser, setDbUser] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
 
   const loadUser = async (authUser: User) => {
     try {
-      const { data: existingUser, error: fetchError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", authUser.id)
-        .maybeSingle()
-
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching user:", fetchError)
-        return
-      }
+      const { data: existingUser } = await supabase.from("users").select("*").eq("id", authUser.id).maybeSingle()
 
       if (!existingUser) {
-        const { data: newUser, error: createError } = await supabase
+        const { data: newUser } = await supabase
           .from("users")
           .upsert({
             id: authUser.id,
@@ -52,19 +41,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           .select()
           .single()
 
-        if (createError) {
-          console.error("Error creating user:", createError)
-          return
-        }
-
-        console.log("✅ User created successfully:", newUser?.email)
         setDbUser(newUser)
       } else {
-        console.log("✅ User loaded successfully:", existingUser.email)
         setDbUser(existingUser)
       }
     } catch (error) {
-      console.error("Error in loadUser:", error)
+      console.error("Error loading user:", error)
     }
   }
 

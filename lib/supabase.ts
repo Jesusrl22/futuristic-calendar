@@ -3,13 +3,9 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
 
-console.log("🔍 Checking Supabase configuration...")
-console.log("URL:", supabaseUrl)
-console.log("Key:", supabaseAnonKey ? "SET" : "NOT SET")
-
 export function createClient() {
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn("⚠️ Supabase credentials not found, using mock client")
+    console.warn("⚠️ Supabase credentials not found")
     return createMockClient()
   }
 
@@ -20,7 +16,6 @@ export function createClient() {
         autoRefreshToken: true,
       },
     })
-    console.log("✅ Supabase client created successfully")
     return client
   } catch (error) {
     console.error("❌ Error creating Supabase client:", error)
@@ -32,42 +27,29 @@ function createMockClient() {
   return {
     auth: {
       getSession: async () => ({ data: { session: null }, error: null }),
-      onAuthStateChange: (callback: any) => {
+      onAuthStateChange: () => {
         return { data: { subscription: { unsubscribe: () => {} } } }
       },
-      signInWithPassword: async () => ({ data: { session: null, user: null }, error: { message: "Mock client" } }),
-      signUp: async () => ({ data: { session: null, user: null }, error: { message: "Mock client" } }),
+      signInWithPassword: async () => ({ data: { session: null, user: null }, error: { message: "Not configured" } }),
+      signUp: async () => ({ data: { session: null, user: null }, error: { message: "Not configured" } }),
       signOut: async () => ({ error: null }),
     },
-    from: (table: string) => ({
+    from: () => ({
       select: () => ({
         eq: () => ({
-          single: async () => ({ data: null, error: { message: "Mock client" } }),
+          single: async () => ({ data: null, error: null }),
           maybeSingle: async () => ({ data: null, error: null }),
-        }),
-        order: () => ({
-          limit: async () => ({ data: [], error: null }),
         }),
       }),
       insert: () => ({
         select: () => ({
-          single: async () => ({ data: null, error: { message: "Mock client" } }),
+          single: async () => ({ data: null, error: null }),
         }),
       }),
       upsert: () => ({
         select: () => ({
-          single: async () => ({ data: null, error: { message: "Mock client" } }),
+          single: async () => ({ data: null, error: null }),
         }),
-      }),
-      update: () => ({
-        eq: () => ({
-          select: () => ({
-            single: async () => ({ data: null, error: { message: "Mock client" } }),
-          }),
-        }),
-      }),
-      delete: () => ({
-        eq: async () => ({ error: null }),
       }),
     }),
   } as any
@@ -85,61 +67,13 @@ export type Database = {
           name: string | null
           subscription_tier: string
           subscription_status: string
-          subscription_end_date: string | null
           ai_credits: number
           created_at: string
           updated_at: string
-        }
-        Insert: {
-          id: string
-          email: string
-          name?: string | null
-          subscription_tier?: string
-          subscription_status?: string
-          subscription_end_date?: string | null
-          ai_credits?: number
-        }
-        Update: {
-          id?: string
-          email?: string
-          name?: string | null
-          subscription_tier?: string
-          subscription_status?: string
-          subscription_end_date?: string | null
-          ai_credits?: number
-        }
-      }
-      tasks: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          description: string | null
-          completed: boolean
-          priority: string
-          due_date: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          description?: string | null
-          completed?: boolean
-          priority?: string
-          due_date?: string | null
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          description?: string | null
-          completed?: boolean
-          priority?: string
-          due_date?: string | null
         }
       }
     }
   }
 }
+
+export default supabase

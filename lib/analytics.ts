@@ -98,39 +98,18 @@ export function initializeAnalytics(config: AnalyticsConfig = {}) {
 }
 
 // Track page views
-export const pageview = (url: string) => {
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("config", GA_TRACKING_ID, {
+export function trackPageView(url: string) {
+  if (typeof window !== "undefined" && (window as any).gtag) {
+    ;(window as any).gtag("config", process.env.NEXT_PUBLIC_GA_ID, {
       page_path: url,
     })
   }
 }
 
-// Track page views (alias)
-export function trackPageView(url: string) {
-  pageview(url)
-}
-
 // Track events
-export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", action, {
-      event_category: category,
-      event_label: label,
-      value: value,
-    })
-  }
-}
-
-// Track events (alternative signature)
-export const event = ({
-  action,
-  category,
-  label,
-  value,
-}: { action: string; category: string; label?: string; value?: number }) => {
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", action, {
+export function trackEvent(action: string, category: string, label?: string, value?: number) {
+  if (typeof window !== "undefined" && (window as any).gtag) {
+    ;(window as any).gtag("event", action, {
       event_category: category,
       event_label: label,
       value: value,
@@ -159,8 +138,9 @@ export function trackFeatureUsage(feature: string, action = "use", label?: strin
 }
 
 // Track errors
-export function trackError(error: string, category = "error", label?: string) {
-  trackEvent("error", category, `${error}${label ? `:${label}` : ""}`)
+export function trackError(error: string, errorInfo?: string) {
+  trackEvent("error", "exception", error)
+  console.error(error, errorInfo)
 }
 
 // Track conversions (purchases, sign-ups, etc.)
@@ -239,12 +219,12 @@ export const trackException = (description: string, fatal = false) => {
 }
 
 // Track button clicks
-export const trackButtonClick = (buttonName: string) => {
+export function trackButtonClick(buttonName: string) {
   trackEvent("click", "button", buttonName)
 }
 
 // Track form submissions
-export const trackFormSubmit = (formName: string) => {
+export function trackFormSubmit(formName: string) {
   trackEvent("submit", "form", formName)
 }
 
@@ -275,9 +255,7 @@ if (typeof window !== "undefined") {
 // Export analytics instance for direct access
 export const analytics = {
   initialize: initializeAnalytics,
-  pageview,
   trackPageView,
-  event,
   trackEvent,
   setUserProperties,
   trackUserAction,
