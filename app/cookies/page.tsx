@@ -1,216 +1,197 @@
-import Link from "next/link"
+"use client"
+
+import { useLanguage } from "@/hooks/useLanguage"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Cookie, Shield, Eye, FileText } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft, Cookie, Shield, Settings, BarChart } from "lucide-react"
+import Link from "next/link"
 
 export default function CookiesPage() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-20 px-4 sm:px-6 lg:px-8">
-      <div className="container mx-auto max-w-4xl">
-        <Link href="/">
-          <Button variant="ghost" className="mb-8 text-white hover:text-purple-400">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al Inicio
-          </Button>
-        </Link>
+  const { t } = useLanguage()
 
-        <div className="mb-12 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center">
-              <Cookie className="w-8 h-8 text-white" />
+  const cookieTypes = [
+    {
+      icon: Shield,
+      title: "Cookies Esenciales",
+      description: "Necesarias para el funcionamiento básico del sitio",
+      items: ["Gestión de sesión de usuario", "Preferencias de idioma y tema", "Seguridad y autenticación"],
+      required: true,
+    },
+    {
+      icon: BarChart,
+      title: "Cookies Analíticas",
+      description: "Nos ayudan a entender cómo usas la aplicación",
+      items: [
+        "Google Analytics para análisis de tráfico",
+        "Métricas de uso de funcionalidades",
+        "Identificación de errores técnicos",
+      ],
+      required: false,
+    },
+    {
+      icon: Settings,
+      title: "Cookies Funcionales",
+      description: "Mejoran tu experiencia personalizada",
+      items: ["Recordar tus preferencias", "Configuración del temporizador Pomodoro", "Estado de tareas y notas"],
+      required: false,
+    },
+  ]
+
+  const handleAcceptAll = () => {
+    localStorage.setItem("cookie-consent", "accepted")
+    if (typeof window !== "undefined" && window.gtag && process.env.NEXT_PUBLIC_GA_ID) {
+      window.gtag("consent", "update", {
+        analytics_storage: "granted",
+      })
+    }
+    alert("✅ Todas las cookies han sido aceptadas")
+  }
+
+  const handleRejectAll = () => {
+    localStorage.setItem("cookie-consent", "declined")
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("consent", "update", {
+        analytics_storage: "denied",
+      })
+    }
+    alert("❌ Las cookies no esenciales han sido rechazadas")
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-950 dark:via-blue-950 dark:to-purple-950">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Header */}
+        <div className="mb-8">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mb-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver al inicio
+            </Button>
+          </Link>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <Cookie className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Política de Cookies</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">Última actualización: Octubre 2024</p>
             </div>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Política de Cookies</h1>
-          <p className="text-slate-300 text-lg">Última actualización: 10 de enero de 2025</p>
         </div>
 
-        <div className="space-y-6">
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
-                ¿Qué son las cookies?
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-slate-300 space-y-4">
-              <p>
-                Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas un sitio
-                web. Se utilizan ampliamente para hacer que los sitios web funcionen de manera más eficiente y para
-                proporcionar información a los propietarios del sitio.
-              </p>
-            </CardContent>
-          </Card>
+        {/* Introduction */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>¿Qué son las cookies?</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-gray-700 dark:text-gray-300">
+            <p>
+              Las cookies son pequeños archivos de texto que se almacenan en tu dispositivo cuando visitas un sitio web.
+              Nos ayudan a mejorar tu experiencia, recordar tus preferencias y entender cómo usas nuestra aplicación.
+            </p>
+            <p>
+              En <strong>FutureTask</strong>, utilizamos cookies para ofrecerte una experiencia personalizada y mejorar
+              continuamente nuestros servicios.
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <Eye className="w-5 h-5 mr-2" />
-                Cookies que utilizamos
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-slate-300 space-y-4">
-              <div>
-                <h3 className="font-semibold text-white mb-2">1. Cookies Esenciales</h3>
-                <p>
-                  Estas cookies son necesarias para que el sitio web funcione correctamente. No se pueden desactivar en
-                  nuestros sistemas.
-                </p>
-                <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
-                  <li>Cookies de sesión de autenticación</li>
-                  <li>Cookies de preferencias de idioma</li>
-                  <li>Cookies de seguridad</li>
+        {/* Cookie Types */}
+        <div className="space-y-4 mb-6">
+          {cookieTypes.map((type, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <type.icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{type.title}</CardTitle>
+                      <CardDescription>{type.description}</CardDescription>
+                    </div>
+                  </div>
+                  {type.required && (
+                    <span className="px-2 py-1 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                      Requeridas
+                    </span>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {type.items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <div className="h-1.5 w-1.5 bg-blue-600 dark:bg-blue-400 rounded-full" />
+                      {item}
+                    </li>
+                  ))}
                 </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-white mb-2">2. Cookies de Rendimiento</h3>
-                <p>
-                  Estas cookies nos permiten contar las visitas y fuentes de tráfico para poder medir y mejorar el
-                  rendimiento de nuestro sitio.
-                </p>
-                <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
-                  <li>Google Analytics (_ga, _gid, _gat)</li>
-                  <li>Cookies de análisis de Vercel</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-white mb-2">3. Cookies Funcionales</h3>
-                <p>
-                  Estas cookies permiten que el sitio web proporcione una funcionalidad y personalización mejoradas.
-                </p>
-                <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
-                  <li>Preferencias de tema (claro/oscuro)</li>
-                  <li>Configuraciones de usuario</li>
-                  <li>Estado del banner de cookies</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-white mb-2">4. Cookies de Terceros</h3>
-                <p>Utilizamos servicios de terceros que pueden establecer cookies:</p>
-                <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
-                  <li>Supabase (autenticación y base de datos)</li>
-                  <li>Google Analytics (análisis web)</li>
-                  <li>PayPal (procesamiento de pagos)</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <Shield className="w-5 h-5 mr-2" />
-                Control de cookies
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-slate-300 space-y-4">
-              <p>
-                Puedes controlar y/o eliminar las cookies como desees. Puedes eliminar todas las cookies que ya están en
-                tu dispositivo y puedes configurar la mayoría de los navegadores para evitar que se coloquen.
-              </p>
-
-              <div>
-                <h3 className="font-semibold text-white mb-2">Cómo gestionar cookies en tu navegador:</h3>
-                <ul className="list-disc list-inside ml-4 space-y-1">
-                  <li>
-                    <strong>Chrome:</strong> Configuración → Privacidad y seguridad → Cookies y otros datos de sitios
-                  </li>
-                  <li>
-                    <strong>Firefox:</strong> Opciones → Privacidad y seguridad → Cookies y datos del sitio
-                  </li>
-                  <li>
-                    <strong>Safari:</strong> Preferencias → Privacidad → Gestionar datos del sitio web
-                  </li>
-                  <li>
-                    <strong>Edge:</strong> Configuración → Cookies y permisos del sitio → Cookies y datos del sitio
-                  </li>
-                </ul>
-              </div>
-
-              <p className="text-yellow-400 text-sm">
-                ⚠️ Ten en cuenta que si desactivas las cookies, es posible que algunas funciones del sitio web no
-                funcionen correctamente.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
-            <CardHeader>
-              <CardTitle className="text-white">Duración de las cookies</CardTitle>
-            </CardHeader>
-            <CardContent className="text-slate-300 space-y-4">
-              <div>
-                <h3 className="font-semibold text-white mb-2">Cookies de sesión</h3>
-                <p>Se eliminan automáticamente cuando cierras el navegador.</p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-white mb-2">Cookies persistentes</h3>
-                <p>
-                  Permanecen en tu dispositivo durante un período específico (generalmente entre 1 mes y 2 años) o hasta
-                  que las elimines manualmente.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
-            <CardHeader>
-              <CardTitle className="text-white">Actualizaciones de esta política</CardTitle>
-            </CardHeader>
-            <CardContent className="text-slate-300 space-y-4">
-              <p>
-                Podemos actualizar esta Política de Cookies periódicamente para reflejar cambios en las cookies que
-                utilizamos o por otras razones operativas, legales o reglamentarias. Te recomendamos que revises esta
-                página regularmente para estar informado sobre nuestro uso de cookies.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-slate-800/50 backdrop-blur border-purple-500/20">
-            <CardHeader>
-              <CardTitle className="text-white">Contacto</CardTitle>
-            </CardHeader>
-            <CardContent className="text-slate-300 space-y-4">
-              <p>Si tienes preguntas sobre nuestra Política de Cookies, puedes contactarnos:</p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li>
-                  Por email:{" "}
-                  <a href="mailto:privacy@future-task.com" className="text-purple-400 hover:text-purple-300">
-                    privacy@future-task.com
-                  </a>
-                </li>
-                <li>
-                  A través de nuestra página de{" "}
-                  <Link href="/contact" className="text-purple-400 hover:text-purple-300">
-                    contacto
-                  </Link>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-center gap-4 pt-8">
-            <Link href="/privacy">
-              <Button
-                variant="outline"
-                className="border-purple-500/50 text-white hover:bg-purple-500/10 bg-transparent"
-              >
-                Política de Privacidad
-              </Button>
-            </Link>
-            <Link href="/terms">
-              <Button
-                variant="outline"
-                className="border-purple-500/50 text-white hover:bg-purple-500/10 bg-transparent"
-              >
-                Términos de Servicio
-              </Button>
-            </Link>
-          </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
+
+        {/* Cookie Management */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Gestión de Cookies</CardTitle>
+            <CardDescription>Puedes gestionar tus preferencias de cookies en cualquier momento</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button onClick={handleAcceptAll} className="flex-1">
+                Aceptar todas las cookies
+              </Button>
+              <Button onClick={handleRejectAll} variant="outline" className="flex-1 bg-transparent">
+                Rechazar cookies no esenciales
+              </Button>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              También puedes configurar tu navegador para bloquear o alertarte sobre cookies. Ten en cuenta que algunas
+              funcionalidades pueden no estar disponibles si bloqueas todas las cookies.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Third Party Cookies */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Cookies de Terceros</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-gray-700 dark:text-gray-300">
+            <div>
+              <h3 className="font-semibold mb-2">Google Analytics</h3>
+              <p className="text-sm">
+                Utilizamos Google Analytics para analizar el uso de nuestra aplicación. Google Analytics establece
+                cookies para ayudarnos a entender cómo los usuarios interactúan con nuestro sitio.
+              </p>
+              <a
+                href="https://policies.google.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-block mt-2"
+              >
+                Ver política de privacidad de Google →
+              </a>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Contact */}
+        <Card>
+          <CardHeader>
+            <CardTitle>¿Tienes preguntas?</CardTitle>
+          </CardHeader>
+          <CardContent className="text-gray-700 dark:text-gray-300">
+            <p className="mb-4">
+              Si tienes alguna pregunta sobre nuestra política de cookies, no dudes en contactarnos.
+            </p>
+            <Link href="/contact">
+              <Button variant="outline">Contáctanos</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

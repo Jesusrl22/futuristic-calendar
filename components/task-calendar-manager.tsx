@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
 import { CalendarWidget } from "@/components/calendar-widget"
 import { TaskForm } from "@/components/task-form"
 import { hybridDb, type Task, type User } from "@/lib/hybrid-database"
+import { useToast } from "@/hooks/use-toast"
 
 interface TaskCalendarManagerProps {
   user: User
@@ -18,6 +17,7 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const { toast } = useToast()
 
   const handleCloseForm = () => {
     setShowTaskForm(false)
@@ -40,10 +40,15 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
     } catch (error) {
       console.error("❌ Error loading tasks:", error)
       setTasks([])
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar las tareas",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, toast])
 
   const handleTasksChange = useCallback(() => {
     loadTasks()
@@ -72,11 +77,22 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
       console.log("➕ Creating new task...", taskData)
       const newTask = await hybridDb.createTask(user.id, taskData)
       console.log("✅ Task created:", newTask.id)
-      setTasks((prev) => [newTask, ...(prev || [])])
+
+      await loadTasks()
+
+      toast({
+        title: "✅ Tarea creada",
+        description: "La tarea se ha guardado correctamente",
+      })
+
       setShowTaskForm(false)
     } catch (error) {
       console.error("❌ Error creating task:", error)
-      alert("Error al crear la tarea. Por favor, inténtalo de nuevo.")
+      toast({
+        title: "Error",
+        description: "No se pudo crear la tarea",
+        variant: "destructive",
+      })
     }
   }
 
@@ -85,12 +101,23 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
       console.log("✏️ Updating task:", taskId, updates)
       const updatedTask = await hybridDb.updateTask(taskId, updates)
       console.log("✅ Task updated")
-      setTasks((prev) => (prev || []).map((task) => (task.id === taskId ? updatedTask : task)))
+
+      await loadTasks()
+
+      toast({
+        title: "✅ Tarea actualizada",
+        description: "Los cambios se han guardado correctamente",
+      })
+
       setEditingTask(null)
       setShowTaskForm(false)
     } catch (error) {
       console.error("❌ Error updating task:", error)
-      alert("Error al actualizar la tarea. Por favor, inténtalo de nuevo.")
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la tarea",
+        variant: "destructive",
+      })
     }
   }
 
@@ -99,12 +126,23 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
       console.log("🗑️ Deleting task:", taskId)
       await hybridDb.deleteTask(taskId)
       console.log("✅ Task deleted")
-      setTasks((prev) => (prev || []).filter((task) => task.id !== taskId))
+
+      await loadTasks()
+
+      toast({
+        title: "✅ Tarea eliminada",
+        description: "La tarea se ha eliminado correctamente",
+      })
+
       setEditingTask(null)
       setShowTaskForm(false)
     } catch (error) {
       console.error("❌ Error deleting task:", error)
-      alert("Error al eliminar la tarea. Por favor, inténtalo de nuevo.")
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la tarea",
+        variant: "destructive",
+      })
     }
   }
 
@@ -115,7 +153,7 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
   }
 
   const handleNewTask = () => {
-    console.log("➕ Creating new task")
+    console.log("➕ Creating new task for date:", selectedDate)
     setEditingTask(null)
     setShowTaskForm(true)
   }
@@ -133,22 +171,12 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Tareas & Calendario</h2>
-          <p className="text-muted-foreground text-sm">Organiza y gestiona tus tareas diarias</p>
-        </div>
-        <Button onClick={handleNewTask} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Tarea
-        </Button>
-      </div>
-
       <CalendarWidget
         tasks={tasks}
         selectedDate={selectedDate}
         onDateSelect={setSelectedDate}
         onTaskClick={handleTaskClick}
+        onNewTask={handleNewTask}
       />
 
       <TaskForm

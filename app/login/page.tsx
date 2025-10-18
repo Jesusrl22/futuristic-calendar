@@ -1,14 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Calendar, Loader2, Mail, Lock, User } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar, Loader2, Mail, Lock, User, Globe } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,10 +16,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [language, setLanguage] = useState("es")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  // Clear any existing sessions when component mounts
   useEffect(() => {
     const clearExistingSessions = async () => {
       try {
@@ -34,7 +34,6 @@ export default function LoginPage() {
     clearExistingSessions()
   }, [])
 
-  // Check if user is already logged in
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -56,7 +55,6 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
 
-    // Validation
     if (!email || !password) {
       setError("Por favor, introduce tu email y contraseña")
       return
@@ -93,6 +91,10 @@ export default function LoginPage() {
 
       console.log("✅ Login successful:", data.session.user.email)
 
+      // Set language preference in localStorage
+      localStorage.setItem("language", language)
+      console.log("🌐 Language set to:", language)
+
       // Verify the user exists in the database
       const { data: userData, error: userError } = await supabase
         .from("users")
@@ -107,20 +109,40 @@ export default function LoginPage() {
       // If user doesn't exist in DB, create them
       if (!userData) {
         console.log("📝 Creating user in database...")
-        const { error: insertError } = await supabase.from("users").insert([
-          {
-            id: data.session.user.id,
-            email: data.session.user.email,
-            full_name:
-              data.session.user.user_metadata?.full_name || data.session.user.email?.split("@")[0] || "Usuario",
-            subscription_tier: "free",
-            ai_credits: 0,
-            theme_preference: "dark",
-          },
-        ])
+        const newUserData: any = {
+          id: data.session.user.id,
+          email: data.session.user.email,
+          full_name: data.session.user.user_metadata?.full_name || data.session.user.email?.split("@")[0] || "Usuario",
+          subscription_tier: "free",
+          ai_credits: 0,
+          theme_preference: "dark",
+        }
+
+        // Try to add language, but don't fail if column doesn't exist
+        try {
+          newUserData.language = language
+        } catch (err) {
+          console.warn("Language column might not exist yet:", err)
+        }
+
+        const { error: insertError } = await supabase.from("users").insert([newUserData])
 
         if (insertError) {
           console.error("Error creating user:", insertError)
+        }
+      } else {
+        // Try to update language preference if column exists
+        try {
+          const { error: updateError } = await supabase
+            .from("users")
+            .update({ language: language })
+            .eq("id", data.session.user.id)
+
+          if (updateError) {
+            console.warn("Could not update language (column might not exist):", updateError.message)
+          }
+        } catch (err) {
+          console.warn("Language update failed:", err)
         }
       }
 
@@ -147,7 +169,6 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
 
-    // Validation
     if (!email || !password || !name) {
       setError("Por favor, completa todos los campos")
       return
@@ -170,6 +191,7 @@ export default function LoginPage() {
           data: {
             full_name: name.trim(),
             name: name.trim(),
+            language: language,
           },
         },
       })
@@ -190,17 +212,28 @@ export default function LoginPage() {
 
       console.log("✅ Registration successful:", data.user.email)
 
+      // Set language preference in localStorage
+      localStorage.setItem("language", language)
+      console.log("🌐 Language set to:", language)
+
       // Create user in database
-      const { error: insertError } = await supabase.from("users").insert([
-        {
-          id: data.user.id,
-          email: data.user.email,
-          full_name: name.trim(),
-          subscription_tier: "free",
-          ai_credits: 0,
-          theme_preference: "dark",
-        },
-      ])
+      const newUserData: any = {
+        id: data.user.id,
+        email: data.user.email,
+        full_name: name.trim(),
+        subscription_tier: "free",
+        ai_credits: 0,
+        theme_preference: "dark",
+      }
+
+      // Try to add language, but don't fail if column doesn't exist
+      try {
+        newUserData.language = language
+      } catch (err) {
+        console.warn("Language column might not exist yet:", err)
+      }
+
+      const { error: insertError } = await supabase.from("users").insert([newUserData])
 
       if (insertError) {
         console.error("Error creating user in DB:", insertError)
@@ -301,6 +334,24 @@ export default function LoginPage() {
                 />
               </div>
               <p className="text-xs text-gray-400 mt-1">Mínimo 6 caracteres</p>
+            </div>
+
+            <div>
+              <Label htmlFor="language" className="text-white mb-2 block">
+                Idioma / Language *
+              </Label>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger className="pl-10 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">🇪🇸 Español</SelectItem>
+                    <SelectItem value="en">🇬🇧 English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Button
