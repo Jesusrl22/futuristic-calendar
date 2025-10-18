@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,210 +11,234 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
+import { useUser } from "@/hooks/useUser"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
 import {
   Users,
-  CreditCard,
   BarChart3,
-  Settings,
   Crown,
   Zap,
   Star,
   Edit,
   Trash2,
-  Plus,
   Search,
   Filter,
-  Download,
-  DollarSign,
-  TrendingUp,
   UserCheck,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react"
 
-interface User {
+interface AdminUser {
   id: string
-  name: string
+  name: string | null
   email: string
-  plan: "free" | "premium" | "pro"
+  subscription_tier: "free" | "premium" | "pro"
   subscription_status: "active" | "cancelled" | "expired"
   ai_credits: number
   created_at: string
   last_login?: string
-  total_tasks: number
-  completed_tasks: number
+  email_verified: boolean
   is_lifetime: boolean
-  notes_count: number
-  wishlist_count: number
-}
-
-interface Subscription {
-  id: string
-  user_id: string
-  plan: "free" | "premium" | "pro"
-  status: "active" | "cancelled" | "expired"
-  billing_cycle: "monthly" | "yearly"
-  amount: number
-  next_billing_date?: string
-  created_at: string
 }
 
 interface AdminStats {
   total_users: number
   active_subscriptions: number
-  monthly_revenue: number
+  free_users: number
+  premium_users: number
+  pro_users: number
   total_tasks: number
-  growth_rate: number
+  total_notes: number
 }
 
 export default function AdminPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  const { dbUser, loading: userLoading } = useUser()
+  const router = useRouter()
+  const [users, setUsers] = useState<AdminUser[]>([])
   const [stats, setStats] = useState<AdminStats>({
     total_users: 0,
     active_subscriptions: 0,
-    monthly_revenue: 0,
+    free_users: 0,
+    premium_users: 0,
+    pro_users: 0,
     total_tasks: 0,
-    growth_rate: 0,
+    total_notes: 0,
   })
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterPlan, setFilterPlan] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Sample data - in a real app, this would come from your API
+  // Load admin data
   useEffect(() => {
-    const loadData = async () => {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    const loadAdminData = async () => {
+      // Wait for user to load
+      if (userLoading) {
+        return
+      }
 
-      const sampleUsers: User[] = [
-        {
-          id: "1",
-          name: "John Doe",
-          email: "john@example.com",
-          plan: "pro",
-          subscription_status: "active",
-          ai_credits: 850,
-          created_at: "2024-01-15T10:00:00Z",
-          last_login: "2024-01-20T14:30:00Z",
-          total_tasks: 45,
-          completed_tasks: 38,
-          is_lifetime: false,
-          notes_count: 12,
-          wishlist_count: 8,
-        },
-        {
-          id: "2",
-          name: "Jane Smith",
-          email: "jane@example.com",
-          plan: "premium",
-          subscription_status: "active",
-          ai_credits: 0,
-          created_at: "2024-01-10T09:00:00Z",
-          last_login: "2024-01-19T16:45:00Z",
-          total_tasks: 23,
-          completed_tasks: 20,
-          is_lifetime: true,
-          notes_count: 8,
-          wishlist_count: 15,
-        },
-        {
-          id: "3",
-          name: "Bob Johnson",
-          email: "bob@example.com",
-          plan: "free",
-          subscription_status: "active",
-          ai_credits: 0,
-          created_at: "2024-01-18T11:00:00Z",
-          last_login: "2024-01-20T10:15:00Z",
-          total_tasks: 8,
-          completed_tasks: 5,
-          is_lifetime: false,
-          notes_count: 3,
-          wishlist_count: 0,
-        },
-        {
-          id: "4",
-          name: "Alice Wilson",
-          email: "alice@example.com",
-          plan: "premium",
-          subscription_status: "cancelled",
-          ai_credits: 0,
-          created_at: "2023-12-01T08:00:00Z",
-          last_login: "2024-01-15T12:00:00Z",
-          total_tasks: 67,
-          completed_tasks: 54,
-          is_lifetime: false,
-          notes_count: 25,
-          wishlist_count: 12,
-        },
-      ]
+      // Check if user is admin
+      if (!dbUser) {
+        console.log("No user found, redirecting to login")
+        router.push("/login")
+        return
+      }
 
-      const sampleSubscriptions: Subscription[] = [
-        {
-          id: "1",
-          user_id: "1",
-          plan: "pro",
-          status: "active",
-          billing_cycle: "monthly",
-          amount: 19.99,
-          next_billing_date: "2024-02-15T10:00:00Z",
-          created_at: "2024-01-15T10:00:00Z",
-        },
-        {
-          id: "2",
-          user_id: "2",
-          plan: "premium",
-          status: "active",
-          billing_cycle: "yearly",
-          amount: 99.99,
-          next_billing_date: "2025-01-10T09:00:00Z",
-          created_at: "2024-01-10T09:00:00Z",
-        },
-      ]
+      console.log("Current user:", dbUser)
+      console.log("User subscription tier:", dbUser.subscription_tier)
 
-      setUsers(sampleUsers)
-      setSubscriptions(sampleSubscriptions)
-      setStats({
-        total_users: sampleUsers.length,
-        active_subscriptions: sampleSubscriptions.filter((s) => s.status === "active").length,
-        monthly_revenue: sampleSubscriptions
-          .filter((s) => s.status === "active")
-          .reduce((sum, s) => sum + (s.billing_cycle === "yearly" ? s.amount / 12 : s.amount), 0),
-        total_tasks: sampleUsers.reduce((sum, u) => sum + u.total_tasks, 0),
-        growth_rate: 15.2,
-      })
+      // For now, allow any logged in user to access admin (for testing)
+      // TODO: Change this back to only 'pro' users later
+      // if (dbUser.subscription_tier !== "pro") {
+      //   console.log("User is not pro, redirecting to app")
+      //   router.push("/app")
+      //   return
+      // }
 
-      setIsLoading(false)
+      try {
+        setError(null)
+
+        // Fetch all users
+        const { data: usersData, error: usersError } = await supabase
+          .from("users")
+          .select("*")
+          .order("created_at", { ascending: false })
+
+        if (usersError) {
+          console.error("Error fetching users:", usersError)
+          setError("Error al cargar usuarios: " + usersError.message)
+          throw usersError
+        }
+
+        console.log("Loaded users:", usersData?.length)
+
+        const adminUsers: AdminUser[] =
+          usersData?.map((user) => ({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            subscription_tier: user.subscription_tier || "free",
+            subscription_status: user.subscription_status || "active",
+            ai_credits: user.ai_credits || 0,
+            created_at: user.created_at,
+            last_login: user.last_login,
+            email_verified: user.email_verified || false,
+            is_lifetime: user.is_lifetime || false,
+          })) || []
+
+        setUsers(adminUsers)
+
+        // Calculate stats
+        const freeUsers = adminUsers.filter((u) => u.subscription_tier === "free").length
+        const premiumUsers = adminUsers.filter((u) => u.subscription_tier === "premium").length
+        const proUsers = adminUsers.filter((u) => u.subscription_tier === "pro").length
+        const activeSubscriptions = adminUsers.filter((u) => u.subscription_status === "active").length
+
+        // Fetch task count
+        const { count: taskCount } = await supabase.from("tasks").select("*", { count: "exact", head: true })
+
+        // Fetch note count
+        const { count: noteCount } = await supabase.from("notes").select("*", { count: "exact", head: true })
+
+        console.log("Stats calculated:", {
+          total_users: adminUsers.length,
+          free_users: freeUsers,
+          premium_users: premiumUsers,
+          pro_users: proUsers,
+          tasks: taskCount,
+          notes: noteCount,
+        })
+
+        setStats({
+          total_users: adminUsers.length,
+          active_subscriptions: activeSubscriptions,
+          free_users: freeUsers,
+          premium_users: premiumUsers,
+          pro_users: proUsers,
+          total_tasks: taskCount || 0,
+          total_notes: noteCount || 0,
+        })
+      } catch (error) {
+        console.error("Error loading admin data:", error)
+        setError("Error al cargar datos del panel de administración")
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    loadData()
-  }, [])
+    loadAdminData()
+  }, [dbUser, userLoading, router])
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = (user: AdminUser) => {
     setSelectedUser(user)
     setShowEditModal(true)
   }
 
-  const handleSaveUser = async (updatedUser: User) => {
-    setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
-    setShowEditModal(false)
-    setSelectedUser(null)
+  const handleSaveUser = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!selectedUser) return
+
+    const formData = new FormData(event.currentTarget)
+
+    try {
+      const updates = {
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        subscription_tier: formData.get("plan") as string,
+        subscription_status: formData.get("status") as string,
+        ai_credits: Number.parseInt(formData.get("ai_credits") as string) || 0,
+        is_lifetime: formData.get("is_lifetime") === "on",
+      }
+
+      const { error } = await supabase.from("users").update(updates).eq("id", selectedUser.id)
+
+      if (error) throw error
+
+      // Update local state
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === selectedUser.id
+            ? {
+                ...u,
+                ...updates,
+                subscription_tier: updates.subscription_tier as "free" | "premium" | "pro",
+                subscription_status: updates.subscription_status as "active" | "cancelled" | "expired",
+              }
+            : u,
+        ),
+      )
+
+      setShowEditModal(false)
+      setSelectedUser(null)
+    } catch (error) {
+      console.error("Error updating user:", error)
+      alert("Error al actualizar usuario")
+    }
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (confirm("Are you sure you want to delete this user?")) {
+    if (!confirm("¿Estás seguro de que quieres eliminar este usuario?")) return
+
+    try {
+      const { error } = await supabase.from("users").delete().eq("id", userId)
+
+      if (error) throw error
+
       setUsers((prev) => prev.filter((u) => u.id !== userId))
+    } catch (error) {
+      console.error("Error deleting user:", error)
+      alert("Error al eliminar usuario")
     }
   }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesPlan = filterPlan === "all" || user.plan === filterPlan
+    const matchesPlan = filterPlan === "all" || user.subscription_tier === filterPlan
     return matchesSearch && matchesPlan
   })
 
@@ -230,36 +256,41 @@ export default function AdminPage() {
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case "pro":
-        return "bg-purple-100 text-purple-800"
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
       case "premium":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
       case "cancelled":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
       case "expired":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
     }
   }
 
-  if (isLoading) {
+  if (userLoading || isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading admin dashboard...</p>
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto"></div>
+          <div className="text-lg font-semibold">Cargando panel de administración...</div>
+          {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
         </div>
       </div>
     )
+  }
+
+  if (!dbUser) {
+    return null
   }
 
   return (
@@ -268,79 +299,67 @@ export default function AdminPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage users, subscriptions, and system settings</p>
+            <h1 className="text-3xl font-bold">Panel de Administración</h1>
+            <p className="text-muted-foreground">Gestiona usuarios, suscripciones y configuración del sistema</p>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
+            <Button variant="outline" onClick={() => router.push("/app")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver a la App
             </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total_users}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />+{stats.growth_rate}% from last month
-              </p>
+              <div className="text-xs text-muted-foreground mt-1">
+                <div>Free: {stats.free_users}</div>
+                <div>Premium: {stats.premium_users}</div>
+                <div>Pro: {stats.pro_users}</div>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Subscriptions</CardTitle>
+              <CardTitle className="text-sm font-medium">Suscripciones Activas</CardTitle>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.active_subscriptions}</div>
               <p className="text-xs text-muted-foreground">
-                {((stats.active_subscriptions / stats.total_users) * 100).toFixed(1)}% conversion rate
+                {stats.total_users > 0 ? ((stats.active_subscriptions / stats.total_users) * 100).toFixed(1) : 0}% tasa
+                de conversión
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${stats.monthly_revenue.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Recurring revenue</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Tareas</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total_tasks}</div>
-              <p className="text-xs text-muted-foreground">Created by all users</p>
+              <p className="text-xs text-muted-foreground">Creadas por usuarios</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Status</CardTitle>
-              <AlertCircle className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Total Notas</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">Healthy</div>
-              <p className="text-xs text-muted-foreground">All systems operational</p>
+              <div className="text-2xl font-bold">{stats.total_notes}</div>
+              <p className="text-xs text-muted-foreground">Creadas por usuarios</p>
             </CardContent>
           </Card>
         </div>
@@ -350,19 +369,11 @@ export default function AdminPage() {
           <TabsList>
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
-              <span>Users</span>
-            </TabsTrigger>
-            <TabsTrigger value="subscriptions" className="flex items-center space-x-2">
-              <CreditCard className="h-4 w-4" />
-              <span>Subscriptions</span>
+              <span>Usuarios</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center space-x-2">
               <BarChart3 className="h-4 w-4" />
-              <span>Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>Settings</span>
+              <span>Analíticas</span>
             </TabsTrigger>
           </TabsList>
 
@@ -375,7 +386,7 @@ export default function AdminPage() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Search users..."
+                        placeholder="Buscar usuarios..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -388,7 +399,7 @@ export default function AdminPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Plans</SelectItem>
+                      <SelectItem value="all">Todos los Planes</SelectItem>
                       <SelectItem value="free">Free</SelectItem>
                       <SelectItem value="premium">Premium</SelectItem>
                       <SelectItem value="pro">Pro</SelectItem>
@@ -401,38 +412,37 @@ export default function AdminPage() {
             {/* Users Table */}
             <Card>
               <CardHeader>
-                <CardTitle>Users ({filteredUsers.length})</CardTitle>
+                <CardTitle>Usuarios ({filteredUsers.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-2">User</th>
+                        <th className="text-left p-2">Usuario</th>
                         <th className="text-left p-2">Plan</th>
-                        <th className="text-left p-2">Status</th>
-                        <th className="text-left p-2">Tasks</th>
-                        <th className="text-left p-2">AI Credits</th>
-                        <th className="text-left p-2">Last Login</th>
-                        <th className="text-left p-2">Actions</th>
+                        <th className="text-left p-2">Estado</th>
+                        <th className="text-left p-2">Créditos AI</th>
+                        <th className="text-left p-2">Creado</th>
+                        <th className="text-left p-2">Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredUsers.map((user) => {
-                        const PlanIcon = getPlanIcon(user.plan)
+                        const PlanIcon = getPlanIcon(user.subscription_tier)
                         return (
                           <tr key={user.id} className="border-b hover:bg-muted/50">
                             <td className="p-2">
                               <div>
-                                <div className="font-medium">{user.name}</div>
+                                <div className="font-medium">{user.name || "Sin nombre"}</div>
                                 <div className="text-sm text-muted-foreground">{user.email}</div>
                               </div>
                             </td>
                             <td className="p-2">
-                              <Badge className={getPlanColor(user.plan)}>
+                              <Badge className={getPlanColor(user.subscription_tier)}>
                                 <PlanIcon className="h-3 w-3 mr-1" />
-                                {user.plan.toUpperCase()}
-                                {user.is_lifetime && " (Lifetime)"}
+                                {user.subscription_tier.toUpperCase()}
+                                {user.is_lifetime && " (Vitalicio)"}
                               </Badge>
                             </td>
                             <td className="p-2">
@@ -441,26 +451,10 @@ export default function AdminPage() {
                               </Badge>
                             </td>
                             <td className="p-2">
-                              <div className="text-sm">
-                                {user.completed_tasks}/{user.total_tasks}
-                                <div className="text-xs text-muted-foreground">
-                                  {user.total_tasks > 0
-                                    ? Math.round((user.completed_tasks / user.total_tasks) * 100)
-                                    : 0}
-                                  % complete
-                                </div>
-                              </div>
+                              <div className="text-sm">{user.ai_credits}</div>
                             </td>
                             <td className="p-2">
-                              <div className="text-sm">
-                                {user.ai_credits}
-                                {user.plan === "pro" && <div className="text-xs text-muted-foreground">Pro user</div>}
-                              </div>
-                            </td>
-                            <td className="p-2">
-                              <div className="text-sm">
-                                {user.last_login ? new Date(user.last_login).toLocaleDateString() : "Never"}
-                              </div>
+                              <div className="text-sm">{new Date(user.created_at).toLocaleDateString()}</div>
                             </td>
                             <td className="p-2">
                               <div className="flex items-center space-x-2">
@@ -487,121 +481,82 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="subscriptions" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Subscriptions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">User</th>
-                        <th className="text-left p-2">Plan</th>
-                        <th className="text-left p-2">Billing</th>
-                        <th className="text-left p-2">Amount</th>
-                        <th className="text-left p-2">Next Billing</th>
-                        <th className="text-left p-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {subscriptions.map((subscription) => {
-                        const user = users.find((u) => u.id === subscription.user_id)
-                        return (
-                          <tr key={subscription.id} className="border-b">
-                            <td className="p-2">
-                              <div>
-                                <div className="font-medium">{user?.name}</div>
-                                <div className="text-sm text-muted-foreground">{user?.email}</div>
-                              </div>
-                            </td>
-                            <td className="p-2">
-                              <Badge className={getPlanColor(subscription.plan)}>
-                                {subscription.plan.toUpperCase()}
-                              </Badge>
-                            </td>
-                            <td className="p-2">
-                              <Badge variant="outline">{subscription.billing_cycle}</Badge>
-                            </td>
-                            <td className="p-2">${subscription.amount}</td>
-                            <td className="p-2">
-                              {subscription.next_billing_date
-                                ? new Date(subscription.next_billing_date).toLocaleDateString()
-                                : "N/A"}
-                            </td>
-                            <td className="p-2">
-                              <Badge className={getStatusColor(subscription.status)}>{subscription.status}</Badge>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="analytics" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>User Growth</CardTitle>
+                  <CardTitle>Distribución de Usuarios</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                    <p>Analytics charts would be implemented here</p>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Free</span>
+                        <span className="text-sm font-medium">{stats.free_users}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-gray-500 h-2 rounded-full"
+                          style={{
+                            width: `${stats.total_users > 0 ? (stats.free_users / stats.total_users) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Premium</span>
+                        <span className="text-sm font-medium">{stats.premium_users}</span>
+                      </div>
+                      <div className="w-full bg-blue-200 dark:bg-blue-900 rounded-full h-2">
+                        <div
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{
+                            width: `${stats.total_users > 0 ? (stats.premium_users / stats.total_users) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Pro</span>
+                        <span className="text-sm font-medium">{stats.pro_users}</span>
+                      </div>
+                      <div className="w-full bg-purple-200 dark:bg-purple-900 rounded-full h-2">
+                        <div
+                          className="bg-purple-500 h-2 rounded-full"
+                          style={{
+                            width: `${stats.total_users > 0 ? (stats.pro_users / stats.total_users) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Revenue Trends</CardTitle>
+                  <CardTitle>Actividad del Sistema</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8 text-muted-foreground">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-4" />
-                    <p>Revenue analytics would be implemented here</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Total Tareas</span>
+                      <span className="text-2xl font-bold">{stats.total_tasks}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Total Notas</span>
+                      <span className="text-2xl font-bold">{stats.total_notes}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Usuarios Activos</span>
+                      <span className="text-2xl font-bold">{stats.active_subscriptions}</span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>System Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Maintenance Mode</Label>
-                      <p className="text-sm text-muted-foreground">Enable maintenance mode for system updates</p>
-                    </div>
-                    <Switch />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>New User Registrations</Label>
-                      <p className="text-sm text-muted-foreground">Allow new users to register</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label>Email Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Send system notifications via email</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
 
@@ -610,29 +565,13 @@ export default function AdminPage() {
           <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Edit User: {selectedUser.name}</DialogTitle>
+                <DialogTitle>Editar Usuario: {selectedUser.name || selectedUser.email}</DialogTitle>
               </DialogHeader>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const formData = new FormData(e.currentTarget)
-                  const updatedUser: User = {
-                    ...selectedUser,
-                    name: formData.get("name") as string,
-                    email: formData.get("email") as string,
-                    plan: formData.get("plan") as "free" | "premium" | "pro",
-                    subscription_status: formData.get("status") as "active" | "cancelled" | "expired",
-                    ai_credits: Number.parseInt(formData.get("ai_credits") as string) || 0,
-                    is_lifetime: formData.get("is_lifetime") === "on",
-                  }
-                  handleSaveUser(updatedUser)
-                }}
-                className="space-y-4"
-              >
+              <form onSubmit={handleSaveUser} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" name="name" defaultValue={selectedUser.name} required />
+                    <Label htmlFor="name">Nombre</Label>
+                    <Input id="name" name="name" defaultValue={selectedUser.name || ""} />
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -640,7 +579,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <Label htmlFor="plan">Plan</Label>
-                    <Select name="plan" defaultValue={selectedUser.plan}>
+                    <Select name="plan" defaultValue={selectedUser.subscription_tier}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -652,20 +591,20 @@ export default function AdminPage() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="status">Status</Label>
+                    <Label htmlFor="status">Estado</Label>
                     <Select name="status" defaultValue={selectedUser.subscription_status}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                        <SelectItem value="expired">Expired</SelectItem>
+                        <SelectItem value="active">Activo</SelectItem>
+                        <SelectItem value="cancelled">Cancelado</SelectItem>
+                        <SelectItem value="expired">Expirado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="ai_credits">AI Credits</Label>
+                    <Label htmlFor="ai_credits">Créditos AI</Label>
                     <Input
                       id="ai_credits"
                       name="ai_credits"
@@ -674,22 +613,23 @@ export default function AdminPage() {
                       min="0"
                     />
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 pt-6">
                     <input
                       type="checkbox"
                       id="is_lifetime"
                       name="is_lifetime"
                       defaultChecked={selectedUser.is_lifetime}
+                      className="h-4 w-4 rounded border-gray-300"
                     />
-                    <Label htmlFor="is_lifetime">Lifetime Subscription</Label>
+                    <Label htmlFor="is_lifetime">Suscripción Vitalicia</Label>
                   </div>
                 </div>
 
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setShowEditModal(false)}>
-                    Cancel
+                    Cancelar
                   </Button>
-                  <Button type="submit">Save Changes</Button>
+                  <Button type="submit">Guardar Cambios</Button>
                 </div>
               </form>
             </DialogContent>

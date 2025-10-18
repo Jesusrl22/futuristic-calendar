@@ -1,71 +1,108 @@
 "use client"
 
-import type React from "react"
+import { useEffect, useState } from "react"
 
-import { createContext, useContext, useEffect, useState } from "react"
+export type ThemeName =
+  | "default-light"
+  | "default-dark"
+  | "ocean"
+  | "forest"
+  | "sunset"
+  | "midnight"
+  | "royal-purple"
+  | "cyber-pink"
+  | "neon-green"
+  | "crimson"
+  | "golden-hour"
+  | "arctic-blue"
+  | "dark-amoled"
+  | "matrix"
 
-type Theme = "dark" | "light" | "system"
-
-type ThemeProviderProps = {
-  children: React.ReactNode
-  defaultTheme?: Theme
-  storageKey?: string
+interface ThemeConfig {
+  theme: ThemeName
+  fontSize: "small" | "medium" | "large"
+  compactMode: boolean
 }
 
-type ThemeProviderState = {
-  theme: Theme
-  setTheme: (theme: Theme) => void
-}
-
-const initialState: ThemeProviderState = {
-  theme: "system",
-  setTheme: () => null,
-}
-
-const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
-
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-  storageKey = "vite-ui-theme",
-  ...props
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem(storageKey) as Theme) || defaultTheme)
+export function useTheme() {
+  const [mounted, setMounted] = useState(false)
+  const [config, setConfig] = useState<ThemeConfig>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("themeConfig")
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch (e) {
+          console.error("Error parsing theme config:", e)
+        }
+      }
+    }
+    return {
+      theme: "default-dark",
+      fontSize: "medium",
+      compactMode: false,
+    }
+  })
 
   useEffect(() => {
-    const root = window.document.documentElement
+    setMounted(true)
+  }, [])
 
-    root.classList.remove("light", "dark")
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-
-      root.classList.add(systemTheme)
-      return
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("themeConfig", JSON.stringify(config))
+      applyTheme(config)
     }
+  }, [config, mounted])
 
-    root.classList.add(theme)
-  }, [theme])
+  const applyTheme = (themeConfig: ThemeConfig) => {
+    // Remover todas las clases de tema anteriores
+    document.documentElement.classList.remove(
+      "theme-default-light",
+      "theme-default-dark",
+      "theme-ocean",
+      "theme-forest",
+      "theme-sunset",
+      "theme-midnight",
+      "theme-royal-purple",
+      "theme-cyber-pink",
+      "theme-neon-green",
+      "theme-crimson",
+      "theme-golden-hour",
+      "theme-arctic-blue",
+      "theme-dark-amoled",
+      "theme-matrix",
+    )
 
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
+    // Aplicar nuevo tema
+    document.documentElement.classList.add(`theme-${themeConfig.theme}`)
+
+    // Aplicar tamaño de fuente
+    const fontSizes = {
+      small: "14px",
+      medium: "16px",
+      large: "18px",
+    }
+    document.documentElement.style.fontSize = fontSizes[themeConfig.fontSize]
+
+    // Aplicar modo compacto
+    if (themeConfig.compactMode) {
+      document.documentElement.classList.add("compact-mode")
+    } else {
+      document.documentElement.classList.remove("compact-mode")
+    }
   }
 
-  return (
-    <ThemeProviderContext.Provider {...props} value={value}>
-      {children}
-    </ThemeProviderContext.Provider>
-  )
-}
+  const updateTheme = (updates: Partial<ThemeConfig>) => {
+    setConfig((prev) => {
+      const newConfig = { ...prev, ...updates }
+      return newConfig
+    })
+  }
 
-export const useTheme = () => {
-  const context = useContext(ThemeProviderContext)
-
-  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider")
-
-  return context
+  return {
+    config,
+    updateTheme,
+    mounted,
+  }
 }
