@@ -2,12 +2,12 @@ export const translations = {
   es: {
     // Common
     common: {
-      loading: "Cargando...",
+      loading: "Cargando",
       save: "Guardar",
       cancel: "Cancelar",
       delete: "Eliminar",
       edit: "Editar",
-      add: "Añadir",
+      add: "Agregar",
       close: "Cerrar",
       back: "Volver",
       next: "Siguiente",
@@ -66,9 +66,9 @@ export const translations = {
       nextYear: "Próximo año",
       // Updates Start
       user: "Usuario",
-      email: "Correo electrónico",
+      email: "Email",
       password: "Contraseña",
-      submit: "Enviar",
+      name: "Nombre",
       // Updates End
     },
 
@@ -195,7 +195,7 @@ export const translations = {
       loginOrRegister: "Inicia sesión o crea una nueva cuenta",
       signIn: "Iniciar sesión",
       signUp: "Registrarse",
-      email: "Correo electrónico",
+      email: "Email",
       password: "Contraseña",
       emailPlaceholder: "tu@email.com",
       passwordPlaceholder: "Tu contraseña",
@@ -480,7 +480,7 @@ export const translations = {
     // AI Assistant
     ai: {
       title: "Asistente de IA",
-      placeholder: "Pregúntame cualquier cosa...",
+      placeholder: "Escribe tu mensaje...",
       send: "Enviar",
       thinking: "Pensando...",
       error: "Error al procesar tu solicitud",
@@ -493,18 +493,14 @@ export const translations = {
         "Crea una lista de tareas para mi proyecto",
         "Dame consejos para gestionar el tiempo",
       ],
-      credits: "Créditos de IA",
-      creditsRemaining: "Créditos restantes",
+      credits: "Créditos IA",
+      creditsPerMonth: "créditos IA/mes",
+      noCreditsIncluded: "Sin créditos incluidos",
       buyCredits: "Comprar créditos",
-      upgradeForUnlimited: "Actualizar para créditos ilimitados",
-      noCredits: "Sin créditos",
-      noCreditsDescription: "Necesitas créditos para usar el asistente de IA",
-      conversationHistory: "Historial de conversación",
-      newConversation: "Nueva conversación",
-      saveConversation: "Guardar conversación",
-      loadConversation: "Cargar conversación",
-      deleteConversation: "Eliminar conversación",
-      exportConversation: "Exportar conversación",
+      assistant: "Asistente IA",
+      chat: "Chat",
+      insufficientCredits: "Créditos insuficientes",
+      upgrade: "Actualizar plan para más créditos",
     },
 
     // Settings
@@ -573,11 +569,11 @@ export const translations = {
 
     // Subscription
     subscription: {
-      title: "Suscripción",
-      currentPlan: "Plan actual",
+      title: "Gestionar Suscripción",
+      currentPlan: "Plan Actual",
       upgrade: "Actualizar",
-      downgrade: "Degradar",
-      cancel: "Cancelar",
+      downgrade: "Cambiar",
+      cancel: "Cancelar suscripción",
       renew: "Renovar",
       billing: "Facturación",
       paymentMethod: "Método de pago",
@@ -589,30 +585,21 @@ export const translations = {
 
       // Plans
       free: "Gratis",
+      premium: "Premium",
       pro: "Pro",
-      enterprise: "Empresa",
-
-      // Status
-      active: "Activa",
-      cancelled: "Cancelada",
-      expired: "Expirada",
-      trial: "Prueba",
-
-      // Messages
-      subscriptionUpdated: "Suscripción actualizada",
-      subscriptionCancelled: "Suscripción cancelada",
-      paymentSuccessful: "Pago exitoso",
-      paymentFailed: "Pago fallido",
-
-      // Features
-      unlimitedTasks: "Tareas ilimitadas",
-      aiIntegration: "Integración con IA",
-      advancedAnalytics: "Análisis avanzados",
-      prioritySupport: "Soporte prioritario",
+      monthly: "Mensual",
+      yearly: "Anual",
+      year: "año",
+      month: "mes",
+      perYear: "al año",
+      save: "Ahorra",
+      saveUpTo: "Ahorra hasta",
+      mostPopular: "Más Popular",
+      allPlansInclude: "Todos los planes incluyen",
       cloudSync: "Sincronización en la nube",
-      teamCollaboration: "Colaboración en equipo",
-      customIntegrations: "Integraciones personalizadas",
-      apiAccess: "Acceso a API",
+      mobileAccess: "Acceso móvil",
+      freeUpdates: "Actualizaciones gratuitas",
+      cancelAnytime: "Cancelación en cualquier momento",
     },
 
     // Achievements
@@ -843,7 +830,7 @@ export const translations = {
   en: {
     // Common
     common: {
-      loading: "Loading...",
+      loading: "Loading",
       save: "Save",
       cancel: "Cancel",
       delete: "Delete",
@@ -909,7 +896,7 @@ export const translations = {
       user: "User",
       email: "Email",
       password: "Password",
-      submit: "Submit",
+      name: "Name",
       // Updates End
     },
 
@@ -927,7 +914,7 @@ export const translations = {
       notes: "Notes",
       wishlist: "Wishlist",
       pomodoro: "Pomodoro",
-      stats: "Stats",
+      stats: "Statistics",
       settings: "Settings",
       profile: "Profile",
       subscription: "Subscription",
@@ -1102,7 +1089,7 @@ export const translations = {
 
     // Tasks
     tasks: {
-      title: "Task management",
+      title: "Tasks",
       addTask: "Add new task",
       editTask: "Edit task",
       deleteTask: "Delete task",
@@ -1271,7 +1258,7 @@ export const translations = {
 
     // Pomodoro
     pomodoro: {
-      title: "Pomodoro Technique",
+      title: "Pomodoro Timer",
       start: "Start",
       pause: "Pause",
       resume: "Resume",
@@ -1314,7 +1301,7 @@ export const translations = {
     // AI Assistant
     ai: {
       title: "AI Assistant",
-      placeholder: "Ask me anything...",
+      placeholder: "Type your message...",
       send: "Send",
       thinking: "Thinking...",
       error: "Error processing your request",
@@ -1328,17 +1315,13 @@ export const translations = {
         "Give me time management tips",
       ],
       credits: "AI Credits",
-      creditsRemaining: "Credits remaining",
+      creditsPerMonth: "AI credits/month",
+      noCreditsIncluded: "No credits included",
       buyCredits: "Buy credits",
-      upgradeForUnlimited: "Upgrade for unlimited credits",
-      noCredits: "No credits",
-      noCreditsDescription: "You need credits to use the AI assistant",
-      conversationHistory: "Conversation history",
-      newConversation: "New conversation",
-      saveConversation: "Save conversation",
-      loadConversation: "Load conversation",
-      deleteConversation: "Delete conversation",
-      exportConversation: "Export conversation",
+      assistant: "AI Assistant",
+      chat: "Chat",
+      insufficientCredits: "Insufficient credits",
+      upgrade: "Upgrade plan for more credits",
     },
 
     // Settings
@@ -1407,11 +1390,11 @@ export const translations = {
 
     // Subscription
     subscription: {
-      title: "Subscription",
-      currentPlan: "Current plan",
+      title: "Manage Subscription",
+      currentPlan: "Current Plan",
       upgrade: "Upgrade",
-      downgrade: "Downgrade",
-      cancel: "Cancel",
+      downgrade: "Change",
+      cancel: "Cancel subscription",
       renew: "Renew",
       billing: "Billing",
       paymentMethod: "Payment method",
@@ -1423,37 +1406,28 @@ export const translations = {
 
       // Plans
       free: "Free",
+      premium: "Premium",
       pro: "Pro",
-      enterprise: "Enterprise",
-
-      // Status
-      active: "Active",
-      cancelled: "Cancelled",
-      expired: "Expired",
-      trial: "Trial",
-
-      // Messages
-      subscriptionUpdated: "Subscription updated",
-      subscriptionCancelled: "Subscription cancelled",
-      paymentSuccessful: "Payment successful",
-      paymentFailed: "Payment failed",
-
-      // Features
-      unlimitedTasks: "Unlimited tasks",
-      aiIntegration: "AI integration",
-      advancedAnalytics: "Advanced analytics",
-      prioritySupport: "Priority support",
+      monthly: "Monthly",
+      yearly: "Yearly",
+      year: "year",
+      month: "month",
+      perYear: "per year",
+      save: "Save",
+      saveUpTo: "Save up to",
+      mostPopular: "Most Popular",
+      allPlansInclude: "All plans include",
       cloudSync: "Cloud sync",
-      teamCollaboration: "Team collaboration",
-      customIntegrations: "Custom integrations",
-      apiAccess: "API access",
+      mobileAccess: "Mobile access",
+      freeUpdates: "Free updates",
+      cancelAnytime: "Cancel anytime",
     },
 
     // Achievements
     achievements: {
       title: "Achievements",
-      unlocked: "Unlocked",
       locked: "Locked",
+      unlocked: "Unlocked",
       progress: "Progress",
       points: "Points",
       totalPoints: "Total points",
@@ -1673,7 +1647,6 @@ export const translations = {
       paymentProcessed: "Payment processed successfully",
     },
   },
-
   fr: {
     // Common
     common: {
@@ -1743,7 +1716,7 @@ export const translations = {
       user: "Utilisateur",
       email: "Email",
       password: "Mot de passe",
-      submit: "Soumettre",
+      name: "Nom",
       // Updates End
     },
 
@@ -1849,7 +1822,7 @@ export const translations = {
       testimonial1: "Cette application a révolutionné ma façon de travailler. L'IA comprend vraiment mes besoins.",
       testimonial1Author: "Marie Dupont, Designer",
 
-      testimonial2: "Le meilleur système de gestion de tâches que j'ai utilisé. Simple mais puissant.",
+      testimonial2: "Le meilleur système de gestion des tâches que j'ai utilisé. Simple mais puissant.",
       testimonial2Author: "Pierre Martin, Développeur",
 
       testimonial3: "Les analyses de productivité m'ont aidé à identifier mes meilleures heures de travail.",
@@ -2169,17 +2142,13 @@ export const translations = {
         "Donnez-moi des conseils de gestion du temps",
       ],
       credits: "Crédits IA",
-      creditsRemaining: "Crédits restants",
+      creditsPerMonth: "crédits IA/mois",
+      noCreditsIncluded: "Aucun crédit inclus",
       buyCredits: "Acheter des crédits",
-      upgradeForUnlimited: "Mettre à niveau pour des crédits illimités",
-      noCredits: "Aucun crédit",
-      noCreditsDescription: "Vous avez besoin de crédits pour utiliser l'assistant IA",
-      conversationHistory: "Historique des conversations",
-      newConversation: "Nouvelle conversation",
-      saveConversation: "Sauvegarder la conversation",
-      loadConversation: "Charger la conversation",
-      deleteConversation: "Supprimer la conversation",
-      exportConversation: "Exporter la conversation",
+      assistant: "Assistant IA",
+      chat: "Chat",
+      insufficientCredits: "Crédits insuffisants",
+      upgrade: "Mettre à niveau le plan pour plus de crédits",
     },
 
     // Settings
@@ -2248,46 +2217,37 @@ export const translations = {
 
     // Subscription
     subscription: {
-      title: "Abonnement",
+      title: "Gestionner l'abonnement",
       currentPlan: "Plan actuel",
       upgrade: "Mettre à niveau",
-      downgrade: "Rétrograder",
-      cancel: "Annuler",
+      downgrade: "Changer",
+      cancel: "Annuler l'abonnement",
       renew: "Renouveler",
       billing: "Facturation",
       paymentMethod: "Méthode de paiement",
       billingHistory: "Historique de facturation",
       nextBilling: "Prochaine facturation",
-      planFeatures: "Fonctionnalités du plan",
+      planFeatures: "Caractéristiques du plan",
       usage: "Utilisation",
       limits: "Limites",
 
       // Plans
       free: "Gratuit",
+      premium: "Premium",
       pro: "Pro",
-      enterprise: "Entreprise",
-
-      // Status
-      active: "Actif",
-      cancelled: "Annulé",
-      expired: "Expiré",
-      trial: "Essai",
-
-      // Messages
-      subscriptionUpdated: "Abonnement mis à jour",
-      subscriptionCancelled: "Abonnement annulé",
-      paymentSuccessful: "Paiement réussi",
-      paymentFailed: "Paiement échoué",
-
-      // Features
-      unlimitedTasks: "Tâches illimitées",
-      aiIntegration: "Intégration IA",
-      advancedAnalytics: "Analyses avancées",
-      prioritySupport: "Support prioritaire",
+      monthly: "Mensuel",
+      yearly: "Annuel",
+      year: "an",
+      month: "mois",
+      perYear: "par an",
+      save: "Économisez",
+      saveUpTo: "Économisez jusqu'à",
+      mostPopular: "Le plus populaire",
+      allPlansInclude: "Tous les plans incluent",
       cloudSync: "Synchronisation cloud",
-      teamCollaboration: "Collaboration d'équipe",
-      customIntegrations: "Intégrations personnalisées",
-      apiAccess: "Accès API",
+      mobileAccess: "Accès mobile",
+      freeUpdates: "Mises à jour gratuites",
+      cancelAnytime: "Annulation à tout moment",
     },
 
     // Achievements
@@ -2515,7 +2475,6 @@ export const translations = {
       paymentProcessed: "Paiement traité avec succès",
     },
   },
-
   de: {
     // Common
     common: {
@@ -2585,7 +2544,7 @@ export const translations = {
       user: "Benutzer",
       email: "E-Mail",
       password: "Passwort",
-      submit: "Senden",
+      name: "Name",
       // Updates End
     },
 
@@ -3011,17 +2970,13 @@ export const translations = {
         "Geben Sie mir Zeitmanagement-Tipps",
       ],
       credits: "KI-Credits",
-      creditsRemaining: "Verbleibende Credits",
+      creditsPerMonth: "KI-Credits/Monat",
+      noCreditsIncluded: "Keine Credits enthalten",
       buyCredits: "Credits kaufen",
-      upgradeForUnlimited: "Upgrade für unbegrenzte Credits",
-      noCredits: "Keine Credits",
-      noCreditsDescription: "Sie benötigen Credits, um den KI-Assistenten zu verwenden",
-      conversationHistory: "Unterhaltungsverlauf",
-      newConversation: "Neue Unterhaltung",
-      saveConversation: "Unterhaltung speichern",
-      loadConversation: "Unterhaltung laden",
-      deleteConversation: "Unterhaltung löschen",
-      exportConversation: "Unterhaltung exportieren",
+      assistant: "KI-Assistent",
+      chat: "Chat",
+      insufficientCredits: "Unzureichende Credits",
+      upgrade: "Upgrade für mehr Credits",
     },
 
     // Settings
@@ -3106,30 +3061,21 @@ export const translations = {
 
       // Plans
       free: "Kostenlos",
+      premium: "Premium",
       pro: "Pro",
-      enterprise: "Unternehmen",
-
-      // Status
-      active: "Aktiv",
-      cancelled: "Gekündigt",
-      expired: "Abgelaufen",
-      trial: "Testversion",
-
-      // Messages
-      subscriptionUpdated: "Abonnement aktualisiert",
-      subscriptionCancelled: "Abonnement gekündigt",
-      paymentSuccessful: "Zahlung erfolgreich",
-      paymentFailed: "Zahlung fehlgeschlagen",
-
-      // Features
-      unlimitedTasks: "Unbegrenzte Aufgaben",
-      aiIntegration: "KI-Integration",
-      advancedAnalytics: "Erweiterte Analysen",
-      prioritySupport: "Prioritäts-Support",
+      monthly: "Monatlich",
+      yearly: "Jährlich",
+      year: "Jahr",
+      month: "Monat",
+      perYear: "pro Jahr",
+      save: "Sparen",
+      saveUpTo: "Sparen bis zu",
+      mostPopular: "Beliebteste",
+      allPlansInclude: "Alle Pläne beinhalten",
       cloudSync: "Cloud-Synchronisation",
-      teamCollaboration: "Team-Zusammenarbeit",
-      customIntegrations: "Benutzerdefinierte Integrationen",
-      apiAccess: "API-Zugang",
+      mobileAccess: "Mobiles Zugreifen",
+      freeUpdates: "Kostenlose Updates",
+      cancelAnytime: "Jederzeit kündbar",
     },
 
     // Achievements
@@ -3356,7 +3302,6 @@ export const translations = {
       paymentProcessed: "Zahlung erfolgreich verarbeitet",
     },
   },
-
   it: {
     // Common
     common: {
@@ -3426,7 +3371,7 @@ export const translations = {
       user: "Utente",
       email: "Email",
       password: "Password",
-      submit: "Invia",
+      name: "Nome",
       // Updates End
     },
 
@@ -3651,7 +3596,7 @@ export const translations = {
       taskDeleted: "Attività eliminata",
       taskCreated: "Attività creata",
       taskUpdated: "Attività aggiornata",
-      confirmDelete: "Sei sicuro di voler eliminare questa attività?",
+      confirmDelete: "¿Estás seguro de que quieres eliminar esta tarea?",
       dueSoon: "Scade presto",
       overdue: "Scaduta",
       completed: "Completata",
@@ -3687,7 +3632,7 @@ export const translations = {
       eventCreated: "Evento creato",
       eventUpdated: "Evento aggiornato",
       eventDeleted: "Evento eliminato",
-      confirmDeleteEvent: "Sei sicuro di voler eliminare questo evento?",
+      confirmDeleteEvent: "¿Estás seguro de que quieres eliminar este evento?",
       viewDetails: "Visualizza dettagli",
       goToDate: "Vai alla data",
       previousMonth: "Mese precedente",
@@ -3723,7 +3668,7 @@ export const translations = {
       noteCreated: "Nota creata",
       noteUpdated: "Nota aggiornata",
       noteDeleted: "Nota eliminata",
-      confirmDelete: "Sei sicuro di voler eliminare questa nota?",
+      confirmDelete: "¿Estás seguro de que quieres eliminar esta nota?",
       lastModified: "Ultima modifica",
       wordCount: "Parole",
       characterCount: "Caratteri",
@@ -3769,7 +3714,7 @@ export const translations = {
       itemCreated: "Elemento aggiunto",
       itemUpdated: "Elemento aggiornato",
       itemDeleted: "Elemento eliminato",
-      confirmDelete: "Sei sicuro di voler eliminare questo elemento?",
+      confirmDelete: "¿Estás seguro de que quieres eliminar este elemento?",
       totalValue: "Valore totale",
       acquiredValue: "Valore acquisito",
       markAcquired: "Segna come acquisito",
@@ -3846,17 +3791,13 @@ export const translations = {
         "Dammi consigli per la gestione del tempo",
       ],
       credits: "Crediti IA",
-      creditsRemaining: "Crediti rimanenti",
+      creditsPerMonth: "crediti IA/mese",
+      noCreditsIncluded: "Nessun credito incluso",
       buyCredits: "Acquista crediti",
-      upgradeForUnlimited: "Aggiorna per crediti illimitati",
-      noCredits: "Nessun credito",
-      noCreditsDescription: "Hai bisogno di crediti per usare l'assistente IA",
-      conversationHistory: "Cronologia conversazioni",
-      newConversation: "Nuova conversazione",
-      saveConversation: "Salva conversazione",
-      loadConversation: "Carica conversazione",
-      deleteConversation: "Elimina conversazione",
-      exportConversation: "Esporta conversazione",
+      assistant: "Assistente IA",
+      chat: "Chat",
+      insufficientCredits: "Crediti insufficienti",
+      upgrade: "Aggiorna piano per più crediti",
     },
 
     // Settings
@@ -3919,17 +3860,17 @@ export const translations = {
       dataExported: "Dati esportati",
       dataImported: "Dati importati",
       dataCleared: "Dati cancellati",
-      confirmClearData: "Sei sicuro di voler cancellare tutti i dati?",
-      confirmDeleteAccount: "Sei sicuro di voler eliminare il tuo account?",
+      confirmClearData: "¿Estás seguro de que quieres limpiar todos los datos?",
+      confirmDeleteAccount: "¿Estás seguro de que quieres eliminar tu cuenta?",
     },
 
     // Subscription
     subscription: {
-      title: "Abbonamento",
-      currentPlan: "Piano corrente",
+      title: "Gestire Abbonamento",
+      currentPlan: "Piano Corrente",
       upgrade: "Aggiorna",
-      downgrade: "Declassa",
-      cancel: "Annulla",
+      downgrade: "Cambia",
+      cancel: "Cancella abbonamento",
       renew: "Rinnova",
       billing: "Fatturazione",
       paymentMethod: "Metodo di pagamento",
@@ -3941,30 +3882,21 @@ export const translations = {
 
       // Plans
       free: "Gratuito",
+      premium: "Premium",
       pro: "Pro",
-      enterprise: "Enterprise",
-
-      // Status
-      active: "Attiva",
-      cancelled: "Annullata",
-      expired: "Scaduta",
-      trial: "Prova",
-
-      // Messages
-      subscriptionUpdated: "Abbonamento aggiornato",
-      subscriptionCancelled: "Abbonamento annullato",
-      paymentSuccessful: "Pagamento riuscito",
-      paymentFailed: "Pagamento fallito",
-
-      // Features
-      unlimitedTasks: "Attività illimitate",
-      aiIntegration: "Integrazione IA",
-      advancedAnalytics: "Analisi avanzate",
-      prioritySupport: "Supporto prioritario",
+      monthly: "Mensile",
+      yearly: "Annuale",
+      year: "anno",
+      month: "mese",
+      perYear: "all'anno",
+      save: "Risparmia",
+      saveUpTo: "Risparmia fino a",
+      mostPopular: "Più Popolare",
+      allPlansInclude: "Tutti i piani includono",
       cloudSync: "Sincronizzazione cloud",
-      teamCollaboration: "Collaborazione team",
-      customIntegrations: "Integrazioni personalizzate",
-      apiAccess: "Accesso API",
+      mobileAccess: "Accesso mobile",
+      freeUpdates: "Aggiornamenti gratuiti",
+      cancelAnytime: "Cancellazione in qualsiasi momento",
     },
 
     // Achievements
@@ -4191,7 +4123,6 @@ export const translations = {
       paymentProcessed: "Pagamento elaborato con successo",
     },
   },
-
   pt: {
     // Common
     common: {
@@ -4261,7 +4192,7 @@ export const translations = {
       user: "Usuário",
       email: "E-mail",
       password: "Senha",
-      submit: "Enviar",
+      name: "Nome",
       // Updates End
     },
 
@@ -4492,7 +4423,7 @@ export const translations = {
       taskDeleted: "Tarefa excluída",
       taskCreated: "Tarefa criada",
       taskUpdated: "Tarefa atualizada",
-      confirmDelete: "Tem certeza de que deseja excluir esta tarefa?",
+      confirmDelete: "¿Tem certeza de que deseja excluir esta tarefa?",
       dueSoon: "Vence em breve",
       overdue: "Atrasada",
       completed: "Concluída",
@@ -4528,7 +4459,7 @@ export const translations = {
       eventCreated: "Evento criado",
       eventUpdated: "Evento atualizado",
       eventDeleted: "Evento excluído",
-      confirmDeleteEvent: "Tem certeza de que deseja excluir este evento?",
+      confirmDeleteEvent: "¿Tem certeza de que deseja excluir este evento?",
       viewDetails: "Ver detalhes",
       goToDate: "Ir para a data",
       previousMonth: "Mês anterior",
@@ -4564,7 +4495,7 @@ export const translations = {
       noteCreated: "Nota criada",
       noteUpdated: "Nota atualizada",
       noteDeleted: "Nota excluída",
-      confirmDelete: "Tem certeza de que deseja excluir esta nota?",
+      confirmDelete: "¿Tem certeza de que deseja excluir esta nota?",
       lastModified: "Última modificação",
       wordCount: "Palavras",
       characterCount: "Caracteres",
@@ -4610,7 +4541,7 @@ export const translations = {
       itemCreated: "Item adicionado",
       itemUpdated: "Item atualizado",
       itemDeleted: "Item excluído",
-      confirmDelete: "Tem certeza de que deseja excluir este item?",
+      confirmDelete: "¿Tem certeza de que deseja excluir este item?",
       totalValue: "Valor total",
       acquiredValue: "Valor adquirido",
       markAcquired: "Marcar como adquirido",
@@ -4655,8 +4586,8 @@ export const translations = {
       autoStartSessions: "Iniciar sessões automaticamente",
       soundEnabled: "Som ativado",
       notificationsEnabled: "Notificações ativadas",
-      sessionCompleted: "Sessão concluída!",
-      breakCompleted: "Pausa concluída!",
+      sessionCompleted: "¡Sessão concluída!",
+      breakCompleted: "¡Pausa concluída!",
       timeForBreak: "Hora de uma pausa",
       timeToWork: "Hora de trabalhar",
       focusMode: "Modo foco",
@@ -4687,17 +4618,13 @@ export const translations = {
         "Dê-me dicas de gerenciamento de tempo",
       ],
       credits: "Créditos IA",
-      creditsRemaining: "Créditos restantes",
+      creditsPerMonth: "créditos IA/mês",
+      noCreditsIncluded: "Sem créditos incluídos",
       buyCredits: "Comprar créditos",
-      upgradeForUnlimited: "Atualize para créditos ilimitados",
-      noCredits: "Sem créditos",
-      noCreditsDescription: "Você precisa de créditos para usar o assistente de IA",
-      conversationHistory: "Histórico de conversas",
-      newConversation: "Nova conversa",
-      saveConversation: "Salvar conversa",
-      loadConversation: "Carregar conversa",
-      deleteConversation: "Excluir conversa",
-      exportConversation: "Exportar conversa",
+      assistant: "Assistente IA",
+      chat: "Chat",
+      insufficientCredits: "Créditos insuficientes",
+      upgrade: "Atualize o plano para mais créditos",
     },
 
     // Settings
@@ -4760,17 +4687,17 @@ export const translations = {
       dataExported: "Dados exportados",
       dataImported: "Dados importados",
       dataCleared: "Dados limpos",
-      confirmClearData: "Tem certeza de que deseja limpar todos os dados?",
-      confirmDeleteAccount: "Tem certeza de que deseja excluir sua conta?",
+      confirmClearData: "¿Tem certeza de que deseja limpar todos os dados?",
+      confirmDeleteAccount: "¿Tem certeza de que deseja excluir sua conta?",
     },
 
     // Subscription
     subscription: {
-      title: "Assinatura",
-      currentPlan: "Plano atual",
+      title: "Gerenciar Assinatura",
+      currentPlan: "Plano Atual",
       upgrade: "Atualizar",
-      downgrade: "Rebaixar",
-      cancel: "Cancelar",
+      downgrade: "Mudar",
+      cancel: "Cancelar assinatura",
       renew: "Renovar",
       billing: "Faturamento",
       paymentMethod: "Método de pagamento",
@@ -4782,30 +4709,21 @@ export const translations = {
 
       // Plans
       free: "Grátis",
+      premium: "Premium",
       pro: "Pro",
-      enterprise: "Empresa",
-
-      // Status
-      active: "Ativo",
-      cancelled: "Cancelado",
-      expired: "Expirado",
-      trial: "Teste",
-
-      // Messages
-      subscriptionUpdated: "Assinatura atualizada",
-      subscriptionCancelled: "Assinatura cancelada",
-      paymentSuccessful: "Pagamento bem-sucedido",
-      paymentFailed: "Pagamento falhou",
-
-      // Features
-      unlimitedTasks: "Tarefas ilimitadas",
-      aiIntegration: "Integração IA",
-      advancedAnalytics: "Análises avançadas",
-      prioritySupport: "Suporte prioritário",
+      monthly: "Mensal",
+      yearly: "Anual",
+      year: "ano",
+      month: "mês",
+      perYear: "por ano",
+      save: "Salvar",
+      saveUpTo: "Salvar até",
+      mostPopular: "Mais Popular",
+      allPlansInclude: "Todos os planos incluem",
       cloudSync: "Sincronização na nuvem",
-      teamCollaboration: "Colaboração em equipe",
-      customIntegrations: "Integrações personalizadas",
-      apiAccess: "Acesso à API",
+      mobileAccess: "Acesso móvel",
+      freeUpdates: "Atualizações gratuitas",
+      cancelAnytime: "Cancelamento a qualquer momento",
     },
 
     // Achievements
@@ -5032,4 +4950,18 @@ export const translations = {
       paymentProcessed: "Pagamento processado com sucesso",
     },
   },
+}
+
+export type TranslationKey = keyof typeof translations.es
+export type Language = keyof typeof translations
+
+export function getTranslation(lang: Language, key: string): string {
+  const keys = key.split(".")
+  let value: any = translations[lang]
+
+  for (const k of keys) {
+    value = value?.[k]
+  }
+
+  return value || key
 }
