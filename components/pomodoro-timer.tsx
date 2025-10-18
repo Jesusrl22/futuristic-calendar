@@ -30,10 +30,22 @@ interface PomodoroSession {
 
 interface PomodoroTimerProps {
   userId: string
+  workDuration?: number
+  breakDuration?: number
+  longBreakDuration?: number
+  sessionsUntilLongBreak?: number
+  isDemo?: boolean
 }
 
-export function PomodoroTimer({ userId }: PomodoroTimerProps) {
-  const [timeLeft, setTimeLeft] = useState(25 * 60) // 25 minutes in seconds
+export function PomodoroTimer({
+  userId,
+  workDuration = 25,
+  breakDuration = 5,
+  longBreakDuration = 15,
+  sessionsUntilLongBreak = 4,
+  isDemo = false,
+}: PomodoroTimerProps) {
+  const [timeLeft, setTimeLeft] = useState(workDuration * 60)
   const [isActive, setIsActive] = useState(false)
   const [currentSession, setCurrentSession] = useState<"work" | "shortBreak" | "longBreak">("work")
   const [completedPomodoros, setCompletedPomodoros] = useState(0)
@@ -46,10 +58,10 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
       }
     }
     return {
-      workDuration: 25,
-      shortBreak: 5,
-      longBreak: 15,
-      longBreakInterval: 4,
+      workDuration,
+      shortBreak: breakDuration,
+      longBreak: longBreakDuration,
+      longBreakInterval: sessionsUntilLongBreak,
       autoStartBreaks: false,
       autoStartPomodoros: false,
       enableSounds: true,
@@ -62,7 +74,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
   const audioContextRef = useRef<AudioContext | null>(null)
   const tickingIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Load sessions from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedSessions = localStorage.getItem(`pomodoroSessions_${userId}`)
@@ -72,14 +83,12 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
     }
   }, [userId])
 
-  // Save sessions to localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem(`pomodoroSessions_${userId}`, JSON.stringify(sessions))
     }
   }, [sessions, userId])
 
-  // Initialize audio context
   useEffect(() => {
     if (typeof window !== "undefined") {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
@@ -91,7 +100,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
     }
   }, [])
 
-  // Timer logic
   useEffect(() => {
     if (isActive && timeLeft > 0) {
       intervalRef.current = setInterval(() => {
@@ -112,7 +120,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
     }
   }, [isActive, timeLeft])
 
-  // Ticking sound
   useEffect(() => {
     if (isActive && settings.enableTickingSound && settings.enableSounds) {
       tickingIntervalRef.current = setInterval(() => {
@@ -156,17 +163,15 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
   }
 
   const playCompletionSound = () => {
-    // Play a pleasant completion sound
-    setTimeout(() => playSound(523, 0.2), 0) // C5
-    setTimeout(() => playSound(659, 0.2), 200) // E5
-    setTimeout(() => playSound(784, 0.4), 400) // G5
+    setTimeout(() => playSound(523, 0.2), 0)
+    setTimeout(() => playSound(659, 0.2), 200)
+    setTimeout(() => playSound(784, 0.4), 400)
   }
 
   const handleSessionComplete = () => {
     setIsActive(false)
     playCompletionSound()
 
-    // Save completed session
     const newSession: PomodoroSession = {
       id: Date.now().toString(),
       type: currentSession,
@@ -178,7 +183,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
 
     if (currentSession === "work") {
       setCompletedPomodoros((prev) => prev + 1)
-      // Determine next session
       const nextPomodoroCount = completedPomodoros + 1
       if (nextPomodoroCount % settings.longBreakInterval === 0) {
         setCurrentSession("longBreak")
@@ -192,7 +196,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
         setTimeout(() => setIsActive(true), 1000)
       }
     } else {
-      // Break completed, start work session
       setCurrentSession("work")
       setTimeLeft(settings.workDuration * 60)
 
@@ -254,20 +257,19 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
   const getSessionColor = () => {
     switch (currentSession) {
       case "work":
-        return "bg-red-500"
+        return "bg-destructive"
       case "shortBreak":
-        return "bg-green-500"
+        return "bg-accent"
       case "longBreak":
-        return "bg-blue-500"
+        return "bg-primary"
       default:
-        return "bg-red-500"
+        return "bg-destructive"
     }
   }
 
   const totalDuration = getDurationForSession(currentSession) * 60
   const progress = ((totalDuration - timeLeft) / totalDuration) * 100
 
-  // Get today's sessions
   const today = new Date().toDateString()
   const todaySessions = sessions.filter((session) => session.date === today)
   const todayWorkSessions = todaySessions.filter((session) => session.type === "work").length
@@ -275,24 +277,22 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Card>
+      <Card className="border-border bg-card">
         <CardHeader className="text-center">
           <CardTitle className="flex items-center justify-center gap-2">
             <div className={`w-3 h-3 rounded-full ${getSessionColor()}`} />
             {getSessionLabel()}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground">
             Sesión {completedPomodoros + 1} • {todayWorkSessions} completadas hoy
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Timer Display */}
           <div className="text-center">
             <div className="text-6xl font-mono font-bold text-primary mb-4">{formatTime(timeLeft)}</div>
             <Progress value={progress} className="w-full h-2" />
           </div>
 
-          {/* Controls */}
           <div className="flex justify-center gap-4">
             {!isActive ? (
               <Button onClick={handleStart} size="lg" className="px-8">
@@ -314,7 +314,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
             </Button>
           </div>
 
-          {/* Session Info */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-primary">{completedPomodoros}</div>
@@ -332,7 +331,6 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
         </CardContent>
       </Card>
 
-      {/* Stats and History */}
       <Tabs defaultValue="stats" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="stats">Estadísticas</TabsTrigger>
@@ -340,26 +338,26 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
         </TabsList>
 
         <TabsContent value="stats" className="space-y-4">
-          <Card>
+          <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <BarChart3 className="w-5 h-5" />
                 Estadísticas de Hoy
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">
+                <div className="text-center p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                  <div className="text-2xl font-bold text-destructive">
                     {todaySessions.filter((s) => s.type === "work").length}
                   </div>
-                  <div className="text-sm text-red-600">Sesiones de Trabajo</div>
+                  <div className="text-sm text-destructive">Sesiones de Trabajo</div>
                 </div>
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
+                <div className="text-center p-4 bg-accent/10 rounded-lg border border-accent/20">
+                  <div className="text-2xl font-bold text-accent-foreground">
                     {todaySessions.filter((s) => s.type !== "work").length}
                   </div>
-                  <div className="text-sm text-green-600">Descansos</div>
+                  <div className="text-sm text-accent-foreground">Descansos</div>
                 </div>
               </div>
             </CardContent>
@@ -367,25 +365,28 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
-          <Card>
+          <Card className="border-border bg-card">
             <CardHeader>
-              <CardTitle>Historial Reciente</CardTitle>
+              <CardTitle className="text-foreground">Historial Reciente</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {sessions.slice(0, 10).map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between p-2 bg-muted rounded border border-border"
+                  >
                     <div className="flex items-center gap-2">
                       <div
                         className={`w-2 h-2 rounded-full ${
                           session.type === "work"
-                            ? "bg-red-500"
+                            ? "bg-destructive"
                             : session.type === "shortBreak"
-                              ? "bg-green-500"
-                              : "bg-blue-500"
+                              ? "bg-accent"
+                              : "bg-primary"
                         }`}
                       />
-                      <span className="text-sm">
+                      <span className="text-sm text-foreground">
                         {session.type === "work"
                           ? "Trabajo"
                           : session.type === "shortBreak"
@@ -407,8 +408,7 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
         </TabsContent>
       </Tabs>
 
-      {/* Sound Controls */}
-      <Card>
+      <Card className="border-border bg-card">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -417,7 +417,9 @@ export function PomodoroTimer({ userId }: PomodoroTimerProps) {
               ) : (
                 <VolumeX className="w-5 h-5 text-muted-foreground" />
               )}
-              <span className="text-sm">Sonidos {settings.enableSounds ? "activados" : "desactivados"}</span>
+              <span className="text-sm text-foreground">
+                Sonidos {settings.enableSounds ? "activados" : "desactivados"}
+              </span>
             </div>
             <Badge variant={settings.enableSounds ? "default" : "secondary"}>Volumen: {settings.volume}%</Badge>
           </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Globe } from "lucide-react"
 import { useLanguage } from "@/hooks/useLanguage"
@@ -43,17 +42,31 @@ export function LanguageSelector({
 
   if (variant === "button") {
     return (
-      <div className={`relative ${className}`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-10 px-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600"
-        >
-          <Globe className="h-4 w-4 mr-2" />
-          {showFlag && <span className="mr-1">{currentLanguage.flag}</span>}
-          {showName && <span className="hidden sm:inline">{currentLanguage.name}</span>}
-        </Button>
-      </div>
+      <Select value={language} onValueChange={setLanguage}>
+        <SelectTrigger className={`w-auto h-10 px-3 bg-transparent border-gray-200 dark:border-gray-600 ${className}`}>
+          <SelectValue>
+            <div className="flex items-center">
+              <Globe className="h-4 w-4 mr-2" />
+              {showFlag && <span className="mr-2">{currentLanguage.flag}</span>}
+              {showName && <span className="hidden sm:inline">{currentLanguage.name}</span>}
+            </div>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+          {languages.map((lang) => (
+            <SelectItem
+              key={lang.code}
+              value={lang.code}
+              className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700"
+            >
+              <div className="flex items-center">
+                {showFlag && <span className="mr-2">{lang.flag}</span>}
+                {showName && <span>{lang.name}</span>}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     )
   }
 

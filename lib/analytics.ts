@@ -98,7 +98,7 @@ export function initializeAnalytics(config: AnalyticsConfig = {}) {
 }
 
 // Track page views
-export function trackPageView(url: string) {
+export const trackPageView = (url: string) => {
   if (typeof window !== "undefined" && (window as any).gtag) {
     ;(window as any).gtag("config", process.env.NEXT_PUBLIC_GA_ID, {
       page_path: url,
@@ -107,7 +107,7 @@ export function trackPageView(url: string) {
 }
 
 // Track events
-export function trackEvent(action: string, category: string, label?: string, value?: number) {
+export const trackEvent = (action: string, category: string, label?: string, value?: number) => {
   if (typeof window !== "undefined" && (window as any).gtag) {
     ;(window as any).gtag("event", action, {
       event_category: category,
@@ -154,8 +154,8 @@ export const trackConversion = (eventName: string, parameters?: Record<string, a
 }
 
 // Track subscription events
-export function trackSubscription(action: string, plan: string, billing?: string) {
-  trackEvent(action, "subscription", `${plan}${billing ? `:${billing}` : ""}`)
+export const trackSubscription = (plan: string, value: number) => {
+  trackEvent("purchase", "ecommerce", plan, value)
 }
 
 // Track AI usage
@@ -168,6 +168,10 @@ export function trackTaskAction(action: string, taskType?: string) {
   trackEvent(action, "tasks", taskType)
 }
 
+export const trackTaskCreated = () => {
+  trackEvent("task_created", "productivity", "task")
+}
+
 // Track productivity metrics
 export function trackProductivityMetric(metric: string, value: number, unit?: string) {
   trackEvent(metric, "productivity", `${metric}${unit ? `:${unit}` : ""}`, value)
@@ -176,6 +180,10 @@ export function trackProductivityMetric(metric: string, value: number, unit?: st
 // Track pomodoro sessions
 export function trackPomodoroSession(action: string, duration?: number) {
   trackEvent(action, "pomodoro", action, duration)
+}
+
+export const trackPomodoroCompleted = () => {
+  trackEvent("pomodoro_completed", "productivity", "pomodoro")
 }
 
 // Track note actions
@@ -233,9 +241,17 @@ export const trackSignup = () => {
   trackEvent("signup", "user", "new_user")
 }
 
+export const trackUserSignup = (method: string) => {
+  trackEvent("sign_up", "engagement", method)
+}
+
 // Track logins
 export const trackLogin = () => {
   trackEvent("login", "user", "returning_user")
+}
+
+export const trackUserLogin = (method: string) => {
+  trackEvent("login", "engagement", method)
 }
 
 // Track purchases
@@ -280,6 +296,10 @@ export const analytics = {
   trackSignup,
   trackLogin,
   trackPurchase,
+  trackTaskCreated,
+  trackPomodoroCompleted,
+  trackUserSignup,
+  trackUserLogin,
 }
 
 export default analytics

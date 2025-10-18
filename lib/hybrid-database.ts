@@ -1,19 +1,19 @@
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "./supabase"
 
-// Browser-compatible UUID generation
-function generateUUID(): string {
-  if (typeof crypto !== "undefined" && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0
-    const v = c === "x" ? r : (r & 0x3) | 0x8
-    return v.toString(16)
-  })
+export interface Task {
+  id: string
+  user_id: string
+  title: string
+  description?: string
+  completed: boolean
+  priority: "low" | "medium" | "high"
+  category?: string
+  due_date?: string
+  created_at: string
+  updated_at: string
 }
 
-interface User {
+export interface User {
   id: string
   name: string
   email: string
@@ -43,21 +43,6 @@ interface User {
   updated_at: string
 }
 
-interface Task {
-  id: string
-  user_id: string
-  title: string
-  description?: string
-  completed: boolean
-  priority: "low" | "medium" | "high"
-  category?: string
-  date?: string
-  due_date?: string
-  created_at: string
-  updated_at: string
-  estimatedTime?: number
-}
-
 interface Note {
   id: string
   user_id: string
@@ -77,23 +62,34 @@ interface WishlistItem {
   updated_at: string
 }
 
-class HybridDatabase {
-  private supabase: any
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
+export class HybridDatabase {
   private isSupabaseAvailable = false
   private currentUser: User | null = null
   private userCache = new Map<string, User>()
 
   constructor() {
+    this.checkSupabaseConnection()
+  }
+
+  private async checkSupabaseConnection(): Promise<void> {
     try {
-      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        this.supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-        this.isSupabaseAvailable = true
-        console.log("✅ Supabase client initialized")
-      } else {
-        console.warn("⚠️ Supabase environment variables not found")
-      }
+      const { error } = await supabase.from("tasks").select("id").limit(1)
+      this.isSupabaseAvailable = !error
+      console.log("🔌 Supabase connection:", this.isSupabaseAvailable ? "✅ Connected" : "❌ Disconnected")
     } catch (error) {
-      console.warn("⚠️ Supabase not available, using localStorage fallback:", error)
+      console.warn("⚠️ Supabase connection failed, using localStorage fallback")
       this.isSupabaseAvailable = false
     }
   }
@@ -125,7 +121,7 @@ class HybridDatabase {
         const {
           data: { user },
           error: authError,
-        } = await this.supabase.auth.getUser()
+        } = await supabase.auth.getUser()
 
         if (authError) {
           console.error("❌ Auth error:", authError)
@@ -142,7 +138,6 @@ class HybridDatabase {
         }
 
         console.log("✅ Authenticated user found:", user.email)
-
         return await this.getUserById(user.id)
       }
 
@@ -175,7 +170,7 @@ class HybridDatabase {
   async getUserById(userId: string): Promise<User | null> {
     try {
       if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase.from("users").select("*").eq("id", userId).maybeSingle()
+        const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
 
         if (error) {
           console.error("❌ Error fetching user:", error)
@@ -238,7 +233,7 @@ class HybridDatabase {
     if (this.isSupabaseAvailable) {
       try {
         console.log("💾 Saving user to Supabase...")
-        const { data, error } = await this.supabase.from("users").upsert(newUser).select().single()
+        const { data, error } = await supabase.from("users").upsert(newUser).select().single()
 
         if (error) {
           console.error("❌ Error creating user in Supabase:", error)
@@ -281,7 +276,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase.from("users").update(updatedData).eq("id", userId).select().single()
+        const { data, error } = await supabase.from("users").update(updatedData).eq("id", userId).select().single()
 
         if (error) throw error
 
@@ -318,7 +313,7 @@ class HybridDatabase {
       if (isDemoUser === "true") {
         localStorage.clear()
       } else if (this.isSupabaseAvailable) {
-        await this.supabase.auth.signOut()
+        await supabase.auth.signOut()
       }
 
       this.clearUserCache()
@@ -338,13 +333,15 @@ class HybridDatabase {
       }
 
       if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase
+        console.log("📋 Fetching tasks from Supabase for user:", userId)
+        const { data, error } = await supabase
           .from("tasks")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
 
         if (error) throw error
+        console.log("✅ Tasks fetched from Supabase:", data?.length || 0)
         return data || []
       }
     } catch (error) {
@@ -356,34 +353,38 @@ class HybridDatabase {
     return tasks ? JSON.parse(tasks) : []
   }
 
-  async createTask(
-    userId: string,
-    taskData: Omit<Task, "id" | "user_id" | "created_at" | "updated_at">,
-  ): Promise<Task> {
+  async createTask(userId: string, taskData: any): Promise<Task> {
     const now = new Date().toISOString()
-    const newTask: Task = {
+
+    const dbTask = {
       id: generateUUID(),
       user_id: userId,
+      title: taskData.title,
+      description: taskData.description || null,
+      completed: taskData.completed || false,
+      priority: taskData.priority || "medium",
+      category: taskData.category || null,
+      due_date: taskData.due_date || null,
       created_at: now,
       updated_at: now,
-      date: taskData.due_date ? taskData.due_date.split("T")[0] : now.split("T")[0],
-      ...taskData,
     }
 
     const isDemoUser = localStorage.getItem("isDemoUser")
     if (isDemoUser === "true") {
       const existingTasks = await this.getTasks(userId)
-      const updatedTasks = [newTask, ...existingTasks]
+      const updatedTasks = [dbTask, ...existingTasks]
       localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
-      return newTask
+      return dbTask as Task
     }
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase.from("tasks").insert(newTask).select().single()
+        console.log("➕ Creating task in Supabase:", dbTask.title)
+        const { data, error } = await supabase.from("tasks").insert([dbTask]).select().single()
 
         if (error) throw error
-        return data
+        console.log("✅ Task created in Supabase:", data.id)
+        return data as Task
       } catch (error) {
         console.error("Supabase error creating task, falling back to localStorage:", error)
         this.isSupabaseAvailable = false
@@ -391,19 +392,20 @@ class HybridDatabase {
     }
 
     const existingTasks = await this.getTasks(userId)
-    const updatedTasks = [newTask, ...existingTasks]
+    const updatedTasks = [dbTask, ...existingTasks]
     localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
-    return newTask
+    return dbTask as Task
   }
 
   async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
-    const updatedData = {
-      ...updates,
+    const dbUpdates = {
+      title: updates.title,
+      description: updates.description || null,
+      completed: updates.completed,
+      priority: updates.priority,
+      category: updates.category || null,
+      due_date: updates.due_date || null,
       updated_at: new Date().toISOString(),
-    }
-
-    if (updatedData.due_date) {
-      updatedData.date = updatedData.due_date.split("T")[0]
     }
 
     const isDemoUser = localStorage.getItem("isDemoUser")
@@ -414,7 +416,7 @@ class HybridDatabase {
           const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
           const taskIndex = tasks.findIndex((t) => t.id === taskId)
           if (taskIndex !== -1) {
-            tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+            tasks[taskIndex] = { ...tasks[taskIndex], ...dbUpdates }
             localStorage.setItem(key, JSON.stringify(tasks))
             return tasks[taskIndex]
           }
@@ -425,10 +427,12 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase.from("tasks").update(updatedData).eq("id", taskId).select().single()
+        console.log("✏️ Updating task in Supabase:", taskId)
+        const { data, error } = await supabase.from("tasks").update(dbUpdates).eq("id", taskId).select().single()
 
         if (error) throw error
-        return data
+        console.log("✅ Task updated in Supabase:", data.id)
+        return data as Task
       } catch (error) {
         console.error("Supabase error updating task, falling back to localStorage:", error)
         this.isSupabaseAvailable = false
@@ -441,7 +445,7 @@ class HybridDatabase {
         const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
         const taskIndex = tasks.findIndex((t) => t.id === taskId)
         if (taskIndex !== -1) {
-          tasks[taskIndex] = { ...tasks[taskIndex], ...updatedData }
+          tasks[taskIndex] = { ...tasks[taskIndex], ...dbUpdates }
           localStorage.setItem(key, JSON.stringify(tasks))
           return tasks[taskIndex]
         }
@@ -470,9 +474,11 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { error } = await this.supabase.from("tasks").delete().eq("id", taskId)
+        console.log("🗑️ Deleting task from Supabase:", taskId)
+        const { error } = await supabase.from("tasks").delete().eq("id", taskId)
 
         if (error) throw error
+        console.log("✅ Task deleted from Supabase:", taskId)
         return
       } catch (error) {
         console.error("Supabase error deleting task, falling back to localStorage:", error)
@@ -502,7 +508,7 @@ class HybridDatabase {
       }
 
       if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase
+        const { data, error } = await supabase
           .from("notes")
           .select("*")
           .eq("user_id", userId)
@@ -538,7 +544,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase.from("notes").insert(newNote).select().single()
+        const { data, error } = await supabase.from("notes").insert(newNote).select().single()
 
         if (error) throw error
         return data
@@ -579,7 +585,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase.from("notes").update(updatedData).eq("id", noteId).select().single()
+        const { data, error } = await supabase.from("notes").update(updatedData).eq("id", noteId).select().single()
 
         if (error) throw error
         return data
@@ -624,7 +630,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { error } = await this.supabase.from("notes").delete().eq("id", noteId)
+        const { error } = await supabase.from("notes").delete().eq("id", noteId)
 
         if (error) throw error
         return
@@ -656,7 +662,7 @@ class HybridDatabase {
       }
 
       if (this.isSupabaseAvailable) {
-        const { data, error } = await this.supabase
+        const { data, error } = await supabase
           .from("wishlist_items")
           .select("*")
           .eq("user_id", userId)
@@ -692,7 +698,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase.from("wishlist_items").insert(newItem).select().single()
+        const { data, error } = await supabase.from("wishlist_items").insert(newItem).select().single()
 
         if (error) throw error
         return data
@@ -733,7 +739,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { data, error } = await this.supabase
+        const { data, error } = await supabase
           .from("wishlist_items")
           .update(updatedData)
           .eq("id", itemId)
@@ -783,7 +789,7 @@ class HybridDatabase {
 
     if (this.isSupabaseAvailable) {
       try {
-        const { error } = await this.supabase.from("wishlist_items").delete().eq("id", itemId)
+        const { error } = await supabase.from("wishlist_items").delete().eq("id", itemId)
 
         if (error) throw error
         return
@@ -823,9 +829,9 @@ class HybridDatabase {
         const user = this.currentUser
         if (user) {
           await Promise.all([
-            this.supabase.from("tasks").delete().eq("user_id", user.id),
-            this.supabase.from("notes").delete().eq("user_id", user.id),
-            this.supabase.from("wishlist_items").delete().eq("user_id", user.id),
+            supabase.from("tasks").delete().eq("user_id", user.id),
+            supabase.from("notes").delete().eq("user_id", user.id),
+            supabase.from("wishlist_items").delete().eq("user_id", user.id),
           ])
         }
         return
@@ -848,33 +854,27 @@ class HybridDatabase {
 
     const demoTasks = [
       {
-        user_id: userId,
         title: "Revisar emails matutinos",
         description: "Revisar y responder emails importantes",
         completed: false,
         priority: "medium" as const,
         category: "trabajo",
         due_date: new Date().toISOString(),
-        estimatedTime: 30,
       },
       {
-        user_id: userId,
         title: "Planificar reunión de equipo",
         description: "Preparar agenda y materiales",
         completed: true,
         priority: "high" as const,
         category: "trabajo",
         due_date: new Date(Date.now() + 86400000).toISOString(),
-        estimatedTime: 60,
       },
       {
-        user_id: userId,
         title: "Actualizar documentación",
         description: "Revisar y actualizar docs del proyecto",
         completed: false,
         priority: "low" as const,
         category: "trabajo",
-        estimatedTime: 45,
       },
     ]
 
@@ -921,5 +921,23 @@ class HybridDatabase {
 }
 
 export const hybridDb = new HybridDatabase()
-export const db = hybridDb // Export as 'db' alias
-export type { User, Task, Note, WishlistItem }
+export const hybridDatabase = hybridDb
+export const db = hybridDb
+
+export async function getTasksFromDatabase(userId: string): Promise<Task[]> {
+  return await hybridDb.getTasks(userId)
+}
+
+export async function saveTaskToDatabase(userId: string, taskData: any): Promise<Task> {
+  return await hybridDb.createTask(userId, taskData)
+}
+
+export async function updateTaskInDatabase(taskId: string, updates: Partial<Task>): Promise<Task> {
+  return await hybridDb.updateTask(taskId, updates)
+}
+
+export async function deleteTaskFromDatabase(taskId: string): Promise<void> {
+  return await hybridDb.deleteTask(taskId)
+}
+
+export type { Note, WishlistItem }

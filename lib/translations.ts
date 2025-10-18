@@ -64,6 +64,12 @@ export const translations = {
       nextWeek: "Próxima semana",
       nextMonth: "Próximo mes",
       nextYear: "Próximo año",
+      // Updates Start
+      user: "Usuario",
+      email: "Correo electrónico",
+      password: "Contraseña",
+      submit: "Enviar",
+      // Updates End
     },
 
     // Navigation
@@ -205,6 +211,13 @@ export const translations = {
       termsText: "Al continuar, aceptas nuestros",
       termsLink: "Términos de servicio",
       privacyLink: "Política de privacidad",
+      // Updates Start
+      fullNamePlaceholder: "Tu nombre completo",
+      alreadyHaveAccount: "¿Ya tienes una cuenta?",
+      dontHaveAccount: "¿No tienes una cuenta?",
+      continueWithGoogle: "Continuar con Google",
+      continueWithGithub: "Continuar con GitHub",
+      // Updates End
     },
 
     register: {
@@ -292,6 +305,9 @@ export const translations = {
       completed: "Completada",
       markComplete: "Marcar como completada",
       markIncomplete: "Marcar como pendiente",
+      // Updates Start
+      inProgress: "En progreso",
+      // Updates End
     },
 
     // Calendar
@@ -328,6 +344,11 @@ export const translations = {
       nextWeek: "Semana siguiente",
       previousDay: "Día anterior",
       nextDay: "Día siguiente",
+      // Updates Start
+      year: "Año",
+      startDate: "Fecha de inicio",
+      endDate: "Fecha de fin",
+      // Updates End
     },
 
     // Notes
@@ -427,7 +448,7 @@ export const translations = {
       longBreak: "Descanso largo",
       session: "Sesión",
       break: "Descanso",
-      completed: "Completado",
+      completed: "Completada",
       workTime: "Tiempo de trabajo",
       shortBreakTime: "Descanso corto",
       longBreakTime: "Descanso largo",
@@ -450,6 +471,10 @@ export const translations = {
       productivity: "Productividad",
       averageSessionLength: "Duración promedio de sesión",
       completionRate: "Tasa de finalización",
+      // Updates Start
+      work: "Trabajo",
+      sessions: "Sesiones",
+      // Updates End
     },
 
     // AI Assistant
@@ -880,6 +905,12 @@ export const translations = {
       nextWeek: "Next week",
       nextMonth: "Next month",
       nextYear: "Next year",
+      // Updates Start
+      user: "User",
+      email: "Email",
+      password: "Password",
+      submit: "Submit",
+      // Updates End
     },
 
     // Navigation
@@ -1014,6 +1045,13 @@ export const translations = {
       termsText: "By continuing, you agree to our",
       termsLink: "Terms of Service",
       privacyLink: "Privacy Policy",
+      // Updates Start
+      fullNamePlaceholder: "Your full name",
+      alreadyHaveAccount: "Already have an account?",
+      dontHaveAccount: "Don't have an account?",
+      continueWithGoogle: "Continue with Google",
+      continueWithGithub: "Continue with GitHub",
+      // Updates End
     },
 
     register: {
@@ -1101,6 +1139,9 @@ export const translations = {
       completed: "Completed",
       markComplete: "Mark as completed",
       markIncomplete: "Mark as pending",
+      // Updates Start
+      inProgress: "In progress",
+      // Updates End
     },
 
     // Calendar
@@ -1137,6 +1178,11 @@ export const translations = {
       nextWeek: "Next week",
       previousDay: "Previous day",
       nextDay: "Next day",
+      // Updates Start
+      year: "Year",
+      startDate: "Start date",
+      endDate: "End date",
+      // Updates End
     },
 
     // Notes
@@ -1259,6 +1305,10 @@ export const translations = {
       productivity: "Productivity",
       averageSessionLength: "Average session length",
       completionRate: "Completion rate",
+      // Updates Start
+      work: "Work",
+      sessions: "Sessions",
+      // Updates End
     },
 
     // AI Assistant
@@ -1689,6 +1739,12 @@ export const translations = {
       nextWeek: "Semaine prochaine",
       nextMonth: "Mois prochain",
       nextYear: "Année prochaine",
+      // Updates Start
+      user: "Utilisateur",
+      email: "Email",
+      password: "Mot de passe",
+      submit: "Soumettre",
+      // Updates End
     },
 
     // Navigation
@@ -1830,6 +1886,13 @@ export const translations = {
       termsText: "En continuant, vous acceptez nos",
       termsLink: "Conditions d'utilisation",
       privacyLink: "Politique de confidentialité",
+      // Updates Start
+      fullNamePlaceholder: "Votre nom complet",
+      alreadyHaveAccount: "Déjà un compte ?",
+      dontHaveAccount: "Pas de compte ?",
+      continueWithGoogle: "Continuer avec Google",
+      continueWithGithub: "Continuer avec GitHub",
+      // Updates End
     },
 
     register: {
@@ -1917,6 +1980,9 @@ export const translations = {
       completed: "Terminée",
       markComplete: "Marquer comme terminée",
       markIncomplete: "Marquer comme en attente",
+      // Updates Start
+      inProgress: "En cours",
+      // Updates End
     },
 
     // Calendar
@@ -1953,6 +2019,11 @@ export const translations = {
       nextWeek: "Semaine suivante",
       previousDay: "Jour précédent",
       nextDay: "Jour suivant",
+      // Updates Start
+      year: "Année",
+      startDate: "Date de début",
+      endDate: "Date de fin",
+      // Updates End
     },
 
     // Notes
@@ -2075,6 +2146,10 @@ export const translations = {
       productivity: "Productivité",
       averageSessionLength: "Durée moyenne de session",
       completionRate: "Taux de completion",
+      // Updates Start
+      work: "Travail",
+      sessions: "Sessions",
+      // Updates End
     },
 
     // AI Assistant
@@ -2506,6 +2581,12 @@ export const translations = {
       nextWeek: "Nächste Woche",
       nextMonth: "Nächster Monat",
       nextYear: "Nächstes Jahr",
+      // Updates Start
+      user: "Benutzer",
+      email: "E-Mail",
+      password: "Passwort",
+      submit: "Senden",
+      // Updates End
     },
 
     // Navigation
@@ -2647,6 +2728,13 @@ export const translations = {
       termsText: "Durch Fortfahren stimmen Sie unseren",
       termsLink: "Nutzungsbedingungen",
       privacyLink: "Datenschutzrichtlinie",
+      // Updates Start
+      fullNamePlaceholder: "Ihr vollständiger Name",
+      alreadyHaveAccount: "Haben Sie bereits ein Konto?",
+      dontHaveAccount: "Kein Konto?",
+      continueWithGoogle: "Mit Google fortfahren",
+      continueWithGithub: "Mit GitHub fortfahren",
+      // Updates End
     },
 
     register: {
@@ -2734,6 +2822,9 @@ export const translations = {
       completed: "Erledigt",
       markComplete: "Als erledigt markieren",
       markIncomplete: "Als ausstehend markieren",
+      // Updates Start
+      inProgress: "In Bearbeitung",
+      // Updates End
     },
 
     // Calendar
@@ -2770,6 +2861,11 @@ export const translations = {
       nextWeek: "Nächste Woche",
       previousDay: "Vorheriger Tag",
       nextDay: "Nächster Tag",
+      // Updates Start
+      year: "Jahr",
+      startDate: "Startdatum",
+      endDate: "Enddatum",
+      // Updates End
     },
 
     // Notes
@@ -2892,6 +2988,10 @@ export const translations = {
       productivity: "Produktivität",
       averageSessionLength: "Durchschnittliche Sitzungsdauer",
       completionRate: "Abschlussrate",
+      // Updates Start
+      work: "Arbeit",
+      sessions: "Sitzungen",
+      // Updates End
     },
 
     // AI Assistant
@@ -3322,6 +3422,12 @@ export const translations = {
       nextWeek: "Prossima settimana",
       nextMonth: "Prossimo mese",
       nextYear: "Prossimo anno",
+      // Updates Start
+      user: "Utente",
+      email: "Email",
+      password: "Password",
+      submit: "Invia",
+      // Updates End
     },
 
     // Navigation
@@ -3457,6 +3563,13 @@ export const translations = {
       termsText: "Continuando, accetti i nostri",
       termsLink: "Termini di servizio",
       privacyLink: "Informativa privacy",
+      // Updates Start
+      fullNamePlaceholder: "Il tuo nome completo",
+      alreadyHaveAccount: "Hai già un account?",
+      dontHaveAccount: "Non hai un account?",
+      continueWithGoogle: "Continua con Google",
+      continueWithGithub: "Continua con GitHub",
+      // Updates End
     },
 
     register: {
@@ -3544,6 +3657,9 @@ export const translations = {
       completed: "Completata",
       markComplete: "Segna come completata",
       markIncomplete: "Segna come in sospeso",
+      // Updates Start
+      inProgress: "In corso",
+      // Updates End
     },
 
     // Calendar
@@ -3580,6 +3696,11 @@ export const translations = {
       nextWeek: "Settimana successiva",
       previousDay: "Giorno precedente",
       nextDay: "Giorno successivo",
+      // Updates Start
+      year: "Anno",
+      startDate: "Data di inizio",
+      endDate: "Data di fine",
+      // Updates End
     },
 
     // Notes
@@ -3674,12 +3795,12 @@ export const translations = {
       resume: "Riprendi",
       stop: "Ferma",
       reset: "Reimposta",
-      workSession: "Sessione di lavoro",
+      workSession: "Sesión de trabajo",
       shortBreak: "Pausa breve",
       longBreak: "Pausa lunga",
       session: "Sessione",
       break: "Pausa",
-      completed: "Completato",
+      completed: "Completata",
       workTime: "Tempo di lavoro",
       shortBreakTime: "Pausa breve",
       longBreakTime: "Pausa lunga",
@@ -3693,8 +3814,8 @@ export const translations = {
       autoStartSessions: "Avvia automaticamente le sessioni",
       soundEnabled: "Suono abilitato",
       notificationsEnabled: "Notifiche abilitate",
-      sessionCompleted: "Sessione completata!",
-      breakCompleted: "Pausa completata!",
+      sessionCompleted: "¡Sesión completada!",
+      breakCompleted: "¡Pausa completada!",
       timeForBreak: "Tempo per una pausa",
       timeToWork: "Tempo di lavorare",
       focusMode: "Modalità focus",
@@ -3702,6 +3823,10 @@ export const translations = {
       productivity: "Produttività",
       averageSessionLength: "Durata media sessione",
       completionRate: "Tasso di completamento",
+      // Updates Start
+      work: "Lavoro",
+      sessions: "Sessioni",
+      // Updates End
     },
 
     // AI Assistant
@@ -3820,9 +3945,9 @@ export const translations = {
       enterprise: "Enterprise",
 
       // Status
-      active: "Attivo",
-      cancelled: "Annullato",
-      expired: "Scaduto",
+      active: "Attiva",
+      cancelled: "Annullata",
+      expired: "Scaduta",
       trial: "Prova",
 
       // Messages
@@ -3886,7 +4011,7 @@ export const translations = {
       shareArticle: "Condividi articolo",
       relatedArticles: "Articoli correlati",
       categories: "Categorie",
-      tags: "Tag",
+      tags: "Etichette",
       author: "Autore",
       publishedOn: "Pubblicato il",
       readingTime: "Tempo di lettura",
@@ -3898,7 +4023,7 @@ export const translations = {
       featuredArticles: "Articoli in evidenza",
 
       // Categories
-      productivity: "Produttività",
+      productivity: "Productivité",
       timeManagement: "Gestione del tempo",
       technology: "Tecnologia",
       wellness: "Benessere",
@@ -3921,8 +4046,8 @@ export const translations = {
       article5Title: "IA e produttività: Il futuro del lavoro",
       article5Excerpt: "Come l'intelligenza artificiale sta trasformando il modo in cui lavoriamo.",
 
-      article6Title: "Mindfulness sul posto di lavoro",
-      article6Excerpt: "Tecniche di mindfulness per ridurre lo stress e migliorare le prestazioni lavorative.",
+      article6Title: "Pleine conscience sul posto di lavoro",
+      article6Excerpt: "Tecniche di pleine conscience per ridurre lo stress e migliorare le prestazioni sul lavoro.",
     },
 
     // Footer
@@ -4132,6 +4257,12 @@ export const translations = {
       nextWeek: "Próxima semana",
       nextMonth: "Próximo mês",
       nextYear: "Próximo ano",
+      // Updates Start
+      user: "Usuário",
+      email: "E-mail",
+      password: "Senha",
+      submit: "Enviar",
+      // Updates End
     },
 
     // Navigation
@@ -4273,6 +4404,13 @@ export const translations = {
       termsText: "Ao continuar, você concorda com nossos",
       termsLink: "Termos de Serviço",
       privacyLink: "Política de Privacidade",
+      // Updates Start
+      fullNamePlaceholder: "Seu nome completo",
+      alreadyHaveAccount: "Já tem uma conta?",
+      dontHaveAccount: "Não tem uma conta?",
+      continueWithGoogle: "Continuar com Google",
+      continueWithGithub: "Continuar com GitHub",
+      // Updates End
     },
 
     register: {
@@ -4360,6 +4498,9 @@ export const translations = {
       completed: "Concluída",
       markComplete: "Marcar como concluída",
       markIncomplete: "Marcar como pendente",
+      // Updates Start
+      inProgress: "Em andamento",
+      // Updates End
     },
 
     // Calendar
@@ -4396,6 +4537,11 @@ export const translations = {
       nextWeek: "Próxima semana",
       previousDay: "Dia anterior",
       nextDay: "Próximo dia",
+      // Updates Start
+      year: "Ano",
+      startDate: "Data de início",
+      endDate: "Data de término",
+      // Updates End
     },
 
     // Notes
@@ -4518,6 +4664,10 @@ export const translations = {
       productivity: "Produtividade",
       averageSessionLength: "Duração média da sessão",
       completionRate: "Taxa de conclusão",
+      // Updates Start
+      work: "Trabalho",
+      sessions: "Sessões",
+      // Updates End
     },
 
     // AI Assistant

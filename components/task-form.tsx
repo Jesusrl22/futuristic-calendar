@@ -18,18 +18,15 @@ import { es } from "date-fns/locale"
 
 interface Task {
   id: string
-  userId: string
+  user_id: string
   title: string
   description?: string
   completed: boolean
   priority: "low" | "medium" | "high"
-  dueDate?: string
+  due_date?: string
   category?: string
-  tags?: string[]
-  createdAt: string
-  updatedAt: string
-  estimatedTime?: number
-  actualTime?: number
+  created_at: string
+  updated_at: string
 }
 
 interface TaskFormProps {
@@ -43,32 +40,29 @@ interface TaskFormProps {
 }
 
 const categories = [
-  { value: "work", label: "Trabajo", color: "bg-blue-500", icon: "💼" },
-  { value: "personal", label: "Personal", color: "bg-green-500", icon: "🏠" },
-  { value: "health", label: "Salud", color: "bg-red-500", icon: "❤️" },
-  { value: "education", label: "Educación", color: "bg-purple-500", icon: "📚" },
-  { value: "finance", label: "Finanzas", color: "bg-yellow-500", icon: "💰" },
-  { value: "social", label: "Social", color: "bg-pink-500", icon: "👥" },
-  { value: "travel", label: "Viajes", color: "bg-indigo-500", icon: "✈️" },
-  { value: "other", label: "Otros", color: "bg-gray-500", icon: "📝" },
+  { value: "work", label: "Trabajo", color: "bg-primary", icon: "💼" },
+  { value: "personal", label: "Personal", color: "bg-accent", icon: "🏠" },
+  { value: "health", label: "Salud", color: "bg-destructive", icon: "❤️" },
+  { value: "education", label: "Educación", color: "bg-secondary", icon: "📚" },
+  { value: "finance", label: "Finanzas", color: "bg-primary", icon: "💰" },
+  { value: "social", label: "Social", color: "bg-accent", icon: "👥" },
+  { value: "travel", label: "Viajes", color: "bg-primary", icon: "✈️" },
+  { value: "other", label: "Otros", color: "bg-muted", icon: "📝" },
 ]
 
 const priorities = [
-  { value: "low", label: "Baja", color: "bg-green-500" },
-  { value: "medium", label: "Media", color: "bg-yellow-500" },
-  { value: "high", label: "Alta", color: "bg-red-500" },
+  { value: "low", label: "Baja", color: "bg-accent" },
+  { value: "medium", label: "Media", color: "bg-secondary" },
+  { value: "high", label: "Alta", color: "bg-destructive" },
 ]
 
-// Helper function to safely parse dates
 const safeParseDate = (dateString: string | undefined | null): Date | null => {
   if (!dateString) return null
 
   try {
-    // Try parsing as ISO string first
     const parsed = parseISO(dateString)
     if (isValid(parsed)) return parsed
 
-    // Try creating a new Date object
     const date = new Date(dateString)
     if (isValid(date)) return date
 
@@ -96,21 +90,18 @@ export function TaskForm({
     category: "personal",
     priority: "medium" as "low" | "medium" | "high",
     notifications: false,
-    estimatedTime: "",
   })
 
-  // Validate selectedDate
   const validSelectedDate = isValid(selectedDate) ? selectedDate : new Date()
 
-  // Update form when editing task changes or selectedDate changes
   useEffect(() => {
     if (editingTask) {
-      const taskDate = editingTask.dueDate ? safeParseDate(editingTask.dueDate) : validSelectedDate
+      const taskDate = editingTask.due_date ? safeParseDate(editingTask.due_date) : validSelectedDate
       const validDate = taskDate && isValid(taskDate) ? taskDate : validSelectedDate
 
       let timeString = ""
-      if (editingTask.dueDate) {
-        const parsedDate = safeParseDate(editingTask.dueDate)
+      if (editingTask.due_date) {
+        const parsedDate = safeParseDate(editingTask.due_date)
         if (parsedDate && isValid(parsedDate)) {
           try {
             timeString = format(parsedDate, "HH:mm")
@@ -129,7 +120,6 @@ export function TaskForm({
         category: editingTask.category || "personal",
         priority: editingTask.priority,
         notifications: false,
-        estimatedTime: editingTask.estimatedTime ? editingTask.estimatedTime.toString() : "",
       })
     } else {
       setFormData({
@@ -140,7 +130,6 @@ export function TaskForm({
         category: "personal",
         priority: "medium",
         notifications: false,
-        estimatedTime: "",
       })
     }
   }, [editingTask, validSelectedDate])
@@ -148,16 +137,13 @@ export function TaskForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate form data
     if (!formData.title.trim()) {
       alert("El título es requerido")
       return
     }
 
-    // Create a valid date object
     let dueDate = new Date(formData.date)
 
-    // Ensure we have a valid date
     if (!isValid(dueDate)) {
       dueDate = new Date()
     }
@@ -184,13 +170,10 @@ export function TaskForm({
     const taskData = {
       title: formData.title.trim(),
       description: formData.description.trim(),
-      date: formData.date.toISOString().split("T")[0],
-      time: formData.time || undefined,
       category: formData.category,
       priority: formData.priority,
-      notifications: formData.notifications,
-      estimatedTime: formData.estimatedTime ? Number.parseInt(formData.estimatedTime, 10) : undefined,
-      dueDate: dueDate.toISOString(),
+      due_date: dueDate.toISOString(),
+      completed: false,
     }
 
     try {
@@ -198,10 +181,9 @@ export function TaskForm({
         await onTaskUpdated(editingTask.id, {
           title: formData.title.trim(),
           description: formData.description.trim(),
-          dueDate: dueDate.toISOString(),
+          due_date: dueDate.toISOString(),
           category: formData.category,
           priority: formData.priority,
-          estimatedTime: formData.estimatedTime ? Number.parseInt(formData.estimatedTime, 10) : undefined,
         })
       } else {
         await onTaskCreated(taskData)
@@ -235,7 +217,6 @@ export function TaskForm({
   const selectedCategory = categories.find((cat) => cat.value === formData.category)
   const selectedPriority = priorities.find((pri) => pri.value === formData.priority)
 
-  // Safe format function for preview
   const safeFormatDate = (date: Date, formatString: string, options?: any): string => {
     try {
       if (!date || !isValid(date)) return "Fecha inválida"
@@ -248,18 +229,17 @@ export function TaskForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              {editingTask ? <Edit className="h-5 w-5 text-blue-600" /> : <Plus className="h-5 w-5 text-green-600" />}
+              {editingTask ? <Edit className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-accent" />}
               <span>{editingTask ? "Editar Tarea" : "Nueva Tarea"}</span>
             </div>
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Título de la Tarea *</Label>
             <Input
@@ -268,10 +248,10 @@ export function TaskForm({
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="¿Qué necesitas hacer?"
               required
+              className="bg-background border-border"
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Descripción</Label>
             <Textarea
@@ -280,23 +260,26 @@ export function TaskForm({
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Añade más detalles sobre esta tarea..."
               rows={3}
+              className="bg-background border-border"
             />
           </div>
 
-          {/* Date and Time Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Fecha *</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal bg-background border-border"
+                  >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {formData.date && isValid(formData.date)
                       ? safeFormatDate(formData.date, "PPP", { locale: es })
                       : "Selecciona una fecha"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
                   <Calendar
                     mode="single"
                     selected={formData.date}
@@ -311,19 +294,18 @@ export function TaskForm({
             <div className="space-y-2">
               <Label htmlFor="time">Hora (opcional)</Label>
               <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="time"
                   type="time"
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  className="pl-10"
+                  className="pl-10 bg-background border-border"
                 />
               </div>
             </div>
           </div>
 
-          {/* Category and Priority Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Categoría *</Label>
@@ -331,7 +313,7 @@ export function TaskForm({
                 value={formData.category}
                 onValueChange={(value) => setFormData({ ...formData, category: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue>
                     {selectedCategory && (
                       <div className="flex items-center space-x-2">
@@ -341,7 +323,7 @@ export function TaskForm({
                     )}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {categories.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
                       <div className="flex items-center space-x-2">
@@ -360,7 +342,7 @@ export function TaskForm({
                 value={formData.priority}
                 onValueChange={(value: "low" | "medium" | "high") => setFormData({ ...formData, priority: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue>
                     {selectedPriority && (
                       <div className="flex items-center space-x-2">
@@ -370,7 +352,7 @@ export function TaskForm({
                     )}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-card border-border">
                   {priorities.map((priority) => (
                     <SelectItem key={priority.value} value={priority.value}>
                       <div className="flex items-center space-x-2">
@@ -384,32 +366,15 @@ export function TaskForm({
             </div>
           </div>
 
-          {/* Estimated Time */}
-          <div className="space-y-2">
-            <Label htmlFor="estimatedTime">Tiempo Estimado (opcional, en minutos)</Label>
-            <Input
-              id="estimatedTime"
-              type="number"
-              min="5"
-              max="480"
-              step="5"
-              value={formData.estimatedTime}
-              onChange={(e) => setFormData({ ...formData, estimatedTime: e.target.value })}
-              placeholder="Ej: 30, 60, 120..."
-            />
-            <p className="text-xs text-gray-500">Deja vacío si no quieres especificar un tiempo estimado</p>
-          </div>
-
-          {/* Notifications Toggle */}
           {formData.time && !editingTask && (
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="flex items-center space-x-3">
-                <Bell className="h-5 w-5 text-gray-500" />
+                <Bell className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <Label htmlFor="notifications" className="text-sm font-medium">
                     Activar Notificaciones
                   </Label>
-                  <p className="text-xs text-gray-500">Recibe un recordatorio 15 minutos antes</p>
+                  <p className="text-xs text-muted-foreground">Recibe un recordatorio 15 minutos antes</p>
                 </div>
               </div>
               <Switch
@@ -420,8 +385,7 @@ export function TaskForm({
             </div>
           )}
 
-          {/* Task Preview */}
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-muted rounded-lg">
             <h4 className="font-medium mb-2 flex items-center space-x-2">
               <Tag className="h-4 w-4" />
               <span>Vista Previa de la Tarea</span>
@@ -429,11 +393,11 @@ export function TaskForm({
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
                 <span className="font-medium">Título:</span>
-                <span className="text-gray-700">{formData.title || "Tarea sin título"}</span>
+                <span className="text-foreground">{formData.title || "Tarea sin título"}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="font-medium">Fecha:</span>
-                <span className="text-gray-700">
+                <span className="text-foreground">
                   {formData.date && isValid(formData.date)
                     ? safeFormatDate(formData.date, "PPP", { locale: es })
                     : "Fecha inválida"}
@@ -441,38 +405,33 @@ export function TaskForm({
                 {formData.time && (
                   <>
                     <span className="font-medium">Hora:</span>
-                    <span className="text-gray-700">{formData.time}</span>
+                    <span className="text-foreground">{formData.time}</span>
                   </>
                 )}
               </div>
               <div className="flex items-center space-x-2">
                 <span className="font-medium">Categoría:</span>
-                <Badge className={`${selectedCategory?.color} text-white text-xs`}>
+                <Badge className={`${selectedCategory?.color} text-primary-foreground text-xs`}>
                   {selectedCategory?.icon} {selectedCategory?.label}
                 </Badge>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="font-medium">Prioridad:</span>
-                <Badge className={`${selectedPriority?.color} text-white text-xs`}>{selectedPriority?.label}</Badge>
+                <Badge className={`${selectedPriority?.color} text-secondary-foreground text-xs`}>
+                  {selectedPriority?.label}
+                </Badge>
               </div>
-              {formData.estimatedTime && (
-                <div className="flex items-center space-x-2">
-                  <span className="font-medium">Tiempo estimado:</span>
-                  <span className="text-gray-700">{formData.estimatedTime} minutos</span>
-                </div>
-              )}
               {formData.notifications && !editingTask && (
                 <div className="flex items-center space-x-2">
-                  <Bell className="h-3 w-3 text-gray-500" />
-                  <span className="text-xs text-gray-500">Notificaciones activadas</span>
+                  <Bell className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Notificaciones activadas</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex space-x-3">
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
               {editingTask ? <Edit className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               {editingTask ? "Actualizar Tarea" : "Crear Tarea"}
             </Button>
@@ -481,7 +440,7 @@ export function TaskForm({
                 <Trash2 className="h-4 w-4" />
               </Button>
             )}
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} className="border-border bg-transparent">
               Cancelar
             </Button>
           </div>

@@ -4,75 +4,155 @@ export type BillingCycle = "monthly" | "yearly"
 export interface SubscriptionPlan {
   id: string
   name: string
-  price: {
-    monthly: number
-    yearly: number
-  }
+  description: string
+  monthlyPrice: number
+  yearlyPrice: number
   features: string[]
-  aiCredits: string
   popular?: boolean
-  paypalPlanId?: {
-    monthly?: string
-    yearly?: string
-  }
+  aiCreditsIncluded: number
+  aiCreditsRenewMonthly: boolean
 }
 
+export interface CreditPack {
+  id: string
+  name: string
+  credits: number
+  price: number
+  basePrice: number
+  vat: number
+  popular?: boolean
+  description: string
+}
+
+// Export named as subscriptionPlans (lowercase)
 export const subscriptionPlans: SubscriptionPlan[] = [
   {
     id: "free",
     name: "Gratis",
-    price: { monthly: 0, yearly: 0 },
+    description: "Perfecto para empezar",
+    monthlyPrice: 0,
+    yearlyPrice: 0,
+    aiCreditsIncluded: 0,
+    aiCreditsRenewMonthly: false,
     features: [
-      "Sin créditos IA (compra packs por separado)",
       "Calendario básico",
-      "Tareas ilimitadas",
-      "Temporizador Pomodoro",
-      "Notas personales",
+      "10 tareas por mes",
+      "5 eventos por mes",
+      "Pomodoro básico",
+      "Notas limitadas",
+      "Sin créditos IA incluidos",
+      "Puede comprar packs de créditos IA",
     ],
-    aiCredits: "0",
   },
   {
     id: "premium",
     name: "Premium",
-    price: { monthly: 9.99, yearly: 99.99 },
+    description: "Para usuarios avanzados",
+    monthlyPrice: 2.49,
+    yearlyPrice: 24.99,
+    aiCreditsIncluded: 0,
+    aiCreditsRenewMonthly: false,
     features: [
-      "Sin créditos IA (compra packs por separado)",
-      "Sincronización en la nube",
-      "Análisis de productividad",
-      "Temas personalizados",
-      "Exportar datos",
-      "Soporte prioritario",
+      "Tareas ilimitadas",
+      "Eventos ilimitados",
+      "Pomodoro avanzado",
+      "Notas ilimitadas",
+      "Sin créditos IA incluidos",
+      "Puede comprar packs de créditos IA",
+      "Estadísticas básicas",
+      "Lista de deseos",
     ],
-    aiCredits: "0",
-    popular: true,
-    paypalPlanId: {
-      monthly: "P-PREMIUM-MONTHLY",
-      yearly: "P-PREMIUM-YEARLY",
-    },
   },
   {
     id: "pro",
     name: "Pro",
-    price: { monthly: 19.99, yearly: 199.99 },
+    description: "Para profesionales",
+    monthlyPrice: 4.99,
+    yearlyPrice: 49.99,
+    popular: true,
+    aiCreditsIncluded: 500,
+    aiCreditsRenewMonthly: true,
     features: [
-      "500 créditos IA al mes",
+      "Todo de Premium",
+      "500 créditos IA/mes incluidos",
+      "Créditos se renuevan mensualmente",
+      "Puede comprar packs adicionales",
       "Asistente IA avanzado",
-      "IA para tareas automáticas",
-      "Análisis predictivo",
-      "Integraciones avanzadas",
-      "Soporte VIP",
-      "API access",
-      "Equipos y colaboración",
+      "Estadísticas completas",
+      "Logros y gamificación",
+      "Soporte prioritario",
+      "Exportar datos",
+      "Integraciones premium",
     ],
-    aiCredits: "500/mes",
-    paypalPlanId: {
-      monthly: "P-PRO-MONTHLY",
-      yearly: "P-PRO-YEARLY",
-    },
   },
 ]
 
-// Format price with currency
+export const creditPacks: CreditPack[] = [
+  {
+    id: "starter",
+    name: "Starter",
+    credits: 100,
+    price: 2.99,
+    basePrice: 2.47,
+    vat: 0.52,
+    description: "Perfecto para probar",
+  },
+  {
+    id: "popular",
+    name: "Popular",
+    credits: 500,
+    price: 9.99,
+    basePrice: 8.26,
+    vat: 1.73,
+    popular: true,
+    description: "El más vendido",
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    credits: 1000,
+    price: 17.99,
+    basePrice: 14.87,
+    vat: 3.12,
+    description: "Para uso intensivo",
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    credits: 2500,
+    price: 39.99,
+    basePrice: 33.05,
+    vat: 6.94,
+    description: "Máximo valor",
+  },
+]
+
+export function getPlanById(planId: string): SubscriptionPlan | undefined {
+  return subscriptionPlans.find((plan) => plan.id === planId)
+}
+
+export function getCreditPackById(packId: string): CreditPack | undefined {
+  return creditPacks.find((pack) => pack.id === packId)
+}
+
+export function getPlanPrice(planId: string, billingCycle: BillingCycle): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  return billingCycle === "monthly" ? plan.monthlyPrice : plan.yearlyPrice
+}
+
+export function getYearlySavings(planId: string): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  const monthlyTotal = plan.monthlyPrice * 12
+  return monthlyTotal - plan.yearlyPrice
+}
+
+export function calculateAnnualSavings(monthlyPrice: number, annualPrice: number): number {
+  const monthlyTotal = monthlyPrice * 12
+  return Math.round(monthlyTotal - annualPrice)
+}
+
 export function formatPrice(price: number, currency = "EUR"): string {
   return new Intl.NumberFormat("es-ES", {
     style: "currency",
@@ -80,82 +160,45 @@ export function formatPrice(price: number, currency = "EUR"): string {
   }).format(price)
 }
 
-// Get yearly savings for a plan
-export function getYearlySavings(plan: SubscriptionPlan): number {
-  const monthlyTotal = plan.price.monthly * 12
-  const yearlyPrice = plan.price.yearly
-  return monthlyTotal - yearlyPrice
-}
-
-// Get plan by ID
-export function getPlanById(planId: string): SubscriptionPlan | undefined {
-  return subscriptionPlans.find((plan) => plan.id === planId)
-}
-
-// Get annual savings percentage
-export function getAnnualSavingsPercentage(planId: string): number {
+export function getAICreditsDisplayText(planId: string): string {
   const plan = getPlanById(planId)
-  if (!plan) return 0
-  const monthlyTotal = plan.price.monthly * 12
-  const yearlyPrice = plan.price.yearly
-  if (monthlyTotal === 0) return 0
-  return Math.round(((monthlyTotal - yearlyPrice) / monthlyTotal) * 100)
+  if (!plan) return "Sin créditos incluidos"
+
+  if (plan.aiCreditsIncluded === 0) {
+    return "Sin créditos incluidos"
+  }
+
+  if (plan.aiCreditsRenewMonthly) {
+    return `${plan.aiCreditsIncluded} créditos/mes`
+  }
+
+  return `${plan.aiCreditsIncluded} créditos`
 }
 
-// Get plan features
-export function getPlanFeatures(planId: string): string[] {
+export function canPurchaseAICredits(planId: string): boolean {
+  // Todos los planes pueden comprar packs de créditos IA
+  return true
+}
+
+export function hasMonthlyAICreditsRenewal(planId: string): boolean {
   const plan = getPlanById(planId)
-  return plan?.features || []
+  return plan?.aiCreditsRenewMonthly || false
 }
 
-// Get plan price
-export function getPlanPrice(planId: string, cycle: BillingCycle): number {
-  const plan = getPlanById(planId)
-  if (!plan) return 0
-  return cycle === "monthly" ? plan.price.monthly : plan.price.yearly
-}
-
-// Calculate annual savings
-export function calculateAnnualSavings(planId: string): number {
-  const plan = getPlanById(planId)
-  if (!plan) return 0
-  return getYearlySavings(plan)
-}
-
-// Check if plan includes AI credits
-export function planIncludesAICredits(planId: string): boolean {
-  return planId === "pro"
-}
-
-// Get monthly AI credits for a plan
 export function getMonthlyAICredits(planId: string): number {
   const plan = getPlanById(planId)
-  if (!plan || plan.id !== "pro") return 0
-  return 500
+  return plan?.aiCreditsRenewMonthly ? plan.aiCreditsIncluded : 0
 }
 
-// Get PayPal plan ID
-export function getPayPalPlanId(planId: string, cycle: BillingCycle): string | undefined {
+export function planIncludesAICredits(planId: string): boolean {
   const plan = getPlanById(planId)
-  return plan?.paypalPlanId?.[cycle]
+  return plan ? plan.aiCreditsIncluded > 0 : false
 }
 
-// Get subscription price based on tier and billing cycle
-export function getSubscriptionPrice(planId: string, cycle: BillingCycle): number {
-  return getPlanPrice(planId, cycle)
-}
-
-// Get plan by name
-export function getPlanByName(name: string): SubscriptionPlan | undefined {
-  return subscriptionPlans.find((plan) => plan.name.toLowerCase() === name.toLowerCase())
-}
-
-// Get AI credits for a tier
 export function getAICredits(planId: string): number {
   return getMonthlyAICredits(planId)
 }
 
-// Check if user has access to a feature
 export function hasFeatureAccess(userPlanId: string, requiredPlanId: string): boolean {
   const tierOrder = ["free", "premium", "pro"]
   const userIndex = tierOrder.indexOf(userPlanId)
@@ -163,7 +206,44 @@ export function hasFeatureAccess(userPlanId: string, requiredPlanId: string): bo
   return userIndex >= requiredIndex
 }
 
-// Calculate prorated amount for plan changes
+export function getSubscriptionPrice(planId: string, cycle: BillingCycle): number {
+  return getPlanPrice(planId, cycle)
+}
+
+export function getPlanByName(name: string): SubscriptionPlan | undefined {
+  return subscriptionPlans.find((plan) => plan.name.toLowerCase() === name.toLowerCase())
+}
+
+export function getPlanFeatures(planId: string): string[] {
+  const plan = getPlanById(planId)
+  return plan?.features || []
+}
+
+export function getAnnualSavingsPercentage(planId: string): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  const monthlyTotal = plan.monthlyPrice * 12
+  const yearlyPrice = plan.yearlyPrice
+  if (monthlyTotal === 0) return 0
+  return Math.round(((monthlyTotal - yearlyPrice) / monthlyTotal) * 100)
+}
+
+export function getPayPalPlanId(planId: string, cycle: BillingCycle): string | undefined {
+  // PayPal plan IDs would be configured here
+  const paypalIds: Record<string, Record<BillingCycle, string>> = {
+    premium: {
+      monthly: "P-PREMIUM-MONTHLY",
+      yearly: "P-PREMIUM-YEARLY",
+    },
+    pro: {
+      monthly: "P-PRO-MONTHLY",
+      yearly: "P-PRO-YEARLY",
+    },
+  }
+
+  return paypalIds[planId]?.[cycle]
+}
+
 export function calculateProratedAmount(
   currentPlanId: string,
   newPlanId: string,
@@ -180,7 +260,6 @@ export function calculateProratedAmount(
   return Math.max(0, newAmount - unusedAmount)
 }
 
-// Get subscription status display text
 export function getSubscriptionStatus(
   planId: string,
   isActive: boolean,
@@ -227,7 +306,6 @@ export function getSubscriptionStatus(
   }
 }
 
-// Validate subscription data
 export function validateSubscriptionData(data: {
   tier: string
   cycle: string
@@ -246,9 +324,4 @@ export function validateSubscriptionData(data: {
     valid: errors.length === 0,
     errors,
   }
-}
-
-// Check if user can purchase AI credits
-export function canPurchaseAICredits(planId: string): boolean {
-  return true // All plans can purchase credits
 }

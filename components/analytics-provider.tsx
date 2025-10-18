@@ -1,36 +1,21 @@
 "use client"
 
+import type React from "react"
+
 import { useEffect } from "react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { trackPageView, trackEvent } from "@/lib/analytics"
+import { trackPageView } from "@/lib/analytics"
 
-export function AnalyticsProvider() {
+export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    // Track page view on mount and route changes
     if (pathname) {
-      trackPageView(pathname)
+      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "")
+      trackPageView(url)
     }
   }, [pathname, searchParams])
 
-  useEffect(() => {
-    // Track user engagement
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        trackEvent("user_engagement", "page_visible", pathname || "")
-      } else {
-        trackEvent("user_engagement", "page_hidden", pathname || "")
-      }
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-    }
-  }, [pathname])
-
-  return null
+  return <>{children}</>
 }

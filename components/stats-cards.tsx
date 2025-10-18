@@ -15,61 +15,61 @@ export function StatsCards({ totalTasks, completedTasks, pendingTasks, overdueTa
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/10 border-blue-500/20 hover:shadow-lg transition-all duration-200">
+      <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-all duration-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-600 mb-1">Total Tareas</p>
-              <p className="text-3xl font-bold text-blue-700">{totalTasks}</p>
-              <p className="text-xs text-blue-500 mt-1">Todas las tareas</p>
+              <p className="text-sm font-medium text-primary mb-1">Total Tareas</p>
+              <p className="text-3xl font-bold text-primary">{totalTasks}</p>
+              <p className="text-xs text-muted-foreground mt-1">Todas las tareas</p>
             </div>
-            <div className="p-3 bg-blue-500/20 rounded-full">
-              <Target className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-primary/20 rounded-full">
+              <Target className="h-6 w-6 text-primary" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-green-500/20 hover:shadow-lg transition-all duration-200">
+      <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 hover:shadow-lg transition-all duration-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-green-600 mb-1">Completadas</p>
-              <p className="text-3xl font-bold text-green-700">{completedTasks}</p>
-              <p className="text-xs text-green-500 mt-1">{completionRate}% del total</p>
+              <p className="text-sm font-medium text-accent-foreground mb-1">Completadas</p>
+              <p className="text-3xl font-bold text-accent-foreground">{completedTasks}</p>
+              <p className="text-xs text-muted-foreground mt-1">{completionRate}% del total</p>
             </div>
-            <div className="p-3 bg-green-500/20 rounded-full">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div className="p-3 bg-accent/20 rounded-full">
+              <CheckCircle2 className="h-6 w-6 text-accent-foreground" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border-orange-500/20 hover:shadow-lg transition-all duration-200">
+      <Card className="bg-gradient-to-br from-secondary/10 to-secondary/5 border-secondary/20 hover:shadow-lg transition-all duration-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-orange-600 mb-1">Pendientes</p>
-              <p className="text-3xl font-bold text-orange-700">{pendingTasks}</p>
-              <p className="text-xs text-orange-500 mt-1">Por completar</p>
+              <p className="text-sm font-medium text-secondary-foreground mb-1">Pendientes</p>
+              <p className="text-3xl font-bold text-secondary-foreground">{pendingTasks}</p>
+              <p className="text-xs text-muted-foreground mt-1">Por completar</p>
             </div>
-            <div className="p-3 bg-orange-500/20 rounded-full">
-              <Clock className="h-6 w-6 text-orange-600" />
+            <div className="p-3 bg-secondary/20 rounded-full">
+              <Clock className="h-6 w-6 text-secondary-foreground" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-red-500/10 to-red-600/10 border-red-500/20 hover:shadow-lg transition-all duration-200">
+      <Card className="bg-gradient-to-br from-destructive/10 to-destructive/5 border-destructive/20 hover:shadow-lg transition-all duration-200">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-red-600 mb-1">Vencidas</p>
-              <p className="text-3xl font-bold text-red-700">{overdueTasks}</p>
-              <p className="text-xs text-red-500 mt-1">Requieren atención</p>
+              <p className="text-sm font-medium text-destructive mb-1">Vencidas</p>
+              <p className="text-3xl font-bold text-destructive">{overdueTasks}</p>
+              <p className="text-xs text-muted-foreground mt-1">Requieren atención</p>
             </div>
-            <div className="p-3 bg-red-500/20 rounded-full">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
+            <div className="p-3 bg-destructive/20 rounded-full">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
           </div>
         </CardContent>

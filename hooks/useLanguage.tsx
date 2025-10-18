@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { translations } from "@/lib/translations"
 
-type Language = "es" | "en" | "fr" | "de" | "it" | "pt"
+type Language = "es" | "en"
 
 interface LanguageContextType {
   language: Language
@@ -19,17 +19,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Get language from localStorage or browser
-    const savedLanguage = localStorage.getItem("language") as Language
-    const browserLanguage = navigator.language.split("-")[0] as Language
-
-    if (savedLanguage && ["es", "en", "fr", "de", "it", "pt"].includes(savedLanguage)) {
-      setLanguageState(savedLanguage)
-    } else if (["es", "en", "fr", "de", "it", "pt"].includes(browserLanguage)) {
-      setLanguageState(browserLanguage)
-    }
-
     setMounted(true)
+    const savedLanguage = localStorage.getItem("language") as Language
+    if (savedLanguage && (savedLanguage === "es" || savedLanguage === "en")) {
+      setLanguageState(savedLanguage)
+    }
   }, [])
 
   const setLanguage = (lang: Language) => {
@@ -45,7 +39,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       if (value && typeof value === "object" && k in value) {
         value = value[k]
       } else {
-        return key // Return key if translation not found
+        return key
       }
     }
 

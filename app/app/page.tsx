@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { CalendarWidget } from "@/components/calendar-widget"
-import { TaskManager } from "@/components/task-manager"
+import { TaskCalendarManager } from "@/components/task-calendar-manager"
 import { PomodoroTimer } from "@/components/pomodoro-timer"
 import { StatsCards } from "@/components/stats-cards"
 import { WishlistManager } from "@/components/wishlist-manager"
@@ -16,7 +15,6 @@ import { AchievementsDisplay } from "@/components/achievements-display"
 import { Button } from "@/components/ui/button"
 import {
   Calendar,
-  CheckSquare,
   Clock,
   BarChart3,
   Star,
@@ -37,7 +35,7 @@ import { useLanguage } from "@/hooks/useLanguage"
 function AppContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { t } = useLanguage()
+  const { t, mounted } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -48,10 +46,11 @@ function AppContent() {
   const hasLoadedRef = useRef(false)
 
   useEffect(() => {
+    if (!mounted) return
     if (hasLoadedRef.current || hasRedirectedRef.current) return
     hasLoadedRef.current = true
 
-    let mounted = true
+    let isMounted = true
 
     const loadUser = async () => {
       try {
@@ -76,7 +75,7 @@ function AppContent() {
             isDemo: true,
           }
 
-          if (mounted) {
+          if (isMounted) {
             setUser(demoUser)
             setLoading(false)
           }
@@ -94,7 +93,7 @@ function AppContent() {
           session = result?.data?.session
         } catch (error) {
           console.error("❌ Session check failed:", error)
-          if (mounted && !hasRedirectedRef.current) {
+          if (isMounted && !hasRedirectedRef.current) {
             hasRedirectedRef.current = true
             setLoading(false)
             router.replace("/login")
@@ -104,7 +103,7 @@ function AppContent() {
 
         if (!session?.user) {
           console.log("❌ No session found, redirecting to login")
-          if (mounted && !hasRedirectedRef.current) {
+          if (isMounted && !hasRedirectedRef.current) {
             hasRedirectedRef.current = true
             setLoading(false)
             router.replace("/login")
@@ -127,7 +126,7 @@ function AppContent() {
             console.error("Error loading user data:", error)
           }
 
-          if (mounted) {
+          if (isMounted) {
             if (userData) {
               console.log("✅ User data loaded from database")
               const aiCredits =
@@ -160,7 +159,7 @@ function AppContent() {
           }
         } catch (userError) {
           console.error("Failed to load user data:", userError)
-          if (mounted) {
+          if (isMounted) {
             setUser({
               id: session.user.id,
               email: session.user.email,
@@ -181,7 +180,7 @@ function AppContent() {
         }
       } catch (error) {
         console.error("Error loading app:", error)
-        if (mounted && !hasRedirectedRef.current) {
+        if (isMounted && !hasRedirectedRef.current) {
           hasRedirectedRef.current = true
           setLoading(false)
           router.replace("/login")
@@ -192,9 +191,9 @@ function AppContent() {
     loadUser()
 
     return () => {
-      mounted = false
+      isMounted = false
     }
-  }, [router, searchParams])
+  }, [router, searchParams, mounted])
 
   const handleLogout = async () => {
     if (user?.isDemo) {
@@ -215,12 +214,16 @@ function AppContent() {
     setUser((prev: any) => ({ ...prev, ai_credits: newCredits }))
   }
 
-  if (loading) {
+  const handleUserUpdate = (updates: any) => {
+    setUser((prev: any) => ({ ...prev, ...updates }))
+  }
+
+  if (!mounted || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/20 to-background">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-gray-600 dark:text-gray-400">{t("common.loading")}</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     )
@@ -231,19 +234,21 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/20 to-background">
+      <div className="lg:hidden bg-card/50 backdrop-blur-sm border-b border-border p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-2">
-          <Calendar className="h-6 w-6 text-blue-600" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">FutureTask</h1>
+          <Calendar className="h-6 w-6 text-primary" />
+          <h1 className="text-xl font-bold text-foreground">FutureTask</h1>
           {user?.isDemo && (
-            <span className="px-2 py-1 text-xs font-semibold bg-yellow-100 text-yellow-800 rounded-full">DEMO</span>
+            <span className="px-2 py-1 text-xs font-semibold bg-secondary text-secondary-foreground rounded-full border border-border">
+              DEMO
+            </span>
           )}
         </div>
         <div className="flex items-center space-x-2">
-          <LanguageSelector />
+          <LanguageSelector variant="button" showFlag={true} showName={false} />
           <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isSidebarOpen ? <X className="h-5 w-5 text-foreground" /> : <Menu className="h-5 w-5 text-foreground" />}
           </Button>
         </div>
       </div>
@@ -253,43 +258,47 @@ function AppContent() {
           className={`
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40
-          w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
+          w-64 bg-card/50 backdrop-blur-sm border-r border-border
           transition-transform duration-300 ease-in-out
           flex flex-col
           lg:top-0 top-[73px]
         `}
         >
-          <div className="hidden lg:flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="hidden lg:flex items-center justify-between p-6 border-b border-border">
             <div className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">FutureTask</h1>
+              <Calendar className="h-8 w-8 text-primary" />
+              <h1 className="text-2xl font-bold text-foreground">FutureTask</h1>
             </div>
-            <LanguageSelector />
+            <LanguageSelector variant="button" showFlag={true} showName={false} />
           </div>
 
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-border">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold">
                 {user?.full_name?.charAt(0) || user?.name?.charAt(0) || "U"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {user?.full_name || user?.name || t("common.user")}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
             </div>
             {user?.isDemo && (
-              <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-                <p className="text-xs text-yellow-800 dark:text-yellow-200 flex items-center">
+              <div className="mt-3 p-2 bg-secondary/50 border border-border rounded-md">
+                <p className="text-xs text-secondary-foreground flex items-center">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Modo Demo - Todas las funciones desbloqueadas
                 </p>
               </div>
             )}
-            <div className="mt-3 flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-              <span className="capitalize">Plan: {user?.subscription_tier || user?.plan || "free"}</span>
-              <span>Créditos IA: {user?.ai_credits || 0}</span>
+            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+              <span className="capitalize">
+                {t("subscription.currentPlan")}: {user?.subscription_tier || user?.plan || t("subscription.free")}
+              </span>
+              <span>
+                {t("ai.credits")}: {user?.ai_credits || 0}
+              </span>
             </div>
           </div>
 
@@ -301,27 +310,12 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "calendar"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <Calendar className="h-5 w-5" />
-              <span className="font-medium">Calendario</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab("tasks")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "tasks"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              }`}
-            >
-              <CheckSquare className="h-5 w-5" />
-              <span className="font-medium">Tareas</span>
+              <span className="font-medium">{t("nav.calendar")}</span>
             </button>
 
             <button
@@ -331,12 +325,12 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "pomodoro"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <Clock className="h-5 w-5" />
-              <span className="font-medium">Pomodoro</span>
+              <span className="font-medium">{t("nav.pomodoro")}</span>
             </button>
 
             <button
@@ -346,12 +340,12 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "stats"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <BarChart3 className="h-5 w-5" />
-              <span className="font-medium">Estadísticas</span>
+              <span className="font-medium">{t("nav.stats")}</span>
             </button>
 
             <button
@@ -361,12 +355,12 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "wishlist"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <Star className="h-5 w-5" />
-              <span className="font-medium">Lista de Deseos</span>
+              <span className="font-medium">{t("nav.wishlist")}</span>
             </button>
 
             <button
@@ -376,12 +370,12 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "notes"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <FileText className="h-5 w-5" />
-              <span className="font-medium">Notas</span>
+              <span className="font-medium">{t("nav.notes")}</span>
             </button>
 
             <button
@@ -391,14 +385,14 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "ai"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <Bot className="h-5 w-5" />
-              <span className="font-medium">Asistente IA</span>
+              <span className="font-medium">{t("nav.aiAssistant")}</span>
               {user?.ai_credits > 0 && (
-                <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-full">
+                <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-primary/20 text-primary-foreground rounded-full border border-primary">
                   {user.ai_credits}
                 </span>
               )}
@@ -412,12 +406,12 @@ function AppContent() {
                 }}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                   activeTab === "subscription"
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
                 <CreditCard className="h-5 w-5" />
-                <span className="font-medium">Suscripción</span>
+                <span className="font-medium">{t("nav.subscription")}</span>
               </button>
             )}
 
@@ -428,38 +422,37 @@ function AppContent() {
               }}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                 activeTab === "achievements"
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
             >
               <Trophy className="h-5 w-5" />
-              <span className="font-medium">Logros</span>
+              <span className="font-medium">{t("nav.achievements")}</span>
             </button>
           </nav>
 
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <div className="p-4 border-t border-border space-y-2">
             <Button
-              variant="outline"
-              className="w-full justify-start bg-transparent"
+              variant="ghost"
+              className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
               onClick={() => setIsSettingsOpen(true)}
             >
               <Settings className="h-4 w-4 mr-2" />
-              Configuración
+              {t("nav.settings")}
             </Button>
             <Button
-              variant="outline"
-              className="w-full justify-start text-red-600 hover:text-red-700 bg-transparent"
+              variant="ghost"
+              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleLogout}
             >
-              {user?.isDemo ? "Salir del Demo" : "Cerrar Sesión"}
+              {user?.isDemo ? "Salir del Demo" : t("common.logout")}
             </Button>
           </div>
         </aside>
 
         <main className="flex-1 overflow-auto p-4 lg:p-6">
           <div className="max-w-7xl mx-auto">
-            {activeTab === "calendar" && <CalendarWidget userId={user?.id} isDemo={user?.isDemo} />}
-            {activeTab === "tasks" && <TaskManager userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "calendar" && <TaskCalendarManager user={user} onUserUpdate={handleUserUpdate} />}
             {activeTab === "pomodoro" && (
               <PomodoroTimer
                 userId={user?.id}
@@ -489,7 +482,9 @@ function AppContent() {
                 billingCycle={user?.billing_cycle || user?.billing || "monthly"}
               />
             )}
-            {activeTab === "achievements" && <AchievementsDisplay userId={user?.id} isDemo={user?.isDemo} />}
+            {activeTab === "achievements" && (
+              <AchievementsDisplay userId={user?.id} user={user} isDemo={user?.isDemo} />
+            )}
           </div>
         </main>
       </div>
@@ -500,7 +495,7 @@ function AppContent() {
 
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
           aria-hidden="true"
         />
@@ -513,8 +508,8 @@ export default function AppPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/20 to-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }
     >
