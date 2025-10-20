@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { translations } from "@/lib/translations"
 
-type Language = "es" | "en"
+type Language = "es" | "en" | "fr" | "de" | "it" | "pt"
 
 interface LanguageContextType {
   language: Language
@@ -21,14 +21,22 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true)
     const savedLanguage = localStorage.getItem("language") as Language
-    if (savedLanguage && (savedLanguage === "es" || savedLanguage === "en")) {
+    if (savedLanguage && ["es", "en", "fr", "de", "it", "pt"].includes(savedLanguage)) {
       setLanguageState(savedLanguage)
+    } else {
+      // Detectar idioma del navegador
+      const browserLang = navigator.language.split("-")[0] as Language
+      if (["es", "en", "fr", "de", "it", "pt"].includes(browserLang)) {
+        setLanguageState(browserLang)
+      }
     }
   }, [])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
     localStorage.setItem("language", lang)
+    // Forzar recarga para aplicar el nuevo idioma
+    window.location.reload()
   }
 
   const t = (key: string): string => {

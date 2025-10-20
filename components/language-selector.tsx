@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Globe } from "lucide-react"
 import { useLanguage } from "@/hooks/useLanguage"
@@ -27,12 +27,8 @@ export function LanguageSelector({
   showName = true,
   className = "",
 }: LanguageSelectorProps) {
-  const { language, setLanguage } = useLanguage()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const { language, setLanguage, mounted } = useLanguage()
+  const [isOpen, setIsOpen] = useState(false)
 
   if (!mounted) {
     return <div className={`w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ${className}`} />
@@ -40,9 +36,14 @@ export function LanguageSelector({
 
   const currentLanguage = languages.find((lang) => lang.code === language) || languages[0]
 
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang as "es" | "en" | "fr" | "de" | "it" | "pt")
+    setIsOpen(false)
+  }
+
   if (variant === "button") {
     return (
-      <Select value={language} onValueChange={setLanguage}>
+      <Select value={language} onValueChange={handleLanguageChange} open={isOpen} onOpenChange={setIsOpen}>
         <SelectTrigger className={`w-auto h-10 px-3 bg-transparent border-gray-200 dark:border-gray-600 ${className}`}>
           <SelectValue>
             <div className="flex items-center">
@@ -57,7 +58,7 @@ export function LanguageSelector({
             <SelectItem
               key={lang.code}
               value={lang.code}
-              className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700"
+              className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 cursor-pointer"
             >
               <div className="flex items-center">
                 {showFlag && <span className="mr-2">{lang.flag}</span>}
@@ -71,7 +72,7 @@ export function LanguageSelector({
   }
 
   return (
-    <Select value={language} onValueChange={setLanguage}>
+    <Select value={language} onValueChange={handleLanguageChange} open={isOpen} onOpenChange={setIsOpen}>
       <SelectTrigger className={`w-full bg-white/10 border-white/20 text-white hover:bg-white/20 ${className}`}>
         <SelectValue>
           <div className="flex items-center">
@@ -83,7 +84,11 @@ export function LanguageSelector({
       </SelectTrigger>
       <SelectContent className="bg-gray-900 border-gray-700">
         {languages.map((lang) => (
-          <SelectItem key={lang.code} value={lang.code} className="text-white hover:bg-gray-700 focus:bg-gray-700">
+          <SelectItem
+            key={lang.code}
+            value={lang.code}
+            className="text-white hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
+          >
             <div className="flex items-center">
               {showFlag && <span className="mr-2">{lang.flag}</span>}
               {showName && <span>{lang.name}</span>}

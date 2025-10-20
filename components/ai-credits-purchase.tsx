@@ -221,11 +221,11 @@ export function AiCreditsPurchase({ userId, currentCredits, onPurchaseSuccess }:
                   <span className="text-sm text-gray-400">créditos</span>
                 </div>
                 <div className="text-sm text-gray-400">
-                  <div>Base: {pack.basePrice.toFixed(2)}€</div>
-                  <div>IVA (21%): {pack.vat.toFixed(2)}€</div>
+                  <div>Base: €{pack.basePrice.toFixed(2)}</div>
+                  <div>IVA (21%): €{pack.vat.toFixed(2)}</div>
                 </div>
-                <div className="text-2xl font-bold text-white">{pack.finalPrice.toFixed(2)}€</div>
-                <div className="text-xs text-gray-500">{getCostPerCredit(pack)}€ por crédito</div>
+                <div className="text-2xl font-bold text-white">€{pack.finalPrice.toFixed(2)}</div>
+                <div className="text-xs text-gray-500">€{getCostPerCredit(pack)} por crédito</div>
               </div>
             </CardHeader>
 
@@ -275,8 +275,8 @@ export function AiCreditsPurchase({ userId, currentCredits, onPurchaseSuccess }:
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              💡 <strong>Tip:</strong> Los usuarios Pro obtienen créditos automáticamente cada mes, pero pueden comprar
-              más si los necesitan
+              💡 <strong>Tip:</strong> Los usuarios Pro obtienen 500 créditos automáticamente cada mes, pero pueden
+              comprar más si los necesitan
             </p>
           </div>
         </CardContent>

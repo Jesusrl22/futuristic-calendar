@@ -12,6 +12,13 @@ export interface AICreditPack {
   bestValue?: boolean
 }
 
+export interface CreditPack {
+  credits: number
+  priceEur: number
+  priceWithTaxEur: number
+  discount?: number
+}
+
 export const aiCreditPacks: AICreditPack[] = [
   {
     id: "starter",
@@ -53,7 +60,32 @@ export const aiCreditPacks: AICreditPack[] = [
   },
 ]
 
-// Export as CREDIT_PACKAGES for compatibility
+export const CREDIT_PACKS: Record<string, CreditPack> = {
+  small: {
+    credits: 100,
+    priceEur: 2.47,
+    priceWithTaxEur: 2.99,
+  },
+  medium: {
+    credits: 500,
+    priceEur: 8.26,
+    priceWithTaxEur: 9.99,
+    discount: 10,
+  },
+  large: {
+    credits: 1000,
+    priceEur: 14.87,
+    priceWithTaxEur: 17.99,
+    discount: 15,
+  },
+  xlarge: {
+    credits: 2500,
+    priceEur: 33.05,
+    priceWithTaxEur: 39.99,
+    discount: 20,
+  },
+}
+
 export const CREDIT_PACKAGES = aiCreditPacks
 
 export const AI_COSTS = {
@@ -89,25 +121,11 @@ export const calculateRealCost = (
   }
 }
 
-export const CREDIT_VALUE_EUR = 2 / 500
+export const CREDIT_VALUE_EUR = 2.99 / 100
 
-export const calculateCreditsNeeded = (message: string, responseLength?: number): number => {
-  const messageLength = message.length
-  const estimatedResponseLength = responseLength || messageLength * 2
-
-  if (messageLength < 50) {
-    return AI_COSTS.SIMPLE_CHAT
-  }
-
-  if (messageLength < 200) {
-    return AI_COSTS.SIMPLE_CHAT
-  }
-
-  if (messageLength < 500) {
-    return AI_COSTS.COMPLEX_CHAT
-  }
-
-  return AI_COSTS.COMPLEX_CHAT + 1
+export const calculateCreditsNeeded = (messages: number, complexity: "simple" | "complex" = "simple"): number => {
+  const creditsPerMessage = complexity === "simple" ? 1 : 2
+  return messages * creditsPerMessage
 }
 
 export const calculateActualCost = (inputTokens: number, outputTokens: number) => {
@@ -248,7 +266,6 @@ export const processCreditPurchase = async (
   }
 }
 
-// Get user AI credits
 export async function getUserAICredits(userId: string): Promise<number> {
   try {
     const user = await hybridDb.getUserById(userId)
@@ -260,4 +277,53 @@ export async function getUserAICredits(userId: string): Promise<number> {
     console.error("Error getting user AI credits:", error)
     return 0
   }
+}
+
+export function hasEnoughCredits(user: any, tokensNeeded: number): boolean {
+  const creditsNeeded = calculateCreditsNeeded(tokensNeeded)
+  return (user?.ai_credits || 0) >= creditsNeeded
+}
+
+export function deductCredits(currentCredits: number, tokensUsed: number): number {
+  const creditsToDeduct = calculateCreditsNeeded(tokensUsed)
+  return Math.max(0, currentCredits - creditsToDeduct)
+}
+
+export function getMonthlyCredits(plan: "free" | "premium" | "pro"): number {
+  const credits = {
+    free: 0,
+    premium: 0,
+    pro: 500,
+  }
+  return credits[plan]
+}
+
+export function shouldResetCredits(lastResetDate: string | null): boolean {
+  if (!lastResetDate) return true
+
+  const lastReset = new Date(lastResetDate)
+  const now = new Date()
+
+  // Reset if it's a new month
+  return now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()
+}
+
+export function getCreditPackById(packId: string): CreditPack | undefined {
+  return CREDIT_PACKS[packId]
+}
+
+export function formatCredits(credits: number): string {
+  if (credits >= 1000) {
+    return `${(credits / 1000).toFixed(1)}k`
+  }
+  return credits.toString()
+}
+
+export function canUseAIFeature(userCredits: number, requiredCredits = 1): boolean {
+  return userCredits >= requiredCredits
+}
+
+export function getRemainingMessages(credits: number, complexity: "simple" | "complex" = "simple"): number {
+  const creditsPerMessage = complexity === "simple" ? 1 : 2
+  return Math.floor(credits / creditsPerMessage)
 }

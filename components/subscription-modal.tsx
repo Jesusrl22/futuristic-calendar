@@ -27,28 +27,35 @@ export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: Subsc
   const plans = {
     premium: {
       name: "Premium",
-      monthly: { base: 2.07, vat: 0.42, total: 2.49 },
-      yearly: { base: 20.66, vat: 4.33, total: 24.99 },
+      monthly: { base: 2.06, vat: 0.43, total: 2.49 },
+      yearly: { base: 20.65, vat: 4.34, total: 24.99 },
       features: [
         "Tareas ilimitadas",
-        "Notas avanzadas",
-        "Lista de deseos premium",
+        "Eventos ilimitados",
+        "Notas ilimitadas",
+        "Lista de deseos",
+        "Pomodoro avanzado",
+        "Todos los logros",
         "Sincronización en la nube",
+        "Estadísticas básicas",
         "Soporte prioritario",
       ],
       notIncluded: ["Créditos IA incluidos"],
     },
     pro: {
       name: "Pro",
-      monthly: { base: 4.96, vat: 1.03, total: 5.99 },
-      yearly: { base: 45.45, vat: 9.54, total: 54.99 },
+      monthly: { base: 4.12, vat: 0.87, total: 4.99 },
+      yearly: { base: 41.31, vat: 8.68, total: 49.99 },
       features: [
         "Todo lo de Premium",
+        "500 créditos IA/mes",
         "Asistente IA avanzado",
-        "Créditos IA incluidos",
-        "Análisis de productividad",
+        "Créditos se renuevan mensualmente",
+        "Análisis de productividad completos",
         "Integraciones premium",
+        "Exportar datos",
         "API access",
+        "Soporte 24/7",
       ],
       notIncluded: [],
     },
@@ -70,7 +77,6 @@ export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: Subsc
 
   const handlePaymentSuccess = (details: any) => {
     console.log("Payment successful:", details)
-    // Update user plan based on payment
     if (selectedPlan === "premium") {
       onUserUpdate({
         is_premium: true,
@@ -80,7 +86,7 @@ export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: Subsc
       onUserUpdate({
         is_premium: false,
         is_pro: true,
-        ai_credits: user.ai_credits + (billingCycle === "yearly" ? 2400 : 200), // Add credits for Pro plan
+        ai_credits: user.ai_credits + (billingCycle === "yearly" ? 6000 : 500),
       })
     }
     onClose()
@@ -175,7 +181,7 @@ export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: Subsc
                 onClick={() => setBillingCycle("yearly")}
                 className="text-white"
               >
-                Anual (2 meses gratis)
+                Anual (ahorra)
               </Button>
             </div>
           )}
@@ -190,9 +196,9 @@ export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: Subsc
                 </Button>
               </div>
               <AiCreditsPurchase
+                userId={user.id}
                 currentCredits={user.ai_credits}
                 onPurchaseSuccess={handleCreditsPurchase}
-                userPlan={currentPlan}
               />
             </div>
           )}
@@ -245,17 +251,17 @@ export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: Subsc
 
                     <div className="text-center mb-6">
                       <div className="text-sm text-gray-400 mb-1">
-                        Base: {pricing.base.toFixed(2)}€ + IVA: {pricing.vat.toFixed(2)}€
+                        Base: €{pricing.base.toFixed(2)} + IVA: €{pricing.vat.toFixed(2)}
                       </div>
                       <div className="text-3xl font-bold text-white">
-                        {pricing.total.toFixed(2)}€
+                        €{pricing.total.toFixed(2)}
                         <span className="text-sm text-gray-400 ml-1">
                           /{billingCycle === "monthly" ? "mes" : "año"}
                         </span>
                       </div>
                       {billingCycle === "yearly" && (
                         <div className="text-sm text-green-400 mt-1">
-                          Ahorra {(plans[planKey as keyof typeof plans].monthly.total * 12 - pricing.total).toFixed(2)}€
+                          Ahorra €{(plans[planKey as keyof typeof plans].monthly.total * 12 - pricing.total).toFixed(2)}{" "}
                           al año
                         </div>
                       )}

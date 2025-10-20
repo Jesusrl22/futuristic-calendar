@@ -6,7 +6,11 @@ export interface SubscriptionPlan {
   name: string
   description: string
   monthlyPrice: number
+  monthlyBasePrice: number
+  monthlyVat: number
   yearlyPrice: number
+  yearlyBasePrice: number
+  yearlyVat: number
   features: string[]
   popular?: boolean
   aiCreditsIncluded: number
@@ -24,22 +28,24 @@ export interface CreditPack {
   description: string
 }
 
-// Export named as subscriptionPlans (lowercase)
 export const subscriptionPlans: SubscriptionPlan[] = [
   {
     id: "free",
     name: "Gratis",
     description: "Perfecto para empezar",
     monthlyPrice: 0,
+    monthlyBasePrice: 0,
+    monthlyVat: 0,
     yearlyPrice: 0,
+    yearlyBasePrice: 0,
+    yearlyVat: 0,
     aiCreditsIncluded: 0,
     aiCreditsRenewMonthly: false,
     features: [
+      "Tareas ilimitadas",
       "Calendario básico",
-      "10 tareas por mes",
-      "5 eventos por mes",
       "Pomodoro básico",
-      "Notas limitadas",
+      "Algunos logros",
       "Sin créditos IA incluidos",
       "Puede comprar packs de créditos IA",
     ],
@@ -49,18 +55,24 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: "Premium",
     description: "Para usuarios avanzados",
     monthlyPrice: 2.49,
+    monthlyBasePrice: 2.06,
+    monthlyVat: 0.43,
     yearlyPrice: 24.99,
+    yearlyBasePrice: 20.65,
+    yearlyVat: 4.34,
     aiCreditsIncluded: 0,
     aiCreditsRenewMonthly: false,
     features: [
-      "Tareas ilimitadas",
+      "Todo de Gratis",
       "Eventos ilimitados",
       "Pomodoro avanzado",
       "Notas ilimitadas",
+      "Lista de deseos",
+      "Todos los logros",
       "Sin créditos IA incluidos",
       "Puede comprar packs de créditos IA",
       "Estadísticas básicas",
-      "Lista de deseos",
+      "Sincronización en la nube",
     ],
   },
   {
@@ -68,7 +80,11 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: "Pro",
     description: "Para profesionales",
     monthlyPrice: 4.99,
+    monthlyBasePrice: 4.12,
+    monthlyVat: 0.87,
     yearlyPrice: 49.99,
+    yearlyBasePrice: 41.31,
+    yearlyVat: 8.68,
     popular: true,
     aiCreditsIncluded: 500,
     aiCreditsRenewMonthly: true,
@@ -79,7 +95,7 @@ export const subscriptionPlans: SubscriptionPlan[] = [
       "Puede comprar packs adicionales",
       "Asistente IA avanzado",
       "Estadísticas completas",
-      "Logros y gamificación",
+      "Logros y gamificación avanzada",
       "Soporte prioritario",
       "Exportar datos",
       "Integraciones premium",
@@ -141,6 +157,18 @@ export function getPlanPrice(planId: string, billingCycle: BillingCycle): number
   return billingCycle === "monthly" ? plan.monthlyPrice : plan.yearlyPrice
 }
 
+export function getPlanBasePrice(planId: string, billingCycle: BillingCycle): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  return billingCycle === "monthly" ? plan.monthlyBasePrice : plan.yearlyBasePrice
+}
+
+export function getPlanVat(planId: string, billingCycle: BillingCycle): number {
+  const plan = getPlanById(planId)
+  if (!plan) return 0
+  return billingCycle === "monthly" ? plan.monthlyVat : plan.yearlyVat
+}
+
 export function getYearlySavings(planId: string): number {
   const plan = getPlanById(planId)
   if (!plan) return 0
@@ -150,7 +178,7 @@ export function getYearlySavings(planId: string): number {
 
 export function calculateAnnualSavings(monthlyPrice: number, annualPrice: number): number {
   const monthlyTotal = monthlyPrice * 12
-  return Math.round(monthlyTotal - annualPrice)
+  return Math.round((monthlyTotal - annualPrice) * 100) / 100
 }
 
 export function formatPrice(price: number, currency = "EUR"): string {
@@ -176,7 +204,6 @@ export function getAICreditsDisplayText(planId: string): string {
 }
 
 export function canPurchaseAICredits(planId: string): boolean {
-  // Todos los planes pueden comprar packs de créditos IA
   return true
 }
 
@@ -229,7 +256,6 @@ export function getAnnualSavingsPercentage(planId: string): number {
 }
 
 export function getPayPalPlanId(planId: string, cycle: BillingCycle): string | undefined {
-  // PayPal plan IDs would be configured here
   const paypalIds: Record<string, Record<BillingCycle, string>> = {
     premium: {
       monthly: "P-PREMIUM-MONTHLY",
