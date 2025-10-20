@@ -128,13 +128,24 @@ function AppContent() {
 
           if (isMounted) {
             if (userData) {
-              console.log("✅ User data loaded from database")
-              const aiCredits =
-                userData.subscription_tier === "free" || userData.subscription_tier === "premium"
-                  ? userData.ai_credits || 0
-                  : userData.ai_credits || 500
+              console.log("✅ User data loaded from database:", userData)
+
+              // Normalizar el plan del usuario
+              let userPlan = "free"
+              if (userData.is_pro || userData.subscription_tier === "pro") {
+                userPlan = "pro"
+              } else if (userData.is_premium || userData.subscription_tier === "premium") {
+                userPlan = "premium"
+              }
+
+              console.log("📊 User plan detected:", userPlan)
+
+              const aiCredits = userPlan === "pro" ? userData.ai_credits || 500 : userData.ai_credits || 0
+
               setUser({
                 ...userData,
+                subscription_tier: userPlan,
+                plan: userPlan,
                 ai_credits: aiCredits,
               })
             } else {

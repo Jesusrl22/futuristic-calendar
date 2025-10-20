@@ -2,326 +2,186 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Crown, Star, Zap, Check, X } from "lucide-react"
-import { PayPalPayment } from "@/components/paypal-payment"
-import { AiCreditsPurchase } from "@/components/ai-credits-purchase"
-import { SubscriptionCancellation } from "@/components/subscription-cancellation"
-import type { User } from "@/lib/hybrid-database"
+import { Check, Sparkles } from "lucide-react"
+import { subscriptionPlans, formatPrice, type BillingCycle } from "@/lib/subscription"
+import { PayPalButtons } from "@paypal/react-paypal-js"
 
 interface SubscriptionModalProps {
-  isOpen: boolean
-  onClose: () => void
-  user: User
-  onUserUpdate: (updates: Partial<User>) => void
+  userId: string
+  currentPlan: string
+  billingCycle: string
 }
 
-export function SubscriptionModal({ isOpen, onClose, user, onUserUpdate }: SubscriptionModalProps) {
-  const [selectedPlan, setSelectedPlan] = useState<"premium" | "pro" | null>(null)
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
-  const [showAiCredits, setShowAiCredits] = useState(false)
-  const [showCancellation, setShowCancellation] = useState(false)
+export function SubscriptionModal({ userId, currentPlan, billingCycle }: SubscriptionModalProps) {
+  const [selectedPlan, setSelectedPlan] = useState<string>(currentPlan)
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>((billingCycle as BillingCycle) || "monthly")
+  const [loading, setLoading] = useState(false)
 
-  const plans = {
-    premium: {
-      name: "Premium",
-      monthly: { base: 2.06, vat: 0.43, total: 2.49 },
-      yearly: { base: 20.65, vat: 4.34, total: 24.99 },
-      features: [
-        "Tareas ilimitadas",
-        "Eventos ilimitados",
-        "Notas ilimitadas",
-        "Lista de deseos",
-        "Pomodoro avanzado",
-        "Todos los logros",
-        "Sincronización en la nube",
-        "Estadísticas básicas",
-        "Soporte prioritario",
-      ],
-      notIncluded: ["Créditos IA incluidos"],
-    },
-    pro: {
-      name: "Pro",
-      monthly: { base: 4.12, vat: 0.87, total: 4.99 },
-      yearly: { base: 41.31, vat: 8.68, total: 49.99 },
-      features: [
-        "Todo lo de Premium",
-        "500 créditos IA/mes",
-        "Asistente IA avanzado",
-        "Créditos se renuevan mensualmente",
-        "Análisis de productividad completos",
-        "Integraciones premium",
-        "Exportar datos",
-        "API access",
-        "Soporte 24/7",
-      ],
-      notIncluded: [],
-    },
-  }
-
-  const getCurrentPlan = () => {
-    if (user.is_pro) return "pro"
-    if (user.is_premium) return "premium"
-    return "free"
-  }
-
-  const currentPlan = getCurrentPlan()
-
-  const handlePlanSelect = (plan: "premium" | "pro") => {
-    setSelectedPlan(plan)
-    setShowAiCredits(false)
-    setShowCancellation(false)
-  }
-
-  const handlePaymentSuccess = (details: any) => {
-    console.log("Payment successful:", details)
-    if (selectedPlan === "premium") {
-      onUserUpdate({
-        is_premium: true,
-        is_pro: false,
-      })
-    } else if (selectedPlan === "pro") {
-      onUserUpdate({
-        is_premium: false,
-        is_pro: true,
-        ai_credits: user.ai_credits + (billingCycle === "yearly" ? 6000 : 500),
-      })
+  const handlePlanSelect = (planId: string) => {
+    if (planId !== "free") {
+      setSelectedPlan(planId)
     }
-    onClose()
   }
 
-  const handleCreditsPurchase = (credits: number) => {
-    onUserUpdate({
-      ai_credits: user.ai_credits + credits,
-    })
-    setShowAiCredits(false)
-  }
+  const selectedPlanData = subscriptionPlans.find((p) => p.id === selectedPlan)
+  const price = selectedCycle === "monthly" ? selectedPlanData?.monthlyPrice : selectedPlanData?.yearlyPrice
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-slate-900 border-purple-500/20">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
-            <Star className="h-6 w-6 text-purple-400" />
-            Gestión de Suscripción
-          </DialogTitle>
-        </DialogHeader>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold mb-2">Elige tu Plan</h1>
+        <p className="text-muted-foreground">Selecciona el plan que mejor se adapte a tus necesidades</p>
+      </div>
 
-        <div className="space-y-6">
-          {/* Current Plan Status */}
-          <div className="p-4 bg-slate-800/50 rounded-lg border border-purple-500/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-white">Plan Actual</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant={currentPlan === "pro" ? "default" : "secondary"}>
-                    {currentPlan === "pro" ? (
-                      <>
-                        <Crown className="h-3 w-3 mr-1" />
-                        Pro
-                      </>
-                    ) : currentPlan === "premium" ? (
-                      "Premium"
-                    ) : (
-                      "Free"
-                    )}
-                  </Badge>
-                  <span className="text-sm text-gray-400">{user.ai_credits} créditos IA disponibles</span>
-                </div>
-              </div>
-              {currentPlan !== "free" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCancellation(true)}
-                  className="text-red-400 border-red-500/30 hover:bg-red-500/10"
-                >
-                  Cancelar Plan
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <Button
-              onClick={() => setShowAiCredits(true)}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              Comprar Créditos IA
-            </Button>
-            {currentPlan === "free" && (
-              <Button
-                onClick={() => handlePlanSelect("premium")}
-                variant="outline"
-                className="flex-1 border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
-              >
-                Upgrade a Premium
-              </Button>
-            )}
-          </div>
-
-          {/* Billing Cycle Toggle */}
-          {!showAiCredits && !showCancellation && (
-            <div className="flex items-center justify-center gap-4 p-4 bg-slate-800/30 rounded-lg">
-              <Button
-                variant={billingCycle === "monthly" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setBillingCycle("monthly")}
-                className="text-white"
-              >
-                Mensual
-              </Button>
-              <Button
-                variant={billingCycle === "yearly" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setBillingCycle("yearly")}
-                className="text-white"
-              >
-                Anual (ahorra)
-              </Button>
-            </div>
-          )}
-
-          {/* AI Credits Purchase */}
-          {showAiCredits && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Comprar Créditos IA</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowAiCredits(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <AiCreditsPurchase
-                userId={user.id}
-                currentCredits={user.ai_credits}
-                onPurchaseSuccess={handleCreditsPurchase}
-              />
-            </div>
-          )}
-
-          {/* Subscription Cancellation */}
-          {showCancellation && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Cancelar Suscripción</h3>
-                <Button variant="ghost" size="sm" onClick={() => setShowCancellation(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <SubscriptionCancellation
-                user={user}
-                onCancellationSuccess={() => {
-                  onUserUpdate({ is_premium: false, is_pro: false })
-                  setShowCancellation(false)
-                  onClose()
-                }}
-              />
-            </div>
-          )}
-
-          {/* Plan Comparison */}
-          {!showAiCredits && !showCancellation && (
-            <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(plans).map(([planKey, plan]) => {
-                const isCurrentPlan = currentPlan === planKey
-                const pricing = plan[billingCycle]
-
-                return (
-                  <div
-                    key={planKey}
-                    className={`p-6 rounded-lg border-2 transition-all ${
-                      selectedPlan === planKey
-                        ? "border-purple-500 bg-purple-500/10"
-                        : isCurrentPlan
-                          ? "border-green-500/50 bg-green-500/5"
-                          : "border-slate-700 bg-slate-800/30"
-                    }`}
-                  >
-                    <div className="text-center mb-4">
-                      <h3 className="text-xl font-bold text-white flex items-center justify-center gap-2">
-                        {planKey === "pro" && <Crown className="h-5 w-5 text-yellow-400" />}
-                        {plan.name}
-                      </h3>
-                      {isCurrentPlan && <Badge className="mt-2 bg-green-500/20 text-green-400">Plan Actual</Badge>}
-                    </div>
-
-                    <div className="text-center mb-6">
-                      <div className="text-sm text-gray-400 mb-1">
-                        Base: €{pricing.base.toFixed(2)} + IVA: €{pricing.vat.toFixed(2)}
-                      </div>
-                      <div className="text-3xl font-bold text-white">
-                        €{pricing.total.toFixed(2)}
-                        <span className="text-sm text-gray-400 ml-1">
-                          /{billingCycle === "monthly" ? "mes" : "año"}
-                        </span>
-                      </div>
-                      {billingCycle === "yearly" && (
-                        <div className="text-sm text-green-400 mt-1">
-                          Ahorra €{(plans[planKey as keyof typeof plans].monthly.total * 12 - pricing.total).toFixed(2)}{" "}
-                          al año
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-3 mb-6">
-                      {plan.features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
-                          <span className="text-gray-300">{feature}</span>
-                        </div>
-                      ))}
-                      {plan.notIncluded.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <X className="h-4 w-4 text-red-400 flex-shrink-0" />
-                          <span className="text-gray-500">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {!isCurrentPlan && (
-                      <Button
-                        onClick={() => handlePlanSelect(planKey as "premium" | "pro")}
-                        className={`w-full ${
-                          selectedPlan === planKey
-                            ? "bg-purple-600 hover:bg-purple-700"
-                            : "bg-slate-700 hover:bg-slate-600"
-                        }`}
-                      >
-                        {selectedPlan === planKey ? "Seleccionado" : `Cambiar a ${plan.name}`}
-                      </Button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Payment Section */}
-          {selectedPlan && !showAiCredits && !showCancellation && (
-            <div className="space-y-4">
-              <Separator className="bg-purple-500/20" />
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-white mb-4">
-                  Proceder con el pago - Plan {plans[selectedPlan].name}
-                </h3>
-                <PayPalPayment
-                  amount={plans[selectedPlan][billingCycle].total}
-                  currency="EUR"
-                  description={`Plan ${plans[selectedPlan].name} - ${billingCycle === "monthly" ? "Mensual" : "Anual"}`}
-                  onSuccess={handlePaymentSuccess}
-                  onError={(error) => console.error("Payment error:", error)}
-                  planType={selectedPlan}
-                  billingCycle={billingCycle}
-                />
-              </div>
-            </div>
-          )}
+      {/* Toggle Mensual/Anual */}
+      <div className="flex justify-center mb-8">
+        <div className="inline-flex rounded-lg border border-border p-1 bg-muted/50">
+          <Button
+            variant={selectedCycle === "monthly" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedCycle("monthly")}
+            className={selectedCycle === "monthly" ? "bg-primary text-primary-foreground" : ""}
+          >
+            Mensual
+          </Button>
+          <Button
+            variant={selectedCycle === "yearly" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedCycle("yearly")}
+            className={selectedCycle === "yearly" ? "bg-primary text-primary-foreground" : ""}
+          >
+            Anual
+            <Badge variant="secondary" className="ml-2">
+              Ahorra 20%
+            </Badge>
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {/* Plan Cards */}
+      <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {subscriptionPlans.map((plan) => {
+          const price = selectedCycle === "monthly" ? plan.monthlyPrice : plan.yearlyPrice
+          const isCurrentPlan = currentPlan === plan.id
+          const isSelected = selectedPlan === plan.id
+
+          return (
+            <Card
+              key={plan.id}
+              className={`relative cursor-pointer transition-all ${
+                isSelected ? "border-primary border-2 shadow-lg" : "hover:border-primary/50"
+              } ${plan.popular ? "border-primary/50" : ""}`}
+              onClick={() => handlePlanSelect(plan.id)}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-primary text-primary-foreground">Más Popular</Badge>
+                </div>
+              )}
+              {isCurrentPlan && (
+                <div className="absolute -top-3 right-4">
+                  <Badge variant="secondary">Plan Actual</Badge>
+                </div>
+              )}
+
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  {plan.name}
+                  {plan.aiCreditsIncluded > 0 && <Sparkles className="h-5 w-5 text-primary" />}
+                </CardTitle>
+                <CardDescription>{plan.description}</CardDescription>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">{formatPrice(price)}</span>
+                  {price > 0 && (
+                    <span className="text-muted-foreground">/{selectedCycle === "monthly" ? "mes" : "año"}</span>
+                  )}
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <ul className="space-y-2">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-primary mr-2 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Button
+                  className="w-full mt-6"
+                  variant={isSelected ? "default" : "outline"}
+                  onClick={() => handlePlanSelect(plan.id)}
+                  disabled={isCurrentPlan || plan.id === "free"}
+                >
+                  {isCurrentPlan ? "Plan Actual" : isSelected ? "✓ Seleccionado" : "Seleccionar"}
+                </Button>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Payment Section */}
+      {selectedPlan !== "free" && selectedPlan !== currentPlan && (
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle>Confirmar Suscripción</CardTitle>
+            <CardDescription>
+              Has seleccionado el plan {selectedPlanData?.name} - {selectedCycle === "monthly" ? "Mensual" : "Anual"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-muted-foreground">Plan:</span>
+                <span className="font-semibold">{selectedPlanData?.name}</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-muted-foreground">Ciclo:</span>
+                <span className="font-semibold">{selectedCycle === "monthly" ? "Mensual" : "Anual"}</span>
+              </div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-muted-foreground">Total:</span>
+                <span className="text-2xl font-bold">{formatPrice(price || 0)}</span>
+              </div>
+            </div>
+
+            <div className="bg-muted p-4 rounded-lg mb-4">
+              <p className="text-sm text-muted-foreground">
+                Serás redirigido a PayPal para completar el pago de forma segura.
+              </p>
+            </div>
+
+            <PayPalButtons
+              style={{ layout: "vertical" }}
+              createOrder={async () => {
+                const response = await fetch("/api/paypal/create-subscription", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    planId: selectedPlan,
+                    billingCycle: selectedCycle,
+                    userId,
+                  }),
+                })
+                const data = await response.json()
+                return data.subscriptionId
+              }}
+              onApprove={async (data) => {
+                setLoading(true)
+                window.location.href = `/payment/success?subscription_id=${data.subscriptionID}`
+              }}
+              onError={(err) => {
+                console.error("PayPal error:", err)
+                alert("Error al procesar el pago")
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }
