@@ -1,139 +1,152 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, CreditCard, Shield, CheckCircle } from "lucide-react"
+import { Loader2, CheckCircle, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface PayPalPaymentProps {
-  planId: string
+  plan: string
+  billingCycle: string
+  amount: number
   onSuccess: () => void
   onCancel: () => void
 }
 
-export function PayPalPayment({ planId, onSuccess, onCancel }: PayPalPaymentProps) {
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [paymentStep, setPaymentStep] = useState<"select" | "processing" | "success">("select")
+export function PayPalPayment({ plan, billingCycle, amount, onSuccess, onCancel }: PayPalPaymentProps) {
+  const [processing, setProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isDemoMode, setIsDemoMode] = useState(false)
 
-  const handlePayPalPayment = async () => {
-    setIsProcessing(true)
-    setPaymentStep("processing")
+  useEffect(() => {
+    // Check if PayPal client ID is configured
+    const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
+
+    if (!clientId || clientId === "your-paypal-client-id" || clientId.includes("your-")) {
+      console.log("⚠️ PayPal not configured - using demo mode")
+      setIsDemoMode(true)
+      return
+    }
+
+    // Load PayPal SDK
+    const script = document.createElement("script")
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=EUR&intent=subscription&vault=true`
+    script.async = true
+
+    script.onload = () => {
+      console.log("✅ PayPal SDK loaded")
+      setIsDemoMode(false)
+    }
+
+    script.onerror = () => {
+      console.error("❌ Failed to load PayPal SDK")
+      setError("Error al cargar PayPal. Usando modo demo.")
+      setIsDemoMode(true)
+    }
+
+    document.body.appendChild(script)
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
+      }
+    }
+  }, [])
+
+  const handleDemoPayment = async () => {
+    console.log("💳 Processing demo payment...")
+    console.log("   Plan:", plan)
+    console.log("   Billing:", billingCycle)
+    console.log("   Amount:", amount)
+
+    setProcessing(true)
+    setError(null)
 
     try {
-      // Simulate PayPal payment process
-      await new Promise((resolve) => setTimeout(resolve, 3000))
+      // Simular llamada al backend
+      await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      setPaymentStep("success")
-      setTimeout(() => {
-        onSuccess()
-      }, 2000)
-    } catch (error) {
-      console.error("Payment error:", error)
-      setIsProcessing(false)
-      setPaymentStep("select")
+      console.log("✅ Demo payment completed")
+      setProcessing(false)
+      onSuccess()
+    } catch (err) {
+      console.error("❌ Demo payment error:", err)
+      setError("Error al procesar el pago demo")
+      setProcessing(false)
     }
   }
 
-  const handleDemoPayment = async () => {
-    setIsProcessing(true)
-    setPaymentStep("processing")
-
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    setPaymentStep("success")
-    setTimeout(() => {
-      onSuccess()
-    }, 1500)
-  }
-
-  if (paymentStep === "success") {
+  if (error && !isDemoMode) {
     return (
-      <Card className="bg-slate-800/50 border-green-500/30">
-        <CardContent className="p-8 text-center">
-          <CheckCircle className="h-16 w-16 text-green-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">¡Pago Exitoso!</h3>
-          <p className="text-gray-400">Tu suscripción ha sido activada correctamente.</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (paymentStep === "processing") {
-    return (
-      <Card className="bg-slate-800/50 border-purple-500/20">
-        <CardContent className="p-8 text-center">
-          <Loader2 className="h-16 w-16 text-purple-400 mx-auto mb-4 animate-spin" />
-          <h3 className="text-xl font-bold text-white mb-2">Procesando Pago</h3>
-          <p className="text-gray-400">Por favor espera mientras procesamos tu pago...</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button onClick={onCancel} variant="outline" className="w-full bg-transparent">
+          Cerrar
+        </Button>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-slate-800/50 border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Método de Pago
-          </CardTitle>
-          <CardDescription className="text-gray-400">Selecciona tu método de pago preferido</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Demo Payment Button */}
-          <Button
-            onClick={handleDemoPayment}
-            disabled={isProcessing}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white py-3"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Procesando...
-              </>
-            ) : (
-              <>
-                <CreditCard className="h-4 w-4 mr-2" />
-                Pago Demo (Simulado)
-              </>
-            )}
-          </Button>
+    <div className="space-y-4">
+      {isDemoMode && (
+        <Alert className="bg-blue-500/10 border-blue-500/20">
+          <AlertCircle className="h-4 w-4 text-blue-500" />
+          <AlertDescription className="text-blue-700 dark:text-blue-400">
+            <strong>Modo Demo:</strong> PayPal no está configurado. Este es un pago simulado para pruebas.
+          </AlertDescription>
+        </Alert>
+      )}
 
-          {/* PayPal Button */}
-          <Button
-            onClick={handlePayPalPayment}
-            disabled={isProcessing}
-            className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white py-3"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Procesando...
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h8.418c2.508 0 4.514.893 5.835 2.607 1.146 1.486 1.321 3.51.534 6.154-.906 3.04-2.474 4.977-4.563 5.629-.906.283-1.929.283-3.298.283H9.15c-.283 0-.566.283-.566.566l-.849 5.418c-.071.566-.566.849-1.132.849-.283 0-.566-.071-.849-.283-.283-.212-.566-.566-.566-.849l.849-5.418c.071-.566.566-.849 1.132-.849h3.581c1.369 0 2.392 0 3.298-.283 2.089-.652 3.657-2.589 4.563-5.629.787-2.644.612-4.668-.534-6.154C18.932.893 16.926 0 14.418 0H5.998c-.524 0-.972.382-1.054.901L1.837 20.597a.641.641 0 0 0 .633.74h4.606z" />
-                </svg>
-                Pagar con PayPal
-              </>
-            )}
-          </Button>
-
-          <div className="flex items-center gap-2 text-sm text-gray-400 justify-center">
-            <Shield className="h-4 w-4" />
-            <span>Pago seguro y encriptado</span>
+      <div className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-lg border">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Plan</span>
+            <span className="font-semibold capitalize">{plan}</span>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Facturación</span>
+            <span className="font-semibold capitalize">{billingCycle === "monthly" ? "Mensual" : "Anual"}</span>
+          </div>
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-300 dark:via-gray-700 to-transparent" />
+          <div className="flex justify-between items-center">
+            <span className="text-lg font-semibold">Total</span>
+            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{amount}€</span>
+          </div>
+        </div>
+      </div>
 
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={onCancel} className="flex-1 bg-transparent">
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={onCancel} disabled={processing} className="flex-1 bg-transparent">
           Cancelar
         </Button>
+        <Button
+          onClick={handleDemoPayment}
+          disabled={processing}
+          className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Procesando...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              {isDemoMode ? "Pagar (Demo)" : "Pagar con PayPal"}
+            </>
+          )}
+        </Button>
       </div>
+
+      {isDemoMode && (
+        <p className="text-xs text-center text-muted-foreground">
+          Para usar PayPal real, configura NEXT_PUBLIC_PAYPAL_CLIENT_ID en .env.local
+        </p>
+      )}
     </div>
   )
 }

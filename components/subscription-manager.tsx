@@ -1,169 +1,218 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Check, Crown, Loader2, Star } from "lucide-react"
-import { subscriptionPlans, formatPrice, getYearlySavings } from "@/lib/subscription"
-import { useLanguage } from "@/hooks/useLanguage"
+import { Separator } from "@/components/ui/separator"
+import { SubscriptionModal } from "./subscription-modal"
+import { Crown, Zap, Rocket, Calendar, CreditCard, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface SubscriptionManagerProps {
-  currentPlan?: string
-  onUpgrade?: (planId: string, billing: "monthly" | "yearly") => Promise<void>
-  userId?: string
-  billingCycle?: "monthly" | "yearly"
+  userId: string
+  currentPlan: string
+  billingCycle: string
 }
 
-export function SubscriptionManager({
-  currentPlan = "free",
-  onUpgrade,
-  userId,
-  billingCycle = "monthly",
-}: SubscriptionManagerProps) {
-  const { t } = useLanguage()
-  const [isYearly, setIsYearly] = useState(billingCycle === "yearly")
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+const planIcons = {
+  free: Zap,
+  premium: Crown,
+  pro: Rocket,
+}
 
-  const handleUpgrade = async (planId: string) => {
-    if (!onUpgrade) return
+const planColors = {
+  free: "text-gray-500",
+  premium: "text-purple-500",
+  pro: "text-yellow-500",
+}
 
-    setLoadingPlan(planId)
+const planDescriptions = {
+  free: "Plan básico con funciones esenciales",
+  premium: "Plan avanzado con todas las funciones",
+  pro: "Plan profesional con IA ilimitada",
+}
+
+export function SubscriptionManager({ userId, currentPlan, billingCycle }: SubscriptionManagerProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [planData, setPlanData] = useState<any>(null)
+
+  console.log("📊 SubscriptionManager rendered with:", { userId, currentPlan, billingCycle })
+
+  useEffect(() => {
+    loadPlanData()
+  }, [currentPlan])
+
+  const loadPlanData = async () => {
     try {
-      await onUpgrade(planId, isYearly ? "yearly" : "monthly")
+      const response = await fetch(`/api/subscription?userId=${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setPlanData(data)
+        console.log("✅ Plan data loaded:", data)
+      }
     } catch (error) {
-      console.error("Error upgrading plan:", error)
-    } finally {
-      setLoadingPlan(null)
+      console.error("❌ Error loading plan data:", error)
     }
   }
 
+  const handleUpgrade = (plan: string, cycle: string) => {
+    console.log("✨ Plan upgraded:", { plan, cycle })
+    loadPlanData()
+    setIsModalOpen(false)
+  }
+
+  const PlanIcon = planIcons[currentPlan as keyof typeof planIcons] || Zap
+  const planColor = planColors[currentPlan as keyof typeof planColors] || "text-gray-500"
+  const planDescription = planDescriptions[currentPlan as keyof typeof planDescriptions] || "Plan desconocido"
+
   return (
     <div className="space-y-6">
-      {/* Billing Toggle */}
-      <div className="flex items-center justify-center space-x-4">
-        <span className={`text-sm ${!isYearly ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-          {t("subscription.monthly")}
-        </span>
-        <Switch checked={isYearly} onCheckedChange={setIsYearly} />
-        <span className={`text-sm ${isYearly ? "text-foreground font-medium" : "text-muted-foreground"}`}>
-          {t("subscription.yearly")}
-        </span>
-        {isYearly && (
-          <Badge variant="secondary" className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30">
-            {t("subscription.saveUpTo")} €40
-          </Badge>
-        )}
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Suscripción</h1>
+        <p className="text-muted-foreground">Gestiona tu plan y facturación</p>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {subscriptionPlans.map((plan) => {
-          const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice
-          const savings = isYearly ? getYearlySavings(plan.id) : 0
-          const isCurrentPlan = currentPlan === plan.id
-          const isLoading = loadingPlan === plan.id
+      <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Modo Demo</AlertTitle>
+        <AlertDescription>
+          Los pagos están simulados para demostración. En producción se integraría PayPal real.
+        </AlertDescription>
+      </Alert>
 
-          return (
-            <Card
-              key={plan.id}
-              className={`relative bg-card border-border ${
-                plan.popular ? "ring-2 ring-primary/50" : ""
-              } ${isCurrentPlan ? "ring-2 ring-green-500/50" : ""}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-                    <Star className="w-3 h-3 mr-1" />
-                    {t("subscription.mostPopular")}
-                  </Badge>
-                </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-lg bg-muted ${planColor}`}>
+                <PlanIcon className="w-6 h-6" />
+              </div>
+              <div>
+                <CardTitle className="capitalize">{currentPlan}</CardTitle>
+                <CardDescription>{planDescription}</CardDescription>
+              </div>
+            </div>
+            <Badge variant={currentPlan === "pro" ? "default" : "secondary"} className="capitalize">
+              {currentPlan}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar className="w-4 h-4" />
+                <span className="text-sm">Ciclo de facturación</span>
+              </div>
+              <p className="font-semibold capitalize">{billingCycle === "yearly" ? "Anual" : "Mensual"}</p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <CreditCard className="w-4 h-4" />
+                <span className="text-sm">Estado</span>
+              </div>
+              <p className="font-semibold text-green-600">Activo</p>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <h3 className="font-semibold">Características incluidas:</h3>
+            <ul className="space-y-2 text-sm">
+              {currentPlan === "free" && (
+                <>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Tareas ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Pomodoro básico
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Algunos logros
+                  </li>
+                </>
               )}
 
-              {isCurrentPlan && (
-                <div className="absolute -top-3 right-4">
-                  <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0">
-                    <Crown className="w-3 h-3 mr-1" />
-                    {t("subscription.currentPlan")}
-                  </Badge>
-                </div>
+              {currentPlan === "premium" && (
+                <>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Todo de Free
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Eventos ilimitados
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Notas ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Pomodoro avanzado
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Todos los logros
+                  </li>
+                </>
               )}
 
-              <CardHeader className="text-center">
-                <CardTitle className="text-xl text-foreground">{plan.name}</CardTitle>
-                <div className="space-y-2">
-                  <div className="text-3xl font-bold text-foreground">
-                    {formatPrice(price)}
-                    {plan.id !== "free" && (
-                      <span className="text-sm font-normal text-muted-foreground">
-                        /{isYearly ? t("subscription.year") : t("subscription.month")}
-                      </span>
-                    )}
-                  </div>
-                  {isYearly && savings > 0 && (
-                    <div className="text-sm text-green-600 dark:text-green-400">
-                      {t("subscription.save")} {formatPrice(savings)} {t("subscription.perYear")}
-                    </div>
-                  )}
-                </div>
-                <CardDescription className="text-muted-foreground">
-                  {plan.aiCreditsIncluded > 0
-                    ? `${plan.aiCreditsIncluded} ${t("ai.creditsPerMonth")}`
-                    : t("ai.noCreditsIncluded")}
-                </CardDescription>
-              </CardHeader>
+              {currentPlan === "pro" && (
+                <>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Todo de Premium
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    500 créditos IA/mes
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Asistente IA avanzado
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Soporte prioritario 24/7
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Funciones beta exclusivas
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
 
-              <CardContent className="space-y-4">
-                <ul className="space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <Check className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+          <Separator />
 
-                <Button
-                  className={`w-full ${
-                    isCurrentPlan
-                      ? "bg-green-600 hover:bg-green-700"
-                      : plan.popular
-                        ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                        : "bg-primary hover:bg-primary/90"
-                  }`}
-                  disabled={isCurrentPlan || isLoading}
-                  onClick={() => handleUpgrade(plan.id)}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      {t("common.loading")}...
-                    </>
-                  ) : isCurrentPlan ? (
-                    t("subscription.currentPlan")
-                  ) : plan.id === "free" ? (
-                    t("subscription.free")
-                  ) : (
-                    `${t("subscription.upgrade")} ${isYearly ? t("subscription.yearly") : t("subscription.monthly")}`
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+          <div className="flex gap-3">
+            <Button onClick={() => setIsModalOpen(true)} className="flex-1">
+              {currentPlan === "free" ? "Mejorar Plan" : "Cambiar Plan"}
+            </Button>
+            {currentPlan !== "free" && (
+              <Button variant="outline" onClick={() => setIsModalOpen(true)}>
+                Ver Planes
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Additional Info */}
-      <div className="text-center text-sm text-muted-foreground space-y-2">
-        <p>{t("subscription.allPlansInclude")}:</p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <span>✓ {t("subscription.cloudSync")}</span>
-          <span>✓ {t("subscription.mobileAccess")}</span>
-          <span>✓ {t("subscription.freeUpdates")}</span>
-          <span>✓ {t("subscription.cancelAnytime")}</span>
-        </div>
-      </div>
+      <SubscriptionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        currentPlan={currentPlan}
+        userId={userId}
+        onUpgrade={handleUpgrade}
+      />
     </div>
   )
 }
