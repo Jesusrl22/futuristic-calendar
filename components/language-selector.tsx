@@ -1,13 +1,12 @@
 "use client"
-
-import { useState } from "react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Globe } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useLanguage } from "@/hooks/useLanguage"
 
 const languages = [
   { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "en", name: "English", flag: "🇺🇸" },
+  { code: "en", name: "English", flag: "🇬🇧" },
   { code: "fr", name: "Français", flag: "🇫🇷" },
   { code: "de", name: "Deutsch", flag: "🇩🇪" },
   { code: "it", name: "Italiano", flag: "🇮🇹" },
@@ -15,87 +14,41 @@ const languages = [
 ]
 
 interface LanguageSelectorProps {
-  variant?: "button" | "select"
+  variant?: "button" | "icon"
   showFlag?: boolean
   showName?: boolean
-  className?: string
 }
 
-export function LanguageSelector({
-  variant = "select",
-  showFlag = true,
-  showName = true,
-  className = "",
-}: LanguageSelectorProps) {
-  const { language, setLanguage, mounted } = useLanguage()
-  const [isOpen, setIsOpen] = useState(false)
-
-  if (!mounted) {
-    return <div className={`w-32 h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ${className}`} />
-  }
-
-  const currentLanguage = languages.find((lang) => lang.code === language) || languages[0]
-
-  const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang as "es" | "en" | "fr" | "de" | "it" | "pt")
-    setIsOpen(false)
-  }
-
-  if (variant === "button") {
-    return (
-      <Select value={language} onValueChange={handleLanguageChange} open={isOpen} onOpenChange={setIsOpen}>
-        <SelectTrigger className={`w-auto h-10 px-3 bg-transparent border-gray-200 dark:border-gray-600 ${className}`}>
-          <SelectValue>
-            <div className="flex items-center">
-              <Globe className="h-4 w-4 mr-2" />
-              {showFlag && <span className="mr-2">{currentLanguage.flag}</span>}
-              {showName && <span className="hidden sm:inline">{currentLanguage.name}</span>}
-            </div>
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-          {languages.map((lang) => (
-            <SelectItem
-              key={lang.code}
-              value={lang.code}
-              className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 cursor-pointer"
-            >
-              <div className="flex items-center">
-                {showFlag && <span className="mr-2">{lang.flag}</span>}
-                {showName && <span>{lang.name}</span>}
-              </div>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    )
-  }
+export function LanguageSelector({ variant = "button", showFlag = true, showName = true }: LanguageSelectorProps) {
+  const { language, setLanguage } = useLanguage()
+  const currentLang = languages.find((l) => l.code === language) || languages[0]
 
   return (
-    <Select value={language} onValueChange={handleLanguageChange} open={isOpen} onOpenChange={setIsOpen}>
-      <SelectTrigger className={`w-full bg-white/10 border-white/20 text-white hover:bg-white/20 ${className}`}>
-        <SelectValue>
-          <div className="flex items-center">
-            <Globe className="h-4 w-4 mr-2" />
-            {showFlag && <span className="mr-2">{currentLanguage.flag}</span>}
-            {showName && <span>{currentLanguage.name}</span>}
-          </div>
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent className="bg-gray-900 border-gray-700">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {variant === "icon" ? (
+          <Button variant="ghost" size="icon">
+            <Globe className="h-5 w-5" />
+          </Button>
+        ) : (
+          <Button variant="ghost" className="gap-2">
+            {showFlag && <span>{currentLang.flag}</span>}
+            {showName && <span>{currentLang.name}</span>}
+          </Button>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
         {languages.map((lang) => (
-          <SelectItem
+          <DropdownMenuItem
             key={lang.code}
-            value={lang.code}
-            className="text-white hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
+            onClick={() => setLanguage(lang.code as any)}
+            className={language === lang.code ? "bg-accent" : ""}
           >
-            <div className="flex items-center">
-              {showFlag && <span className="mr-2">{lang.flag}</span>}
-              {showName && <span>{lang.name}</span>}
-            </div>
-          </SelectItem>
+            <span className="mr-2">{lang.flag}</span>
+            <span>{lang.name}</span>
+          </DropdownMenuItem>
         ))}
-      </SelectContent>
-    </Select>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

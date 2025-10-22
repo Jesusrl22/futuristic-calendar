@@ -306,6 +306,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
   }
 
   const handleThemeChange = (themeName: ThemeName) => {
+    console.log("🎨 Cambiando tema a:", themeName)
     updateTheme({ theme: themeName })
     toast({
       title: "Tema actualizado",
@@ -362,19 +363,17 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-background border-border">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-foreground">
+          <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Configuración
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground">
-            Personaliza tu experiencia en FutureTask
-          </DialogDescription>
+          <DialogDescription>Personaliza tu experiencia en FutureTask</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 bg-muted">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile" className="flex items-center gap-1">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Perfil</span>
@@ -398,48 +397,40 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            <Card className="bg-card border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground">Información Personal</CardTitle>
+                <CardTitle>Información Personal</CardTitle>
                 <CardDescription>Actualiza tu información de perfil</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-foreground">
-                      Nombre
-                    </Label>
+                    <Label htmlFor="name">Nombre</Label>
                     <Input
                       id="name"
                       value={profileData.name}
                       onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                      className="bg-background border-input text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-foreground">
-                      Email
-                    </Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       type="email"
                       value={profileData.email}
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="bg-background border-input text-foreground"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="timezone" className="text-foreground">
-                      Zona Horaria
-                    </Label>
+                    <Label htmlFor="timezone">Zona Horaria</Label>
                     <Select
                       value={profileData.timezone}
                       onValueChange={(value) => setProfileData({ ...profileData, timezone: value })}
                     >
-                      <SelectTrigger className="bg-background border-input text-foreground">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
+                      <SelectContent>
                         <SelectItem value="America/Mexico_City">Ciudad de México (GMT-6)</SelectItem>
                         <SelectItem value="America/New_York">Nueva York (GMT-5)</SelectItem>
                         <SelectItem value="Europe/Madrid">Madrid (GMT+1)</SelectItem>
@@ -448,17 +439,15 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="language" className="text-foreground">
-                      Idioma
-                    </Label>
+                    <Label htmlFor="language">Idioma</Label>
                     <Select
                       value={profileData.language}
                       onValueChange={(value) => setProfileData({ ...profileData, language: value })}
                     >
-                      <SelectTrigger className="bg-background border-input text-foreground">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
+                      <SelectContent>
                         <SelectItem value="es">Español</SelectItem>
                         <SelectItem value="en">English</SelectItem>
                         <SelectItem value="fr">Français</SelectItem>
@@ -466,7 +455,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                     </Select>
                   </div>
                 </div>
-                <Button onClick={handleSaveProfile} disabled={isLoading} className="bg-primary text-primary-foreground">
+                <Button onClick={handleSaveProfile} disabled={isLoading}>
                   {isLoading ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </CardContent>
@@ -474,16 +463,16 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
           </TabsContent>
 
           <TabsContent value="pomodoro" className="space-y-6">
-            <Card className="bg-card border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground">Configuración del Pomodoro</CardTitle>
+                <CardTitle>Configuración del Pomodoro</CardTitle>
                 <CardDescription>Personaliza tus sesiones de trabajo y descanso</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label className="text-foreground">Duración del trabajo (minutos)</Label>
+                      <Label>Duración del trabajo (minutos)</Label>
                       <Input
                         type="number"
                         min="1"
@@ -495,11 +484,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                             workDuration: Number.parseInt(e.target.value) || 25,
                           })
                         }
-                        className="bg-background border-input text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground">Descanso corto (minutos)</Label>
+                      <Label>Descanso corto (minutos)</Label>
                       <Input
                         type="number"
                         min="1"
@@ -511,11 +499,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                             shortBreak: Number.parseInt(e.target.value) || 5,
                           })
                         }
-                        className="bg-background border-input text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground">Descanso largo (minutos)</Label>
+                      <Label>Descanso largo (minutos)</Label>
                       <Input
                         type="number"
                         min="1"
@@ -527,11 +514,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                             longBreak: Number.parseInt(e.target.value) || 15,
                           })
                         }
-                        className="bg-background border-input text-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground">Intervalo para descanso largo</Label>
+                      <Label>Intervalo para descanso largo</Label>
                       <Input
                         type="number"
                         min="2"
@@ -543,14 +529,13 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                             longBreakInterval: Number.parseInt(e.target.value) || 4,
                           })
                         }
-                        className="bg-background border-input text-foreground"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <Label className="text-foreground">Iniciar descansos automáticamente</Label>
+                      <Label>Iniciar descansos automáticamente</Label>
                       <Switch
                         checked={pomodoroSettings.autoStartBreaks}
                         onCheckedChange={(checked) =>
@@ -559,7 +544,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-foreground">Iniciar pomodoros automáticamente</Label>
+                      <Label>Iniciar pomodoros automáticamente</Label>
                       <Switch
                         checked={pomodoroSettings.autoStartPomodoros}
                         onCheckedChange={(checked) =>
@@ -568,7 +553,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-foreground">Habilitar sonidos</Label>
+                      <Label>Habilitar sonidos</Label>
                       <Switch
                         checked={pomodoroSettings.enableSounds}
                         onCheckedChange={(checked) =>
@@ -577,7 +562,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-foreground">Sonido de tic-tac</Label>
+                      <Label>Sonido de tic-tac</Label>
                       <Switch
                         checked={pomodoroSettings.enableTickingSound}
                         onCheckedChange={(checked) =>
@@ -586,7 +571,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-foreground">Volumen ({pomodoroSettings.volume}%)</Label>
+                      <Label>Volumen ({pomodoroSettings.volume}%)</Label>
                       <Input
                         type="range"
                         min="0"
@@ -598,7 +583,6 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                             volume: Number.parseInt(e.target.value),
                           })
                         }
-                        className="bg-background"
                       />
                     </div>
                   </div>
@@ -608,16 +592,16 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
-            <Card className="bg-card border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground">Configuración de Notificaciones</CardTitle>
+                <CardTitle>Configuración de Notificaciones</CardTitle>
                 <CardDescription>Controla cómo y cuándo recibes notificaciones</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Recordatorios de tareas</Label>
+                      <Label>Recordatorios de tareas</Label>
                       <p className="text-sm text-muted-foreground">
                         Recibe notificaciones sobre tareas próximas a vencer
                       </p>
@@ -632,7 +616,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Notificaciones de Pomodoro</Label>
+                      <Label>Notificaciones de Pomodoro</Label>
                       <p className="text-sm text-muted-foreground">
                         Alertas cuando terminen las sesiones de trabajo y descanso
                       </p>
@@ -647,7 +631,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Notificaciones de logros</Label>
+                      <Label>Notificaciones de logros</Label>
                       <p className="text-sm text-muted-foreground">Celebra cuando desbloquees nuevos logros</p>
                     </div>
                     <Switch
@@ -660,7 +644,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Notificaciones por email</Label>
+                      <Label>Notificaciones por email</Label>
                       <p className="text-sm text-muted-foreground">Recibe resúmenes y actualizaciones por correo</p>
                     </div>
                     <Switch
@@ -673,7 +657,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Sonido habilitado</Label>
+                      <Label>Sonido habilitado</Label>
                       <p className="text-sm text-muted-foreground">Reproducir sonidos con las notificaciones</p>
                     </div>
                     <Switch
@@ -689,9 +673,9 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
           </TabsContent>
 
           <TabsContent value="theme" className="space-y-6">
-            <Card className="bg-card border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2">
                   Configuración de Tema
                   {userPlan === "pro" && (
                     <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
@@ -712,7 +696,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <Label className="text-foreground text-lg font-semibold">Selecciona un tema</Label>
+                  <Label className="text-lg font-semibold">Selecciona un tema</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {getAvailableThemes().map((theme) => (
                       <button
@@ -725,7 +709,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                         }`}
                       >
                         <div className={`w-full h-20 rounded ${theme.preview} mb-3`} />
-                        <p className="text-sm font-medium text-foreground mb-1">{theme.label}</p>
+                        <p className="text-sm font-medium mb-1">{theme.label}</p>
                         <p className="text-xs text-muted-foreground">{theme.description}</p>
                         {config.theme === theme.value && (
                           <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
@@ -737,13 +721,11 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   </div>
 
                   {userPlan === "free" && (
-                    <div className="bg-muted p-4 rounded-lg border border-border">
+                    <div className="bg-muted p-4 rounded-lg border">
                       <div className="flex items-start gap-3">
                         <Lock className="w-5 h-5 text-muted-foreground mt-0.5" />
                         <div>
-                          <p className="text-sm font-medium text-foreground mb-1">
-                            Desbloquea más temas con Premium o Pro
-                          </p>
+                          <p className="text-sm font-medium mb-1">Desbloquea más temas con Premium o Pro</p>
                           <p className="text-xs text-muted-foreground">
                             Obtén acceso a {themes.premium.length - 2} temas adicionales con Premium, o{" "}
                             {themes.pro.length - 2} temas únicos con Pro
@@ -757,9 +739,9 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-foreground">Tamaño de fuente</Label>
+                      <Label>Tamaño de fuente</Label>
                       {!canUseFeature("fontSize") && (
-                        <Badge variant="outline" className="border-border text-muted-foreground">
+                        <Badge variant="outline">
                           <Lock className="w-3 h-3 mr-1" />
                           Premium/Pro
                         </Badge>
@@ -770,10 +752,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                       onValueChange={(value: "small" | "medium" | "large") => updateTheme({ fontSize: value })}
                       disabled={!canUseFeature("fontSize")}
                     >
-                      <SelectTrigger className="bg-background border-input text-foreground">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border">
+                      <SelectContent>
                         <SelectItem value="small">Pequeña</SelectItem>
                         <SelectItem value="medium">Mediana</SelectItem>
                         <SelectItem value="large">Grande</SelectItem>
@@ -783,10 +765,10 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground flex items-center gap-2">
+                      <Label className="flex items-center gap-2">
                         Modo compacto
                         {!canUseFeature("compactMode") && (
-                          <Badge variant="outline" className="border-border text-muted-foreground">
+                          <Badge variant="outline">
                             <Lock className="w-3 h-3 mr-1" />
                             Premium/Pro
                           </Badge>
@@ -806,16 +788,16 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
           </TabsContent>
 
           <TabsContent value="privacy" className="space-y-6">
-            <Card className="bg-card border-border">
+            <Card>
               <CardHeader>
-                <CardTitle className="text-card-foreground">Configuración de Privacidad</CardTitle>
+                <CardTitle>Configuración de Privacidad</CardTitle>
                 <CardDescription>Controla cómo se usan tus datos</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Recopilación de datos</Label>
+                      <Label>Recopilación de datos</Label>
                       <p className="text-sm text-muted-foreground">
                         Permitir la recopilación de datos para mejorar la experiencia
                       </p>
@@ -828,7 +810,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Análisis de uso</Label>
+                      <Label>Análisis de uso</Label>
                       <p className="text-sm text-muted-foreground">Ayúdanos a entender cómo usas la aplicación</p>
                     </div>
                     <Switch
@@ -839,7 +821,7 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                   <Separator />
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label className="text-foreground">Reportes de errores</Label>
+                      <Label>Reportes de errores</Label>
                       <p className="text-sm text-muted-foreground">
                         Enviar reportes automáticos de errores para mejorar la estabilidad
                       </p>
@@ -854,21 +836,17 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
                 <Separator />
 
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-foreground">Gestión de Datos</h4>
+                  <h4 className="font-semibold">Gestión de Datos</h4>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       onClick={handleExportData}
-                      className="flex items-center gap-2 border-border text-foreground bg-transparent"
+                      className="flex items-center gap-2 bg-transparent"
                     >
                       <Download className="h-4 w-4" />
                       Exportar Datos
                     </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleDeleteAccount}
-                      className="flex items-center gap-2 bg-destructive text-destructive-foreground"
-                    >
+                    <Button variant="destructive" onClick={handleDeleteAccount} className="flex items-center gap-2">
                       <Trash2 className="h-4 w-4" />
                       Eliminar Cuenta
                     </Button>
@@ -879,8 +857,8 @@ export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsM
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-border">
-          <Button variant="outline" onClick={onClose} className="border-border text-foreground bg-transparent">
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
             Cerrar
           </Button>
         </div>

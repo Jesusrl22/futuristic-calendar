@@ -1,42 +1,33 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { translations } from "@/lib/translations"
-
-type Language = "es" | "en" | "fr" | "de" | "it" | "pt"
+import type React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
+import { translations, type Language } from "@/lib/translations"
 
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
   t: (key: string) => string
-  mounted: boolean
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>("es")
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    // Load language from localStorage
     const savedLanguage = localStorage.getItem("language") as Language
-    if (savedLanguage && ["es", "en", "fr", "de", "it", "pt"].includes(savedLanguage)) {
+    if (savedLanguage && (savedLanguage === "es" || savedLanguage === "en")) {
       setLanguageState(savedLanguage)
-    } else {
-      // Detectar idioma del navegador
-      const browserLang = navigator.language.split("-")[0] as Language
-      if (["es", "en", "fr", "de", "it", "pt"].includes(browserLang)) {
-        setLanguageState(browserLang)
-      }
     }
   }, [])
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang)
     localStorage.setItem("language", lang)
-    // Forzar recarga para aplicar el nuevo idioma
-    window.location.reload()
+    // Update HTML lang attribute
+    document.documentElement.lang = lang
   }
 
   const t = (key: string): string => {
@@ -47,6 +38,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       if (value && typeof value === "object" && k in value) {
         value = value[k]
       } else {
+        console.warn(`Translation key not found: ${key}`)
         return key
       }
     }
@@ -54,7 +46,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return typeof value === "string" ? value : key
   }
 
-  return <LanguageContext.Provider value={{ language, setLanguage, t, mounted }}>{children}</LanguageContext.Provider>
+  return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
 }
 
 export function useLanguage() {

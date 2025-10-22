@@ -21,54 +21,31 @@ export default function LoginPage() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    const clearExistingSessions = async () => {
+    // Clear any existing sessions on mount
+    const clearSession = async () => {
       try {
         await supabase.auth.signOut()
         localStorage.clear()
-        sessionStorage.clear()
-        console.log("🧹 Cleared existing sessions")
       } catch (err) {
-        console.error("Error clearing sessions:", err)
+        console.error("Error clearing session:", err)
       }
     }
-    clearExistingSessions()
+    clearSession()
   }, [])
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        if (session?.user) {
-          console.log("✅ Active session found, redirecting...")
-          router.push("/app")
-        }
-      } catch (err) {
-        console.error("Error checking auth:", err)
-      }
-    }
-    checkAuth()
-  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-
-    if (!email || !password) {
-      setError("Por favor, introduce tu email y contraseña")
-      return
-    }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
-      return
-    }
-
     setLoading(true)
 
     try {
-      console.log("🔐 Attempting login...")
+      if (!email || !password) {
+        setError("Por favor, introduce tu email y contraseña")
+        setLoading(false)
+        return
+      }
+
+      console.log("🔐 Intentando login...")
 
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -76,91 +53,31 @@ export default function LoginPage() {
       })
 
       if (signInError) {
-        console.error("❌ Login error:", signInError)
+        console.error("❌ Error de login:", signInError)
         setError("Credenciales incorrectas")
         setLoading(false)
         return
       }
 
       if (!data?.session?.user) {
-        console.error("❌ No session returned")
         setError("No se pudo iniciar sesión")
         setLoading(false)
         return
       }
 
-      console.log("✅ Login successful:", data.session.user.email)
+      console.log("✅ Login exitoso")
 
-      // Set language preference in localStorage
+      // Set language in localStorage
       localStorage.setItem("language", language)
-      console.log("🌐 Language set to:", language)
 
-      // Verify the user exists in the database
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.session.user.id)
-        .single()
+      // Small delay to ensure session is established
+      await new Promise((resolve) => setTimeout(resolve, 500))
 
-      if (userError && userError.code !== "PGRST116") {
-        console.error("Error checking user:", userError)
-      }
-
-      // If user doesn't exist in DB, create them
-      if (!userData) {
-        console.log("📝 Creating user in database...")
-        const newUserData: any = {
-          id: data.session.user.id,
-          email: data.session.user.email,
-          full_name: data.session.user.user_metadata?.full_name || data.session.user.email?.split("@")[0] || "Usuario",
-          subscription_tier: "free",
-          ai_credits: 0,
-          theme_preference: "dark",
-        }
-
-        // Try to add language, but don't fail if column doesn't exist
-        try {
-          newUserData.language = language
-        } catch (err) {
-          console.warn("Language column might not exist yet:", err)
-        }
-
-        const { error: insertError } = await supabase.from("users").insert([newUserData])
-
-        if (insertError) {
-          console.error("Error creating user:", insertError)
-        }
-      } else {
-        // Try to update language preference if column exists
-        try {
-          const { error: updateError } = await supabase
-            .from("users")
-            .update({ language: language })
-            .eq("id", data.session.user.id)
-
-          if (updateError) {
-            console.warn("Could not update language (column might not exist):", updateError.message)
-          }
-        } catch (err) {
-          console.warn("Language update failed:", err)
-        }
-      }
-
-      // Verify session is valid before redirecting
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session?.user) {
-        console.log("✅ Session verified, redirecting to app...")
-        router.push("/app")
-      } else {
-        console.error("❌ Session validation failed")
-        setError("Error al verificar la sesión")
-        setLoading(false)
-      }
+      // Redirect to app
+      router.push("/app")
     } catch (err) {
-      console.error("❌ Unexpected error:", err)
-      setError("Error al iniciar sesión. Por favor, inténtalo de nuevo.")
+      console.error("❌ Error inesperado:", err)
+      setError("Error al iniciar sesión")
       setLoading(false)
     }
   }
@@ -168,21 +85,22 @@ export default function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-
-    if (!email || !password || !name) {
-      setError("Por favor, completa todos los campos")
-      return
-    }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
-      return
-    }
-
     setLoading(true)
 
     try {
-      console.log("📝 Attempting registration...")
+      if (!email || !password || !name) {
+        setError("Por favor, completa todos los campos")
+        setLoading(false)
+        return
+      }
+
+      if (password.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres")
+        setLoading(false)
+        return
+      }
+
+      console.log("📝 Intentando registro...")
 
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
@@ -197,51 +115,44 @@ export default function LoginPage() {
       })
 
       if (signUpError) {
-        console.error("❌ Registration error:", signUpError)
+        console.error("❌ Error de registro:", signUpError)
         setError(signUpError.message || "Error al registrarse")
         setLoading(false)
         return
       }
 
       if (!data?.user) {
-        console.error("❌ No user returned")
         setError("Error al crear la cuenta")
         setLoading(false)
         return
       }
 
-      console.log("✅ Registration successful:", data.user.email)
+      console.log("✅ Registro exitoso")
 
-      // Set language preference in localStorage
+      // Set language in localStorage
       localStorage.setItem("language", language)
-      console.log("🌐 Language set to:", language)
 
       // Create user in database
-      const newUserData: any = {
-        id: data.user.id,
-        email: data.user.email,
-        full_name: name.trim(),
-        subscription_tier: "free",
-        ai_credits: 0,
-        theme_preference: "dark",
-      }
-
-      // Try to add language, but don't fail if column doesn't exist
-      try {
-        newUserData.language = language
-      } catch (err) {
-        console.warn("Language column might not exist yet:", err)
-      }
-
-      const { error: insertError } = await supabase.from("users").insert([newUserData])
+      const { error: insertError } = await supabase.from("users").insert([
+        {
+          id: data.user.id,
+          email: data.user.email,
+          name: name.trim(),
+          full_name: name.trim(),
+          language: language,
+          subscription_tier: "free",
+          ai_credits: 0,
+          theme: "light",
+        },
+      ])
 
       if (insertError) {
-        console.error("Error creating user in DB:", insertError)
+        console.error("Error creando usuario en DB:", insertError)
       }
 
       // Check if email confirmation is required
       if (data.session) {
-        console.log("✅ Auto-confirmed, redirecting...")
+        await new Promise((resolve) => setTimeout(resolve, 500))
         router.push("/app")
       } else {
         setError("Registro exitoso. Por favor, verifica tu email antes de iniciar sesión.")
@@ -250,8 +161,8 @@ export default function LoginPage() {
 
       setLoading(false)
     } catch (err) {
-      console.error("❌ Unexpected error:", err)
-      setError("Error al registrarse. Por favor, inténtalo de nuevo.")
+      console.error("❌ Error inesperado:", err)
+      setError("Error al registrarse")
       setLoading(false)
     }
   }
@@ -280,7 +191,7 @@ export default function LoginPage() {
             {!isLogin && (
               <div>
                 <Label htmlFor="name" className="text-white mb-2 block">
-                  Nombre completo *
+                  Nombre completo
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -290,8 +201,6 @@ export default function LoginPage() {
                     placeholder="Tu nombre"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    required
-                    minLength={2}
                     className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                   />
                 </div>
@@ -300,7 +209,7 @@ export default function LoginPage() {
 
             <div>
               <Label htmlFor="email" className="text-white mb-2 block">
-                Email *
+                Email
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -310,7 +219,6 @@ export default function LoginPage() {
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                   className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                 />
               </div>
@@ -318,7 +226,7 @@ export default function LoginPage() {
 
             <div>
               <Label htmlFor="password" className="text-white mb-2 block">
-                Contraseña *
+                Contraseña
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -328,17 +236,14 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
                   className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Mínimo 6 caracteres</p>
             </div>
 
             <div>
               <Label htmlFor="language" className="text-white mb-2 block">
-                Idioma / Language *
+                Idioma
               </Label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
@@ -356,7 +261,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              disabled={loading || !email || !password || (!isLogin && !name)}
+              disabled={loading}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
             >
               {loading ? (
@@ -377,9 +282,6 @@ export default function LoginPage() {
               onClick={() => {
                 setIsLogin(!isLogin)
                 setError("")
-                setEmail("")
-                setPassword("")
-                setName("")
               }}
               className="text-purple-300 hover:text-purple-200 text-sm transition-colors"
             >
@@ -395,16 +297,6 @@ export default function LoginPage() {
               O prueba el <span className="text-yellow-400 font-semibold">Modo Demo</span>
             </button>
           </div>
-        </div>
-
-        <div className="mt-6 text-center text-gray-400 text-sm">
-          <a href="/privacy" className="hover:text-gray-300 transition-colors">
-            Privacidad
-          </a>
-          {" · "}
-          <a href="/terms" className="hover:text-gray-300 transition-colors">
-            Términos
-          </a>
         </div>
       </div>
     </div>

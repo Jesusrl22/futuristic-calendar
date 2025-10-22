@@ -35,29 +35,25 @@ import { useLanguage } from "@/hooks/useLanguage"
 function AppContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { t, mounted } = useLanguage()
+  const { t } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState("calendar")
 
-  const hasRedirectedRef = useRef(false)
-  const hasLoadedRef = useRef(false)
+  const isCheckingRef = useRef(false)
 
   useEffect(() => {
-    if (!mounted) return
-    if (hasLoadedRef.current || hasRedirectedRef.current) return
-    hasLoadedRef.current = true
+    if (isCheckingRef.current) return
+    isCheckingRef.current = true
 
-    let isMounted = true
-
-    const loadUser = async () => {
+    const checkAuth = async () => {
       try {
         const isDemo = searchParams?.get("demo") === "true"
 
         if (isDemo) {
-          console.log("🎯 Demo mode activated")
+          console.log("🎯 Modo Demo activado")
           const demoUser = {
             id: "demo-user",
             email: "demo@futuretask.app",
@@ -65,176 +61,104 @@ function AppContent() {
             name: "Usuario Demo",
             subscription_tier: "pro",
             plan: "pro",
-            billing_cycle: "monthly",
             ai_credits: 500,
-            theme_preference: "light",
-            pomodoro_work_duration: 25,
-            pomodoro_break_duration: 5,
-            pomodoro_long_break_duration: 15,
-            pomodoro_sessions_until_long_break: 4,
             isDemo: true,
           }
-
-          if (isMounted) {
-            setUser(demoUser)
-            setLoading(false)
-          }
+          setUser(demoUser)
+          setLoading(false)
           return
         }
 
-        console.log("🔍 Checking authentication...")
+        console.log("🔍 Verificando autenticación...")
 
-        const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
 
-        let session
-        try {
-          const result = (await Promise.race([sessionPromise, timeoutPromise])) as any
-          session = result?.data?.session
-        } catch (error) {
-          console.error("❌ Session check failed:", error)
-          if (isMounted && !hasRedirectedRef.current) {
-            hasRedirectedRef.current = true
-            setLoading(false)
-            router.replace("/login")
-          }
+        if (sessionError) {
+          console.error("❌ Error de sesión:", sessionError)
+          router.replace("/login")
           return
         }
 
         if (!session?.user) {
-          console.log("❌ No session found, redirecting to login")
-          if (isMounted && !hasRedirectedRef.current) {
-            hasRedirectedRef.current = true
-            setLoading(false)
-            router.replace("/login")
-          }
+          console.log("❌ No hay sesión, redirigiendo a login")
+          router.replace("/login")
           return
         }
 
-        console.log("✅ Session found:", session.user.email)
+        console.log("✅ Sesión encontrada:", session.user.email)
 
-        try {
-          const userDataPromise = supabase.from("users").select("*").eq("id", session.user.id).single()
+        // Load user data from database
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", session.user.id)
+          .single()
 
-          const userTimeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("User data timeout")), 5000),
-          )
-
-          const { data: userData, error } = (await Promise.race([userDataPromise, userTimeoutPromise])) as any
-
-          if (error && error.code !== "PGRST116") {
-            console.error("Error loading user data:", error)
-          }
-
-          if (isMounted) {
-            if (userData) {
-              console.log("✅ User data loaded from database:", userData)
-
-              // Normalizar el plan del usuario
-              let userPlan = "free"
-              if (userData.is_pro || userData.subscription_tier === "pro") {
-                userPlan = "pro"
-              } else if (userData.is_premium || userData.subscription_tier === "premium") {
-                userPlan = "premium"
-              }
-
-              console.log("📊 User plan detected:", userPlan)
-
-              const aiCredits = userPlan === "pro" ? userData.ai_credits || 500 : userData.ai_credits || 0
-
-              setUser({
-                ...userData,
-                subscription_tier: userPlan,
-                plan: userPlan,
-                ai_credits: aiCredits,
-              })
-            } else {
-              console.log("⚠️ No user data in database, using session data")
-              setUser({
-                id: session.user.id,
-                email: session.user.email,
-                full_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Usuario",
-                name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Usuario",
-                subscription_tier: "free",
-                plan: "free",
-                billing_cycle: "monthly",
-                ai_credits: 0,
-                theme_preference: "light",
-                pomodoro_work_duration: 25,
-                pomodoro_break_duration: 5,
-                pomodoro_long_break_duration: 15,
-                pomodoro_sessions_until_long_break: 4,
-              })
-            }
-            setLoading(false)
-          }
-        } catch (userError) {
-          console.error("Failed to load user data:", userError)
-          if (isMounted) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Usuario",
-              name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Usuario",
-              subscription_tier: "free",
-              plan: "free",
-              billing_cycle: "monthly",
-              ai_credits: 0,
-              theme_preference: "light",
-              pomodoro_work_duration: 25,
-              pomodoro_break_duration: 5,
-              pomodoro_long_break_duration: 15,
-              pomodoro_sessions_until_long_break: 4,
-            })
-            setLoading(false)
-          }
+        if (userError && userError.code !== "PGRST116") {
+          console.error("Error cargando datos de usuario:", userError)
         }
-      } catch (error) {
-        console.error("Error loading app:", error)
-        if (isMounted && !hasRedirectedRef.current) {
-          hasRedirectedRef.current = true
-          setLoading(false)
-          router.replace("/login")
+
+        if (userData) {
+          console.log("✅ Datos de usuario cargados")
+          setUser({
+            ...userData,
+            plan: userData.subscription_tier || "free",
+          })
+        } else {
+          // Create user in database if doesn't exist
+          const newUser = {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Usuario",
+            full_name: session.user.user_metadata?.full_name || session.user.email?.split("@")[0] || "Usuario",
+            subscription_tier: "free",
+            plan: "free",
+            ai_credits: 0,
+          }
+
+          const { error: insertError } = await supabase.from("users").insert([newUser])
+
+          if (insertError) {
+            console.error("Error creando usuario:", insertError)
+          }
+
+          setUser(newUser)
         }
+
+        setLoading(false)
+      } catch (err) {
+        console.error("❌ Error verificando autenticación:", err)
+        router.replace("/login")
       }
     }
 
-    loadUser()
-
-    return () => {
-      isMounted = false
-    }
-  }, [router, searchParams, mounted])
+    checkAuth()
+  }, [router, searchParams])
 
   const handleLogout = async () => {
-    if (user?.isDemo) {
-      router.push("/login")
-      return
-    }
-
     try {
+      if (user?.isDemo) {
+        router.push("/login")
+        return
+      }
+
       await supabase.auth.signOut()
       router.push("/login")
     } catch (error) {
-      console.error("Error logging out:", error)
+      console.error("Error cerrando sesión:", error)
       router.push("/login")
     }
   }
 
-  const handleUpdateCredits = (newCredits: number) => {
-    setUser((prev: any) => ({ ...prev, ai_credits: newCredits }))
-  }
-
-  const handleUserUpdate = (updates: any) => {
-    setUser((prev: any) => ({ ...prev, ...updates }))
-  }
-
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/20 to-background">
         <div className="flex flex-col items-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">{t("common.loading")}</p>
+          <p className="text-muted-foreground">Cargando...</p>
         </div>
       </div>
     )
@@ -246,6 +170,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/20 to-background">
+      {/* Mobile Header */}
       <div className="lg:hidden bg-card/50 backdrop-blur-sm border-b border-border p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-2">
           <Calendar className="h-6 w-6 text-primary" />
@@ -259,12 +184,13 @@ function AppContent() {
         <div className="flex items-center space-x-2">
           <LanguageSelector variant="button" showFlag={true} showName={false} />
           <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            {isSidebarOpen ? <X className="h-5 w-5 text-foreground" /> : <Menu className="h-5 w-5 text-foreground" />}
+            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
       <div className="flex h-[calc(100vh-73px)] lg:h-screen">
+        {/* Sidebar */}
         <aside
           className={`
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
@@ -275,6 +201,7 @@ function AppContent() {
           lg:top-0 top-[73px]
         `}
         >
+          {/* Desktop Header */}
           <div className="hidden lg:flex items-center justify-between p-6 border-b border-border">
             <div className="flex items-center space-x-2">
               <Calendar className="h-8 w-8 text-primary" />
@@ -283,6 +210,7 @@ function AppContent() {
             <LanguageSelector variant="button" showFlag={true} showName={false} />
           </div>
 
+          {/* User Info */}
           <div className="p-6 border-b border-border">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold">
@@ -290,7 +218,7 @@ function AppContent() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  {user?.full_name || user?.name || t("common.user")}
+                  {user?.full_name || user?.name || "Usuario"}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
@@ -299,20 +227,17 @@ function AppContent() {
               <div className="mt-3 p-2 bg-secondary/50 border border-border rounded-md">
                 <p className="text-xs text-secondary-foreground flex items-center">
                   <Sparkles className="h-3 w-3 mr-1" />
-                  Modo Demo - Todas las funciones desbloqueadas
+                  Modo Demo - Todas las funciones
                 </p>
               </div>
             )}
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-              <span className="capitalize">
-                {t("subscription.currentPlan")}: {user?.subscription_tier || user?.plan || t("subscription.free")}
-              </span>
-              <span>
-                {t("ai.credits")}: {user?.ai_credits || 0}
-              </span>
+              <span className="capitalize">Plan: {user?.subscription_tier || user?.plan || "free"}</span>
+              <span>Créditos: {user?.ai_credits || 0}</span>
             </div>
           </div>
 
+          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             <button
               onClick={() => {
@@ -326,7 +251,7 @@ function AppContent() {
               }`}
             >
               <Calendar className="h-5 w-5" />
-              <span className="font-medium">{t("nav.calendar")}</span>
+              <span className="font-medium">Calendario</span>
             </button>
 
             <button
@@ -341,7 +266,7 @@ function AppContent() {
               }`}
             >
               <Clock className="h-5 w-5" />
-              <span className="font-medium">{t("nav.pomodoro")}</span>
+              <span className="font-medium">Pomodoro</span>
             </button>
 
             <button
@@ -356,7 +281,7 @@ function AppContent() {
               }`}
             >
               <BarChart3 className="h-5 w-5" />
-              <span className="font-medium">{t("nav.stats")}</span>
+              <span className="font-medium">Estadísticas</span>
             </button>
 
             <button
@@ -371,7 +296,7 @@ function AppContent() {
               }`}
             >
               <Star className="h-5 w-5" />
-              <span className="font-medium">{t("nav.wishlist")}</span>
+              <span className="font-medium">Lista de Deseos</span>
             </button>
 
             <button
@@ -386,7 +311,7 @@ function AppContent() {
               }`}
             >
               <FileText className="h-5 w-5" />
-              <span className="font-medium">{t("nav.notes")}</span>
+              <span className="font-medium">Notas</span>
             </button>
 
             <button
@@ -401,7 +326,7 @@ function AppContent() {
               }`}
             >
               <Bot className="h-5 w-5" />
-              <span className="font-medium">{t("nav.aiAssistant")}</span>
+              <span className="font-medium">Asistente IA</span>
               {user?.ai_credits > 0 && (
                 <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-primary/20 text-primary-foreground rounded-full border border-primary">
                   {user.ai_credits}
@@ -422,7 +347,7 @@ function AppContent() {
                 }`}
               >
                 <CreditCard className="h-5 w-5" />
-                <span className="font-medium">{t("nav.subscription")}</span>
+                <span className="font-medium">Suscripción</span>
               </button>
             )}
 
@@ -438,10 +363,11 @@ function AppContent() {
               }`}
             >
               <Trophy className="h-5 w-5" />
-              <span className="font-medium">{t("nav.achievements")}</span>
+              <span className="font-medium">Logros</span>
             </button>
           </nav>
 
+          {/* Footer */}
           <div className="p-4 border-t border-border space-y-2">
             <Button
               variant="ghost"
@@ -449,21 +375,24 @@ function AppContent() {
               onClick={() => setIsSettingsOpen(true)}
             >
               <Settings className="h-4 w-4 mr-2" />
-              {t("nav.settings")}
+              Configuración
             </Button>
             <Button
               variant="ghost"
               className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleLogout}
             >
-              {user?.isDemo ? "Salir del Demo" : t("common.logout")}
+              {user?.isDemo ? "Salir del Demo" : "Cerrar Sesión"}
             </Button>
           </div>
         </aside>
 
+        {/* Main Content */}
         <main className="flex-1 overflow-auto p-4 lg:p-6">
           <div className="max-w-7xl mx-auto">
-            {activeTab === "calendar" && <TaskCalendarManager user={user} onUserUpdate={handleUserUpdate} />}
+            {activeTab === "calendar" && (
+              <TaskCalendarManager user={user} onUserUpdate={(updates) => setUser({ ...user, ...updates })} />
+            )}
             {activeTab === "pomodoro" && (
               <PomodoroTimer
                 userId={user?.id}
@@ -481,7 +410,7 @@ function AppContent() {
               <AIAssistant
                 userId={user?.id}
                 credits={user?.ai_credits || 0}
-                onCreditsUpdate={handleUpdateCredits}
+                onCreditsUpdate={(newCredits) => setUser({ ...user, ai_credits: newCredits })}
                 userPlan={user?.subscription_tier || user?.plan || "free"}
                 onUpgrade={() => setActiveTab("subscription")}
               />
@@ -490,7 +419,7 @@ function AppContent() {
               <SubscriptionManager
                 userId={user?.id}
                 currentPlan={user?.subscription_tier || user?.plan || "free"}
-                billingCycle={user?.billing_cycle || user?.billing || "monthly"}
+                billingCycle={user?.billing_cycle || "monthly"}
               />
             )}
             {activeTab === "achievements" && (
@@ -501,14 +430,13 @@ function AppContent() {
       </div>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} user={user} />
-
       <Toaster />
 
+      {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
-          aria-hidden="true"
         />
       )}
     </div>
@@ -519,8 +447,8 @@ export default function AppPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/20 to-background">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       }
     >

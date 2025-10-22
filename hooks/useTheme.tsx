@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 
 export type ThemeName =
-  | "default-light"
-  | "default-dark"
+  | "light"
+  | "dark"
   | "ocean"
   | "forest"
   | "sunset"
@@ -15,94 +15,86 @@ export type ThemeName =
   | "crimson"
   | "golden-hour"
   | "arctic-blue"
-  | "dark-amoled"
+  | "amoled"
   | "matrix"
 
-interface ThemeConfig {
+export type FontSize = "small" | "medium" | "large"
+
+export interface ThemeSettings {
   theme: ThemeName
-  fontSize: "small" | "medium" | "large"
+  fontSize: FontSize
   compactMode: boolean
 }
 
+const DEFAULT_THEME: ThemeSettings = {
+  theme: "dark",
+  fontSize: "medium",
+  compactMode: false,
+}
+
 export function useTheme() {
-  const [mounted, setMounted] = useState(false)
-  const [config, setConfig] = useState<ThemeConfig>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("themeConfig")
-      if (saved) {
-        try {
-          return JSON.parse(saved)
-        } catch (e) {
-          console.error("Error parsing theme config:", e)
-        }
-      }
-    }
-    return {
-      theme: "default-dark",
-      fontSize: "medium",
-      compactMode: false,
-    }
-  })
+  const [settings, setSettings] = useState<ThemeSettings>(DEFAULT_THEME)
 
   useEffect(() => {
-    setMounted(true)
+    // Load settings from localStorage
+    const saved = localStorage.getItem("themeSettings")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setSettings(parsed)
+        applyTheme(parsed)
+      } catch (e) {
+        console.error("Error loading theme settings:", e)
+      }
+    } else {
+      applyTheme(DEFAULT_THEME)
+    }
   }, [])
 
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem("themeConfig", JSON.stringify(config))
-      applyTheme(config)
-    }
-  }, [config, mounted])
+  const applyTheme = (newSettings: ThemeSettings) => {
+    const html = document.documentElement
 
-  const applyTheme = (themeConfig: ThemeConfig) => {
-    // Remover todas las clases de tema anteriores
-    document.documentElement.classList.remove(
-      "theme-default-light",
-      "theme-default-dark",
-      "theme-ocean",
-      "theme-forest",
-      "theme-sunset",
-      "theme-midnight",
-      "theme-royal-purple",
-      "theme-cyber-pink",
-      "theme-neon-green",
-      "theme-crimson",
-      "theme-golden-hour",
-      "theme-arctic-blue",
-      "theme-dark-amoled",
-      "theme-matrix",
-    )
+    // Apply theme
+    html.setAttribute("data-theme", newSettings.theme)
 
-    // Aplicar nuevo tema
-    document.documentElement.classList.add(`theme-${themeConfig.theme}`)
+    // Apply font size
+    html.setAttribute("data-font-size", newSettings.fontSize)
 
-    // Aplicar tamaño de fuente
-    const fontSizes = {
-      small: "14px",
-      medium: "16px",
-      large: "18px",
-    }
-    document.documentElement.style.fontSize = fontSizes[themeConfig.fontSize]
-
-    // Aplicar modo compacto
-    if (themeConfig.compactMode) {
-      document.documentElement.classList.add("compact-mode")
+    // Apply compact mode
+    if (newSettings.compactMode) {
+      html.setAttribute("data-compact", "true")
     } else {
-      document.documentElement.classList.remove("compact-mode")
+      html.removeAttribute("data-compact")
     }
+
+    console.log("Theme applied:", newSettings)
   }
 
-  const updateTheme = (updates: Partial<ThemeConfig>) => {
-    setConfig((prev) => {
-      const newConfig = { ...prev, ...updates }
-      return newConfig
-    })
+  const updateTheme = (theme: ThemeName) => {
+    const newSettings = { ...settings, theme }
+    setSettings(newSettings)
+    localStorage.setItem("themeSettings", JSON.stringify(newSettings))
+    applyTheme(newSettings)
+  }
+
+  const updateFontSize = (fontSize: FontSize) => {
+    const newSettings = { ...settings, fontSize }
+    setSettings(newSettings)
+    localStorage.setItem("themeSettings", JSON.stringify(newSettings))
+    applyTheme(newSettings)
+  }
+
+  const toggleCompactMode = () => {
+    const newSettings = { ...settings, compactMode: !settings.compactMode }
+    setSettings(newSettings)
+    localStorage.setItem("themeSettings", JSON.stringify(newSettings))
+    applyTheme(newSettings)
   }
 
   return {
-    config,
+    ...settings,
     updateTheme,
-    mounted,
+    updateFontSize,
+    toggleCompactMode,
   }
 }

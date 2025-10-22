@@ -8,17 +8,13 @@ import { useLanguage } from "@/hooks/useLanguage"
 import Link from "next/link"
 
 export default function LandingPage() {
-  const { t, mounted } = useLanguage()
+  const { t } = useLanguage()
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     setIsVisible(true)
   }, [])
-
-  if (!mounted) {
-    return null
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
@@ -41,13 +37,13 @@ export default function LandingPage() {
               Blog
             </Link>
             <Link href="/login" className="px-4 py-2 text-gray-300 hover:text-white transition-colors">
-              {t("nav.login")}
+              Iniciar sesión
             </Link>
             <Link
               href="/login"
               className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all hover:scale-105"
             >
-              {t("nav.getStarted")}
+              Comenzar
             </Link>
           </div>
         </div>
@@ -62,26 +58,28 @@ export default function LandingPage() {
         >
           <div className="inline-block mb-4 px-4 py-2 rounded-full bg-purple-600/20 text-purple-300 border border-purple-500/50 text-sm animate-bounce">
             <Sparkles className="inline-block h-4 w-4 mr-2" />
-            {t("landing.subtitle")}
+            La aplicación del futuro para tu productividad
           </div>
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            {t("landing.title")}
+            Organiza tu vida
             <br />
             <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">
-              {t("common.and")} IA
+              con IA
             </span>
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">{t("landing.description")}</p>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Gestiona tus tareas, optimiza tu tiempo con Pomodoro y alcanza tus metas con inteligencia artificial
+          </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/login"
               className="inline-flex items-center justify-center px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white text-lg rounded-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50"
             >
-              {t("landing.heroButton")}
+              Comenzar gratis
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <button className="inline-flex items-center justify-center px-8 py-3 border border-purple-500 text-white hover:bg-purple-500/10 text-lg rounded-lg transition-all hover:scale-105">
-              {t("landing.heroSecondary")}
+              Ver demostración
             </button>
           </div>
 
@@ -92,21 +90,21 @@ export default function LandingPage() {
                 <Users className="h-8 w-8 text-purple-400 mr-2" />
                 <div className="text-4xl font-bold text-purple-400">50K+</div>
               </div>
-              <div className="text-gray-400">{t("common.user")}s</div>
+              <div className="text-gray-400">Usuarios activos</div>
             </div>
             <div className="text-center transform hover:scale-110 transition-all duration-300">
               <div className="flex items-center justify-center mb-2">
                 <TrendingUp className="h-8 w-8 text-cyan-400 mr-2" />
                 <div className="text-4xl font-bold text-cyan-400">95%</div>
               </div>
-              <div className="text-gray-400">{t("landing.testimonialsSubtitle")}</div>
+              <div className="text-gray-400">Satisfacción</div>
             </div>
             <div className="text-center transform hover:scale-110 transition-all duration-300">
               <div className="flex items-center justify-center mb-2">
                 <Check className="h-8 w-8 text-purple-400 mr-2" />
                 <div className="text-4xl font-bold text-purple-400">2M+</div>
               </div>
-              <div className="text-gray-400">{t("tasks.taskCompleted")}</div>
+              <div className="text-gray-400">Tareas completadas</div>
             </div>
           </div>
         </div>
@@ -116,8 +114,8 @@ export default function LandingPage() {
       <section className="relative py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{t("landing.featuresTitle")}</h2>
-            <p className="text-gray-400 text-lg">{t("landing.featuresSubtitle")}</p>
+            <h2 className="text-4xl font-bold text-white mb-4">Funciones Poderosas</h2>
+            <p className="text-gray-400 text-lg">Todo lo que necesitas para ser más productivo</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
@@ -125,24 +123,24 @@ export default function LandingPage() {
               <div className="h-16 w-16 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-600/30 transition-all group-hover:rotate-6">
                 <Brain className="h-8 w-8 text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">{t("landing.feature1Title")}</h3>
-              <p className="text-gray-400">{t("landing.feature1Description")}</p>
+              <h3 className="text-xl font-bold text-white mb-2">Asistente IA</h3>
+              <p className="text-gray-400">Organiza tus tareas automáticamente con inteligencia artificial</p>
             </div>
 
             <div className="text-center group transform hover:scale-105 transition-all duration-300">
               <div className="h-16 w-16 bg-cyan-600/20 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-600/30 transition-all group-hover:rotate-6">
                 <Calendar className="h-8 w-8 text-cyan-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">{t("landing.feature2Title")}</h3>
-              <p className="text-gray-400">{t("landing.feature2Description")}</p>
+              <h3 className="text-xl font-bold text-white mb-2">Calendario Inteligente</h3>
+              <p className="text-gray-400">Visualiza y planifica tu tiempo de forma eficiente</p>
             </div>
 
             <div className="text-center group transform hover:scale-105 transition-all duration-300">
               <div className="h-16 w-16 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-600/30 transition-all group-hover:rotate-6">
                 <Zap className="h-8 w-8 text-purple-400" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">{t("landing.feature4Title")}</h3>
-              <p className="text-gray-400">{t("landing.feature4Description")}</p>
+              <h3 className="text-xl font-bold text-white mb-2">Pomodoro Timer</h3>
+              <p className="text-gray-400">Mantén el foco con técnicas probadas de productividad</p>
             </div>
           </div>
         </div>
@@ -152,8 +150,8 @@ export default function LandingPage() {
       <section className="relative py-20 bg-black/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-white mb-4">💎 {t("subscription.title")}</h2>
-            <p className="text-gray-400 text-lg">{t("landing.pricingSubtitle")}</p>
+            <h2 className="text-4xl font-bold text-white mb-4">💎 Planes y Precios</h2>
+            <p className="text-gray-400 text-lg">Elige el plan perfecto para ti</p>
           </div>
 
           {/* Billing Cycle Toggle */}
@@ -169,7 +167,7 @@ export default function LandingPage() {
                     : "text-gray-300 hover:text-white hover:bg-slate-700"
                 }`}
               >
-                {t("common.monthly")}
+                Mensual
               </Button>
               <Button
                 variant={billingCycle === "yearly" ? "default" : "ghost"}
@@ -181,7 +179,7 @@ export default function LandingPage() {
                     : "text-gray-300 hover:text-white hover:bg-slate-700"
                 }`}
               >
-                {t("common.yearly")}
+                Anual
                 <span className="ml-2 px-2 py-0.5 bg-green-600 text-white text-xs rounded-full animate-pulse">
                   Ahorra
                 </span>
@@ -193,7 +191,7 @@ export default function LandingPage() {
             {/* Free Plan */}
             <div className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-lg p-8 hover:border-gray-500/30 transition-all hover:scale-105 hover:shadow-xl">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-white">{t("subscription.free")}</h3>
+                <h3 className="text-2xl font-bold text-white">Free</h3>
                 <Shield className="h-6 w-6 text-gray-400" />
               </div>
               <div className="mb-6">
@@ -224,7 +222,7 @@ export default function LandingPage() {
                 href="/login"
                 className="block w-full text-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all hover:scale-105"
               >
-                {t("landing.heroButton")}
+                Comenzar gratis
               </Link>
             </div>
 
@@ -283,7 +281,7 @@ export default function LandingPage() {
                 href="/login"
                 className="block w-full text-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all hover:scale-105"
               >
-                {t("nav.getStarted")}
+                Comenzar
               </Link>
             </div>
 
@@ -345,7 +343,7 @@ export default function LandingPage() {
                 href="/login"
                 className="block w-full text-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all hover:scale-105"
               >
-                {t("nav.getStarted")}
+                Comenzar
               </Link>
             </div>
           </div>
@@ -356,8 +354,8 @@ export default function LandingPage() {
       <section className="relative py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">{t("landing.testimonialsTitle")}</h2>
-            <p className="text-gray-400 text-lg">{t("landing.testimonialsSubtitle")}</p>
+            <h2 className="text-4xl font-bold text-white mb-4">Lo que dicen nuestros usuarios</h2>
+            <p className="text-gray-400 text-lg">Miles de personas ya están siendo más productivas</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
@@ -367,13 +365,15 @@ export default function LandingPage() {
                   <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-4">{t("landing.testimonial1")}</p>
+              <p className="text-gray-300 mb-4">
+                "Esta app ha transformado completamente mi forma de trabajar. Ahora soy mucho más productiva."
+              </p>
               <div className="flex items-center justify-center">
                 <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
                   SM
                 </div>
                 <div className="ml-3 text-left">
-                  <div className="text-white font-semibold">{t("landing.testimonial1Author")}</div>
+                  <div className="text-white font-semibold">Sarah Martínez</div>
                 </div>
               </div>
             </div>
@@ -384,13 +384,15 @@ export default function LandingPage() {
                   <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-4">{t("landing.testimonial2")}</p>
+              <p className="text-gray-300 mb-4">
+                "El asistente IA es increíble. Organiza mis tareas mejor que yo mismo."
+              </p>
               <div className="flex items-center justify-center">
                 <div className="h-10 w-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
                   JD
                 </div>
                 <div className="ml-3 text-left">
-                  <div className="text-white font-semibold">{t("landing.testimonial2Author")}</div>
+                  <div className="text-white font-semibold">Juan Díaz</div>
                 </div>
               </div>
             </div>
@@ -401,13 +403,15 @@ export default function LandingPage() {
                   <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                 ))}
               </div>
-              <p className="text-gray-300 mb-4">{t("landing.testimonial3")}</p>
+              <p className="text-gray-300 mb-4">
+                "Perfecta para mantenerme enfocada. El Pomodoro timer es justo lo que necesitaba."
+              </p>
               <div className="flex items-center justify-center">
                 <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
                   EC
                 </div>
                 <div className="ml-3 text-left">
-                  <div className="text-white font-semibold">{t("landing.testimonial3Author")}</div>
+                  <div className="text-white font-semibold">Emma Castro</div>
                 </div>
               </div>
             </div>
@@ -418,13 +422,15 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="relative py-20">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{t("landing.ctaTitle")}</h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">{t("landing.ctaSubtitle")}</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">¿Listo para ser más productivo?</h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Únete a miles de usuarios que ya están alcanzando sus metas
+          </p>
           <Link
             href="/login"
             className="inline-flex items-center justify-center px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white text-lg rounded-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50"
           >
-            {t("landing.ctaButton")}
+            Comenzar gratis
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </div>
@@ -439,51 +445,51 @@ export default function LandingPage() {
                 <Calendar className="h-6 w-6 text-purple-400" />
                 <span className="text-xl font-bold text-white">FutureTask</span>
               </div>
-              <p className="text-gray-400">{t("footer.description")}</p>
+              <p className="text-gray-400">La mejor app de productividad con IA</p>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">{t("footer.product")}</h3>
+              <h3 className="text-white font-semibold mb-4">Producto</h3>
               <ul className="space-y-2">
                 <li>
                   <a href="#features" className="text-gray-400 hover:text-white transition-colors">
-                    {t("footer.features")}
+                    Funciones
                   </a>
                 </li>
                 <li>
                   <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
-                    {t("footer.pricing")}
+                    Precios
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">{t("footer.company")}</h3>
+              <h3 className="text-white font-semibold mb-4">Empresa</h3>
               <ul className="space-y-2">
                 <li>
                   <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
-                    {t("footer.blog")}
+                    Blog
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-white font-semibold mb-4">{t("footer.legal")}</h3>
+              <h3 className="text-white font-semibold mb-4">Legal</h3>
               <ul className="space-y-2">
                 <li>
                   <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                    {t("footer.privacy")}
+                    Privacidad
                   </Link>
                 </li>
                 <li>
                   <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
-                    {t("footer.terms")}
+                    Términos
                   </Link>
                 </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/10 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 FutureTask. {t("footer.copyright")}</p>
+            <p>&copy; 2025 FutureTask. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
