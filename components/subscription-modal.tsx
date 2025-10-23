@@ -26,8 +26,24 @@ const plans = [
     color: "from-gray-400 to-gray-600",
     monthlyPrice: 0,
     yearlyPrice: 0,
-    features: ["Tareas ilimitadas", "Temporizador Pomodoro básico", "Algunos logros", "Sincronización limitada"],
-    notIncluded: ["IA avanzada", "Temas personalizados", "Soporte prioritario", "Estadísticas detalladas"],
+    features: [
+      "Tareas ilimitadas",
+      "Temporizador Pomodoro básico",
+      "Algunos logros",
+      "2 temas (claro y oscuro)",
+      "Sincronización limitada",
+    ],
+    notIncluded: [
+      "Eventos ilimitados",
+      "Notas ilimitadas",
+      "Lista de deseos",
+      "Pomodoro avanzado",
+      "Todos los logros",
+      "Temas premium",
+      "Créditos IA",
+      "Asistente IA",
+      "Soporte prioritario",
+    ],
   },
   {
     id: "premium",
@@ -38,15 +54,25 @@ const plans = [
     yearlyPrice: 24.99,
     popular: true,
     features: [
-      "Todo de Free",
+      "✅ Todo de Free",
       "Eventos ilimitados",
       "Notas ilimitadas",
       "Lista de deseos",
-      "Pomodoro avanzado",
-      "Todos los logros",
+      "Pomodoro avanzado con estadísticas",
+      "Todos los logros desbloqueados",
+      "6 temas premium",
+      "Estadísticas avanzadas",
       "Sincronización en tiempo real",
+      "Backup en la nube",
     ],
-    notIncluded: ["Créditos IA incluidos", "Soporte prioritario 24/7"],
+    notIncluded: [
+      "500 créditos IA/mes",
+      "Asistente IA avanzado",
+      "14 temas profesionales",
+      "Soporte prioritario 24/7",
+      "Funciones beta exclusivas",
+      "API access",
+    ],
   },
   {
     id: "pro",
@@ -56,13 +82,16 @@ const plans = [
     monthlyPrice: 4.99,
     yearlyPrice: 49.99,
     features: [
-      "Todo de Premium",
+      "✅ Todo de Premium + Free",
       "500 créditos IA/mes",
       "Asistente IA avanzado",
+      "14 temas profesionales",
+      "Análisis predictivo con IA",
       "Soporte prioritario 24/7",
       "Funciones beta exclusivas",
       "API de integración",
-      "Backup automático",
+      "Backup automático diario",
+      "Exportación de datos",
     ],
     notIncluded: [],
   },
@@ -243,11 +272,15 @@ export function SubscriptionModal({ isOpen, onClose, currentPlan, userId, onUpgr
                         </div>
                       </div>
 
-                      <div className="space-y-3 min-h-[320px]">
+                      <div className="space-y-3 min-h-[380px]">
                         {plan.features.map((feature, index) => (
                           <div key={index} className="flex items-start gap-3">
                             <Check className="w-5 h-5 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                            <span className="text-sm leading-relaxed">{feature}</span>
+                            <span
+                              className={`text-sm leading-relaxed ${feature.startsWith("✅") ? "font-semibold text-primary" : ""}`}
+                            >
+                              {feature}
+                            </span>
                           </div>
                         ))}
                         {plan.notIncluded.map((feature, index) => (

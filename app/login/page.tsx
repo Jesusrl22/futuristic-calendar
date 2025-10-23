@@ -1,303 +1,421 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabase"
+import { Eye, EyeOff, Sparkles, ArrowLeft, Globe } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Loader2, Mail, Lock, User, Globe } from "lucide-react"
+import { useLanguage } from "@/hooks/useLanguage"
+import Link from "next/link"
+
+const TRANSLATIONS = {
+  es: {
+    backToWeb: "Volver a la web",
+    welcome: "Bienvenido de vuelta",
+    createAccount: "Crea tu cuenta",
+    loginDesc: "Ingresa tus credenciales para acceder",
+    signupDesc: "Completa el formulario para comenzar",
+    email: "Correo electrónico",
+    password: "Contraseña",
+    name: "Nombre completo",
+    login: "Iniciar sesión",
+    signup: "Registrarse",
+    loggingIn: "Iniciando sesión...",
+    signingUp: "Registrando...",
+    demoMode: "Modo Demo",
+    demoDesc: "Prueba sin registrarte",
+    tryDemo: "Probar Demo",
+    language: "Idioma",
+  },
+  en: {
+    backToWeb: "Back to website",
+    welcome: "Welcome back",
+    createAccount: "Create your account",
+    loginDesc: "Enter your credentials to access",
+    signupDesc: "Complete the form to get started",
+    email: "Email",
+    password: "Password",
+    name: "Full name",
+    login: "Login",
+    signup: "Sign up",
+    loggingIn: "Logging in...",
+    signingUp: "Signing up...",
+    demoMode: "Demo Mode",
+    demoDesc: "Try without registration",
+    tryDemo: "Try Demo",
+    language: "Language",
+  },
+  fr: {
+    backToWeb: "Retour au site",
+    welcome: "Bon retour",
+    createAccount: "Créez votre compte",
+    loginDesc: "Entrez vos identifiants pour accéder",
+    signupDesc: "Remplissez le formulaire pour commencer",
+    email: "Email",
+    password: "Mot de passe",
+    name: "Nom complet",
+    login: "Se connecter",
+    signup: "S'inscrire",
+    loggingIn: "Connexion...",
+    signingUp: "Inscription...",
+    demoMode: "Mode Démo",
+    demoDesc: "Essayez sans inscription",
+    tryDemo: "Essayer la démo",
+    language: "Langue",
+  },
+  de: {
+    backToWeb: "Zurück zur Website",
+    welcome: "Willkommen zurück",
+    createAccount: "Erstellen Sie Ihr Konto",
+    loginDesc: "Geben Sie Ihre Anmeldedaten ein",
+    signupDesc: "Füllen Sie das Formular aus",
+    email: "E-Mail",
+    password: "Passwort",
+    name: "Vollständiger Name",
+    login: "Anmelden",
+    signup: "Registrieren",
+    loggingIn: "Anmeldung...",
+    signingUp: "Registrierung...",
+    demoMode: "Demo-Modus",
+    demoDesc: "Ohne Registrierung testen",
+    tryDemo: "Demo testen",
+    language: "Sprache",
+  },
+  it: {
+    backToWeb: "Torna al sito",
+    welcome: "Bentornato",
+    createAccount: "Crea il tuo account",
+    loginDesc: "Inserisci le tue credenziali",
+    signupDesc: "Completa il modulo per iniziare",
+    email: "Email",
+    password: "Password",
+    name: "Nome completo",
+    login: "Accedi",
+    signup: "Registrati",
+    loggingIn: "Accesso in corso...",
+    signingUp: "Registrazione...",
+    demoMode: "Modalità Demo",
+    demoDesc: "Prova senza registrazione",
+    tryDemo: "Prova Demo",
+    language: "Lingua",
+  },
+  pt: {
+    backToWeb: "Voltar ao site",
+    welcome: "Bem-vindo de volta",
+    createAccount: "Crie sua conta",
+    loginDesc: "Digite suas credenciais para acessar",
+    signupDesc: "Preencha o formulário para começar",
+    email: "Email",
+    password: "Senha",
+    name: "Nome completo",
+    login: "Entrar",
+    signup: "Cadastrar",
+    loggingIn: "Entrando...",
+    signingUp: "Cadastrando...",
+    demoMode: "Modo Demo",
+    demoDesc: "Experimente sem cadastro",
+    tryDemo: "Experimentar Demo",
+    language: "Idioma",
+  },
+}
+
+const LANGUAGES = [
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "de", name: "Deutsch", flag: "🇩🇪" },
+  { code: "it", name: "Italiano", flag: "🇮🇹" },
+  { code: "pt", name: "Português", flag: "🇵🇹" },
+]
 
 export default function LoginPage() {
   const router = useRouter()
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("")
-  const [language, setLanguage] = useState("es")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const { toast } = useToast()
+  const { language, setLanguage } = useLanguage()
+  const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [loginData, setLoginData] = useState({ email: "", password: "" })
+  const [signupData, setSignupData] = useState({ name: "", email: "", password: "" })
 
-  useEffect(() => {
-    // Clear any existing sessions on mount
-    const clearSession = async () => {
-      try {
-        await supabase.auth.signOut()
-        localStorage.clear()
-      } catch (err) {
-        console.error("Error clearing session:", err)
-      }
-    }
-    clearSession()
-  }, [])
+  const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.es
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setLoading(true)
+    setIsLoading(true)
 
     try {
-      if (!email || !password) {
-        setError("Por favor, introduce tu email y contraseña")
-        setLoading(false)
-        return
-      }
-
-      console.log("🔐 Intentando login...")
-
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginData.email,
+        password: loginData.password,
       })
 
-      if (signInError) {
-        console.error("❌ Error de login:", signInError)
-        setError("Credenciales incorrectas")
-        setLoading(false)
-        return
+      if (error) throw error
+
+      if (data.user) {
+        toast({
+          title: "✅ Success",
+          description: "Logged in successfully",
+        })
+        router.push("/app")
       }
-
-      if (!data?.session?.user) {
-        setError("No se pudo iniciar sesión")
-        setLoading(false)
-        return
-      }
-
-      console.log("✅ Login exitoso")
-
-      // Set language in localStorage
-      localStorage.setItem("language", language)
-
-      // Small delay to ensure session is established
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      // Redirect to app
-      router.push("/app")
-    } catch (err) {
-      console.error("❌ Error inesperado:", err)
-      setError("Error al iniciar sesión")
-      setLoading(false)
+    } catch (error: any) {
+      toast({
+        title: "❌ Error",
+        description: error.message || "Failed to login",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setLoading(true)
+    setIsLoading(true)
 
     try {
-      if (!email || !password || !name) {
-        setError("Por favor, completa todos los campos")
-        setLoading(false)
-        return
-      }
-
-      if (password.length < 6) {
-        setError("La contraseña debe tener al menos 6 caracteres")
-        setLoading(false)
-        return
-      }
-
-      console.log("📝 Intentando registro...")
-
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password: password,
+      const { data, error } = await supabase.auth.signUp({
+        email: signupData.email,
+        password: signupData.password,
         options: {
           data: {
-            full_name: name.trim(),
-            name: name.trim(),
-            language: language,
+            name: signupData.name,
           },
         },
       })
 
-      if (signUpError) {
-        console.error("❌ Error de registro:", signUpError)
-        setError(signUpError.message || "Error al registrarse")
-        setLoading(false)
-        return
-      }
+      if (error) throw error
 
-      if (!data?.user) {
-        setError("Error al crear la cuenta")
-        setLoading(false)
-        return
-      }
-
-      console.log("✅ Registro exitoso")
-
-      // Set language in localStorage
-      localStorage.setItem("language", language)
-
-      // Create user in database
-      const { error: insertError } = await supabase.from("users").insert([
-        {
+      if (data.user) {
+        const { error: insertError } = await supabase.from("users").insert({
           id: data.user.id,
-          email: data.user.email,
-          name: name.trim(),
-          full_name: name.trim(),
-          language: language,
+          email: signupData.email,
+          name: signupData.name,
           subscription_tier: "free",
-          ai_credits: 0,
-          theme: "light",
-        },
-      ])
+        })
 
-      if (insertError) {
-        console.error("Error creando usuario en DB:", insertError)
-      }
+        if (insertError) throw insertError
 
-      // Check if email confirmation is required
-      if (data.session) {
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        toast({
+          title: "✅ Success",
+          description: "Account created successfully",
+        })
         router.push("/app")
-      } else {
-        setError("Registro exitoso. Por favor, verifica tu email antes de iniciar sesión.")
-        setIsLogin(true)
       }
-
-      setLoading(false)
-    } catch (err) {
-      console.error("❌ Error inesperado:", err)
-      setError("Error al registrarse")
-      setLoading(false)
+    } catch (error: any) {
+      toast({
+        title: "❌ Error",
+        description: error.message || "Failed to sign up",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
+  const handleDemo = () => {
+    localStorage.setItem("demoMode", "true")
+    toast({
+      title: "🎉 Demo Mode",
+      description: "Exploring in demo mode",
+    })
+    router.push("/app")
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8">
-          <div className="flex flex-col items-center mb-8">
-            <div className="h-16 w-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-4">
-              <Calendar className="h-8 w-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-white mb-2">FutureTask</h1>
-            <p className="text-gray-300 text-center">
-              {isLogin ? "Inicia sesión en tu cuenta" : "Crea tu cuenta gratuita"}
-            </p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-pink-900 p-4">
+      <div className="w-full max-w-md space-y-4">
+        <Link href="/">
+          <Button variant="ghost" className="glass-effect text-white hover:bg-white/10 mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t.backToWeb}
+          </Button>
+        </Link>
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-8 w-8 text-white" />
+            <span className="text-2xl font-bold text-white">FutureTask</span>
           </div>
 
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-              <p className="text-red-200 text-sm">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={isLogin ? handleLogin : handleRegister} className="space-y-4">
-            {!isLogin && (
-              <div>
-                <Label htmlFor="name" className="text-white mb-2 block">
-                  Nombre completo
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Tu nombre"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="email" className="text-white mb-2 block">
-                Email
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-white mb-2 block">
-                Contraseña
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="language" className="text-white mb-2 block">
-                Idioma
-              </Label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger className="pl-10 bg-white/10 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="es">🇪🇸 Español</SelectItem>
-                    <SelectItem value="en">🇬🇧 English</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Procesando...
-                </>
-              ) : isLogin ? (
-                "Iniciar Sesión"
-              ) : (
-                "Crear Cuenta"
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setIsLogin(!isLogin)
-                setError("")
-              }}
-              className="text-purple-300 hover:text-purple-200 text-sm transition-colors"
-            >
-              {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-            </button>
-          </div>
-
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => router.push("/?demo=true")}
-              className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
-            >
-              O prueba el <span className="text-yellow-400 font-semibold">Modo Demo</span>
-            </button>
+          <div className="flex items-center gap-2">
+            <Globe className="h-4 w-4 text-white" />
+            <Select value={language} onValueChange={setLanguage}>
+              <SelectTrigger className="w-[140px] glass-effect text-white border-white/20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((lang) => (
+                  <SelectItem key={lang.code} value={lang.code}>
+                    <span className="flex items-center gap-2">
+                      <span>{lang.flag}</span>
+                      <span>{lang.name}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
+
+        <Card className="glass-card border-white/20">
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-white/10">
+              <TabsTrigger value="login" className="text-white data-[state=active]:bg-white/20">
+                {t.login}
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white/20">
+                {t.signup}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login">
+              <CardHeader>
+                <CardTitle className="text-2xl text-white">{t.welcome}</CardTitle>
+                <CardDescription className="text-white/70">{t.loginDesc}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email" className="text-white">
+                      {t.email}
+                    </Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="nombre@ejemplo.com"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      required
+                      className="glass-effect text-white placeholder:text-white/50 border-white/20"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password" className="text-white">
+                      {t.password}
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        required
+                        className="glass-effect text-white placeholder:text-white/50 border-white/20 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={isLoading} className="w-full btn-gradient">
+                    {isLoading ? t.loggingIn : t.login}
+                  </Button>
+                </form>
+              </CardContent>
+            </TabsContent>
+
+            <TabsContent value="signup">
+              <CardHeader>
+                <CardTitle className="text-2xl text-white">{t.createAccount}</CardTitle>
+                <CardDescription className="text-white/70">{t.signupDesc}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name" className="text-white">
+                      {t.name}
+                    </Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Tu nombre"
+                      value={signupData.name}
+                      onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                      required
+                      className="glass-effect text-white placeholder:text-white/50 border-white/20"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email" className="text-white">
+                      {t.email}
+                    </Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="nombre@ejemplo.com"
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                      required
+                      className="glass-effect text-white placeholder:text-white/50 border-white/20"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password" className="text-white">
+                      {t.password}
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        type={showPassword ? "text" : "password"}
+                        value={signupData.password}
+                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                        required
+                        className="glass-effect text-white placeholder:text-white/50 border-white/20 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={isLoading} className="w-full btn-gradient">
+                    {isLoading ? t.signingUp : t.signup}
+                  </Button>
+                </form>
+              </CardContent>
+            </TabsContent>
+          </Tabs>
+        </Card>
+
+        <Card className="glass-card border-white/20">
+          <CardHeader>
+            <CardTitle className="text-xl text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              {t.demoMode}
+            </CardTitle>
+            <CardDescription className="text-white/70">{t.demoDesc}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleDemo}
+              variant="outline"
+              className="w-full glass-effect text-white border-white/20 bg-transparent"
+            >
+              {t.tryDemo}
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

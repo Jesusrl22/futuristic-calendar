@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { SubscriptionModal } from "./subscription-modal"
-import { Crown, Zap, Rocket, Calendar, CreditCard, AlertCircle } from "lucide-react"
+import { Crown, Zap, Rocket, Calendar, CreditCard, AlertCircle, Check } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 interface SubscriptionManagerProps {
@@ -29,8 +29,8 @@ const planColors = {
 
 const planDescriptions = {
   free: "Plan básico con funciones esenciales",
-  premium: "Plan avanzado con todas las funciones",
-  pro: "Plan profesional con IA ilimitada",
+  premium: "Plan avanzado con todas las funciones premium",
+  pro: "Plan profesional con IA ilimitada + Todo de Premium",
 }
 
 export function SubscriptionManager({ userId, currentPlan, billingCycle }: SubscriptionManagerProps) {
@@ -65,6 +65,57 @@ export function SubscriptionManager({ userId, currentPlan, billingCycle }: Subsc
   const PlanIcon = planIcons[currentPlan as keyof typeof planIcons] || Zap
   const planColor = planColors[currentPlan as keyof typeof planColors] || "text-gray-500"
   const planDescription = planDescriptions[currentPlan as keyof typeof planDescriptions] || "Plan desconocido"
+
+  // Características según el plan actual
+  const getFeaturesList = () => {
+    if (currentPlan === "free") {
+      return [
+        { text: "Tareas ilimitadas", included: true },
+        { text: "Pomodoro básico", included: true },
+        { text: "Algunos logros", included: true },
+        { text: "2 temas", included: true },
+        { text: "Eventos ilimitados", included: false },
+        { text: "Notas ilimitadas", included: false },
+        { text: "Lista de deseos", included: false },
+        { text: "Créditos IA", included: false },
+      ]
+    }
+
+    if (currentPlan === "premium") {
+      return [
+        { text: "✅ Todo de Free", included: true, highlight: true },
+        { text: "Eventos ilimitados", included: true },
+        { text: "Notas ilimitadas", included: true },
+        { text: "Lista de deseos", included: true },
+        { text: "Pomodoro avanzado", included: true },
+        { text: "Todos los logros", included: true },
+        { text: "6 temas premium", included: true },
+        { text: "Estadísticas avanzadas", included: true },
+        { text: "Sincronización en la nube", included: true },
+        { text: "500 créditos IA/mes", included: false },
+        { text: "Asistente IA avanzado", included: false },
+        { text: "Soporte prioritario 24/7", included: false },
+      ]
+    }
+
+    if (currentPlan === "pro") {
+      return [
+        { text: "✅ Todo de Premium + Free", included: true, highlight: true },
+        { text: "500 créditos IA/mes", included: true },
+        { text: "Asistente IA avanzado", included: true },
+        { text: "14 temas profesionales", included: true },
+        { text: "Análisis predictivo con IA", included: true },
+        { text: "Soporte prioritario 24/7", included: true },
+        { text: "Funciones beta exclusivas", included: true },
+        { text: "API de integración", included: true },
+        { text: "Backup automático diario", included: true },
+      ]
+    }
+
+    return []
+  }
+
+  const features = getFeaturesList()
 
   return (
     <div className="space-y-6">
@@ -122,72 +173,16 @@ export function SubscriptionManager({ userId, currentPlan, billingCycle }: Subsc
           <div className="space-y-4">
             <h3 className="font-semibold">Características incluidas:</h3>
             <ul className="space-y-2 text-sm">
-              {currentPlan === "free" && (
-                <>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Tareas ilimitadas
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Pomodoro básico
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Algunos logros
-                  </li>
-                </>
-              )}
-
-              {currentPlan === "premium" && (
-                <>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Todo de Free
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Eventos ilimitados
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Notas ilimitadas
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Pomodoro avanzado
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Todos los logros
-                  </li>
-                </>
-              )}
-
-              {currentPlan === "pro" && (
-                <>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Todo de Premium
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    500 créditos IA/mes
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Asistente IA avanzado
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Soporte prioritario 24/7
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    Funciones beta exclusivas
-                  </li>
-                </>
-              )}
+              {features.map((feature, index) => (
+                <li key={index} className={`flex items-center gap-2 ${!feature.included ? "opacity-40" : ""}`}>
+                  {feature.included ? (
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <div className="w-4 h-4 rounded-full border-2 border-gray-300 flex-shrink-0" />
+                  )}
+                  <span className={feature.highlight ? "font-semibold text-primary" : ""}>{feature.text}</span>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -195,11 +190,11 @@ export function SubscriptionManager({ userId, currentPlan, billingCycle }: Subsc
 
           <div className="flex gap-3">
             <Button onClick={() => setIsModalOpen(true)} className="flex-1">
-              {currentPlan === "free" ? "Mejorar Plan" : "Cambiar Plan"}
+              {currentPlan === "free" ? "Mejorar Plan" : currentPlan === "premium" ? "Upgrade a Pro" : "Ver Planes"}
             </Button>
             {currentPlan !== "free" && (
               <Button variant="outline" onClick={() => setIsModalOpen(true)}>
-                Ver Planes
+                Ver Todos los Planes
               </Button>
             )}
           </div>

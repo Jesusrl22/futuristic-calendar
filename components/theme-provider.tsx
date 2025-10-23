@@ -1,9 +1,23 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 
-type Theme = "light" | "dark"
+type Theme =
+  | "light"
+  | "dark"
+  | "sunset"
+  | "ocean"
+  | "forest"
+  | "midnight"
+  | "rose"
+  | "lavender"
+  | "ember"
+  | "mint"
+  | "coral"
+  | "arctic"
+  | "sahara"
+  | "neon"
 
 interface ThemeContextType {
   theme: Theme
@@ -16,30 +30,34 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("dark")
 
   useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem("theme") as Theme
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setThemeState(savedTheme)
-      document.documentElement.classList.toggle("dark", savedTheme === "dark")
-    } else {
-      // Default to dark theme
-      document.documentElement.classList.add("dark")
-    }
+    const savedTheme = (localStorage.getItem("theme") || "dark") as Theme
+    setThemeState(savedTheme)
+    applyTheme(savedTheme)
   }, [])
+
+  const applyTheme = (newTheme: Theme) => {
+    const html = document.documentElement
+    html.setAttribute("data-theme", newTheme)
+    if (newTheme === "light") {
+      html.classList.remove("dark")
+    } else {
+      html.classList.add("dark")
+    }
+  }
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme)
+    applyTheme(newTheme)
     localStorage.setItem("theme", newTheme)
-    document.documentElement.classList.toggle("dark", newTheme === "dark")
   }
 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
 }
 
-export function useThemeContext() {
+export function useTheme() {
   const context = useContext(ThemeContext)
   if (context === undefined) {
-    throw new Error("useThemeContext must be used within a ThemeProvider")
+    throw new Error("useTheme must be used within a ThemeProvider")
   }
   return context
 }

@@ -36,7 +36,6 @@ export function useTheme() {
   const [settings, setSettings] = useState<ThemeSettings>(DEFAULT_THEME)
 
   useEffect(() => {
-    // Load settings from localStorage
     const saved = localStorage.getItem("themeSettings")
     if (saved) {
       try {
@@ -45,6 +44,7 @@ export function useTheme() {
         applyTheme(parsed)
       } catch (e) {
         console.error("Error loading theme settings:", e)
+        applyTheme(DEFAULT_THEME)
       }
     } else {
       applyTheme(DEFAULT_THEME)
@@ -54,17 +54,19 @@ export function useTheme() {
   const applyTheme = (newSettings: ThemeSettings) => {
     const html = document.documentElement
 
-    // Apply theme
     html.setAttribute("data-theme", newSettings.theme)
-
-    // Apply font size
     html.setAttribute("data-font-size", newSettings.fontSize)
 
-    // Apply compact mode
     if (newSettings.compactMode) {
       html.setAttribute("data-compact", "true")
     } else {
       html.removeAttribute("data-compact")
+    }
+
+    if (newSettings.theme === "dark" || newSettings.theme === "amoled" || newSettings.theme === "midnight") {
+      html.classList.add("dark")
+    } else {
+      html.classList.remove("dark")
     }
 
     console.log("Theme applied:", newSettings)

@@ -32,23 +32,51 @@ import {
   Heart,
 } from "lucide-react"
 import { hybridDb, type Note } from "@/lib/hybrid-database"
+import { isPremiumOrPro } from "@/lib/subscription"
 
 interface NotesManagerProps {
   userId: string
-  isPremium: boolean
+  userPlan: string
   onUpgrade: () => void
 }
 
 const NOTE_COLORS = [
-  { id: "yellow", name: "Amarillo", class: "bg-yellow-100 border-yellow-300 text-yellow-800" },
-  { id: "blue", name: "Azul", class: "bg-blue-100 border-blue-300 text-blue-800" },
-  { id: "green", name: "Verde", class: "bg-green-100 border-green-300 text-green-800" },
-  { id: "purple", name: "Púrpura", class: "bg-purple-100 border-purple-300 text-purple-800" },
-  { id: "pink", name: "Rosa", class: "bg-pink-100 border-pink-300 text-pink-800" },
-  { id: "gray", name: "Gris", class: "bg-gray-100 border-gray-300 text-gray-800" },
+  {
+    id: "yellow",
+    name: "Amarillo",
+    class:
+      "bg-yellow-100 border-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:border-yellow-700 dark:text-yellow-200",
+  },
+  {
+    id: "blue",
+    name: "Azul",
+    class: "bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200",
+  },
+  {
+    id: "green",
+    name: "Verde",
+    class: "bg-green-100 border-green-300 text-green-800 dark:bg-green-900 dark:border-green-700 dark:text-green-200",
+  },
+  {
+    id: "purple",
+    name: "Púrpura",
+    class:
+      "bg-purple-100 border-purple-300 text-purple-800 dark:bg-purple-900 dark:border-purple-700 dark:text-purple-200",
+  },
+  {
+    id: "pink",
+    name: "Rosa",
+    class: "bg-pink-100 border-pink-300 text-pink-800 dark:bg-pink-900 dark:border-pink-700 dark:text-pink-200",
+  },
+  {
+    id: "gray",
+    name: "Gris",
+    class: "bg-gray-100 border-gray-300 text-gray-800 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200",
+  },
 ]
 
-export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps) {
+export function NotesManager({ userId, userPlan, onUpgrade }: NotesManagerProps) {
+  const isPremium = isPremiumOrPro(userPlan)
   const [notes, setNotes] = useState<Note[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -57,7 +85,6 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
   const [filterTag, setFilterTag] = useState<string>("all")
   const [activeTab, setActiveTab] = useState("all")
 
-  // Form state
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -66,12 +93,13 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
   })
 
   useEffect(() => {
+    console.log("📝 NotesManager - User Plan:", userPlan, "isPremium:", isPremium)
     if (isPremium) {
       loadNotes()
     } else {
       setIsLoading(false)
     }
-  }, [userId, isPremium])
+  }, [userId, isPremium, userPlan])
 
   const loadNotes = async () => {
     try {
@@ -105,7 +133,7 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
       if (editingNote) {
         await hybridDb.updateNote(editingNote.id, noteData)
       } else {
-        await hybridDb.createNote(userId, noteData)
+        await hybridDb.createNote({ user_id: userId, ...noteData })
       }
       await loadNotes()
       handleCloseForm()
@@ -147,7 +175,6 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
     })
   }
 
-  // Filter notes
   const filteredNotes = notes.filter((note) => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -159,12 +186,11 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
 
     const matchesTab =
       activeTab === "all" ||
-      (activeTab === "recent" && new Date(note.updatedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
+      (activeTab === "recent" && new Date(note.updated_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
 
     return matchesSearch && matchesTag && matchesTab
   })
 
-  // Get unique tags
   const allTags = Array.from(
     new Set(
       notes
@@ -179,17 +205,15 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando notas...</p>
+          <p className="text-gray-600 dark:text-gray-400">Cargando notas...</p>
         </div>
       </div>
     )
   }
 
-  // Show premium upgrade screen if not premium
   if (!isPremium) {
     return (
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
             <BookOpen className="w-6 h-6 text-white" />
@@ -198,20 +222,19 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Notas Avanzadas
             </h2>
-            <p className="text-gray-600 text-sm">Función Premium</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">Función Premium</p>
           </div>
         </div>
 
-        {/* Premium Upgrade Card */}
-        <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
           <CardContent className="pt-12 pb-12">
             <div className="text-center max-w-md mx-auto">
               <div className="mb-6">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-10 h-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Notas Avanzadas Premium</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Notas Avanzadas Premium</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
                   Organiza tus ideas con nuestro sistema avanzado de notas con etiquetas y colores
                 </p>
               </div>
@@ -221,25 +244,25 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <FileText className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-gray-700">Notas ilimitadas con formato avanzado</span>
+                  <span className="text-gray-700 dark:text-gray-300">Notas ilimitadas con formato avanzado</span>
                 </div>
                 <div className="flex items-center gap-3 text-left">
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <Tag className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-gray-700">Sistema de etiquetas para organización</span>
+                  <span className="text-gray-700 dark:text-gray-300">Sistema de etiquetas para organización</span>
                 </div>
                 <div className="flex items-center gap-3 text-left">
                   <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <Lightbulb className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-gray-700">Colores personalizables para categorización</span>
+                  <span className="text-gray-700 dark:text-gray-300">Colores personalizables para categorización</span>
                 </div>
                 <div className="flex items-center gap-3 text-left">
                   <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <Search className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-gray-700">Búsqueda avanzada y filtros inteligentes</span>
+                  <span className="text-gray-700 dark:text-gray-300">Búsqueda avanzada y filtros inteligentes</span>
                 </div>
               </div>
 
@@ -250,9 +273,9 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
                 >
                   <Crown className="w-5 h-5 mr-2" />
-                  Actualizar a Premium
+                  Actualizar a Premium o Pro
                 </Button>
-                <p className="text-xs text-gray-500">Desde €1.99/mes • Cancela cuando quieras</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Desde €2.49/mes • Cancela cuando quieras</p>
               </div>
             </div>
           </CardContent>
@@ -263,7 +286,6 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
@@ -273,7 +295,9 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
             <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Notas Avanzadas
             </h2>
-            <p className="text-gray-600 text-sm">{notes.length} notas (Premium)</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              {notes.length} notas ({userPlan === "pro" ? "Pro" : "Premium"})
+            </p>
           </div>
         </div>
         <Dialog open={showForm} onOpenChange={setShowForm}>
@@ -359,14 +383,13 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-300/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">Total Notas</p>
-                <p className="text-2xl font-bold text-blue-700">{notes.length}</p>
+                <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Notas</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{notes.length}</p>
               </div>
               <FileText className="h-8 w-8 text-blue-400" />
             </div>
@@ -377,8 +400,8 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600">Etiquetas</p>
-                <p className="text-2xl font-bold text-purple-700">{allTags.length}</p>
+                <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Etiquetas</p>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">{allTags.length}</p>
               </div>
               <Tag className="h-8 w-8 text-purple-400" />
             </div>
@@ -389,10 +412,10 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-pink-600">Esta Semana</p>
-                <p className="text-2xl font-bold text-pink-700">
+                <p className="text-sm font-medium text-pink-600 dark:text-pink-400">Esta Semana</p>
+                <p className="text-2xl font-bold text-pink-700 dark:text-pink-300">
                   {
-                    notes.filter((note) => new Date(note.updatedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
+                    notes.filter((note) => new Date(note.updated_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000)
                       .length
                   }
                 </p>
@@ -406,8 +429,8 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">Favoritas</p>
-                <p className="text-2xl font-bold text-green-700">
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">Favoritas</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {notes.filter((note) => note.color === "yellow").length}
                 </p>
               </div>
@@ -417,7 +440,6 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="all" className="flex items-center gap-2">
@@ -427,11 +449,10 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
           <TabsTrigger value="recent" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Recientes (
-            {notes.filter((note) => new Date(note.updatedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000).length})
+            {notes.filter((note) => new Date(note.updated_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000).length})
           </TabsTrigger>
         </TabsList>
 
-        {/* Filters */}
         <Card className="mt-4">
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -476,10 +497,10 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
               <CardContent className="pt-6">
                 <div className="text-center py-12">
                   <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
                     {searchTerm || filterTag !== "all" ? "No se encontraron notas" : "No tienes notas aún"}
                   </h3>
-                  <p className="text-gray-500 mb-6">
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">
                     {searchTerm || filterTag !== "all"
                       ? "Intenta ajustar los filtros de búsqueda"
                       : "Comienza creando tu primera nota"}
@@ -510,7 +531,7 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(note)}
-                            className="hover:bg-blue-100"
+                            className="hover:bg-blue-100 dark:hover:bg-blue-900"
                           >
                             <Edit className="w-4 h-4 text-blue-600" />
                           </Button>
@@ -518,7 +539,7 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(note.id)}
-                            className="hover:bg-red-100"
+                            className="hover:bg-red-100 dark:hover:bg-red-900"
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </Button>
@@ -526,7 +547,9 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <p className="text-gray-700 line-clamp-4 text-sm leading-relaxed">{note.content}</p>
+                      <p className="text-gray-700 dark:text-gray-300 line-clamp-4 text-sm leading-relaxed">
+                        {note.content}
+                      </p>
 
                       {Array.isArray(note.tags) && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
@@ -538,8 +561,8 @@ export function NotesManager({ userId, isPremium, onUpgrade }: NotesManagerProps
                         </div>
                       )}
 
-                      <div className="text-xs text-gray-500 pt-2 border-t border-gray-200">
-                        Actualizada el {new Date(note.updatedAt).toLocaleDateString()}
+                      <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        Actualizada el {new Date(note.updated_at).toLocaleDateString()}
                       </div>
                     </CardContent>
                   </Card>

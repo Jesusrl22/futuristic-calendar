@@ -27,6 +27,7 @@ import {
   Trophy,
   Sparkles,
   Bot,
+  Zap,
 } from "lucide-react"
 import { Toaster } from "@/components/toaster"
 import { LanguageSelector } from "@/components/language-selector"
@@ -90,7 +91,6 @@ function AppContent() {
 
         console.log("✅ Sesión encontrada:", session.user.email)
 
-        // Load user data from database
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("*")
@@ -102,13 +102,12 @@ function AppContent() {
         }
 
         if (userData) {
-          console.log("✅ Datos de usuario cargados")
+          console.log("✅ Datos de usuario cargados - Plan:", userData.subscription_tier || userData.plan)
           setUser({
             ...userData,
-            plan: userData.subscription_tier || "free",
+            plan: userData.subscription_tier || userData.plan || "free",
           })
         } else {
-          // Create user in database if doesn't exist
           const newUser = {
             id: session.user.id,
             email: session.user.email,
@@ -155,10 +154,15 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/20 to-background">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Cargando...</p>
+          <div className="relative">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
+            <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full bg-blue-400 opacity-75" />
+          </div>
+          <p className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Cargando...
+          </p>
         </div>
       </div>
     )
@@ -168,22 +172,32 @@ function AppContent() {
     return null
   }
 
+  const userPlan = user?.subscription_tier || user?.plan || "free"
+  console.log("🎯 App Page - User Plan:", userPlan)
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/20 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-card/50 backdrop-blur-sm border-b border-border p-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">FutureTask</h1>
+      <div className="lg:hidden glass-card border-b border-white/20 p-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg">
+            <Calendar className="h-5 w-5 text-white" />
+          </div>
+          <h1 className="text-xl font-bold gradient-text">FutureTask</h1>
           {user?.isDemo && (
-            <span className="px-2 py-1 text-xs font-semibold bg-secondary text-secondary-foreground rounded-full border border-border">
+            <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full shadow-lg badge-glow">
               DEMO
             </span>
           )}
         </div>
         <div className="flex items-center space-x-2">
           <LanguageSelector variant="button" showFlag={true} showName={false} />
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="hover:bg-white/20"
+          >
             {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
@@ -195,183 +209,95 @@ function AppContent() {
           className={`
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40
-          w-64 bg-card/50 backdrop-blur-sm border-r border-border
+          w-72 sidebar-glass
           transition-transform duration-300 ease-in-out
           flex flex-col
-          lg:top-0 top-[73px]
+          lg:top-0 top-[73px] shadow-2xl
         `}
         >
           {/* Desktop Header */}
-          <div className="hidden lg:flex items-center justify-between p-6 border-b border-border">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold text-foreground">FutureTask</h1>
+          <div className="hidden lg:flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg animate-glow">
+                <Calendar className="h-7 w-7 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold gradient-text">FutureTask</h1>
             </div>
             <LanguageSelector variant="button" showFlag={true} showName={false} />
           </div>
 
           {/* User Info */}
-          <div className="p-6 border-b border-border">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold">
+          <div className="p-6 border-b border-white/10">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-lg shadow-xl">
                 {user?.full_name?.charAt(0) || user?.name?.charAt(0) || "U"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
                   {user?.full_name || user?.name || "Usuario"}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user?.email}</p>
               </div>
             </div>
             {user?.isDemo && (
-              <div className="mt-3 p-2 bg-secondary/50 border border-border rounded-md">
-                <p className="text-xs text-secondary-foreground flex items-center">
+              <div className="p-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 border border-yellow-400/30 rounded-xl backdrop-blur-sm">
+                <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 flex items-center">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Modo Demo - Todas las funciones
                 </p>
               </div>
             )}
-            <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-              <span className="capitalize">Plan: {user?.subscription_tier || user?.plan || "free"}</span>
-              <span>Créditos: {user?.ai_credits || 0}</span>
+            <div className="mt-4 flex items-center justify-between p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl backdrop-blur-sm border border-blue-500/20">
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 capitalize">
+                Plan: {userPlan}
+              </span>
+              <div className="flex items-center gap-1">
+                <Zap className="h-3 w-3 text-yellow-500" />
+                <span className="text-xs font-bold text-yellow-600">{user?.ai_credits || 0}</span>
+              </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            <button
-              onClick={() => {
-                setActiveTab("calendar")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "calendar"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <Calendar className="h-5 w-5" />
-              <span className="font-medium">Calendario</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab("pomodoro")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "pomodoro"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <Clock className="h-5 w-5" />
-              <span className="font-medium">Pomodoro</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab("stats")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "stats"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <BarChart3 className="h-5 w-5" />
-              <span className="font-medium">Estadísticas</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab("wishlist")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "wishlist"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <Star className="h-5 w-5" />
-              <span className="font-medium">Lista de Deseos</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab("notes")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "notes"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              <span className="font-medium">Notas</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab("ai")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "ai"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <Bot className="h-5 w-5" />
-              <span className="font-medium">Asistente IA</span>
-              {user?.ai_credits > 0 && (
-                <span className="ml-auto px-2 py-0.5 text-xs font-semibold bg-primary/20 text-primary-foreground rounded-full border border-primary">
-                  {user.ai_credits}
-                </span>
-              )}
-            </button>
-
-            {!user?.isDemo && (
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            {[
+              { id: "calendar", icon: Calendar, label: "Calendario" },
+              { id: "pomodoro", icon: Clock, label: "Pomodoro" },
+              { id: "stats", icon: BarChart3, label: "Estadísticas" },
+              { id: "wishlist", icon: Star, label: "Lista de Deseos" },
+              { id: "notes", icon: FileText, label: "Notas" },
+              { id: "ai", icon: Bot, label: "Asistente IA", credits: user?.ai_credits },
+              ...(user?.isDemo ? [] : [{ id: "subscription", icon: CreditCard, label: "Suscripción" }]),
+              { id: "achievements", icon: Trophy, label: "Logros" },
+            ].map((item) => (
               <button
+                key={item.id}
                 onClick={() => {
-                  setActiveTab("subscription")
+                  setActiveTab(item.id)
                   setIsSidebarOpen(false)
                 }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  activeTab === "subscription"
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  activeTab === item.id
+                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/50 hover:scale-102"
                 }`}
               >
-                <CreditCard className="h-5 w-5" />
-                <span className="font-medium">Suscripción</span>
+                <item.icon className="h-5 w-5" />
+                <span className="font-semibold">{item.label}</span>
+                {item.credits && item.credits > 0 && (
+                  <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-yellow-400 text-gray-900 rounded-full">
+                    {item.credits}
+                  </span>
+                )}
               </button>
-            )}
-
-            <button
-              onClick={() => {
-                setActiveTab("achievements")
-                setIsSidebarOpen(false)
-              }}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                activeTab === "achievements"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              <Trophy className="h-5 w-5" />
-              <span className="font-medium">Logros</span>
-            </button>
+            ))}
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-border space-y-2">
+          <div className="p-4 border-t border-white/10 space-y-2">
             <Button
               variant="ghost"
-              className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent"
+              className="w-full justify-start hover:bg-white/20 dark:hover:bg-gray-800/50"
               onClick={() => setIsSettingsOpen(true)}
             >
               <Settings className="h-4 w-4 mr-2" />
@@ -379,7 +305,7 @@ function AppContent() {
             </Button>
             <Button
               variant="ghost"
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
               onClick={handleLogout}
             >
               {user?.isDemo ? "Salir del Demo" : "Cerrar Sesión"}
@@ -388,43 +314,49 @@ function AppContent() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto p-4 lg:p-6">
+        <main className="flex-1 overflow-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto">
-            {activeTab === "calendar" && (
-              <TaskCalendarManager user={user} onUserUpdate={(updates) => setUser({ ...user, ...updates })} />
-            )}
-            {activeTab === "pomodoro" && (
-              <PomodoroTimer
-                userId={user?.id}
-                workDuration={user?.pomodoro_work_duration || 25}
-                breakDuration={user?.pomodoro_break_duration || 5}
-                longBreakDuration={user?.pomodoro_long_break_duration || 15}
-                sessionsUntilLongBreak={user?.pomodoro_sessions_until_long_break || 4}
-                isDemo={user?.isDemo}
-              />
-            )}
-            {activeTab === "stats" && <StatsCards userId={user?.id} isDemo={user?.isDemo} />}
-            {activeTab === "wishlist" && <WishlistManager userId={user?.id} isDemo={user?.isDemo} />}
-            {activeTab === "notes" && <NotesManager userId={user?.id} isDemo={user?.isDemo} />}
-            {activeTab === "ai" && (
-              <AIAssistant
-                userId={user?.id}
-                credits={user?.ai_credits || 0}
-                onCreditsUpdate={(newCredits) => setUser({ ...user, ai_credits: newCredits })}
-                userPlan={user?.subscription_tier || user?.plan || "free"}
-                onUpgrade={() => setActiveTab("subscription")}
-              />
-            )}
-            {activeTab === "subscription" && !user?.isDemo && (
-              <SubscriptionManager
-                userId={user?.id}
-                currentPlan={user?.subscription_tier || user?.plan || "free"}
-                billingCycle={user?.billing_cycle || "monthly"}
-              />
-            )}
-            {activeTab === "achievements" && (
-              <AchievementsDisplay userId={user?.id} user={user} isDemo={user?.isDemo} />
-            )}
+            <div className="animate-fade-in">
+              {activeTab === "calendar" && (
+                <TaskCalendarManager user={user} onUserUpdate={(updates) => setUser({ ...user, ...updates })} />
+              )}
+              {activeTab === "pomodoro" && (
+                <PomodoroTimer
+                  userId={user?.id}
+                  workDuration={user?.pomodoro_work_duration || 25}
+                  breakDuration={user?.pomodoro_break_duration || 5}
+                  longBreakDuration={user?.pomodoro_long_break_duration || 15}
+                  sessionsUntilLongBreak={user?.pomodoro_sessions_until_long_break || 4}
+                  isDemo={user?.isDemo}
+                />
+              )}
+              {activeTab === "stats" && <StatsCards userId={user?.id} isDemo={user?.isDemo} />}
+              {activeTab === "wishlist" && (
+                <WishlistManager userId={user?.id} userPlan={userPlan} onUpgrade={() => setActiveTab("subscription")} />
+              )}
+              {activeTab === "notes" && (
+                <NotesManager userId={user?.id} userPlan={userPlan} onUpgrade={() => setActiveTab("subscription")} />
+              )}
+              {activeTab === "ai" && (
+                <AIAssistant
+                  userId={user?.id}
+                  credits={user?.ai_credits || 0}
+                  onCreditsUpdate={(newCredits) => setUser({ ...user, ai_credits: newCredits })}
+                  userPlan={userPlan}
+                  onUpgrade={() => setActiveTab("subscription")}
+                />
+              )}
+              {activeTab === "subscription" && !user?.isDemo && (
+                <SubscriptionManager
+                  userId={user?.id}
+                  currentPlan={userPlan}
+                  billingCycle={user?.billing_cycle || "monthly"}
+                />
+              )}
+              {activeTab === "achievements" && (
+                <AchievementsDisplay userId={user?.id} user={user} isDemo={user?.isDemo} />
+              )}
+            </div>
           </div>
         </main>
       </div>
@@ -435,7 +367,7 @@ function AppContent() {
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -447,8 +379,8 @@ export default function AppPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       }
     >

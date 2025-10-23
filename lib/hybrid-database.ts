@@ -43,21 +43,26 @@ export interface User {
   updated_at: string
 }
 
-interface Note {
+export interface Note {
   id: string
   user_id: string
   title: string
   content: string
+  tags?: string[]
+  color?: string
   created_at: string
   updated_at: string
 }
 
-interface WishlistItem {
+export interface WishlistItem {
   id: string
   user_id: string
   title: string
   description?: string
   priority: "low" | "medium" | "high"
+  category?: string
+  target_date?: string
+  notes?: string
   created_at: string
   updated_at: string
 }

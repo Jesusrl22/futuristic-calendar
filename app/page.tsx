@@ -18,13 +18,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
-      {/* Header */}
       <header className="relative border-b border-purple-500/20 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
@@ -49,7 +47,6 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="relative container mx-auto px-4 py-20 text-center">
         <div
           className={`transition-all duration-1000 ${
@@ -83,7 +80,6 @@ export default function LandingPage() {
             </button>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto">
             <div className="text-center transform hover:scale-110 transition-all duration-300">
               <div className="flex items-center justify-center mb-2">
@@ -110,7 +106,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="relative py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -146,7 +141,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
       <section className="relative py-20 bg-black/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
@@ -154,7 +148,6 @@ export default function LandingPage() {
             <p className="text-gray-400 text-lg">Elige el plan perfecto para ti</p>
           </div>
 
-          {/* Billing Cycle Toggle */}
           <div className="flex justify-center mb-12">
             <div className="bg-slate-800/80 p-1 rounded-lg flex gap-1">
               <Button
@@ -188,7 +181,6 @@ export default function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Free Plan */}
             <div className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-lg p-8 hover:border-gray-500/30 transition-all hover:scale-105 hover:shadow-xl">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-white">Free</h3>
@@ -226,7 +218,6 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Premium Plan */}
             <div className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-lg p-8 hover:border-purple-500/30 transition-all hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-bold text-white">Premium</h3>
@@ -285,7 +276,6 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Pro Plan */}
             <div className="bg-gradient-to-b from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 backdrop-blur-sm rounded-lg p-8 relative hover:border-purple-500 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full text-sm font-semibold animate-pulse">
                 Más Popular
@@ -350,7 +340,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section className="relative py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -419,7 +408,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="relative py-20">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">¿Listo para ser más productivo?</h2>
@@ -436,7 +424,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="relative border-t border-white/10 py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">

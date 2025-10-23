@@ -1,168 +1,194 @@
-export const SUBSCRIPTION_PLANS = {
+export type SubscriptionTier = "free" | "premium" | "pro"
+export type SubscriptionPlan = SubscriptionTier
+
+export interface SubscriptionFeatures {
+  unlimitedTasks: boolean
+  unlimitedEvents: boolean
+  unlimitedNotes: boolean
+  wishlist: boolean
+  advancedPomodoro: boolean
+  allAchievements: boolean
+  themesCount: number
+  aiCreditsPerMonth: number
+  advancedAnalytics: boolean
+  prioritySupport: boolean
+  cloudSync: boolean
+  betaFeatures: boolean
+  apiAccess: boolean
+  autoBackup: boolean
+}
+
+export const SUBSCRIPTION_FEATURES: Record<SubscriptionTier, SubscriptionFeatures> = {
   free: {
-    id: "free",
-    name: "Free",
-    paypalPlanId: "", // No PayPal plan for free
-    price: {
-      monthly: 0,
-      yearly: 0,
-    },
-    features: {
-      tasks: "unlimited",
-      pomodoro: "basic",
-      achievements: "some",
-      aiCredits: 0,
-      themes: false,
-      analytics: false,
-      prioritySupport: false,
-      betaFeatures: false,
-    },
-    limits: {
-      aiCredits: 0,
-      tasks: -1,
-      notes: -1,
-      wishlist: -1,
-    },
-    featureList: [
-      "Tareas ilimitadas",
-      "Temporizador Pomodoro básico",
-      "Algunos logros",
-      "2 temas (claro y oscuro)",
-      "Sin créditos de IA",
-    ],
+    unlimitedTasks: true,
+    unlimitedEvents: false,
+    unlimitedNotes: false,
+    wishlist: false,
+    advancedPomodoro: false,
+    allAchievements: false,
+    themesCount: 2,
+    aiCreditsPerMonth: 0,
+    advancedAnalytics: false,
+    prioritySupport: false,
+    cloudSync: false,
+    betaFeatures: false,
+    apiAccess: false,
+    autoBackup: false,
   },
   premium: {
-    id: "premium",
-    name: "Premium",
-    paypalPlanId: process.env.PAYPAL_PREMIUM_PLAN_ID || "P-PREMIUM",
-    price: {
-      monthly: 2.49,
-      yearly: 24.99,
-    },
-    features: {
-      tasks: "unlimited",
-      pomodoro: "advanced",
-      achievements: "all",
-      aiCredits: 0,
-      themes: true,
-      analytics: true,
-      prioritySupport: false,
-      betaFeatures: false,
-    },
-    limits: {
-      aiCredits: 0,
-      tasks: -1,
-      notes: -1,
-      wishlist: -1,
-    },
-    featureList: [
-      "Todo lo de Free",
-      "Temporizador Pomodoro avanzado",
-      "Todos los logros",
-      "6 temas premium",
-      "Estadísticas avanzadas",
-      "Sincronización en la nube",
-    ],
+    unlimitedTasks: true,
+    unlimitedEvents: true,
+    unlimitedNotes: true,
+    wishlist: true,
+    advancedPomodoro: true,
+    allAchievements: true,
+    themesCount: 8,
+    aiCreditsPerMonth: 0,
+    advancedAnalytics: true,
+    prioritySupport: false,
+    cloudSync: true,
+    betaFeatures: false,
+    apiAccess: false,
+    autoBackup: false,
   },
   pro: {
-    id: "pro",
-    name: "Pro",
-    paypalPlanId: process.env.PAYPAL_PRO_PLAN_ID || "P-PRO",
-    price: {
-      monthly: 4.99,
-      yearly: 49.99,
-    },
-    features: {
-      tasks: "unlimited",
-      pomodoro: "advanced",
-      achievements: "all",
-      aiCredits: 500,
-      themes: true,
-      analytics: true,
-      prioritySupport: true,
-      betaFeatures: true,
-    },
-    limits: {
-      aiCredits: 500,
-      tasks: -1,
-      notes: -1,
-      wishlist: -1,
-    },
-    featureList: [
-      "Todo lo de Premium",
-      "500 créditos de IA/mes",
-      "14 temas profesionales",
-      "Análisis predictivo",
-      "API access",
-      "Soporte prioritario 24/7",
-      "Acceso a funciones beta",
-    ],
+    unlimitedTasks: true,
+    unlimitedEvents: true,
+    unlimitedNotes: true,
+    wishlist: true,
+    advancedPomodoro: true,
+    allAchievements: true,
+    themesCount: 14,
+    aiCreditsPerMonth: 500,
+    advancedAnalytics: true,
+    prioritySupport: true,
+    cloudSync: true,
+    betaFeatures: true,
+    apiAccess: true,
+    autoBackup: true,
   },
 }
 
-export type SubscriptionPlan = keyof typeof SUBSCRIPTION_PLANS
-export type BillingCycle = "monthly" | "yearly"
-
-export function getPlanFeatures(plan: SubscriptionPlan) {
-  return SUBSCRIPTION_PLANS[plan].features
+export function getSubscriptionFeatures(tier: SubscriptionTier): SubscriptionFeatures {
+  return SUBSCRIPTION_FEATURES[tier]
 }
 
-export function getPlanPrice(plan: SubscriptionPlan, cycle: BillingCycle) {
-  return SUBSCRIPTION_PLANS[plan].price[cycle]
+export function canAccessFeature(userTier: SubscriptionTier, requiredTier: SubscriptionTier): boolean {
+  const tierOrder: SubscriptionTier[] = ["free", "premium", "pro"]
+  const userIndex = tierOrder.indexOf(userTier)
+  const requiredIndex = tierOrder.indexOf(requiredTier)
+  return userIndex >= requiredIndex
 }
 
-export function getPlanLimits(plan: SubscriptionPlan) {
-  return SUBSCRIPTION_PLANS[plan].limits
+export function isPremiumOrPro(tier: SubscriptionTier | string): boolean {
+  return tier === "premium" || tier === "pro"
 }
 
-export function getPlanById(planId: string): (typeof SUBSCRIPTION_PLANS)[SubscriptionPlan] | null {
-  const plan = Object.values(SUBSCRIPTION_PLANS).find((p) => p.id === planId)
-  return plan || null
+export function isPro(tier: SubscriptionTier | string): boolean {
+  return tier === "pro"
 }
 
-export function getPayPalPlanId(plan: SubscriptionPlan, cycle: BillingCycle): string {
-  const planData = SUBSCRIPTION_PLANS[plan]
-  if (!planData.paypalPlanId) {
-    return ""
+export function hasAccess(userTier: SubscriptionTier, feature: keyof SubscriptionFeatures): boolean {
+  const features = getSubscriptionFeatures(userTier)
+  return features[feature] as boolean
+}
+
+export function canUseFeature(userTier: SubscriptionTier | string, featureName: string): boolean {
+  if (userTier === "pro") {
+    return true
   }
-  // Append cycle suffix for PayPal plan IDs
-  return cycle === "monthly" ? `${planData.paypalPlanId}-MONTHLY` : `${planData.paypalPlanId}-YEARLY`
+
+  switch (featureName) {
+    case "unlimited-tasks":
+      return true
+    case "unlimited-events":
+      return isPremiumOrPro(userTier)
+    case "unlimited-notes":
+      return isPremiumOrPro(userTier)
+    case "wishlist":
+      return isPremiumOrPro(userTier)
+    case "advanced-pomodoro":
+      return isPremiumOrPro(userTier)
+    case "all-achievements":
+      return isPremiumOrPro(userTier)
+    case "premium-themes":
+      return isPremiumOrPro(userTier)
+    case "pro-themes":
+      return isPro(userTier)
+    case "ai-credits":
+      return isPro(userTier)
+    case "advanced-analytics":
+      return isPremiumOrPro(userTier)
+    case "priority-support":
+      return isPro(userTier)
+    case "cloud-sync":
+      return isPremiumOrPro(userTier)
+    case "beta-features":
+      return isPro(userTier)
+    case "api-access":
+      return isPro(userTier)
+    case "auto-backup":
+      return isPro(userTier)
+    default:
+      return false
+  }
 }
 
-export function canAccessFeature(
-  userPlan: SubscriptionPlan,
-  feature: keyof (typeof SUBSCRIPTION_PLANS)["free"]["features"],
-) {
-  return SUBSCRIPTION_PLANS[userPlan].features[feature]
+export function getThemeAccess(tier: SubscriptionTier | string): string[] {
+  const freeThemes = ["light", "dark"]
+  const premiumThemes = ["ocean", "forest", "sunset", "midnight"]
+  const proThemes = [
+    "royal-purple",
+    "cyber-pink",
+    "neon-green",
+    "crimson",
+    "golden-hour",
+    "arctic-blue",
+    "amoled",
+    "matrix",
+  ]
+
+  if (tier === "pro") {
+    return [...freeThemes, ...premiumThemes, ...proThemes]
+  } else if (tier === "premium") {
+    return [...freeThemes, ...premiumThemes]
+  } else {
+    return freeThemes
+  }
 }
 
-export function getAnnualSavings(plan: SubscriptionPlan) {
-  const monthly = SUBSCRIPTION_PLANS[plan].price.monthly * 12
-  const yearly = SUBSCRIPTION_PLANS[plan].price.yearly
-  return monthly - yearly
+export function canAccessTheme(tier: SubscriptionTier | string, themeName: string): boolean {
+  const accessibleThemes = getThemeAccess(tier)
+  return accessibleThemes.includes(themeName)
 }
 
-export function formatPrice(amount: number) {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-  }).format(amount)
-}
-
-export function getPlanFeatureList(plan: SubscriptionPlan): string[] {
-  return SUBSCRIPTION_PLANS[plan].featureList
-}
-
-export function comparePlans(plan1: SubscriptionPlan, plan2: SubscriptionPlan): number {
-  const order = { free: 0, premium: 1, pro: 2 }
-  return order[plan1] - order[plan2]
-}
-
-export function isUpgrade(currentPlan: SubscriptionPlan, targetPlan: SubscriptionPlan): boolean {
-  return comparePlans(targetPlan, currentPlan) > 0
-}
-
-export function isDowngrade(currentPlan: SubscriptionPlan, targetPlan: SubscriptionPlan): boolean {
-  return comparePlans(targetPlan, currentPlan) < 0
+export const SUBSCRIPTION_PRICES = {
+  premium: {
+    monthly: {
+      base: 2.06,
+      vat: 0.43,
+      total: 2.49,
+    },
+    yearly: {
+      base: 20.65,
+      vat: 4.34,
+      total: 24.99,
+      monthlyEquivalent: 2.08,
+      savings: 4.89,
+    },
+  },
+  pro: {
+    monthly: {
+      base: 4.12,
+      vat: 0.87,
+      total: 4.99,
+    },
+    yearly: {
+      base: 41.31,
+      vat: 8.68,
+      total: 49.99,
+      monthlyEquivalent: 4.17,
+      savings: 9.89,
+    },
+  },
 }
