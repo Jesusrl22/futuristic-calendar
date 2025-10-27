@@ -3,356 +3,450 @@
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Settings, Moon, Sun, Globe, Bell, Volume2, Type, Maximize2 } from "lucide-react"
-import { hybridDb } from "@/lib/hybrid-database"
+import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
 import { useToast } from "@/hooks/use-toast"
+import { useTheme, type ThemeName } from "@/hooks/useTheme"
+import { useLanguage } from "@/hooks/useLanguage"
+import { hybridDb } from "@/lib/hybrid-database"
+import { Settings, UserIcon, Bell, Palette, Clock, Type, Crown } from "lucide-react"
+import type { User } from "@/lib/hybrid-database"
 
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
-  user: any
+  user: User
+  onUserUpdate?: () => void
 }
 
-export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
+const THEMES = [
+  { value: "light", label: "Claro", icon: "☀️", tier: "free" },
+  { value: "dark", label: "Oscuro", icon: "🌙", tier: "free" },
+  { value: "ocean", label: "Océano", icon: "🌊", tier: "premium" },
+  { value: "forest", label: "Bosque", icon: "🌲", tier: "premium" },
+  { value: "sunset", label: "Atardecer", icon: "🌅", tier: "premium" },
+  { value: "midnight", label: "Medianoche", icon: "🌌", tier: "premium" },
+  { value: "royal-purple", label: "Púrpura Real", icon: "👑", tier: "premium" },
+  { value: "cyber-pink", label: "Rosa Cibernético", icon: "💖", tier: "premium" },
+  { value: "neon-green", label: "Verde Neón", icon: "⚡", tier: "premium" },
+  { value: "crimson", label: "Carmesí", icon: "❤️", tier: "premium" },
+  { value: "golden-hour", label: "Hora Dorada", icon: "✨", tier: "pro" },
+  { value: "arctic-blue", label: "Azul Ártico", icon: "🧊", tier: "pro" },
+  { value: "amoled", label: "AMOLED", icon: "⚫", tier: "pro" },
+  { value: "matrix", label: "Matrix", icon: "🟢", tier: "pro" },
+]
+
+const LANGUAGES = [
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "fr", name: "Français", flag: "🇫🇷" },
+  { code: "de", name: "Deutsch", flag: "🇩🇪" },
+  { code: "it", name: "Italiano", flag: "🇮🇹" },
+  { code: "pt", name: "Português", flag: "🇵🇹" },
+]
+
+export function SettingsModal({ isOpen, onClose, user, onUserUpdate }: SettingsModalProps) {
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
-  const [showMigrationWarning, setShowMigrationWarning] = useState(false)
+  const { theme: currentTheme, setTheme, updateFontSize, toggleCompactMode } = useTheme()
+  const { language, setLanguage } = useLanguage()
 
-  // Theme & Language
-  const [theme, setTheme] = useState<"light" | "dark">("dark")
-  const [language, setLanguage] = useState<"es" | "en">("es")
+  const [selectedTheme, setSelectedTheme] = useState<ThemeName>(currentTheme)
+  const [formData, setFormData] = useState({
+    name: user.name || "",
+    email: user.email || "",
+    language: user.language || language || "es",
+  })
 
-  // Pomodoro Settings
-  const [workDuration, setWorkDuration] = useState(25)
-  const [shortBreakDuration, setShortBreakDuration] = useState(5)
-  const [longBreakDuration, setLongBreakDuration] = useState(15)
-  const [sessionsUntilLongBreak, setSessionsUntilLongBreak] = useState(4)
+  const [pomodoroSettings, setPomodoroSettings] = useState({
+    workTime: 25,
+    breakTime: 5,
+    longBreakTime: 15,
+    sessionsUntilLongBreak: 4,
+  })
 
-  // Notifications
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
-  const [soundEnabled, setSoundEnabled] = useState(true)
-  const [volume, setVolume] = useState(50)
+  const [notificationSettings, setNotificationSettings] = useState({
+    enableNotifications: true,
+    notificationSound: true,
+  })
 
-  // UI Preferences
-  const [fontSize, setFontSize] = useState<"small" | "medium" | "large">("medium")
-  const [compactMode, setCompactMode] = useState(false)
+  const [uiSettings, setUiSettings] = useState({
+    compactMode: false,
+    fontSize: "medium" as "small" | "medium" | "large",
+  })
 
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Sincronizar tema actual
   useEffect(() => {
-    if (isOpen && user) {
-      if (!user.id || user.id === "undefined") {
-        console.error("Invalid userId in SettingsModal:", user.id)
-        toast({
-          title: "Error",
-          description: "Invalid user session. Please log in again.",
-          variant: "destructive",
-        })
-        onClose()
-        return
+    setSelectedTheme(currentTheme)
+  }, [currentTheme])
+
+  // Cargar ajustes extendidos desde localStorage
+  useEffect(() => {
+    const loadExtendedSettings = () => {
+      const savedSettings = localStorage.getItem(`user_settings_${user.id}`)
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings)
+
+          if (settings.pomodoro_work_time) {
+            setPomodoroSettings({
+              workTime: settings.pomodoro_work_time,
+              breakTime: settings.pomodoro_break_time || 5,
+              longBreakTime: settings.pomodoro_long_break_time || 15,
+              sessionsUntilLongBreak: settings.pomodoro_sessions_until_long_break || 4,
+            })
+          }
+
+          if (settings.enable_notifications !== undefined) {
+            setNotificationSettings({
+              enableNotifications: settings.enable_notifications,
+              notificationSound: settings.notification_sound !== false,
+            })
+          }
+
+          if (settings.font_size) {
+            setUiSettings((prev) => ({
+              ...prev,
+              fontSize: settings.font_size,
+            }))
+          }
+
+          if (settings.compact_mode !== undefined) {
+            setUiSettings((prev) => ({
+              ...prev,
+              compactMode: settings.compact_mode,
+            }))
+          }
+        } catch (error) {
+          console.error("Error loading settings:", error)
+        }
       }
-
-      loadSettings()
     }
-  }, [isOpen, user])
 
-  const loadSettings = async () => {
-    if (!user?.id) return
-
-    try {
-      const userData = await hybridDb.getUser(user.id)
-
-      if (userData) {
-        setTheme((userData.theme as "light" | "dark") || "dark")
-        setLanguage((userData.language as "es" | "en") || "es")
-
-        // Handle both old and new field names
-        setWorkDuration(userData.work_duration || userData.pomodoro_work_duration || 25)
-        setShortBreakDuration(userData.short_break_duration || userData.pomodoro_break_duration || 5)
-        setLongBreakDuration(userData.long_break_duration || userData.pomodoro_long_break_duration || 15)
-        setSessionsUntilLongBreak(
-          userData.sessions_until_long_break || userData.pomodoro_sessions_until_long_break || 4,
-        )
-
-        setNotificationsEnabled(userData.notifications_enabled ?? true)
-        setSoundEnabled(userData.sound_enabled ?? true)
-        setVolume(userData.volume ?? 50)
-        setFontSize((userData.font_size as "small" | "medium" | "large") || "medium")
-        setCompactMode(userData.compact_mode ?? false)
-      }
-    } catch (error) {
-      console.error("Error loading settings:", error)
+    if (user.id) {
+      loadExtendedSettings()
     }
+  }, [user.id])
+
+  const canUseTheme = (themeTier: string) => {
+    if (themeTier === "free") return true
+    if (themeTier === "premium") return user.subscription_tier === "premium" || user.subscription_tier === "pro"
+    if (themeTier === "pro") return user.subscription_tier === "pro"
+    return false
   }
 
-  const handleSave = async () => {
-    if (!user?.id || user.id === "undefined") {
+  const handleThemeChange = (newTheme: string) => {
+    const theme = THEMES.find((t) => t.value === newTheme)
+    if (!theme || !canUseTheme(theme.tier)) {
       toast({
-        title: "Error",
-        description: "Cannot save settings: Invalid user session",
+        title: "🔒 Tema bloqueado",
+        description: `Este tema requiere una suscripción ${theme?.tier}`,
         variant: "destructive",
       })
       return
     }
 
-    setLoading(true)
-    setShowMigrationWarning(false)
+    setSelectedTheme(newTheme as ThemeName)
+    setTheme(newTheme as ThemeName)
+  }
+
+  const handleSave = async () => {
+    setIsSaving(true)
 
     try {
-      const updates = {
-        theme,
-        language,
-        work_duration: workDuration,
-        short_break_duration: shortBreakDuration,
-        long_break_duration: longBreakDuration,
-        sessions_until_long_break: sessionsUntilLongBreak,
-        notifications_enabled: notificationsEnabled,
-        sound_enabled: soundEnabled,
-        volume,
-        font_size: fontSize,
-        compact_mode: compactMode,
-      }
+      // Actualizar ajustes básicos y extendidos
+      await hybridDb.updateUser(user.id, {
+        name: formData.name,
+        email: formData.email,
+        theme: selectedTheme,
+        language: formData.language,
+        pomodoro_work_time: pomodoroSettings.workTime,
+        pomodoro_break_time: pomodoroSettings.breakTime,
+        pomodoro_long_break_time: pomodoroSettings.longBreakTime,
+        pomodoro_sessions_until_long_break: pomodoroSettings.sessionsUntilLongBreak,
+        enable_notifications: notificationSettings.enableNotifications,
+        notification_sound: notificationSettings.notificationSound,
+        compact_mode: uiSettings.compactMode,
+        font_size: uiSettings.fontSize,
+      })
 
-      const result = await hybridDb.updateUser(user.id, updates)
-
-      if (result) {
-        toast({
-          title: "Settings saved",
-          description: "Your preferences have been updated successfully.",
-        })
-
-        // Apply theme immediately
-        if (theme === "dark") {
-          document.documentElement.classList.add("dark")
-        } else {
-          document.documentElement.classList.remove("dark")
-        }
-
-        onClose()
-      } else {
-        setShowMigrationWarning(true)
-        toast({
-          title: "Partial save",
-          description: "Some settings may not have been saved. Check the warning below.",
-          variant: "warning" as any,
-        })
-      }
-    } catch (error: any) {
-      console.error("Error saving settings:", error)
-
-      if (error?.message?.includes("column") && error?.message?.includes("does not exist")) {
-        setShowMigrationWarning(true)
-      }
+      // Aplicar tema y lenguaje inmediatamente
+      setTheme(selectedTheme)
+      setLanguage(formData.language)
+      updateFontSize(uiSettings.fontSize)
 
       toast({
-        title: "Error",
-        description: "Failed to save some settings. Please try again.",
+        title: "✅ Ajustes guardados",
+        description: "Tus preferencias se han actualizado correctamente",
+      })
+
+      if (onUserUpdate) {
+        onUserUpdate()
+      }
+
+      onClose()
+    } catch (error) {
+      console.error("Error saving settings:", error)
+      toast({
+        title: "❌ Error",
+        description: "No se pudieron guardar los ajustes",
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setIsSaving(false)
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Settings
+            <Settings className="h-5 w-5" />
+            Configuración
           </DialogTitle>
-          <DialogDescription>Customize your FutureTask experience</DialogDescription>
+          <DialogDescription>Personaliza tu experiencia en FutureTask</DialogDescription>
         </DialogHeader>
 
-        {showMigrationWarning && (
-          <Alert variant="warning">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Database Migration Needed</AlertTitle>
-            <AlertDescription>
-              Some advanced settings columns don't exist in your database yet. To enable all settings features, run the
-              SQL script:{" "}
-              <code className="text-xs bg-yellow-100 dark:bg-yellow-900 px-1 py-0.5 rounded">
-                scripts/add-settings-columns.sql
-              </code>{" "}
-              in your Supabase dashboard.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <Tabs defaultValue="appearance" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="profile" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="profile">
+              <UserIcon className="h-4 w-4 mr-2" />
+              Perfil
+            </TabsTrigger>
             <TabsTrigger value="appearance">
-              <Sun className="w-4 h-4 mr-2" />
-              Appearance
+              <Palette className="h-4 w-4 mr-2" />
+              Tema
             </TabsTrigger>
             <TabsTrigger value="pomodoro">
-              <Settings className="w-4 h-4 mr-2" />
+              <Clock className="h-4 w-4 mr-2" />
               Pomodoro
             </TabsTrigger>
             <TabsTrigger value="notifications">
-              <Bell className="w-4 h-4 mr-2" />
-              Notifications
+              <Bell className="h-4 w-4 mr-2" />
+              Notif.
             </TabsTrigger>
             <TabsTrigger value="ui">
-              <Type className="w-4 h-4 mr-2" />
+              <Type className="h-4 w-4 mr-2" />
               UI
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="appearance" className="space-y-4">
+          <TabsContent value="profile" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="theme" className="flex items-center gap-2">
-                {theme === "dark" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                Theme
-              </Label>
-              <Select value={theme} onValueChange={(v) => setTheme(v as "light" | "dark")}>
-                <SelectTrigger id="theme">
+              <Label htmlFor="name">Nombre</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="language">Idioma</Label>
+              <Select
+                value={formData.language}
+                onValueChange={(value) => setFormData({ ...formData, language: value })}
+              >
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
+                  {LANGUAGES.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      <span className="flex items-center gap-2">
+                        <span>{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
+            <div className="pt-4 border-t">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Plan actual</p>
+                  <p className="text-sm text-muted-foreground capitalize">{user.subscription_tier}</p>
+                </div>
+                {user.subscription_tier !== "pro" && (
+                  <Button variant="outline" size="sm">
+                    <Crown className="h-4 w-4 mr-2" />
+                    Mejorar Plan
+                  </Button>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="appearance" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="language" className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                Language
-              </Label>
-              <Select value={language} onValueChange={(v) => setLanguage(v as "es" | "en")}>
-                <SelectTrigger id="language">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Temas Disponibles</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {THEMES.map((t) => {
+                  const isLocked = !canUseTheme(t.tier)
+                  const isSelected = selectedTheme === t.value
+                  return (
+                    <button
+                      key={t.value}
+                      onClick={() => handleThemeChange(t.value)}
+                      disabled={isLocked}
+                      className={`relative p-4 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? "border-primary bg-primary/10 ring-2 ring-primary"
+                          : "border-border hover:border-primary/50"
+                      } ${isLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:scale-105"}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{t.icon}</span>
+                        <div className="text-left flex-1">
+                          <p className="font-medium text-sm">{t.label}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{t.tier}</p>
+                        </div>
+                        {isLocked && <Crown className="h-4 w-4 text-yellow-500" />}
+                        {isSelected && <div className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full" />}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="pomodoro" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="work-duration">Work Duration (minutes)</Label>
-              <Input
-                id="work-duration"
-                type="number"
-                min="1"
-                max="60"
-                value={workDuration}
-                onChange={(e) => setWorkDuration(Number(e.target.value))}
-              />
-            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tiempo de trabajo: {pomodoroSettings.workTime} min</Label>
+                <Slider
+                  value={[pomodoroSettings.workTime]}
+                  onValueChange={([value]) => setPomodoroSettings({ ...pomodoroSettings, workTime: value })}
+                  min={15}
+                  max={60}
+                  step={5}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="short-break">Short Break (minutes)</Label>
-              <Input
-                id="short-break"
-                type="number"
-                min="1"
-                max="30"
-                value={shortBreakDuration}
-                onChange={(e) => setShortBreakDuration(Number(e.target.value))}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label>Descanso corto: {pomodoroSettings.breakTime} min</Label>
+                <Slider
+                  value={[pomodoroSettings.breakTime]}
+                  onValueChange={([value]) => setPomodoroSettings({ ...pomodoroSettings, breakTime: value })}
+                  min={3}
+                  max={15}
+                  step={1}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="long-break">Long Break (minutes)</Label>
-              <Input
-                id="long-break"
-                type="number"
-                min="1"
-                max="60"
-                value={longBreakDuration}
-                onChange={(e) => setLongBreakDuration(Number(e.target.value))}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label>Descanso largo: {pomodoroSettings.longBreakTime} min</Label>
+                <Slider
+                  value={[pomodoroSettings.longBreakTime]}
+                  onValueChange={([value]) => setPomodoroSettings({ ...pomodoroSettings, longBreakTime: value })}
+                  min={15}
+                  max={30}
+                  step={5}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="sessions">Sessions Until Long Break</Label>
-              <Input
-                id="sessions"
-                type="number"
-                min="1"
-                max="10"
-                value={sessionsUntilLongBreak}
-                onChange={(e) => setSessionsUntilLongBreak(Number(e.target.value))}
-              />
+              <div className="space-y-2">
+                <Label>Sesiones hasta descanso largo: {pomodoroSettings.sessionsUntilLongBreak}</Label>
+                <Slider
+                  value={[pomodoroSettings.sessionsUntilLongBreak]}
+                  onValueChange={([value]) =>
+                    setPomodoroSettings({ ...pomodoroSettings, sessionsUntilLongBreak: value })
+                  }
+                  min={2}
+                  max={8}
+                  step={1}
+                />
+              </div>
             </div>
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="notifications" className="flex items-center gap-2">
-                <Bell className="w-4 h-4" />
-                Enable Notifications
-              </Label>
-              <Switch id="notifications" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
+              <div className="space-y-0.5">
+                <Label>Activar notificaciones</Label>
+                <p className="text-sm text-muted-foreground">Recibe alertas de tareas y Pomodoro</p>
+              </div>
+              <Switch
+                checked={notificationSettings.enableNotifications}
+                onCheckedChange={(checked) =>
+                  setNotificationSettings({ ...notificationSettings, enableNotifications: checked })
+                }
+              />
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="sound" className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4" />
-                Enable Sound
-              </Label>
-              <Switch id="sound" checked={soundEnabled} onCheckedChange={setSoundEnabled} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="volume">Volume: {volume}%</Label>
-              <Input
-                id="volume"
-                type="range"
-                min="0"
-                max="100"
-                value={volume}
-                onChange={(e) => setVolume(Number(e.target.value))}
-                disabled={!soundEnabled}
+              <div className="space-y-0.5">
+                <Label>Sonido de notificaciones</Label>
+                <p className="text-sm text-muted-foreground">Reproducir sonido con las alertas</p>
+              </div>
+              <Switch
+                checked={notificationSettings.notificationSound}
+                onCheckedChange={(checked) =>
+                  setNotificationSettings({ ...notificationSettings, notificationSound: checked })
+                }
+                disabled={!notificationSettings.enableNotifications}
               />
             </div>
           </TabsContent>
 
           <TabsContent value="ui" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="font-size" className="flex items-center gap-2">
-                <Type className="w-4 h-4" />
-                Font Size
-              </Label>
-              <Select value={fontSize} onValueChange={(v) => setFontSize(v as any)}>
-                <SelectTrigger id="font-size">
+              <Label htmlFor="fontSize">Tamaño de fuente</Label>
+              <Select
+                value={uiSettings.fontSize}
+                onValueChange={(value: "small" | "medium" | "large") =>
+                  setUiSettings({ ...uiSettings, fontSize: value })
+                }
+              >
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
+                  <SelectItem value="small">Pequeña</SelectItem>
+                  <SelectItem value="medium">Mediana</SelectItem>
+                  <SelectItem value="large">Grande</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex items-center justify-between">
-              <Label htmlFor="compact" className="flex items-center gap-2">
-                <Maximize2 className="w-4 h-4" />
-                Compact Mode
-              </Label>
-              <Switch id="compact" checked={compactMode} onCheckedChange={setCompactMode} />
+              <div className="space-y-0.5">
+                <Label>Modo compacto</Label>
+                <p className="text-sm text-muted-foreground">Reduce el espaciado entre elementos</p>
+              </div>
+              <Switch
+                checked={uiSettings.compactMode}
+                onCheckedChange={(checked) => setUiSettings({ ...uiSettings, compactMode: checked })}
+              />
             </div>
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
-            Cancel
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? "Guardando..." : "Guardar cambios"}
           </Button>
         </div>
       </DialogContent>

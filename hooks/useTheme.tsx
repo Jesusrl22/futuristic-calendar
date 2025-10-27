@@ -34,6 +34,7 @@ const DEFAULT_THEME: ThemeSettings = {
 
 export function useTheme() {
   const [settings, setSettings] = useState<ThemeSettings>(DEFAULT_THEME)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("themeSettings")
@@ -49,30 +50,49 @@ export function useTheme() {
     } else {
       applyTheme(DEFAULT_THEME)
     }
+    setIsInitialized(true)
   }, [])
 
   const applyTheme = (newSettings: ThemeSettings) => {
     const html = document.documentElement
 
+    // Aplicar el tema usando data-theme
     html.setAttribute("data-theme", newSettings.theme)
     html.setAttribute("data-font-size", newSettings.fontSize)
 
+    // Aplicar modo compacto
     if (newSettings.compactMode) {
       html.setAttribute("data-compact", "true")
     } else {
       html.removeAttribute("data-compact")
     }
 
-    if (newSettings.theme === "dark" || newSettings.theme === "amoled" || newSettings.theme === "midnight") {
+    // Aplicar clase dark solo para temas oscuros
+    const darkThemes = [
+      "dark",
+      "ocean",
+      "forest",
+      "sunset",
+      "midnight",
+      "royal-purple",
+      "cyber-pink",
+      "neon-green",
+      "crimson",
+      "golden-hour",
+      "arctic-blue",
+      "amoled",
+      "matrix",
+    ]
+    if (darkThemes.includes(newSettings.theme)) {
       html.classList.add("dark")
     } else {
       html.classList.remove("dark")
     }
 
-    console.log("Theme applied:", newSettings)
+    console.log("🎨 Theme applied:", newSettings)
   }
 
-  const updateTheme = (theme: ThemeName) => {
+  const setTheme = (theme: ThemeName) => {
     const newSettings = { ...settings, theme }
     setSettings(newSettings)
     localStorage.setItem("themeSettings", JSON.stringify(newSettings))
@@ -94,9 +114,12 @@ export function useTheme() {
   }
 
   return {
-    ...settings,
-    updateTheme,
+    theme: settings.theme,
+    fontSize: settings.fontSize,
+    compactMode: settings.compactMode,
+    setTheme,
     updateFontSize,
     toggleCompactMode,
+    isInitialized,
   }
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -164,7 +163,9 @@ export default function LoginPage() {
           title: "✅ Success",
           description: "Logged in successfully",
         })
-        router.push("/app")
+
+        // Usar window.location.href para forzar recarga completa
+        window.location.href = "/app"
       }
     } catch (error: any) {
       toast({
@@ -208,7 +209,9 @@ export default function LoginPage() {
           title: "✅ Success",
           description: "Account created successfully",
         })
-        router.push("/app")
+
+        // Usar window.location.href para forzar recarga completa
+        window.location.href = "/app"
       }
     } catch (error: any) {
       toast({
@@ -227,7 +230,7 @@ export default function LoginPage() {
       title: "🎉 Demo Mode",
       description: "Exploring in demo mode",
     })
-    router.push("/app")
+    window.location.href = "/app?demo=true"
   }
 
   return (
@@ -410,7 +413,7 @@ export default function LoginPage() {
             <Button
               onClick={handleDemo}
               variant="outline"
-              className="w-full glass-effect text-white border-white/20 bg-transparent"
+              className="w-full glass-effect text-white border-white/20 hover:bg-white/10 bg-transparent"
             >
               {t.tryDemo}
             </Button>

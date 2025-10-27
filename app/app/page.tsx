@@ -284,7 +284,7 @@ function AppContent() {
               >
                 <item.icon className="h-5 w-5" />
                 <span className="font-semibold">{item.label}</span>
-                {item.credits && item.credits > 0 && (
+                {item.credits !== undefined && item.credits > 0 && (
                   <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-yellow-400 text-gray-900 rounded-full">
                     {item.credits}
                   </span>
