@@ -1,6 +1,7 @@
+"use client"
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
 const alertVariants = cva(
@@ -10,6 +11,11 @@ const alertVariants = cva(
       variant: {
         default: "bg-background text-foreground",
         destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        warning:
+          "border-yellow-500/50 bg-yellow-50 text-yellow-900 dark:bg-yellow-900/10 dark:text-yellow-500 [&>svg]:text-yellow-600",
+        success:
+          "border-green-500/50 bg-green-50 text-green-900 dark:bg-green-900/10 dark:text-green-500 [&>svg]:text-green-600",
+        info: "border-blue-500/50 bg-blue-50 text-blue-900 dark:bg-blue-900/10 dark:text-blue-500 [&>svg]:text-blue-600",
       },
     },
     defaultVariants: {

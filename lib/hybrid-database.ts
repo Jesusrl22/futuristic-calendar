@@ -1,44 +1,25 @@
 import { supabase } from "./supabase"
 
+export interface User {
+  id: string
+  email: string
+  name?: string
+  theme?: string
+  language?: string
+  subscription_tier?: string
+  ai_credits?: number
+  [key: string]: any
+}
+
 export interface Task {
   id: string
   user_id: string
   title: string
   description?: string
+  due_date?: string
   completed: boolean
   priority: "low" | "medium" | "high"
   category?: string
-  due_date?: string
-  created_at: string
-  updated_at: string
-}
-
-export interface User {
-  id: string
-  name: string
-  email: string
-  language: string
-  theme: string
-  is_premium: boolean
-  is_pro: boolean
-  plan?: string
-  premium_expiry?: string
-  onboarding_completed: boolean
-  pomodoro_sessions: number
-  work_duration: number
-  short_break_duration: number
-  long_break_duration: number
-  sessions_until_long_break: number
-  ai_credits: number
-  ai_credits_used: number
-  ai_credits_reset_date?: string
-  ai_total_tokens_used: number
-  ai_total_cost_eur: number
-  ai_monthly_limit: number
-  ai_plan_type: string
-  subscription_status?: string
-  subscription_end_date?: string
-  subscription_tier?: string
   created_at: string
   updated_at: string
 }
@@ -48,10 +29,8 @@ export interface Note {
   user_id: string
   title: string
   content: string
-  tags?: string[]
-  color?: string
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface WishlistItem {
@@ -59,19 +38,18 @@ export interface WishlistItem {
   user_id: string
   title: string
   description?: string
-  priority: "low" | "medium" | "high"
-  category?: string
-  target_date?: string
-  notes?: string
-  created_at: string
-  updated_at: string
+  priority?: "low" | "medium" | "high"
+  created_at?: string
+  updated_at?: string
 }
 
+// Browser-compatible UUID generation
 function generateUUID(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID()
   }
 
+  // Fallback UUID generation
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0
     const v = c === "x" ? r : (r & 0x3) | 0x8
@@ -79,870 +57,711 @@ function generateUUID(): string {
   })
 }
 
-export class HybridDatabase {
-  private isSupabaseAvailable = false
-  private currentUser: User | null = null
-  private userCache = new Map<string, User>()
-
-  constructor() {
-    this.checkSupabaseConnection()
+class HybridDatabase {
+  private isSupabaseConfigured(): boolean {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    return !!(url && key && url !== "your-supabase-url" && key !== "your-supabase-anon-key")
   }
 
-  private async checkSupabaseConnection(): Promise<void> {
+  // Task Methods
+  async getTasks(userId: string): Promise<Task[]> {
+    if (!userId || userId === "undefined") {
+      console.error("Invalid userId in getTasks:", userId)
+      return []
+    }
+
     try {
-      const { error } = await supabase.from("tasks").select("id").limit(1)
-      this.isSupabaseAvailable = !error
-      console.log("🔌 Supabase connection:", this.isSupabaseAvailable ? "✅ Connected" : "❌ Disconnected")
+      if (!this.isSupabaseConfigured()) {
+        return this.getTasksFromLocalStorage(userId)
+      }
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.getTasksFromLocalStorage(userId)
+      }
+
+      return data || []
     } catch (error) {
-      console.warn("⚠️ Supabase connection failed, using localStorage fallback")
-      this.isSupabaseAvailable = false
+      console.error("Error getting tasks:", error)
+      return this.getTasksFromLocalStorage(userId)
     }
   }
 
-  async getCurrentUser(): Promise<User | null> {
+  private getTasksFromLocalStorage(userId: string): Task[] {
+    if (typeof window === "undefined") return []
     try {
-      console.log("🔍 Getting current user from database...")
-
-      const isDemoUser = localStorage.getItem("isDemoUser")
-      if (isDemoUser === "true") {
-        const storedUser = localStorage.getItem("currentUser")
-        if (storedUser) {
-          try {
-            const user = JSON.parse(storedUser)
-            this.currentUser = user
-            console.log("✅ Demo user loaded:", user.name)
-            return user
-          } catch (error) {
-            console.error("❌ Error parsing demo user:", error)
-            localStorage.removeItem("isDemoUser")
-            localStorage.removeItem("currentUser")
-          }
-        }
-      }
-
-      if (this.isSupabaseAvailable && isDemoUser !== "true") {
-        console.log("🔍 Getting user from Supabase...")
-
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser()
-
-        if (authError) {
-          console.error("❌ Auth error:", authError)
-          this.currentUser = null
-          this.userCache.clear()
-          return null
-        }
-
-        if (!user) {
-          console.log("❌ No authenticated user found")
-          this.currentUser = null
-          this.userCache.clear()
-          return null
-        }
-
-        console.log("✅ Authenticated user found:", user.email)
-        return await this.getUserById(user.id)
-      }
-
-      if (isDemoUser !== "true") {
-        console.log("💾 Using localStorage fallback")
-        const userData = localStorage.getItem("currentUser")
-        if (userData) {
-          try {
-            const user = JSON.parse(userData)
-            this.currentUser = user
-            console.log("✅ User loaded from localStorage:", user.name)
-            return user
-          } catch (error) {
-            console.error("❌ Error parsing user data from localStorage:", error)
-            localStorage.removeItem("currentUser")
-          }
-        }
-      }
-
-      console.log("❌ No user found")
-      this.currentUser = null
-      return null
+      const stored = localStorage.getItem(`tasks_${userId}`)
+      return stored ? JSON.parse(stored) : []
     } catch (error) {
-      console.error("❌ Error getting current user:", error)
-      this.currentUser = null
-      return null
+      console.error("Error reading from localStorage:", error)
+      return []
     }
   }
 
-  async getUserById(userId: string): Promise<User | null> {
+  async createTask(
+    userId: string,
+    task: Omit<Task, "id" | "created_at" | "updated_at" | "user_id">,
+  ): Promise<Task | null> {
+    if (!userId || userId === "undefined") {
+      console.error("Invalid userId in createTask:", userId)
+      return null
+    }
+
     try {
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await supabase.from("users").select("*").eq("id", userId).maybeSingle()
-
-        if (error) {
-          console.error("❌ Error fetching user:", error)
-          return null
-        }
-
-        if (data) {
-          this.currentUser = data
-          this.userCache.set(userId, data)
-          return data
-        }
+      const taskWithUserId = {
+        ...task,
+        user_id: userId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
 
-      return null
+      if (!this.isSupabaseConfigured()) {
+        return this.createTaskInLocalStorage(userId, task)
+      }
+
+      const { data, error } = await supabase.from("tasks").insert([taskWithUserId]).select().single()
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.createTaskInLocalStorage(userId, task)
+      }
+
+      return data
     } catch (error) {
-      console.error("❌ Error in getUserById:", error)
-      return null
+      console.error("Error creating task:", error)
+      return this.createTaskInLocalStorage(userId, task)
     }
   }
 
-  async createUser(userData: Partial<User>): Promise<User> {
-    const newUser: User = {
-      id: userData.id || generateUUID(),
-      name: userData.name || "Demo User",
-      email: userData.email || "demo@example.com",
-      language: userData.language || "es",
-      theme: userData.theme || "default",
-      is_premium: userData.is_premium || false,
-      is_pro: userData.is_pro || false,
-      plan: userData.plan || "free",
-      premium_expiry: userData.premium_expiry,
-      onboarding_completed: userData.onboarding_completed || true,
-      pomodoro_sessions: userData.pomodoro_sessions || 0,
-      work_duration: userData.work_duration || 25,
-      short_break_duration: userData.short_break_duration || 5,
-      long_break_duration: userData.long_break_duration || 15,
-      sessions_until_long_break: userData.sessions_until_long_break || 4,
-      ai_credits: userData.ai_credits || 0,
-      ai_credits_used: userData.ai_credits_used || 0,
-      ai_credits_reset_date: userData.ai_credits_reset_date,
-      ai_total_tokens_used: userData.ai_total_tokens_used || 0,
-      ai_total_cost_eur: userData.ai_total_cost_eur || 0,
-      ai_monthly_limit: userData.ai_monthly_limit || 0,
-      ai_plan_type: userData.ai_plan_type || "none",
-      subscription_status: userData.subscription_status,
-      subscription_end_date: userData.subscription_end_date,
-      subscription_tier: userData.subscription_tier || "free",
+  private createTaskInLocalStorage(
+    userId: string,
+    task: Omit<Task, "id" | "created_at" | "updated_at" | "user_id">,
+  ): Task {
+    const newTask: Task = {
+      ...task,
+      id: generateUUID(),
+      user_id: userId,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
 
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      console.log("💾 Saving demo user to localStorage...")
-      localStorage.setItem("currentUser", JSON.stringify(newUser))
-      this.currentUser = newUser
-      return newUser
-    }
-
-    if (this.isSupabaseAvailable) {
-      try {
-        console.log("💾 Saving user to Supabase...")
-        const { data, error } = await supabase.from("users").upsert(newUser).select().single()
-
-        if (error) {
-          console.error("❌ Error creating user in Supabase:", error)
-          throw error
-        }
-
-        console.log("✅ User saved to Supabase:", data.name)
-        this.currentUser = data
-        this.userCache.set(data.id, data)
-        return data
-      } catch (error) {
-        console.error("❌ Supabase error, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
-      }
-    }
-
-    console.log("💾 Saving user to localStorage...")
-    localStorage.setItem("currentUser", JSON.stringify(newUser))
-    this.currentUser = newUser
-    return newUser
+    const tasks = this.getTasksFromLocalStorage(userId)
+    tasks.push(newTask)
+    localStorage.setItem(`tasks_${userId}`, JSON.stringify(tasks))
+    return newTask
   }
 
-  async updateUser(userId: string, updates: Partial<User>): Promise<User> {
-    const updatedData = {
-      ...updates,
-      updated_at: new Date().toISOString(),
+  async updateTask(taskId: string, updates: Partial<Task>): Promise<Task | null> {
+    if (!taskId) {
+      console.error("Invalid taskId in updateTask:", taskId)
+      return null
     }
 
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const currentUser = this.currentUser
-      if (currentUser && currentUser.id === userId) {
-        const updatedUser = { ...currentUser, ...updatedData }
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser))
-        this.currentUser = updatedUser
-        return updatedUser
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.updateTaskInLocalStorage(taskId, updates)
       }
-      throw new Error("Demo user not found")
-    }
 
-    if (this.isSupabaseAvailable) {
-      try {
-        const { data, error } = await supabase.from("users").update(updatedData).eq("id", userId).select().single()
+      const { data, error } = await supabase
+        .from("tasks")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", taskId)
+        .select()
+        .single()
 
-        if (error) throw error
-
-        this.currentUser = data
-        this.userCache.set(userId, data)
-        return data
-      } catch (error) {
+      if (error) {
         console.error("Supabase error, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
-      }
-    }
-
-    const currentUser = this.currentUser
-    if (currentUser && currentUser.id === userId) {
-      const updatedUser = { ...currentUser, ...updatedData }
-      localStorage.setItem("currentUser", JSON.stringify(updatedUser))
-      this.currentUser = updatedUser
-      return updatedUser
-    }
-
-    throw new Error("User not found")
-  }
-
-  clearUserCache(): void {
-    console.log("🗑️ Clearing user cache")
-    this.currentUser = null
-    this.userCache.clear()
-  }
-
-  async logout(): Promise<void> {
-    try {
-      const isDemoUser = localStorage.getItem("isDemoUser")
-
-      if (isDemoUser === "true") {
-        localStorage.clear()
-      } else if (this.isSupabaseAvailable) {
-        await supabase.auth.signOut()
+        return this.updateTaskInLocalStorage(taskId, updates)
       }
 
-      this.clearUserCache()
+      return data
     } catch (error) {
-      console.error("Error logging out:", error)
-      localStorage.clear()
-      this.clearUserCache()
+      console.error("Error updating task:", error)
+      return this.updateTaskInLocalStorage(taskId, updates)
     }
   }
 
-  async getTasks(userId: string): Promise<Task[]> {
+  private updateTaskInLocalStorage(taskId: string, updates: Partial<Task>): Task | null {
+    if (typeof window === "undefined") return null
+
     try {
-      const isDemoUser = localStorage.getItem("isDemoUser")
-      if (isDemoUser === "true") {
-        const tasks = localStorage.getItem(`tasks_${userId}`)
-        return tasks ? JSON.parse(tasks) : []
-      }
+      const allTasksKeys = Object.keys(localStorage).filter((key) => key.startsWith("tasks_"))
 
-      if (this.isSupabaseAvailable) {
-        console.log("📋 Fetching tasks from Supabase for user:", userId)
-        const { data, error } = await supabase
-          .from("tasks")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
+      for (const key of allTasksKeys) {
+        const tasks = JSON.parse(localStorage.getItem(key) || "[]")
+        const taskIndex = tasks.findIndex((t: Task) => t.id === taskId)
 
-        if (error) throw error
-        console.log("✅ Tasks fetched from Supabase:", data?.length || 0)
-        return data || []
-      }
-    } catch (error) {
-      console.error("Supabase error loading tasks, falling back to localStorage:", error)
-      this.isSupabaseAvailable = false
-    }
-
-    const tasks = localStorage.getItem(`tasks_${userId}`)
-    return tasks ? JSON.parse(tasks) : []
-  }
-
-  async createTask(userId: string, taskData: any): Promise<Task> {
-    const now = new Date().toISOString()
-
-    const dbTask = {
-      id: generateUUID(),
-      user_id: userId,
-      title: taskData.title,
-      description: taskData.description || null,
-      completed: taskData.completed || false,
-      priority: taskData.priority || "medium",
-      category: taskData.category || null,
-      due_date: taskData.due_date || null,
-      created_at: now,
-      updated_at: now,
-    }
-
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const existingTasks = await this.getTasks(userId)
-      const updatedTasks = [dbTask, ...existingTasks]
-      localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
-      return dbTask as Task
-    }
-
-    if (this.isSupabaseAvailable) {
-      try {
-        console.log("➕ Creating task in Supabase:", dbTask.title)
-        const { data, error } = await supabase.from("tasks").insert([dbTask]).select().single()
-
-        if (error) throw error
-        console.log("✅ Task created in Supabase:", data.id)
-        return data as Task
-      } catch (error) {
-        console.error("Supabase error creating task, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
-      }
-    }
-
-    const existingTasks = await this.getTasks(userId)
-    const updatedTasks = [dbTask, ...existingTasks]
-    localStorage.setItem(`tasks_${userId}`, JSON.stringify(updatedTasks))
-    return dbTask as Task
-  }
-
-  async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
-    const dbUpdates = {
-      title: updates.title,
-      description: updates.description || null,
-      completed: updates.completed,
-      priority: updates.priority,
-      category: updates.category || null,
-      due_date: updates.due_date || null,
-      updated_at: new Date().toISOString(),
-    }
-
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const allKeys = Object.keys(localStorage)
-      for (const key of allKeys) {
-        if (key.startsWith("tasks_")) {
-          const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
-          const taskIndex = tasks.findIndex((t) => t.id === taskId)
-          if (taskIndex !== -1) {
-            tasks[taskIndex] = { ...tasks[taskIndex], ...dbUpdates }
-            localStorage.setItem(key, JSON.stringify(tasks))
-            return tasks[taskIndex]
-          }
-        }
-      }
-      throw new Error("Task not found")
-    }
-
-    if (this.isSupabaseAvailable) {
-      try {
-        console.log("✏️ Updating task in Supabase:", taskId)
-        const { data, error } = await supabase.from("tasks").update(dbUpdates).eq("id", taskId).select().single()
-
-        if (error) throw error
-        console.log("✅ Task updated in Supabase:", data.id)
-        return data as Task
-      } catch (error) {
-        console.error("Supabase error updating task, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
-      }
-    }
-
-    const allKeys = Object.keys(localStorage)
-    for (const key of allKeys) {
-      if (key.startsWith("tasks_")) {
-        const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
-        const taskIndex = tasks.findIndex((t) => t.id === taskId)
         if (taskIndex !== -1) {
-          tasks[taskIndex] = { ...tasks[taskIndex], ...dbUpdates }
+          tasks[taskIndex] = {
+            ...tasks[taskIndex],
+            ...updates,
+            updated_at: new Date().toISOString(),
+          }
           localStorage.setItem(key, JSON.stringify(tasks))
           return tasks[taskIndex]
         }
       }
+    } catch (error) {
+      console.error("Error updating task in localStorage:", error)
     }
 
-    throw new Error("Task not found")
+    return null
   }
 
-  async deleteTask(taskId: string): Promise<void> {
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const allKeys = Object.keys(localStorage)
-      for (const key of allKeys) {
-        if (key.startsWith("tasks_")) {
-          const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
-          const filteredTasks = tasks.filter((t) => t.id !== taskId)
-          if (filteredTasks.length !== tasks.length) {
-            localStorage.setItem(key, JSON.stringify(filteredTasks))
-            return
-          }
-        }
-      }
-      return
+  async deleteTask(taskId: string): Promise<boolean> {
+    if (!taskId) {
+      console.error("Invalid taskId in deleteTask:", taskId)
+      return false
     }
 
-    if (this.isSupabaseAvailable) {
-      try {
-        console.log("🗑️ Deleting task from Supabase:", taskId)
-        const { error } = await supabase.from("tasks").delete().eq("id", taskId)
-
-        if (error) throw error
-        console.log("✅ Task deleted from Supabase:", taskId)
-        return
-      } catch (error) {
-        console.error("Supabase error deleting task, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.deleteTaskFromLocalStorage(taskId)
       }
-    }
 
-    const allKeys = Object.keys(localStorage)
-    for (const key of allKeys) {
-      if (key.startsWith("tasks_")) {
-        const tasks: Task[] = JSON.parse(localStorage.getItem(key) || "[]")
-        const filteredTasks = tasks.filter((t) => t.id !== taskId)
+      const { error } = await supabase.from("tasks").delete().eq("id", taskId)
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.deleteTaskFromLocalStorage(taskId)
+      }
+
+      return true
+    } catch (error) {
+      console.error("Error deleting task:", error)
+      return this.deleteTaskFromLocalStorage(taskId)
+    }
+  }
+
+  private deleteTaskFromLocalStorage(taskId: string): boolean {
+    if (typeof window === "undefined") return false
+
+    try {
+      const allTasksKeys = Object.keys(localStorage).filter((key) => key.startsWith("tasks_"))
+
+      for (const key of allTasksKeys) {
+        const tasks = JSON.parse(localStorage.getItem(key) || "[]")
+        const filteredTasks = tasks.filter((t: Task) => t.id !== taskId)
+
         if (filteredTasks.length !== tasks.length) {
           localStorage.setItem(key, JSON.stringify(filteredTasks))
-          return
+          return true
         }
       }
-    }
-  }
-
-  async getNotes(userId: string): Promise<Note[]> {
-    try {
-      const isDemoUser = localStorage.getItem("isDemoUser")
-      if (isDemoUser === "true") {
-        const notes = localStorage.getItem(`notes_${userId}`)
-        return notes ? JSON.parse(notes) : []
-      }
-
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await supabase
-          .from("notes")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-
-        if (error) throw error
-        return data || []
-      }
     } catch (error) {
-      console.error("Supabase error loading notes, falling back to localStorage:", error)
-      this.isSupabaseAvailable = false
+      console.error("Error deleting task from localStorage:", error)
     }
 
-    const notes = localStorage.getItem(`notes_${userId}`)
-    return notes ? JSON.parse(notes) : []
+    return false
   }
 
-  async createNote(noteData: Omit<Note, "id" | "created_at" | "updated_at">): Promise<Note> {
-    const newNote: Note = {
-      id: generateUUID(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      ...noteData,
+  // User Methods
+  async getUser(userId: string): Promise<User | null> {
+    if (!userId || userId === "undefined") {
+      console.error("Invalid userId in getUser:", userId)
+      return null
     }
 
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const existingNotes = await this.getNotes(noteData.user_id)
-      const updatedNotes = [newNote, ...existingNotes]
-      localStorage.setItem(`notes_${noteData.user_id}`, JSON.stringify(updatedNotes))
-      return newNote
-    }
-
-    if (this.isSupabaseAvailable) {
-      try {
-        const { data, error } = await supabase.from("notes").insert(newNote).select().single()
-
-        if (error) throw error
-        return data
-      } catch (error) {
-        console.error("Supabase error creating note, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.getUserFromLocalStorage(userId)
       }
+
+      const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.getUserFromLocalStorage(userId)
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error getting user:", error)
+      return this.getUserFromLocalStorage(userId)
+    }
+  }
+
+  private getUserFromLocalStorage(userId: string): User | null {
+    if (typeof window === "undefined") return null
+    try {
+      const stored = localStorage.getItem(`user_${userId}`)
+      return stored ? JSON.parse(stored) : null
+    } catch (error) {
+      console.error("Error reading user from localStorage:", error)
+      return null
+    }
+  }
+
+  async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
+    if (!userId || userId === "undefined") {
+      console.error("Invalid userId in updateUser:", userId)
+      return null
     }
 
-    const existingNotes = await this.getNotes(noteData.user_id)
-    const updatedNotes = [newNote, ...existingNotes]
-    localStorage.setItem(`notes_${noteData.user_id}`, JSON.stringify(updatedNotes))
+    try {
+      console.log("Updating user:", userId, "with data:", updates)
+
+      if (!this.isSupabaseConfigured()) {
+        return this.updateUserInLocalStorage(userId, updates)
+      }
+
+      const validUpdates: any = {}
+
+      const coreFields = ["theme", "language", "name", "email"]
+
+      const extendedFields = [
+        "work_duration",
+        "short_break_duration",
+        "long_break_duration",
+        "sessions_until_long_break",
+        "notifications_enabled",
+        "sound_enabled",
+        "volume",
+        "font_size",
+        "compact_mode",
+      ]
+
+      for (const field of coreFields) {
+        if (updates[field] !== undefined) {
+          validUpdates[field] = updates[field]
+        }
+      }
+
+      for (const field of extendedFields) {
+        if (updates[field] !== undefined) {
+          validUpdates[field] = updates[field]
+        }
+      }
+
+      validUpdates.updated_at = new Date().toISOString()
+
+      console.log("Attempting to update with fields:", Object.keys(validUpdates))
+
+      const { data, error } = await supabase.from("users").update(validUpdates).eq("id", userId).select().single()
+
+      if (error) {
+        console.error("Supabase error:", error)
+
+        if (error.message.includes("column") && error.message.includes("does not exist")) {
+          console.log("Some columns don't exist, trying with core fields only...")
+
+          const coreUpdates: any = {
+            updated_at: new Date().toISOString(),
+          }
+
+          for (const field of coreFields) {
+            if (updates[field] !== undefined) {
+              coreUpdates[field] = updates[field]
+            }
+          }
+
+          const { data: coreData, error: coreError } = await supabase
+            .from("users")
+            .update(coreUpdates)
+            .eq("id", userId)
+            .select()
+            .single()
+
+          if (coreError) {
+            console.error("Core update also failed, falling back to localStorage:", coreError)
+            return this.updateUserInLocalStorage(userId, updates)
+          }
+
+          console.log("Core update succeeded, some settings were not saved")
+          return coreData
+        }
+
+        console.error("Falling back to localStorage")
+        return this.updateUserInLocalStorage(userId, updates)
+      }
+
+      console.log("User updated successfully in Supabase")
+      return data
+    } catch (error) {
+      console.error("Error updating user:", error)
+      return this.updateUserInLocalStorage(userId, updates)
+    }
+  }
+
+  private updateUserInLocalStorage(userId: string, updates: Partial<User>): User | null {
+    if (typeof window === "undefined") return null
+
+    try {
+      const stored = localStorage.getItem(`user_${userId}`)
+      const user = stored ? JSON.parse(stored) : { id: userId }
+
+      const updatedUser = {
+        ...user,
+        ...updates,
+        updated_at: new Date().toISOString(),
+      }
+
+      localStorage.setItem(`user_${userId}`, JSON.stringify(updatedUser))
+      console.log("User updated in localStorage")
+      return updatedUser
+    } catch (error) {
+      console.error("Error updating user in localStorage:", error)
+      return null
+    }
+  }
+
+  // Note Methods
+  async getNotes(userId: string): Promise<Note[]> {
+    if (!userId || userId === "undefined") {
+      console.error("Invalid userId in getNotes:", userId)
+      return []
+    }
+
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.getNotesFromLocalStorage(userId)
+      }
+
+      const { data, error } = await supabase
+        .from("notes")
+        .select("*")
+        .eq("user_id", userId)
+        .order("updated_at", { ascending: false })
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.getNotesFromLocalStorage(userId)
+      }
+
+      return data || []
+    } catch (error) {
+      console.error("Error getting notes:", error)
+      return this.getNotesFromLocalStorage(userId)
+    }
+  }
+
+  private getNotesFromLocalStorage(userId: string): Note[] {
+    if (typeof window === "undefined") return []
+    try {
+      const stored = localStorage.getItem(`notes_${userId}`)
+      return stored ? JSON.parse(stored) : []
+    } catch (error) {
+      console.error("Error reading notes from localStorage:", error)
+      return []
+    }
+  }
+
+  async createNote(note: Omit<Note, "id" | "created_at" | "updated_at">): Promise<Note | null> {
+    try {
+      const newNote = {
+        ...note,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      if (!this.isSupabaseConfigured()) {
+        return this.createNoteInLocalStorage(newNote)
+      }
+
+      const { data, error } = await supabase.from("notes").insert([newNote]).select().single()
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.createNoteInLocalStorage(newNote)
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error creating note:", error)
+      return null
+    }
+  }
+
+  private createNoteInLocalStorage(note: Omit<Note, "id">): Note {
+    const newNote: Note = {
+      ...note,
+      id: generateUUID(),
+    }
+
+    const notes = this.getNotesFromLocalStorage(note.user_id)
+    notes.push(newNote)
+    localStorage.setItem(`notes_${note.user_id}`, JSON.stringify(notes))
     return newNote
   }
 
-  async updateNote(noteId: string, updates: Partial<Note>): Promise<Note> {
-    const updatedData = {
-      ...updates,
-      updated_at: new Date().toISOString(),
-    }
-
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const allKeys = Object.keys(localStorage)
-      for (const key of allKeys) {
-        if (key.startsWith("notes_")) {
-          const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
-          const noteIndex = notes.findIndex((n) => n.id === noteId)
-          if (noteIndex !== -1) {
-            notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
-            localStorage.setItem(key, JSON.stringify(notes))
-            return notes[noteIndex]
-          }
-        }
+  async updateNote(noteId: string, updates: Partial<Note>): Promise<Note | null> {
+    try {
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString(),
       }
-      throw new Error("Note not found")
-    }
 
-    if (this.isSupabaseAvailable) {
-      try {
-        const { data, error } = await supabase.from("notes").update(updatedData).eq("id", noteId).select().single()
-
-        if (error) throw error
-        return data
-      } catch (error) {
-        console.error("Supabase error updating note, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+      if (!this.isSupabaseConfigured()) {
+        return this.updateNoteInLocalStorage(noteId, updateData)
       }
-    }
 
-    const allKeys = Object.keys(localStorage)
-    for (const key of allKeys) {
-      if (key.startsWith("notes_")) {
-        const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
-        const noteIndex = notes.findIndex((n) => n.id === noteId)
+      const { data, error } = await supabase.from("notes").update(updateData).eq("id", noteId).select().single()
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.updateNoteInLocalStorage(noteId, updateData)
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error updating note:", error)
+      return null
+    }
+  }
+
+  private updateNoteInLocalStorage(noteId: string, updates: Partial<Note>): Note | null {
+    if (typeof window === "undefined") return null
+
+    try {
+      const allNotesKeys = Object.keys(localStorage).filter((key) => key.startsWith("notes_"))
+
+      for (const key of allNotesKeys) {
+        const notes = JSON.parse(localStorage.getItem(key) || "[]")
+        const noteIndex = notes.findIndex((n: Note) => n.id === noteId)
+
         if (noteIndex !== -1) {
-          notes[noteIndex] = { ...notes[noteIndex], ...updatedData }
+          notes[noteIndex] = {
+            ...notes[noteIndex],
+            ...updates,
+          }
           localStorage.setItem(key, JSON.stringify(notes))
           return notes[noteIndex]
         }
       }
+    } catch (error) {
+      console.error("Error updating note in localStorage:", error)
     }
 
-    throw new Error("Note not found")
+    return null
   }
 
-  async deleteNote(noteId: string): Promise<void> {
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const allKeys = Object.keys(localStorage)
-      for (const key of allKeys) {
-        if (key.startsWith("notes_")) {
-          const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
-          const filteredNotes = notes.filter((n) => n.id !== noteId)
-          if (filteredNotes.length !== notes.length) {
-            localStorage.setItem(key, JSON.stringify(filteredNotes))
-            return
-          }
-        }
+  async deleteNote(noteId: string): Promise<boolean> {
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.deleteNoteFromLocalStorage(noteId)
       }
-      return
-    }
 
-    if (this.isSupabaseAvailable) {
-      try {
-        const { error } = await supabase.from("notes").delete().eq("id", noteId)
+      const { error } = await supabase.from("notes").delete().eq("id", noteId)
 
-        if (error) throw error
-        return
-      } catch (error) {
-        console.error("Supabase error deleting note, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.deleteNoteFromLocalStorage(noteId)
       }
-    }
 
-    const allKeys = Object.keys(localStorage)
-    for (const key of allKeys) {
-      if (key.startsWith("notes_")) {
-        const notes: Note[] = JSON.parse(localStorage.getItem(key) || "[]")
-        const filteredNotes = notes.filter((n) => n.id !== noteId)
+      return true
+    } catch (error) {
+      console.error("Error deleting note:", error)
+      return false
+    }
+  }
+
+  private deleteNoteFromLocalStorage(noteId: string): boolean {
+    if (typeof window === "undefined") return false
+
+    try {
+      const allNotesKeys = Object.keys(localStorage).filter((key) => key.startsWith("notes_"))
+
+      for (const key of allNotesKeys) {
+        const notes = JSON.parse(localStorage.getItem(key) || "[]")
+        const filteredNotes = notes.filter((n: Note) => n.id !== noteId)
+
         if (filteredNotes.length !== notes.length) {
           localStorage.setItem(key, JSON.stringify(filteredNotes))
-          return
+          return true
         }
       }
-    }
-  }
-
-  async getWishlistItems(userId: string): Promise<WishlistItem[]> {
-    try {
-      const isDemoUser = localStorage.getItem("isDemoUser")
-      if (isDemoUser === "true") {
-        const items = localStorage.getItem(`wishlist_${userId}`)
-        return items ? JSON.parse(items) : []
-      }
-
-      if (this.isSupabaseAvailable) {
-        const { data, error } = await supabase
-          .from("wishlist_items")
-          .select("*")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-
-        if (error) throw error
-        return data || []
-      }
     } catch (error) {
-      console.error("Supabase error loading wishlist, falling back to localStorage:", error)
-      this.isSupabaseAvailable = false
+      console.error("Error deleting note from localStorage:", error)
     }
 
-    const items = localStorage.getItem(`wishlist_${userId}`)
-    return items ? JSON.parse(items) : []
+    return false
   }
 
-  async createWishlistItem(itemData: Omit<WishlistItem, "id" | "created_at" | "updated_at">): Promise<WishlistItem> {
-    const newItem: WishlistItem = {
-      id: generateUUID(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      ...itemData,
+  // Wishlist Methods - FIXED: Changed table name from 'wishlist' to 'wishlist_items'
+  async getWishlistItems(userId: string): Promise<WishlistItem[]> {
+    if (!userId || userId === "undefined") {
+      console.error("Invalid userId in getWishlistItems:", userId)
+      return []
     }
 
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const existingItems = await this.getWishlistItems(itemData.user_id)
-      const updatedItems = [newItem, ...existingItems]
-      localStorage.setItem(`wishlist_${itemData.user_id}`, JSON.stringify(updatedItems))
-      return newItem
-    }
-
-    if (this.isSupabaseAvailable) {
-      try {
-        const { data, error } = await supabase.from("wishlist_items").insert(newItem).select().single()
-
-        if (error) throw error
-        return data
-      } catch (error) {
-        console.error("Supabase error creating wishlist item, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.getWishlistFromLocalStorage(userId)
       }
+
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.getWishlistFromLocalStorage(userId)
+      }
+
+      return data || []
+    } catch (error) {
+      console.error("Error getting wishlist items:", error)
+      return this.getWishlistFromLocalStorage(userId)
+    }
+  }
+
+  private getWishlistFromLocalStorage(userId: string): WishlistItem[] {
+    if (typeof window === "undefined") return []
+    try {
+      const stored = localStorage.getItem(`wishlist_${userId}`)
+      return stored ? JSON.parse(stored) : []
+    } catch (error) {
+      console.error("Error reading wishlist from localStorage:", error)
+      return []
+    }
+  }
+
+  async createWishlistItem(item: Omit<WishlistItem, "id" | "created_at" | "updated_at">): Promise<WishlistItem | null> {
+    try {
+      const newItem = {
+        ...item,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+
+      if (!this.isSupabaseConfigured()) {
+        return this.createWishlistItemInLocalStorage(newItem)
+      }
+
+      const { data, error } = await supabase.from("wishlist_items").insert([newItem]).select().single()
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.createWishlistItemInLocalStorage(newItem)
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error creating wishlist item:", error)
+      return null
+    }
+  }
+
+  private createWishlistItemInLocalStorage(item: Omit<WishlistItem, "id">): WishlistItem {
+    const newItem: WishlistItem = {
+      ...item,
+      id: generateUUID(),
     }
 
-    const existingItems = await this.getWishlistItems(itemData.user_id)
-    const updatedItems = [newItem, ...existingItems]
-    localStorage.setItem(`wishlist_${itemData.user_id}`, JSON.stringify(updatedItems))
+    const items = this.getWishlistFromLocalStorage(item.user_id)
+    items.push(newItem)
+    localStorage.setItem(`wishlist_${item.user_id}`, JSON.stringify(items))
     return newItem
   }
 
-  async updateWishlistItem(itemId: string, updates: Partial<WishlistItem>): Promise<WishlistItem> {
-    const updatedData = {
-      ...updates,
-      updated_at: new Date().toISOString(),
-    }
-
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const allKeys = Object.keys(localStorage)
-      for (const key of allKeys) {
-        if (key.startsWith("wishlist_")) {
-          const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
-          const itemIndex = items.findIndex((i) => i.id === itemId)
-          if (itemIndex !== -1) {
-            items[itemIndex] = { ...items[itemIndex], ...updatedData }
-            localStorage.setItem(key, JSON.stringify(items))
-            return items[itemIndex]
-          }
-        }
+  async updateWishlistItem(itemId: string, updates: Partial<WishlistItem>): Promise<WishlistItem | null> {
+    try {
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString(),
       }
-      throw new Error("Wishlist item not found")
-    }
 
-    if (this.isSupabaseAvailable) {
-      try {
-        const { data, error } = await supabase
-          .from("wishlist_items")
-          .update(updatedData)
-          .eq("id", itemId)
-          .select()
-          .single()
-
-        if (error) throw error
-        return data
-      } catch (error) {
-        console.error("Supabase error updating wishlist item, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+      if (!this.isSupabaseConfigured()) {
+        return this.updateWishlistItemInLocalStorage(itemId, updateData)
       }
-    }
 
-    const allKeys = Object.keys(localStorage)
-    for (const key of allKeys) {
-      if (key.startsWith("wishlist_")) {
-        const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
-        const itemIndex = items.findIndex((i) => i.id === itemId)
+      const { data, error } = await supabase
+        .from("wishlist_items")
+        .update(updateData)
+        .eq("id", itemId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.updateWishlistItemInLocalStorage(itemId, updateData)
+      }
+
+      return data
+    } catch (error) {
+      console.error("Error updating wishlist item:", error)
+      return null
+    }
+  }
+
+  private updateWishlistItemInLocalStorage(itemId: string, updates: Partial<WishlistItem>): WishlistItem | null {
+    if (typeof window === "undefined") return null
+
+    try {
+      const allWishlistKeys = Object.keys(localStorage).filter((key) => key.startsWith("wishlist_"))
+
+      for (const key of allWishlistKeys) {
+        const items = JSON.parse(localStorage.getItem(key) || "[]")
+        const itemIndex = items.findIndex((i: WishlistItem) => i.id === itemId)
+
         if (itemIndex !== -1) {
-          items[itemIndex] = { ...items[itemIndex], ...updatedData }
+          items[itemIndex] = {
+            ...items[itemIndex],
+            ...updates,
+          }
           localStorage.setItem(key, JSON.stringify(items))
           return items[itemIndex]
         }
       }
+    } catch (error) {
+      console.error("Error updating wishlist item in localStorage:", error)
     }
 
-    throw new Error("Wishlist item not found")
+    return null
   }
 
-  async deleteWishlistItem(itemId: string): Promise<void> {
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const allKeys = Object.keys(localStorage)
-      for (const key of allKeys) {
-        if (key.startsWith("wishlist_")) {
-          const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
-          const filteredItems = items.filter((i) => i.id !== itemId)
-          if (filteredItems.length !== items.length) {
-            localStorage.setItem(key, JSON.stringify(filteredItems))
-            return
-          }
-        }
+  async deleteWishlistItem(itemId: string): Promise<boolean> {
+    try {
+      if (!this.isSupabaseConfigured()) {
+        return this.deleteWishlistItemFromLocalStorage(itemId)
       }
-      return
-    }
 
-    if (this.isSupabaseAvailable) {
-      try {
-        const { error } = await supabase.from("wishlist_items").delete().eq("id", itemId)
+      const { error } = await supabase.from("wishlist_items").delete().eq("id", itemId)
 
-        if (error) throw error
-        return
-      } catch (error) {
-        console.error("Supabase error deleting wishlist item, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
+      if (error) {
+        console.error("Supabase error, falling back to localStorage:", error)
+        return this.deleteWishlistItemFromLocalStorage(itemId)
       }
-    }
 
-    const allKeys = Object.keys(localStorage)
-    for (const key of allKeys) {
-      if (key.startsWith("wishlist_")) {
-        const items: WishlistItem[] = JSON.parse(localStorage.getItem(key) || "[]")
-        const filteredItems = items.filter((i) => i.id !== itemId)
-        if (filteredItems.length !== items.length) {
-          localStorage.setItem(key, JSON.stringify(filteredItems))
-          return
-        }
-      }
+      return true
+    } catch (error) {
+      console.error("Error deleting wishlist item:", error)
+      return false
     }
   }
 
-  async clearAllData(): Promise<void> {
-    const isDemoUser = localStorage.getItem("isDemoUser")
-    if (isDemoUser === "true") {
-      const keysToRemove = Object.keys(localStorage).filter(
-        (key) =>
-          key.startsWith("tasks_") || key.startsWith("notes_") || key.startsWith("wishlist_") || key === "currentUser",
-      )
-      keysToRemove.forEach((key) => localStorage.removeItem(key))
-      this.clearUserCache()
-      return
-    }
-
-    if (this.isSupabaseAvailable) {
-      try {
-        const user = this.currentUser
-        if (user) {
-          await Promise.all([
-            supabase.from("tasks").delete().eq("user_id", user.id),
-            supabase.from("notes").delete().eq("user_id", user.id),
-            supabase.from("wishlist_items").delete().eq("user_id", user.id),
-          ])
-        }
-        return
-      } catch (error) {
-        console.error("Supabase error clearing data, falling back to localStorage:", error)
-        this.isSupabaseAvailable = false
-      }
-    }
-
-    const keysToRemove = Object.keys(localStorage).filter(
-      (key) =>
-        key.startsWith("tasks_") || key.startsWith("notes_") || key.startsWith("wishlist_") || key === "currentUser",
-    )
-    keysToRemove.forEach((key) => localStorage.removeItem(key))
-    this.clearUserCache()
-  }
-
-  async createDemoData(userId: string): Promise<void> {
-    console.log("🎯 Creating demo data for user:", userId)
-
-    const demoTasks = [
-      {
-        title: "Revisar emails matutinos",
-        description: "Revisar y responder emails importantes",
-        completed: false,
-        priority: "medium" as const,
-        category: "trabajo",
-        due_date: new Date().toISOString(),
-      },
-      {
-        title: "Planificar reunión de equipo",
-        description: "Preparar agenda y materiales",
-        completed: true,
-        priority: "high" as const,
-        category: "trabajo",
-        due_date: new Date(Date.now() + 86400000).toISOString(),
-      },
-      {
-        title: "Actualizar documentación",
-        description: "Revisar y actualizar docs del proyecto",
-        completed: false,
-        priority: "low" as const,
-        category: "trabajo",
-      },
-    ]
-
-    const demoNotes = [
-      {
-        user_id: userId,
-        title: "Ideas para el proyecto",
-        content:
-          "- Implementar notificaciones push\n- Mejorar la interfaz de usuario\n- Añadir integración con calendario",
-      },
-      {
-        user_id: userId,
-        title: "Notas de la reunión",
-        content: "Puntos clave discutidos:\n1. Objetivos del Q4\n2. Recursos necesarios\n3. Timeline del proyecto",
-      },
-    ]
-
-    const demoWishlist = [
-      {
-        user_id: userId,
-        title: "Aprender TypeScript avanzado",
-        description: "Profundizar en tipos avanzados y patrones",
-        priority: "high" as const,
-      },
-      {
-        user_id: userId,
-        title: "Configurar CI/CD pipeline",
-        description: "Automatizar despliegues y testing",
-        priority: "medium" as const,
-      },
-    ]
+  private deleteWishlistItemFromLocalStorage(itemId: string): boolean {
+    if (typeof window === "undefined") return false
 
     try {
-      await Promise.all([
-        ...demoTasks.map((task) => this.createTask(userId, task)),
-        ...demoNotes.map((note) => this.createNote(note)),
-        ...demoWishlist.map((item) => this.createWishlistItem(item)),
-      ])
-      console.log("✅ Demo data created successfully")
+      const allWishlistKeys = Object.keys(localStorage).filter((key) => key.startsWith("wishlist_"))
+
+      for (const key of allWishlistKeys) {
+        const items = JSON.parse(localStorage.getItem(key) || "[]")
+        const filteredItems = items.filter((i: WishlistItem) => i.id !== itemId)
+
+        if (filteredItems.length !== items.length) {
+          localStorage.setItem(key, JSON.stringify(filteredItems))
+          return true
+        }
+      }
     } catch (error) {
-      console.error("❌ Error creating demo data:", error)
+      console.error("Error deleting wishlist item from localStorage:", error)
     }
+
+    return false
   }
 }
 
 export const hybridDb = new HybridDatabase()
-export const hybridDatabase = hybridDb
 export const db = hybridDb
-
-export async function getTasksFromDatabase(userId: string): Promise<Task[]> {
-  return await hybridDb.getTasks(userId)
-}
-
-export async function saveTaskToDatabase(userId: string, taskData: any): Promise<Task> {
-  return await hybridDb.createTask(userId, taskData)
-}
-
-export async function updateTaskInDatabase(taskId: string, updates: Partial<Task>): Promise<Task> {
-  return await hybridDb.updateTask(taskId, updates)
-}
-
-export async function deleteTaskFromDatabase(taskId: string): Promise<void> {
-  return await hybridDb.deleteTask(taskId)
-}
-
-export type { Note, WishlistItem }
+export default hybridDb

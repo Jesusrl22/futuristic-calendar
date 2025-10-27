@@ -75,8 +75,9 @@ export function TaskCalendarManager({ user, onUserUpdate }: TaskCalendarManagerP
 
     try {
       console.log("➕ Creating new task...", taskData)
+      // Updated to use correct signature
       const newTask = await hybridDb.createTask(user.id, taskData)
-      console.log("✅ Task created:", newTask.id)
+      console.log("✅ Task created:", newTask?.id)
 
       await loadTasks()
 
