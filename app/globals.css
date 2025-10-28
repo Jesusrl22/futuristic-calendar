@@ -425,14 +425,34 @@ html[data-theme="matrix"] {
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    border-color: hsl(var(--border));
   }
-
   body {
     @apply bg-background text-foreground;
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Forzar fondos sólidos en todos los componentes emergentes */
+  [role="dialog"],
+  [data-radix-dialog-content],
+  [data-radix-popover-content],
+  [data-radix-dropdown-menu-content],
+  [data-radix-select-content] {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+    opacity: 1 !important;
+  }
+
+  /* Asegurar que los overlays sean completamente opacos */
+  [data-radix-dialog-overlay] {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  /* Forzar fondos sólidos en tabs */
+  [role="tablist"] {
+    background-color: hsl(var(--muted)) !important;
+  }
+
+  [role="tabpanel"] {
+    background-color: transparent !important;
   }
 }
 
