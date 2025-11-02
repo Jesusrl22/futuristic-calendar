@@ -154,15 +154,13 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center space-y-4">
           <div className="relative">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-            <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full bg-blue-400 opacity-75" />
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full bg-primary/50" />
           </div>
-          <p className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Cargando...
-          </p>
+          <p className="text-lg font-semibold text-foreground">{t("common.loading")}</p>
         </div>
       </div>
     )
@@ -176,16 +174,16 @@ function AppContent() {
   console.log("🎯 App Page - User Plan:", userPlan)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <div className="lg:hidden glass-card border-b border-white/20 p-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl">
+      <div className="lg:hidden glass-card p-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg">
-            <Calendar className="h-5 w-5 text-white" />
+          <div className="p-2 bg-primary rounded-xl shadow-lg">
+            <Calendar className="h-5 w-5 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold gradient-text">FutureTask</h1>
+          <h1 className="text-xl font-bold text-foreground">FutureTask</h1>
           {user?.isDemo && (
-            <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-full shadow-lg badge-glow">
+            <span className="px-3 py-1 text-xs font-bold bg-accent text-accent-foreground rounded-full shadow-lg">
               DEMO
             </span>
           )}
@@ -196,7 +194,7 @@ function AppContent() {
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hover:bg-white/20"
+            className="hover:bg-accent"
           >
             {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
@@ -216,44 +214,42 @@ function AppContent() {
         `}
         >
           {/* Desktop Header */}
-          <div className="hidden lg:flex items-center justify-between p-6 border-b border-white/10">
+          <div className="hidden lg:flex items-center justify-between p-6 border-b border-border">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-lg animate-glow">
-                <Calendar className="h-7 w-7 text-white" />
+              <div className="p-2 bg-primary rounded-xl shadow-lg">
+                <Calendar className="h-7 w-7 text-primary-foreground" />
               </div>
-              <h1 className="text-2xl font-bold gradient-text">FutureTask</h1>
+              <h1 className="text-2xl font-bold text-foreground">FutureTask</h1>
             </div>
             <LanguageSelector variant="button" showFlag={true} showName={false} />
           </div>
 
           {/* User Info */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-border">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-lg shadow-xl">
+              <div className="h-12 w-12 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shadow-xl">
                 {user?.full_name?.charAt(0) || user?.name?.charAt(0) || "U"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                <p className="text-sm font-bold text-foreground truncate">
                   {user?.full_name || user?.name || "Usuario"}
                 </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{user?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
             </div>
             {user?.isDemo && (
-              <div className="p-3 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 border border-yellow-400/30 rounded-xl backdrop-blur-sm">
-                <p className="text-xs font-semibold text-yellow-700 dark:text-yellow-300 flex items-center">
+              <div className="p-3 bg-accent/20 border border-accent rounded-xl backdrop-blur-sm">
+                <p className="text-xs font-semibold text-accent-foreground flex items-center">
                   <Sparkles className="h-3 w-3 mr-1" />
                   Modo Demo - Todas las funciones
                 </p>
               </div>
             )}
-            <div className="mt-4 flex items-center justify-between p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl backdrop-blur-sm border border-blue-500/20">
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 capitalize">
-                Plan: {userPlan}
-              </span>
+            <div className="mt-4 flex items-center justify-between p-3 bg-muted rounded-xl backdrop-blur-sm border border-border">
+              <span className="text-xs font-semibold text-muted-foreground capitalize">Plan: {userPlan}</span>
               <div className="flex items-center gap-1">
-                <Zap className="h-3 w-3 text-yellow-500" />
-                <span className="text-xs font-bold text-yellow-600">{user?.ai_credits || 0}</span>
+                <Zap className="h-3 w-3 text-primary" />
+                <span className="text-xs font-bold text-primary">{user?.ai_credits || 0}</span>
               </div>
             </div>
           </div>
@@ -261,14 +257,14 @@ function AppContent() {
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {[
-              { id: "calendar", icon: Calendar, label: "Calendario" },
-              { id: "pomodoro", icon: Clock, label: "Pomodoro" },
-              { id: "stats", icon: BarChart3, label: "Estadísticas" },
-              { id: "wishlist", icon: Star, label: "Lista de Deseos" },
-              { id: "notes", icon: FileText, label: "Notas" },
-              { id: "ai", icon: Bot, label: "Asistente IA", credits: user?.ai_credits },
-              ...(user?.isDemo ? [] : [{ id: "subscription", icon: CreditCard, label: "Suscripción" }]),
-              { id: "achievements", icon: Trophy, label: "Logros" },
+              { id: "calendar", icon: Calendar, label: t("nav.calendar") },
+              { id: "pomodoro", icon: Clock, label: t("nav.pomodoro") },
+              { id: "stats", icon: BarChart3, label: t("nav.stats") },
+              { id: "wishlist", icon: Star, label: t("nav.wishlist") },
+              { id: "notes", icon: FileText, label: t("nav.notes") },
+              { id: "ai", icon: Bot, label: t("nav.aiAssistant"), credits: user?.ai_credits },
+              ...(user?.isDemo ? [] : [{ id: "subscription", icon: CreditCard, label: t("nav.subscription") }]),
+              { id: "achievements", icon: Trophy, label: t("nav.achievements") },
             ].map((item) => (
               <button
                 key={item.id}
@@ -278,14 +274,14 @@ function AppContent() {
                 }}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   activeTab === item.id
-                    ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-800/50 hover:scale-102"
+                    ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                    : "text-foreground hover:bg-accent hover:text-accent-foreground hover:scale-102"
                 }`}
               >
                 <item.icon className="h-5 w-5" />
                 <span className="font-semibold">{item.label}</span>
                 {item.credits !== undefined && item.credits > 0 && (
-                  <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-yellow-400 text-gray-900 rounded-full">
+                  <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-accent text-accent-foreground rounded-full">
                     {item.credits}
                   </span>
                 )}
@@ -294,21 +290,21 @@ function AppContent() {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-white/10 space-y-2">
+          <div className="p-4 border-t border-border space-y-2">
             <Button
               variant="ghost"
-              className="w-full justify-start hover:bg-white/20 dark:hover:bg-gray-800/50"
+              className="w-full justify-start hover:bg-accent hover:text-accent-foreground"
               onClick={() => setIsSettingsOpen(true)}
             >
               <Settings className="h-4 w-4 mr-2" />
-              Configuración
+              {t("nav.settings")}
             </Button>
             <Button
               variant="ghost"
-              className="w-full justify-start text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="w-full justify-start text-destructive hover:bg-destructive/10"
               onClick={handleLogout}
             >
-              {user?.isDemo ? "Salir del Demo" : "Cerrar Sesión"}
+              {user?.isDemo ? "Salir del Demo" : t("auth.logout")}
             </Button>
           </div>
         </aside>
@@ -379,8 +375,8 @@ export default function AppPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       }
     >

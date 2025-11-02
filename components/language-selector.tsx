@@ -55,16 +55,24 @@ export function LanguageSelector({ variant = "dropdown", showFlag = true, showNa
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="hover:bg-white/20">
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-card hover:bg-accent hover:text-accent-foreground border-2 border-border shadow-sm transition-all"
+          >
             <span className="text-xl">{currentLang.flag}</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="bg-card border-2 border-border shadow-lg min-w-[180px]">
           {LANGUAGES.map((lang) => (
-            <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code as any)}>
+            <DropdownMenuItem
+              key={lang.code}
+              onClick={() => setLanguage(lang.code as any)}
+              className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+            >
               <span className="flex items-center gap-2">
-                <span>{lang.flag}</span>
-                <span>{lang.name}</span>
+                <span className="text-lg">{lang.flag}</span>
+                <span className="font-medium">{lang.name}</span>
               </span>
             </DropdownMenuItem>
           ))}
@@ -76,15 +84,19 @@ export function LanguageSelector({ variant = "dropdown", showFlag = true, showNa
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+        <Button variant="outline" size="sm" className="gap-2 bg-card border-border">
           <Globe className="h-4 w-4" />
           {showFlag && <span>{currentLang.flag}</span>}
           {showName && <span className="hidden sm:inline">{currentLang.name}</span>}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-card border-2 border-border shadow-lg">
         {LANGUAGES.map((lang) => (
-          <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code as any)}>
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => setLanguage(lang.code as any)}
+            className="hover:bg-accent hover:text-accent-foreground cursor-pointer"
+          >
             <span className="flex items-center gap-2">
               <span>{lang.flag}</span>
               <span>{lang.name}</span>

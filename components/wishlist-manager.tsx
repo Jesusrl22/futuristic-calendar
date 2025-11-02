@@ -31,9 +31,9 @@ interface WishlistManagerProps {
 }
 
 const PRIORITY_COLORS = {
-  high: "bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-700 border-red-300",
-  medium: "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-700 border-yellow-300",
-  low: "bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 border-green-300",
+  high: "bg-destructive/20 text-destructive-foreground border-destructive/50",
+  medium: "bg-primary/20 text-primary-foreground border-primary/50",
+  low: "bg-accent/20 text-accent-foreground border-accent/50",
 }
 
 const PREMIUM_LIMIT = 100
@@ -149,8 +149,8 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">{t("common.loading")}</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     )
@@ -160,54 +160,52 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg">
-            <Heart className="w-6 h-6 text-white" />
+          <div className="p-2 bg-primary rounded-lg">
+            <Heart className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              {t("wishlist.title")}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">{t("common.premium")}</p>
+            <h2 className="text-2xl font-bold text-foreground">{t("wishlist.title")}</h2>
+            <p className="text-muted-foreground text-sm">{t("common.premium")}</p>
           </div>
         </div>
 
-        <Card className="border-2 border-dashed border-pink-300 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+        <Card className="border-2 border-dashed border-border bg-muted/50">
           <CardContent className="pt-12 pb-12">
             <div className="text-center max-w-md mx-auto">
               <div className="mb-6">
-                <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Lock className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="w-10 h-10 text-primary-foreground" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">{t("wishlist.title")}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                <h3 className="text-2xl font-bold text-foreground mb-2">{t("wishlist.title")}</h3>
+                <p className="text-muted-foreground mb-6">
                   Organiza y planifica todos tus deseos y metas con nuestra función premium
                 </p>
               </div>
 
               <div className="space-y-4 mb-8">
                 <div className="flex items-center gap-3 text-left">
-                  <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Heart className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <Heart className="w-4 h-4 text-primary-foreground" />
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Hasta 100 deseos organizados</span>
+                  <span className="text-foreground">Hasta 100 deseos organizados</span>
                 </div>
                 <div className="flex items-center gap-3 text-left">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Star className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <Star className="w-4 h-4 text-primary-foreground" />
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Sistema de prioridades para tus metas</span>
+                  <span className="text-foreground">Sistema de prioridades para tus metas</span>
                 </div>
                 <div className="flex items-center gap-3 text-left">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-4 h-4 text-primary-foreground" />
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Seguimiento de progreso y logros</span>
+                  <span className="text-foreground">Seguimiento de progreso y logros</span>
                 </div>
                 <div className="flex items-center gap-3 text-left">
-                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Search className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                    <Search className="w-4 h-4 text-primary-foreground" />
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Filtros avanzados y búsqueda inteligente</span>
+                  <span className="text-foreground">Filtros avanzados y búsqueda inteligente</span>
                 </div>
               </div>
 
@@ -215,12 +213,12 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                 <Button
                   onClick={onUpgrade}
                   size="lg"
-                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
                 >
                   <Crown className="w-5 h-5 mr-2" />
                   {t("common.upgrade")}
                 </Button>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Desde €2.49/mes • Cancela cuando quieras</p>
+                <p className="text-xs text-muted-foreground">Desde €2.49/mes • Cancela cuando quieras</p>
               </div>
             </div>
           </CardContent>
@@ -233,14 +231,12 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg">
-            <Heart className="w-6 h-6 text-white" />
+          <div className="p-2 bg-primary rounded-lg">
+            <Heart className="w-6 h-6 text-primary-foreground" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              {t("wishlist.title")}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
+            <h2 className="text-2xl font-bold text-foreground">{t("wishlist.title")}</h2>
+            <p className="text-muted-foreground text-sm">
               {wishlistItems.length}/{PREMIUM_LIMIT} {t("wishlist.title").toLowerCase()} (
               {userPlan === "pro" ? "Pro" : "Premium"})
             </p>
@@ -249,7 +245,7 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
         <Dialog open={showForm} onOpenChange={setShowForm}>
           <DialogTrigger asChild>
             <Button
-              className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white shadow-lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg"
               disabled={!editingItem && wishlistItems.length >= PREMIUM_LIMIT}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -259,7 +255,7 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
-                <Heart className="w-6 h-6 text-pink-500" />
+                <Heart className="w-6 h-6 text-primary" />
                 {editingItem ? t("wishlist.editItem") : t("wishlist.addItem")}
               </DialogTitle>
               <DialogDescription>
@@ -309,19 +305,19 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                   <SelectContent>
                     <SelectItem value="high">
                       <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-red-500" />
+                        <Star className="w-4 h-4 text-destructive" />
                         {t("tasks.priorityHigh")}
                       </div>
                     </SelectItem>
                     <SelectItem value="medium">
                       <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-500" />
+                        <Star className="w-4 h-4 text-primary" />
                         {t("tasks.priorityMedium")}
                       </div>
                     </SelectItem>
                     <SelectItem value="low">
                       <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4 text-green-500" />
+                        <Star className="w-4 h-4 text-accent-foreground" />
                         {t("tasks.priorityLow")}
                       </div>
                     </SelectItem>
@@ -333,7 +329,7 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                 <Button type="button" variant="outline" onClick={handleCloseForm} size="lg">
                   {t("common.cancel")}
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-500 text-white" size="lg">
+                <Button type="submit" className="bg-primary text-primary-foreground" size="lg">
                   {editingItem ? t("common.save") : t("common.add")}
                 </Button>
               </div>
@@ -343,42 +339,42 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-pink-300/20">
+        <Card className="bg-primary/10 border-primary/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-pink-600 dark:text-pink-400">Total</p>
-                <p className="text-2xl font-bold text-pink-700 dark:text-pink-300">{wishlistItems.length}</p>
+                <p className="text-sm font-medium text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold text-foreground">{wishlistItems.length}</p>
               </div>
-              <Heart className="h-8 w-8 text-pink-400" />
+              <Heart className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-300/20">
+        <Card className="bg-destructive/10 border-destructive/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("tasks.priorityHigh")}</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                <p className="text-sm font-medium text-muted-foreground">{t("tasks.priorityHigh")}</p>
+                <p className="text-2xl font-bold text-foreground">
                   {wishlistItems.filter((item) => item?.priority === "high").length}
                 </p>
               </div>
-              <Star className="h-8 w-8 text-red-400" />
+              <Star className="h-8 w-8 text-destructive" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-300/20">
+        <Card className="bg-accent/10 border-accent/20">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">{t("tasks.priorityMedium")}</p>
-                <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                <p className="text-sm font-medium text-muted-foreground">{t("tasks.priorityMedium")}</p>
+                <p className="text-2xl font-bold text-foreground">
                   {wishlistItems.filter((item) => item?.priority === "medium").length}
                 </p>
               </div>
-              <Star className="h-8 w-8 text-yellow-400" />
+              <Star className="h-8 w-8 text-accent-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -400,7 +396,7 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder={t("common.search")}
                   value={searchTerm}
@@ -417,19 +413,19 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                   <SelectItem value="all">{t("wishlist.filterAll")}</SelectItem>
                   <SelectItem value="high">
                     <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-red-500" />
+                      <Star className="w-4 h-4 text-destructive" />
                       {t("tasks.priorityHigh")}
                     </div>
                   </SelectItem>
                   <SelectItem value="medium">
                     <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-yellow-500" />
+                      <Star className="w-4 h-4 text-primary" />
                       {t("tasks.priorityMedium")}
                     </div>
                   </SelectItem>
                   <SelectItem value="low">
                     <div className="flex items-center gap-2">
-                      <Star className="w-4 h-4 text-green-500" />
+                      <Star className="w-4 h-4 text-accent-foreground" />
                       {t("tasks.priorityLow")}
                     </div>
                   </SelectItem>
@@ -444,20 +440,17 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center py-12">
-                  <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
+                  <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     {searchTerm || filterPriority !== "all" ? t("wishlist.noItems") : t("wishlist.noItems")}
                   </h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-6">
+                  <p className="text-muted-foreground mb-6">
                     {searchTerm || filterPriority !== "all"
                       ? "Intenta ajustar los filtros de búsqueda"
                       : t("wishlist.noItemsDescription")}
                   </p>
                   {!searchTerm && filterPriority === "all" && wishlistItems.length < PREMIUM_LIMIT && (
-                    <Button
-                      onClick={() => setShowForm(true)}
-                      className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white"
-                    >
+                    <Button onClick={() => setShowForm(true)} className="bg-primary text-primary-foreground">
                       <Plus className="h-4 w-4 mr-2" />
                       {t("wishlist.addItem")}
                     </Button>
@@ -474,15 +467,12 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                 const itemCreatedAt = item?.created_at || new Date().toISOString()
 
                 return (
-                  <Card
-                    key={item.id}
-                    className="hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900"
-                  >
+                  <Card key={item.id} className="hover:shadow-xl transition-all duration-300 border bg-card">
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="p-2 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-lg">
-                            <Heart className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                          <div className="p-2 bg-primary/20 rounded-lg">
+                            <Heart className="h-5 w-5 text-primary" />
                           </div>
                           <CardTitle className="text-lg line-clamp-2 flex-1">{itemTitle}</CardTitle>
                         </div>
@@ -491,22 +481,22 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEdit(item)}
-                            className="hover:bg-blue-100 dark:hover:bg-blue-900"
+                            className="hover:bg-accent"
                           >
-                            <Edit className="w-4 h-4 text-blue-600" />
+                            <Edit className="w-4 h-4 text-primary" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(item.id)}
-                            className="hover:bg-red-100 dark:hover:bg-red-900"
+                            className="hover:bg-destructive/10"
                           >
-                            <Trash2 className="w-4 h-4 text-red-600" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         </div>
                       </div>
                       {itemDescription && (
-                        <CardDescription className="line-clamp-3 text-gray-600 dark:text-gray-400 mt-2">
+                        <CardDescription className="line-clamp-3 text-muted-foreground mt-2">
                           {itemDescription}
                         </CardDescription>
                       )}
@@ -519,7 +509,7 @@ export function WishlistManager({ userId, userPlan, onUpgrade }: WishlistManager
                         {itemPriority === "low" && t("tasks.priorityLow")}
                       </Badge>
 
-                      <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <div className="text-xs text-muted-foreground pt-2 border-t border-border">
                         Añadido el {new Date(itemCreatedAt).toLocaleDateString()}
                       </div>
                     </CardContent>

@@ -29,14 +29,6 @@
   --chart-3: 197 37% 24%;
   --chart-4: 43 74% 66%;
   --chart-5: 27 87% 67%;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
@@ -64,14 +56,6 @@
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
   --chart-5: 340 75% 55%;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @theme inline {
@@ -104,14 +88,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 html[data-theme="light"] {
@@ -430,29 +406,108 @@ html[data-theme="matrix"] {
     @apply bg-background text-foreground;
   }
 
-  /* Forzar fondos sólidos en todos los componentes emergentes */
+  .sidebar-glass {
+    background-color: hsl(var(--card)) !important;
+    border-right: 1px solid hsl(var(--border));
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  .glass-card {
+    background-color: hsl(var(--card)) !important;
+    border: 1px solid hsl(var(--border));
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  [data-radix-select-content] {
+    background-color: hsl(var(--card)) !important;
+    border: 2px solid hsl(var(--border)) !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    opacity: 1 !important;
+  }
+
+  [data-radix-select-viewport] {
+    background-color: hsl(var(--card)) !important;
+    padding: 4px !important;
+  }
+
+  [data-radix-select-item] {
+    color: hsl(var(--card-foreground)) !important;
+    background-color: transparent !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+  }
+
+  [data-radix-select-item]:hover,
+  [data-radix-select-item][data-highlighted] {
+    background-color: hsl(var(--accent)) !important;
+    color: hsl(var(--accent-foreground)) !important;
+    outline: none !important;
+  }
+
+  [data-radix-select-item][data-state="checked"] {
+    background-color: hsl(var(--primary) / 0.2) !important;
+    color: hsl(var(--primary)) !important;
+    font-weight: 600 !important;
+  }
+
   [role="dialog"],
   [data-radix-dialog-content],
   [data-radix-popover-content],
-  [data-radix-dropdown-menu-content],
-  [data-radix-select-content] {
+  [data-radix-dropdown-menu-content] {
     background-color: hsl(var(--card)) !important;
     color: hsl(var(--card-foreground)) !important;
     opacity: 1 !important;
   }
 
-  /* Asegurar que los overlays sean completamente opacos */
   [data-radix-dialog-overlay] {
     background-color: rgba(0, 0, 0, 0.8) !important;
   }
 
-  /* Forzar fondos sólidos en tabs */
   [role="tablist"] {
     background-color: hsl(var(--muted)) !important;
   }
 
   [role="tabpanel"] {
     background-color: transparent !important;
+  }
+
+  .rdp {
+    background-color: transparent !important;
+  }
+
+  .rdp-month {
+    background-color: transparent !important;
+  }
+
+  .rdp-table {
+    background-color: transparent !important;
+  }
+
+  [class*="card"],
+  [class*="Card"] {
+    background-color: hsl(var(--card)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  .bg-white {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  .dark .bg-white {
+    background-color: hsl(var(--card)) !important;
+  }
+
+  .text-gray-600,
+  .text-gray-700,
+  .text-gray-800,
+  .text-gray-900 {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .dark .text-gray-300,
+  .dark .text-gray-400 {
+    color: hsl(var(--muted-foreground)) !important;
   }
 }
 

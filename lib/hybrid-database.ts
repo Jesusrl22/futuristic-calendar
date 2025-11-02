@@ -111,6 +111,10 @@ class HybridDatabase {
     }
   }
 
+  async getUserById(userId: string): Promise<User | null> {
+    return this.getUser(userId)
+  }
+
   async updateUser(userId: string, updates: Partial<User>): Promise<User | null> {
     try {
       // Columnas básicas que sabemos que existen en Supabase
@@ -546,6 +550,26 @@ class HybridDatabase {
       sessions.unshift(newSession)
       localStorage.setItem(`pomodoro_${userId}`, JSON.stringify(sessions))
       return newSession
+    }
+  }
+
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      if (this.isSupabaseAvailable) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) return null
+        return this.getUser(user.id)
+      }
+
+      // Fallback to localStorage for current user
+      const currentUserId = localStorage.getItem("current_user_id")
+      if (!currentUserId) return null
+      return this.getUser(currentUserId)
+    } catch (error) {
+      console.error("Error getting current user:", error)
+      return null
     }
   }
 }

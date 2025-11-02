@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { getUserAICredits } from "@/lib/ai-credits"
+import { getUserAICredits, consumeAICredits } from "@/lib/ai-credits"
+import { generateText } from "ai"
 
 // Mock AI response for demo purposes
 const mockAIResponses = [
@@ -14,75 +15,122 @@ export const maxDuration = 60 // Allow up to 60 seconds for AI processing
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, userId, creditsConsumed } = await req.json()
+    const { message, userId } = await req.json()
 
     if (!message || !userId) {
       return NextResponse.json({ error: "Message and userId are required" }, { status: 400 })
     }
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY not configured")
-      return NextResponse.json({ error: "AI service not configured" }, { status: 500 })
+    const currentCredits = await getUserAICredits(userId)
+    if (currentCredits < 2) {
+      return NextResponse.json(
+        {
+          error: "Insufficient AI credits",
+          message: "No tienes suficientes créditos de IA para esta consulta. Por favor, compra más créditos.",
+        },
+        { status: 402 },
+      )
     }
 
-    // Simulate AI processing delay
-    await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY not configured")
+      return NextResponse.json(
+        {
+          error: "AI service not configured",
+          message:
+            "El servicio de IA no está configurado correctamente. Por favor, contacta al administrador del sistema.",
+        },
+        { status: 500 },
+      )
+    }
 
-    // Select a random response
-    const response = mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)]
+    let responseText = ""
 
-    // In a real implementation, you would:
-    // 1. Call OpenAI API
-    // 2. Process the response
-    // 3. Update user's AI credits
-    // 4. Log the interaction
+    try {
+      const { text } = await generateText({
+        model: "openai/gpt-4o-mini", // AI Gateway format: provider/model
+        prompt: `Eres un asistente de productividad útil y amigable. Respondes en español de manera clara y concisa. 
 
-    // Generate AI response
-    // const { text, usage } = await generateText({
-    //   model: openai("gpt-4o-mini"),
-    //   prompt: `You are a helpful productivity assistant. Respond in Spanish. User message: ${message}`,
-    //   maxTokens: 1000,
-    // })
+Mensaje del usuario: ${message}
 
-    // Calculate actual cost based on tokens used
-    // const actualCreditsUsed = calculateActualCost(usage?.promptTokens || 200, usage?.completionTokens || 800)
+Proporciona una respuesta útil y práctica que ayude al usuario con su consulta sobre productividad, organización o gestión del tiempo.`,
+        maxTokens: 1000,
+        temperature: 0.7,
+      })
 
-    // Log for analytics
-    // console.log("AI Chat Usage:", {
-    //   userId,
-    //   creditsConsumed,
-    //   actualCreditsUsed,
-    //   promptTokens: usage?.promptTokens,
-    //   completionTokens: usage?.completionTokens,
-    //   message: message.substring(0, 100) + "...",
-    // })
+      responseText = text
+    } catch (apiError: any) {
+      console.error("OpenAI API Error:", apiError)
 
-    // Determine request type based on content
+      if (apiError.message?.includes("insufficient_quota") || apiError.message?.includes("billing")) {
+        return NextResponse.json(
+          {
+            error: "API billing issue",
+            message:
+              "La API de OpenAI requiere configurar un método de pago. No se han descontado créditos. Por favor, configura la facturación en OpenAI.",
+          },
+          { status: 500 },
+        )
+      }
+
+      if (apiError.message?.includes("API key")) {
+        return NextResponse.json(
+          {
+            error: "API key issue",
+            message:
+              "La clave de API de OpenAI no es válida. No se han descontado créditos. Por favor, verifica la configuración.",
+          },
+          { status: 500 },
+        )
+      }
+
+      return NextResponse.json(
+        {
+          error: "API error",
+          message:
+            "Hubo un error al comunicarse con el servicio de IA. No se han descontado créditos. Por favor, intenta de nuevo más tarde.",
+        },
+        { status: 500 },
+      )
+    }
+
+    const creditsToConsume = 2
+
+    let remainingCredits = currentCredits
+    try {
+      remainingCredits = await consumeAICredits(userId, creditsToConsume)
+    } catch (creditError) {
+      console.error("Error consuming credits:", creditError)
+      // If credit consumption fails, still return the response but log the error
+    }
+
+    // Determine request type and parse response
     const requestType = determineRequestType(message)
+    const aiResponse = parseAIResponse(responseText, message)
 
-    // Parse the AI response to extract tasks, goals, etc.
-    const aiResponse = parseAIResponse(response, message)
-
-    // Get updated credits info
-    const updatedCreditsInfo = await getUserAICredits(userId)
+    console.log("[v0] AI Chat Success:", {
+      userId,
+      creditsConsumed: creditsToConsume,
+      remainingCredits,
+      requestType,
+    })
 
     return NextResponse.json({
-      response,
+      message: responseText,
       tasks: aiResponse.tasks,
       wishlistItems: aiResponse.wishlistItems,
       notes: aiResponse.notes,
-      creditsInfo: updatedCreditsInfo,
-      creditsConsumed: creditsConsumed || 1,
-      remainingCredits: 50 - (creditsConsumed || 1), // Mock remaining credits
+      creditsConsumed: creditsToConsume,
+      remainingCredits,
     })
-  } catch (creditError) {
+  } catch (error: any) {
+    console.error("AI Chat Error:", error)
     return NextResponse.json(
       {
-        error: "Insufficient AI credits",
-        message: "No tienes suficientes créditos de IA para esta consulta",
+        error: "Internal server error",
+        message: "Hubo un error inesperado. Por favor, intenta de nuevo.",
       },
-      { status: 402 },
+      { status: 500 },
     )
   }
 }

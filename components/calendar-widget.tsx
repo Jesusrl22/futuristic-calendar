@@ -106,26 +106,26 @@ export function CalendarWidget({
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-500/20 text-red-300 border-red-500/30"
+        return "bg-destructive/10 text-destructive border-destructive/30"
       case "medium":
-        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+        return "bg-accent/10 text-accent-foreground border-accent/30"
       case "low":
-        return "bg-green-500/20 text-green-300 border-green-500/30"
+        return "bg-primary/10 text-primary border-primary/30"
       default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30"
+        return "bg-muted text-muted-foreground border-border"
     }
   }
 
   const getSelectedTaskPriorityColor = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-500/10 text-red-300 border-red-500/30 hover:bg-red-500/20"
+        return "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20"
       case "medium":
-        return "bg-yellow-500/10 text-yellow-300 border-yellow-500/30 hover:bg-yellow-500/20"
+        return "bg-accent/10 text-accent-foreground border-accent/30 hover:bg-accent/20"
       case "low":
-        return "bg-green-500/10 text-green-300 border-green-500/30 hover:bg-green-500/20"
+        return "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
       default:
-        return "bg-gray-500/10 text-gray-300 border-gray-500/30 hover:bg-gray-500/20"
+        return "bg-muted/10 text-muted-foreground border-border hover:bg-muted/20"
     }
   }
 
@@ -162,20 +162,24 @@ export function CalendarWidget({
   return (
     <div className="space-y-6">
       {/* Calendar */}
-      <Card className="bg-white/80 dark:bg-gray-900/80 border-gray-200 dark:border-gray-800 backdrop-blur-sm">
-        <CardHeader className="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-800/50">
+      <Card className="bg-card border-border backdrop-blur-sm">
+        <CardHeader className="border-b border-border bg-card/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CalendarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <CalendarIcon className="h-5 w-5 text-primary" />
               <div>
-                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
+                <CardTitle className="text-lg font-semibold text-foreground">
                   {safeFormatDate(validCurrentMonth, "MMMM yyyy", { locale: es }) || "Calendario"}
                 </CardTitle>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Gestiona tus tareas</p>
+                <p className="text-sm text-muted-foreground">Gestiona tus tareas</p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={onNewTask} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-medium">
+              <Button
+                onClick={onNewTask}
+                size="sm"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Nueva Tarea
               </Button>
@@ -184,7 +188,7 @@ export function CalendarWidget({
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth("prev")}
-                  className="h-9 w-9 p-0 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                  className="h-9 w-9 p-0 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
@@ -192,7 +196,7 @@ export function CalendarWidget({
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentMonth(new Date())}
-                  className="h-9 px-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white text-xs font-medium"
+                  className="h-9 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground text-xs font-medium"
                 >
                   Hoy
                 </Button>
@@ -200,7 +204,7 @@ export function CalendarWidget({
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateMonth("next")}
-                  className="h-9 w-9 p-0 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                  className="h-9 w-9 p-0 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -209,14 +213,14 @@ export function CalendarWidget({
           </div>
         </CardHeader>
 
-        <CardContent className="p-4 bg-white dark:bg-gray-900">
+        <CardContent className="p-4 bg-card">
           {/* Days of week header */}
-          <div className="grid grid-cols-7 gap-px mb-2">
+          <div className="grid grid-cols-7 gap-1 mb-2">
             {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day, index) => (
               <div
                 key={day}
-                className={`p-2 text-center text-xs font-medium ${
-                  index === 0 || index === 6 ? "text-red-600 dark:text-red-400" : "text-gray-600 dark:text-gray-400"
+                className={`p-2 text-center text-xs font-semibold ${
+                  index === 0 || index === 6 ? "text-destructive" : "text-muted-foreground"
                 }`}
               >
                 {day}
@@ -225,7 +229,7 @@ export function CalendarWidget({
           </div>
 
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-px bg-gray-300 dark:bg-gray-700 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-7 gap-1">
             {calendarDays.map((day) => {
               const dayTasks = getTasksForDate(day)
               const isSelected = isSameDay(day, validSelectedDate)
@@ -236,22 +240,26 @@ export function CalendarWidget({
                 <div
                   key={day.toISOString()}
                   className={`
-                    min-h-[100px] p-2 cursor-pointer transition-colors
+                    min-h-[100px] p-2 cursor-pointer transition-all duration-200 rounded-lg border
                     ${
                       isSelected
-                        ? "bg-blue-600 ring-2 ring-blue-400 ring-inset"
+                        ? "bg-primary text-primary-foreground border-primary shadow-lg scale-105"
                         : isTodayDate
-                          ? "bg-blue-100 dark:bg-blue-900"
-                          : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          ? "bg-accent text-accent-foreground border-primary/50 shadow-md"
+                          : "bg-card/50 hover:bg-accent/30 border-border/50"
                     }
-                    ${!isCurrentMonth ? "bg-gray-100 dark:bg-gray-900 text-gray-400" : "text-gray-900 dark:text-white"}
+                    ${!isCurrentMonth ? "opacity-40" : ""}
                   `}
                   onClick={() => onDateSelect?.(day)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span
-                      className={`text-sm font-medium ${
-                        isSelected ? "text-white" : isTodayDate ? "text-blue-600 dark:text-blue-400 font-bold" : ""
+                      className={`text-sm font-semibold ${
+                        isSelected
+                          ? "text-primary-foreground"
+                          : isTodayDate
+                            ? "text-primary font-bold"
+                            : "text-foreground"
                       }`}
                     >
                       {safeFormatDate(day, "d") || "?"}
@@ -259,7 +267,9 @@ export function CalendarWidget({
                     {dayTasks.length > 0 && (
                       <Badge
                         variant="secondary"
-                        className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-0"
+                        className={`text-xs px-1.5 py-0.5 border-0 ${
+                          isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/20 text-primary"
+                        }`}
                       >
                         {dayTasks.length}
                       </Badge>
@@ -292,7 +302,7 @@ export function CalendarWidget({
                       </div>
                     ))}
                     {dayTasks.length > 2 && (
-                      <div className="text-xs text-center py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">
+                      <div className="text-xs text-center py-1 bg-muted/50 text-muted-foreground rounded font-medium">
                         +{dayTasks.length - 2} más
                       </div>
                     )}
@@ -306,26 +316,24 @@ export function CalendarWidget({
 
       {/* Selected date tasks */}
       {selectedDateTasks.length > 0 && (
-        <Card className="bg-white/80 dark:bg-gray-900/80 border-gray-200 dark:border-gray-800 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-800/50">
-            <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-3">
-              <CalendarIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <Card className="bg-card border-border backdrop-blur-sm">
+          <CardHeader className="border-b border-border bg-card/50">
+            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-3">
+              <CalendarIcon className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <span>
                   Tareas para {safeFormatDate(validSelectedDate, "d 'de' MMMM", { locale: es }) || "fecha seleccionada"}
                 </span>
-                <p className="text-sm text-gray-600 dark:text-gray-400 font-normal">
-                  Haz clic en una tarea para editarla
-                </p>
+                <p className="text-sm text-muted-foreground font-normal">Haz clic en una tarea para editarla</p>
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 space-y-3 bg-white dark:bg-gray-900">
+          <CardContent className="p-4 space-y-3 bg-card">
             {selectedDateTasks.map((task) => (
               <div
                 key={task.id}
                 className={`
-                  p-4 border rounded-lg cursor-pointer transition-all duration-200 group
+                  p-4 border border-border rounded-lg cursor-pointer transition-all duration-200 group
                   ${getSelectedTaskPriorityColor(task.priority)}
                   ${task.completed ? "opacity-70" : "hover:shadow-md"}
                 `}
@@ -333,33 +341,29 @@ export function CalendarWidget({
               >
                 <div className="flex items-center gap-3 mb-2">
                   {getTaskIcon(task)}
-                  <span
-                    className={`font-semibold text-base text-gray-900 dark:text-white ${task.completed ? "line-through" : ""}`}
-                  >
+                  <span className={`font-semibold text-base text-foreground ${task.completed ? "line-through" : ""}`}>
                     {task.title}
                   </span>
                   <Badge
                     variant="outline"
                     className={`text-xs font-medium px-2 py-1 ${
                       task.priority === "high"
-                        ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 border-red-300 dark:border-red-700"
+                        ? "bg-destructive/10 text-destructive border-destructive/30"
                         : task.priority === "medium"
-                          ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700"
-                          : "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 border-green-300 dark:border-green-700"
+                          ? "bg-accent/10 text-accent-foreground border-accent/30"
+                          : "bg-primary/10 text-primary border-primary/30"
                     }`}
                   >
                     {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
                   </Badge>
-                  <Edit className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-gray-400" />
+                  <Edit className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
                 </div>
 
-                {task.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 pl-7">{task.description}</p>
-                )}
+                {task.description && <p className="text-sm text-muted-foreground mb-3 pl-7">{task.description}</p>}
 
                 <div className="flex items-center gap-3 text-sm pl-7">
                   {task.due_date && task.due_date.includes("T") && (
-                    <span className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded font-medium border border-blue-300 dark:border-blue-700">
+                    <span className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded font-medium border border-primary/30">
                       <Clock className="w-3 h-3" />
                       {safeFormatDate(task.due_date, "HH:mm") || ""}
                     </span>
@@ -367,7 +371,7 @@ export function CalendarWidget({
                   {task.category && (
                     <Badge
                       variant="secondary"
-                      className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-700"
+                      className="text-xs px-2 py-1 bg-muted text-muted-foreground border border-border"
                     >
                       {task.category}
                     </Badge>
