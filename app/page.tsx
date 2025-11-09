@@ -1,482 +1,606 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Calendar, Brain, Zap, Star, ArrowRight, Check, Sparkles, Shield, Users, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LanguageSelector } from "@/components/language-selector"
-import { useLanguage } from "@/hooks/useLanguage"
+import { Card } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
+import { useState } from "react"
 
-export default function LandingPage() {
-  const { t } = useLanguage()
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly")
-  const [isVisible, setIsVisible] = useState(false)
+const translations = {
+  en: {
+    features: "Features",
+    dashboard: "Dashboard",
+    pricing: "Pricing",
+    about: "About",
+    login: "Login",
+    signup: "Sign Up",
+    hero: "Smart Systems, Collaborate Seamlessly, Succeed Efficiently",
+    heroDesc: "Empower your productivity with intelligent task management, AI assistance, and seamless collaboration",
+    startNow: "Start now",
+    learnMore: "Learn more",
+    secure: "Secure & Reliable",
+    secureDesc: "Enterprise-grade security for your data",
+    growth: "Growth Analytics",
+    growthDesc: "Real-time insights and metrics",
+    team: "Team Collaboration",
+    teamDesc: "Work together seamlessly",
+    global: "Global Scale",
+    globalDesc: "Deploy anywhere in the world",
+    ai: "AI-Powered",
+    aiDesc: "Intelligent automation built-in",
+    fast: "Lightning Fast",
+    fastDesc: "Optimized for performance",
+    powerfulDashboard: "Powerful Dashboard",
+    dashboardDesc:
+      "Monitor your metrics, track performance, and make data-driven decisions with our intuitive interface.",
+    tasksCompleted: "Tasks Completed",
+    productivity: "Productivity",
+    timeSaved: "Time Saved",
+    pricingTitle: "Choose Your Plan",
+    pricingDesc: "Select the perfect plan for your needs",
+    monthly: "Monthly",
+    annually: "Annually",
+    saveAnnually: "Save 20% with annual billing",
+    free: "Free",
+    freeDesc: "Perfect for getting started",
+    aiCredits: "50 AI credits/month",
+    basicTasks: "Basic task management",
+    basicNotes: "Notes & wishlist",
+    basicPomodoro: "Pomodoro timer",
+    pro: "Pro",
+    proDesc: "For power users",
+    proAiCredits: "500 AI credits/month",
+    advancedTasks: "Advanced task analytics",
+    proNotes: "Unlimited notes",
+    proPomodoro: "Custom pomodoro settings",
+    premium: "Premium",
+    premiumDesc: "For teams and professionals",
+    teamFeatures: "Team collaboration",
+    prioritySupport: "Priority support",
+    customIntegrations: "Custom integrations",
+    chooseFreePlan: "Current Plan",
+    chooseProPlan: "Upgrade to Pro",
+    choosePremiumPlan: "Upgrade to Premium",
+    month: "/month",
+    year: "/year",
+  },
+  es: {
+    features: "Características",
+    dashboard: "Panel",
+    pricing: "Precios",
+    about: "Acerca de",
+    login: "Iniciar sesión",
+    signup: "Registrarse",
+    hero: "Sistemas Inteligentes, Colabora Sin Problemas, Triunfa Eficientemente",
+    heroDesc: "Potencia tu productividad con gestión inteligente de tareas, asistencia IA y colaboración perfecta",
+    startNow: "Comenzar ahora",
+    learnMore: "Saber más",
+    secure: "Seguro y Confiable",
+    secureDesc: "Seguridad de nivel empresarial para tus datos",
+    growth: "Analíticas de Crecimiento",
+    growthDesc: "Información y métricas en tiempo real",
+    team: "Colaboración en Equipo",
+    teamDesc: "Trabaja junto sin problemas",
+    global: "Escala Global",
+    globalDesc: "Despliega en cualquier parte del mundo",
+    ai: "Impulsado por IA",
+    aiDesc: "Automatización inteligente incorporada",
+    fast: "Rapidísimo",
+    fastDesc: "Optimizado para rendimiento",
+    powerfulDashboard: "Panel Potente",
+    dashboardDesc:
+      "Monitorea tus métricas, rastrea el rendimiento y toma decisiones basadas en datos con nuestra interfaz intuitiva.",
+    tasksCompleted: "Tareas Completadas",
+    productivity: "Productividad",
+    timeSaved: "Tiempo Ahorrado",
+    pricingTitle: "Elige Tu Plan",
+    pricingDesc: "Selecciona el plan perfecto para tus necesidades",
+    monthly: "Mensual",
+    annually: "Anual",
+    saveAnnually: "Ahorra 20% con facturación anual",
+    free: "Gratis",
+    freeDesc: "Perfecto para empezar",
+    aiCredits: "50 créditos IA/mes",
+    basicTasks: "Gestión básica de tareas",
+    basicNotes: "Notas y lista de deseos",
+    basicPomodoro: "Temporizador Pomodoro",
+    pro: "Pro",
+    proDesc: "Para usuarios avanzados",
+    proAiCredits: "500 créditos IA/mes",
+    advancedTasks: "Analíticas avanzadas de tareas",
+    proNotes: "Notas ilimitadas",
+    proPomodoro: "Ajustes personalizados de pomodoro",
+    premium: "Premium",
+    premiumDesc: "Para equipos y profesionales",
+    teamFeatures: "Colaboración en equipo",
+    prioritySupport: "Soporte prioritario",
+    customIntegrations: "Integraciones personalizadas",
+    chooseFreePlan: "Plan Actual",
+    chooseProPlan: "Actualizar a Pro",
+    choosePremiumPlan: "Actualizar a Premium",
+    month: "/mes",
+    year: "/año",
+  },
+  fr: {
+    features: "Fonctionnalités",
+    dashboard: "Tableau de bord",
+    pricing: "Tarifs",
+    about: "À propos",
+    login: "Connexion",
+    signup: "S'inscrire",
+    hero: "Systèmes Intelligents, Collaborez Sans Effort, Réussissez Efficacement",
+    heroDesc:
+      "Boostez votre productivité avec une gestion intelligente des tâches, une assistance IA et une collaboration fluide",
+    startNow: "Commencer maintenant",
+    learnMore: "En savoir plus",
+    secure: "Sécurisé et Fiable",
+    secureDesc: "Sécurité de niveau entreprise pour vos données",
+    growth: "Analyses de Croissance",
+    growthDesc: "Informations et métriques en temps réel",
+    team: "Collaboration d'Équipe",
+    teamDesc: "Travaillez ensemble sans effort",
+    global: "Échelle Mondiale",
+    globalDesc: "Déployez n'importe où dans le monde",
+    ai: "Propulsé par l'IA",
+    aiDesc: "Automatisation intelligente intégrée",
+    fast: "Ultra Rapide",
+    fastDesc: "Optimisé pour les performances",
+    powerfulDashboard: "Tableau de Bord Puissant",
+    dashboardDesc:
+      "Surveillez vos métriques, suivez les performances et prenez des décisions basées sur les données avec notre interface intuitive.",
+    tasksCompleted: "Tâches Terminées",
+    productivity: "Productivité",
+    timeSaved: "Temps Économisé",
+    pricingTitle: "Choisissez Votre Plan",
+    pricingDesc: "Sélectionnez le plan parfait pour vos besoins",
+    monthly: "Mensuel",
+    annually: "Annuel",
+    saveAnnually: "Économisez 20% avec la facturation annuelle",
+    free: "Gratuit",
+    freeDesc: "Parfait pour commencer",
+    aiCredits: "50 crédits IA/mois",
+    basicTasks: "Gestion de tâches basique",
+    basicNotes: "Notes et liste de souhaits",
+    basicPomodoro: "Minuteur Pomodoro",
+    pro: "Pro",
+    proDesc: "Pour les utilisateurs avancés",
+    proAiCredits: "500 crédits IA/mois",
+    advancedTasks: "Analyses avancées des tâches",
+    proNotes: "Notes illimitées",
+    proPomodoro: "Paramètres Pomodoro personnalisés",
+    premium: "Premium",
+    premiumDesc: "Pour les équipes et professionnels",
+    teamFeatures: "Collaboration d'équipe",
+    prioritySupport: "Support prioritaire",
+    customIntegrations: "Intégrations personnalisées",
+    chooseFreePlan: "Plan Actuel",
+    chooseProPlan: "Passer à Pro",
+    choosePremiumPlan: "Passer à Premium",
+    month: "/mois",
+    year: "/an",
+  },
+  de: {
+    features: "Funktionen",
+    dashboard: "Dashboard",
+    pricing: "Preise",
+    about: "Über uns",
+    login: "Anmelden",
+    signup: "Registrieren",
+    hero: "Intelligente Systeme, Nahtlos Zusammenarbeiten, Effizient Erfolgreich Sein",
+    heroDesc:
+      "Steigern Sie Ihre Produktivität mit intelligentem Aufgabenmanagement, KI-Unterstützung und nahtloser Zusammenarbeit",
+    startNow: "Jetzt starten",
+    learnMore: "Mehr erfahren",
+    secure: "Sicher & Zuverlässig",
+    secureDesc: "Unternehmenssicherheit für Ihre Daten",
+    growth: "Wachstumsanalysen",
+    growthDesc: "Echtzeit-Einblicke und Metriken",
+    team: "Team-Zusammenarbeit",
+    teamDesc: "Arbeiten Sie nahtlos zusammen",
+    global: "Globale Reichweite",
+    globalDesc: "Überall auf der Welt bereitstellen",
+    ai: "KI-Gestützt",
+    aiDesc: "Intelligente Automatisierung integriert",
+    fast: "Blitzschnell",
+    fastDesc: "Für Leistung optimiert",
+    powerfulDashboard: "Leistungsstarkes Dashboard",
+    dashboardDesc:
+      "Überwachen Sie Ihre Metriken, verfolgen Sie die Leistung und treffen Sie datengestützte Entscheidungen mit unserer intuitiven Oberfläche.",
+    tasksCompleted: "Erledigte Aufgaben",
+    productivity: "Produktivität",
+    timeSaved: "Zeit Gespart",
+    pricingTitle: "Wählen Sie Ihren Plan",
+    pricingDesc: "Wählen Sie den perfekten Plan für Ihre Bedürfnisse",
+    monthly: "Monatlich",
+    annually: "Jährlich",
+    saveAnnually: "Sparen Sie 20% mit jährlicher Abrechnung",
+    free: "Kostenlos",
+    freeDesc: "Perfekt für den Einstieg",
+    aiCredits: "50 KI-Credits/Monat",
+    basicTasks: "Basis-Aufgabenverwaltung",
+    basicNotes: "Notizen & Wunschliste",
+    basicPomodoro: "Pomodoro-Timer",
+    pro: "Pro",
+    proDesc: "Für Power-User",
+    proAiCredits: "500 KI-Credits/Monat",
+    advancedTasks: "Erweiterte Aufgabenanalysen",
+    proNotes: "Unbegrenzte Notizen",
+    proPomodoro: "Benutzerdefinierte Pomodoro-Einstellungen",
+    premium: "Premium",
+    premiumDesc: "Für Teams und Profis",
+    teamFeatures: "Team-Zusammenarbeit",
+    prioritySupport: "Prioritäts-Support",
+    customIntegrations: "Benutzerdefinierte Integrationen",
+    chooseFreePlan: "Aktueller Plan",
+    chooseProPlan: "Auf Pro upgraden",
+    choosePremiumPlan: "Auf Premium upgraden",
+    month: "/Monat",
+    year: "/Jahr",
+  },
+  it: {
+    features: "Funzionalità",
+    dashboard: "Dashboard",
+    pricing: "Prezzi",
+    about: "Chi siamo",
+    login: "Accedi",
+    signup: "Registrati",
+    hero: "Sistemi Intelligenti, Collabora Senza Sforzo, Raggiungi il Successo Efficacemente",
+    heroDesc:
+      "Potenzia la tua produttività con gestione intelligente delle attività, assistenza IA e collaborazione fluida",
+    startNow: "Inizia ora",
+    learnMore: "Scopri di più",
+    secure: "Sicuro e Affidabile",
+    secureDesc: "Sicurezza di livello aziendale per i tuoi dati",
+    growth: "Analisi di Crescita",
+    growthDesc: "Informazioni e metriche in tempo reale",
+    team: "Collaborazione di Team",
+    teamDesc: "Lavora insieme senza sforzo",
+    global: "Scala Globale",
+    globalDesc: "Distribuisci ovunque nel mondo",
+    ai: "Alimentato da IA",
+    aiDesc: "Automazione intelligente integrata",
+    fast: "Velocissimo",
+    fastDesc: "Ottimizzato per le prestazioni",
+    powerfulDashboard: "Dashboard Potente",
+    dashboardDesc:
+      "Monitora le tue metriche, traccia le prestazioni e prendi decisioni basate sui dati con la nostra interfaccia intuitiva.",
+    tasksCompleted: "Attività Completate",
+    productivity: "Produttività",
+    timeSaved: "Tempo Risparmiato",
+    pricingTitle: "Scegli il Tuo Piano",
+    pricingDesc: "Seleziona il piano perfetto per le tue esigenze",
+    monthly: "Mensile",
+    annually: "Annuale",
+    saveAnnually: "Risparmia il 20% con fatturazione annuale",
+    free: "Gratuito",
+    freeDesc: "Perfetto per iniziare",
+    aiCredits: "50 crediti IA/mese",
+    basicTasks: "Gestione attività base",
+    basicNotes: "Note e lista desideri",
+    basicPomodoro: "Timer Pomodoro",
+    pro: "Pro",
+    proDesc: "Per utenti esperti",
+    proAiCredits: "500 crediti IA/mese",
+    advancedTasks: "Analisi attività avanzate",
+    proNotes: "Note illimitate",
+    proPomodoro: "Impostazioni Pomodoro personalizzate",
+    premium: "Premium",
+    premiumDesc: "Per team e professionisti",
+    teamFeatures: "Collaborazione di team",
+    prioritySupport: "Supporto prioritario",
+    customIntegrations: "Integrazioni personalizzate",
+    chooseFreePlan: "Piano Attuale",
+    chooseProPlan: "Passa a Pro",
+    choosePremiumPlan: "Passa a Premium",
+    month: "/mese",
+    year: "/anno",
+  },
+}
 
-  useEffect(() => {
-    setIsVisible(true)
-  }, [])
+type Language = "en" | "es" | "fr" | "de" | "it"
+
+export default function HomePage() {
+  const [lang, setLang] = useState<Language>("en")
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
+  const t = translations[lang]
+
+  const prices = {
+    free: { monthly: 0, annually: 0 },
+    pro: { monthly: 6.49, annually: 64.9 },
+    premium: { monthly: 2.49, annually: 24.99 },
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      </div>
-
-      <header className="relative border-b border-purple-500/20 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <Calendar className="h-8 w-8 text-purple-400 group-hover:scale-110 transition-transform" />
-            <span className="text-2xl font-bold text-white">FutureTask</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <LanguageSelector variant="button" showFlag={true} showName={false} />
-            <Link href="/blog" className="px-4 py-2 text-gray-300 hover:text-white transition-colors">
-              Blog
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+              <span className="text-primary font-bold">S</span>
+            </div>
+            <span className="text-xl font-bold">SmartSys</span>
+          </div>
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-sm hover:text-primary transition-colors">
+              {t.features}
+            </a>
+            <a href="#dashboard" className="text-sm hover:text-primary transition-colors">
+              {t.dashboard}
+            </a>
+            <a href="#pricing" className="text-sm hover:text-primary transition-colors">
+              {t.pricing}
+            </a>
+            <a href="#about" className="text-sm hover:text-primary transition-colors">
+              {t.about}
+            </a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Select value={lang} onValueChange={(v) => setLang(v as Language)}>
+              <SelectTrigger className="w-[70px] h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="en">EN</SelectItem>
+                <SelectItem value="es">ES</SelectItem>
+                <SelectItem value="fr">FR</SelectItem>
+                <SelectItem value="de">DE</SelectItem>
+                <SelectItem value="it">IT</SelectItem>
+              </SelectContent>
+            </Select>
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                {t.login}
+              </Button>
             </Link>
-            <Link href="/login" className="px-4 py-2 text-gray-300 hover:text-white transition-colors">
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/login"
-              className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all hover:scale-105"
-            >
-              Comenzar
+            <Link href="/signup">
+              <Button size="sm" className="neon-glow-hover">
+                {t.signup}
+              </Button>
             </Link>
           </div>
         </div>
       </header>
 
-      <section className="relative container mx-auto px-4 py-20 text-center">
-        <div
-          className={`transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-        >
-          <div className="inline-block mb-4 px-4 py-2 rounded-full bg-purple-600/20 text-purple-300 border border-purple-500/50 text-sm animate-bounce">
-            <Sparkles className="inline-block h-4 w-4 mr-2" />
-            La aplicación del futuro para tu productividad
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20 md:py-32 relative">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="inline-block px-4 py-2 rounded-full border border-primary/30 bg-primary/5 text-sm mb-4">
+            <span className="text-primary">✨ Next Generation Platform</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            Organiza tu vida
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+            Smart Systems, <span className="text-primary neon-text">Collaborate</span>
             <br />
-            <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">
-              con IA
-            </span>
+            Seamlessly, Succeed Efficiently
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Gestiona tus tareas, optimiza tu tiempo con Pomodoro y alcanza tus metas con inteligencia artificial
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white text-lg rounded-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50"
-            >
-              Comenzar gratis
-              <ArrowRight className="ml-2 h-5 w-5" />
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t.heroDesc}</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <Link href="/signup">
+              <Button size="lg" className="neon-glow-hover group">
+                {t.startNow}
+                <svg
+                  className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Button>
             </Link>
-            <button className="inline-flex items-center justify-center px-8 py-3 border border-purple-500 text-white hover:bg-purple-500/10 text-lg rounded-lg transition-all hover:scale-105">
-              Ver demostración
+            <Link href="#features">
+              <Button size="lg" variant="outline" className="neon-glow-hover bg-transparent">
+                {t.learnMore}
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Glow Effect */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="container mx-auto px-4 py-20">
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { icon: "🛡️", title: t.secure, desc: t.secureDesc },
+            { icon: "📈", title: t.growth, desc: t.growthDesc },
+            { icon: "👥", title: t.team, desc: t.teamDesc },
+            { icon: "🌍", title: t.global, desc: t.globalDesc },
+            { icon: "✨", title: t.ai, desc: t.aiDesc },
+            { icon: "⚡", title: t.fast, desc: t.fastDesc },
+          ].map((feature, i) => (
+            <Card
+              key={i}
+              className="glass-card p-6 neon-glow-hover transition-all duration-300 cursor-pointer group h-full"
+            >
+              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{feature.icon}</div>
+              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground">{feature.desc}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Dashboard Preview */}
+      <section id="dashboard" className="container mx-auto px-4 py-20">
+        <Card className="glass-card p-8 neon-glow">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold">{t.powerfulDashboard}</h2>
+              <p className="text-muted-foreground">{t.dashboardDesc}</p>
+              <div className="space-y-3 pt-4">
+                {[
+                  { label: t.tasksCompleted, value: "156", change: "+12.5%" },
+                  { label: t.productivity, value: "94%", change: "+8.3%" },
+                  { label: t.timeSaved, value: "24h", change: "+15.2%" },
+                ].map((stat, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                    <span className="text-sm text-muted-foreground">{stat.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{stat.value}</span>
+                      <span className="text-xs text-primary">{stat.change}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="relative h-[300px] rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 flex items-center justify-center">
+              <div className="text-8xl opacity-30">📊</div>
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxODQsMjU1LDc4LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-50" />
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      <section id="pricing" className="container mx-auto px-4 py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold mb-4">{t.pricingTitle}</h2>
+          <p className="text-muted-foreground mb-6">{t.pricingDesc}</p>
+
+          {/* Billing Period Toggle */}
+          <div className="inline-flex items-center gap-3 p-1 rounded-lg bg-secondary/50 border border-border/50">
+            <button
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                billingPeriod === "monthly"
+                  ? "bg-primary text-primary-foreground shadow-lg"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.monthly}
+            </button>
+            <button
+              onClick={() => setBillingPeriod("annually")}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                billingPeriod === "annually"
+                  ? "bg-primary text-primary-foreground shadow-lg"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t.annually}
             </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 max-w-4xl mx-auto">
-            <div className="text-center transform hover:scale-110 transition-all duration-300">
-              <div className="flex items-center justify-center mb-2">
-                <Users className="h-8 w-8 text-purple-400 mr-2" />
-                <div className="text-4xl font-bold text-purple-400">50K+</div>
-              </div>
-              <div className="text-gray-400">Usuarios activos</div>
-            </div>
-            <div className="text-center transform hover:scale-110 transition-all duration-300">
-              <div className="flex items-center justify-center mb-2">
-                <TrendingUp className="h-8 w-8 text-cyan-400 mr-2" />
-                <div className="text-4xl font-bold text-cyan-400">95%</div>
-              </div>
-              <div className="text-gray-400">Satisfacción</div>
-            </div>
-            <div className="text-center transform hover:scale-110 transition-all duration-300">
-              <div className="flex items-center justify-center mb-2">
-                <Check className="h-8 w-8 text-purple-400 mr-2" />
-                <div className="text-4xl font-bold text-purple-400">2M+</div>
-              </div>
-              <div className="text-gray-400">Tareas completadas</div>
-            </div>
-          </div>
+          {billingPeriod === "annually" && <p className="text-sm text-primary mt-3 font-medium">{t.saveAnnually}</p>}
         </div>
-      </section>
 
-      <section className="relative py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Funciones Poderosas</h2>
-            <p className="text-gray-400 text-lg">Todo lo que necesitas para ser más productivo</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            <div className="text-center group transform hover:scale-105 transition-all duration-300">
-              <div className="h-16 w-16 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-600/30 transition-all group-hover:rotate-6">
-                <Brain className="h-8 w-8 text-purple-400" />
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {/* Free Plan */}
+          <Card className="glass-card p-6 neon-glow-hover transition-all duration-300">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">{t.free}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t.freeDesc}</p>
+                <div className="text-4xl font-bold mb-1">€{prices.free[billingPeriod]}</div>
+                <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Asistente IA</h3>
-              <p className="text-gray-400">Organiza tus tareas automáticamente con inteligencia artificial</p>
-            </div>
-
-            <div className="text-center group transform hover:scale-105 transition-all duration-300">
-              <div className="h-16 w-16 bg-cyan-600/20 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-cyan-600/30 transition-all group-hover:rotate-6">
-                <Calendar className="h-8 w-8 text-cyan-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Calendario Inteligente</h3>
-              <p className="text-gray-400">Visualiza y planifica tu tiempo de forma eficiente</p>
-            </div>
-
-            <div className="text-center group transform hover:scale-105 transition-all duration-300">
-              <div className="h-16 w-16 bg-purple-600/20 rounded-lg flex items-center justify-center mb-4 mx-auto group-hover:bg-purple-600/30 transition-all group-hover:rotate-6">
-                <Zap className="h-8 w-8 text-purple-400" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">Pomodoro Timer</h3>
-              <p className="text-gray-400">Mantén el foco con técnicas probadas de productividad</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative py-20 bg-black/20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-white mb-4">💎 Planes y Precios</h2>
-            <p className="text-gray-400 text-lg">Elige el plan perfecto para ti</p>
-          </div>
-
-          <div className="flex justify-center mb-12">
-            <div className="bg-slate-800/80 p-1 rounded-lg flex gap-1">
-              <Button
-                variant={billingCycle === "monthly" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setBillingCycle("monthly")}
-                className={`px-6 transition-all ${
-                  billingCycle === "monthly"
-                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                    : "text-gray-300 hover:text-white hover:bg-slate-700"
-                }`}
-              >
-                Mensual
-              </Button>
-              <Button
-                variant={billingCycle === "yearly" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setBillingCycle("yearly")}
-                className={`px-6 transition-all ${
-                  billingCycle === "yearly"
-                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                    : "text-gray-300 hover:text-white hover:bg-slate-700"
-                }`}
-              >
-                Anual
-                <span className="ml-2 px-2 py-0.5 bg-green-600 text-white text-xs rounded-full animate-pulse">
-                  Ahorra
-                </span>
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-lg p-8 hover:border-gray-500/30 transition-all hover:scale-105 hover:shadow-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-white">Free</h3>
-                <Shield className="h-6 w-6 text-gray-400" />
-              </div>
-              <div className="mb-6">
-                <div className="text-5xl font-bold text-gray-400 mb-2">€0</div>
-                <div className="text-gray-400 text-sm">
-                  <div className="text-white mt-1">Para siempre</div>
-                </div>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Tareas ilimitadas</span>
+              <ul className="space-y-3 pt-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.aiCredits}</span>
                 </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Calendario básico</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.basicTasks}</span>
                 </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Pomodoro básico</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.basicNotes}</span>
                 </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Algunos logros</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.basicPomodoro}</span>
                 </li>
               </ul>
-              <Link
-                href="/login"
-                className="block w-full text-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all hover:scale-105"
-              >
-                Comenzar gratis
+              <Link href="/signup">
+                <Button className="w-full mt-6 bg-transparent" variant="outline">
+                  {t.chooseFreePlan}
+                </Button>
               </Link>
             </div>
+          </Card>
 
-            <div className="bg-white/5 border border-white/10 backdrop-blur-sm rounded-lg p-8 hover:border-purple-500/30 transition-all hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-white">Premium</h3>
-                <Star className="h-6 w-6 text-purple-400" />
+          {/* Premium Plan */}
+          <Card className="glass-card p-6 neon-glow border-primary/50 relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg">
+              POPULAR
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">{t.premium}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t.premiumDesc}</p>
+                <div className="text-4xl font-bold mb-1">€{prices.premium[billingPeriod]}</div>
+                <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
               </div>
-              <div className="mb-6">
-                {billingCycle === "monthly" ? (
-                  <>
-                    <div className="text-5xl font-bold text-purple-400 mb-2">€2.49</div>
-                    <div className="text-gray-400 text-sm">
-                      <div className="text-xs">Base: €2.06 + IVA: €0.43</div>
-                      <div className="text-white mt-1">/mes (IVA incluido)</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-5xl font-bold text-purple-400 mb-2">€24.99</div>
-                    <div className="text-gray-400 text-sm">
-                      <div className="text-xs">Base: €20.65 + IVA: €4.34</div>
-                      <div className="text-green-400 mt-1">€2.08/mes · Ahorra €4.89/año</div>
-                    </div>
-                  </>
-                )}
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Todo de Gratis</span>
+              <ul className="space-y-3 pt-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.teamFeatures}</span>
                 </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Eventos ilimitados</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.prioritySupport}</span>
                 </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Notas ilimitadas</span>
-                </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Lista de deseos</span>
-                </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Todos los logros</span>
-                </li>
-                <li className="flex items-start text-gray-300">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Sincronización en la nube</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.customIntegrations}</span>
                 </li>
               </ul>
-              <Link
-                href="/login"
-                className="block w-full text-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-all hover:scale-105"
-              >
-                Comenzar
+              <Link href="/signup">
+                <Button className="w-full mt-6 neon-glow-hover">{t.choosePremiumPlan}</Button>
               </Link>
             </div>
+          </Card>
 
-            <div className="bg-gradient-to-b from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 backdrop-blur-sm rounded-lg p-8 relative hover:border-purple-500 transition-all hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full text-sm font-semibold animate-pulse">
-                Más Popular
+          {/* Pro Plan */}
+          <Card className="glass-card p-6 neon-glow-hover transition-all duration-300">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-2xl font-bold mb-2">{t.pro}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t.proDesc}</p>
+                <div className="text-4xl font-bold mb-1">€{prices.pro[billingPeriod]}</div>
+                <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
               </div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-2xl font-bold text-white">Pro</h3>
-                <Sparkles className="h-6 w-6 text-purple-400" />
-              </div>
-              <div className="mb-6">
-                {billingCycle === "monthly" ? (
-                  <>
-                    <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                      €4.99
-                    </div>
-                    <div className="text-gray-300 text-sm">
-                      <div className="text-xs">Base: €4.12 + IVA: €0.87</div>
-                      <div className="text-white mt-1">/mes (IVA incluido)</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                      €49.99
-                    </div>
-                    <div className="text-gray-300 text-sm">
-                      <div className="text-xs">Base: €41.31 + IVA: €8.68</div>
-                      <div className="text-green-400 mt-1">€4.17/mes · Ahorra €9.89/año</div>
-                    </div>
-                  </>
-                )}
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-start text-gray-200">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Todo de Premium</span>
+              <ul className="space-y-3 pt-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.proAiCredits}</span>
                 </li>
-                <li className="flex items-start text-gray-200">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>500 créditos IA/mes</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.advancedTasks}</span>
                 </li>
-                <li className="flex items-start text-gray-200">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Asistente IA avanzado</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.proNotes}</span>
                 </li>
-                <li className="flex items-start text-gray-200">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Análisis completos</span>
-                </li>
-                <li className="flex items-start text-gray-200">
-                  <Check className="h-5 w-5 text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>Soporte prioritario</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.proPomodoro}</span>
                 </li>
               </ul>
-              <Link
-                href="/login"
-                className="block w-full text-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all hover:scale-105"
-              >
-                Comenzar
+              <Link href="/signup">
+                <Button className="w-full mt-6 bg-transparent" variant="outline">
+                  {t.chooseProPlan}
+                </Button>
               </Link>
             </div>
-          </div>
+          </Card>
         </div>
       </section>
 
-      <section className="relative py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Lo que dicen nuestros usuarios</h2>
-            <p className="text-gray-400 text-lg">Miles de personas ya están siendo más productivas</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
-            <div className="text-center bg-white/5 p-6 rounded-lg border border-white/10 hover:border-purple-500/30 transition-all hover:scale-105">
-              <div className="flex justify-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
+      {/* Footer */}
+      <footer className="border-t border-border/50 mt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">S</span>
               </div>
-              <p className="text-gray-300 mb-4">
-                "Esta app ha transformado completamente mi forma de trabajar. Ahora soy mucho más productiva."
-              </p>
-              <div className="flex items-center justify-center">
-                <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  SM
-                </div>
-                <div className="ml-3 text-left">
-                  <div className="text-white font-semibold">Sarah Martínez</div>
-                </div>
-              </div>
+              <span className="font-semibold">SmartSys</span>
             </div>
-
-            <div className="text-center bg-white/5 p-6 rounded-lg border border-white/10 hover:border-cyan-500/30 transition-all hover:scale-105">
-              <div className="flex justify-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-300 mb-4">
-                "El asistente IA es increíble. Organiza mis tareas mejor que yo mismo."
-              </p>
-              <div className="flex items-center justify-center">
-                <div className="h-10 w-10 bg-cyan-600 rounded-full flex items-center justify-center text-white font-bold">
-                  JD
-                </div>
-                <div className="ml-3 text-left">
-                  <div className="text-white font-semibold">Juan Díaz</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center bg-white/5 p-6 rounded-lg border border-white/10 hover:border-purple-500/30 transition-all hover:scale-105">
-              <div className="flex justify-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
-              </div>
-              <p className="text-gray-300 mb-4">
-                "Perfecta para mantenerme enfocada. El Pomodoro timer es justo lo que necesitaba."
-              </p>
-              <div className="flex items-center justify-center">
-                <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  EC
-                </div>
-                <div className="ml-3 text-left">
-                  <div className="text-white font-semibold">Emma Castro</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">¿Listo para ser más productivo?</h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Únete a miles de usuarios que ya están alcanzando sus metas
-          </p>
-          <Link
-            href="/login"
-            className="inline-flex items-center justify-center px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white text-lg rounded-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50"
-          >
-            Comenzar gratis
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Link>
-        </div>
-      </section>
-
-      <footer className="relative border-t border-white/10 py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Calendar className="h-6 w-6 text-purple-400" />
-                <span className="text-xl font-bold text-white">FutureTask</span>
-              </div>
-              <p className="text-gray-400">La mejor app de productividad con IA</p>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4">Producto</h3>
-              <ul className="space-y-2">
-                <li>
-                  <a href="#features" className="text-gray-400 hover:text-white transition-colors">
-                    Funciones
-                  </a>
-                </li>
-                <li>
-                  <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
-                    Precios
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4">Empresa</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
-                    Blog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                    Privacidad
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
-                    Términos
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/10 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 FutureTask. Todos los derechos reservados.</p>
+            <p className="text-sm text-muted-foreground">© 2025 SmartSys. All rights reserved.</p>
           </div>
         </div>
       </footer>
