@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createClient } from "@/lib/supabase/client"
-import { motion } from "framer-motion"
 import { Send, Zap } from "@/components/icons"
+import { UpgradeModal } from "@/components/upgrade-modal" // Fixed import to use named import
 
 export default function AIPage() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
@@ -14,24 +14,31 @@ export default function AIPage() {
   const [loading, setLoading] = useState(false)
   const [credits, setCredits] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null)
+  const [checkingAccess, setCheckingAccess] = useState(true)
 
   useEffect(() => {
-    fetchCredits()
+    checkSubscriptionAndFetchCredits()
   }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const fetchCredits = async () => {
+  const checkSubscriptionAndFetchCredits = async () => {
     const supabase = createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
     if (user) {
-      const { data } = await supabase.from("users").select("ai_credits").eq("id", user.id).single()
-      setCredits(data?.ai_credits || 0)
+      const { data } = await supabase.from("users").select("subscription_tier, ai_credits").eq("id", user.id).single()
+      setSubscriptionTier(data?.subscription_tier || "free")
+      setCheckingAccess(false)
+
+      if (data?.subscription_tier === "pro") {
+        setCredits(data?.ai_credits || 0)
+      }
     }
   }
 
@@ -73,14 +80,21 @@ export default function AIPage() {
     }
   }
 
+  if (checkingAccess) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  if (subscriptionTier !== "pro") {
+    return <UpgradeModal feature="AI Assistant" requiredPlan="pro" />
+  }
+
   return (
     <div className="p-8 h-[calc(100vh-4rem)]">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="h-full flex flex-col"
-      >
+      <div className="h-full flex flex-col">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-bold">
             <span className="text-primary neon-text">AI Assistant</span>
@@ -103,13 +117,7 @@ export default function AIPage() {
             )}
 
             {messages.map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
+              <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[80%] p-4 rounded-lg ${
                     message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-foreground"
@@ -117,11 +125,11 @@ export default function AIPage() {
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
 
             {loading && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+              <div className="flex justify-start">
                 <div className="bg-secondary/50 p-4 rounded-lg">
                   <div className="flex gap-2">
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
@@ -129,7 +137,7 @@ export default function AIPage() {
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             <div ref={messagesEndRef} />
@@ -151,7 +159,7 @@ export default function AIPage() {
             </div>
           </div>
         </Card>
-      </motion.div>
+      </div>
     </div>
   )
 }

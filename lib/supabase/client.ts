@@ -136,6 +136,34 @@ export function createClient() {
           orderBy = `${column}.${options?.ascending ? "asc" : "desc"}`
           return builder
         },
+        single: () => {
+          return {
+            then: async (resolve: any, reject: any) => {
+              try {
+                const accessToken = getAccessToken()
+                let url = `${supabaseUrl}/rest/v1/${table}`
+                const allParams = [...queryParams, ...filters]
+                if (orderBy) allParams.push(`order=${orderBy}`)
+                if (allParams.length > 0) {
+                  url += `?${allParams.join("&")}`
+                }
+
+                const response = await fetch(url, {
+                  headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    apikey: supabaseKey,
+                    Accept: "application/vnd.pgrst.object+json",
+                  },
+                })
+
+                const data = await response.json()
+                resolve({ data: response.ok ? data : null, error: response.ok ? null : data })
+              } catch (error) {
+                reject(error)
+              }
+            },
+          }
+        },
         update: (data: any) => {
           updateData = data
           return builder
