@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const translations = {
   en: {
@@ -304,6 +304,18 @@ export default function HomePage() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
   const t = translations[lang]
 
+  useEffect(() => {
+    const savedLang = localStorage.getItem("language") as Language | null
+    if (savedLang && translations[savedLang]) {
+      setLang(savedLang)
+    }
+  }, [])
+
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang)
+    localStorage.setItem("language", newLang)
+  }
+
   const prices = {
     free: { monthly: 0, annually: 0 },
     pro: { monthly: 6.49, annually: 64.9 },
@@ -317,9 +329,9 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-bold">S</span>
+              <span className="text-primary font-bold">FT</span>
             </div>
-            <span className="text-xl font-bold">SmartSys</span>
+            <span className="text-xl font-bold">Future Task</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm hover:text-primary transition-colors">
@@ -336,7 +348,7 @@ export default function HomePage() {
             </a>
           </nav>
           <div className="flex items-center gap-2">
-            <Select value={lang} onValueChange={(v) => setLang(v as Language)}>
+            <Select value={lang} onValueChange={(v) => handleLanguageChange(v as Language)}>
               <SelectTrigger className="w-[70px] h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -596,11 +608,11 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">S</span>
+                <span className="text-primary font-bold text-sm">FT</span>
               </div>
-              <span className="font-semibold">SmartSys</span>
+              <span className="font-semibold">Future Task</span>
             </div>
-            <p className="text-sm text-muted-foreground">© 2025 SmartSys. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">© 2025 Future Task. All rights reserved.</p>
           </div>
         </div>
       </footer>

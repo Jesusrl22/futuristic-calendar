@@ -34,7 +34,7 @@ const menuItems = [
   { icon: Settings, label: "Settings", href: "/app/settings" },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -44,11 +44,17 @@ export function AppSidebar() {
     router.push("/")
   }
 
+  const handleNavClick = () => {
+    if (onNavigate) {
+      onNavigate()
+    }
+  }
+
   return (
     <div className="flex flex-col h-full w-full border-r border-border/50 bg-card/50 backdrop-blur-sm">
       {/* Logo */}
       <div className="p-6 border-b border-border/50">
-        <Link href="/app" className="flex items-center gap-3">
+        <Link href="/app" className="flex items-center gap-3" onClick={handleNavClick}>
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
             <span className="text-xl font-bold text-primary">FT</span>
           </div>
@@ -62,7 +68,7 @@ export function AppSidebar() {
           {menuItems.map((item) => {
             const isActive = pathname === item.href
             return (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} onClick={handleNavClick}>
                 <Button
                   variant={isActive ? "secondary" : "ghost"}
                   className={`w-full justify-start gap-3 ${
