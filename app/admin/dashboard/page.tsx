@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Shield, Search, Crown, Zap, LogOut } from "lucide-react"
 
 interface User {
   id: string
@@ -33,6 +32,8 @@ export default function AdminDashboardPage() {
     try {
       const isAuthenticated = sessionStorage.getItem("admin_authenticated") === "true"
 
+      console.log("[v0] Admin check:", isAuthenticated)
+
       if (!isAuthenticated) {
         router.push("/admin")
         return
@@ -48,11 +49,15 @@ export default function AdminDashboardPage() {
 
   const fetchUsers = async () => {
     try {
+      console.log("[v0] Fetching users...")
       const supabase = createClient()
       const { data, error } = await supabase
         .from("users")
         .select("id, email, name, subscription_tier, created_at")
         .order("created_at", { ascending: false })
+
+      console.log("[v0] Users data:", data)
+      console.log("[v0] Users error:", error)
 
       if (error) throw error
 
@@ -67,6 +72,7 @@ export default function AdminDashboardPage() {
 
   const updateUserTier = async (userId: string, newTier: string) => {
     try {
+      console.log("[v0] Updating user tier:", userId, newTier)
       const supabase = createClient()
       const { error } = await supabase.from("users").update({ subscription_tier: newTier }).eq("id", userId)
 
@@ -97,23 +103,12 @@ export default function AdminDashboardPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <Card className="p-8 text-center">
-          <Shield className="w-16 h-16 mx-auto mb-4 text-destructive" />
+          <div className="text-4xl mb-4">🛡️</div>
           <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
           <p className="text-muted-foreground">You don't have permission to access this page.</p>
         </Card>
       </div>
     )
-  }
-
-  const getTierIcon = (tier: string | null) => {
-    switch (tier) {
-      case "pro":
-        return <Zap className="w-4 h-4 text-yellow-500" />
-      case "premium":
-        return <Crown className="w-4 h-4 text-purple-500" />
-      default:
-        return null
-    }
   }
 
   const getTierBadge = (tier: string | null) => {
@@ -132,29 +127,28 @@ export default function AdminDashboardPage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Shield className="w-8 h-8 text-primary" />
+              <div className="text-4xl">🛡️</div>
               <h1 className="text-4xl font-bold">Admin Dashboard</h1>
             </div>
             <p className="text-muted-foreground">Manage user subscriptions and access</p>
           </div>
           <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
             Logout
           </Button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-6">
-          <Card className="glass-card p-6">
+          <Card className="p-6 bg-card/50 backdrop-blur">
             <div className="text-sm text-muted-foreground mb-2">Total Users</div>
             <div className="text-3xl font-bold">{users.length}</div>
           </Card>
-          <Card className="glass-card p-6">
+          <Card className="p-6 bg-card/50 backdrop-blur">
             <div className="text-sm text-muted-foreground mb-2">Premium Users</div>
             <div className="text-3xl font-bold text-purple-500">
               {users.filter((u) => u.subscription_tier === "premium").length}
             </div>
           </Card>
-          <Card className="glass-card p-6">
+          <Card className="p-6 bg-card/50 backdrop-blur">
             <div className="text-sm text-muted-foreground mb-2">Pro Users</div>
             <div className="text-3xl font-bold text-yellow-500">
               {users.filter((u) => u.subscription_tier === "pro").length}
@@ -162,19 +156,15 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        <Card className="glass-card p-6 mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <Input
-              placeholder="Search users by email or name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+        <Card className="p-6 mb-6 bg-card/50 backdrop-blur">
+          <Input
+            placeholder="🔍 Search users by email or name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </Card>
 
-        <Card className="glass-card overflow-hidden">
+        <Card className="overflow-hidden bg-card/50 backdrop-blur">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b border-border/50">
@@ -195,7 +185,7 @@ export default function AdminDashboardPage() {
                 ) : filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="p-8 text-center text-muted-foreground">
-                      No users found
+                      {searchTerm ? "No users found matching your search" : "No users in database"}
                     </td>
                   </tr>
                 ) : (
@@ -214,7 +204,6 @@ export default function AdminDashboardPage() {
                             user.subscription_tier,
                           )}`}
                         >
-                          {getTierIcon(user.subscription_tier)}
                           {user.subscription_tier?.toUpperCase() || "FREE"}
                         </span>
                       </td>
