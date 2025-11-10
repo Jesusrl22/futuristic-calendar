@@ -1,17 +1,15 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Shield, Lock } from "lucide-react"
+import { Shield, Lock, User } from "lucide-react"
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -24,19 +22,11 @@ export default function AdminLoginPage() {
 
   const checkAdminStatus = async () => {
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        // Check if user is admin
-        const { data: userData } = await supabase.from("users").select("is_admin").eq("id", user.id).single()
-
-        if (userData?.is_admin) {
-          router.push("/admin/dashboard")
-          return
-        }
+      // Check if already logged in as admin
+      const isAdmin = sessionStorage.getItem("admin_authenticated") === "true"
+      if (isAdmin) {
+        router.push("/admin/dashboard")
+        return
       }
     } catch (error) {
       console.error("[v0] Error checking admin status:", error)
@@ -51,39 +41,20 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      const supabase = createClient()
+      // Simple admin authentication
+      const adminUsername = "admin"
+      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123"
 
-      // Sign in with Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (authError) throw authError
-
-      if (!authData.user) {
-        throw new Error("No user returned from authentication")
+      if (username === adminUsername && password === adminPassword) {
+        // Set admin session
+        sessionStorage.setItem("admin_authenticated", "true")
+        window.location.href = "/admin/dashboard"
+      } else {
+        throw new Error("Invalid admin credentials")
       }
-
-      // Check if user is admin
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("is_admin")
-        .eq("id", authData.user.id)
-        .single()
-
-      if (userError) throw userError
-
-      if (!userData?.is_admin) {
-        await supabase.auth.signOut()
-        throw new Error("Access denied. Admin privileges required.")
-      }
-
-      // Redirect to admin dashboard
-      window.location.href = "/admin/dashboard"
     } catch (err: any) {
       console.error("[v0] Admin login error:", err)
-      setError(err.message || "Invalid credentials or insufficient permissions")
+      setError(err.message || "Invalid credentials")
     } finally {
       setLoading(false)
     }
@@ -112,15 +83,16 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Email</label>
+            <label className="block text-sm font-medium mb-2">Username</label>
             <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@future-task.com"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
                 required
-                className="pl-3"
+                className="pl-10"
               />
             </div>
           </div>

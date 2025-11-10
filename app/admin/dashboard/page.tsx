@@ -15,7 +15,6 @@ interface User {
   name: string | null
   subscription_tier: string | null
   created_at: string
-  is_admin: boolean
 }
 
 export default function AdminDashboardPage() {
@@ -32,25 +31,15 @@ export default function AdminDashboardPage() {
 
   const checkAdminAccess = async () => {
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const isAuthenticated = sessionStorage.getItem("admin_authenticated") === "true"
 
-      if (!user) {
+      if (!isAuthenticated) {
         router.push("/admin")
         return
       }
 
-      // Check if user is admin
-      const { data: userData } = await supabase.from("users").select("is_admin").eq("id", user.id).single()
-
-      if (userData?.is_admin) {
-        setIsAdmin(true)
-        fetchUsers()
-      } else {
-        router.push("/admin")
-      }
+      setIsAdmin(true)
+      fetchUsers()
     } catch (error) {
       console.error("[v0] Admin access check error:", error)
       router.push("/admin")
@@ -62,7 +51,7 @@ export default function AdminDashboardPage() {
       const supabase = createClient()
       const { data, error } = await supabase
         .from("users")
-        .select("id, email, name, subscription_tier, is_admin, created_at")
+        .select("id, email, name, subscription_tier, created_at")
         .order("created_at", { ascending: false })
 
       if (error) throw error
@@ -83,7 +72,6 @@ export default function AdminDashboardPage() {
 
       if (error) throw error
 
-      // Update local state
       setUsers(users.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
       setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
     } catch (error) {
@@ -91,14 +79,9 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      router.push("/admin")
-    } catch (error) {
-      console.error("[v0] Logout error:", error)
-    }
+  const handleLogout = () => {
+    sessionStorage.removeItem("admin_authenticated")
+    router.push("/admin")
   }
 
   useEffect(() => {
@@ -146,7 +129,6 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
       <div className="container mx-auto p-6 max-w-7xl">
-        {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -161,7 +143,6 @@ export default function AdminDashboardPage() {
           </Button>
         </div>
 
-        {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-6">
           <Card className="glass-card p-6">
             <div className="text-sm text-muted-foreground mb-2">Total Users</div>
@@ -181,7 +162,6 @@ export default function AdminDashboardPage() {
           </Card>
         </div>
 
-        {/* Search */}
         <Card className="glass-card p-6 mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -194,7 +174,6 @@ export default function AdminDashboardPage() {
           </div>
         </Card>
 
-        {/* Users Table */}
         <Card className="glass-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -223,15 +202,7 @@ export default function AdminDashboardPage() {
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="border-b border-border/30 hover:bg-secondary/30 transition-colors">
                       <td className="p-4">
-                        <div className="font-medium flex items-center gap-2">
-                          {user.name || "No name"}
-                          {user.is_admin && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-500">
-                              <Shield className="w-3 h-3" />
-                              Admin
-                            </span>
-                          )}
-                        </div>
+                        <div className="font-medium">{user.name || "No name"}</div>
                         <div className="text-sm text-muted-foreground">
                           Joined {new Date(user.created_at).toLocaleDateString()}
                         </div>
@@ -251,7 +222,6 @@ export default function AdminDashboardPage() {
                         <Select
                           value={user.subscription_tier || "free"}
                           onValueChange={(value) => updateUserTier(user.id, value)}
-                          disabled={user.is_admin}
                         >
                           <SelectTrigger className="w-[140px]">
                             <SelectValue />

@@ -36,57 +36,69 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient()
-      const { data, error: authError } = await supabase.auth.signUp({
+
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
-        },
       })
 
       if (authError) {
         setError(authError.message)
-      } else if (data.user) {
-        const { error: profileError } = await supabase.from("users").insert({
-          id: data.user.id,
-          email,
-          theme: "neon-tech",
-          language: "en",
-          ai_credits: 100,
-          subscription_tier: "free",
-        })
+        setLoading(false)
+        return
+      }
 
-        if (profileError) {
-          console.error("Profile creation error:", profileError)
-        }
+      if (!authData.user) {
+        setError("Failed to create user account")
+        setLoading(false)
+        return
+      }
 
-        if (data.session) {
-          window.location.href = "/app"
-        } else {
-          setError("Please check your email to confirm your account before signing in.")
-        }
+      const { error: profileError } = await supabase.from("users").insert({
+        id: authData.user.id,
+        email,
+        theme: "neon-tech",
+        language: "en",
+        ai_credits: 100,
+        subscription_tier: "free",
+      })
+
+      if (profileError) {
+        console.error("[v0] Profile creation error:", profileError)
+      }
+
+      if (authData.session) {
+        // Save tokens to cookies
+        const maxAge = 60 * 60 * 24 * 7 // 7 days
+        document.cookie = `sb-access-token=${authData.session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`
+        document.cookie = `sb-refresh-token=${authData.session.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`
+
+        // Redirect to app
+        window.location.href = "/app"
+      } else {
+        // Email confirmation required
+        setError("Please check your email to confirm your account before signing in.")
+        setLoading(false)
       }
     } catch (err) {
-      console.error("Signup exception:", err)
+      console.error("[v0] Signup exception:", err)
       setError("An error occurred. Please try again.")
-    } finally {
       setLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-      {/* Background glow effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
       <div className="w-full max-w-md">
         <Card className="glass-card p-8 neon-glow">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
-              <span className="text-3xl font-bold text-primary">S</span>
+              <span className="text-3xl font-bold text-primary">FT</span>
             </div>
             <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-            <p className="text-muted-foreground">Sign up to get started with SmartSys</p>
+            <p className="text-muted-foreground">Sign up to get started with Future Task</p>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">
