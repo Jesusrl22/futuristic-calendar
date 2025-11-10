@@ -12,13 +12,15 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, name, subscription_tier, subscription_expires_at, created_at")
+      .select("id, email, name, subscription_tier, created_at")
       .order("created_at", { ascending: false })
 
     if (error) {
       console.error("[API] Error fetching users:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    console.log("[API] Fetched users:", data?.length || 0)
 
     return NextResponse.json({ users: data || [] })
   } catch (error) {
@@ -42,14 +44,14 @@ export async function PATCH(request: Request) {
       },
     })
 
-    const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select().single()
+    const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select()
 
     if (error) {
       console.error("[API] Error updating user:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ user: data })
+    return NextResponse.json({ user: data?.[0] })
   } catch (error) {
     console.error("[API] Unexpected error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
