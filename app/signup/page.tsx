@@ -40,7 +40,12 @@ export default function SignupPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
+        },
       })
+
+      console.log("[v0] Signup response:", { authData, authError })
 
       if (authError) {
         setError(authError.message)
@@ -54,27 +59,26 @@ export default function SignupPage() {
         return
       }
 
-      const { error: profileError } = await supabase.from("users").insert({
-        id: authData.user.id,
-        email,
-        theme: "neon-tech",
-        language: "en",
-        ai_credits: 100,
-        subscription_tier: "free",
-      })
-
-      if (profileError) {
-        console.error("[v0] Profile creation error:", profileError)
-      }
-
       if (authData.session) {
-        // Save tokens to cookies
-        const maxAge = 60 * 60 * 24 * 7 // 7 days
-        document.cookie = `sb-access-token=${authData.session.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`
-        document.cookie = `sb-refresh-token=${authData.session.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`
+        console.log("[v0] Session created, inserting user profile")
 
-        // Redirect to app
-        window.location.href = "/app"
+        const { error: profileError } = await supabase.from("users").insert({
+          id: authData.user.id,
+          email,
+          theme: "neon-tech",
+          language: "en",
+          ai_credits: 100,
+          subscription_tier: "free",
+        })
+
+        if (profileError) {
+          console.error("[v0] Profile creation error:", profileError)
+        }
+
+        // Session exists, redirect to app
+        console.log("[v0] Redirecting to /app")
+        router.push("/app")
+        router.refresh()
       } else {
         // Email confirmation required
         setError("Please check your email to confirm your account before signing in.")

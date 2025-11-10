@@ -9,9 +9,6 @@ import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
 
 interface User {
   id: string
@@ -29,7 +26,7 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined)
+  const [expirationDate, setExpirationDate] = useState("")
   const [isExpirationDialogOpen, setIsExpirationDialogOpen] = useState(false)
   const router = useRouter()
 
@@ -103,25 +100,25 @@ export default function AdminDashboardPage() {
       const { error } = await supabase
         .from("users")
         .update({
-          subscription_expires_at: expirationDate ? expirationDate.toISOString() : null,
+          subscription_expires_at: expirationDate ? new Date(expirationDate).toISOString() : null,
         })
         .eq("id", selectedUser.id)
 
       if (error) throw error
 
-      // Update local state
       const updatedUser = {
         ...selectedUser,
-        subscription_expires_at: expirationDate ? expirationDate.toISOString() : null,
+        subscription_expires_at: expirationDate ? new Date(expirationDate).toISOString() : null,
       }
       setUsers(users.map((u) => (u.id === selectedUser.id ? updatedUser : u)))
       setFilteredUsers(filteredUsers.map((u) => (u.id === selectedUser.id ? updatedUser : u)))
 
       setIsExpirationDialogOpen(false)
       setSelectedUser(null)
-      setExpirationDate(undefined)
+      setExpirationDate("")
     } catch (error) {
       console.error("[v0] Error updating expiration:", error)
+      alert("Error updating expiration. Please try again.")
     }
   }
 
@@ -178,6 +175,11 @@ export default function AdminDashboardPage() {
   const isExpired = (expiresAt: string | null) => {
     if (!expiresAt) return false
     return new Date(expiresAt) < new Date()
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
   return (
@@ -253,9 +255,7 @@ export default function AdminDashboardPage() {
                     <tr key={user.id} className="border-b border-border/30 hover:bg-secondary/30 transition-colors">
                       <td className="p-4">
                         <div className="font-medium">{user.name || "No name"}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Joined {new Date(user.created_at).toLocaleDateString()}
-                        </div>
+                        <div className="text-sm text-muted-foreground">Joined {formatDate(user.created_at)}</div>
                       </td>
                       <td className="p-4 text-sm">{user.email}</td>
                       <td className="p-4">
@@ -274,7 +274,7 @@ export default function AdminDashboardPage() {
                               className={`text-sm ${isExpired(user.subscription_expires_at) ? "text-red-500 font-semibold" : "text-muted-foreground"}`}
                             >
                               {isExpired(user.subscription_expires_at) && "⚠️ "}
-                              {format(new Date(user.subscription_expires_at), "MMM dd, yyyy")}
+                              {formatDate(user.subscription_expires_at)}
                             </span>
                             <Button
                               variant="ghost"
@@ -310,10 +310,13 @@ export default function AdminDashboardPage() {
                             onClick={() => {
                               setSelectedUser(user)
                               setExpirationDate(
-                                user.subscription_expires_at ? new Date(user.subscription_expires_at) : undefined,
+                                user.subscription_expires_at
+                                  ? new Date(user.subscription_expires_at).toISOString().split("T")[0]
+                                  : "",
                               )
                               setIsExpirationDialogOpen(true)
                             }}
+                            title="Set expiration date"
                           >
                             📅
                           </Button>
@@ -336,27 +339,28 @@ export default function AdminDashboardPage() {
               <div>
                 <Label>User</Label>
                 <div className="text-sm text-muted-foreground">{selectedUser?.email}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Current Tier: {selectedUser?.subscription_tier?.toUpperCase() || "FREE"}
+                </div>
               </div>
               <div>
-                <Label>Expiration Date (Optional)</Label>
+                <Label htmlFor="expiration-date">Expiration Date (Optional)</Label>
                 <div className="text-xs text-muted-foreground mb-2">Leave empty for unlimited access</div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
-                      {expirationDate ? format(expirationDate, "PPP") : "No expiration (unlimited)"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={expirationDate} onSelect={setExpirationDate} initialFocus />
-                  </PopoverContent>
-                </Popover>
+                <Input
+                  id="expiration-date"
+                  type="date"
+                  value={expirationDate}
+                  onChange={(e) => setExpirationDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="bg-transparent"
+                />
               </div>
               <div className="flex gap-2">
                 <Button onClick={updateSubscriptionExpiration} className="flex-1">
-                  Save Expiration
+                  💾 Save Expiration
                 </Button>
                 {expirationDate && (
-                  <Button variant="outline" onClick={() => setExpirationDate(undefined)}>
+                  <Button variant="outline" onClick={() => setExpirationDate("")}>
                     Clear
                   </Button>
                 )}

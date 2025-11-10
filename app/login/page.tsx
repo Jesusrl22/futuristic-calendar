@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +26,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -37,33 +37,28 @@ export default function LoginPage() {
       if (authError) {
         console.log("[v0] Login error:", authError.message)
         setError(authError.message)
+        setLoading(false)
       } else if (data.session) {
-        console.log("[v0] Login successful, session:", data.session)
-
-        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600`
-        document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=604800`
-
-        console.log("[v0] Redirecting to /app")
-        window.location.href = "/app"
+        console.log("[v0] Login successful, redirecting to /app")
+        router.push("/app")
+        router.refresh()
       }
     } catch (err) {
       console.log("[v0] Login exception:", err)
       setError("An error occurred. Please try again.")
-    } finally {
       setLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-      {/* Background glow effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
       <div className="w-full max-w-md">
         <Card className="glass-card p-8 neon-glow">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
-              <span className="text-3xl font-bold text-primary">S</span>
+              <span className="text-3xl font-bold text-primary">FT</span>
             </div>
             <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
             <p className="text-muted-foreground">Sign in to your account to continue</p>
