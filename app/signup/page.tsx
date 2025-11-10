@@ -33,47 +33,41 @@ export default function SignupPage() {
     }
 
     setLoading(true)
-    console.log("[v0] Starting signup process")
 
     try {
       const supabase = createClient()
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
+        },
       })
 
-      console.log("[v0] Signup response:", { data, error: authError })
-
       if (authError) {
-        console.log("[v0] Signup error:", authError.message)
         setError(authError.message)
       } else if (data.user) {
-        console.log("[v0] User created:", data.user.id)
-
         const { error: profileError } = await supabase.from("users").insert({
           id: data.user.id,
           email,
           theme: "neon-tech",
           language: "en",
           ai_credits: 100,
+          subscription_tier: "free",
         })
 
         if (profileError) {
-          console.log("[v0] Profile creation error:", profileError)
+          console.error("Profile creation error:", profileError)
         }
 
         if (data.session) {
-          console.log("[v0] Session created, storing cookies")
-          document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=3600`
-          document.cookie = `sb-refresh-token=${data.session.refresh_token}; path=/; max-age=604800`
+          window.location.href = "/app"
+        } else {
+          setError("Please check your email to confirm your account before signing in.")
         }
-
-        console.log("[v0] Signup successful, redirecting to /app")
-        router.push("/app")
-        router.refresh()
       }
     } catch (err) {
-      console.log("[v0] Signup exception:", err)
+      console.error("Signup exception:", err)
       setError("An error occurred. Please try again.")
     } finally {
       setLoading(false)
