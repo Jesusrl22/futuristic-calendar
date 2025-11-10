@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { createBrowserClient } from "@supabase/ssr"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -55,27 +54,18 @@ export default function AdminDashboardPage() {
 
   const fetchUsers = async () => {
     try {
-      console.log("[v0] Fetching users with service role key...")
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {},
-        },
-      )
+      console.log("[v0] Fetching users via API...")
+      const response = await fetch("/api/admin/users")
+      const data = await response.json()
 
-      const { data, error } = await supabase
-        .from("users")
-        .select("id, email, name, subscription_tier, subscription_expires_at, created_at")
-        .order("created_at", { ascending: false })
+      console.log("[v0] Users API response:", data)
 
-      console.log("[v0] Users data:", data)
-      console.log("[v0] Users error:", error)
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch users")
+      }
 
-      if (error) throw error
-
-      setUsers(data || [])
-      setFilteredUsers(data || [])
+      setUsers(data.users || [])
+      setFilteredUsers(data.users || [])
     } catch (error) {
       console.error("[v0] Error fetching users:", error)
     } finally {
@@ -86,22 +76,26 @@ export default function AdminDashboardPage() {
   const updateUserTier = async (userId: string, newTier: string) => {
     try {
       console.log("[v0] Updating user tier:", userId, newTier)
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {},
-        },
-      )
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          updates: { subscription_tier: newTier },
+        }),
+      })
 
-      const { error } = await supabase.from("users").update({ subscription_tier: newTier }).eq("id", userId)
+      const data = await response.json()
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update user")
+      }
 
       setUsers(users.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
       setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
     } catch (error) {
       console.error("[v0] Error updating user tier:", error)
+      alert("Error updating user. Please try again.")
     }
   }
 
@@ -110,22 +104,22 @@ export default function AdminDashboardPage() {
 
     try {
       console.log("[v0] Updating expiration for user:", selectedUser.id, expirationDate)
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {},
-        },
-      )
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          updates: {
+            subscription_expires_at: expirationDate ? new Date(expirationDate).toISOString() : null,
+          },
+        }),
+      })
 
-      const { error } = await supabase
-        .from("users")
-        .update({
-          subscription_expires_at: expirationDate ? new Date(expirationDate).toISOString() : null,
-        })
-        .eq("id", selectedUser.id)
+      const data = await response.json()
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update expiration")
+      }
 
       const updatedUser = {
         ...selectedUser,
@@ -145,17 +139,20 @@ export default function AdminDashboardPage() {
 
   const removeExpiration = async (userId: string) => {
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {},
-        },
-      )
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          updates: { subscription_expires_at: null },
+        }),
+      })
 
-      const { error } = await supabase.from("users").update({ subscription_expires_at: null }).eq("id", userId)
+      const data = await response.json()
 
-      if (error) throw error
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to remove expiration")
+      }
 
       setUsers(users.map((u) => (u.id === userId ? { ...u, subscription_expires_at: null } : u)))
       setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? { ...u, subscription_expires_at: null } : u)))

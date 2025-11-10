@@ -41,10 +41,7 @@ export default function SignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
-          data: {
-            email: email,
-          },
+          emailRedirectTo: `${window.location.origin}/app`,
         },
       })
 
@@ -52,28 +49,35 @@ export default function SignupPage() {
 
       if (authError) {
         console.error("[v0] Auth error:", authError)
-        setError(authError.message || "Failed to create account. Please try again.")
+        if (authError.message.includes("already registered")) {
+          setError("This email is already registered. Please try logging in instead.")
+        } else if (authError.message.includes("invalid")) {
+          setError("Invalid email or password format")
+        } else {
+          setError(authError.message || "Failed to create account. Please try again.")
+        }
         setLoading(false)
         return
       }
 
       if (!authData.user) {
-        setError("Failed to create user account")
+        setError("Failed to create user account. Please try again.")
         setLoading(false)
         return
       }
 
       if (authData.session) {
         console.log("[v0] User created with session, redirecting to /app")
-        window.location.href = "/app"
+        router.push("/app")
       } else {
-        // Email confirmation required
-        setError("Please check your email to confirm your account before signing in.")
-        setLoading(false)
+        setError("Account created! Please check your email to confirm your account before signing in.")
+        setTimeout(() => {
+          router.push("/login")
+        }, 3000)
       }
     } catch (err) {
       console.error("[v0] Signup exception:", err)
-      setError("An error occurred. Please try again.")
+      setError("An unexpected error occurred. Please try again.")
       setLoading(false)
     }
   }
