@@ -115,10 +115,15 @@ export default function CalendarPage() {
       const dueDate = new Date(selectedDate)
       if (newTask.time) {
         const [hours, minutes] = newTask.time.split(":")
-        dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes))
+        dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+      } else {
+        // If no time specified, set to end of day
+        dueDate.setHours(23, 59, 59, 999)
       }
 
-      const { data: insertedTasks } = await supabase
+      console.log("[v0] Creating task with due_date:", dueDate.toISOString())
+
+      const { data: insertedTasks, error: insertError } = await supabase
         .from("tasks")
         .insert({
           user_id: user.id,
@@ -128,10 +133,16 @@ export default function CalendarPage() {
           category: newTask.category,
           due_date: dueDate.toISOString(),
           completed: false,
+          status: "todo",
         })
         .select()
 
-      console.log("[v0] Task created:", insertedTasks)
+      if (insertError) {
+        console.error("[v0] Error creating task:", insertError)
+        return
+      }
+
+      console.log("[v0] Task created successfully:", insertedTasks)
 
       if (insertedTasks && insertedTasks.length > 0) {
         scheduleNotification(insertedTasks[0])

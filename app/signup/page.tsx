@@ -42,13 +42,17 @@ export default function SignupPage() {
         password,
         options: {
           emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
+          data: {
+            email: email,
+          },
         },
       })
 
       console.log("[v0] Signup response:", { authData, authError })
 
       if (authError) {
-        setError(authError.message)
+        console.error("[v0] Auth error:", authError)
+        setError(authError.message || "Failed to create account. Please try again.")
         setLoading(false)
         return
       }
@@ -60,25 +64,10 @@ export default function SignupPage() {
       }
 
       if (authData.session) {
-        console.log("[v0] Session created, inserting user profile")
-
-        const { error: profileError } = await supabase.from("users").insert({
-          id: authData.user.id,
-          email,
-          subscription_tier: "free",
-          ai_credits: 100,
-        })
-
-        if (profileError) {
-          console.error("[v0] Profile creation error:", profileError)
-          setError("Database error saving new user. Please contact support.")
-          setLoading(false)
-          return
-        }
-
-        console.log("[v0] Profile created successfully, redirecting to /app")
+        console.log("[v0] User created with session, redirecting to /app")
         window.location.href = "/app"
       } else {
+        // Email confirmation required
         setError("Please check your email to confirm your account before signing in.")
         setLoading(false)
       }
