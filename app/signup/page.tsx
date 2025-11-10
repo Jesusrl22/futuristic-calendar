@@ -65,22 +65,20 @@ export default function SignupPage() {
         const { error: profileError } = await supabase.from("users").insert({
           id: authData.user.id,
           email,
-          theme: "neon-tech",
-          language: "en",
-          ai_credits: 100,
           subscription_tier: "free",
+          ai_credits: 100,
         })
 
         if (profileError) {
           console.error("[v0] Profile creation error:", profileError)
+          setError("Database error saving new user. Please contact support.")
+          setLoading(false)
+          return
         }
 
-        // Session exists, redirect to app
-        console.log("[v0] Redirecting to /app")
-        router.push("/app")
-        router.refresh()
+        console.log("[v0] Profile created successfully, redirecting to /app")
+        window.location.href = "/app"
       } else {
-        // Email confirmation required
         setError("Please check your email to confirm your account before signing in.")
         setLoading(false)
       }

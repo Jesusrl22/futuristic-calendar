@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@supabase/ssr"
 import { useRouter } from "next/navigation"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -55,8 +55,15 @@ export default function AdminDashboardPage() {
 
   const fetchUsers = async () => {
     try {
-      console.log("[v0] Fetching users...")
-      const supabase = createClient()
+      console.log("[v0] Fetching users with service role key...")
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {},
+        },
+      )
+
       const { data, error } = await supabase
         .from("users")
         .select("id, email, name, subscription_tier, subscription_expires_at, created_at")
@@ -79,7 +86,14 @@ export default function AdminDashboardPage() {
   const updateUserTier = async (userId: string, newTier: string) => {
     try {
       console.log("[v0] Updating user tier:", userId, newTier)
-      const supabase = createClient()
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {},
+        },
+      )
+
       const { error } = await supabase.from("users").update({ subscription_tier: newTier }).eq("id", userId)
 
       if (error) throw error
@@ -96,7 +110,14 @@ export default function AdminDashboardPage() {
 
     try {
       console.log("[v0] Updating expiration for user:", selectedUser.id, expirationDate)
-      const supabase = createClient()
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {},
+        },
+      )
+
       const { error } = await supabase
         .from("users")
         .update({
@@ -124,7 +145,14 @@ export default function AdminDashboardPage() {
 
   const removeExpiration = async (userId: string) => {
     try {
-      const supabase = createClient()
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {},
+        },
+      )
+
       const { error } = await supabase.from("users").update({ subscription_expires_at: null }).eq("id", userId)
 
       if (error) throw error
