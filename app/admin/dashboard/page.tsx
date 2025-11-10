@@ -7,12 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
 
 interface User {
   id: string
   email: string
   name: string | null
   subscription_tier: string | null
+  subscription_expires_at: string | null
   created_at: string
 }
 
@@ -22,6 +28,9 @@ export default function AdminDashboardPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined)
+  const [isExpirationDialogOpen, setIsExpirationDialogOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -53,7 +62,7 @@ export default function AdminDashboardPage() {
       const supabase = createClient()
       const { data, error } = await supabase
         .from("users")
-        .select("id, email, name, subscription_tier, created_at")
+        .select("id, email, name, subscription_tier, subscription_expires_at, created_at")
         .order("created_at", { ascending: false })
 
       console.log("[v0] Users data:", data)
@@ -82,6 +91,51 @@ export default function AdminDashboardPage() {
       setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
     } catch (error) {
       console.error("[v0] Error updating user tier:", error)
+    }
+  }
+
+  const updateSubscriptionExpiration = async () => {
+    if (!selectedUser) return
+
+    try {
+      console.log("[v0] Updating expiration for user:", selectedUser.id, expirationDate)
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("users")
+        .update({
+          subscription_expires_at: expirationDate ? expirationDate.toISOString() : null,
+        })
+        .eq("id", selectedUser.id)
+
+      if (error) throw error
+
+      // Update local state
+      const updatedUser = {
+        ...selectedUser,
+        subscription_expires_at: expirationDate ? expirationDate.toISOString() : null,
+      }
+      setUsers(users.map((u) => (u.id === selectedUser.id ? updatedUser : u)))
+      setFilteredUsers(filteredUsers.map((u) => (u.id === selectedUser.id ? updatedUser : u)))
+
+      setIsExpirationDialogOpen(false)
+      setSelectedUser(null)
+      setExpirationDate(undefined)
+    } catch (error) {
+      console.error("[v0] Error updating expiration:", error)
+    }
+  }
+
+  const removeExpiration = async (userId: string) => {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from("users").update({ subscription_expires_at: null }).eq("id", userId)
+
+      if (error) throw error
+
+      setUsers(users.map((u) => (u.id === userId ? { ...u, subscription_expires_at: null } : u)))
+      setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? { ...u, subscription_expires_at: null } : u)))
+    } catch (error) {
+      console.error("[v0] Error removing expiration:", error)
     }
   }
 
@@ -119,6 +173,11 @@ export default function AdminDashboardPage() {
       pro: "bg-yellow-500/20 text-yellow-500",
     }
     return colors[tierLower as keyof typeof colors] || colors.free
+  }
+
+  const isExpired = (expiresAt: string | null) => {
+    if (!expiresAt) return false
+    return new Date(expiresAt) < new Date()
   }
 
   return (
@@ -172,19 +231,20 @@ export default function AdminDashboardPage() {
                   <th className="text-left p-4 font-semibold">User</th>
                   <th className="text-left p-4 font-semibold">Email</th>
                   <th className="text-left p-4 font-semibold">Current Tier</th>
+                  <th className="text-left p-4 font-semibold">Expiration</th>
                   <th className="text-left p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
                       Loading users...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
                       {searchTerm ? "No users found matching your search" : "No users in database"}
                     </td>
                   </tr>
@@ -208,19 +268,56 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="p-4">
-                        <Select
-                          value={user.subscription_tier || "free"}
-                          onValueChange={(value) => updateUserTier(user.id, value)}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="free">Free</SelectItem>
-                            <SelectItem value="premium">Premium</SelectItem>
-                            <SelectItem value="pro">Pro</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {user.subscription_expires_at ? (
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`text-sm ${isExpired(user.subscription_expires_at) ? "text-red-500 font-semibold" : "text-muted-foreground"}`}
+                            >
+                              {isExpired(user.subscription_expires_at) && "⚠️ "}
+                              {format(new Date(user.subscription_expires_at), "MMM dd, yyyy")}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeExpiration(user.id)}
+                              className="text-xs h-6 px-2"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-green-500">♾️ Unlimited</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={user.subscription_tier || "free"}
+                            onValueChange={(value) => updateUserTier(user.id, value)}
+                          >
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">Free</SelectItem>
+                              <SelectItem value="premium">Premium</SelectItem>
+                              <SelectItem value="pro">Pro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setExpirationDate(
+                                user.subscription_expires_at ? new Date(user.subscription_expires_at) : undefined,
+                              )
+                              setIsExpirationDialogOpen(true)
+                            }}
+                          >
+                            📅
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -229,6 +326,44 @@ export default function AdminDashboardPage() {
             </table>
           </div>
         </Card>
+
+        <Dialog open={isExpirationDialogOpen} onOpenChange={setIsExpirationDialogOpen}>
+          <DialogContent className="glass-card">
+            <DialogHeader>
+              <DialogTitle>Set Subscription Expiration</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>User</Label>
+                <div className="text-sm text-muted-foreground">{selectedUser?.email}</div>
+              </div>
+              <div>
+                <Label>Expiration Date (Optional)</Label>
+                <div className="text-xs text-muted-foreground mb-2">Leave empty for unlimited access</div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal bg-transparent">
+                      {expirationDate ? format(expirationDate, "PPP") : "No expiration (unlimited)"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar mode="single" selected={expirationDate} onSelect={setExpirationDate} initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={updateSubscriptionExpiration} className="flex-1">
+                  Save Expiration
+                </Button>
+                {expirationDate && (
+                  <Button variant="outline" onClick={() => setExpirationDate(undefined)}>
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

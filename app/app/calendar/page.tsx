@@ -118,7 +118,7 @@ export default function CalendarPage() {
         dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes))
       }
 
-      const { data: insertedTask } = await supabase
+      const { data: insertedTasks } = await supabase
         .from("tasks")
         .insert({
           user_id: user.id,
@@ -130,10 +130,11 @@ export default function CalendarPage() {
           completed: false,
         })
         .select()
-        .single()
 
-      if (insertedTask) {
-        scheduleNotification(insertedTask)
+      console.log("[v0] Task created:", insertedTasks)
+
+      if (insertedTasks && insertedTasks.length > 0) {
+        scheduleNotification(insertedTasks[0])
       }
 
       setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
