@@ -24,11 +24,13 @@ export default function LoginPage() {
 
       if (result?.error) {
         setError(result.error)
+        setLoading(false)
+      } else if (result?.success) {
+        window.location.href = "/app"
       }
     } catch (err) {
       console.error("[v0] Login error:", err)
       setError("An unexpected error occurred")
-    } finally {
       setLoading(false)
     }
   }

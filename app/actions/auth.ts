@@ -122,8 +122,10 @@ export async function signIn(formData: FormData) {
     maxAge: 60 * 60 * 24 * 30, // 30 days
   })
 
-  console.log("[v0] Login successful, redirecting to app")
-  redirect("/app")
+  console.log("[v0] Cookies set successfully")
+
+  // Return success so the client can redirect
+  return { success: true }
 }
 
 export async function signOut() {
