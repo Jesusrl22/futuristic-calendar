@@ -5,49 +5,69 @@ export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json()
 
-    console.log("[API] Signup request for:", email)
+    console.log("[SERVER][API] Signup request for:", email)
 
-    // Create Supabase client with service role key to bypass email confirmation
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
     })
 
-    // Create user with email confirmed
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Sign up user normally
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      email_confirm: true, // Auto-confirm email for development
+      options: {
+        data: {
+          name: name || email.split("@")[0],
+        },
+      },
     })
 
     if (authError) {
-      console.error("[API] Auth error:", authError)
+      console.error("[SERVER][API] Auth error:", authError.message)
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
-    console.log("[API] User created in auth:", authData.user?.id)
+    if (!authData.user) {
+      console.error("[SERVER][API] No user data returned")
+      return NextResponse.json({ error: "Failed to create user" }, { status: 400 })
+    }
 
-    // Create user profile in users table
-    const { error: profileError } = await supabase.from("users").insert({
-      id: authData.user!.id,
+    console.log("[SERVER][API] User created:", authData.user.id)
+
+    // Create user profile using service role to bypass RLS
+    const adminSupabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+
+    const { error: profileError } = await adminSupabase.from("users").insert({
+      id: authData.user.id,
       email,
       name: name || email.split("@")[0],
       subscription_tier: "free",
+      plan: "free",
       ai_credits: 10,
     })
 
     if (profileError) {
-      console.error("[API] Profile error:", profileError)
-      // User exists in auth but not in users table - not critical
+      console.error("[SERVER][API] Profile creation error:", profileError.message)
+      // Don't fail the whole signup if profile creation fails
+      // User can still login and we'll create profile on first login
+    } else {
+      console.log("[SERVER][API] Profile created successfully")
     }
 
-    console.log("[API] Signup successful!")
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true,
+      message: "Account created successfully. Please check your email to confirm your account.",
+    })
   } catch (error: any) {
-    console.error("[API] Signup error:", error)
+    console.error("[SERVER][API] Signup error:", error.message)
     return NextResponse.json({ error: error.message || "Signup failed" }, { status: 500 })
   }
 }
