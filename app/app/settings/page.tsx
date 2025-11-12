@@ -9,15 +9,17 @@ import { createClient } from "@/lib/supabase/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTranslation, type Language } from "@/lib/translations"
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState({
     email: "",
     theme: "neon-tech",
-    language: "en",
+    language: "en" as Language,
     notifications: true,
   })
   const [loading, setLoading] = useState(false)
+  const { t } = useTranslation(profile.language)
 
   useEffect(() => {
     fetchProfile()
@@ -67,7 +69,7 @@ export default function SettingsPage() {
     <div className="p-8">
       <div>
         <h1 className="text-4xl font-bold mb-8">
-          <span className="text-primary neon-text">Settings</span>
+          <span className="text-primary neon-text">{t("settings")}</span>
         </h1>
 
         <Tabs defaultValue="profile" className="space-y-6">
@@ -88,7 +90,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <Label>Theme</Label>
+                  <Label>{t("theme")}</Label>
                   <Select value={profile.theme} onValueChange={(value) => setProfile({ ...profile, theme: value })}>
                     <SelectTrigger className="bg-secondary/50">
                       <SelectValue />
@@ -102,25 +104,29 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <Label>Language</Label>
+                  <Label>{t("language")}</Label>
                   <Select
                     value={profile.language}
-                    onValueChange={(value) => setProfile({ ...profile, language: value })}
+                    onValueChange={(value: Language) => {
+                      setProfile({ ...profile, language: value })
+                      localStorage.setItem("language", value)
+                    }}
                   >
                     <SelectTrigger className="bg-secondary/50">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
-                      <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="de">Deutsch</SelectItem>
+                      <SelectItem value="it">Italiano</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <Button onClick={handleSave} disabled={loading} className="neon-glow-hover">
-                  {loading ? "Saving..." : "Save Changes"}
+                  {loading ? "Saving..." : t("save")}
                 </Button>
               </div>
             </Card>
@@ -198,7 +204,7 @@ export default function SettingsPage() {
                 </div>
 
                 <Button onClick={handleSave} disabled={loading} className="neon-glow-hover">
-                  {loading ? "Saving..." : "Save Changes"}
+                  {loading ? "Saving..." : t("save")}
                 </Button>
               </div>
             </Card>

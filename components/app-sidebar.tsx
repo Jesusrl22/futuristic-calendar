@@ -19,6 +19,8 @@ import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { createClient } from "@/lib/supabase/client"
+import { useState, useEffect } from "react"
+import { useTranslation, type Language } from "@/lib/translations"
 
 const menuItems = [
   { icon: Home, label: "Dashboard", href: "/app" },
@@ -37,6 +39,29 @@ const menuItems = [
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [lang, setLang] = useState<Language>("en")
+  const { t } = useTranslation(lang)
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem("language") as Language | null
+    if (savedLang) {
+      setLang(savedLang)
+    }
+  }, [])
+
+  const menuItemsTranslated = [
+    { icon: Home, label: t("dashboard"), href: "/app" },
+    { icon: Calendar, label: t("calendar"), href: "/app/calendar" },
+    { icon: CheckSquare, label: t("tasks"), href: "/app/tasks" },
+    { icon: FileText, label: t("notes"), href: "/app/notes" },
+    { icon: Heart, label: t("wishlist"), href: "/app/wishlist" },
+    { icon: Timer, label: t("pomodoro"), href: "/app/pomodoro" },
+    { icon: BarChart3, label: t("stats"), href: "/app/stats" },
+    { icon: Bot, label: t("ai"), href: "/app/ai" },
+    { icon: Trophy, label: t("achievements"), href: "/app/achievements" },
+    { icon: CreditCard, label: t("subscription"), href: "/app/subscription" },
+    { icon: Settings, label: t("settings"), href: "/app/settings" },
+  ]
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -65,7 +90,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Navigation */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {menuItemsTranslated.map((item) => {
             const isActive = pathname === item.href
             return (
               <Link key={item.href} href={item.href} onClick={handleNavClick}>
@@ -92,7 +117,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           onClick={handleLogout}
         >
           <LogOut className="w-5 h-5" />
-          <span>Logout</span>
+          <span>{t("logout")}</span>
         </Button>
       </div>
     </div>
