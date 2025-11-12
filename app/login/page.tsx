@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
@@ -25,17 +24,19 @@ export default function LoginPage() {
       const email = formData.get("email") as string
       const password = formData.get("password") as string
 
-      const supabase = createClient()
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (signInError) throw signInError
+      const data = await response.json()
 
-      router.push("/app")
-      router.refresh()
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed")
+      }
+
+      window.location.href = "/app"
     } catch (err: any) {
       setError(err.message || "Invalid credentials")
       setLoading(false)

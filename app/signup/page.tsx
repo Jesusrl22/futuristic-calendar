@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
@@ -36,24 +35,17 @@ export default function SignupPage() {
     }
 
     try {
-      console.log("[v0] Creating Supabase client...")
-      const supabase = createClient()
-      console.log("[v0] Supabase client created successfully")
-
-      console.log("[v0] Calling supabase.auth.signUp...")
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
-        },
+      console.log("[v0] Calling API route for signup...")
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name: email.split("@")[0] }),
       })
 
-      console.log("[v0] SignUp response:", { data, error: signUpError })
+      const data = await response.json()
 
-      if (signUpError) {
-        console.error("[v0] SignUp error:", signUpError)
-        throw signUpError
+      if (!response.ok) {
+        throw new Error(data.error || "Signup failed")
       }
 
       console.log("[v0] User created successfully:", data.user?.id)
