@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 
@@ -8,90 +7,89 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][API] Login request for:", email)
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+    const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
     })
 
-    // Sign in with email and password
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const loginData = await loginResponse.json()
 
-    if (error) {
-      console.error("[SERVER][API] Login error:", error.message)
-      return NextResponse.json({ error: error.message }, { status: 400 })
+    if (!loginResponse.ok || loginData.error) {
+      console.error("[SERVER][API] Login error:", loginData.error?.message || loginData.error_description)
+      return NextResponse.json(
+        { error: loginData.error_description || loginData.error?.message || "Invalid credentials" },
+        { status: 400 },
+      )
     }
 
-    if (!data.session) {
-      console.error("[SERVER][API] No session created")
-      return NextResponse.json({ error: "No session created" }, { status: 400 })
-    }
+    console.log("[SERVER][API] Login successful for user:", loginData.user.id)
 
-    console.log("[SERVER][API] Login successful for user:", data.user.id)
-
-    const adminSupabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+    const profileCheckResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${loginData.user.id}&select=id`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
       },
-    })
+    )
 
-    const { data: profile, error: profileCheckError } = await adminSupabase
-      .from("users")
-      .select("id")
-      .eq("id", data.user.id)
-      .single()
+    const profiles = await profileCheckResponse.json()
 
-    if (profileCheckError && profileCheckError.code === "PGRST116") {
-      // Profile doesn't exist, create it
+    if (!profiles || profiles.length === 0) {
       console.log("[SERVER][API] Profile not found, creating...")
 
-      const { error: createError } = await adminSupabase.from("users").insert({
-        id: data.user.id,
-        email: data.user.email!,
-        name: data.user.user_metadata?.name || data.user.email!.split("@")[0],
-        subscription_tier: "free",
-        plan: "free",
-        ai_credits: 10,
+      await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          id: loginData.user.id,
+          email: loginData.user.email,
+          name: loginData.user.user_metadata?.name || loginData.user.email.split("@")[0],
+          subscription_tier: "free",
+          plan: "free",
+          ai_credits: 10,
+        }),
       })
 
-      if (createError) {
-        console.error("[SERVER][API] Error creating profile:", createError.message)
-      } else {
-        console.log("[SERVER][API] Profile created successfully")
-      }
-    } else if (profile) {
-      console.log("[SERVER][API] Profile exists")
+      console.log("[SERVER][API] Profile created")
     }
 
-    // Set cookies for session persistence
     const cookieStore = await cookies()
 
-    cookieStore.set("sb-access-token", data.session.access_token, {
+    cookieStore.set("sb-access-token", loginData.access_token, {
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 24 * 7,
     })
 
-    cookieStore.set("sb-refresh-token", data.session.refresh_token, {
+    cookieStore.set("sb-refresh-token", loginData.refresh_token, {
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
     })
 
     console.log("[SERVER][API] Cookies set successfully")
 
-    return NextResponse.json({ success: true, user: data.user })
+    return NextResponse.json({ success: true, user: loginData.user })
   } catch (error: any) {
-    console.error("[SERVER][API] Login error:", error.message)
+    console.error("[SERVER][API] Login exception:", error.message)
     return NextResponse.json({ error: error.message || "Login failed" }, { status: 500 })
   }
 }
