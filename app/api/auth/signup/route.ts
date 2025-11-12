@@ -7,7 +7,80 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][API] Signup request for:", email)
 
-    const signupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/signup`, {
+    const checkUserResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
+      },
+    )
+
+    const existingUsers = await checkUserResponse.json()
+    if (existingUsers && existingUsers.length > 0) {
+      return NextResponse.json({ error: "User already exists. Please login instead." }, { status: 400 })
+    }
+
+    const adminSignupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true, // Auto-confirm email for development
+        user_metadata: {
+          name: name || email.split("@")[0],
+        },
+      }),
+    })
+
+    const adminSignupData = await adminSignupResponse.json()
+
+    if (!adminSignupResponse.ok || adminSignupData.error) {
+      console.error("[SERVER][API] Admin signup error:", adminSignupData.error?.message || adminSignupData.msg)
+      return NextResponse.json(
+        { error: adminSignupData.error?.message || adminSignupData.msg || "Signup failed" },
+        { status: 400 },
+      )
+    }
+
+    console.log("[SERVER][API] User created via admin API:", adminSignupData.id)
+
+    const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        id: adminSignupData.id,
+        email: adminSignupData.email,
+        name: name || email.split("@")[0],
+        subscription_tier: "free",
+        plan: "free",
+        subscription_plan: "free",
+        ai_credits: 10,
+        theme: "system",
+        language: "en",
+      }),
+    })
+
+    if (!profileResponse.ok) {
+      const errorText = await profileResponse.text()
+      console.error("[SERVER][API] Profile creation failed:", errorText)
+      // User created but profile failed - still allow login
+    } else {
+      console.log("[SERVER][API] Profile created successfully")
+    }
+
+    const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -16,29 +89,15 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         email,
         password,
-        data: {
-          name: name || email.split("@")[0],
-        },
       }),
     })
 
-    const signupData = await signupResponse.json()
+    const loginData = await loginResponse.json()
 
-    if (!signupResponse.ok || signupData.error) {
-      console.error("[SERVER][API] Signup error:", signupData.error?.message || signupData.msg)
-      return NextResponse.json(
-        { error: signupData.error?.message || signupData.msg || "Signup failed" },
-        { status: 400 },
-      )
-    }
-
-    console.log("[SERVER][API] User created:", signupData.id)
-    console.log("[SERVER][API] Session:", signupData.access_token ? "Created" : "Not created")
-
-    if (signupData.access_token && signupData.refresh_token) {
+    if (loginData.access_token && loginData.refresh_token) {
       const cookieStore = await cookies()
 
-      cookieStore.set("sb-access-token", signupData.access_token, {
+      cookieStore.set("sb-access-token", loginData.access_token, {
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -46,7 +105,7 @@ export async function POST(request: Request) {
         maxAge: 60 * 60 * 24 * 7,
       })
 
-      cookieStore.set("sb-refresh-token", signupData.refresh_token, {
+      cookieStore.set("sb-refresh-token", loginData.refresh_token, {
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -54,42 +113,13 @@ export async function POST(request: Request) {
         maxAge: 60 * 60 * 24 * 30,
       })
 
-      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({
-          id: signupData.user.id,
-          email: signupData.user.email,
-          name: name || email.split("@")[0],
-          subscription_tier: "free",
-          plan: "free",
-          ai_credits: 10,
-        }),
-      })
-
-      if (!profileResponse.ok) {
-        console.error("[SERVER][API] Profile creation failed, but user created")
-      } else {
-        console.log("[SERVER][API] Profile created successfully")
-      }
-
-      console.log("[SERVER][API] Cookies set, redirecting to app")
-      return NextResponse.json({
-        success: true,
-        message: "Account created successfully!",
-        requiresConfirmation: false,
-      })
+      console.log("[SERVER][API] Login successful, cookies set")
     }
 
     return NextResponse.json({
       success: true,
-      message: "Account created! Please check your email to confirm your account.",
-      requiresConfirmation: true,
+      message: "Account created successfully!",
+      requiresConfirmation: false,
     })
   } catch (error: any) {
     console.error("[SERVER][API] Signup error:", error.message)

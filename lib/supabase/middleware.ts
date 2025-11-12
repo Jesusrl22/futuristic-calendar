@@ -37,7 +37,7 @@ export async function updateSession(request: NextRequest) {
       return response
     }
 
-    console.log("[v0][Middleware] Access token expired, refreshing...")
+    console.log("[v0][Middleware] Access token invalid or expired, attempting refresh...")
 
     const refreshResponse = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
@@ -84,12 +84,21 @@ export async function updateSession(request: NextRequest) {
       return response
     }
 
-    console.log("[v0][Middleware] Refresh failed, redirecting to login")
+    console.log("[v0][Middleware] Refresh failed, clearing cookies")
+    response.cookies.delete("sb-access-token")
+    response.cookies.delete("sb-refresh-token")
+
     if (request.nextUrl.pathname.startsWith("/app")) {
       return NextResponse.redirect(new URL("/login", request.url))
     }
+
+    return response
   } catch (error) {
     console.error("[v0][Middleware] Error checking session:", error)
+
+    response.cookies.delete("sb-access-token")
+    response.cookies.delete("sb-refresh-token")
+
     if (request.nextUrl.pathname.startsWith("/app")) {
       return NextResponse.redirect(new URL("/login", request.url))
     }
