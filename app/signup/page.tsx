@@ -27,6 +27,8 @@ export default function SignupPage() {
     const password = formData.get("password") as string
     const confirmPassword = formData.get("confirmPassword") as string
 
+    console.log("[v0] Starting signup process for:", email)
+
     if (password !== confirmPassword) {
       setError("Passwords do not match")
       setLoading(false)
@@ -34,9 +36,12 @@ export default function SignupPage() {
     }
 
     try {
+      console.log("[v0] Creating Supabase client...")
       const supabase = createClient()
+      console.log("[v0] Supabase client created successfully")
 
-      const { error: signUpError } = await supabase.auth.signUp({
+      console.log("[v0] Calling supabase.auth.signUp...")
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -44,13 +49,20 @@ export default function SignupPage() {
         },
       })
 
-      if (signUpError) throw signUpError
+      console.log("[v0] SignUp response:", { data, error: signUpError })
 
-      setSuccess("Account created! Check your email to confirm (or sign in if email confirmation is disabled).")
+      if (signUpError) {
+        console.error("[v0] SignUp error:", signUpError)
+        throw signUpError
+      }
+
+      console.log("[v0] User created successfully:", data.user?.id)
+      setSuccess("Account created! Redirecting to login...")
       setTimeout(() => {
         router.push("/login")
       }, 2000)
     } catch (err: any) {
+      console.error("[v0] Caught error:", err)
       setError(err.message || "An unexpected error occurred")
     } finally {
       setLoading(false)

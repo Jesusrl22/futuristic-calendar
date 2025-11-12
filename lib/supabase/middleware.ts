@@ -1,47 +1,59 @@
-import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  const response = NextResponse.next()
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
-        },
-      },
-    },
-  )
+  // Get tokens from cookies
+  const accessToken = request.cookies.get("sb-access-token")?.value
+  const refreshToken = request.cookies.get("sb-refresh-token")?.value
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/signup") &&
-    !request.nextUrl.pathname.startsWith("/admin") &&
-    !request.nextUrl.pathname.startsWith("/api") &&
-    !request.nextUrl.pathname.startsWith("/_next") &&
-    request.nextUrl.pathname.startsWith("/app")
-  ) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/login"
-    return NextResponse.redirect(url)
+  if (!accessToken || !refreshToken) {
+    // No auth tokens - redirect to login if accessing protected routes
+    if (request.nextUrl.pathname.startsWith("/app")) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+    return response
   }
 
-  return supabaseResponse
+  // Create Supabase client
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+
+  // Set the session
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  })
+
+  if (error || !session) {
+    // Invalid session - redirect to login
+    if (request.nextUrl.pathname.startsWith("/app")) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+    return response
+  }
+
+  // If session was refreshed, update cookies
+  if (session.access_token !== accessToken) {
+    response.cookies.set("sb-access-token", session.access_token, {
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      sameSite: "lax",
+    })
+  }
+
+  if (session.refresh_token && session.refresh_token !== refreshToken) {
+    response.cookies.set("sb-refresh-token", session.refresh_token, {
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      sameSite: "lax",
+    })
+  }
+
+  return response
 }
