@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { signIn } from "@/app/actions/auth"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -20,17 +22,22 @@ export default function LoginPage() {
 
     try {
       const formData = new FormData(e.currentTarget)
-      const result = await signIn(formData)
+      const email = formData.get("email") as string
+      const password = formData.get("password") as string
 
-      if (result?.error) {
-        setError(result.error)
-        setLoading(false)
-      } else if (result?.success) {
-        window.location.href = "/app"
-      }
-    } catch (err) {
-      console.error("[v0] Login error:", err)
-      setError("An unexpected error occurred")
+      const supabase = createClient()
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) throw signInError
+
+      router.push("/app")
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message || "Invalid credentials")
       setLoading(false)
     }
   }

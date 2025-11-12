@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { signUp } from "@/app/actions/auth"
+import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -21,6 +23,7 @@ export default function SignupPage() {
     setLoading(true)
 
     const formData = new FormData(e.currentTarget)
+    const email = formData.get("email") as string
     const password = formData.get("password") as string
     const confirmPassword = formData.get("confirmPassword") as string
 
@@ -31,18 +34,24 @@ export default function SignupPage() {
     }
 
     try {
-      // Remove confirmPassword before sending to server
-      formData.delete("confirmPassword")
-      const result = await signUp(formData)
+      const supabase = createClient()
 
-      if (result?.error) {
-        setError(result.error)
-      } else if (result?.message) {
-        setSuccess(result.message)
-      }
-    } catch (err) {
-      console.error("[v0] Signup error:", err)
-      setError("An unexpected error occurred")
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/app`,
+        },
+      })
+
+      if (signUpError) throw signUpError
+
+      setSuccess("Account created! Check your email to confirm (or sign in if email confirmation is disabled).")
+      setTimeout(() => {
+        router.push("/login")
+      }, 2000)
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred")
     } finally {
       setLoading(false)
     }

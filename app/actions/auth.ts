@@ -2,10 +2,14 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 
 function createAdminClient() {
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
 }
 
 export async function signUp(formData: FormData) {
@@ -21,7 +25,6 @@ export async function signUp(formData: FormData) {
   }
 
   console.log("[v0] Starting signup for:", email)
-  console.log("[v0] Using Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
 
   const supabase = createAdminClient()
 
@@ -32,48 +35,30 @@ export async function signUp(formData: FormData) {
       email_confirm: true,
     })
 
-    console.log("[v0] Auth signup response:", {
-      userId: authData?.user?.id,
-      userEmail: authData?.user?.email,
-      error: authError?.message,
+    console.log("[v0] Auth signup response:", { userId: authData?.user?.id, error: authError?.message })
+
+    if (authError) throw authError
+    if (!authData.user) throw new Error("Failed to create user")
+
+    const { error: profileError } = await supabase.from("users").insert({
+      id: authData.user.id,
+      email: authData.user.email,
+      subscription_tier: "free",
+      ai_credits: 10,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
-
-    if (authError) {
-      console.error("[v0] Signup auth error:", authError)
-      return { error: authError.message }
-    }
-
-    if (!authData.user) {
-      return { error: "Failed to create user" }
-    }
-
-    console.log("[v0] Creating user profile with ID:", authData.user.id)
-    const { data: profileData, error: profileError } = await supabase
-      .from("users")
-      .insert({
-        id: authData.user.id,
-        email: authData.user.email,
-        subscription_tier: "free",
-        ai_credits: 10,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
 
     if (profileError) {
       console.error("[v0] Profile creation error:", profileError)
-      return { error: `User created but profile failed: ${profileError.message}` }
+      throw new Error(`Database error creating user profile: ${profileError.message}`)
     }
 
-    console.log("[v0] User profile created successfully:", profileData)
-
-    return {
-      success: true,
-      message: "Account created successfully! Please sign in.",
-    }
-  } catch (err) {
-    console.error("[v0] Unexpected signup error:", err)
-    return { error: "An unexpected error occurred during signup" }
+    console.log("[v0] User created successfully")
+    return { success: true, message: "Account created successfully! Please sign in." }
+  } catch (err: any) {
+    console.error("[v0] Signup error:", err)
+    return { error: err.message || "Database error creating new user" }
   }
 }
 
@@ -85,52 +70,50 @@ export async function signIn(formData: FormData) {
     return { error: "Email and password are required" }
   }
 
-  console.log("[v0] Starting login for:", email)
+  console.log("[v0] Attempting login for:", email)
 
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  })
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-  console.log("[v0] Login response:", {
-    session: !!data.session,
-    error: error?.message,
-  })
+    if (error) throw error
+    if (!data.session) throw new Error("Failed to create session")
 
-  if (error) {
-    console.error("[v0] Login error:", error)
-    return { error: error.message }
+    console.log("[v0] Login successful, setting cookies")
+
+    const cookieStore = await cookies()
+
+    cookieStore.set("sb-access-token", data.session.access_token, {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    })
+
+    cookieStore.set("sb-refresh-token", data.session.refresh_token, {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    })
+
+    console.log("[v0] Cookies set successfully")
+    return { success: true }
+  } catch (err: any) {
+    console.error("[v0] Login error:", err)
+    return { error: err.message || "Invalid credentials" }
   }
-
-  if (!data.session) {
-    return { error: "Failed to create session" }
-  }
-
-  const cookieStore = await cookies()
-  cookieStore.set("sb-access-token", data.session.access_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  })
-  cookieStore.set("sb-refresh-token", data.session.refresh_token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30, // 30 days
-  })
-
-  console.log("[v0] Cookies set successfully")
-
-  // Return success so the client can redirect
-  return { success: true }
 }
 
 export async function signOut() {
   const cookieStore = await cookies()
   cookieStore.delete("sb-access-token")
   cookieStore.delete("sb-refresh-token")
-  redirect("/login")
+  return { success: true }
 }
