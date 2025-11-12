@@ -67,9 +67,16 @@ export default function SignupPage() {
       }
 
       if (authData.session) {
-        console.log("[v0] User created with session, redirecting to /app")
-        router.push("/app")
+        console.log("[v0] Session created, saving tokens")
+        document.cookie = `sb-access-token=${authData.session.access_token}; path=/; max-age=3600; SameSite=Lax`
+        document.cookie = `sb-refresh-token=${authData.session.refresh_token}; path=/; max-age=604800; SameSite=Lax`
+
+        // Redirect immediately to app
+        setTimeout(() => {
+          router.push("/app")
+        }, 500)
       } else {
+        // No session = email confirmation required
         setError("Account created! Please check your email to confirm your account before signing in.")
         setTimeout(() => {
           router.push("/login")
