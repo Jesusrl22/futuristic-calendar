@@ -1,90 +1,49 @@
 "use client"
 
 import type React from "react"
-import { createClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { signUp } from "@/app/actions/auth"
 
 export default function SignupPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
+    setSuccess("")
+    setLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+    const password = formData.get("password") as string
+    const confirmPassword = formData.get("confirmPassword") as string
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
+      setLoading(false)
       return
     }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return
-    }
-
-    setLoading(true)
 
     try {
-      const supabase = createClient()
+      // Remove confirmPassword before sending to server
+      formData.delete("confirmPassword")
+      const result = await signUp(formData)
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/app`,
-        },
-      })
-
-      console.log("[v0] Signup response:", { authData, authError })
-
-      if (authError) {
-        console.error("[v0] Auth error:", authError)
-        if (authError.message.includes("already registered")) {
-          setError("This email is already registered. Please try logging in instead.")
-        } else if (authError.message.includes("invalid")) {
-          setError("Invalid email or password format")
-        } else {
-          setError(authError.message || "Failed to create account. Please try again.")
-        }
-        setLoading(false)
-        return
-      }
-
-      if (!authData.user) {
-        setError("Failed to create user account. Please try again.")
-        setLoading(false)
-        return
-      }
-
-      if (authData.session) {
-        console.log("[v0] Session created, saving tokens")
-        document.cookie = `sb-access-token=${authData.session.access_token}; path=/; max-age=3600; SameSite=Lax`
-        document.cookie = `sb-refresh-token=${authData.session.refresh_token}; path=/; max-age=604800; SameSite=Lax`
-
-        // Redirect immediately to app
-        setTimeout(() => {
-          router.push("/app")
-        }, 500)
-      } else {
-        // No session = email confirmation required
-        setError("Account created! Please check your email to confirm your account before signing in.")
-        setTimeout(() => {
-          router.push("/login")
-        }, 3000)
+      if (result?.error) {
+        setError(result.error)
+      } else if (result?.message) {
+        setSuccess(result.message)
       }
     } catch (err) {
-      console.error("[v0] Signup exception:", err)
-      setError("An unexpected error occurred. Please try again.")
+      console.error("[v0] Signup error:", err)
+      setError("An unexpected error occurred")
+    } finally {
       setLoading(false)
     }
   }
@@ -108,10 +67,9 @@ export default function SignupPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="bg-secondary/50"
               />
@@ -121,11 +79,11 @@ export default function SignupPage() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
                 className="bg-secondary/50"
               />
             </div>
@@ -134,16 +92,17 @@ export default function SignupPage() {
               <Label htmlFor="confirmPassword">Confirm Password</Label>
               <Input
                 id="confirmPassword"
+                name="confirmPassword"
                 type="password"
                 placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                minLength={6}
                 className="bg-secondary/50"
               />
             </div>
 
             {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</div>}
+            {success && <div className="text-sm text-green-600 bg-green-600/10 p-3 rounded-lg">{success}</div>}
 
             <Button type="submit" className="w-full neon-glow-hover" disabled={loading}>
               {loading ? "Creating account..." : "Sign Up"}
