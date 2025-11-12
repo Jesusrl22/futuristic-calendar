@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
   try {
@@ -7,14 +8,9 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][API] Signup request for:", email)
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
-    // Sign up user normally
+    // Sign up the user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -36,38 +32,39 @@ export async function POST(request: Request) {
     }
 
     console.log("[SERVER][API] User created:", authData.user.id)
+    console.log("[SERVER][API] Session:", authData.session ? "Created" : "Not created (email confirmation required)")
 
-    // Create user profile using service role to bypass RLS
-    const adminSupabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
+    // If email confirmation is disabled, we'll have a session
+    if (authData.session) {
+      // Set cookies for immediate login
+      const cookieStore = await cookies()
+      cookieStore.set("sb-access-token", authData.session.access_token, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      })
+      cookieStore.set("sb-refresh-token", authData.session.refresh_token, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      })
 
-    const { error: profileError } = await adminSupabase.from("users").insert({
-      id: authData.user.id,
-      email,
-      name: name || email.split("@")[0],
-      subscription_tier: "free",
-      plan: "free",
-      ai_credits: 10,
-    })
-
-    if (profileError) {
-      console.error("[SERVER][API] Profile creation error:", profileError.message)
-      // Don't fail the whole signup if profile creation fails
-      // User can still login and we'll create profile on first login
-    } else {
-      console.log("[SERVER][API] Profile created successfully")
+      console.log("[SERVER][API] Cookies set, user can login immediately")
     }
 
     return NextResponse.json({
       success: true,
-      message: "Account created successfully. Please check your email to confirm your account.",
+      message: authData.session
+        ? "Account created successfully! Redirecting..."
+        : "Account created! Please check your email to confirm your account.",
+      requiresConfirmation: !authData.session,
     })
   } catch (error: any) {
-    console.error("[SERVER][API] Signup error:", error.message)
+    console.error("[SERVER][API] Signup error:", error)
     return NextResponse.json({ error: error.message || "Signup failed" }, { status: 500 })
   }
 }

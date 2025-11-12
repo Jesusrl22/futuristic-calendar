@@ -48,11 +48,16 @@ export default function SignupPage() {
         throw new Error(data.error || "Signup failed")
       }
 
-      console.log("[v0] User created successfully:", data.user?.id)
-      setSuccess("Account created! Redirecting to login...")
-      setTimeout(() => {
-        router.push("/login")
-      }, 2000)
+      console.log("[v0] Signup successful:", data)
+
+      if (data.requiresConfirmation) {
+        setSuccess("Account created! Please check your email to confirm your account.")
+      } else {
+        setSuccess("Account created successfully! Redirecting to app...")
+        setTimeout(() => {
+          router.push("/app")
+        }, 1500)
+      }
     } catch (err: any) {
       console.error("[v0] Caught error:", err)
       setError(err.message || "An unexpected error occurred")
