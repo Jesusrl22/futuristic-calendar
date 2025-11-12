@@ -21,6 +21,7 @@ export async function signUp(formData: FormData) {
   }
 
   console.log("[v0] Starting signup for:", email)
+  console.log("[v0] Using Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
 
   const supabase = createAdminClient()
 
@@ -28,11 +29,12 @@ export async function signUp(formData: FormData) {
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm email
+      email_confirm: true,
     })
 
     console.log("[v0] Auth signup response:", {
-      user: authData?.user?.id,
+      userId: authData?.user?.id,
+      userEmail: authData?.user?.email,
       error: authError?.message,
     })
 
@@ -45,21 +47,25 @@ export async function signUp(formData: FormData) {
       return { error: "Failed to create user" }
     }
 
-    const { error: profileError } = await supabase.from("users").insert({
-      id: authData.user.id,
-      email: authData.user.email,
-      subscription_tier: "free",
-      ai_credits: 10,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    console.log("[v0] Creating user profile with ID:", authData.user.id)
+    const { data: profileData, error: profileError } = await supabase
+      .from("users")
+      .insert({
+        id: authData.user.id,
+        email: authData.user.email,
+        subscription_tier: "free",
+        ai_credits: 10,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select()
 
     if (profileError) {
       console.error("[v0] Profile creation error:", profileError)
-      // User was created but profile failed - they can still login
-    } else {
-      console.log("[v0] User profile created successfully")
+      return { error: `User created but profile failed: ${profileError.message}` }
     }
+
+    console.log("[v0] User profile created successfully:", profileData)
 
     return {
       success: true,
