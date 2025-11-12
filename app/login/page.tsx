@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,33 @@ import { useRouter } from "next/navigation"
 export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [hasSession, setHasSession] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/check-session")
+        if (response.ok) {
+          const data = await response.json()
+          setHasSession(data.hasSession)
+        }
+      } catch (err) {
+        console.log("[v0] Session check failed:", err)
+      }
+    }
+    checkSession()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+      setHasSession(false)
+      window.location.reload()
+    } catch (err) {
+      console.error("[v0] Logout failed:", err)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -41,6 +67,42 @@ export default function LoginPage() {
       setError(err.message || "Invalid credentials")
       setLoading(false)
     }
+  }
+
+  if (hasSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
+
+        <div className="w-full max-w-md">
+          <Card className="glass-card p-8 neon-glow">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
+                <span className="text-3xl font-bold text-primary">FT</span>
+              </div>
+              <h1 className="text-3xl font-bold mb-2">Already Logged In</h1>
+              <p className="text-muted-foreground">You have an active session</p>
+            </div>
+
+            <div className="space-y-4">
+              <Button onClick={() => (window.location.href = "/app")} className="w-full neon-glow-hover">
+                Go to App
+              </Button>
+
+              <Button onClick={handleLogout} variant="outline" className="w-full bg-transparent">
+                Logout and Sign In with Different Account
+              </Button>
+            </div>
+
+            <div className="mt-6 text-center">
+              <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                ← Back to home
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
