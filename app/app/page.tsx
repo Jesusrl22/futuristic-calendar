@@ -30,7 +30,7 @@ export default function AppPage() {
         }
 
         setUser(data.user)
-        setLoading(false)
+        fetchUserProfile(data.user.id)
       } catch (error) {
         console.error("[v0] Auth check failed:", error)
         window.location.href = "/login"
@@ -39,6 +39,22 @@ export default function AppPage() {
 
     checkAuth()
   }, [])
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/user/profile?userId=${userId}`, {
+        cache: "no-store", // Force fresh data on every reload
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setUser(data.user)
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching profile:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -63,9 +79,22 @@ export default function AppPage() {
       <div>
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">
-            Welcome back, <span className="text-primary neon-text">{user?.email?.split("@")[0]}</span>
+            Welcome, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
           </h1>
-          <p className="text-muted-foreground">Here's your productivity overview</p>
+          <p className="text-muted-foreground">
+            Here's your productivity overview ·
+            <span
+              className={`ml-2 font-medium ${
+                user?.subscription_tier === "pro"
+                  ? "text-yellow-500"
+                  : user?.subscription_tier === "premium"
+                    ? "text-purple-500"
+                    : "text-gray-500"
+              }`}
+            >
+              {user?.subscription_tier?.toUpperCase() || "FREE"} Plan
+            </span>
+          </p>
         </div>
 
         {/* Stats Grid */}

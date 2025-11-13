@@ -6,12 +6,22 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 
 interface User {
   id: string
   email: string
   name: string | null
   subscription_tier: string | null
+  subscription_expires_at: string | null
   created_at: string
 }
 
@@ -21,6 +31,8 @@ export default function AdminDashboardPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [expirationDate, setExpirationDate] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -67,15 +79,19 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const updateUserTier = async (userId: string, newTier: string) => {
+  const updateUserTier = async (userId: string, newTier: string, expiresAt?: string | null) => {
     try {
-      console.log("[v0] Updating user tier:", userId, newTier)
+      const updates: any = { subscription_tier: newTier }
+      if (expiresAt !== undefined) {
+        updates.subscription_expires_at = expiresAt
+      }
+
       const response = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
-          updates: { subscription_tier: newTier },
+          updates,
         }),
       })
 
@@ -85,10 +101,11 @@ export default function AdminDashboardPage() {
         throw new Error(data.error || "Failed to update user")
       }
 
-      setUsers(users.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
-      setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? { ...u, subscription_tier: newTier } : u)))
+      const updatedUser = { ...users.find((u) => u.id === userId)!, ...updates }
+      setUsers(users.map((u) => (u.id === userId ? updatedUser : u)))
+      setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? updatedUser : u)))
 
-      alert(`User updated to ${newTier.toUpperCase()} tier successfully!`)
+      alert(`User updated successfully!`)
     } catch (error) {
       console.error("[v0] Error updating user tier:", error)
       alert("Error updating user. Please try again.")
@@ -98,6 +115,15 @@ export default function AdminDashboardPage() {
   const handleLogout = () => {
     sessionStorage.removeItem("admin_authenticated")
     router.push("/admin")
+  }
+
+  const handleSetExpiration = () => {
+    if (selectedUser) {
+      const expiresAt = expirationDate ? new Date(expirationDate).toISOString() : null
+      updateUserTier(selectedUser.id, selectedUser.subscription_tier || "free", expiresAt)
+      setSelectedUser(null)
+      setExpirationDate("")
+    }
   }
 
   useEffect(() => {
@@ -187,19 +213,21 @@ export default function AdminDashboardPage() {
                   <th className="text-left p-4 font-semibold">User</th>
                   <th className="text-left p-4 font-semibold">Email</th>
                   <th className="text-left p-4 font-semibold">Current Tier</th>
+                  <th className="text-left p-4 font-semibold">Expires</th>
                   <th className="text-left p-4 font-semibold">Change Tier</th>
+                  <th className="text-left p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       Loading users...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       {searchTerm ? "No users found matching your search" : "No users in database"}
                     </td>
                   </tr>
@@ -220,6 +248,13 @@ export default function AdminDashboardPage() {
                           {user.subscription_tier?.toUpperCase() || "FREE"}
                         </span>
                       </td>
+                      <td className="p-4 text-sm">
+                        {user.subscription_expires_at ? (
+                          <span className="text-muted-foreground">{formatDate(user.subscription_expires_at)}</span>
+                        ) : (
+                          <span className="text-muted-foreground italic">No expiration</span>
+                        )}
+                      </td>
                       <td className="p-4">
                         <Select
                           value={user.subscription_tier || "free"}
@@ -234,6 +269,58 @@ export default function AdminDashboardPage() {
                             <SelectItem value="pro">Pro</SelectItem>
                           </SelectContent>
                         </Select>
+                      </td>
+                      <td className="p-4">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user)
+                                setExpirationDate(user.subscription_expires_at?.split("T")[0] || "")
+                              }}
+                            >
+                              Set Expiration
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Set Plan Expiration</DialogTitle>
+                              <DialogDescription>
+                                Set an expiration date for {user.name || user.email}'s subscription plan. Leave empty
+                                for no expiration (until user cancels).
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="expiration">Expiration Date</Label>
+                                <Input
+                                  id="expiration"
+                                  type="date"
+                                  value={expirationDate}
+                                  onChange={(e) => setExpirationDate(e.target.value)}
+                                />
+                                <p className="text-xs text-muted-foreground">Leave empty to remove expiration date</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button onClick={handleSetExpiration} className="flex-1">
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setExpirationDate("")
+                                    updateUserTier(user.id, user.subscription_tier || "free", null)
+                                    setSelectedUser(null)
+                                  }}
+                                >
+                                  Remove Expiration
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </td>
                     </tr>
                   ))
