@@ -7,7 +7,11 @@ export const metadata: Metadata = {
   description: "Organize your tasks, notes, and projects with AI-powered assistance",
   generator: "v0.app",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.jpg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-touch-icon.jpg",
   },
 }
 

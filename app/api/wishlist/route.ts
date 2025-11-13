@@ -33,11 +33,17 @@ export async function GET() {
       },
     )
 
+    if (!itemsResponse.ok) {
+      const error = await itemsResponse.json()
+      console.error("Failed to fetch wishlist:", error)
+      return NextResponse.json({ items: [] })
+    }
+
     const items = await itemsResponse.json()
     return NextResponse.json({ items })
   } catch (error) {
     console.error("Error fetching wishlist:", error)
-    return NextResponse.json({ error: "Failed to fetch wishlist" }, { status: 500 })
+    return NextResponse.json({ items: [] })
   }
 }
 

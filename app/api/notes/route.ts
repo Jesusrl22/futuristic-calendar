@@ -33,11 +33,17 @@ export async function GET() {
       },
     )
 
+    if (!notesResponse.ok) {
+      const error = await notesResponse.json()
+      console.error("Failed to fetch notes:", error)
+      return NextResponse.json({ notes: [] })
+    }
+
     const notes = await notesResponse.json()
     return NextResponse.json({ notes })
   } catch (error) {
     console.error("Error fetching notes:", error)
-    return NextResponse.json({ error: "Failed to fetch notes" }, { status: 500 })
+    return NextResponse.json({ notes: [] })
   }
 }
 
