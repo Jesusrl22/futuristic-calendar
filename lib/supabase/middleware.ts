@@ -16,12 +16,11 @@ export async function updateSession(request: NextRequest) {
 
   if (request.nextUrl.pathname.startsWith("/app")) {
     if (!accessToken && !refreshToken) {
-      console.log("[v0][Middleware] No auth tokens, redirecting to login")
       return NextResponse.redirect(new URL("/login", request.url))
     }
   }
 
-  if (!accessToken || !refreshToken) {
+  if (!accessToken && !refreshToken) {
     return response
   }
 
@@ -40,46 +39,48 @@ export async function updateSession(request: NextRequest) {
       return response
     }
 
-    const refreshResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    if (refreshToken) {
+      const refreshResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          },
+          body: JSON.stringify({
+            refresh_token: refreshToken,
+          }),
         },
-        body: JSON.stringify({
-          refresh_token: refreshToken,
-        }),
-      },
-    )
+      )
 
-    if (refreshResponse.ok) {
-      const refreshData = await refreshResponse.json()
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json()
 
-      response.cookies.set("sb-access-token", refreshData.access_token, {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7,
-      })
-
-      if (refreshData.refresh_token) {
-        response.cookies.set("sb-refresh-token", refreshData.refresh_token, {
+        response.cookies.set("sb-access-token", refreshData.access_token, {
           path: "/",
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 30,
+          maxAge: 60 * 60 * 24 * 7,
         })
-      }
 
-      if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
-        return NextResponse.redirect(new URL("/app", request.url))
-      }
+        if (refreshData.refresh_token) {
+          response.cookies.set("sb-refresh-token", refreshData.refresh_token, {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 60 * 60 * 24 * 30,
+          })
+        }
 
-      return response
+        if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
+          return NextResponse.redirect(new URL("/app", request.url))
+        }
+
+        return response
+      }
     }
 
     response.cookies.delete("sb-access-token")

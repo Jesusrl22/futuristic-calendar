@@ -21,10 +21,12 @@ export default function LoginPage() {
         const response = await fetch("/api/auth/check-session")
         if (response.ok) {
           const data = await response.json()
-          setHasSession(data.hasSession)
+          setHasSession(data.hasSession && data.user)
+        } else {
+          setHasSession(false)
         }
       } catch (err) {
-        console.log("[v0] Session check failed:", err)
+        setHasSession(false)
       }
     }
     checkSession()
