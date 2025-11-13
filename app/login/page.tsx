@@ -38,7 +38,7 @@ export default function LoginPage() {
       setHasSession(false)
       window.location.reload()
     } catch (err) {
-      console.error("[v0] Logout failed:", err)
+      console.error("Logout failed:", err)
     }
   }
 
@@ -88,7 +88,7 @@ export default function LoginPage() {
 
             <div className="space-y-4">
               <Button onClick={() => (window.location.href = "/app")} className="w-full neon-glow-hover">
-                Go to App
+                Continue to App
               </Button>
 
               <Button onClick={handleLogout} variant="outline" className="w-full bg-transparent">

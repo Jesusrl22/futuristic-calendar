@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,7 +13,35 @@ export default function SignupPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const [hasSession, setHasSession] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch("/api/auth/check-session")
+        if (response.ok) {
+          const data = await response.json()
+          setHasSession(data.hasSession && data.user)
+        } else {
+          setHasSession(false)
+        }
+      } catch (err) {
+        setHasSession(false)
+      }
+    }
+    checkSession()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" })
+      setHasSession(false)
+      window.location.reload()
+    } catch (err) {
+      console.error("Logout failed:", err)
+    }
+  }
 
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -26,8 +54,6 @@ export default function SignupPage() {
     const password = formData.get("password") as string
     const confirmPassword = formData.get("confirmPassword") as string
 
-    console.log("[v0] Starting signup process for:", email)
-
     if (password !== confirmPassword) {
       setError("Passwords do not match")
       setLoading(false)
@@ -35,7 +61,6 @@ export default function SignupPage() {
     }
 
     try {
-      console.log("[v0] Calling API route for signup...")
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,8 +73,6 @@ export default function SignupPage() {
         throw new Error(data.error || "Signup failed")
       }
 
-      console.log("[v0] Signup successful:", data)
-
       if (data.requiresConfirmation) {
         setSuccess("Account created! Please check your email to confirm your account.")
       } else {
@@ -59,11 +82,46 @@ export default function SignupPage() {
         }, 1500)
       }
     } catch (err: any) {
-      console.error("[v0] Caught error:", err)
       setError(err.message || "An unexpected error occurred")
     } finally {
       setLoading(false)
     }
+  }
+
+  if (hasSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
+
+        <div className="w-full max-w-md">
+          <Card className="glass-card p-8 neon-glow">
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
+                <span className="text-3xl font-bold text-primary">FT</span>
+              </div>
+              <h1 className="text-3xl font-bold mb-2">Already Logged In</h1>
+              <p className="text-muted-foreground">You already have an active session</p>
+            </div>
+
+            <div className="space-y-4">
+              <Button onClick={() => (window.location.href = "/app")} className="w-full neon-glow-hover">
+                Continue to App
+              </Button>
+
+              <Button onClick={handleLogout} variant="outline" className="w-full bg-transparent">
+                Logout to Create New Account
+              </Button>
+            </div>
+
+            <div className="mt-6 text-center">
+              <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                ← Back to home
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (

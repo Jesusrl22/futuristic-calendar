@@ -20,6 +20,11 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // The pages themselves will show logout option if session exists
+  if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
+    return response
+  }
+
   if (!accessToken && !refreshToken) {
     return response
   }
@@ -33,9 +38,6 @@ export async function updateSession(request: NextRequest) {
     })
 
     if (userResponse.ok) {
-      if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
-        return NextResponse.redirect(new URL("/app", request.url))
-      }
       return response
     }
 
@@ -73,10 +75,6 @@ export async function updateSession(request: NextRequest) {
             sameSite: "lax",
             maxAge: 60 * 60 * 24 * 30,
           })
-        }
-
-        if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
-          return NextResponse.redirect(new URL("/app", request.url))
         }
 
         return response
