@@ -41,7 +41,9 @@ export default function CalendarPage() {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch("/api/tasks")
+      const response = await fetch("/api/tasks", {
+        cache: "no-store",
+      })
       const data = await response.json()
       if (data.tasks) {
         setTasks(data.tasks)
@@ -101,6 +103,7 @@ export default function CalendarPage() {
 
   const handleCreateTask = async () => {
     if (!selectedDate || !newTask.title.trim()) {
+      alert("Please enter a task title")
       return
     }
 
@@ -127,13 +130,18 @@ export default function CalendarPage() {
         }),
       })
 
-      if (response.ok) {
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || "Failed to create task")
+      } else {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
         fetchTasks()
       }
     } catch (error) {
       console.error("Error creating task:", error)
+      alert("Failed to create task. Please try again.")
     }
   }
 

@@ -5,7 +5,22 @@ export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json()
 
-    // Use regular signup instead of admin API
+    const existingUserCheck = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?email=eq.${email}&select=id`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
+      },
+    )
+
+    const existingUsers = await existingUserCheck.json()
+    if (existingUsers && existingUsers.length > 0) {
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
+    }
+
+    // Use regular signup
     const signupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/signup`, {
       method: "POST",
       headers: {
@@ -33,7 +48,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "User ID not found" }, { status: 400 })
     }
 
-    // Create user profile
     const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
       method: "POST",
       headers: {
@@ -56,7 +70,9 @@ export async function POST(request: Request) {
     })
 
     if (!profileResponse.ok) {
-      console.error("Profile creation failed:", await profileResponse.text())
+      const errorText = await profileResponse.text()
+      console.error("Profile creation failed:", errorText)
+      // Continue anyway - user is created in auth
     }
 
     // Set session cookies if access token exists

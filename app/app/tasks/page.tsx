@@ -31,6 +31,7 @@ export default function TasksPage() {
     priority: "medium",
     category: "",
     due_date: "",
+    due_time: "", // Added time field
   })
   const [isCreating, setIsCreating] = useState(false)
 
@@ -82,6 +83,17 @@ export default function TasksPage() {
 
     setIsCreating(true)
     try {
+      let dueDate = null
+      if (newTask.due_date) {
+        dueDate = new Date(newTask.due_date)
+        if (newTask.due_time) {
+          const [hours, minutes] = newTask.due_time.split(":")
+          dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+        } else {
+          dueDate.setHours(23, 59, 59, 999)
+        }
+      }
+
       const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,7 +102,7 @@ export default function TasksPage() {
           description: newTask.description,
           priority: newTask.priority,
           category: newTask.category || null,
-          due_date: newTask.due_date || null,
+          due_date: dueDate ? dueDate.toISOString() : null,
           completed: false,
           status: "todo",
         }),
@@ -108,6 +120,7 @@ export default function TasksPage() {
           priority: "medium",
           category: "",
           due_date: "",
+          due_time: "", // Reset time field
         })
         fetchTasks()
       }
@@ -195,6 +208,17 @@ export default function TasksPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Input
+                      id="category"
+                      placeholder="e.g., Work, Personal..."
+                      value={newTask.category}
+                      onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <Label htmlFor="due_date">Due Date</Label>
                     <Input
                       id="due_date"
@@ -203,15 +227,15 @@ export default function TasksPage() {
                       onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    placeholder="e.g., Work, Personal, Shopping..."
-                    value={newTask.category}
-                    onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="due_time">Due Time</Label>
+                    <Input
+                      id="due_time"
+                      type="time"
+                      value={newTask.due_time}
+                      onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -267,7 +291,11 @@ export default function TasksPage() {
                         {task.category && <span className="text-xs text-muted-foreground">{task.category}</span>}
                         {task.due_date && (
                           <span className="text-xs text-muted-foreground">
-                            Due: {new Date(task.due_date).toLocaleDateString()}
+                            Due: {new Date(task.due_date).toLocaleDateString()}{" "}
+                            {new Date(task.due_date).toLocaleTimeString("en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </span>
                         )}
                       </div>
