@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { createClient } from "@/lib/supabase/client"
 import { Plus, Search, Trash2, Edit } from "@/components/icons"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -40,32 +39,39 @@ export default function TasksPage() {
   }, [])
 
   const fetchTasks = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { data } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-
-      setTasks(data || [])
+    try {
+      const response = await fetch("/api/tasks")
+      const data = await response.json()
+      if (data.tasks) {
+        setTasks(data.tasks)
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error)
     }
   }
 
   const toggleTask = async (taskId: string, completed: boolean) => {
-    const supabase = createClient()
-    await supabase.from("tasks").update({ completed: !completed }).eq("id", taskId)
-    fetchTasks()
+    try {
+      await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId, completed: !completed }),
+      })
+      fetchTasks()
+    } catch (error) {
+      console.error("Error toggling task:", error)
+    }
   }
 
   const deleteTask = async (taskId: string) => {
-    const supabase = createClient()
-    await supabase.from("tasks").delete().eq("id", taskId)
-    fetchTasks()
+    try {
+      await fetch(`/api/tasks?id=${taskId}`, {
+        method: "DELETE",
+      })
+      fetchTasks()
+    } catch (error) {
+      console.error("Error deleting task:", error)
+    }
   }
 
   const createTask = async () => {
@@ -76,36 +82,34 @@ export default function TasksPage() {
 
     setIsCreating(true)
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        const { error } = await supabase.from("tasks").insert({
-          user_id: user.id,
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           title: newTask.title,
           description: newTask.description,
           priority: newTask.priority,
           category: newTask.category || null,
           due_date: newTask.due_date || null,
           completed: false,
-        })
+          status: "todo",
+        }),
+      })
 
-        if (error) {
-          console.error("Error creating task:", error)
-          alert("Failed to create task. Please try again.")
-        } else {
-          setIsDialogOpen(false)
-          setNewTask({
-            title: "",
-            description: "",
-            priority: "medium",
-            category: "",
-            due_date: "",
-          })
-          fetchTasks()
-        }
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || "Failed to create task")
+      } else {
+        setIsDialogOpen(false)
+        setNewTask({
+          title: "",
+          description: "",
+          priority: "medium",
+          category: "",
+          due_date: "",
+        })
+        fetchTasks()
       }
     } catch (error) {
       console.error("Error creating task:", error)
@@ -244,7 +248,7 @@ export default function TasksPage() {
           </TabsList>
 
           <TabsContent value={filter} className="space-y-4">
-            {filteredTasks.map((task, index) => (
+            {filteredTasks.map((task) => (
               <div key={task.id}>
                 <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
                   <div className="flex items-center gap-4">

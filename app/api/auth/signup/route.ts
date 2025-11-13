@@ -5,74 +5,8 @@ export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json()
 
-    const checkUserResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id`,
-      {
-        headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-        },
-      },
-    )
-
-    const existingUsers = await checkUserResponse.json()
-    if (existingUsers && existingUsers.length > 0) {
-      return NextResponse.json({ error: "User already exists. Please login instead." }, { status: 400 })
-    }
-
-    const adminSignupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          name: name || email.split("@")[0],
-        },
-      }),
-    })
-
-    const adminSignupData = await adminSignupResponse.json()
-
-    if (!adminSignupResponse.ok || adminSignupData.error) {
-      return NextResponse.json(
-        { error: adminSignupData.error?.message || adminSignupData.msg || "Signup failed" },
-        { status: 400 },
-      )
-    }
-
-    const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-        Prefer: "return=minimal",
-      },
-      body: JSON.stringify({
-        id: adminSignupData.id,
-        email: adminSignupData.email,
-        name: name || email.split("@")[0],
-        subscription_tier: "free",
-        plan: "free",
-        subscription_plan: "free",
-        ai_credits: 10,
-        theme: "system",
-        language: "en",
-      }),
-    })
-
-    if (!profileResponse.ok) {
-      const errorText = await profileResponse.text()
-      console.error("Profile creation failed:", errorText)
-    }
-
-    const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    // Use regular signup instead of admin API
+    const signupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -84,12 +18,52 @@ export async function POST(request: Request) {
       }),
     })
 
-    const loginData = await loginResponse.json()
+    const signupData = await signupResponse.json()
 
-    if (loginData.access_token && loginData.refresh_token) {
+    if (!signupResponse.ok || signupData.error) {
+      return NextResponse.json(
+        { error: signupData.error?.message || signupData.msg || "Signup failed" },
+        { status: 400 },
+      )
+    }
+
+    const userId = signupData.user?.id
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not found" }, { status: 400 })
+    }
+
+    // Create user profile
+    const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        id: userId,
+        email,
+        name: name || email.split("@")[0],
+        subscription_tier: "free",
+        plan: "free",
+        subscription_plan: "free",
+        ai_credits: 10,
+        theme: "system",
+        language: "en",
+      }),
+    })
+
+    if (!profileResponse.ok) {
+      console.error("Profile creation failed:", await profileResponse.text())
+    }
+
+    // Set session cookies if access token exists
+    if (signupData.access_token && signupData.refresh_token) {
       const cookieStore = await cookies()
 
-      cookieStore.set("sb-access-token", loginData.access_token, {
+      cookieStore.set("sb-access-token", signupData.access_token, {
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -97,7 +71,7 @@ export async function POST(request: Request) {
         maxAge: 60 * 60 * 24 * 7,
       })
 
-      cookieStore.set("sb-refresh-token", loginData.refresh_token, {
+      cookieStore.set("sb-refresh-token", signupData.refresh_token, {
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -109,9 +83,10 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: "Account created successfully!",
-      requiresConfirmation: false,
+      requiresConfirmation: signupData.user?.email_confirmed === false,
     })
   } catch (error: any) {
+    console.error("Signup error:", error)
     return NextResponse.json({ error: error.message || "Signup failed" }, { status: 500 })
   }
 }

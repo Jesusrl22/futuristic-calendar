@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { ChevronLeft, ChevronRight, Plus } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -41,19 +40,14 @@ export default function CalendarPage() {
   }, [currentDate])
 
   const fetchTasks = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { data } = await supabase
-        .from("tasks")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("due_date", { ascending: true })
-
-      setTasks(data || [])
+    try {
+      const response = await fetch("/api/tasks")
+      const data = await response.json()
+      if (data.tasks) {
+        setTasks(data.tasks)
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error)
     }
   }
 
@@ -106,27 +100,23 @@ export default function CalendarPage() {
   }
 
   const handleCreateTask = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    if (!selectedDate || !newTask.title.trim()) {
+      return
+    }
 
-    if (user && selectedDate) {
-      const dueDate = new Date(selectedDate)
-      if (newTask.time) {
-        const [hours, minutes] = newTask.time.split(":")
-        dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
-      } else {
-        // If no time specified, set to end of day
-        dueDate.setHours(23, 59, 59, 999)
-      }
+    const dueDate = new Date(selectedDate)
+    if (newTask.time) {
+      const [hours, minutes] = newTask.time.split(":")
+      dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+    } else {
+      dueDate.setHours(23, 59, 59, 999)
+    }
 
-      console.log("[v0] Creating task with due_date:", dueDate.toISOString())
-
-      const { data: insertedTasks, error: insertError } = await supabase
-        .from("tasks")
-        .insert({
-          user_id: user.id,
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           title: newTask.title,
           description: newTask.description,
           priority: newTask.priority,
@@ -134,30 +124,30 @@ export default function CalendarPage() {
           due_date: dueDate.toISOString(),
           completed: false,
           status: "todo",
-        })
-        .select()
+        }),
+      })
 
-      if (insertError) {
-        console.error("[v0] Error creating task:", insertError)
-        return
+      if (response.ok) {
+        setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
+        setIsDialogOpen(false)
+        fetchTasks()
       }
-
-      console.log("[v0] Task created successfully:", insertedTasks)
-
-      if (insertedTasks && insertedTasks.length > 0) {
-        scheduleNotification(insertedTasks[0])
-      }
-
-      setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
-      setIsDialogOpen(false)
-      fetchTasks()
+    } catch (error) {
+      console.error("Error creating task:", error)
     }
   }
 
   const toggleTask = async (taskId: string, completed: boolean) => {
-    const supabase = createClient()
-    await supabase.from("tasks").update({ completed: !completed }).eq("id", taskId)
-    fetchTasks()
+    try {
+      await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId, completed: !completed }),
+      })
+      fetchTasks()
+    } catch (error) {
+      console.error("Error toggling task:", error)
+    }
   }
 
   const days = getDaysInMonth(currentDate)
