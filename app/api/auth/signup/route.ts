@@ -5,8 +5,6 @@ export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json()
 
-    console.log("[SERVER][API] Signup request for:", email)
-
     const checkUserResponse = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id`,
       {
@@ -32,7 +30,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         email,
         password,
-        email_confirm: true, // Auto-confirm email for development
+        email_confirm: true,
         user_metadata: {
           name: name || email.split("@")[0],
         },
@@ -42,14 +40,11 @@ export async function POST(request: Request) {
     const adminSignupData = await adminSignupResponse.json()
 
     if (!adminSignupResponse.ok || adminSignupData.error) {
-      console.error("[SERVER][API] Admin signup error:", adminSignupData.error?.message || adminSignupData.msg)
       return NextResponse.json(
         { error: adminSignupData.error?.message || adminSignupData.msg || "Signup failed" },
         { status: 400 },
       )
     }
-
-    console.log("[SERVER][API] User created via admin API:", adminSignupData.id)
 
     const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
       method: "POST",
@@ -74,10 +69,7 @@ export async function POST(request: Request) {
 
     if (!profileResponse.ok) {
       const errorText = await profileResponse.text()
-      console.error("[SERVER][API] Profile creation failed:", errorText)
-      // User created but profile failed - still allow login
-    } else {
-      console.log("[SERVER][API] Profile created successfully")
+      console.error("Profile creation failed:", errorText)
     }
 
     const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
@@ -112,8 +104,6 @@ export async function POST(request: Request) {
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 30,
       })
-
-      console.log("[SERVER][API] Login successful, cookies set")
     }
 
     return NextResponse.json({
@@ -122,7 +112,6 @@ export async function POST(request: Request) {
       requiresConfirmation: false,
     })
   } catch (error: any) {
-    console.error("[SERVER][API] Signup error:", error.message)
     return NextResponse.json({ error: error.message || "Signup failed" }, { status: 500 })
   }
 }

@@ -8,11 +8,32 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
 import { Plus, Search, Trash2, Edit } from "@/components/icons"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [filter, setFilter] = useState("all")
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    category: "",
+    due_date: "",
+  })
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
     fetchTasks()
@@ -47,6 +68,53 @@ export default function TasksPage() {
     fetchTasks()
   }
 
+  const createTask = async () => {
+    if (!newTask.title.trim()) {
+      alert("Please enter a task title")
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const { error } = await supabase.from("tasks").insert({
+          user_id: user.id,
+          title: newTask.title,
+          description: newTask.description,
+          priority: newTask.priority,
+          category: newTask.category || null,
+          due_date: newTask.due_date || null,
+          completed: false,
+        })
+
+        if (error) {
+          console.error("Error creating task:", error)
+          alert("Failed to create task. Please try again.")
+        } else {
+          setIsDialogOpen(false)
+          setNewTask({
+            title: "",
+            description: "",
+            priority: "medium",
+            category: "",
+            due_date: "",
+          })
+          fetchTasks()
+        }
+      }
+    } catch (error) {
+      console.error("Error creating task:", error)
+      alert("Failed to create task. Please try again.")
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesFilter =
@@ -74,10 +142,84 @@ export default function TasksPage() {
           <h1 className="text-4xl font-bold">
             <span className="text-primary neon-text">Tasks</span>
           </h1>
-          <Button className="neon-glow-hover">
-            <Plus className="w-4 h-4 mr-2" />
-            New Task
-          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="neon-glow-hover">
+                <Plus className="w-4 h-4 mr-2" />
+                New Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Task</DialogTitle>
+                <DialogDescription>Add a new task to your list. Fill in the details below.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title *</Label>
+                  <Input
+                    id="title"
+                    placeholder="Task title..."
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Task description..."
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select
+                      value={newTask.priority}
+                      onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
+                    >
+                      <SelectTrigger id="priority">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="due_date">Due Date</Label>
+                    <Input
+                      id="due_date"
+                      type="date"
+                      value={newTask.due_date}
+                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    placeholder="e.g., Work, Personal, Shopping..."
+                    value={newTask.category}
+                    onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
+                  Cancel
+                </Button>
+                <Button onClick={createTask} disabled={isCreating}>
+                  {isCreating ? "Creating..." : "Create Task"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Card className="glass-card p-6 neon-glow mb-6">

@@ -6,6 +6,10 @@ export async function updateSession(request: NextRequest) {
   const accessToken = request.cookies.get("sb-access-token")?.value
   const refreshToken = request.cookies.get("sb-refresh-token")?.value
 
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return response
+  }
+
   console.log("[v0][Middleware] Checking auth for:", request.nextUrl.pathname)
   console.log("[v0][Middleware] Has access token:", !!accessToken)
   console.log("[v0][Middleware] Has refresh token:", !!refreshToken)
@@ -27,13 +31,10 @@ export async function updateSession(request: NextRequest) {
     })
 
     if (userResponse.ok) {
-      console.log("[v0][Middleware] Session valid")
-
       if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
         console.log("[v0][Middleware] Authenticated user accessing auth page, redirecting to /app")
         return NextResponse.redirect(new URL("/app", request.url))
       }
-
       return response
     }
 
@@ -94,8 +95,6 @@ export async function updateSession(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("[v0][Middleware] Error checking session:", error)
-
     response.cookies.delete("sb-access-token")
     response.cookies.delete("sb-refresh-token")
 
