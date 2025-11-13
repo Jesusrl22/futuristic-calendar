@@ -50,10 +50,16 @@ export default function WishlistPage() {
   const fetchItems = async () => {
     try {
       const response = await fetch("/api/wishlist")
+      if (!response.ok) {
+        console.error("Failed to fetch wishlist:", response.status)
+        setItems([])
+        return
+      }
       const data = await response.json()
       setItems(data.items || [])
     } catch (error) {
       console.error("Error fetching wishlist:", error)
+      setItems([])
     }
   }
 

@@ -7,7 +7,7 @@ export async function GET() {
     const accessToken = cookieStore.get("sb-access-token")?.value
 
     if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ items: [] })
     }
 
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
@@ -18,7 +18,7 @@ export async function GET() {
     })
 
     if (!userResponse.ok) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 })
+      return NextResponse.json({ items: [] })
     }
 
     const user = await userResponse.json()

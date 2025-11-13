@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Plus } from "@/components/icons"
+import { ChevronLeft, ChevronRight, Plus, Edit2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,6 +18,8 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<any>(null)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
   const [newTask, setNewTask] = useState({
     title: "",
@@ -155,6 +157,43 @@ export default function CalendarPage() {
       fetchTasks()
     } catch (error) {
       console.error("Error toggling task:", error)
+    }
+  }
+
+  const handleUpdateTask = async () => {
+    if (!editingTask || !editingTask.title.trim()) {
+      alert("Please enter a task title")
+      return
+    }
+
+    const dueDate = new Date(editingTask.due_date)
+
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingTask.id,
+          title: editingTask.title,
+          description: editingTask.description,
+          priority: editingTask.priority,
+          category: editingTask.category,
+          due_date: dueDate.toISOString(),
+          completed: editingTask.completed,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || "Failed to update task")
+      } else {
+        setIsEditDialogOpen(false)
+        setEditingTask(null)
+        fetchTasks()
+      }
+    } catch (error) {
+      console.error("Error updating task:", error)
+      alert("Failed to update task. Please try again.")
     }
   }
 
@@ -428,11 +467,99 @@ export default function CalendarPage() {
                           )}
                         </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingTask(task)
+                          setIsViewDialogOpen(false)
+                          setIsEditDialogOpen(true)
+                        }}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
                     </div>
                   </Card>
                 ))
               )}
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="glass-card max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+            </DialogHeader>
+            {editingTask && (
+              <div className="space-y-4">
+                <div>
+                  <Label>Title</Label>
+                  <Input
+                    value={editingTask.title}
+                    onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
+                    placeholder="Task title"
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    value={editingTask.description || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+                    placeholder="Task description"
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <div>
+                  <Label>Due Date & Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={editingTask.due_date ? new Date(editingTask.due_date).toISOString().slice(0, 16) : ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Priority</Label>
+                    <Select
+                      value={editingTask.priority}
+                      onValueChange={(value) => setEditingTask({ ...editingTask, priority: value })}
+                    >
+                      <SelectTrigger className="bg-secondary/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Category</Label>
+                    <Select
+                      value={editingTask.category}
+                      onValueChange={(value) => setEditingTask({ ...editingTask, category: value })}
+                    >
+                      <SelectTrigger className="bg-secondary/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="personal">Personal</SelectItem>
+                        <SelectItem value="work">Work</SelectItem>
+                        <SelectItem value="health">Health</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button onClick={handleUpdateTask} className="w-full neon-glow-hover">
+                  Update Task
+                </Button>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
