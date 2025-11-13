@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -15,47 +14,42 @@ export default function StatsPage() {
     totalFocusTime: 0,
   })
   const [weeklyData, setWeeklyData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchStats()
   }, [])
 
   const fetchStats = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const [tasksRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
-        supabase.from("tasks").select("*", { count: "exact" }).eq("user_id", user.id),
-        supabase.from("tasks").select("*", { count: "exact" }).eq("user_id", user.id).eq("completed", true),
-        supabase.from("notes").select("*", { count: "exact" }).eq("user_id", user.id),
-        supabase.from("pomodoro_sessions").select("*").eq("user_id", user.id).eq("completed", true),
-      ])
-
-      const totalFocusTime = (pomodoroRes.data?.reduce((sum, s) => sum + s.duration, 0) || 0) / 60
-
-      setStats({
-        totalTasks: tasksRes.count || 0,
-        completedTasks: completedRes.count || 0,
-        totalNotes: notesRes.count || 0,
-        totalPomodoro: pomodoroRes.data?.length || 0,
-        totalFocusTime: Math.round(totalFocusTime),
-      })
-
-      // Generate weekly data
-      const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-      const weekData = days.map((day) => ({
-        name: day,
-        tasks: Math.floor(Math.random() * 10),
-        pomodoro: Math.floor(Math.random() * 8),
-      }))
-      setWeeklyData(weekData)
+    try {
+      const response = await fetch("/api/stats")
+      if (response.ok) {
+        const data = await response.json()
+        setStats({
+          totalTasks: data.totalTasks || 0,
+          completedTasks: data.completedTasks || 0,
+          totalNotes: data.totalNotes || 0,
+          totalPomodoro: data.totalPomodoro || 0,
+          totalFocusTime: data.totalFocusTime || 0,
+        })
+        setWeeklyData(data.weeklyData || [])
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
   const completionRate = stats.totalTasks > 0 ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <div className="text-muted-foreground">Loading statistics...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-8">

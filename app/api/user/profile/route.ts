@@ -1,21 +1,37 @@
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 
-export async function GET(request: Request) {
+function getUserIdFromToken(token: string): string | null {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
+    const payload = JSON.parse(atob(token.split(".")[1]))
+    return payload.sub || null
+  } catch {
+    return null
+  }
+}
 
-    if (!userId) {
-      return NextResponse.json({ error: "User ID required" }, { status: 400 })
+export async function GET() {
+  try {
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get("sb-access-token")?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch user profile from Supabase
+    const userId = getUserIdFromToken(accessToken)
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=*`, {
       headers: {
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
       },
-      cache: "no-store", // Disable caching to always get fresh data
+      cache: "no-store",
     })
 
     if (!response.ok) {
@@ -28,7 +44,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ user: users[0] })
+    return NextResponse.json(users[0])
   } catch (error) {
     console.error("[API] Error fetching user profile:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

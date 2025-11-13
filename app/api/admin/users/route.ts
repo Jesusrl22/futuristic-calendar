@@ -12,7 +12,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, name, subscription_tier, created_at")
+      .select("id, email, name, subscription_tier, subscription_expires_at, created_at")
       .order("created_at", { ascending: false })
 
     if (error) {
