@@ -209,12 +209,20 @@ export default function TasksPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      placeholder="e.g., Work, Personal..."
+                    <Select
                       value={newTask.category}
-                      onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
-                    />
+                      onValueChange={(value) => setNewTask({ ...newTask, category: value })}
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="personal">Personal</SelectItem>
+                        <SelectItem value="work">Work</SelectItem>
+                        <SelectItem value="health">Health</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
