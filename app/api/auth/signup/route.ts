@@ -5,65 +5,91 @@ export async function POST(request: Request) {
   try {
     const { email, password, name } = await request.json()
 
-    console.log("[v0] Starting signup for:", email, "with name:", name)
+    console.log("[SERVER][v0] Starting signup for:", email, "with name:", name)
 
     if (!name || name.trim() === "") {
       return NextResponse.json({ error: "Name is required" }, { status: 400 })
     }
 
-    // Step 1: Check if user already exists
-    const checkResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users?email=${encodeURIComponent(email)}`,
-      {
-        headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-        },
-      },
-    )
-
-    if (checkResponse.ok) {
-      const existingUsers = await checkResponse.json()
-      if (existingUsers && existingUsers.users && existingUsers.users.length > 0) {
-        console.log("[v0] User already exists")
-        return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
-      }
-    }
-
-    // Step 2: Create user in Supabase Auth
-    const signupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
-      method: "POST",
+    // Step 1: Check if user already exists in auth
+    const checkResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
       headers: {
-        "Content-Type": "application/json",
         apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
       },
-      body: JSON.stringify({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          name: name,
-        },
-      }),
     })
 
-    const signupData = await signupResponse.json()
+    let existingUserId: string | null = null
 
-    if (!signupResponse.ok) {
-      console.error("[v0] Signup API failed:", signupData)
-      // Even if it says error, the user might have been created, so we continue
-      if (!signupData.id && !signupData.user?.id) {
-        const errorMsg = signupData.msg || signupData.message || signupData.error || "Failed to create account"
-        return NextResponse.json({ error: errorMsg }, { status: signupResponse.status })
+    if (checkResponse.ok) {
+      const allUsers = await checkResponse.json()
+      const existingUser = allUsers.users?.find((u: any) => u.email === email)
+
+      if (existingUser) {
+        existingUserId = existingUser.id
+        console.log("[SERVER][v0] User already exists in auth with ID:", existingUserId)
+
+        const profileCheckResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${existingUserId}`,
+          {
+            headers: {
+              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+            },
+          },
+        )
+
+        if (profileCheckResponse.ok) {
+          const profiles = await profileCheckResponse.json()
+
+          if (profiles && profiles.length > 0) {
+            // Profile exists, user is fully registered
+            console.log("[SERVER][v0] Profile exists, user is fully registered")
+            return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
+          } else {
+            // Profile missing, we'll create it below
+            console.log("[SERVER][v0] Profile missing, will create it")
+          }
+        }
       }
     }
 
-    const userId = signupData.id || signupData.user?.id
-    console.log("[v0] User created in auth with ID:", userId)
+    let userId = existingUserId
 
-    // Step 3: Create profile in users table manually
-    console.log("[v0] Creating user profile...")
+    // Step 2: Create user in auth if doesn't exist
+    if (!userId) {
+      console.log("[SERVER][v0] Creating new user in auth...")
+      const signupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            name: name,
+          },
+        }),
+      })
+
+      const signupData = await signupResponse.json()
+
+      if (!signupResponse.ok) {
+        console.error("[SERVER][v0] Signup API failed:", signupData)
+        const errorMsg = signupData.msg || signupData.message || signupData.error || "Failed to create account"
+        return NextResponse.json({ error: errorMsg }, { status: signupResponse.status })
+      }
+
+      userId = signupData.id
+      console.log("[SERVER][v0] User created in auth with ID:", userId)
+    }
+
+    // Step 3: Create profile in users table
+    console.log("[SERVER][v0] Creating user profile for ID:", userId)
     const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
       method: "POST",
       headers: {
@@ -95,18 +121,14 @@ export async function POST(request: Request) {
 
     if (!profileResponse.ok) {
       const profileError = await profileResponse.json()
-      console.error("[v0] Failed to create profile:", profileError)
-      return NextResponse.json(
-        { error: "Account created but profile setup failed. Please contact support." },
-        { status: 500 },
-      )
+      console.error("[SERVER][v0] Failed to create profile:", profileError)
+      return NextResponse.json({ error: "Failed to create user profile. Please try again." }, { status: 500 })
     }
 
-    const profileData = await profileResponse.json()
-    console.log("[v0] Profile created successfully:", profileData)
+    console.log("[SERVER][v0] Profile created successfully")
 
     // Step 4: Auto-login the user
-    console.log("[v0] Attempting auto-login...")
+    console.log("[SERVER][v0] Attempting auto-login...")
     const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: "POST",
       headers: {
@@ -141,8 +163,10 @@ export async function POST(request: Request) {
           maxAge: 60 * 60 * 24 * 30,
         })
 
-        console.log("[v0] Auto-login successful, cookies set")
+        console.log("[SERVER][v0] Auto-login successful, cookies set")
       }
+    } else {
+      console.error("[SERVER][v0] Auto-login failed")
     }
 
     return NextResponse.json({
@@ -150,7 +174,7 @@ export async function POST(request: Request) {
       message: "Account created successfully!",
     })
   } catch (error: any) {
-    console.error("[v0] Signup error:", error)
+    console.error("[SERVER][v0] Signup error:", error)
     return NextResponse.json({ error: error.message || "Signup failed" }, { status: 500 })
   }
 }
