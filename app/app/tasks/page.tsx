@@ -25,13 +25,23 @@ export default function TasksPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [filter, setFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<any>(null)
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    category: "",
+    due_date: "",
+    due_time: "",
+  })
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
     priority: "medium",
     category: "",
     due_date: "",
-    due_time: "", // Added time field
+    due_time: "",
   })
   const [isCreating, setIsCreating] = useState(false)
 
@@ -120,13 +130,78 @@ export default function TasksPage() {
           priority: "medium",
           category: "",
           due_date: "",
-          due_time: "", // Reset time field
+          due_time: "",
         })
         fetchTasks()
       }
     } catch (error) {
       console.error("Error creating task:", error)
       alert("Failed to create task. Please try again.")
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const openEditDialog = (task: any) => {
+    setEditingTask(task)
+    const dueDate = task.due_date ? new Date(task.due_date) : null
+    setEditForm({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority || "medium",
+      category: task.category || "",
+      due_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
+      due_time: dueDate
+        ? dueDate.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })
+        : "",
+    })
+    setIsEditDialogOpen(true)
+  }
+
+  const updateTask = async () => {
+    if (!editForm.title.trim()) {
+      alert("Please enter a task title")
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      let dueDate = null
+      if (editForm.due_date) {
+        dueDate = new Date(editForm.due_date)
+        if (editForm.due_time) {
+          const [hours, minutes] = editForm.due_time.split(":")
+          dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+        } else {
+          dueDate.setHours(23, 59, 59, 999)
+        }
+      }
+
+      const response = await fetch("/api/tasks", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingTask.id,
+          title: editForm.title,
+          description: editForm.description,
+          priority: editForm.priority,
+          category: editForm.category || null,
+          due_date: dueDate ? dueDate.toISOString() : null,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(data.error || "Failed to update task")
+      } else {
+        setIsEditDialogOpen(false)
+        setEditingTask(null)
+        fetchTasks()
+      }
+    } catch (error) {
+      console.error("Error updating task:", error)
+      alert("Failed to update task. Please try again.")
     } finally {
       setIsCreating(false)
     }
@@ -309,7 +384,7 @@ export default function TasksPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(task)}>
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
@@ -328,6 +403,98 @@ export default function TasksPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+              <DialogDescription>Update the task details below.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Title *</Label>
+                <Input
+                  id="edit-title"
+                  placeholder="Task title..."
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  placeholder="Task description..."
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-priority">Priority</Label>
+                  <Select
+                    value={editForm.priority}
+                    onValueChange={(value) => setEditForm({ ...editForm, priority: value })}
+                  >
+                    <SelectTrigger id="edit-priority">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Select
+                    value={editForm.category}
+                    onValueChange={(value) => setEditForm({ ...editForm, category: value })}
+                  >
+                    <SelectTrigger id="edit-category">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="personal">Personal</SelectItem>
+                      <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="health">Health</SelectItem>
+                      <SelectItem value="finance">Finance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-due_date">Due Date</Label>
+                  <Input
+                    id="edit-due_date"
+                    type="date"
+                    value={editForm.due_date}
+                    onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-due_time">Due Time</Label>
+                  <Input
+                    id="edit-due_time"
+                    type="time"
+                    value={editForm.due_time}
+                    onChange={(e) => setEditForm({ ...editForm, due_time: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating}>
+                Cancel
+              </Button>
+              <Button onClick={updateTask} disabled={isCreating}>
+                {isCreating ? "Updating..." : "Update Task"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

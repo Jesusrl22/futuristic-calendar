@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2, Edit2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<any[]>([])
@@ -23,30 +22,18 @@ export default function NotesPage() {
   }, [])
 
   const checkSubscriptionAndFetch = async () => {
-    const sessionResponse = await fetch("/api/auth/check-session")
-    const sessionData = await sessionResponse.json()
-
-    if (sessionData.hasSession && sessionData.userId) {
-      const profileResponse = await fetch(`/api/user/profile?userId=${sessionData.userId}`)
-      const profileData = await profileResponse.json()
-
-      setSubscriptionTier(profileData.profile?.subscription_tier || "free")
+    try {
       setLoading(false)
-
-      if (profileData.profile?.subscription_tier === "premium" || profileData.profile?.subscription_tier === "pro") {
-        fetchNotes()
-      }
+      fetchNotes()
+    } catch (error) {
+      console.error("Error checking subscription:", error)
+      setLoading(false)
     }
   }
 
   const fetchNotes = async () => {
     try {
       const response = await fetch("/api/notes")
-      if (!response.ok) {
-        console.error("Failed to fetch notes:", response.status)
-        setNotes([])
-        return
-      }
       const data = await response.json()
       setNotes(data.notes || [])
     } catch (error) {
@@ -110,10 +97,6 @@ export default function NotesPage() {
         <p>Loading...</p>
       </div>
     )
-  }
-
-  if (subscriptionTier !== "premium" && subscriptionTier !== "pro") {
-    return <UpgradeModal feature="Notes" requiredPlan="premium" />
   }
 
   return (

@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function WishlistPage() {
   const [items, setItems] = useState<any[]>([])
@@ -31,30 +30,18 @@ export default function WishlistPage() {
   }, [])
 
   const checkSubscriptionAndFetch = async () => {
-    const sessionResponse = await fetch("/api/auth/check-session")
-    const sessionData = await sessionResponse.json()
-
-    if (sessionData.hasSession && sessionData.userId) {
-      const profileResponse = await fetch(`/api/user/profile?userId=${sessionData.userId}`)
-      const profileData = await profileResponse.json()
-
-      setSubscriptionTier(profileData.profile?.subscription_tier || "free")
+    try {
       setLoading(false)
-
-      if (profileData.profile?.subscription_tier === "premium" || profileData.profile?.subscription_tier === "pro") {
-        fetchItems()
-      }
+      fetchItems()
+    } catch (error) {
+      console.error("Error checking subscription:", error)
+      setLoading(false)
     }
   }
 
   const fetchItems = async () => {
     try {
       const response = await fetch("/api/wishlist")
-      if (!response.ok) {
-        console.error("Failed to fetch wishlist:", response.status)
-        setItems([])
-        return
-      }
       const data = await response.json()
       setItems(data.items || [])
     } catch (error) {
@@ -109,10 +96,6 @@ export default function WishlistPage() {
         <p>Loading...</p>
       </div>
     )
-  }
-
-  if (subscriptionTier !== "premium" && subscriptionTier !== "pro") {
-    return <UpgradeModal feature="Wishlist" requiredPlan="premium" />
   }
 
   return (
