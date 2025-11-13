@@ -6,7 +6,7 @@ export async function GET() {
   const accessToken = cookieStore.get("sb-access-token")?.value
 
   if (!accessToken) {
-    return NextResponse.json({ hasSession: false })
+    return NextResponse.json({ hasSession: false, user: null })
   }
 
   try {
@@ -17,8 +17,17 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ hasSession: response.ok })
+    if (!response.ok) {
+      return NextResponse.json({ hasSession: false, user: null })
+    }
+
+    const userData = await response.json()
+
+    return NextResponse.json({
+      hasSession: true,
+      user: userData,
+    })
   } catch (error) {
-    return NextResponse.json({ hasSession: false })
+    return NextResponse.json({ hasSession: false, user: null })
   }
 }

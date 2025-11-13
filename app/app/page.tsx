@@ -1,54 +1,44 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
 import { CheckSquare, FileText, Timer, Zap } from "@/components/icons"
 
 export default function AppPage() {
-  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({
     tasks: 0,
     notes: 0,
     pomodoro: 0,
-    credits: 0,
+    credits: 100,
   })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      try {
+        const response = await fetch("/api/auth/check-session")
+        if (!response.ok) {
+          window.location.href = "/login"
+          return
+        }
 
-      if (!user) {
-        router.push("/login")
-        return
+        const data = await response.json()
+        if (!data.hasSession || !data.user) {
+          window.location.href = "/login"
+          return
+        }
+
+        setUser(data.user)
+        setLoading(false)
+      } catch (error) {
+        console.error("[v0] Auth check failed:", error)
+        window.location.href = "/login"
       }
-
-      setUser(user)
-
-      // Fetch user stats
-      const tasksData = await supabase.from("tasks").select("*")
-      const notesData = await supabase.from("notes").select("*")
-      const pomodoroData = await supabase.from("pomodoro_sessions").select("*")
-      const profileData = await supabase.from("users").select("ai_credits")
-
-      setStats({
-        tasks: tasksData.data?.length || 0,
-        notes: notesData.data?.length || 0,
-        pomodoro: pomodoroData.data?.filter((s: any) => s.completed)?.length || 0,
-        credits: profileData.data?.[0]?.ai_credits || 100,
-      })
-
-      setLoading(false)
     }
 
     checkAuth()
-  }, [router])
+  }, [])
 
   if (loading) {
     return (
@@ -80,7 +70,7 @@ export default function AppPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {statCards.map((stat, i) => (
+          {statCards.map((stat) => (
             <div key={stat.title}>
               <Card className="glass-card p-6 neon-glow-hover transition-all duration-300 cursor-pointer group">
                 <div className="flex items-center justify-between mb-4">
@@ -102,7 +92,7 @@ export default function AppPage() {
                 { title: "Create Task", href: "/app/tasks", icon: "📝" },
                 { title: "Start Pomodoro", href: "/app/pomodoro", icon: "⏱️" },
                 { title: "Ask AI", href: "/app/ai", icon: "🤖" },
-              ].map((action, i) => (
+              ].map((action) => (
                 <a
                   key={action.title}
                   href={action.href}
