@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   generator: "v0.app",
   icons: {
     icon: [
-      { url: "/favicon.jpg", type: "image/svg+xml" },
+      { url: "/favicon.ico", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
     ],
     apple: "/apple-touch-icon.jpg",

@@ -30,7 +30,7 @@ export default function AppPage() {
         }
 
         setUser(data.user)
-        fetchUserProfile(data.user.id)
+        fetchUserProfile()
       } catch (error) {
         console.error("[v0] Auth check failed:", error)
         window.location.href = "/login"
@@ -40,14 +40,18 @@ export default function AppPage() {
     checkAuth()
   }, [])
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async () => {
     try {
-      const response = await fetch(`/api/user/profile?userId=${userId}`, {
-        cache: "no-store", // Force fresh data on every reload
+      const response = await fetch("/api/user/profile", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
       })
       if (response.ok) {
         const data = await response.json()
-        setUser(data.user)
+        setUser(data)
       }
     } catch (error) {
       console.error("[v0] Error fetching profile:", error)
