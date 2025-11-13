@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createClient } from "@/lib/supabase/client"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -26,41 +25,39 @@ export default function SettingsPage() {
   }, [])
 
   const fetchProfile = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    try {
+      const response = await fetch("/api/settings")
+      const data = await response.json()
 
-    if (user) {
-      const { data } = await supabase.from("users").select("*").eq("id", user.id).single()
-
-      setProfile({
-        email: user.email || "",
-        theme: data?.theme || "neon-tech",
-        language: data?.language || "en",
-        notifications: data?.notifications ?? true,
-      })
+      if (data.profile) {
+        setProfile({
+          email: data.email || "",
+          theme: data.profile.theme || "neon-tech",
+          language: data.profile.language || "en",
+          notifications: data.profile.notifications ?? true,
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching settings:", error)
     }
   }
 
   const handleSave = async () => {
     setLoading(true)
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      await supabase
-        .from("users")
-        .update({
+    try {
+      await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           theme: profile.theme,
           language: profile.language,
           notifications: profile.notifications,
-        })
-        .eq("id", user.id)
-
+        }),
+      })
       alert("Settings saved successfully!")
+    } catch (error) {
+      console.error("Error saving settings:", error)
+      alert("Failed to save settings")
     }
     setLoading(false)
   }

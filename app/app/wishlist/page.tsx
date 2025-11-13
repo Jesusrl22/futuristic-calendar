@@ -5,13 +5,12 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { createClient } from "@/lib/supabase/client"
 import { Plus, Trash2, ExternalLink } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UpgradeModal } from "@/components/upgrade-modal" // Fixed import to use named import
+import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function WishlistPage() {
   const [items, setItems] = useState<any[]>([])
@@ -32,65 +31,63 @@ export default function WishlistPage() {
   }, [])
 
   const checkSubscriptionAndFetch = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const sessionResponse = await fetch("/api/auth/check-session")
+    const sessionData = await sessionResponse.json()
 
-    if (user) {
-      const { data } = await supabase.from("users").select("subscription_tier").eq("id", user.id).single()
-      setSubscriptionTier(data?.subscription_tier || "free")
+    if (sessionData.hasSession && sessionData.userId) {
+      const profileResponse = await fetch(`/api/user/profile?userId=${sessionData.userId}`)
+      const profileData = await profileResponse.json()
+
+      setSubscriptionTier(profileData.profile?.subscription_tier || "free")
       setLoading(false)
 
-      if (data?.subscription_tier === "premium" || data?.subscription_tier === "pro") {
+      if (profileData.profile?.subscription_tier === "premium" || profileData.profile?.subscription_tier === "pro") {
         fetchItems()
       }
     }
   }
 
   const fetchItems = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { data } = await supabase
-        .from("wishlist_items")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-
-      setItems(data || [])
+    try {
+      const response = await fetch("/api/wishlist")
+      const data = await response.json()
+      setItems(data.items || [])
+    } catch (error) {
+      console.error("Error fetching wishlist:", error)
     }
   }
 
   const handleSaveItem = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      await supabase.from("wishlist_items").insert({
-        user_id: user.id,
-        title: itemForm.title,
-        description: itemForm.description,
-        price: itemForm.price ? Number.parseFloat(itemForm.price) : null,
-        priority: itemForm.priority,
-        url: itemForm.url,
+    try {
+      await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: itemForm.title,
+          description: itemForm.description,
+          price: itemForm.price ? Number.parseFloat(itemForm.price) : null,
+          priority: itemForm.priority,
+          url: itemForm.url,
+        }),
       })
 
       setItemForm({ title: "", description: "", price: "", priority: "medium", url: "" })
       setIsDialogOpen(false)
       fetchItems()
+    } catch (error) {
+      console.error("Error saving wishlist item:", error)
     }
   }
 
   const deleteItem = async (itemId: string) => {
-    const supabase = createClient()
-    await supabase.from("wishlist_items").delete().eq("id", itemId)
-    fetchItems()
+    try {
+      await fetch(`/api/wishlist?id=${itemId}`, {
+        method: "DELETE",
+      })
+      fetchItems()
+    } catch (error) {
+      console.error("Error deleting wishlist item:", error)
+    }
   }
 
   const filteredItems = items.filter((item) => {

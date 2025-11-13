@@ -5,10 +5,9 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { createClient } from "@/lib/supabase/client"
 import { Plus, Search, Trash2, Edit2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { UpgradeModal } from "@/components/upgrade-modal" // Fixed import to use named import
+import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<any[]>([])
@@ -24,56 +23,52 @@ export default function NotesPage() {
   }, [])
 
   const checkSubscriptionAndFetch = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const sessionResponse = await fetch("/api/auth/check-session")
+    const sessionData = await sessionResponse.json()
 
-    if (user) {
-      const { data } = await supabase.from("users").select("subscription_tier").eq("id", user.id).single()
-      setSubscriptionTier(data?.subscription_tier || "free")
+    if (sessionData.hasSession && sessionData.userId) {
+      const profileResponse = await fetch(`/api/user/profile?userId=${sessionData.userId}`)
+      const profileData = await profileResponse.json()
+
+      setSubscriptionTier(profileData.profile?.subscription_tier || "free")
       setLoading(false)
 
-      if (data?.subscription_tier === "premium" || data?.subscription_tier === "pro") {
+      if (profileData.profile?.subscription_tier === "premium" || profileData.profile?.subscription_tier === "pro") {
         fetchNotes()
       }
     }
   }
 
   const fetchNotes = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { data } = await supabase
-        .from("notes")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false })
-
-      setNotes(data || [])
+    try {
+      const response = await fetch("/api/notes")
+      const data = await response.json()
+      setNotes(data.notes || [])
+    } catch (error) {
+      console.error("Error fetching notes:", error)
     }
   }
 
   const handleSaveNote = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
+    try {
       if (editingNote) {
-        await supabase
-          .from("notes")
-          .update({ title: noteForm.title, content: noteForm.content, updated_at: new Date().toISOString() })
-          .eq("id", editingNote.id)
+        await fetch("/api/notes", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: editingNote.id,
+            title: noteForm.title,
+            content: noteForm.content,
+          }),
+        })
       } else {
-        await supabase.from("notes").insert({
-          user_id: user.id,
-          title: noteForm.title,
-          content: noteForm.content,
+        await fetch("/api/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: noteForm.title,
+            content: noteForm.content,
+          }),
         })
       }
 
@@ -81,13 +76,20 @@ export default function NotesPage() {
       setEditingNote(null)
       setIsDialogOpen(false)
       fetchNotes()
+    } catch (error) {
+      console.error("Error saving note:", error)
     }
   }
 
   const deleteNote = async (noteId: string) => {
-    const supabase = createClient()
-    await supabase.from("notes").delete().eq("id", noteId)
-    fetchNotes()
+    try {
+      await fetch(`/api/notes?id=${noteId}`, {
+        method: "DELETE",
+      })
+      fetchNotes()
+    } catch (error) {
+      console.error("Error deleting note:", error)
+    }
   }
 
   const filteredNotes = notes.filter(
@@ -165,7 +167,7 @@ export default function NotesPage() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredNotes.map((note, index) => (
+        {filteredNotes.map((note) => (
           <div key={note.id}>
             <Card className="glass-card p-6 neon-glow-hover transition-all duration-300 h-full flex flex-col">
               <h3 className="font-semibold text-lg mb-2">{note.title}</h3>

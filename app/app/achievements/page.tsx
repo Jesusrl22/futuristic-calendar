@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { createClient } from "@/lib/supabase/client"
 import { motion } from "framer-motion"
 import { Trophy, Lock } from "@/components/icons"
 import { Progress } from "@/components/ui/progress"
@@ -33,25 +32,14 @@ export default function AchievementsPage() {
   }, [])
 
   const fetchAchievements = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    try {
+      const response = await fetch("/api/achievements")
+      const data = await response.json()
 
-    if (user) {
-      const [achievementsRes, tasksRes, notesRes, pomodoroRes] = await Promise.all([
-        supabase.from("achievements").select("*").eq("user_id", user.id),
-        supabase.from("tasks").select("*", { count: "exact" }).eq("user_id", user.id).eq("completed", true),
-        supabase.from("notes").select("*", { count: "exact" }).eq("user_id", user.id),
-        supabase.from("pomodoro_sessions").select("*", { count: "exact" }).eq("user_id", user.id).eq("completed", true),
-      ])
-
-      setAchievements(achievementsRes.data || [])
-      setStats({
-        tasks: tasksRes.count || 0,
-        notes: notesRes.count || 0,
-        pomodoro: pomodoroRes.count || 0,
-      })
+      setAchievements(data.achievements || [])
+      setStats(data.stats || { tasks: 0, notes: 0, pomodoro: 0 })
+    } catch (error) {
+      console.error("Error fetching achievements:", error)
     }
   }
 

@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 
+function getUserIdFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
+    return payload.sub || null
+  } catch {
+    return null
+  }
+}
+
 export async function GET() {
   try {
     const cookieStore = await cookies()
@@ -33,7 +42,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const userId = getUserIdFromToken(accessToken)
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
     const body = await request.json()
+
+    const taskData = {
+      ...body,
+      user_id: userId,
+    }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks`, {
       method: "POST",
@@ -43,17 +62,19 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${accessToken}`,
         Prefer: "return=representation",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(taskData),
     })
 
-    const task = await response.json()
-
     if (!response.ok) {
-      return NextResponse.json({ error: task.message || "Failed to create task" }, { status: response.status })
+      const error = await response.json()
+      console.error("[SERVER] Task creation failed:", error)
+      return NextResponse.json({ error: error.message || "Failed to create task" }, { status: response.status })
     }
 
+    const task = await response.json()
     return NextResponse.json({ task })
   } catch (error: any) {
+    console.error("[SERVER] Task API error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
