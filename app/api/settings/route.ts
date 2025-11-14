@@ -51,7 +51,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { theme, language, notifications } = body
+    const { theme, language, notifications, timezone } = body
 
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
       headers: {
@@ -73,6 +73,7 @@ export async function PATCH(request: Request) {
         theme,
         language,
         notifications,
+        timezone,
         updated_at: new Date().toISOString(),
       }),
     })

@@ -27,6 +27,7 @@ export default function TasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
+  const [userTimezone, setUserTimezone] = useState<string>("UTC")
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -47,6 +48,8 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks()
+    const savedTimezone = localStorage.getItem("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
+    setUserTimezone(savedTimezone)
   }, [])
 
   const fetchTasks = async () => {
@@ -152,7 +155,7 @@ export default function TasksPage() {
       category: task.category || "",
       due_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
       due_time: dueDate
-        ? dueDate.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" })
+        ? `${String(dueDate.getHours()).padStart(2, "0")}:${String(dueDate.getMinutes()).padStart(2, "0")}`
         : "",
     })
     setIsEditDialogOpen(true)
@@ -225,6 +228,18 @@ export default function TasksPage() {
       default:
         return "text-muted-foreground"
     }
+  }
+
+  const formatTaskDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    const dateStr = date.toLocaleDateString(undefined, { timeZone: userTimezone })
+    const timeStr = date.toLocaleTimeString(undefined, { 
+      timeZone: userTimezone,
+      hour: "2-digit", 
+      minute: "2-digit",
+      hour12: false 
+    })
+    return `${dateStr} ${timeStr}`
   }
 
   return (
@@ -374,11 +389,7 @@ export default function TasksPage() {
                         {task.category && <span className="text-xs text-muted-foreground">{task.category}</span>}
                         {task.due_date && (
                           <span className="text-xs text-muted-foreground">
-                            Due: {new Date(task.due_date).toLocaleDateString()}{" "}
-                            {new Date(task.due_date).toLocaleTimeString("en-GB", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            Due: {formatTaskDateTime(task.due_date)}
                           </span>
                         )}
                       </div>

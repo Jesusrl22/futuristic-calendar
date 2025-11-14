@@ -21,6 +21,7 @@ export default function CalendarPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
+  const [userTimezone, setUserTimezone] = useState<string>("UTC")
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -31,13 +32,20 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks()
+    const savedTimezone = localStorage.getItem("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
+    setUserTimezone(savedTimezone)
+    
     if ("Notification" in window) {
+      console.log("[v0] Current notification permission:", Notification.permission)
       setNotificationPermission(Notification.permission)
       if (Notification.permission === "default") {
         Notification.requestPermission().then((permission) => {
+          console.log("[v0] Notification permission after request:", permission)
           setNotificationPermission(permission)
         })
       }
+    } else {
+      console.log("[v0] Notifications not supported in this browser")
     }
   }, [currentDate])
 
@@ -49,6 +57,11 @@ export default function CalendarPage() {
       const data = await response.json()
       if (data.tasks) {
         setTasks(data.tasks)
+        data.tasks.forEach((task: any) => {
+          if (task.due_date && !task.completed) {
+            scheduleNotification(task)
+          }
+        })
       }
     } catch (error) {
       console.error("Error fetching tasks:", error)
@@ -86,20 +99,45 @@ export default function CalendarPage() {
   }
 
   const scheduleNotification = (task: any) => {
-    if ("Notification" in window && Notification.permission === "granted") {
+    console.log("[v0] Scheduling notification for task:", task.title)
+    
+    if (!("Notification" in window)) {
+      console.log("[v0] Notifications not supported")
+      return
+    }
+    
+    if (Notification.permission !== "granted") {
+      console.log("[v0] Notification permission not granted, current:", Notification.permission)
+      return
+    }
+
+    try {
       const taskDate = new Date(task.due_date)
       const now = new Date()
       const timeUntilTask = taskDate.getTime() - now.getTime()
 
-      if (timeUntilTask > 0) {
+      console.log("[v0] Task date:", taskDate.toLocaleString(undefined, { timeZone: userTimezone }))
+      console.log("[v0] Current time:", now.toLocaleString(undefined, { timeZone: userTimezone }))
+      console.log("[v0] Time until task (ms):", timeUntilTask)
+
+      if (timeUntilTask > 0 && timeUntilTask < 24 * 60 * 60 * 1000) {
+        console.log("[v0] Setting timeout for notification")
         setTimeout(() => {
+          console.log("[v0] Showing notification for:", task.title)
           new Notification(task.title, {
             body: task.description || "Task is due now!",
             icon: "/favicon.ico",
             tag: task.id,
+            requireInteraction: true,
           })
         }, timeUntilTask)
+      } else if (timeUntilTask <= 0) {
+        console.log("[v0] Task is overdue, not scheduling notification")
+      } else {
+        console.log("[v0] Task is more than 24 hours away, not scheduling")
       }
+    } catch (error) {
+      console.error("[v0] Error scheduling notification:", error)
     }
   }
 
@@ -140,6 +178,9 @@ export default function CalendarPage() {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
         fetchTasks()
+        if (data.task && data.task.due_date) {
+          scheduleNotification(data.task)
+        }
       }
     } catch (error) {
       console.error("Error creating task:", error)
@@ -242,7 +283,11 @@ export default function CalendarPage() {
                 size="sm"
                 onClick={() => {
                   Notification.requestPermission().then((permission) => {
+                    console.log("[v0] Permission granted:", permission)
                     setNotificationPermission(permission)
+                    if (permission === "granted") {
+                      alert("Notifications enabled! You will receive reminders for upcoming tasks.")
+                    }
                   })
                 }}
               >
@@ -252,8 +297,20 @@ export default function CalendarPage() {
           </Card>
         )}
 
+        {notificationPermission === "denied" && (
+          <Card className="glass-card p-4 mb-6 border-red-500/50">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-red-500">Notifications are blocked. To enable them:</p>
+              <ul className="text-xs text-muted-foreground ml-4 list-disc">
+                <li>Click the lock icon in your browser's address bar</li>
+                <li>Find "Notifications" and set it to "Allow"</li>
+                <li>Reload the page</li>
+              </ul>
+            </div>
+          </Card>
+        )}
+
         <Card className="glass-card p-4 md:p-6 neon-glow">
-          {/* Calendar Header */}
           <div className="flex items-center justify-between mb-6">
             <Button
               variant="ghost"
@@ -274,7 +331,6 @@ export default function CalendarPage() {
             </Button>
           </div>
 
-          {/* Calendar Grid */}
           <div className="grid grid-cols-7 gap-1 md:gap-2">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day} className="text-center font-semibold text-xs md:text-sm text-muted-foreground p-2">

@@ -16,6 +16,7 @@ export default function SettingsPage() {
     theme: "neon-tech",
     language: "en" as Language,
     notifications: true,
+    timezone: "UTC",
   })
   const [loading, setLoading] = useState(false)
   const { t } = useTranslation(profile.language)
@@ -35,6 +36,7 @@ export default function SettingsPage() {
           theme: data.profile.theme || "neon-tech",
           language: data.profile.language || "en",
           notifications: data.profile.notifications ?? true,
+          timezone: data.profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
         })
       }
     } catch (error) {
@@ -52,8 +54,10 @@ export default function SettingsPage() {
           theme: profile.theme,
           language: profile.language,
           notifications: profile.notifications,
+          timezone: profile.timezone,
         }),
       })
+      localStorage.setItem("timezone", profile.timezone)
       alert("Settings saved successfully!")
     } catch (error) {
       console.error("Error saving settings:", error)
@@ -61,6 +65,24 @@ export default function SettingsPage() {
     }
     setLoading(false)
   }
+
+  const timezones = [
+    { value: "UTC", label: "UTC (Coordinated Universal Time)" },
+    { value: "Europe/Madrid", label: "Europe/Madrid (Spain)" },
+    { value: "Europe/London", label: "Europe/London (UK)" },
+    { value: "Europe/Paris", label: "Europe/Paris (France)" },
+    { value: "Europe/Berlin", label: "Europe/Berlin (Germany)" },
+    { value: "America/New_York", label: "America/New York (EST/EDT)" },
+    { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
+    { value: "America/Denver", label: "America/Denver (MST/MDT)" },
+    { value: "America/Los_Angeles", label: "America/Los Angeles (PST/PDT)" },
+    { value: "America/Mexico_City", label: "America/Mexico City" },
+    { value: "America/Sao_Paulo", label: "America/São Paulo (Brazil)" },
+    { value: "Asia/Tokyo", label: "Asia/Tokyo (Japan)" },
+    { value: "Asia/Shanghai", label: "Asia/Shanghai (China)" },
+    { value: "Asia/Dubai", label: "Asia/Dubai (UAE)" },
+    { value: "Australia/Sydney", label: "Australia/Sydney" },
+  ]
 
   return (
     <div className="p-8">
@@ -120,6 +142,28 @@ export default function SettingsPage() {
                       <SelectItem value="it">Italiano</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label>Timezone / Region</Label>
+                  <Select
+                    value={profile.timezone}
+                    onValueChange={(value) => setProfile({ ...profile, timezone: value })}
+                  >
+                    <SelectTrigger className="bg-secondary/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {timezones.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
+                  </p>
                 </div>
 
                 <Button onClick={handleSave} disabled={loading} className="neon-glow-hover">
