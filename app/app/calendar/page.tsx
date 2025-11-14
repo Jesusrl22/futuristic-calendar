@@ -518,10 +518,12 @@ export default function CalendarPage() {
                           <Badge variant="outline">{task.category}</Badge>
                           {task.due_date && (
                             <span className="text-xs text-muted-foreground">
-                              {new Date(task.due_date).toLocaleTimeString("en-GB", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {(() => {
+                                const date = new Date(task.due_date)
+                                const hours = String(date.getHours()).padStart(2, "0")
+                                const minutes = String(date.getMinutes()).padStart(2, "0")
+                                return `${hours}:${minutes}`
+                              })()}
                             </span>
                           )}
                         </div>
