@@ -79,14 +79,14 @@ export async function GET() {
       pomodoro: pomodoroCount,
     }
 
-    const unlockedIds = new Set(existingAchievements.map((a: any) => a.achievement_id))
+    const unlockedIds = new Set(existingAchievements.map((a: any) => a.achievement_type))
     const newAchievements = []
 
     for (const achievement of ACHIEVEMENTS) {
       if (!unlockedIds.has(achievement.id) && achievement.checkFn(stats)) {
         const newAchievement = {
           user_id: userId,
-          achievement_id: achievement.id,
+          achievement_type: achievement.id,
           title: achievement.title,
           description: achievement.description,
           icon: "🏆",

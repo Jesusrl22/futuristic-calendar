@@ -31,8 +31,15 @@ export default function AchievementsPage() {
 
   useEffect(() => {
     fetchAchievements()
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission()
+    if ("Notification" in window) {
+      console.log("[v0] Notification permission:", Notification.permission)
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then((permission) => {
+          console.log("[v0] Notification permission result:", permission)
+        })
+      }
+    } else {
+      console.log("[v0] Browser does not support notifications")
     }
   }, [])
 
@@ -40,6 +47,8 @@ export default function AchievementsPage() {
     try {
       const response = await fetch("/api/achievements")
       const data = await response.json()
+
+      console.log("[v0] Achievements data:", data)
 
       setAchievements(data.achievements || [])
       setStats(data.stats || { tasks: 0, notes: 0, pomodoro: 0 })
@@ -51,13 +60,22 @@ export default function AchievementsPage() {
           duration: 5000,
         })
 
-        // Send browser notification
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification("Achievement Unlocked! 🎉", {
-            body: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
-            icon: "/favicon.ico",
-            tag: "achievement-unlock",
-          })
+        if ("Notification" in window) {
+          console.log("[v0] Attempting to send notification, permission:", Notification.permission)
+          if (Notification.permission === "granted") {
+            try {
+              const notification = new Notification("Achievement Unlocked! 🎉", {
+                body: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
+                icon: "/favicon.ico",
+                tag: "achievement-unlock",
+              })
+              console.log("[v0] Notification sent successfully")
+            } catch (error) {
+              console.error("[v0] Error sending notification:", error)
+            }
+          } else {
+            console.log("[v0] Notification permission not granted")
+          }
         }
       }
     } catch (error) {
@@ -66,7 +84,7 @@ export default function AchievementsPage() {
   }
 
   const isUnlocked = (achievementId: string) => {
-    return achievements.some((a) => a.achievement_id === achievementId)
+    return achievements.some((a) => a.achievement_type === achievementId)
   }
 
   const getProgress = (achievement: any) => {
