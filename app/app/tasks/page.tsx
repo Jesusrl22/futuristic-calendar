@@ -98,12 +98,11 @@ export default function TasksPage() {
     try {
       let dueDate = null
       if (newTask.due_date) {
-        dueDate = new Date(newTask.due_date)
         if (newTask.due_time) {
-          const [hours, minutes] = newTask.due_time.split(":")
-          dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+          // Combine date and time into ISO format without timezone conversion
+          dueDate = `${newTask.due_date}T${newTask.due_time}:00`
         } else {
-          dueDate.setHours(23, 59, 59, 999)
+          dueDate = `${newTask.due_date}T23:59:59`
         }
       }
 
@@ -115,7 +114,7 @@ export default function TasksPage() {
           description: newTask.description,
           priority: newTask.priority,
           category: newTask.category || null,
-          due_date: dueDate ? dueDate.toISOString() : null,
+          due_date: dueDate,
           completed: false,
           status: "todo",
         }),
@@ -171,12 +170,10 @@ export default function TasksPage() {
     try {
       let dueDate = null
       if (editForm.due_date) {
-        dueDate = new Date(editForm.due_date)
         if (editForm.due_time) {
-          const [hours, minutes] = editForm.due_time.split(":")
-          dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+          dueDate = `${editForm.due_date}T${editForm.due_time}:00`
         } else {
-          dueDate.setHours(23, 59, 59, 999)
+          dueDate = `${editForm.due_date}T23:59:59`
         }
       }
 
@@ -189,7 +186,7 @@ export default function TasksPage() {
           description: editForm.description,
           priority: editForm.priority,
           category: editForm.category || null,
-          due_date: dueDate ? dueDate.toISOString() : null,
+          due_date: dueDate,
         }),
       })
 

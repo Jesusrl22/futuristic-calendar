@@ -147,12 +147,15 @@ export default function CalendarPage() {
       return
     }
 
-    const dueDate = new Date(selectedDate)
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, "0")
+    const day = String(selectedDate.getDate()).padStart(2, "0")
+    
+    let dueDate: string
     if (newTask.time) {
-      const [hours, minutes] = newTask.time.split(":")
-      dueDate.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+      dueDate = `${year}-${month}-${day}T${newTask.time}:00`
     } else {
-      dueDate.setHours(23, 59, 59, 999)
+      dueDate = `${year}-${month}-${day}T23:59:59`
     }
 
     try {
@@ -164,7 +167,7 @@ export default function CalendarPage() {
           description: newTask.description,
           priority: newTask.priority,
           category: newTask.category,
-          due_date: dueDate.toISOString(),
+          due_date: dueDate,
           completed: false,
           status: "todo",
         }),
