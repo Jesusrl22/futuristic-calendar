@@ -459,7 +459,7 @@ export default function CalendarPage() {
                           <Badge variant="outline">{task.category}</Badge>
                           {task.due_date && (
                             <span className="text-xs text-muted-foreground">
-                              {new Date(task.due_date).toLocaleTimeString("en-US", {
+                              {new Date(task.due_date).toLocaleTimeString("en-GB", {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })}

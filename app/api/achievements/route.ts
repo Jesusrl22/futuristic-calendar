@@ -84,11 +84,9 @@ export async function GET() {
 
     for (const achievement of ACHIEVEMENTS) {
       if (!unlockedIds.has(achievement.id) && achievement.checkFn(stats)) {
-        // Unlock this achievement
         const newAchievement = {
           user_id: userId,
           achievement_id: achievement.id,
-          achievement_type: achievement.id,
           title: achievement.title,
           description: achievement.description,
           icon: "🏆",
@@ -113,7 +111,17 @@ export async function GET() {
       }
     }
 
-    const finalAchievements = [...existingAchievements, ...newAchievements]
+    const updatedAchievementsResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/achievements?user_id=eq.${userId}&select=*`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        },
+      },
+    )
+
+    const finalAchievements = await updatedAchievementsResponse.json()
 
     return NextResponse.json({
       achievements: finalAchievements,
