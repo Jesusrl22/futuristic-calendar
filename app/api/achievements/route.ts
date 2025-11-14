@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 
+function getUserIdFromToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]))
+    return payload.sub
+  } catch {
+    return null
+  }
+}
+
+const ACHIEVEMENTS = [
+  { id: "first_task", title: "First Steps", description: "Complete your first task", checkFn: (stats: any) => stats.tasks >= 1 },
+  { id: "task_master", title: "Task Master", description: "Complete 50 tasks", checkFn: (stats: any) => stats.tasks >= 50 },
+  { id: "note_taker", title: "Note Taker", description: "Create 10 notes", checkFn: (stats: any) => stats.notes >= 10 },
+  { id: "focus_warrior", title: "Focus Warrior", description: "Complete 25 Pomodoro sessions", checkFn: (stats: any) => stats.pomodoro >= 25 },
+]
+
 export async function GET() {
   try {
     const cookieStore = await cookies()
@@ -10,21 +26,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      },
-    })
-
-    if (!userResponse.ok) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 401 })
+    const userId = getUserIdFromToken(accessToken)
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    const user = await userResponse.json()
-
     const achievementsResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/achievements?user_id=eq.${user.id}&select=*`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/achievements?user_id=eq.${userId}&select=*`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -34,14 +42,14 @@ export async function GET() {
     )
 
     const [tasksResponse, notesResponse, pomodoroResponse] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${user.id}&completed=eq.true&select=id`, {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&select=id`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
           Prefer: "count=exact",
         },
       }),
-      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/notes?user_id=eq.${user.id}&select=id`, {
+      fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/notes?user_id=eq.${userId}&select=id`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -49,7 +57,7 @@ export async function GET() {
         },
       }),
       fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/pomodoro_sessions?user_id=eq.${user.id}&completed=eq.true&select=id`,
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/pomodoro_sessions?user_id=eq.${userId}&completed=eq.true&select=id`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -60,18 +68,74 @@ export async function GET() {
       ),
     ])
 
-    const achievements = await achievementsResponse.json()
+    const existingAchievements = await achievementsResponse.json()
     const tasksCount = Number.parseInt(tasksResponse.headers.get("content-range")?.split("/")[1] || "0")
     const notesCount = Number.parseInt(notesResponse.headers.get("content-range")?.split("/")[1] || "0")
     const pomodoroCount = Number.parseInt(pomodoroResponse.headers.get("content-range")?.split("/")[1] || "0")
 
+    const stats = {
+      tasks: tasksCount,
+      notes: notesCount,
+      pomodoro: pomodoroCount,
+    }
+
+    const unlockedIds = new Set(existingAchievements.map((a: any) => a.achievement_id))
+    const newAchievements = []
+
+    for (const achievement of ACHIEVEMENTS) {
+      if (!unlockedIds.has(achievement.id) && achievement.checkFn(stats)) {
+        // Unlock this achievement
+        const newAchievement = {
+          user_id: userId,
+          achievement_id: achievement.id,
+          achievement_type: achievement.id,
+          title: achievement.title,
+          description: achievement.description,
+          icon: "🏆",
+          unlocked_at: new Date().toISOString(),
+        }
+
+        const insertResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/achievements`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify(newAchievement),
+        })
+
+        if (insertResponse.ok) {
+          const inserted = await insertResponse.json()
+          newAchievements.push(inserted[0])
+          
+          await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/notifications`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_id: userId,
+              type: "achievement",
+              title: "Achievement Unlocked!",
+              message: `You unlocked "${achievement.title}"`,
+              read: false,
+              timestamp: new Date().toISOString(),
+            }),
+          })
+        }
+      }
+    }
+
+    const finalAchievements = [...existingAchievements, ...newAchievements]
+
     return NextResponse.json({
-      achievements,
-      stats: {
-        tasks: tasksCount,
-        notes: notesCount,
-        pomodoro: pomodoroCount,
-      },
+      achievements: finalAchievements,
+      stats,
+      newUnlocks: newAchievements.length,
     })
   } catch (error) {
     console.error("Error fetching achievements:", error)

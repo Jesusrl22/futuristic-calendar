@@ -15,10 +15,10 @@ import {
   LogOut,
 } from "@/components/icons"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { createClient } from "@/lib/supabase/client"
+import { NotificationsDropdown } from "@/components/notifications-dropdown"
 import { useState, useEffect } from "react"
 import { useTranslation, type Language } from "@/lib/translations"
 
@@ -64,8 +64,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   ]
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch("/api/auth/logout", { method: "POST" })
     router.push("/")
   }
 
@@ -109,8 +108,13 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         </nav>
       </ScrollArea>
 
-      {/* Logout */}
-      <div className="p-4 border-t border-border/50">
+      {/* Notifications and Logout */}
+      <div className="p-4 border-t border-border/50 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">{t("notifications") || "Notifications"}</span>
+          <NotificationsDropdown />
+        </div>
+        
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 hover:bg-destructive/10 hover:text-destructive"

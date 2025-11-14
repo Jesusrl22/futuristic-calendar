@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { motion } from "framer-motion"
 import { Trophy, Lock } from "@/components/icons"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
 
 const achievementsList = [
   { id: "first_task", title: "First Steps", description: "Complete your first task", requirement: 1, icon: "🎯" },
@@ -26,6 +27,7 @@ const achievementsList = [
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<any[]>([])
   const [stats, setStats] = useState({ tasks: 0, notes: 0, pomodoro: 0 })
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchAchievements()
@@ -38,6 +40,14 @@ export default function AchievementsPage() {
 
       setAchievements(data.achievements || [])
       setStats(data.stats || { tasks: 0, notes: 0, pomodoro: 0 })
+
+      if (data.newUnlocks > 0) {
+        toast({
+          title: "🎉 Achievement Unlocked!",
+          description: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
+          duration: 5000,
+        })
+      }
     } catch (error) {
       console.error("Error fetching achievements:", error)
     }
