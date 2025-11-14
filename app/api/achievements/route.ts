@@ -109,23 +109,6 @@ export async function GET() {
         if (insertResponse.ok) {
           const inserted = await insertResponse.json()
           newAchievements.push(inserted[0])
-          
-          await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/notifications`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              user_id: userId,
-              type: "achievement",
-              title: "Achievement Unlocked!",
-              message: `You unlocked "${achievement.title}"`,
-              read: false,
-              timestamp: new Date().toISOString(),
-            }),
-          })
         }
       }
     }

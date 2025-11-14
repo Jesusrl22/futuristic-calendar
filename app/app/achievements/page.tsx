@@ -31,6 +31,9 @@ export default function AchievementsPage() {
 
   useEffect(() => {
     fetchAchievements()
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
+    }
   }, [])
 
   const fetchAchievements = async () => {
@@ -47,6 +50,15 @@ export default function AchievementsPage() {
           description: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
           duration: 5000,
         })
+
+        // Send browser notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Achievement Unlocked! 🎉", {
+            body: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
+            icon: "/favicon.ico",
+            tag: "achievement-unlock",
+          })
+        }
       }
     } catch (error) {
       console.error("Error fetching achievements:", error)
