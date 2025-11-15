@@ -4,9 +4,8 @@ import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createClient } from "@/lib/supabase/client"
 import { Send, Zap } from "@/components/icons"
-import { UpgradeModal } from "@/components/upgrade-modal" // Fixed import to use named import
+import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function AIPage() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
@@ -26,19 +25,19 @@ export default function AIPage() {
   }, [messages])
 
   const checkSubscriptionAndFetchCredits = async () => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (user) {
-      const { data } = await supabase.from("users").select("subscription_tier, ai_credits").eq("id", user.id).single()
-      setSubscriptionTier(data?.subscription_tier || "free")
-      setCheckingAccess(false)
-
-      if (data?.subscription_tier === "pro") {
-        setCredits(data?.ai_credits || 0)
+    try {
+      const response = await fetch("/api/user/profile")
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriptionTier(data?.subscription_tier || "free")
+        if (data?.subscription_tier === "pro") {
+          setCredits(data?.ai_credits || 0)
+        }
       }
+    } catch (error) {
+      console.error("[v0] Error fetching profile:", error)
+    } finally {
+      setCheckingAccess(false)
     }
   }
 
@@ -56,21 +55,26 @@ export default function AIPage() {
     setLoading(true)
 
     try {
+      console.log("[v0] Sending message to AI...")
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       })
 
+      console.log("[v0] AI response status:", response.status)
       const data = await response.json()
 
       if (data.error) {
+        console.error("[v0] AI error:", data.error)
         throw new Error(data.error)
       }
 
+      console.log("[v0] AI response received successfully")
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
       setCredits(data.remainingCredits)
     } catch (error) {
+      console.error("[v0] AI chat error:", error)
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Sorry, I encountered an error. Please try again." },

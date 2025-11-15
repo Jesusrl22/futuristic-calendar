@@ -10,7 +10,7 @@ export default function AppPage() {
     tasks: 0,
     notes: 0,
     pomodoro: 0,
-    credits: 100,
+    credits: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -31,6 +31,7 @@ export default function AppPage() {
 
         setUser(data.user)
         fetchUserProfile()
+        fetchStats()
       } catch (error) {
         console.error("[v0] Auth check failed:", error)
         window.location.href = "/login"
@@ -52,11 +53,29 @@ export default function AppPage() {
       if (response.ok) {
         const data = await response.json()
         setUser(data)
+        setStats(prev => ({ ...prev, credits: data.ai_credits || 0 }))
       }
     } catch (error) {
       console.error("[v0] Error fetching profile:", error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/stats")
+      if (response.ok) {
+        const data = await response.json()
+        setStats(prev => ({
+          ...prev,
+          tasks: data.totalTasks || 0,
+          notes: data.totalNotes || 0,
+          pomodoro: data.totalPomodoro || 0,
+        }))
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching stats:", error)
     }
   }
 
