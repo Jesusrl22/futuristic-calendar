@@ -37,6 +37,15 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
+    if (updates.subscription_tier) {
+      const creditsMap = {
+        free: 10,
+        premium: 100,
+        pro: 500,
+      }
+      updates.ai_credits = creditsMap[updates.subscription_tier as keyof typeof creditsMap] || 10
+    }
+
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
       auth: {
         autoRefreshToken: false,
@@ -50,6 +59,8 @@ export async function PATCH(request: Request) {
       console.error("[API] Error updating user:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    console.log("[API] Updated user with AI credits:", updates.ai_credits)
 
     return NextResponse.json({ user: data?.[0] })
   } catch (error) {

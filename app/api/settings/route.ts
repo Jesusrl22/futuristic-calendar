@@ -51,7 +51,15 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const { theme, language, notifications, timezone } = body
+    const {
+      theme,
+      language,
+      notifications,
+      timezone,
+      pomodoro_work_duration,
+      pomodoro_break_duration,
+      pomodoro_long_break_duration,
+    } = body
 
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
       headers: {
@@ -62,6 +70,16 @@ export async function PATCH(request: Request) {
 
     const user = await userResponse.json()
 
+    const updates: any = { updated_at: new Date().toISOString() }
+    if (theme !== undefined) updates.theme = theme
+    if (language !== undefined) updates.language = language
+    if (notifications !== undefined) updates.notifications = notifications
+    if (timezone !== undefined) updates.timezone = timezone
+    if (pomodoro_work_duration !== undefined) updates.pomodoro_work_duration = pomodoro_work_duration
+    if (pomodoro_break_duration !== undefined) updates.pomodoro_break_duration = pomodoro_break_duration
+    if (pomodoro_long_break_duration !== undefined)
+      updates.pomodoro_long_break_duration = pomodoro_long_break_duration
+
     await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
       headers: {
@@ -69,13 +87,7 @@ export async function PATCH(request: Request) {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        theme,
-        language,
-        notifications,
-        timezone,
-        updated_at: new Date().toISOString(),
-      }),
+      body: JSON.stringify(updates),
     })
 
     return NextResponse.json({ success: true })
