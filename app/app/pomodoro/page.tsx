@@ -61,6 +61,46 @@ export default function PomodoroPage() {
   }, [])
 
   useEffect(() => {
+    const saveStateOnExit = () => {
+      // Save to localStorage for quick recovery
+      localStorage.setItem(
+        "pomodoroState",
+        JSON.stringify({
+          mode,
+          timeLeft,
+          sessions,
+          durations,
+        })
+      )
+    }
+
+    // Save state when component unmounts or user leaves
+    window.addEventListener("beforeunload", saveStateOnExit)
+    
+    return () => {
+      saveStateOnExit()
+      window.removeEventListener("beforeunload", saveStateOnExit)
+    }
+  }, [mode, timeLeft, sessions, durations])
+
+  useEffect(() => {
+    const savedState = localStorage.getItem("pomodoroState")
+    if (savedState) {
+      try {
+        const state = JSON.parse(savedState)
+        setMode(state.mode)
+        setTimeLeft(state.timeLeft)
+        setSessions(state.sessions)
+        if (state.durations) {
+          setDurations(state.durations)
+        }
+      } catch (error) {
+        console.error("[v0] Error restoring pomodoro state:", error)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
     let interval: NodeJS.Timeout
 
     if (isRunning && timeLeft > 0) {
@@ -80,10 +120,11 @@ export default function PomodoroPage() {
     if (mode === "work") {
       try {
         console.log("[v0] Saving pomodoro session")
+        const durationInMinutes = Math.round(durations.work / 60)
         const response = await fetch("/api/pomodoro", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ duration: durations.work / 60 }),
+          body: JSON.stringify({ duration: durationInMinutes }),
         })
 
         if (response.ok) {

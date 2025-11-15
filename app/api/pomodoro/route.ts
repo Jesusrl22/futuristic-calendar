@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     const sessionData = {
       user_id: userId,
-      duration: body.duration,
+      duration: body.duration, // already in minutes from frontend
       completed: true,
     }
     console.log("[v0] Request data:", sessionData)
