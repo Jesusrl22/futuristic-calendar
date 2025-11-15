@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
@@ -36,6 +36,7 @@ export default function PomodoroPage() {
   const [sessions, setSessions] = useState(0)
   const [showCustomDialog, setShowCustomDialog] = useState(false)
   const [customMinutes, setCustomMinutes] = useState("25")
+  const sessionSavedRef = useRef(false)
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -107,7 +108,7 @@ export default function PomodoroPage() {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1)
       }, 1000)
-    } else if (timeLeft === 0) {
+    } else if (timeLeft === 0 && !sessionSavedRef.current) {
       handleComplete()
     }
 
@@ -115,6 +116,11 @@ export default function PomodoroPage() {
   }, [isRunning, timeLeft])
 
   const handleComplete = async () => {
+    if (sessionSavedRef.current) {
+      return
+    }
+    sessionSavedRef.current = true
+    
     setIsRunning(false)
 
     if (mode === "work") {
@@ -144,17 +150,23 @@ export default function PomodoroPage() {
       setTimeLeft(durations.work)
       if (mode === "longBreak") setSessions(0)
     }
+    
+    setTimeout(() => {
+      sessionSavedRef.current = false
+    }, 1000)
   }
 
   const handleReset = () => {
     setIsRunning(false)
     setTimeLeft(durations[mode])
+    sessionSavedRef.current = false
   }
 
   const handleModeChange = (newMode: "work" | "break" | "longBreak") => {
     setMode(newMode)
     setTimeLeft(durations[newMode])
     setIsRunning(false)
+    sessionSavedRef.current = false
   }
 
   const saveDurationPreset = async (workMins: number, breakMins: number, longBreakMins: number) => {
