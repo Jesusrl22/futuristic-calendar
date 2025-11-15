@@ -38,20 +38,26 @@ export async function POST(request: Request) {
       Prefer: "return=representation",
     }
 
+    const sessionData = {
+      user_id: userId,
+      duration: body.duration,
+      completed: true,
+    }
+    console.log("[v0] Request data:", sessionData)
+    console.log("[v0] Request URL:", `${supabaseUrl}/rest/v1/pomodoro_sessions`)
+
     const response = await fetch(`${supabaseUrl}/rest/v1/pomodoro_sessions`, {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        user_id: userId,
-        duration: body.duration,
-        completed: true,
-      }),
+      body: JSON.stringify(sessionData),
     })
 
+    console.log("[v0] Response status:", response.status)
+    
     if (!response.ok) {
       const error = await response.text()
       console.log("[v0] Failed to save pomodoro session:", error)
-      return NextResponse.json({ error: "Failed to save session" }, { status: response.status })
+      return NextResponse.json({ error: "Failed to save session", details: error }, { status: response.status })
     }
 
     const session = await response.json()
@@ -60,6 +66,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, session })
   } catch (error) {
     console.error("[v0] Error saving pomodoro session:", error)
-    return NextResponse.json({ error: "Failed to save session" }, { status: 500 })
+    return NextResponse.json({ error: "Failed to save session", details: String(error) }, { status: 500 })
   }
 }
