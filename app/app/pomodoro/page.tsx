@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { motion } from "framer-motion"
 import { Play, Pause, RotateCcw } from "@/components/icons"
 
@@ -37,17 +36,21 @@ export default function PomodoroPage() {
     setIsRunning(false)
 
     if (mode === "work") {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        await supabase.from("pomodoro_sessions").insert({
-          user_id: user.id,
-          duration: durations.work,
-          completed: true,
+      try {
+        console.log("[v0] Saving pomodoro session")
+        const response = await fetch("/api/pomodoro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ duration: durations.work }),
         })
+
+        if (response.ok) {
+          console.log("[v0] Pomodoro session saved successfully")
+        } else {
+          console.error("[v0] Failed to save pomodoro session:", await response.text())
+        }
+      } catch (error) {
+        console.error("[v0] Error saving pomodoro session:", error)
       }
 
       setSessions((prev) => prev + 1)
