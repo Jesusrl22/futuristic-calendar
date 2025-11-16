@@ -305,6 +305,7 @@ export default function TasksPage() {
                       <SelectContent>
                         <SelectItem value="personal">Personal</SelectItem>
                         <SelectItem value="work">Work</SelectItem>
+                        <SelectItem value="study">Study</SelectItem>
                         <SelectItem value="health">Health</SelectItem>
                         <SelectItem value="finance">Finance</SelectItem>
                       </SelectContent>
@@ -465,6 +466,7 @@ export default function TasksPage() {
                     <SelectContent>
                       <SelectItem value="personal">Personal</SelectItem>
                       <SelectItem value="work">Work</SelectItem>
+                      <SelectItem value="study">Study</SelectItem>
                       <SelectItem value="health">Health</SelectItem>
                       <SelectItem value="finance">Finance</SelectItem>
                     </SelectContent>
