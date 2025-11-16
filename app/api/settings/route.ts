@@ -27,11 +27,17 @@ export async function GET() {
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${authUser.id}&select=*`,
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         },
       },
     )
+
+    if (!profileResponse.ok) {
+      const errorText = await profileResponse.text()
+      console.error("[v0] Failed to fetch profile:", errorText)
+      return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
+    }
 
     const profile = await profileResponse.json()
     return NextResponse.json({ profile: profile[0], email: authUser.email })
@@ -97,8 +103,8 @@ export async function PATCH(request: Request) {
     const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
         "Content-Type": "application/json",
         Prefer: "return=representation",
       },
