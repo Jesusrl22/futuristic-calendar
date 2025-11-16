@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from 'next/navigation'
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,8 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTranslation, type Language } from "@/lib/translations"
+import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const { toast } = useToast()
   const [profile, setProfile] = useState({
     email: "",
     theme: "neon-tech",
@@ -29,15 +33,20 @@ export default function SettingsPage() {
     try {
       console.log("[v0] Fetching profile settings...")
       const response = await fetch("/api/settings")
+      
+      if (!response.ok) {
+        console.error("[v0] Failed to fetch settings:", response.status)
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        setProfile(prev => ({ ...prev, timezone: detectedTimezone }))
+        return
+      }
+      
       const data = await response.json()
       console.log("[v0] Profile data received:", data)
 
       if (data.profile) {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
         const savedTimezone = data.profile.timezone || detectedTimezone
-        
-        console.log("[v0] Detected timezone:", detectedTimezone)
-        console.log("[v0] Saved timezone:", savedTimezone)
         
         setProfile({
           email: data.email || "",
@@ -80,19 +89,31 @@ export default function SettingsPage() {
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
         
-        console.log("[v0] Settings saved successfully, reloading page...")
-        alert("Settings saved successfully! The page will reload to apply changes.")
+        console.log("[v0] Settings saved successfully")
+        
+        toast({
+          title: "Settings saved",
+          description: "Your settings have been updated successfully.",
+        })
         
         setTimeout(() => {
-          window.location.reload()
+          router.refresh()
         }, 500)
       } else {
         console.error("[v0] Failed to save:", result)
-        alert(`Failed to save settings: ${result.error || "Unknown error"}\n${result.details || ""}`)
+        toast({
+          title: "Error",
+          description: `Failed to save settings: ${result.error || "Unknown error"}`,
+          variant: "destructive",
+        })
       }
     } catch (error: any) {
       console.error("[v0] Error saving settings:", error)
-      alert(`Failed to save settings: ${error.message || "Network error"}`)
+      toast({
+        title: "Error",
+        description: `Failed to save settings: ${error.message || "Network error"}`,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -119,7 +140,7 @@ export default function SettingsPage() {
   return (
     <div className="p-8">
       <div>
-        <h1 className="text-4xl font-bold mb-8">
+        <h1 className="text-4xl font-bold mb-8 hidden md:block">
           <span className="text-primary neon-text">{t("settings")}</span>
         </h1>
 
