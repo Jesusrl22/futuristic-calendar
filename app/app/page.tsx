@@ -39,6 +39,12 @@ export default function AppPage() {
     }
 
     checkAuth()
+    
+    const interval = setInterval(() => {
+      fetchUserProfile()
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const fetchUserProfile = async () => {

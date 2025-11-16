@@ -4,6 +4,9 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+
+type TimeRange = "day" | "week" | "month"
 
 export default function StatsPage() {
   const [stats, setStats] = useState({
@@ -13,16 +16,17 @@ export default function StatsPage() {
     totalPomodoro: 0,
     totalFocusTime: 0,
   })
-  const [weeklyData, setWeeklyData] = useState<any[]>([])
+  const [chartData, setChartData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState<TimeRange>("week")
 
   useEffect(() => {
     fetchStats()
-  }, [])
+  }, [timeRange])
 
   const fetchStats = async () => {
     try {
-      const response = await fetch("/api/stats")
+      const response = await fetch(`/api/stats?range=${timeRange}`)
       if (response.ok) {
         const data = await response.json()
         setStats({
@@ -32,7 +36,7 @@ export default function StatsPage() {
           totalPomodoro: data.totalPomodoro || 0,
           totalFocusTime: data.totalFocusTime || 0,
         })
-        setWeeklyData(data.weeklyData || [])
+        setChartData(data.chartData || [])
       }
     } catch (error) {
       console.error("Error fetching stats:", error)
@@ -54,16 +58,42 @@ export default function StatsPage() {
   return (
     <div className="p-8">
       <div>
-        <h1 className="text-4xl font-bold mb-8">
-          <span className="text-primary neon-text">Statistics</span>
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold">
+            <span className="text-primary neon-text">Statistics</span>
+          </h1>
+          
+          <div className="flex gap-2">
+            <Button
+              variant={timeRange === "day" ? "default" : "outline"}
+              onClick={() => setTimeRange("day")}
+              className={timeRange === "day" ? "neon-glow" : ""}
+            >
+              Day
+            </Button>
+            <Button
+              variant={timeRange === "week" ? "default" : "outline"}
+              onClick={() => setTimeRange("week")}
+              className={timeRange === "week" ? "neon-glow" : ""}
+            >
+              Week
+            </Button>
+            <Button
+              variant={timeRange === "month" ? "default" : "outline"}
+              onClick={() => setTimeRange("month")}
+              className={timeRange === "month" ? "neon-glow" : ""}
+            >
+              Month
+            </Button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
             { title: "Total Tasks", value: stats.totalTasks, color: "text-blue-500" },
             { title: "Completed", value: stats.completedTasks, color: "text-green-500" },
             { title: "Notes", value: stats.totalNotes, color: "text-purple-500" },
-            { title: "Focus Time", value: `${stats.totalFocusTime}m`, color: "text-primary" },
+            { title: "Focus Time", value: `${stats.totalFocusTime}h`, color: "text-primary" },
           ].map((stat, i) => (
             <div key={stat.title}>
               <Card className="glass-card p-6 neon-glow-hover">
@@ -76,7 +106,7 @@ export default function StatsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card className="glass-card p-6 neon-glow">
-            <h2 className="text-xl font-bold mb-6">Weekly Activity</h2>
+            <h2 className="text-xl font-bold mb-6">Activity Over Time</h2>
             <Tabs defaultValue="tasks">
               <TabsList className="mb-4">
                 <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -84,7 +114,7 @@ export default function StatsPage() {
               </TabsList>
               <TabsContent value="tasks">
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={weeklyData}>
+                  <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                     <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" />
                     <YAxis stroke="rgba(255,255,255,0.5)" />
@@ -101,7 +131,7 @@ export default function StatsPage() {
               </TabsContent>
               <TabsContent value="pomodoro">
                 <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={weeklyData}>
+                  <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                     <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" />
                     <YAxis stroke="rgba(255,255,255,0.5)" />
@@ -138,7 +168,14 @@ export default function StatsPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <span className="text-sm">Average Focus Time</span>
-                  <span className="font-semibold text-primary">{Math.round(stats.totalFocusTime / 7)}m/day</span>
+                  <span className="font-semibold text-primary">
+                    {timeRange === "day" 
+                      ? `${stats.totalFocusTime}h` 
+                      : timeRange === "week"
+                      ? `${Math.round((stats.totalFocusTime / 7) * 10) / 10}h/day`
+                      : `${Math.round((stats.totalFocusTime / 30) * 10) / 10}h/day`
+                    }
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <span className="text-sm">Pomodoro Sessions</span>

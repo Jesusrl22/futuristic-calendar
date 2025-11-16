@@ -49,6 +49,12 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     fetchSubscription()
+    
+    const interval = setInterval(() => {
+      fetchSubscription()
+    }, 5000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const fetchSubscription = async () => {
