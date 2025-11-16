@@ -46,11 +46,16 @@ export async function PATCH(request: Request) {
     const cookieStore = await cookies()
     const accessToken = cookieStore.get("sb-access-token")?.value
 
+    console.log("[v0] PATCH /api/settings - Starting save")
+
     if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      console.error("[v0] No access token found")
+      return NextResponse.json({ error: "Unauthorized - No access token" }, { status: 401 })
     }
 
     const body = await request.json()
+    console.log("[v0] Request body:", body)
+
     const {
       theme,
       language,
@@ -61,8 +66,6 @@ export async function PATCH(request: Request) {
       pomodoro_long_break_duration,
     } = body
 
-    console.log("[v0] Saving settings, timezone:", timezone)
-
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -70,7 +73,14 @@ export async function PATCH(request: Request) {
       },
     })
 
+    if (!userResponse.ok) {
+      const errorText = await userResponse.text()
+      console.error("[v0] Failed to get user:", errorText)
+      return NextResponse.json({ error: "Failed to authenticate", details: errorText }, { status: 401 })
+    }
+
     const user = await userResponse.json()
+    console.log("[v0] User ID:", user.id)
 
     const updates: any = { updated_at: new Date().toISOString() }
     if (theme !== undefined) updates.theme = theme
@@ -82,7 +92,7 @@ export async function PATCH(request: Request) {
     if (pomodoro_long_break_duration !== undefined)
       updates.pomodoro_long_break_duration = pomodoro_long_break_duration
 
-    console.log("[v0] Updating user with:", updates)
+    console.log("[v0] Updates to apply:", updates)
 
     const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
@@ -95,18 +105,34 @@ export async function PATCH(request: Request) {
       body: JSON.stringify(updates),
     })
 
+    console.log("[v0] Update response status:", updateResponse.status)
+
     if (!updateResponse.ok) {
       const errorText = await updateResponse.text()
-      console.error("[v0] Failed to update settings:", errorText)
-      return NextResponse.json({ error: "Failed to update settings", details: errorText }, { status: 500 })
+      console.error("[v0] Failed to update settings. Status:", updateResponse.status, "Body:", errorText)
+      return NextResponse.json(
+        {
+          error: "Failed to update settings",
+          status: updateResponse.status,
+          details: errorText,
+        },
+        { status: updateResponse.status },
+      )
     }
 
     const updatedUser = await updateResponse.json()
-    console.log("[v0] Settings updated successfully:", updatedUser)
+    console.log("[v0] Settings updated successfully. User data:", updatedUser)
 
-    return NextResponse.json({ success: true, user: updatedUser[0] })
-  } catch (error) {
+    return NextResponse.json({ success: true, user: updatedUser[0] || updatedUser })
+  } catch (error: any) {
     console.error("[v0] Error updating settings:", error)
-    return NextResponse.json({ error: "Failed to update settings" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to update settings",
+        message: error.message,
+        stack: error.stack,
+      },
+      { status: 500 },
+    )
   }
 }

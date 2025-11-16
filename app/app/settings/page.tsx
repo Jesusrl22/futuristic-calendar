@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setLoading(true)
     try {
-      console.log("[v0] Saving settings with timezone:", profile.timezone)
+      console.log("[v0] Starting save with profile:", profile)
       
       const response = await fetch("/api/settings", {
         method: "PATCH",
@@ -70,23 +70,32 @@ export default function SettingsPage() {
         }),
       })
       
-      const result = await response.json()
-      console.log("[v0] Save response:", result)
+      console.log("[v0] Save response status:", response.status)
       
-      if (response.ok) {
+      const result = await response.json()
+      console.log("[v0] Save response body:", result)
+      
+      if (response.ok && result.success) {
         localStorage.setItem("timezone", profile.timezone)
         localStorage.setItem("language", profile.language)
+        localStorage.setItem("theme", profile.theme)
+        
+        console.log("[v0] Settings saved successfully, reloading page...")
         alert("Settings saved successfully! The page will reload to apply changes.")
-        window.location.reload()
+        
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       } else {
         console.error("[v0] Failed to save:", result)
-        alert("Failed to save settings: " + (result.error || "Unknown error"))
+        alert(`Failed to save settings: ${result.error || "Unknown error"}\n${result.details || ""}`)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error saving settings:", error)
-      alert("Failed to save settings")
+      alert(`Failed to save settings: ${error.message || "Network error"}`)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const timezones = [
