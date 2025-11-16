@@ -63,6 +63,17 @@ const translations = {
     choosePremiumPlan: "Upgrade to Premium",
     month: "/month",
     year: "/year",
+    blogTitle: "Blog & Resources",
+    blogDesc: "Discover tips, strategies, and insights to boost your productivity",
+    blogPost1Title: "Master the Pomodoro Technique",
+    blogPost1Desc: "Learn how to break your work into focused intervals to maximize productivity and avoid burnout. Discover the science behind this time management method.",
+    blogPost1ReadTime: "5 min read",
+    blogPost2Title: "Effective Study Methods for Students",
+    blogPost2Desc: "Discover proven study techniques including spaced repetition, active recall, and mind mapping to improve retention and ace your exams.",
+    blogPost2ReadTime: "7 min read",
+    blogPost3Title: "Boost Productivity with AI Assistants",
+    blogPost3Desc: "Explore how AI tools can help you automate tasks, generate ideas, and streamline your workflow to achieve more in less time.",
+    blogPost3ReadTime: "6 min read",
   },
   es: {
     features: "Características",
@@ -120,6 +131,17 @@ const translations = {
     choosePremiumPlan: "Actualizar a Premium",
     month: "/mes",
     year: "/año",
+    blogTitle: "Blog y Recursos",
+    blogDesc: "Descubre consejos, estrategias e ideas para impulsar tu productividad",
+    blogPost1Title: "Domina la Técnica Pomodoro",
+    blogPost1Desc: "Aprende a dividir tu trabajo en intervalos enfocados para maximizar la productividad y evitar el agotamiento. Descubre la ciencia detrás de este método de gestión del tiempo.",
+    blogPost1ReadTime: "5 min read",
+    blogPost2Title: "Métodos de Estudio Efectivos para Estudiantes",
+    blogPost2Desc: "Descubre técnicas de estudio probadas como la repetición espaciada, el recuerdo activo y los mapas mentales para mejorar la retención y destacar en tus exámenes.",
+    blogPost2ReadTime: "7 min read",
+    blogPost3Title: "Impulsa la Productividad con Asistentes IA",
+    blogPost3Desc: "Explora cómo las herramientas de IA pueden ayudarte a automatizar tareas, generar ideas y optimizar tu flujo de trabajo para lograr más en menos tiempo.",
+    blogPost3ReadTime: "6 min read",
   },
   fr: {
     features: "Fonctionnalités",
@@ -178,6 +200,17 @@ const translations = {
     choosePremiumPlan: "Passer à Premium",
     month: "/mois",
     year: "/an",
+    blogTitle: "Blog et Ressources",
+    blogDesc: "Découvrez des conseils, stratégies et idées pour booster votre productivité",
+    blogPost1Title: "Maîtrisez la Technique Pomodoro",
+    blogPost1Desc: "Apprenez à diviser votre travail en intervalles concentrés pour maximiser la productivité et éviter l'épuisement. Découvrez la science derrière cette méthode de gestion du temps.",
+    blogPost1ReadTime: "5 min read",
+    blogPost2Title: "Méthodes d'Étude Efficaces pour les Étudiants",
+    blogPost2Desc: "Découvrez des techniques d'étude éprouvées, notamment la répétition espacée, le rappel actif et les cartes mentales pour améliorer la rétention et réussir vos examens.",
+    blogPost2ReadTime: "7 min read",
+    blogPost3Title: "Boostez la Productivité avec les Assistants IA",
+    blogPost3Desc: "Explorez comment les outils d'IA peuvent vous aider à automatiser les tâches, générer des idées et rationaliser votre flux de travail pour accomplir plus en moins de temps.",
+    blogPost3ReadTime: "6 min read",
   },
   de: {
     features: "Funktionen",
@@ -236,6 +269,17 @@ const translations = {
     choosePremiumPlan: "Auf Premium upgraden",
     month: "/Monat",
     year: "/Jahr",
+    blogTitle: "Blog & Ressourcen",
+    blogDesc: "Entdecken Sie Tipps, Strategien und Erkenntnisse zur Steigerung Ihrer Produktivität",
+    blogPost1Title: "Meistern Sie die Pomodoro-Technik",
+    blogPost1Desc: "Lernen Sie, Ihre Arbeit in fokussierte Intervalle aufzuteilen, um die Produktivität zu maximieren und Burnout zu vermeiden. Entdecken Sie die Wissenschaft hinter dieser Zeitmanagement-Methode.",
+    blogPost1ReadTime: "5 min read",
+    blogPost2Title: "Effektive Lernmethoden für Studenten",
+    blogPost2Desc: "Entdecken Sie bewährte Lerntechniken wie verteiltes Lernen, aktives Abrufen und Mind Mapping, um die Merkfähigkeit zu verbessern und Ihre Prüfungen zu bestehen.",
+    blogPost2ReadTime: "7 min read",
+    blogPost3Title: "Steigern Sie die Produktivität mit KI-Assistenten",
+    blogPost3Desc: "Erkunden Sie, wie KI-Tools Ihnen helfen können, Aufgaben zu automatisieren, Ideen zu generieren und Ihren Arbeitsablauf zu optimieren, um in kürzerer Zeit mehr zu erreichen.",
+    blogPost3ReadTime: "6 min read",
   },
   it: {
     features: "Funzionalità",
@@ -294,6 +338,17 @@ const translations = {
     choosePremiumPlan: "Passa a Premium",
     month: "/mese",
     year: "/anno",
+    blogTitle: "Blog e Risorse",
+    blogDesc: "Scopri consigli, strategie e intuizioni per aumentare la tua produttività",
+    blogPost1Title: "Padroneggia la Tecnica Pomodoro",
+    blogPost1Desc: "Impara a dividere il tuo lavoro in intervalli concentrati per massimizzare la produttività ed evitare il burnout. Scopri la scienza dietro questo metodo di gestione del tempo.",
+    blogPost1ReadTime: "5 min read",
+    blogPost2Title: "Metodi di Studio Efficaci per Studenti",
+    blogPost2Desc: "Scopri tecniche di studio comprovate tra cui ripetizione spaziata, richiamo attivo e mappe mentali per migliorare la ritenzione e superare gli esami.",
+    blogPost2ReadTime: "7 min read",
+    blogPost3Title: "Aumenta la Produttività con Assistenti IA",
+    blogPost3Desc: "Esplora come gli strumenti di IA possono aiutarti ad automatizzare le attività, generare idee e ottimizzare il tuo flusso di lavoro per ottenere di più in meno tempo.",
+    blogPost3ReadTime: "6 min read",
   },
 }
 
@@ -345,6 +400,9 @@ export default function HomePage() {
             </a>
             <a href="#about" className="text-sm hover:text-primary transition-colors">
               {t.about}
+            </a>
+            <a href="#blog" className="text-sm hover:text-primary transition-colors">
+              {t.blogTitle}
             </a>
           </nav>
           <div className="flex items-center gap-2">
@@ -597,6 +655,94 @@ export default function HomePage() {
                   {t.chooseProPlan}
                 </Button>
               </Link>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section id="blog" className="container mx-auto px-4 py-20 bg-secondary/20">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold mb-4">{t.blogTitle}</h2>
+          <p className="text-muted-foreground">{t.blogDesc}</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Blog Post 1 - Pomodoro Technique */}
+          <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
+            <div className="h-48 bg-gradient-to-br from-primary/30 to-primary/10 relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">🍅</div>
+            </div>
+            <div className="p-6 space-y-3">
+              <div className="text-xs text-primary font-semibold uppercase tracking-wide">
+                {lang === 'en' && 'Productivity'}
+                {lang === 'es' && 'Productividad'}
+                {lang === 'fr' && 'Productivité'}
+                {lang === 'de' && 'Produktivität'}
+                {lang === 'it' && 'Produttività'}
+              </div>
+              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                {t.blogPost1Title}
+              </h3>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {t.blogPost1Desc}
+              </p>
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-muted-foreground">{t.blogPost1ReadTime}</span>
+                <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Blog Post 2 - Study Techniques */}
+          <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
+            <div className="h-48 bg-gradient-to-br from-blue-500/30 to-blue-500/10 relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">📚</div>
+            </div>
+            <div className="p-6 space-y-3">
+              <div className="text-xs text-blue-400 font-semibold uppercase tracking-wide">
+                {lang === 'en' && 'Study Tips'}
+                {lang === 'es' && 'Consejos de Estudio'}
+                {lang === 'fr' && 'Conseils d\'Étude'}
+                {lang === 'de' && 'Lerntipps'}
+                {lang === 'it' && 'Consigli di Studio'}
+              </div>
+              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                {t.blogPost2Title}
+              </h3>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {t.blogPost2Desc}
+              </p>
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-muted-foreground">{t.blogPost2ReadTime}</span>
+                <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Blog Post 3 - AI Productivity */}
+          <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
+            <div className="h-48 bg-gradient-to-br from-purple-500/30 to-purple-500/10 relative overflow-hidden">
+              <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">🤖</div>
+            </div>
+            <div className="p-6 space-y-3">
+              <div className="text-xs text-purple-400 font-semibold uppercase tracking-wide">
+                {lang === 'en' && 'AI & Automation'}
+                {lang === 'es' && 'IA y Automatización'}
+                {lang === 'fr' && 'IA et Automatisation'}
+                {lang === 'de' && 'KI & Automatisierung'}
+                {lang === 'it' && 'IA e Automazione'}
+              </div>
+              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                {t.blogPost3Title}
+              </h3>
+              <p className="text-sm text-muted-foreground line-clamp-3">
+                {t.blogPost3Desc}
+              </p>
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-muted-foreground">{t.blogPost3ReadTime}</span>
+                <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+              </div>
             </div>
           </Card>
         </div>

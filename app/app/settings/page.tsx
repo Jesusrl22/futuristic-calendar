@@ -47,7 +47,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setLoading(true)
     try {
-      await fetch("/api/settings", {
+      const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -57,8 +57,15 @@ export default function SettingsPage() {
           timezone: profile.timezone,
         }),
       })
-      localStorage.setItem("timezone", profile.timezone)
-      alert("Settings saved successfully!")
+      
+      if (response.ok) {
+        localStorage.setItem("timezone", profile.timezone)
+        localStorage.setItem("language", profile.language)
+        alert("Settings saved successfully! The page will reload to apply changes.")
+        window.location.reload()
+      } else {
+        alert("Failed to save settings")
+      }
     } catch (error) {
       console.error("Error saving settings:", error)
       alert("Failed to save settings")

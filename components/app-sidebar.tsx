@@ -42,10 +42,28 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation(lang)
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("language") as Language | null
-    if (savedLang) {
-      setLang(savedLang)
+    const loadLanguage = async () => {
+      try {
+        const response = await fetch("/api/settings")
+        const data = await response.json()
+        if (data.profile?.language) {
+          setLang(data.profile.language)
+          localStorage.setItem("language", data.profile.language)
+        } else {
+          const savedLang = localStorage.getItem("language") as Language | null
+          if (savedLang) {
+            setLang(savedLang)
+          }
+        }
+      } catch (error) {
+        console.error("[v0] Error loading language:", error)
+        const savedLang = localStorage.getItem("language") as Language | null
+        if (savedLang) {
+          setLang(savedLang)
+        }
+      }
     }
+    loadLanguage()
   }, [])
 
   const menuItemsTranslated = [
