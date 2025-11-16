@@ -6,7 +6,8 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from 'lucide-react'
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { usePathname } from 'next/navigation'
 
 export default function ClientLayout({
   children,
@@ -14,11 +15,29 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
+
+  const getPageTitle = () => {
+    const path = pathname.split('/').pop() || 'dashboard'
+    const titleMap: { [key: string]: string } = {
+      'app': 'Dashboard',
+      'calendar': 'Calendar',
+      'tasks': 'Tasks',
+      'notes': 'Notes',
+      'pomodoro': 'Pomodoro',
+      'ai': 'AI Assistant',
+      'stats': 'Statistics',
+      'achievements': 'Achievements',
+      'settings': 'Settings',
+      'subscription': 'Subscription',
+      'wishlist': 'Wishlist'
+    }
+    return titleMap[path] || 'Dashboard'
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Mobile menu with Sheet */}
-      <div className="md:hidden fixed top-4 left-4 z-40">
+      <div className="md:hidden fixed top-4 left-4 z-40 flex items-center gap-3">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <Button size="icon" variant="outline" className="neon-glow-hover bg-background/95 backdrop-blur-sm">
@@ -29,6 +48,9 @@ export default function ClientLayout({
             <AppSidebar onNavigate={() => setMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
+        <span className="text-lg font-semibold text-primary neon-text">
+          {getPageTitle()}
+        </span>
       </div>
 
       {/* Desktop layout with resizable sidebar */}

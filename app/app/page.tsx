@@ -70,12 +70,12 @@ export default function AppPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch("/api/stats")
+      const response = await fetch("/api/stats?range=month")
       if (response.ok) {
         const data = await response.json()
         setStats(prev => ({
           ...prev,
-          tasks: data.totalTasks || 0,
+          tasks: data.completedTasks || 0,
           notes: data.totalNotes || 0,
           pomodoro: data.totalPomodoro || 0,
         }))
@@ -97,9 +97,9 @@ export default function AppPage() {
   }
 
   const statCards = [
-    { title: "Tasks", value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
-    { title: "Notes", value: stats.notes, icon: FileText, color: "text-purple-500" },
-    { title: "Pomodoro Sessions", value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
+    { title: "Tasks (This Month)", value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
+    { title: "Notes (This Month)", value: stats.notes, icon: FileText, color: "text-purple-500" },
+    { title: "Pomodoros (This Month)", value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
     { title: "AI Credits", value: stats.credits, icon: Zap, color: "text-primary" },
   ]
 
