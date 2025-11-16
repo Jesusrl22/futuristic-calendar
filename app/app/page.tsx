@@ -107,7 +107,7 @@ export default function AppPage() {
     <div className="p-8">
       <div>
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
+          <h1 className="text-4xl font-bold mb-2 hidden md:block">
             Welcome, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
           </h1>
           <p className="text-muted-foreground">

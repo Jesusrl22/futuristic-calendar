@@ -48,8 +48,26 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks()
-    const savedTimezone = localStorage.getItem("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
-    setUserTimezone(savedTimezone)
+    const fetchTimezone = async () => {
+      try {
+        const response = await fetch("/api/settings")
+        const data = await response.json()
+        if (data.profile?.timezone) {
+          setUserTimezone(data.profile.timezone)
+          localStorage.setItem("timezone", data.profile.timezone)
+          console.log("[v0] Loaded timezone from database:", data.profile.timezone)
+        } else {
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+          setUserTimezone(detectedTimezone)
+          console.log("[v0] Using detected timezone:", detectedTimezone)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching timezone:", error)
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        setUserTimezone(detectedTimezone)
+      }
+    }
+    fetchTimezone()
   }, [])
 
   const fetchTasks = async () => {
@@ -229,20 +247,18 @@ export default function TasksPage() {
 
   const formatTaskDateTime = (dateString: string) => {
     const date = new Date(dateString)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, "0")
-    const day = String(date.getDate()).padStart(2, "0")
+    const formattedDate = date.toLocaleDateString("en-GB", { timeZone: userTimezone })
     const hours = String(date.getHours()).padStart(2, "0")
     const minutes = String(date.getMinutes()).padStart(2, "0")
     
-    return `${day}/${month}/${year} ${hours}:${minutes}`
+    return `${formattedDate} ${hours}:${minutes}`
   }
 
   return (
     <div className="p-8">
       <div>
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-4xl font-bold hidden md:block">
             <span className="text-primary neon-text">Tasks</span>
           </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

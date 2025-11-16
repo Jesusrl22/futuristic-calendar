@@ -32,8 +32,26 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks()
-    const savedTimezone = localStorage.getItem("timezone") || Intl.DateTimeFormat().resolvedOptions().timeZone
-    setUserTimezone(savedTimezone)
+    const fetchTimezone = async () => {
+      try {
+        const response = await fetch("/api/settings")
+        const data = await response.json()
+        if (data.profile?.timezone) {
+          setUserTimezone(data.profile.timezone)
+          localStorage.setItem("timezone", data.profile.timezone)
+          console.log("[v0] Loaded timezone from database:", data.profile.timezone)
+        } else {
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+          setUserTimezone(detectedTimezone)
+          console.log("[v0] Using detected timezone:", detectedTimezone)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching timezone:", error)
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        setUserTimezone(detectedTimezone)
+      }
+    }
+    fetchTimezone()
     
     if ("Notification" in window) {
       console.log("[v0] Current notification permission:", Notification.permission)
@@ -100,6 +118,7 @@ export default function CalendarPage() {
 
   const scheduleNotification = (task: any) => {
     console.log("[v0] Scheduling notification for task:", task.title)
+    console.log("[v0] Using timezone:", userTimezone)
     
     if (!("Notification" in window)) {
       console.log("[v0] Notifications not supported")
@@ -116,9 +135,10 @@ export default function CalendarPage() {
       const now = new Date()
       const timeUntilTask = taskDate.getTime() - now.getTime()
 
-      console.log("[v0] Task date:", taskDate.toLocaleString(undefined, { timeZone: userTimezone }))
-      console.log("[v0] Current time:", now.toLocaleString(undefined, { timeZone: userTimezone }))
+      console.log("[v0] Task date (local):", taskDate.toLocaleString("en-US", { timeZone: userTimezone }))
+      console.log("[v0] Current time (local):", now.toLocaleString("en-US", { timeZone: userTimezone }))
       console.log("[v0] Time until task (ms):", timeUntilTask)
+      console.log("[v0] Time until task (hours):", (timeUntilTask / (1000 * 60 * 60)).toFixed(2))
 
       if (timeUntilTask > 0 && timeUntilTask < 24 * 60 * 60 * 1000) {
         console.log("[v0] Setting timeout for notification")
@@ -263,7 +283,7 @@ export default function CalendarPage() {
     <div className="p-4 md:p-8">
       <div className="transition-all duration-300">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold">
+          <h1 className="text-3xl md:text-4xl font-bold hidden md:block">
             <span className="text-primary neon-text">Calendar</span>
           </h1>
           <Button

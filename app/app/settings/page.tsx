@@ -27,26 +27,38 @@ export default function SettingsPage() {
 
   const fetchProfile = async () => {
     try {
+      console.log("[v0] Fetching profile settings...")
       const response = await fetch("/api/settings")
       const data = await response.json()
+      console.log("[v0] Profile data received:", data)
 
       if (data.profile) {
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const savedTimezone = data.profile.timezone || detectedTimezone
+        
+        console.log("[v0] Detected timezone:", detectedTimezone)
+        console.log("[v0] Saved timezone:", savedTimezone)
+        
         setProfile({
           email: data.email || "",
           theme: data.profile.theme || "neon-tech",
           language: data.profile.language || "en",
           notifications: data.profile.notifications ?? true,
-          timezone: data.profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timezone: savedTimezone,
         })
+        
+        localStorage.setItem("timezone", savedTimezone)
       }
     } catch (error) {
-      console.error("Error fetching settings:", error)
+      console.error("[v0] Error fetching settings:", error)
     }
   }
 
   const handleSave = async () => {
     setLoading(true)
     try {
+      console.log("[v0] Saving settings with timezone:", profile.timezone)
+      
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -58,16 +70,20 @@ export default function SettingsPage() {
         }),
       })
       
+      const result = await response.json()
+      console.log("[v0] Save response:", result)
+      
       if (response.ok) {
         localStorage.setItem("timezone", profile.timezone)
         localStorage.setItem("language", profile.language)
         alert("Settings saved successfully! The page will reload to apply changes.")
         window.location.reload()
       } else {
-        alert("Failed to save settings")
+        console.error("[v0] Failed to save:", result)
+        alert("Failed to save settings: " + (result.error || "Unknown error"))
       }
     } catch (error) {
-      console.error("Error saving settings:", error)
+      console.error("[v0] Error saving settings:", error)
       alert("Failed to save settings")
     }
     setLoading(false)
@@ -75,20 +91,20 @@ export default function SettingsPage() {
 
   const timezones = [
     { value: "UTC", label: "UTC (Coordinated Universal Time)" },
-    { value: "Europe/Madrid", label: "Europe/Madrid (Spain)" },
-    { value: "Europe/London", label: "Europe/London (UK)" },
-    { value: "Europe/Paris", label: "Europe/Paris (France)" },
-    { value: "Europe/Berlin", label: "Europe/Berlin (Germany)" },
-    { value: "America/New_York", label: "America/New York (EST/EDT)" },
-    { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
-    { value: "America/Denver", label: "America/Denver (MST/MDT)" },
-    { value: "America/Los_Angeles", label: "America/Los Angeles (PST/PDT)" },
-    { value: "America/Mexico_City", label: "America/Mexico City" },
-    { value: "America/Sao_Paulo", label: "America/São Paulo (Brazil)" },
-    { value: "Asia/Tokyo", label: "Asia/Tokyo (Japan)" },
-    { value: "Asia/Shanghai", label: "Asia/Shanghai (China)" },
-    { value: "Asia/Dubai", label: "Asia/Dubai (UAE)" },
-    { value: "Australia/Sydney", label: "Australia/Sydney" },
+    { value: "Europe/Madrid", label: "Europe/Madrid (Spain - UTC+1/+2)" },
+    { value: "Europe/London", label: "Europe/London (UK - UTC+0/+1)" },
+    { value: "Europe/Paris", label: "Europe/Paris (France - UTC+1/+2)" },
+    { value: "Europe/Berlin", label: "Europe/Berlin (Germany - UTC+1/+2)" },
+    { value: "America/New_York", label: "America/New York (EST/EDT - UTC-5/-4)" },
+    { value: "America/Chicago", label: "America/Chicago (CST/CDT - UTC-6/-5)" },
+    { value: "America/Denver", label: "America/Denver (MST/MDT - UTC-7/-6)" },
+    { value: "America/Los_Angeles", label: "America/Los Angeles (PST/PDT - UTC-8/-7)" },
+    { value: "America/Mexico_City", label: "America/Mexico City (UTC-6)" },
+    { value: "America/Sao_Paulo", label: "America/São Paulo (Brazil - UTC-3)" },
+    { value: "Asia/Tokyo", label: "Asia/Tokyo (Japan - UTC+9)" },
+    { value: "Asia/Shanghai", label: "Asia/Shanghai (China - UTC+8)" },
+    { value: "Asia/Dubai", label: "Asia/Dubai (UAE - UTC+4)" },
+    { value: "Australia/Sydney", label: "Australia/Sydney (UTC+10/+11)" },
   ]
 
   return (
@@ -135,7 +151,6 @@ export default function SettingsPage() {
                     value={profile.language}
                     onValueChange={(value: Language) => {
                       setProfile({ ...profile, language: value })
-                      localStorage.setItem("language", value)
                     }}
                   >
                     <SelectTrigger className="bg-secondary/50">
@@ -155,7 +170,10 @@ export default function SettingsPage() {
                   <Label>Timezone / Region</Label>
                   <Select
                     value={profile.timezone}
-                    onValueChange={(value) => setProfile({ ...profile, timezone: value })}
+                    onValueChange={(value) => {
+                      console.log("[v0] Timezone changed to:", value)
+                      setProfile({ ...profile, timezone: value })
+                    }}
                   >
                     <SelectTrigger className="bg-secondary/50">
                       <SelectValue />

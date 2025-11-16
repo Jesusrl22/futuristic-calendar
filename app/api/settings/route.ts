@@ -61,6 +61,8 @@ export async function PATCH(request: Request) {
       pomodoro_long_break_duration,
     } = body
 
+    console.log("[v0] Saving settings, timezone:", timezone)
+
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -80,19 +82,31 @@ export async function PATCH(request: Request) {
     if (pomodoro_long_break_duration !== undefined)
       updates.pomodoro_long_break_duration = pomodoro_long_break_duration
 
-    await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
+    console.log("[v0] Updating user with:", updates)
+
+    const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         "Content-Type": "application/json",
+        Prefer: "return=representation",
       },
       body: JSON.stringify(updates),
     })
 
-    return NextResponse.json({ success: true })
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text()
+      console.error("[v0] Failed to update settings:", errorText)
+      return NextResponse.json({ error: "Failed to update settings", details: errorText }, { status: 500 })
+    }
+
+    const updatedUser = await updateResponse.json()
+    console.log("[v0] Settings updated successfully:", updatedUser)
+
+    return NextResponse.json({ success: true, user: updatedUser[0] })
   } catch (error) {
-    console.error("Error updating settings:", error)
+    console.error("[v0] Error updating settings:", error)
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 })
   }
 }
