@@ -116,6 +116,9 @@ export async function GET(request: Request) {
         const dayStartISO = dayStart.toISOString()
         const dayEndISO = dayEnd.toISOString()
 
+        const isToday = dayDate.toDateString() === now.toDateString()
+        const isFuture = dayDate > now
+        
         const tasksForDay = completed.filter((t: any) => {
           return t.updated_at >= dayStartISO && t.updated_at <= dayEndISO
         }).length
@@ -123,6 +126,8 @@ export async function GET(request: Request) {
         const pomodoroForDay = pomodoro.filter((p: any) => {
           return p.created_at >= dayStartISO && p.created_at <= dayEndISO
         }).length
+
+        console.log(`[v0] Week stats - ${day} (${dayDate.toDateString()}): tasks=${tasksForDay}, pomodoro=${pomodoroForDay}, isFuture=${isFuture}`)
 
         return { name: day, tasks: tasksForDay, pomodoro: pomodoroForDay }
       })

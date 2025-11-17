@@ -211,29 +211,36 @@ export default function CalendarPage() {
           console.log("[v0] ⏭️  Already notified 5-min for:", task.title)
         }
       } 
-      else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
+      else if (minutesUntilTask >= -30 && minutesUntilTask <= 5) {
         const notificationKey = `notified-now-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
         if (!alreadyNotified) {
-          console.log("[v0] 🔔 Showing DUE NOW notification for:", task.title)
+          const isOverdue = minutesUntilTask < 0
+          const message = isOverdue 
+            ? `Task is overdue by ${Math.abs(minutesUntilTask)} minutes!`
+            : minutesUntilTask === 0
+            ? "Your task is due now!"
+            : `Task is due in ${minutesUntilTask} minutes!`
+          
+          console.log("[v0] 🔔 Showing DUE notification for:", task.title, "| Message:", message)
           upcomingCount++
           
           try {
-            new Notification(`🔔 Task Due: ${task.title}`, {
-              body: task.description || "Your task is due now!",
+            new Notification(`🔔 ${isOverdue ? 'OVERDUE' : 'Task Due'}: ${task.title}`, {
+              body: task.description || message,
               icon: "/favicon.ico",
               tag: `${task.id}-now`,
               requireInteraction: true,
             })
             localStorage.setItem(notificationKey, "true")
             localStorage.setItem(notificationKey + '-time', Date.now().toString())
-            console.log("[v0] ✅ Due-now notification sent successfully")
+            console.log("[v0] ✅ Due notification sent successfully")
           } catch (error) {
-            console.error("[v0] ❌ Failed to show due-now notification:", error)
+            console.error("[v0] ❌ Failed to show due notification:", error)
           }
         } else {
-          console.log("[v0] ⏭️  Already notified due-now for:", task.title)
+          console.log("[v0] ⏭️  Already notified due for:", task.title)
         }
       } else {
         console.log(`[v0] ⏸️  Task outside notification window (${minutesUntilTask} minutes)`)
@@ -284,8 +291,8 @@ export default function CalendarPage() {
       } else {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
-        fetchTasks()
-        setTimeout(checkUpcomingTasks, 100)
+        await fetchTasks()
+        setTimeout(checkUpcomingTasks, 500)
       }
     } catch (error) {
       console.error("Error creating task:", error)
@@ -340,7 +347,6 @@ export default function CalendarPage() {
 
     let dueDate: string
     if (editingTask.due_date.includes("T")) {
-      // Extract date and time components directly from ISO string
       const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (match) {
         const [, year, month, day, hours, minutes] = match
@@ -375,7 +381,8 @@ export default function CalendarPage() {
       } else {
         setIsEditDialogOpen(false)
         setEditingTask(null)
-        fetchTasks()
+        await fetchTasks()
+        setTimeout(checkUpcomingTasks, 500)
       }
     } catch (error) {
       console.error("Error updating task:", error)
