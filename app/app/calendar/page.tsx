@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Plus, Edit2 } from "@/components/icons"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -238,13 +238,53 @@ export default function CalendarPage() {
     }
   }
 
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm("Are you sure you want to delete this task?")) {
+      return
+    }
+
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        alert(data.error || "Failed to delete task")
+      } else {
+        setIsViewDialogOpen(false)
+        setIsEditDialogOpen(false)
+        fetchTasks()
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error)
+      alert("Failed to delete task. Please try again.")
+    }
+  }
+
   const handleUpdateTask = async () => {
     if (!editingTask || !editingTask.title.trim()) {
       alert("Please enter a task title")
       return
     }
 
-    const dueDate = new Date(editingTask.due_date)
+    let dueDate: string
+    if (editingTask.due_date.includes("T")) {
+      // Extract date and time components directly from ISO string
+      const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
+      if (match) {
+        const [, year, month, day, hours, minutes] = match
+        dueDate = `${year}-${month}-${day}T${hours}:${minutes}:00`
+      } else {
+        dueDate = editingTask.due_date
+      }
+    } else {
+      dueDate = editingTask.due_date
+    }
+
+    console.log("[v0] Updating task with due_date:", dueDate)
 
     try {
       const response = await fetch("/api/tasks", {
@@ -256,7 +296,7 @@ export default function CalendarPage() {
           description: editingTask.description,
           priority: editingTask.priority,
           category: editingTask.category,
-          due_date: dueDate.toISOString(),
+          due_date: dueDate,
           completed: editingTask.completed,
         }),
       })
@@ -565,17 +605,27 @@ export default function CalendarPage() {
                           })()}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditingTask(task)
-                          setIsViewDialogOpen(false)
-                          setIsEditDialogOpen(true)
-                        }}
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingTask(task)
+                            setIsViewDialogOpen(false)
+                            setIsEditDialogOpen(true)
+                          }}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))
@@ -613,7 +663,7 @@ export default function CalendarPage() {
                   <Label>Due Date & Time</Label>
                   <Input
                     type="datetime-local"
-                    value={editingTask.due_date ? new Date(editingTask.due_date).toISOString().slice(0, 16) : ""}
+                    value={editingTask.due_date ? editingTask.due_date.slice(0, 16) : ""}
                     onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
                     className="bg-secondary/50"
                   />
@@ -654,9 +704,19 @@ export default function CalendarPage() {
                     </Select>
                   </div>
                 </div>
-                <Button onClick={handleUpdateTask} className="w-full neon-glow-hover">
-                  Update Task
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={handleUpdateTask} className="flex-1 neon-glow-hover">
+                    Update Task
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => handleDeleteTask(editingTask.id)}
+                    className="flex-1"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
               </div>
             )}
           </DialogContent>
