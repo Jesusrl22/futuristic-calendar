@@ -218,17 +218,17 @@ export default function CalendarPage() {
           console.log("[v0] ⏭️  Already notified 5-min for:", task.title)
         }
       } 
-      else if (minutesUntilTask >= -30 && minutesUntilTask <= 5) {
+      else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
         const notificationKey = `notified-now-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
         if (!alreadyNotified) {
           const isOverdue = minutesUntilTask < 0
           const message = isOverdue 
-            ? `Task is overdue by ${Math.abs(minutesUntilTask)} minutes!`
+            ? `Task is overdue by ${Math.abs(minutesUntilTask)} minute(s)!`
             : minutesUntilTask === 0
             ? "Your task is due now!"
-            : `Task is due in ${minutesUntilTask} minutes!`
+            : `Task is due in ${minutesUntilTask} minute(s)!`
           
           console.log("[v0] 🔔 Showing DUE notification for:", task.title, "| Message:", message)
           upcomingCount++
@@ -248,6 +248,31 @@ export default function CalendarPage() {
           }
         } else {
           console.log("[v0] ⏭️  Already notified due for:", task.title)
+        }
+      }
+      else if (minutesUntilTask < -1 && minutesUntilTask >= -30) {
+        const notificationKey = `notified-overdue-${task.id}`
+        const alreadyNotified = localStorage.getItem(notificationKey)
+        
+        if (!alreadyNotified) {
+          console.log("[v0] 🔔 Showing OVERDUE notification for:", task.title)
+          upcomingCount++
+          
+          try {
+            new Notification(`⚠️ OVERDUE: ${task.title}`, {
+              body: `Task is overdue by ${Math.abs(minutesUntilTask)} minutes!`,
+              icon: "/favicon.ico",
+              tag: `${task.id}-overdue`,
+              requireInteraction: true,
+            })
+            localStorage.setItem(notificationKey, "true")
+            localStorage.setItem(notificationKey + '-time', Date.now().toString())
+            console.log("[v0] ✅ Overdue notification sent successfully")
+          } catch (error) {
+            console.error("[v0] ❌ Failed to show overdue notification:", error)
+          }
+        } else {
+          console.log("[v0] ⏭️  Already notified overdue for:", task.title)
         }
       } else {
         console.log(`[v0] ⏸️  Task outside notification window (${minutesUntilTask} minutes)`)
