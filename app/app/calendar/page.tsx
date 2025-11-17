@@ -65,6 +65,15 @@ export default function CalendarPage() {
     } else {
       console.log("[v0] Notifications not supported in this browser")
     }
+
+    const notificationInterval = setInterval(() => {
+      checkUpcomingTasks()
+    }, 60000) // Check every minute
+
+    // Check immediately on mount
+    checkUpcomingTasks()
+
+    return () => clearInterval(notificationInterval)
   }, [currentDate])
 
   const fetchTasks = async () => {
@@ -75,11 +84,6 @@ export default function CalendarPage() {
       const data = await response.json()
       if (data.tasks) {
         setTasks(data.tasks)
-        data.tasks.forEach((task: any) => {
-          if (task.due_date && !task.completed) {
-            scheduleNotification(task)
-          }
-        })
       }
     } catch (error) {
       console.error("Error fetching tasks:", error)
@@ -116,54 +120,49 @@ export default function CalendarPage() {
     })
   }
 
-  const scheduleNotification = (task: any) => {
-    console.log("[v0] Scheduling notification for task:", task.title)
-    console.log("[v0] Task due_date string:", task.due_date)
-    
-    if (!("Notification" in window)) {
-      console.log("[v0] Notifications not supported")
-      return
-    }
-    
-    if (Notification.permission !== "granted") {
-      console.log("[v0] Notification permission not granted, current:", Notification.permission)
+  const checkUpcomingTasks = () => {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
       return
     }
 
-    try {
+    const now = new Date()
+    console.log("[v0] Checking for upcoming tasks at:", now.toLocaleString())
+
+    tasks.forEach((task) => {
+      if (task.completed || !task.due_date) return
+
       const taskDate = new Date(task.due_date)
-      const now = new Date()
-      
-      console.log("[v0] Task date (UTC):", taskDate.toISOString())
-      console.log("[v0] Task date (local):", taskDate.toLocaleString())
-      console.log("[v0] Current time (local):", now.toLocaleString())
-      
       const timeUntilTask = taskDate.getTime() - now.getTime()
-      console.log("[v0] Time until task (ms):", timeUntilTask)
-      console.log("[v0] Time until task (hours):", (timeUntilTask / (1000 * 60 * 60)).toFixed(2))
+      const minutesUntilTask = Math.floor(timeUntilTask / (1000 * 60))
 
-      // Schedule notification 5 minutes before the task
-      const notificationTime = timeUntilTask - (5 * 60 * 1000)
+      console.log(`[v0] Task "${task.title}" is in ${minutesUntilTask} minutes`)
 
-      if (notificationTime > 0 && notificationTime < 24 * 60 * 60 * 1000) {
-        console.log("[v0] Setting timeout for notification in", (notificationTime / 1000 / 60).toFixed(1), "minutes")
-        setTimeout(() => {
-          console.log("[v0] Showing notification for:", task.title)
-          new Notification(task.title, {
-            body: task.description || "Task is due in 5 minutes!",
+      // Notify 5 minutes before and when it's due
+      if (minutesUntilTask === 5) {
+        const notificationKey = `notified-5min-${task.id}`
+        if (!localStorage.getItem(notificationKey)) {
+          console.log("[v0] Showing 5-minute reminder for:", task.title)
+          new Notification(`Reminder: ${task.title}`, {
+            body: "Task is due in 5 minutes!",
             icon: "/favicon.ico",
-            tag: task.id,
+            tag: `${task.id}-5min`,
+          })
+          localStorage.setItem(notificationKey, "true")
+        }
+      } else if (minutesUntilTask === 0) {
+        const notificationKey = `notified-now-${task.id}`
+        if (!localStorage.getItem(notificationKey)) {
+          console.log("[v0] Showing due now notification for:", task.title)
+          new Notification(`Task Due Now: ${task.title}`, {
+            body: task.description || "Your task is due now!",
+            icon: "/favicon.ico",
+            tag: `${task.id}-now`,
             requireInteraction: true,
           })
-        }, notificationTime)
-      } else if (timeUntilTask <= 0) {
-        console.log("[v0] Task is overdue, not scheduling notification")
-      } else {
-        console.log("[v0] Task is more than 24 hours away, not scheduling")
+          localStorage.setItem(notificationKey, "true")
+        }
       }
-    } catch (error) {
-      console.error("[v0] Error scheduling notification:", error)
-    }
+    })
   }
 
   const handleCreateTask = async () => {
@@ -210,9 +209,7 @@ export default function CalendarPage() {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
         fetchTasks()
-        if (data.task && data.task.due_date) {
-          scheduleNotification(data.task)
-        }
+        setTimeout(checkUpcomingTasks, 100)
       }
     } catch (error) {
       console.error("Error creating task:", error)
