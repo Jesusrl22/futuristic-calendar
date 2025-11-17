@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
@@ -29,6 +29,11 @@ export default function CalendarPage() {
     category: "personal",
     time: "",
   })
+  const tasksRef = useRef<any[]>([])
+
+  useEffect(() => {
+    tasksRef.current = tasks
+  }, [tasks])
 
   useEffect(() => {
     fetchTasks()
@@ -83,10 +88,12 @@ export default function CalendarPage() {
 
     const notificationInterval = setInterval(() => {
       console.log("[v0] ⏰ Notification check interval triggered")
-      checkUpcomingTasks()
+      const currentTasks = tasksRef.current
+      console.log("[v0] Current tasks count:", currentTasks.length)
+      checkNotifications(currentTasks)
     }, 15000)
 
-    checkUpcomingTasks()
+    checkNotifications(tasksRef.current)
 
     return () => {
       console.log("[v0] Cleaning up notification interval")
@@ -138,7 +145,7 @@ export default function CalendarPage() {
     })
   }
 
-  const checkUpcomingTasks = () => {
+  const checkNotifications = (tasksToCheck: any[]) => {
     console.log("[v0] 🔍 Starting notification check...")
     
     if (!("Notification" in window)) {
@@ -153,12 +160,12 @@ export default function CalendarPage() {
 
     const now = new Date()
     const nowTime = now.getTime()
-    console.log("[v0] ✅ Checking tasks at:", now.toLocaleString(), "| Total tasks:", tasks.length)
+    console.log("[v0] ✅ Checking tasks at:", now.toLocaleString(), "| Total tasks:", tasksToCheck.length)
 
     let upcomingCount = 0
     let completedCount = 0
 
-    tasks.forEach((task) => {
+    tasksToCheck.forEach((task) => {
       if (task.completed) {
         completedCount++
         return
@@ -292,7 +299,7 @@ export default function CalendarPage() {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
         await fetchTasks()
-        setTimeout(checkUpcomingTasks, 500)
+        setTimeout(() => checkNotifications(tasksRef.current), 500)
       }
     } catch (error) {
       console.error("Error creating task:", error)
@@ -382,7 +389,7 @@ export default function CalendarPage() {
         setIsEditDialogOpen(false)
         setEditingTask(null)
         await fetchTasks()
-        setTimeout(checkUpcomingTasks, 500)
+        setTimeout(() => checkNotifications(tasksRef.current), 500)
       }
     } catch (error) {
       console.error("Error updating task:", error)
