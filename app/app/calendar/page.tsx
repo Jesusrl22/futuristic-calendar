@@ -66,14 +66,33 @@ export default function CalendarPage() {
       console.log("[v0] Notifications not supported in this browser")
     }
 
+    const cleanupOldNotifications = () => {
+      const oneHourAgo = Date.now() - (60 * 60 * 1000)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('notified-')) {
+          const timestamp = localStorage.getItem(key + '-time')
+          if (timestamp && parseInt(timestamp) < oneHourAgo) {
+            localStorage.removeItem(key)
+            localStorage.removeItem(key + '-time')
+            console.log("[v0] Cleaned up old notification:", key)
+          }
+        }
+      })
+    }
+    cleanupOldNotifications()
+
     const notificationInterval = setInterval(() => {
+      console.log("[v0] ⏰ Notification check interval triggered")
       checkUpcomingTasks()
-    }, 30000)
+    }, 15000)
 
     checkUpcomingTasks()
 
-    return () => clearInterval(notificationInterval)
-  }, [currentDate])
+    return () => {
+      console.log("[v0] Cleaning up notification interval")
+      clearInterval(notificationInterval)
+    }
+  }, []) // Remove currentDate dependency to avoid recreating intervals
 
   const fetchTasks = async () => {
     try {
@@ -120,28 +139,50 @@ export default function CalendarPage() {
   }
 
   const checkUpcomingTasks = () => {
-    if (!("Notification" in window) || Notification.permission !== "granted") {
-      console.log("[v0] Notifications not available or not permitted")
+    console.log("[v0] 🔍 Starting notification check...")
+    
+    if (!("Notification" in window)) {
+      console.log("[v0] ❌ Notifications not supported")
+      return
+    }
+    
+    if (Notification.permission !== "granted") {
+      console.log("[v0] ❌ Notification permission not granted:", Notification.permission)
       return
     }
 
     const now = new Date()
-    console.log("[v0] Checking for upcoming tasks at:", now.toLocaleString())
+    console.log("[v0] ✅ Checking tasks at:", now.toLocaleString(), "| Total tasks:", tasks.length)
+
+    let upcomingCount = 0
+    let completedCount = 0
 
     tasks.forEach((task) => {
-      if (task.completed || !task.due_date) return
+      if (task.completed) {
+        completedCount++
+        return
+      }
+      
+      if (!task.due_date) {
+        return
+      }
 
-      // Parse the ISO date string directly to preserve local time
       const taskDate = new Date(task.due_date)
       const timeUntilTask = taskDate.getTime() - now.getTime()
       const minutesUntilTask = Math.floor(timeUntilTask / (1000 * 60))
 
-      console.log(`[v0] Task "${task.title}" due at ${taskDate.toLocaleString()}, in ${minutesUntilTask} minutes`)
+      console.log(`[v0] 📋 Task: "${task.title}"`)
+      console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
+      console.log(`[v0]    In: ${minutesUntilTask} minutes`)
 
-      if (minutesUntilTask >= 4 && minutesUntilTask <= 6) {
+      if (minutesUntilTask >= 3 && minutesUntilTask <= 7) {
         const notificationKey = `notified-5min-${task.id}`
-        if (!localStorage.getItem(notificationKey)) {
-          console.log("[v0] Showing 5-minute reminder for:", task.title)
+        const alreadyNotified = localStorage.getItem(notificationKey)
+        
+        if (!alreadyNotified) {
+          console.log("[v0] 🔔 Showing 5-minute reminder for:", task.title)
+          upcomingCount++
+          
           try {
             new Notification(`⏰ Reminder: ${task.title}`, {
               body: "Task is due in 5 minutes!",
@@ -150,15 +191,23 @@ export default function CalendarPage() {
               requireInteraction: false,
             })
             localStorage.setItem(notificationKey, "true")
+            localStorage.setItem(notificationKey + '-time', Date.now().toString())
+            console.log("[v0] ✅ 5-minute notification sent successfully")
           } catch (error) {
-            console.error("[v0] Failed to show notification:", error)
+            console.error("[v0] ❌ Failed to show 5-min notification:", error)
           }
+        } else {
+          console.log("[v0] ⏭️  Already notified 5-min for:", task.title)
         }
       } 
-      else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
+      else if (minutesUntilTask >= -2 && minutesUntilTask <= 3) {
         const notificationKey = `notified-now-${task.id}`
-        if (!localStorage.getItem(notificationKey)) {
-          console.log("[v0] Showing due now notification for:", task.title)
+        const alreadyNotified = localStorage.getItem(notificationKey)
+        
+        if (!alreadyNotified) {
+          console.log("[v0] 🔔 Showing DUE NOW notification for:", task.title)
+          upcomingCount++
+          
           try {
             new Notification(`🔔 Task Due: ${task.title}`, {
               body: task.description || "Your task is due now!",
@@ -167,12 +216,18 @@ export default function CalendarPage() {
               requireInteraction: true,
             })
             localStorage.setItem(notificationKey, "true")
+            localStorage.setItem(notificationKey + '-time', Date.now().toString())
+            console.log("[v0] ✅ Due-now notification sent successfully")
           } catch (error) {
-            console.error("[v0] Failed to show notification:", error)
+            console.error("[v0] ❌ Failed to show due-now notification:", error)
           }
+        } else {
+          console.log("[v0] ⏭️  Already notified due-now for:", task.title)
         }
       }
     })
+
+    console.log(`[v0] ✅ Check complete: ${upcomingCount} notifications sent, ${completedCount} completed tasks skipped`)
   }
 
   const handleCreateTask = async () => {
