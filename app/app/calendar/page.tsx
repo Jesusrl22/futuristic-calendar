@@ -178,7 +178,8 @@ export default function CalendarPage() {
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
-      dueDate = `${year}-${month}-${day}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
+      dueDate = `${year}-${month}-${day}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`
+      console.log("[v0] Creating task with time:", newTask.time, "-> ISO:", dueDate)
     } else {
       dueDate = `${year}-${month}-${day}T23:59:59`
     }
@@ -543,10 +544,13 @@ export default function CalendarPage() {
                           {task.due_date && (
                             <span className="text-xs text-muted-foreground">
                               {(() => {
-                                const date = new Date(task.due_date)
-                                const hours = String(date.getHours()).padStart(2, "0")
-                                const minutes = String(date.getMinutes()).padStart(2, "0")
-                                return `${hours}:${minutes}`
+                                const isoString = task.due_date
+                                const timePart = isoString.split('T')[1]
+                                if (timePart) {
+                                  const [hours, minutes] = timePart.split(':')
+                                  return `${hours}:${minutes}`
+                                }
+                                return ''
                               })()}
                             </span>
                           )}
