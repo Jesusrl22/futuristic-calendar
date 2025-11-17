@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2, ExternalLink } from "@/components/icons"
+import { Plus, Trash2, ExternalLink, Edit } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export default function WishlistPage() {
   const [items, setItems] = useState<any[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<any>(null)
   const [filter, setFilter] = useState("all")
   const [itemForm, setItemForm] = useState({
     title: "",
@@ -69,6 +71,29 @@ export default function WishlistPage() {
       fetchItems()
     } catch (error) {
       console.error("Error saving wishlist item:", error)
+    }
+  }
+
+  const handleEditItem = async () => {
+    try {
+      await fetch("/api/wishlist", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: editingItem.id,
+          title: editingItem.title,
+          description: editingItem.description,
+          price: editingItem.price ? Number.parseFloat(editingItem.price) : null,
+          priority: editingItem.priority,
+          url: editingItem.url,
+        }),
+      })
+
+      setIsEditDialogOpen(false)
+      setEditingItem(null)
+      fetchItems()
+    } catch (error) {
+      console.error("Error updating wishlist item:", error)
     }
   }
 
@@ -179,6 +204,76 @@ export default function WishlistPage() {
         </Dialog>
       </div>
 
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="glass-card">
+          <DialogHeader>
+            <DialogTitle>Edit Wishlist Item</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <Input
+                  value={editingItem.title}
+                  onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                  placeholder="Item title"
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                  placeholder="Item description"
+                  className="bg-secondary/50"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Price</Label>
+                  <Input
+                    type="number"
+                    value={editingItem.price || ""}
+                    onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
+                    placeholder="0.00"
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <div>
+                  <Label>Priority</Label>
+                  <Select
+                    value={editingItem.priority}
+                    onValueChange={(value) => setEditingItem({ ...editingItem, priority: value })}
+                  >
+                    <SelectTrigger className="bg-secondary/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>URL (optional)</Label>
+                <Input
+                  value={editingItem.url || ""}
+                  onChange={(e) => setEditingItem({ ...editingItem, url: e.target.value })}
+                  placeholder="https://..."
+                  className="bg-secondary/50"
+                />
+              </div>
+              <Button onClick={handleEditItem} className="w-full neon-glow-hover">
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="glass-card p-6 neon-glow-hover">
           <h3 className="text-sm text-muted-foreground mb-2">Total Items</h3>
@@ -220,9 +315,21 @@ export default function WishlistPage() {
                 <div className="mt-4 pt-4 border-t border-border/50">
                   <div className="flex items-center justify-between">
                     {item.price && <span className="text-lg font-bold text-primary">${item.price}</span>}
-                    <Button variant="ghost" size="icon" onClick={() => deleteItem(item.id)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setEditingItem(item)
+                          setIsEditDialogOpen(true)
+                        }}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => deleteItem(item.id)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card>

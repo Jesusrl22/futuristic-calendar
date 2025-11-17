@@ -96,6 +96,47 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get("sb-access-token")?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, title, description, price, priority, url } = body
+
+    const itemResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/wishlist_items?id=eq.${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          price,
+          priority,
+          url,
+          updated_at: new Date().toISOString(),
+        }),
+      },
+    )
+
+    const item = await itemResponse.json()
+    return NextResponse.json({ item: item[0] })
+  } catch (error) {
+    console.error("Error updating wishlist item:", error)
+    return NextResponse.json({ error: "Failed to update item" }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const cookieStore = await cookies()
