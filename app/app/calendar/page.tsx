@@ -152,6 +152,7 @@ export default function CalendarPage() {
     }
 
     const now = new Date()
+    const nowTime = now.getTime()
     console.log("[v0] ✅ Checking tasks at:", now.toLocaleString(), "| Total tasks:", tasks.length)
 
     let upcomingCount = 0
@@ -167,15 +168,25 @@ export default function CalendarPage() {
         return
       }
 
-      const taskDate = new Date(task.due_date)
-      const timeUntilTask = taskDate.getTime() - now.getTime()
+      let taskDate: Date
+      const isoMatch = task.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
+      if (isoMatch) {
+        const [, year, month, day, hours, minutes] = isoMatch
+        taskDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+      } else {
+        taskDate = new Date(task.due_date)
+      }
+
+      const taskTime = taskDate.getTime()
+      const timeUntilTask = taskTime - nowTime
       const minutesUntilTask = Math.floor(timeUntilTask / (1000 * 60))
 
       console.log(`[v0] 📋 Task: "${task.title}"`)
       console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
-      console.log(`[v0]    In: ${minutesUntilTask} minutes`)
+      console.log(`[v0]    Task time: ${taskTime}, Now time: ${nowTime}`)
+      console.log(`[v0]    Difference: ${timeUntilTask}ms = ${minutesUntilTask} minutes`)
 
-      if (minutesUntilTask >= 3 && minutesUntilTask <= 7) {
+      if (minutesUntilTask >= 4 && minutesUntilTask <= 6) {
         const notificationKey = `notified-5min-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
@@ -185,7 +196,7 @@ export default function CalendarPage() {
           
           try {
             new Notification(`⏰ Reminder: ${task.title}`, {
-              body: "Task is due in 5 minutes!",
+              body: `Task is due in ${minutesUntilTask} minutes!`,
               icon: "/favicon.ico",
               tag: `${task.id}-5min`,
               requireInteraction: false,
@@ -200,7 +211,7 @@ export default function CalendarPage() {
           console.log("[v0] ⏭️  Already notified 5-min for:", task.title)
         }
       } 
-      else if (minutesUntilTask >= -2 && minutesUntilTask <= 3) {
+      else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
         const notificationKey = `notified-now-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
@@ -224,6 +235,8 @@ export default function CalendarPage() {
         } else {
           console.log("[v0] ⏭️  Already notified due-now for:", task.title)
         }
+      } else {
+        console.log(`[v0] ⏸️  Task outside notification window (${minutesUntilTask} minutes)`)
       }
     })
 
