@@ -68,9 +68,8 @@ export default function CalendarPage() {
 
     const notificationInterval = setInterval(() => {
       checkUpcomingTasks()
-    }, 60000) // Check every minute
+    }, 30000)
 
-    // Check immediately on mount
     checkUpcomingTasks()
 
     return () => clearInterval(notificationInterval)
@@ -122,6 +121,7 @@ export default function CalendarPage() {
 
   const checkUpcomingTasks = () => {
     if (!("Notification" in window) || Notification.permission !== "granted") {
+      console.log("[v0] Notifications not available or not permitted")
       return
     }
 
@@ -131,35 +131,45 @@ export default function CalendarPage() {
     tasks.forEach((task) => {
       if (task.completed || !task.due_date) return
 
+      // Parse the ISO date string directly to preserve local time
       const taskDate = new Date(task.due_date)
       const timeUntilTask = taskDate.getTime() - now.getTime()
       const minutesUntilTask = Math.floor(timeUntilTask / (1000 * 60))
 
-      console.log(`[v0] Task "${task.title}" is in ${minutesUntilTask} minutes`)
+      console.log(`[v0] Task "${task.title}" due at ${taskDate.toLocaleString()}, in ${minutesUntilTask} minutes`)
 
-      // Notify 5 minutes before and when it's due
-      if (minutesUntilTask === 5) {
+      if (minutesUntilTask >= 4 && minutesUntilTask <= 6) {
         const notificationKey = `notified-5min-${task.id}`
         if (!localStorage.getItem(notificationKey)) {
           console.log("[v0] Showing 5-minute reminder for:", task.title)
-          new Notification(`Reminder: ${task.title}`, {
-            body: "Task is due in 5 minutes!",
-            icon: "/favicon.ico",
-            tag: `${task.id}-5min`,
-          })
-          localStorage.setItem(notificationKey, "true")
+          try {
+            new Notification(`⏰ Reminder: ${task.title}`, {
+              body: "Task is due in 5 minutes!",
+              icon: "/favicon.ico",
+              tag: `${task.id}-5min`,
+              requireInteraction: false,
+            })
+            localStorage.setItem(notificationKey, "true")
+          } catch (error) {
+            console.error("[v0] Failed to show notification:", error)
+          }
         }
-      } else if (minutesUntilTask === 0) {
+      } 
+      else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
         const notificationKey = `notified-now-${task.id}`
         if (!localStorage.getItem(notificationKey)) {
           console.log("[v0] Showing due now notification for:", task.title)
-          new Notification(`Task Due Now: ${task.title}`, {
-            body: task.description || "Your task is due now!",
-            icon: "/favicon.ico",
-            tag: `${task.id}-now`,
-            requireInteraction: true,
-          })
-          localStorage.setItem(notificationKey, "true")
+          try {
+            new Notification(`🔔 Task Due: ${task.title}`, {
+              body: task.description || "Your task is due now!",
+              icon: "/favicon.ico",
+              tag: `${task.id}-now`,
+              requireInteraction: true,
+            })
+            localStorage.setItem(notificationKey, "true")
+          } catch (error) {
+            console.error("[v0] Failed to show notification:", error)
+          }
         }
       }
     })
@@ -178,7 +188,7 @@ export default function CalendarPage() {
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
-      dueDate = `${year}-${month}-${day}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`
+      dueDate = `${year}-${month}-${day}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
       console.log("[v0] Creating task with time:", newTask.time, "-> ISO:", dueDate)
     } else {
       dueDate = `${year}-${month}-${day}T23:59:59`
@@ -541,19 +551,18 @@ export default function CalendarPage() {
                             {task.priority}
                           </Badge>
                           <Badge variant="outline">{task.category}</Badge>
-                          {task.due_date && (
-                            <span className="text-xs text-muted-foreground">
-                              {(() => {
-                                const isoString = task.due_date
-                                const timePart = isoString.split('T')[1]
-                                if (timePart) {
-                                  const [hours, minutes] = timePart.split(':')
-                                  return `${hours}:${minutes}`
-                                }
-                                return ''
-                              })()}
-                            </span>
-                          )}
+                          {task.due_date && (() => {
+                            const isoString = task.due_date
+                            const match = isoString.match(/T(\d{2}):(\d{2})/)
+                            if (match) {
+                              return (
+                                <span className="text-xs text-muted-foreground">
+                                  {match[1]}:{match[2]}
+                                </span>
+                              )
+                            }
+                            return null
+                          })()}
                         </div>
                       </div>
                       <Button
