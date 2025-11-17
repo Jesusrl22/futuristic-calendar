@@ -116,14 +116,12 @@ export default function TasksPage() {
     try {
       let dueDate = null
       if (newTask.due_date) {
-        const [year, month, day] = newTask.due_date.split("-").map(Number)
+        const [year, month, day] = newTask.due_date.split("-")
         if (newTask.due_time) {
-          const [hours, minutes] = newTask.due_time.split(":").map(Number)
-          const taskDate = new Date(year, month - 1, day, hours, minutes, 0)
-          dueDate = taskDate.toISOString()
+          const [hours, minutes] = newTask.due_time.split(":")
+          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
         } else {
-          const taskDate = new Date(year, month - 1, day, 23, 59, 59)
-          dueDate = taskDate.toISOString()
+          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T23:59:59`
         }
       }
 
@@ -191,14 +189,12 @@ export default function TasksPage() {
     try {
       let dueDate = null
       if (editForm.due_date) {
-        const [year, month, day] = editForm.due_date.split("-").map(Number)
+        const [year, month, day] = editForm.due_date.split("-")
         if (editForm.due_time) {
-          const [hours, minutes] = editForm.due_time.split(":").map(Number)
-          const taskDate = new Date(year, month - 1, day, hours, minutes, 0)
-          dueDate = taskDate.toISOString()
+          const [hours, minutes] = editForm.due_time.split(":")
+          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
         } else {
-          const taskDate = new Date(year, month - 1, day, 23, 59, 59)
-          dueDate = taskDate.toISOString()
+          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T23:59:59`
         }
       }
 

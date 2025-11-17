@@ -177,13 +177,10 @@ export default function CalendarPage() {
     
     let dueDate: string
     if (newTask.time) {
-      // Use the exact time provided without timezone conversion
       const [hours, minutes] = newTask.time.split(":")
-      const taskDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), parseInt(hours), parseInt(minutes), 0)
-      dueDate = taskDate.toISOString()
+      dueDate = `${year}-${month}-${day}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
     } else {
-      const taskDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
-      dueDate = taskDate.toISOString()
+      dueDate = `${year}-${month}-${day}T23:59:59`
     }
 
     try {
