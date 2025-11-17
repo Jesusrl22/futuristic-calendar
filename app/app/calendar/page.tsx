@@ -118,7 +118,7 @@ export default function CalendarPage() {
 
   const scheduleNotification = (task: any) => {
     console.log("[v0] Scheduling notification for task:", task.title)
-    console.log("[v0] Using timezone:", userTimezone)
+    console.log("[v0] Task due_date string:", task.due_date)
     
     if (!("Notification" in window)) {
       console.log("[v0] Notifications not supported")
@@ -133,24 +133,29 @@ export default function CalendarPage() {
     try {
       const taskDate = new Date(task.due_date)
       const now = new Date()
+      
+      console.log("[v0] Task date (UTC):", taskDate.toISOString())
+      console.log("[v0] Task date (local):", taskDate.toLocaleString())
+      console.log("[v0] Current time (local):", now.toLocaleString())
+      
       const timeUntilTask = taskDate.getTime() - now.getTime()
-
-      console.log("[v0] Task date (local):", taskDate.toLocaleString("en-US", { timeZone: userTimezone }))
-      console.log("[v0] Current time (local):", now.toLocaleString("en-US", { timeZone: userTimezone }))
       console.log("[v0] Time until task (ms):", timeUntilTask)
       console.log("[v0] Time until task (hours):", (timeUntilTask / (1000 * 60 * 60)).toFixed(2))
 
-      if (timeUntilTask > 0 && timeUntilTask < 24 * 60 * 60 * 1000) {
-        console.log("[v0] Setting timeout for notification")
+      // Schedule notification 5 minutes before the task
+      const notificationTime = timeUntilTask - (5 * 60 * 1000)
+
+      if (notificationTime > 0 && notificationTime < 24 * 60 * 60 * 1000) {
+        console.log("[v0] Setting timeout for notification in", (notificationTime / 1000 / 60).toFixed(1), "minutes")
         setTimeout(() => {
           console.log("[v0] Showing notification for:", task.title)
           new Notification(task.title, {
-            body: task.description || "Task is due now!",
+            body: task.description || "Task is due in 5 minutes!",
             icon: "/favicon.ico",
             tag: task.id,
             requireInteraction: true,
           })
-        }, timeUntilTask)
+        }, notificationTime)
       } else if (timeUntilTask <= 0) {
         console.log("[v0] Task is overdue, not scheduling notification")
       } else {
@@ -173,9 +178,13 @@ export default function CalendarPage() {
     
     let dueDate: string
     if (newTask.time) {
-      dueDate = `${year}-${month}-${day}T${newTask.time}:00`
+      // Use the exact time provided without timezone conversion
+      const [hours, minutes] = newTask.time.split(":")
+      const taskDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), parseInt(hours), parseInt(minutes), 0)
+      dueDate = taskDate.toISOString()
     } else {
-      dueDate = `${year}-${month}-${day}T23:59:59`
+      const taskDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
+      dueDate = taskDate.toISOString()
     }
 
     try {

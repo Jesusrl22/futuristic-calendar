@@ -116,11 +116,14 @@ export default function TasksPage() {
     try {
       let dueDate = null
       if (newTask.due_date) {
+        const [year, month, day] = newTask.due_date.split("-").map(Number)
         if (newTask.due_time) {
-          // Combine date and time into ISO format without timezone conversion
-          dueDate = `${newTask.due_date}T${newTask.due_time}:00`
+          const [hours, minutes] = newTask.due_time.split(":").map(Number)
+          const taskDate = new Date(year, month - 1, day, hours, minutes, 0)
+          dueDate = taskDate.toISOString()
         } else {
-          dueDate = `${newTask.due_date}T23:59:59`
+          const taskDate = new Date(year, month - 1, day, 23, 59, 59)
+          dueDate = taskDate.toISOString()
         }
       }
 
@@ -188,10 +191,14 @@ export default function TasksPage() {
     try {
       let dueDate = null
       if (editForm.due_date) {
+        const [year, month, day] = editForm.due_date.split("-").map(Number)
         if (editForm.due_time) {
-          dueDate = `${editForm.due_date}T${editForm.due_time}:00`
+          const [hours, minutes] = editForm.due_time.split(":").map(Number)
+          const taskDate = new Date(year, month - 1, day, hours, minutes, 0)
+          dueDate = taskDate.toISOString()
         } else {
-          dueDate = `${editForm.due_date}T23:59:59`
+          const taskDate = new Date(year, month - 1, day, 23, 59, 59)
+          dueDate = taskDate.toISOString()
         }
       }
 
@@ -247,7 +254,7 @@ export default function TasksPage() {
 
   const formatTaskDateTime = (dateString: string) => {
     const date = new Date(dateString)
-    const formattedDate = date.toLocaleDateString("en-GB", { timeZone: userTimezone })
+    const formattedDate = date.toLocaleDateString("en-GB")
     const hours = String(date.getHours()).padStart(2, "0")
     const minutes = String(date.getMinutes()).padStart(2, "0")
     
