@@ -117,14 +117,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get("id")
+    const { id } = await request.json()
 
     if (!id) {
       return NextResponse.json({ error: "Task ID required" }, { status: 400 })
     }
 
-    await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?id=eq.${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?id=eq.${id}`, {
       method: "DELETE",
       headers: {
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -132,8 +131,15 @@ export async function DELETE(request: Request) {
       },
     })
 
+    if (!response.ok) {
+      const error = await response.json()
+      console.error("[SERVER] Task deletion failed:", error)
+      return NextResponse.json({ error: error.message || "Failed to delete task" }, { status: response.status })
+    }
+
     return NextResponse.json({ success: true })
   } catch (error: any) {
+    console.error("[SERVER] Delete task error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
