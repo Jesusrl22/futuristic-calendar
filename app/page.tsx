@@ -401,9 +401,9 @@ export default function HomePage() {
             <a href="#about" className="text-sm hover:text-primary transition-colors">
               {t.about}
             </a>
-            <a href="#blog" className="text-sm hover:text-primary transition-colors">
+            <Link href="/blog" className="text-sm hover:text-primary transition-colors">
               {t.blogTitle}
-            </a>
+            </Link>
           </nav>
           <div className="flex items-center gap-2">
             <Select value={lang} onValueChange={(v) => handleLanguageChange(v as Language)}>
@@ -669,82 +669,88 @@ export default function HomePage() {
 
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Blog Post 1 - Pomodoro Technique */}
-          <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
-            <div className="h-48 bg-gradient-to-br from-primary/30 to-primary/10 relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">🍅</div>
-            </div>
-            <div className="p-6 space-y-3">
-              <div className="text-xs text-primary font-semibold uppercase tracking-wide">
-                {lang === 'en' && 'Productivity'}
-                {lang === 'es' && 'Productividad'}
-                {lang === 'fr' && 'Productivité'}
-                {lang === 'de' && 'Produktivität'}
-                {lang === 'it' && 'Produttività'}
+          <Link href="/blog/pomodoro-technique">
+            <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
+              <div className="h-48 bg-gradient-to-br from-primary/30 to-primary/10 relative overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">🍅</div>
               </div>
-              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                {t.blogPost1Title}
-              </h3>
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {t.blogPost1Desc}
-              </p>
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-muted-foreground">{t.blogPost1ReadTime}</span>
-                <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+              <div className="p-6 space-y-3">
+                <div className="text-xs text-primary font-semibold uppercase tracking-wide">
+                  {lang === 'en' && 'Productivity'}
+                  {lang === 'es' && 'Productividad'}
+                  {lang === 'fr' && 'Productivité'}
+                  {lang === 'de' && 'Produktivität'}
+                  {lang === 'it' && 'Produttività'}
+                </div>
+                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                  {t.blogPost1Title}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {t.blogPost1Desc}
+                </p>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs text-muted-foreground">{t.blogPost1ReadTime}</span>
+                  <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           {/* Blog Post 2 - Study Techniques */}
-          <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
-            <div className="h-48 bg-gradient-to-br from-blue-500/30 to-blue-500/10 relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">📚</div>
-            </div>
-            <div className="p-6 space-y-3">
-              <div className="text-xs text-blue-400 font-semibold uppercase tracking-wide">
-                {lang === 'en' && 'Study Tips'}
-                {lang === 'es' && 'Consejos de Estudio'}
-                {lang === 'fr' && 'Conseils d\'Étude'}
-                {lang === 'de' && 'Lerntipps'}
-                {lang === 'it' && 'Consigli di Studio'}
+          <Link href="/blog/study-methods">
+            <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
+              <div className="h-48 bg-gradient-to-br from-blue-500/30 to-blue-500/10 relative overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">📚</div>
               </div>
-              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                {t.blogPost2Title}
-              </h3>
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {t.blogPost2Desc}
-              </p>
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-muted-foreground">{t.blogPost2ReadTime}</span>
-                <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+              <div className="p-6 space-y-3">
+                <div className="text-xs text-blue-400 font-semibold uppercase tracking-wide">
+                  {lang === 'en' && 'Study Tips'}
+                  {lang === 'es' && 'Consejos de Estudio'}
+                  {lang === 'fr' && 'Conseils d\'Étude'}
+                  {lang === 'de' && 'Lerntipps'}
+                  {lang === 'it' && 'Consigli di Studio'}
+                </div>
+                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                  {t.blogPost2Title}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {t.blogPost2Desc}
+                </p>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs text-muted-foreground">{t.blogPost2ReadTime}</span>
+                  <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           {/* Blog Post 3 - AI Productivity */}
-          <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
-            <div className="h-48 bg-gradient-to-br from-purple-500/30 to-purple-500/10 relative overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">🤖</div>
-            </div>
-            <div className="p-6 space-y-3">
-              <div className="text-xs text-purple-400 font-semibold uppercase tracking-wide">
-                {lang === 'en' && 'AI & Automation'}
-                {lang === 'es' && 'IA y Automatización'}
-                {lang === 'fr' && 'IA et Automatisation'}
-                {lang === 'de' && 'KI & Automatisierung'}
-                {lang === 'it' && 'IA e Automazione'}
+          <Link href="/blog/ai-productivity">
+            <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
+              <div className="h-48 bg-gradient-to-br from-purple-500/30 to-purple-500/10 relative overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">🤖</div>
               </div>
-              <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
-                {t.blogPost3Title}
-              </h3>
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {t.blogPost3Desc}
-              </p>
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-muted-foreground">{t.blogPost3ReadTime}</span>
-                <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+              <div className="p-6 space-y-3">
+                <div className="text-xs text-purple-400 font-semibold uppercase tracking-wide">
+                  {lang === 'en' && 'AI & Automation'}
+                  {lang === 'es' && 'IA y Automatización'}
+                  {lang === 'fr' && 'IA et Automatisation'}
+                  {lang === 'de' && 'KI & Automatisierung'}
+                  {lang === 'it' && 'IA e Automazione'}
+                </div>
+                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">
+                  {t.blogPost3Title}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {t.blogPost3Desc}
+                </p>
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs text-muted-foreground">{t.blogPost3ReadTime}</span>
+                  <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">→</span>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </div>
       </section>
 
