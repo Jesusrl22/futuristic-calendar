@@ -65,7 +65,6 @@ export async function PATCH(request: Request) {
     const {
       theme,
       language,
-      notifications,
       timezone,
       pomodoro_work_duration,
       pomodoro_break_duration,
@@ -91,7 +90,6 @@ export async function PATCH(request: Request) {
     const updates: any = { updated_at: new Date().toISOString() }
     if (theme !== undefined) updates.theme = theme
     if (language !== undefined) updates.language = language
-    if (notifications !== undefined) updates.notifications = notifications
     if (timezone !== undefined) updates.timezone = timezone
     if (pomodoro_work_duration !== undefined) updates.pomodoro_work_duration = pomodoro_work_duration
     if (pomodoro_break_duration !== undefined) updates.pomodoro_break_duration = pomodoro_break_duration

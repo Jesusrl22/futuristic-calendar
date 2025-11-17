@@ -74,7 +74,6 @@ export default function SettingsPage() {
         body: JSON.stringify({
           theme: profile.theme,
           language: profile.language,
-          notifications: profile.notifications,
           timezone: profile.timezone,
         }),
       })
@@ -85,6 +84,7 @@ export default function SettingsPage() {
       console.log("[v0] Save response body:", result)
       
       if (response.ok && result.success) {
+        localStorage.setItem("notifications", profile.notifications.toString())
         localStorage.setItem("timezone", profile.timezone)
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
