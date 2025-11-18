@@ -92,6 +92,11 @@ export default function CalendarPage() {
     
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
+      if (Notification.permission === "default") {
+        Notification.requestPermission().then(permission => {
+          setNotificationPermission(permission)
+        })
+      }
     }
 
     const cleanupOldNotifications = () => {
@@ -215,11 +220,7 @@ export default function CalendarPage() {
   }
 
   const checkNotifications = (tasksToCheck: any[]) => {
-    if (!("Notification" in window)) {
-      return
-    }
-    
-    if (Notification.permission !== "granted") {
+    if (!("Notification" in window) || Notification.permission !== "granted") {
       return
     }
 
@@ -231,6 +232,7 @@ export default function CalendarPage() {
         return
       }
 
+      // Parse task date from ISO string
       let taskDate: Date
       const isoMatch = task.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (isoMatch) {
@@ -244,6 +246,7 @@ export default function CalendarPage() {
       const timeUntilTask = taskTime - nowTime
       const secondsUntilTask = Math.floor(timeUntilTask / 1000)
 
+      // Only notify when task is due (0 to 10 seconds window)
       if (secondsUntilTask >= 0 && secondsUntilTask <= 10) {
         const notificationKey = `notified-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
@@ -363,12 +366,6 @@ export default function CalendarPage() {
     const taskId = editingTask.id
     localStorage.removeItem(`notified-${taskId}`)
     localStorage.removeItem(`notified-${taskId}-time`)
-    
-    if ('caches' in window) {
-      caches.open('notifications-cache').then((cache) => {
-        cache.delete(`notified-${taskId}`)
-      })
-    }
 
     let dueDate: string
     if (editingTask.due_date.includes("T")) {
