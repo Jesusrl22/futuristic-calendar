@@ -1,4 +1,4 @@
-const CACHE_NAME = 'futuretask-v1'
+const CACHE_NAME = 'calendar-app-v1'
 const API_URL = '/api/tasks'
 
 // Install event
@@ -81,18 +81,6 @@ async function checkTasksAndNotify() {
           ? 'Your task is due now!'
           : `Task is due in ${Math.ceil(secondsUntilTask / 60)} minute(s)!`
         
-        // Send notification
-        const options = {
-          body: message,
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
-          data: { url: '/app/calendar' },
-          vibrate: [200, 100, 200],
-          tag: task.id || 'task-notification',
-          requireInteraction: true,
-        }
-        
-        self.registration.showNotification(task.title, options)
       }
     }
   } catch (error) {
@@ -100,56 +88,15 @@ async function checkTasksAndNotify() {
   }
 }
 
-// Handle push notifications
-self.addEventListener('push', (event) => {
-  console.log('[SW] Push notification received')
-  
-  if (!event.data) {
-    console.log('[SW] No push data')
-    return
-  }
+// Service Worker is now only for caching, not for notifications
+// Notifications are handled by the calendar page itself
+// To get multi-device notifications, you would need to implement Web Push API with a backend
 
-  try {
-    const data = event.data.json()
-    console.log('[SW] Push data:', data)
-
-    const options = {
-      body: data.body,
-      icon: data.icon || '/icon-192.png',
-      badge: data.badge || '/icon-192.png',
-      data: data.data || {},
-      vibrate: [200, 100, 200],
-      tag: data.data?.taskId || 'task-notification',
-      requireInteraction: true,
-    }
-
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    )
-  } catch (error) {
-    console.error('[SW] Error parsing push data:', error)
-  }
-})
-
-// Handle notification click
+// Handle notification click (if any notifications are sent)
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] Notification clicked')
   event.notification.close()
-
-  const url = event.notification.data?.url || '/app/calendar'
-
+  
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // Check if there's already a window open
-      for (const client of clientList) {
-        if (client.url.includes('/app') && 'focus' in client) {
-          return client.focus().then(() => client.navigate(url))
-        }
-      }
-      // If no window is open, open a new one
-      if (clients.openWindow) {
-        return clients.openWindow(url)
-      }
-    })
+    clients.openWindow(event.notification.data?.url || '/app/calendar')
   )
 })

@@ -12,18 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 
-// Helper function to convert VAPID key
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
-  const rawData = atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
-  }
-  return outputArray
-}
-
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [tasks, setTasks] = useState<any[]>([])
@@ -34,7 +22,6 @@ export default function CalendarPage() {
   const [editingTask, setEditingTask] = useState<any>(null)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
   const [userTimezone, setUserTimezone] = useState<string>("UTC")
-  const [isPushSubscribed, setIsPushSubscribed] = useState(false)
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -70,30 +57,10 @@ export default function CalendarPage() {
     }
     fetchTimezone()
     
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .then((registration) => {
-          console.log("[v0] Service Worker registered successfully:", registration.scope)
-          
-          // Check if already subscribed
-          return registration.pushManager.getSubscription()
-        })
-        .then((subscription) => {
-          if (subscription) {
-            console.log("[v0] Already subscribed to push")
-            setIsPushSubscribed(true)
-          }
-        })
-        .catch((error) => {
-          console.error("[v0] Service Worker registration failed:", error)
-        })
-    }
-    
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
       if (Notification.permission === "default") {
-        Notification.requestPermission().then(permission => {
+        Notification.requestPermission().then((permission) => {
           setNotificationPermission(permission)
         })
       }
@@ -124,56 +91,6 @@ export default function CalendarPage() {
       clearInterval(notificationInterval)
     }
   }, [])
-
-  const subscribeToPush = async () => {
-    try {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        alert("Push notifications are not supported in this browser")
-        return
-      }
-
-      // Request notification permission first
-      const permission = await Notification.requestPermission()
-      setNotificationPermission(permission)
-      
-      if (permission !== "granted") {
-        alert("Notification permission denied")
-        return
-      }
-
-      const registration = await navigator.serviceWorker.ready
-
-      // Subscribe to push
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 
-        'BNxN8fVYYYqF3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_Hq'
-      
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-      })
-
-      console.log("[v0] Push subscription created:", subscription)
-
-      // Send subscription to server
-      const response = await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription),
-      })
-
-      if (response.ok) {
-        console.log("[v0] Push subscription saved to server")
-        setIsPushSubscribed(true)
-        alert("Push notifications enabled! You will receive notifications on all your devices.")
-      } else {
-        console.error("[v0] Failed to save push subscription")
-        alert("Failed to enable push notifications. Please try again.")
-      }
-    } catch (error) {
-      console.error("[v0] Error subscribing to push:", error)
-      alert("Failed to subscribe to push notifications. Please try again.")
-    }
-  }
 
   const fetchTasks = async () => {
     try {
@@ -220,7 +137,11 @@ export default function CalendarPage() {
   }
 
   const checkNotifications = (tasksToCheck: any[]) => {
-    if (!("Notification" in window) || Notification.permission !== "granted") {
+    if (!("Notification" in window)) {
+      return
+    }
+    
+    if (Notification.permission !== "granted") {
       return
     }
 
@@ -232,7 +153,6 @@ export default function CalendarPage() {
         return
       }
 
-      // Parse task date from ISO string
       let taskDate: Date
       const isoMatch = task.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (isoMatch) {
@@ -246,7 +166,6 @@ export default function CalendarPage() {
       const timeUntilTask = taskTime - nowTime
       const secondsUntilTask = Math.floor(timeUntilTask / 1000)
 
-      // Only notify when task is due (0 to 10 seconds window)
       if (secondsUntilTask >= 0 && secondsUntilTask <= 10) {
         const notificationKey = `notified-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
@@ -366,6 +285,12 @@ export default function CalendarPage() {
     const taskId = editingTask.id
     localStorage.removeItem(`notified-${taskId}`)
     localStorage.removeItem(`notified-${taskId}-time`)
+    
+    if ('caches' in window) {
+      caches.open('notifications-cache').then((cache) => {
+        cache.delete(`notified-${taskId}`)
+      })
+    }
 
     let dueDate: string
     if (editingTask.due_date.includes("T")) {
@@ -440,36 +365,20 @@ export default function CalendarPage() {
         {notificationPermission === "default" && (
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm">Enable notifications to get reminders on all your devices</p>
+              <p className="text-sm">Enable notifications to get reminders for your tasks</p>
               <Button
                 size="sm"
-                onClick={subscribeToPush}
+                onClick={() => {
+                  Notification.requestPermission().then((permission) => {
+                    setNotificationPermission(permission)
+                    if (permission === "granted") {
+                      alert("Notifications enabled! You will receive reminders for upcoming tasks.")
+                    }
+                  })
+                }}
               >
                 Enable
               </Button>
-            </div>
-          </Card>
-        )}
-
-        {notificationPermission === "granted" && !isPushSubscribed && (
-          <Card className="glass-card p-4 mb-6 border-blue-500/50">
-            <div className="flex items-center justify-between">
-              <p className="text-sm">Enable push notifications to receive alerts even when the app is closed</p>
-              <Button
-                size="sm"
-                onClick={subscribeToPush}
-              >
-                Enable Push
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {notificationPermission === "granted" && isPushSubscribed && (
-          <Card className="glass-card p-4 mb-6 border-green-500/50">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-sm text-green-500">Push notifications enabled on this device</p>
             </div>
           </Card>
         )}
