@@ -185,12 +185,10 @@ export default function CalendarPage() {
     const nowTime = now.getTime()
     console.log("[v0] ✅ Checking tasks at:", now.toLocaleString(), "| Total tasks:", tasksToCheck.length)
 
-    let upcomingCount = 0
-    let completedCount = 0
+    let notificationCount = 0
 
     tasksToCheck.forEach((task) => {
       if (task.completed) {
-        completedCount++
         return
       }
       
@@ -216,33 +214,8 @@ export default function CalendarPage() {
       console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
       console.log(`[v0]    Time until: ${secondsUntilTask}s = ${minutesUntilTask}m`)
 
-      if (secondsUntilTask >= 270 && secondsUntilTask <= 330) {
-        const notificationKey = `notified-5min-${task.id}`
-        const alreadyNotified = localStorage.getItem(notificationKey)
-        
-        if (!alreadyNotified) {
-          console.log("[v0] 🔔 Showing 5-minute reminder for:", task.title)
-          upcomingCount++
-          
-          try {
-            new Notification(`⏰ Reminder: ${task.title}`, {
-              body: `Task is due in 5 minutes!`,
-              icon: "/favicon.ico",
-              tag: `${task.id}-5min`,
-              requireInteraction: false,
-            })
-            localStorage.setItem(notificationKey, "true")
-            localStorage.setItem(notificationKey + '-time', Date.now().toString())
-            console.log("[v0] ✅ 5-minute notification sent successfully")
-          } catch (error) {
-            console.error("[v0] ❌ Failed to show 5-min notification:", error)
-          }
-        } else {
-          console.log("[v0] ⏭️  Already notified 5-min for:", task.title)
-        }
-      } 
-      else if (secondsUntilTask >= -30 && secondsUntilTask <= 90) {
-        const notificationKey = `notified-now-${task.id}`
+      if (secondsUntilTask >= -30 && secondsUntilTask <= 90) {
+        const notificationKey = `notified-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
         if (!alreadyNotified) {
@@ -250,57 +223,31 @@ export default function CalendarPage() {
             ? "Your task is due now!"
             : `Task is due in ${Math.ceil(secondsUntilTask / 60)} minute(s)!`
           
-          console.log("[v0] 🔔 Showing DUE notification for:", task.title, "| Seconds until:", secondsUntilTask)
-          upcomingCount++
+          console.log("[v0] 🔔 Showing notification for:", task.title, "| Seconds until:", secondsUntilTask)
+          notificationCount++
           
           try {
-            new Notification(`🔔 Task Due: ${task.title}`, {
+            new Notification(`🔔 ${task.title}`, {
               body: task.description || message,
               icon: "/favicon.ico",
-              tag: `${task.id}-now`,
+              tag: `${task.id}-due`,
               requireInteraction: true,
             })
             localStorage.setItem(notificationKey, "true")
             localStorage.setItem(notificationKey + '-time', Date.now().toString())
-            console.log("[v0] ✅ Due notification sent successfully")
+            console.log("[v0] ✅ Notification sent successfully")
           } catch (error) {
-            console.error("[v0] ❌ Failed to show due notification:", error)
+            console.error("[v0] ❌ Failed to show notification:", error)
           }
         } else {
-          console.log("[v0] ⏭️  Already notified due for:", task.title)
-        }
-      }
-      else if (secondsUntilTask < -90 && secondsUntilTask >= -1800) {
-        const notificationKey = `notified-overdue-${task.id}`
-        const alreadyNotified = localStorage.getItem(notificationKey)
-        
-        if (!alreadyNotified) {
-          const minutesOverdue = Math.abs(Math.floor(secondsUntilTask / 60))
-          console.log("[v0] 🔔 Showing OVERDUE notification for:", task.title)
-          upcomingCount++
-          
-          try {
-            new Notification(`⚠️ OVERDUE: ${task.title}`, {
-              body: `Task is overdue by ${minutesOverdue} minutes!`,
-              icon: "/favicon.ico",
-              tag: `${task.id}-overdue`,
-              requireInteraction: true,
-            })
-            localStorage.setItem(notificationKey, "true")
-            localStorage.setItem(notificationKey + '-time', Date.now().toString())
-            console.log("[v0] ✅ Overdue notification sent successfully")
-          } catch (error) {
-            console.error("[v0] ❌ Failed to show overdue notification:", error)
-          }
-        } else {
-          console.log("[v0] ⏭️  Already notified overdue for:", task.title)
+          console.log("[v0] ⏭️  Already notified for:", task.title)
         }
       } else {
         console.log(`[v0] ⏸️  Task outside notification window (${secondsUntilTask}s / ${minutesUntilTask}m)`)
       }
     })
 
-    console.log(`[v0] ✅ Check complete: ${upcomingCount} notifications sent, ${completedCount} completed tasks skipped`)
+    console.log(`[v0] ✅ Check complete: ${notificationCount} notifications sent`)
   }
 
   const handleCreateTask = async () => {
@@ -399,19 +346,13 @@ export default function CalendarPage() {
     }
 
     const taskId = editingTask.id
-    localStorage.removeItem(`notified-5min-${taskId}`)
-    localStorage.removeItem(`notified-5min-${taskId}-time`)
-    localStorage.removeItem(`notified-now-${taskId}`)
-    localStorage.removeItem(`notified-now-${taskId}-time`)
-    localStorage.removeItem(`notified-overdue-${taskId}`)
-    localStorage.removeItem(`notified-overdue-${taskId}-time`)
-    console.log('[v0] Cleared notification flags for task:', taskId)
+    localStorage.removeItem(`notified-${taskId}`)
+    localStorage.removeItem(`notified-${taskId}-time`)
+    console.log('[v0] Cleared notification flag for task:', taskId)
     
     if ('caches' in window) {
       caches.open('notifications-cache').then((cache) => {
-        cache.delete(`notified-5min-${taskId}`)
-        cache.delete(`notified-now-${taskId}`)
-        cache.delete(`notified-overdue-${taskId}`)
+        cache.delete(`notified-${taskId}`)
       })
     }
 
