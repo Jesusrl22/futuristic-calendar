@@ -74,39 +74,18 @@ async function checkTasksAndNotify() {
       )
       
       const taskTime = taskDate.getTime()
-      const minutesUntilTask = Math.floor((taskTime - nowTime) / (1000 * 60))
+      const secondsUntilTask = Math.floor((taskTime - nowTime) / 1000)
       
-      // Check if we should notify (5 minutes before or at due time)
-      if (minutesUntilTask >= 4 && minutesUntilTask <= 6) {
-        // 5 minute reminder
-        await showNotification(
-          `⏰ Reminder: ${task.title}`,
-          `Task is due in ${minutesUntilTask} minutes!`,
-          task.id,
-          '5min'
-        )
-      } else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
-        // Due now notification
-        const isOverdue = minutesUntilTask < 0
-        const message = isOverdue 
-          ? `Task is overdue by ${Math.abs(minutesUntilTask)} minute(s)!`
-          : minutesUntilTask === 0
+      if (secondsUntilTask >= -30 && secondsUntilTask <= 30) {
+        const message = secondsUntilTask <= 0 
           ? 'Your task is due now!'
-          : `Task is due in ${minutesUntilTask} minute(s)!`
+          : `Task is due in ${Math.ceil(secondsUntilTask / 60)} minute(s)!`
         
         await showNotification(
-          `🔔 ${isOverdue ? 'OVERDUE' : 'Task Due'}: ${task.title}`,
+          `🔔 ${task.title}`,
           task.description || message,
           task.id,
-          'now'
-        )
-      } else if (minutesUntilTask < -1 && minutesUntilTask >= -30) {
-        // Overdue notification
-        await showNotification(
-          `⚠️ OVERDUE: ${task.title}`,
-          `Task is overdue by ${Math.abs(minutesUntilTask)} minutes!`,
-          task.id,
-          'overdue'
+          'due'
         )
       }
     }
