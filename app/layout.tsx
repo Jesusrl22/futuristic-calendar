@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Future Task - Smart Task Management",
   description: "Organize your tasks, notes, and projects with AI-powered assistance",
   generator: "v0.app",
+  manifest: "/manifest.json",
   icons: {
     icon: [
       { url: "/favicon.ico", type: "image/svg+xml" },

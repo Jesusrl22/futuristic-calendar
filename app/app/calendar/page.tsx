@@ -37,6 +37,29 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks()
+    
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then((registration) => {
+        console.log('[v0] Service Worker registered:', registration)
+        
+        if ('periodicSync' in registration) {
+          registration.periodicSync.register('check-tasks', {
+            minInterval: 15 * 60 * 1000
+          }).then(() => {
+            console.log('[v0] Periodic sync registered')
+          }).catch((err) => {
+            console.log('[v0] Periodic sync not supported:', err)
+          })
+        }
+        
+        if (registration.active) {
+          registration.active.postMessage({ type: 'CHECK_TASKS' })
+        }
+      }).catch((err) => {
+        console.error('[v0] Service Worker registration failed:', err)
+      })
+    }
+    
     const fetchTimezone = async () => {
       try {
         const response = await fetch("/api/settings")
@@ -99,7 +122,7 @@ export default function CalendarPage() {
       console.log("[v0] Cleaning up notification interval")
       clearInterval(notificationInterval)
     }
-  }, []) // Remove currentDate dependency to avoid recreating intervals
+  }, [])
 
   const fetchTasks = async () => {
     try {
@@ -377,6 +400,23 @@ export default function CalendarPage() {
       return
     }
 
+    const taskId = editingTask.id
+    localStorage.removeItem(`notified-5min-${taskId}`)
+    localStorage.removeItem(`notified-5min-${taskId}-time`)
+    localStorage.removeItem(`notified-now-${taskId}`)
+    localStorage.removeItem(`notified-now-${taskId}-time`)
+    localStorage.removeItem(`notified-overdue-${taskId}`)
+    localStorage.removeItem(`notified-overdue-${taskId}-time`)
+    console.log('[v0] Cleared notification flags for task:', taskId)
+    
+    if ('caches' in window) {
+      caches.open('notifications-cache').then((cache) => {
+        cache.delete(`notified-5min-${taskId}`)
+        cache.delete(`notified-now-${taskId}`)
+        cache.delete(`notified-overdue-${taskId}`)
+      })
+    }
+
     let dueDate: string
     if (editingTask.due_date.includes("T")) {
       const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
@@ -415,6 +455,10 @@ export default function CalendarPage() {
         setEditingTask(null)
         await fetchTasks()
         setTimeout(() => checkNotifications(tasksRef.current), 500)
+        
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'CHECK_TASKS' })
+        }
       }
     } catch (error) {
       console.error("Error updating task:", error)
@@ -424,18 +468,8 @@ export default function CalendarPage() {
 
   const days = getDaysInMonth(currentDate)
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ]
 
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : []
