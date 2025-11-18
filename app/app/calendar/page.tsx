@@ -216,7 +216,7 @@ export default function CalendarPage() {
       console.log(`[v0]    Task time: ${taskTime}, Now time: ${nowTime}`)
       console.log(`[v0]    Difference: ${timeUntilTask}ms = ${minutesUntilTask} minutes`)
 
-      if (minutesUntilTask >= 4 && minutesUntilTask <= 6) {
+      if (minutesUntilTask === 5) {
         const notificationKey = `notified-5min-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
@@ -226,7 +226,7 @@ export default function CalendarPage() {
           
           try {
             new Notification(`⏰ Reminder: ${task.title}`, {
-              body: `Task is due in ${minutesUntilTask} minutes!`,
+              body: `Task is due in 5 minutes!`,
               icon: "/favicon.ico",
               tag: `${task.id}-5min`,
               requireInteraction: false,
@@ -241,23 +241,20 @@ export default function CalendarPage() {
           console.log("[v0] ⏭️  Already notified 5-min for:", task.title)
         }
       } 
-      else if (minutesUntilTask >= -1 && minutesUntilTask <= 2) {
+      else if (minutesUntilTask >= 0 && minutesUntilTask <= 1) {
         const notificationKey = `notified-now-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
         if (!alreadyNotified) {
-          const isOverdue = minutesUntilTask < 0
-          const message = isOverdue 
-            ? `Task is overdue by ${Math.abs(minutesUntilTask)} minute(s)!`
-            : minutesUntilTask === 0
+          const message = minutesUntilTask === 0 
             ? "Your task is due now!"
-            : `Task is due in ${minutesUntilTask} minute(s)!`
+            : "Task is due in 1 minute!"
           
           console.log("[v0] 🔔 Showing DUE notification for:", task.title, "| Message:", message)
           upcomingCount++
           
           try {
-            new Notification(`🔔 ${isOverdue ? 'OVERDUE' : 'Task Due'}: ${task.title}`, {
+            new Notification(`🔔 Task Due: ${task.title}`, {
               body: task.description || message,
               icon: "/favicon.ico",
               tag: `${task.id}-now`,
@@ -273,7 +270,7 @@ export default function CalendarPage() {
           console.log("[v0] ⏭️  Already notified due for:", task.title)
         }
       }
-      else if (minutesUntilTask < -1 && minutesUntilTask >= -30) {
+      else if (minutesUntilTask < 0 && minutesUntilTask >= -30) {
         const notificationKey = `notified-overdue-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
