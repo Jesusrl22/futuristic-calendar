@@ -114,7 +114,7 @@ export default function CalendarPage() {
       const currentTasks = tasksRef.current
       console.log("[v0] Current tasks count:", currentTasks.length)
       checkNotifications(currentTasks)
-    }, 15000)
+    }, 10000)
 
     checkNotifications(tasksRef.current)
 
@@ -221,12 +221,10 @@ export default function CalendarPage() {
       const taskTime = taskDate.getTime()
       const timeUntilTask = taskTime - nowTime
       const secondsUntilTask = Math.floor(timeUntilTask / 1000)
-      const minutesUntilTask = Math.floor(secondsUntilTask / 60)
 
       console.log(`[v0]    - Task timestamp: ${taskTime}`)
       console.log(`[v0]    - Time difference (ms): ${timeUntilTask}`)
       console.log(`[v0]    - Time difference (seconds): ${secondsUntilTask}`)
-      console.log(`[v0]    - Time difference (minutes): ${minutesUntilTask}`)
       console.log(`[v0]    - Notification window: -30s to +30s`)
       console.log(`[v0]    - In window? ${secondsUntilTask >= -30 && secondsUntilTask <= 30}`)
 
@@ -266,7 +264,7 @@ export default function CalendarPage() {
         }
       } else {
         console.log(`[v0] ⏸️  Task outside notification window`)
-        console.log(`[v0]    - Task is ${secondsUntilTask > 0 ? `${minutesUntilTask} minutes in the future` : `${Math.abs(minutesUntilTask)} minutes overdue`}`)
+        console.log(`[v0]    - Task is ${secondsUntilTask > 0 ? `${Math.floor(secondsUntilTask / 60)} minutes in the future` : `${Math.abs(Math.floor(secondsUntilTask / 60))} minutes overdue`}`)
       }
     })
 
