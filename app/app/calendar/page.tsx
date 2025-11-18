@@ -183,25 +183,38 @@ export default function CalendarPage() {
 
     const now = new Date()
     const nowTime = now.getTime()
-    console.log("[v0] ✅ Checking tasks at:", now.toLocaleString(), "| Total tasks:", tasksToCheck.length)
+    console.log("[v0] ✅ Current time:")
+    console.log("[v0]    - Locale string:", now.toLocaleString())
+    console.log("[v0]    - ISO string:", now.toISOString())
+    console.log("[v0]    - Timestamp:", nowTime)
+    console.log("[v0]    - Total tasks to check:", tasksToCheck.length)
 
     let notificationCount = 0
 
     tasksToCheck.forEach((task) => {
       if (task.completed) {
+        console.log(`[v0] ⏭️  Skipping completed task: "${task.title}"`)
         return
       }
       
       if (!task.due_date) {
+        console.log(`[v0] ⏭️  Skipping task without due date: "${task.title}"`)
         return
       }
+
+      console.log(`[v0] 📋 Processing task: "${task.title}"`)
+      console.log(`[v0]    - Raw due_date from DB: "${task.due_date}"`)
 
       let taskDate: Date
       const isoMatch = task.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (isoMatch) {
         const [, year, month, day, hours, minutes] = isoMatch
+        console.log(`[v0]    - Parsed components: Y=${year} M=${month} D=${day} H=${hours} M=${minutes}`)
         taskDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+        console.log(`[v0]    - Created Date object (local): ${taskDate.toLocaleString()}`)
+        console.log(`[v0]    - Date object ISO: ${taskDate.toISOString()}`)
       } else {
+        console.log(`[v0]    - Using fallback Date parsing`)
         taskDate = new Date(task.due_date)
       }
 
@@ -210,20 +223,29 @@ export default function CalendarPage() {
       const secondsUntilTask = Math.floor(timeUntilTask / 1000)
       const minutesUntilTask = Math.floor(secondsUntilTask / 60)
 
-      console.log(`[v0] 📋 Task: "${task.title}"`)
-      console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
-      console.log(`[v0]    Time until: ${secondsUntilTask}s = ${minutesUntilTask}m`)
+      console.log(`[v0]    - Task timestamp: ${taskTime}`)
+      console.log(`[v0]    - Time difference (ms): ${timeUntilTask}`)
+      console.log(`[v0]    - Time difference (seconds): ${secondsUntilTask}`)
+      console.log(`[v0]    - Time difference (minutes): ${minutesUntilTask}`)
+      console.log(`[v0]    - Notification window: -30s to +30s`)
+      console.log(`[v0]    - In window? ${secondsUntilTask >= -30 && secondsUntilTask <= 30}`)
 
-      if (secondsUntilTask >= -30 && secondsUntilTask <= 90) {
+      if (secondsUntilTask >= -30 && secondsUntilTask <= 30) {
         const notificationKey = `notified-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
+        
+        console.log(`[v0]    - Notification key: ${notificationKey}`)
+        console.log(`[v0]    - Already notified? ${!!alreadyNotified}`)
         
         if (!alreadyNotified) {
           const message = secondsUntilTask <= 0 
             ? "Your task is due now!"
             : `Task is due in ${Math.ceil(secondsUntilTask / 60)} minute(s)!`
           
-          console.log("[v0] 🔔 Showing notification for:", task.title, "| Seconds until:", secondsUntilTask)
+          console.log("[v0] 🔔 SENDING NOTIFICATION")
+          console.log("[v0]    - Title:", task.title)
+          console.log("[v0]    - Message:", message)
+          console.log("[v0]    - Seconds until:", secondsUntilTask)
           notificationCount++
           
           try {
@@ -235,19 +257,20 @@ export default function CalendarPage() {
             })
             localStorage.setItem(notificationKey, "true")
             localStorage.setItem(notificationKey + '-time', Date.now().toString())
-            console.log("[v0] ✅ Notification sent successfully")
+            console.log("[v0] ✅ Notification sent and marked as notified")
           } catch (error) {
             console.error("[v0] ❌ Failed to show notification:", error)
           }
         } else {
-          console.log("[v0] ⏭️  Already notified for:", task.title)
+          console.log("[v0] ⏭️  Already notified, skipping")
         }
       } else {
-        console.log(`[v0] ⏸️  Task outside notification window (${secondsUntilTask}s / ${minutesUntilTask}m)`)
+        console.log(`[v0] ⏸️  Task outside notification window`)
+        console.log(`[v0]    - Task is ${secondsUntilTask > 0 ? `${minutesUntilTask} minutes in the future` : `${Math.abs(minutesUntilTask)} minutes overdue`}`)
       }
     })
 
-    console.log(`[v0] ✅ Check complete: ${notificationCount} notifications sent`)
+    console.log(`[v0] ✅ Notification check complete: ${notificationCount} notifications sent`)
   }
 
   const handleCreateTask = async () => {
