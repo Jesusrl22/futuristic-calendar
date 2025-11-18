@@ -81,12 +81,6 @@ async function checkTasksAndNotify() {
           ? 'Your task is due now!'
           : `Task is due in ${Math.ceil(secondsUntilTask / 60)} minute(s)!`
         
-        await showNotification(
-          `🔔 ${task.title}`,
-          task.description || message,
-          task.id,
-          'due'
-        )
       }
     }
   } catch (error) {
@@ -94,53 +88,15 @@ async function checkTasksAndNotify() {
   }
 }
 
-async function showNotification(title, body, taskId, type) {
-  const notificationKey = `notified-${type}-${taskId}`
-  
-  // Check if already notified (use cache API as storage)
-  const cache = await caches.open('notifications-cache')
-  const existing = await cache.match(notificationKey)
-  
-  if (existing) {
-    const data = await existing.json()
-    const notifiedTime = data.time
-    const oneHourAgo = Date.now() - (60 * 60 * 1000)
-    
-    if (notifiedTime > oneHourAgo) {
-      console.log('[SW] Already notified:', notificationKey)
-      return
-    }
-  }
-  
-  // Show notification
-  await self.registration.showNotification(title, {
-    body: body,
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    tag: `${taskId}-${type}`,
-    requireInteraction: type === 'now' || type === 'overdue',
-    vibrate: [200, 100, 200],
-    data: {
-      taskId: taskId,
-      type: type,
-      url: '/app/calendar'
-    }
-  })
-  
-  // Store that we've notified
-  await cache.put(
-    notificationKey,
-    new Response(JSON.stringify({ time: Date.now() }))
-  )
-  
-  console.log('[SW] Notification sent:', title)
-}
+// Service Worker is now only for caching, not for notifications
+// Notifications are handled by the calendar page itself
+// To get multi-device notifications, you would need to implement Web Push API with a backend
 
-// Handle notification click
+// Handle notification click (if any notifications are sent)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/app/calendar')
+    clients.openWindow(event.notification.data?.url || '/app/calendar')
   )
 })
