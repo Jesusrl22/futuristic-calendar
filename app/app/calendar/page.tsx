@@ -72,9 +72,9 @@ export default function CalendarPage() {
     
     if ("serviceWorker" in navigator && "PushManager" in window) {
       navigator.serviceWorker
-        .register("/sw.js")
+        .register("/sw.js", { scope: "/" })
         .then((registration) => {
-          console.log("[v0] Service Worker registered:", registration)
+          console.log("[v0] Service Worker registered successfully:", registration.scope)
           
           // Check if already subscribed
           return registration.pushManager.getSubscription()
