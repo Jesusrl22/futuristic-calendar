@@ -117,11 +117,14 @@ export default function CalendarPage() {
 
   const checkNotifications = (tasksToCheck: any[]) => {
     if (!("Notification" in window) || Notification.permission !== "granted") {
+      console.log("[v0] Notifications not available or not granted")
       return
     }
     
     const now = new Date()
     const nowTime = now.getTime()
+    
+    console.log(`[v0] 🔍 Checking ${tasksToCheck.length} tasks for notifications at ${now.toLocaleTimeString()}`)
 
     tasksToCheck.forEach((task) => {
       if (task.completed || !task.due_date) {
@@ -140,12 +143,18 @@ export default function CalendarPage() {
       const taskTime = taskDate.getTime()
       const timeUntilTask = taskTime - nowTime
       const secondsUntilTask = Math.floor(timeUntilTask / 1000)
+      const minutesUntilTask = Math.floor(secondsUntilTask / 60)
 
-      if (secondsUntilTask >= 0 && secondsUntilTask <= 10) {
+      console.log(`[v0] 📋 Task: "${task.title}"`)
+      console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
+      console.log(`[v0]    Time until: ${minutesUntilTask} min ${secondsUntilTask % 60} sec (${secondsUntilTask}s total)`)
+
+      if (secondsUntilTask >= -30 && secondsUntilTask <= 30) {
         const notificationKey = `notified-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
         
         if (!alreadyNotified) {
+          console.log(`[v0] 🔔 SENDING NOTIFICATION for "${task.title}"`)
           try {
             new Notification(`🔔 ${task.title}`, {
               body: task.description || "Your task is due now!",
@@ -155,9 +164,12 @@ export default function CalendarPage() {
             })
             localStorage.setItem(notificationKey, "true")
             localStorage.setItem(notificationKey + '-time', Date.now().toString())
+            console.log(`[v0] ✅ Notification sent successfully`)
           } catch (error) {
-            console.error("Failed to show notification:", error)
+            console.error("[v0] ❌ Failed to show notification:", error)
           }
+        } else {
+          console.log(`[v0] ⏭️ Already notified for this task`)
         }
       }
     })
