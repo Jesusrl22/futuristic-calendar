@@ -39,28 +39,27 @@ export async function GET(request: Request) {
     let endDate: Date
     
     if (range === "day") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
-      endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+      // Today from 00:00:00 to 23:59:59 in UTC
+      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
+      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
     } else if (range === "week") {
-      const dayOfWeek = now.getDay()
-      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-      startDate = new Date(now)
-      startDate.setDate(now.getDate() - diff)
-      startDate.setHours(0, 0, 0, 0)
-      endDate = new Date(now)
-      endDate.setHours(23, 59, 59, 999)
+      // Monday to today in UTC
+      const dayOfWeek = now.getUTCDay()
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Monday = 0
+      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - diff, 0, 0, 0, 0))
+      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
     } else {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
-      endDate = new Date(now)
-      endDate.setHours(23, 59, 59, 999)
+      // First day of month to today in UTC
+      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0))
+      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
     }
     
     const startDateISO = startDate.toISOString()
     const endDateISO = endDate.toISOString()
 
-    const [allTasksRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
-      // All tasks (not just created in period) to calculate completion rate correctly
-      fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&select=*`, { headers }),
+    const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
+      // Tasks created in the period
+      fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`, { headers }),
       // Tasks completed in the period
       fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startDateISO}&updated_at=lte.${endDateISO}&select=*`, { headers }),
       // Notes created in the period
@@ -71,7 +70,7 @@ export async function GET(request: Request) {
       }),
     ])
 
-    const allTasks = allTasksRes.ok ? await allTasksRes.json() : []
+    const tasksInPeriod = tasksInPeriodRes.ok ? await tasksInPeriodRes.json() : []
     const completed = completedRes.ok ? await completedRes.json() : []
     const notes = notesRes.ok ? await notesRes.json() : []
     const pomodoro = pomodoroRes.ok ? await pomodoroRes.json() : []
@@ -79,37 +78,33 @@ export async function GET(request: Request) {
     const totalFocusTimeMinutes = pomodoro.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
     const totalFocusTimeHours = Math.round((totalFocusTimeMinutes / 60) * 10) / 10
 
-    const tasksInPeriod = allTasks.filter((t: any) => {
-      return t.created_at >= startDateISO && t.created_at <= endDateISO
-    })
-
     let chartData: any[] = []
     
     if (range === "day") {
       for (let i = 0; i < 24; i++) {
         const hour = i.toString().padStart(2, '0') + ":00"
-        const hourStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), i)
-        const hourEnd = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), i + 1)
+        const hourStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), i, 0, 0, 0))
+        const hourEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), i, 59, 59, 999))
         const hourStartISO = hourStart.toISOString()
         const hourEndISO = hourEnd.toISOString()
         
         const tasksForHour = completed.filter((t: any) => {
-          return t.updated_at >= hourStartISO && t.updated_at < hourEndISO
+          return t.updated_at >= hourStartISO && t.updated_at <= hourEndISO
         }).length
         
         const pomodoroForHour = pomodoro.filter((p: any) => {
-          return p.created_at >= hourStartISO && p.created_at < hourEndISO
+          return p.created_at >= hourStartISO && p.created_at <= hourEndISO
         }).length
         
         chartData.push({ name: hour, tasks: tasksForHour, pomodoro: pomodoroForHour })
       }
     } else if (range === "week") {
       const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-      chartData = days.map((day, index) => {
+      for (let i = 0; i < 7; i++) {
         const dayDate = new Date(startDate)
-        dayDate.setDate(startDate.getDate() + index)
-        const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0, 0)
-        const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
+        dayDate.setUTCDate(startDate.getUTCDate() + i)
+        const dayStart = new Date(Date.UTC(dayDate.getUTCFullYear(), dayDate.getUTCMonth(), dayDate.getUTCDate(), 0, 0, 0, 0))
+        const dayEnd = new Date(Date.UTC(dayDate.getUTCFullYear(), dayDate.getUTCMonth(), dayDate.getUTCDate(), 23, 59, 59, 999))
         const dayStartISO = dayStart.toISOString()
         const dayEndISO = dayEnd.toISOString()
         
@@ -121,18 +116,25 @@ export async function GET(request: Request) {
           return p.created_at >= dayStartISO && p.created_at <= dayEndISO
         }).length
 
-        return { name: day, tasks: tasksForDay, pomodoro: pomodoroForDay }
-      })
+        chartData.push({ name: days[i], tasks: tasksForDay, pomodoro: pomodoroForDay })
+      }
     } else {
-      const weeksInMonth = Math.ceil((endDate.getDate() + new Date(startDate.getFullYear(), startDate.getMonth(), 1).getDay()) / 7)
-      for (let week = 0; week < weeksInMonth; week++) {
-        const weekStart = new Date(startDate)
-        weekStart.setDate(startDate.getDate() + (week * 7))
-        const weekEnd = new Date(weekStart)
-        weekEnd.setDate(weekStart.getDate() + 6)
-        weekEnd.setHours(23, 59, 59, 999)
-        const weekStartISO = weekStart.toISOString()
-        const weekEndISO = weekEnd.toISOString()
+      const firstDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+      const lastDayOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999))
+      
+      let currentWeekStart = new Date(firstDayOfMonth)
+      let weekNumber = 1
+      
+      while (currentWeekStart <= lastDayOfMonth) {
+        const weekEnd = new Date(currentWeekStart)
+        weekEnd.setUTCDate(currentWeekStart.getUTCDate() + 6)
+        weekEnd.setUTCHours(23, 59, 59, 999)
+        
+        // Don't go past end of month or today
+        const effectiveEnd = weekEnd > lastDayOfMonth ? lastDayOfMonth : (weekEnd > endDate ? endDate : weekEnd)
+        
+        const weekStartISO = currentWeekStart.toISOString()
+        const weekEndISO = effectiveEnd.toISOString()
         
         const tasksForWeek = completed.filter((t: any) => {
           return t.updated_at >= weekStartISO && t.updated_at <= weekEndISO
@@ -143,10 +145,16 @@ export async function GET(request: Request) {
         }).length
         
         chartData.push({ 
-          name: `Week ${week + 1}`, 
+          name: `Week ${weekNumber}`, 
           tasks: tasksForWeek, 
           pomodoro: pomodoroForWeek 
         })
+        
+        currentWeekStart.setUTCDate(currentWeekStart.getUTCDate() + 7)
+        weekNumber++
+        
+        // Stop if we've passed today
+        if (currentWeekStart > endDate) break
       }
     }
 
