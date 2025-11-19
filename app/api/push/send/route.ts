@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 
-// Configure web-push with VAPID keys
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BNxN8fVYYYqF3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_Hq'
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'cqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYq'
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:support@future-task.com'
 
-webpush.setVapidDetails(
-  'mailto:support@futuretask.app',
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
-)
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  console.error('[Push Send] VAPID keys are missing. Please set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY environment variables.')
+}
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    VAPID_SUBJECT,
+    VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
+    if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+      return NextResponse.json({ error: 'VAPID keys not configured' }, { status: 500 })
+    }
+
     const { userId, title, body, taskId } = await req.json()
 
     if (!userId || !title || !body) {
@@ -52,8 +62,9 @@ export async function POST(req: NextRequest) {
         const payload = JSON.stringify({
           title,
           body,
-          icon: '/icon-192.png',
-          badge: '/icon-192.png',
+          icon: '/icon-192.jpg',
+          badge: '/icon-192.jpg',
+          tag: taskId || 'task-notification',
           data: {
             url: `/app/calendar`,
             taskId,

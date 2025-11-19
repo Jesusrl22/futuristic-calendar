@@ -74,7 +74,7 @@ export default function CalendarPage() {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
         .then((registration) => {
-          console.log("[v0] Service Worker registered successfully:", registration.scope)
+          console.log("[v0] Service Worker registered:", registration.scope)
           
           // Check if already subscribed
           return registration.pushManager.getSubscription()
@@ -138,9 +138,13 @@ export default function CalendarPage() {
 
       const registration = await navigator.serviceWorker.ready
 
-      // Subscribe to push
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 
-        'BNxN8fVYYYqF3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_Hq'
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      
+      if (!vapidPublicKey) {
+        console.error("[v0] VAPID public key not configured")
+        alert("Push notifications are not configured. Please contact support.")
+        return
+      }
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -157,7 +161,7 @@ export default function CalendarPage() {
       })
 
       if (response.ok) {
-        console.log("[v0] Push subscription saved to server")
+        console.log("[v0] Push subscription saved")
         setIsPushSubscribed(true)
         alert("Push notifications enabled! You will receive notifications on all your devices.")
       } else {
@@ -169,6 +173,7 @@ export default function CalendarPage() {
       alert("Failed to subscribe to push notifications. Please try again.")
     }
   }
+
 
   const fetchTasks = async () => {
     try {
@@ -183,6 +188,7 @@ export default function CalendarPage() {
       console.error("Error fetching tasks:", error)
     }
   }
+
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear()
