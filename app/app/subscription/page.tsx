@@ -10,15 +10,15 @@ const plans = [
   {
     name: "Free",
     price: 0,
-    credits: 50,
-    features: ["50 AI credits/month", "Unlimited tasks & notes", "Basic statistics", "Calendar view", "Pomodoro timer"],
+    credits: 0,
+    features: ["0 AI credits/month", "Unlimited tasks & notes", "Basic statistics", "Calendar view", "Pomodoro timer"],
   },
   {
     name: "Premium",
     price: 2.49,
-    credits: 500,
+    credits: 100,
     features: [
-      "500 AI credits/month",
+      "100 AI credits/month",
       "Everything in Free",
       "Team collaboration",
       "Priority support",
@@ -29,9 +29,9 @@ const plans = [
   {
     name: "Pro",
     price: 6.49,
-    credits: 2000,
+    credits: 500,
     features: [
-      "2000 AI credits/month",
+      "500 AI credits/month",
       "Everything in Premium",
       "Advanced analytics",
       "API access",

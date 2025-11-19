@@ -568,10 +568,6 @@ export default function HomePage() {
               <ul className="space-y-3 pt-4">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.aiCredits}</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary mt-1">✓</span>
                   <span className="text-sm">{t.basicTasks}</span>
                 </li>
                 <li className="flex items-start gap-2">
@@ -604,6 +600,10 @@ export default function HomePage() {
                 <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
               </div>
               <ul className="space-y-3 pt-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">100 AI credits/month</span>
+                </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
                   <span className="text-sm">{t.teamFeatures}</span>
