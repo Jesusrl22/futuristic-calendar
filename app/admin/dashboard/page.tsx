@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import {
   Dialog,
   DialogContent,
@@ -105,7 +105,13 @@ export default function AdminDashboardPage() {
       setUsers(users.map((u) => (u.id === userId ? updatedUser : u)))
       setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? updatedUser : u)))
 
-      alert(`User updated successfully!`)
+      const creditsInfo = {
+        free: "10 AI credits",
+        premium: "100 AI credits",
+        pro: "500 AI credits",
+      }
+      const credits = creditsInfo[newTier as keyof typeof creditsInfo] || "AI credits"
+      alert(`User updated successfully!\nPlan: ${newTier.toUpperCase()}\nCredits assigned: ${credits}`)
     } catch (error) {
       console.error("[v0] Error updating user tier:", error)
       alert("Error updating user. Please try again.")
