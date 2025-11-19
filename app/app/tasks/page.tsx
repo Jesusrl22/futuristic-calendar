@@ -97,8 +97,10 @@ export default function TasksPage() {
 
   const deleteTask = async (taskId: string) => {
     try {
-      await fetch(`/api/tasks?id=${taskId}`, {
+      await fetch(`/api/tasks`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: taskId }),
       })
       fetchTasks()
     } catch (error) {
@@ -165,16 +167,22 @@ export default function TasksPage() {
 
   const openEditDialog = (task: any) => {
     setEditingTask(task)
-    const dueDate = task.due_date ? new Date(task.due_date) : null
+    let dueDate = ""
+    let dueTime = ""
+    
+    if (task.due_date) {
+      const isoString = task.due_date
+      dueDate = isoString.slice(0, 10) // YYYY-MM-DD
+      dueTime = isoString.slice(11, 16) // HH:MM
+    }
+    
     setEditForm({
       title: task.title,
       description: task.description || "",
       priority: task.priority || "medium",
       category: task.category || "",
-      due_date: dueDate ? dueDate.toISOString().split("T")[0] : "",
-      due_time: dueDate
-        ? `${String(dueDate.getHours()).padStart(2, "0")}:${String(dueDate.getMinutes()).padStart(2, "0")}`
-        : "",
+      due_date: dueDate,
+      due_time: dueTime,
     })
     setIsEditDialogOpen(true)
   }
