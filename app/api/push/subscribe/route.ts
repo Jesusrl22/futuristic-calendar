@@ -12,15 +12,21 @@ export async function POST(request: Request) {
 
     const subscription = await request.json()
 
-    // Store subscription in database
+    const { endpoint, keys } = subscription
+    const { p256dh, auth } = keys
+
+    // Store subscription in database with individual fields
     const { error } = await supabase
       .from('push_subscriptions')
       .upsert({
         user_id: user.id,
-        subscription: subscription,
-        updated_at: new Date().toISOString()
+        endpoint: endpoint,
+        p256dh: p256dh,
+        auth: auth,
+        user_agent: request.headers.get('user-agent') || 'unknown',
+        last_used_at: new Date().toISOString()
       }, {
-        onConflict: 'user_id,endpoint',
+        onConflict: 'endpoint',
         ignoreDuplicates: false
       })
 

@@ -37,6 +37,10 @@ export default function CalendarPage() {
   useEffect(() => {
     fetchTasks()
     
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      registerServiceWorker()
+    }
+    
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
     }
@@ -55,22 +59,66 @@ export default function CalendarPage() {
     }
     cleanupOldNotifications()
 
-    const notificationInterval = setInterval(() => {
-      const currentTasks = tasksRef.current
-      checkNotifications(currentTasks)
-    }, 10000)
-
-    checkNotifications(tasksRef.current)
-
-    return () => {
-      clearInterval(notificationInterval)
-    }
+    return () => {}
   }, [])
 
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
+  const registerServiceWorker = async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js')
+      console.log('[v0] Service Worker registered')
+
+      // Wait for service worker to be ready
+      const sw = await navigator.serviceWorker.ready
+
+      // Request notification permission
       const permission = await Notification.requestPermission()
       setNotificationPermission(permission)
+
+      if (permission === 'granted') {
+        // Subscribe to push notifications
+        const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        if (!publicKey) {
+          console.error('[v0] VAPID public key not found')
+          return
+        }
+
+        const subscription = await sw.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        })
+
+        // Send subscription to server
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription)
+        })
+
+        console.log('[v0] Push subscription successful')
+      }
+    } catch (error) {
+      console.error('[v0] Service Worker registration failed:', error)
+    }
+  }
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding)
+      .replace(/\-/g, '+')
+      .replace(/_/g, '/')
+
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i)
+    }
+    return outputArray
+  }
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window && "serviceWorker" in navigator) {
+      await registerServiceWorker()
     }
   }
 

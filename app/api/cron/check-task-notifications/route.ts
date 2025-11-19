@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   try {
-    // Verify cron secret
     const authHeader = request.headers.get('authorization')
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -28,30 +27,30 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'VAPID keys not configured' })
     }
 
-    webpush.setVapidDetails(subject, publicKey, privateKey)
+    webpush.default.setVapidDetails(subject, publicKey, privateKey)
 
     const supabase = await createClient()
 
-    // Get tasks that will be due in the next 3 minutes
     const now = new Date()
-    const threeMinutesFromNow = new Date(now.getTime() + 3 * 60 * 1000)
+    const twoMinutesFromNow = new Date(now.getTime() + 2 * 60 * 1000)
 
     const { data: tasks } = await supabase
       .from('tasks')
-      .select('*, user:users(id)')
+      .select('*')
       .eq('completed', false)
       .gte('due_date', now.toISOString())
-      .lte('due_date', threeMinutesFromNow.toISOString())
+      .lte('due_date', twoMinutesFromNow.toISOString())
 
     if (!tasks || tasks.length === 0) {
       return NextResponse.json({ message: 'No tasks to notify', count: 0 })
     }
 
     let notificationsSent = 0
+    const usersSent = new Set()
 
     for (const task of tasks) {
-      const userId = task.user?.id
-      if (!userId) continue
+      const userId = task.user_id
+      if (!userId || usersSent.has(userId + task.id)) continue
 
       // Get subscriptions for this user
       const { data: subscriptions } = await supabase
@@ -62,16 +61,25 @@ export async function GET(request: Request) {
       if (!subscriptions || subscriptions.length === 0) continue
 
       const payload = JSON.stringify({
-        title: '⏰ Tarea próxima',
-        body: `"${task.title}" vence pronto`,
-        taskId: task.id
+        title: '🔔 Task Due Soon',
+        body: `"${task.title}" is due soon`,
+        tag: `task-${task.id}`,
+        url: '/app/calendar'
       })
 
-      // Send to all devices
       for (const sub of subscriptions) {
         try {
-          await webpush.sendNotification(sub.subscription, payload)
+          const pushSubscription = {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth
+            }
+          }
+          
+          await webpush.default.sendNotification(pushSubscription, payload)
           notificationsSent++
+          usersSent.add(userId + task.id)
         } catch (error: any) {
           console.error('[v0] Error sending notification:', error)
           

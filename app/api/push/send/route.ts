@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    // Only allow if web-push is available
     let webpush
     try {
       webpush = await import('web-push')
@@ -21,7 +20,6 @@ export async function POST(request: Request) {
 
     const { title, body, taskId } = await request.json()
 
-    // Check VAPID keys
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
     const privateKey = process.env.VAPID_PRIVATE_KEY
     const subject = process.env.VAPID_SUBJECT
@@ -32,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     // Configure web-push
-    webpush.setVapidDetails(subject, publicKey, privateKey)
+    webpush.default.setVapidDetails(subject, publicKey, privateKey)
 
     // Get all subscriptions for this user
     const { data: subscriptions } = await supabase
@@ -44,14 +42,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No subscriptions found' }, { status: 404 })
     }
 
-    const payload = JSON.stringify({ title, body, taskId })
+    const payload = JSON.stringify({ 
+      title, 
+      body, 
+      taskId,
+      url: '/app/calendar'
+    })
     const results = []
 
-    // Send notification to all devices
     for (const sub of subscriptions) {
       try {
-        await webpush.sendNotification(sub.subscription, payload)
-        results.push({ success: true, endpoint: sub.subscription.endpoint })
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        }
+        
+        await webpush.default.sendNotification(pushSubscription, payload)
+        results.push({ success: true, endpoint: sub.endpoint })
+        
+        // Update last_used_at
+        await supabase
+          .from('push_subscriptions')
+          .update({ last_used_at: new Date().toISOString() })
+          .eq('id', sub.id)
       } catch (error: any) {
         console.error('[v0] Error sending to device:', error)
         
@@ -63,7 +79,7 @@ export async function POST(request: Request) {
             .eq('id', sub.id)
         }
         
-        results.push({ success: false, endpoint: sub.subscription.endpoint, error: error.message })
+        results.push({ success: false, endpoint: sub.endpoint, error: error.message })
       }
     }
 
