@@ -21,7 +21,6 @@ export default function CalendarPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
-  const [isPushSubscribed, setIsPushSubscribed] = useState(false)
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -41,8 +40,6 @@ export default function CalendarPage() {
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
     }
-
-    registerServiceWorkerAndSubscribe()
 
     const cleanupOldNotifications = () => {
       const oneHourAgo = Date.now() - (60 * 60 * 1000)
@@ -70,93 +67,10 @@ export default function CalendarPage() {
     }
   }, [])
 
-  const registerServiceWorkerAndSubscribe = async () => {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.log('Service Worker or Push API not supported')
-      return
-    }
-
-    try {
-      const registration = await navigator.serviceWorker.register('/service-worker', {
-        scope: '/'
-      })
-      console.log('[v0] Service Worker registered successfully')
-
-      // Wait for the service worker to be ready
-      await navigator.serviceWorker.ready
-
-      // Check if already subscribed
-      const existingSubscription = await registration.pushManager.getSubscription()
-      if (existingSubscription) {
-        setIsPushSubscribed(true)
-        console.log('[v0] Already subscribed to push notifications')
-        return
-      }
-
-      // Subscribe to push notifications if user has granted permission
-      if (Notification.permission === 'granted') {
-        await subscribeToPushNotifications(registration)
-      }
-    } catch (error) {
-      console.error('[v0] Service Worker registration failed:', error)
-    }
-  }
-
-  const subscribeToPushNotifications = async (registration: ServiceWorkerRegistration) => {
-    try {
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-      if (!vapidPublicKey) {
-        console.error('[v0] VAPID public key not configured')
-        return
-      }
-
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-      })
-
-      // Send subscription to server
-      const response = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(subscription)
-      })
-
-      if (response.ok) {
-        setIsPushSubscribed(true)
-        console.log('[v0] Successfully subscribed to push notifications')
-      } else {
-        console.error('[v0] Failed to save push subscription')
-      }
-    } catch (error) {
-      console.error('[v0] Failed to subscribe to push notifications:', error)
-    }
-  }
-
-  const urlBase64ToUint8Array = (base64String: string) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4)
-    const base64 = (base64String + padding)
-      .replace(/\-/g, '+')
-      .replace(/_/g, '/')
-
-    const rawData = window.atob(base64)
-    const outputArray = new Uint8Array(rawData.length)
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i)
-    }
-    return outputArray
-  }
-
   const requestNotificationPermission = async () => {
     if ("Notification" in window) {
       const permission = await Notification.requestPermission()
       setNotificationPermission(permission)
-      
-      if (permission === 'granted') {
-        const registration = await navigator.serviceWorker.ready
-        await subscribeToPushNotifications(registration)
-      }
     }
   }
 
@@ -439,9 +353,7 @@ export default function CalendarPage() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <p className="text-sm text-green-500">
-                {isPushSubscribed 
-                  ? "Professional push notifications enabled - works even with browser closed" 
-                  : "Notifications enabled - subscribing to push service..."}
+                Notifications enabled - you'll be notified when tasks are due (keep tab open)
               </p>
             </div>
           </Card>
