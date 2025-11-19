@@ -39,34 +39,29 @@ export async function GET(request: Request) {
     let endDate: Date
     
     if (range === "day") {
-      // Today from 00:00 to 23:59 in local time
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
     } else if (range === "week") {
-      // This week (Monday to Sunday) in local time
       const dayOfWeek = now.getDay()
       const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
       startDate = new Date(now)
       startDate.setDate(now.getDate() - diff)
       startDate.setHours(0, 0, 0, 0)
       endDate = new Date(now)
-      endDate.setHours(23, 59, 59, 999) // Include today completely
+      endDate.setHours(23, 59, 59, 999)
     } else {
-      // This month in local time
       startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
       endDate = new Date(now)
-      endDate.setHours(23, 59, 59, 999) // Include today completely
+      endDate.setHours(23, 59, 59, 999)
     }
     
     const startDateISO = startDate.toISOString()
     const endDateISO = endDate.toISOString()
 
-    console.log("[v0] Stats range:", range, "from", startDateISO, "to", endDateISO)
-
     const [allTasksRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
-      // All tasks created in the period
-      fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`, { headers }),
-      // Tasks completed in the period (use updated_at which is when it was marked complete)
+      // All tasks (not just created in period) to calculate completion rate correctly
+      fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&select=*`, { headers }),
+      // Tasks completed in the period
       fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startDateISO}&updated_at=lte.${endDateISO}&select=*`, { headers }),
       // Notes created in the period
       fetch(`${supabaseUrl}/rest/v1/notes?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`, { headers }),
@@ -81,10 +76,12 @@ export async function GET(request: Request) {
     const notes = notesRes.ok ? await notesRes.json() : []
     const pomodoro = pomodoroRes.ok ? await pomodoroRes.json() : []
 
-    console.log("[v0] Stats data:", { allTasks: allTasks.length, completed: completed.length, notes: notes.length, pomodoro: pomodoro.length })
-
     const totalFocusTimeMinutes = pomodoro.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
     const totalFocusTimeHours = Math.round((totalFocusTimeMinutes / 60) * 10) / 10
+
+    const tasksInPeriod = allTasks.filter((t: any) => {
+      return t.created_at >= startDateISO && t.created_at <= endDateISO
+    })
 
     let chartData: any[] = []
     
@@ -115,9 +112,6 @@ export async function GET(request: Request) {
         const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
         const dayStartISO = dayStart.toISOString()
         const dayEndISO = dayEnd.toISOString()
-
-        const isToday = dayDate.toDateString() === now.toDateString()
-        const isFuture = dayDate > now
         
         const tasksForDay = completed.filter((t: any) => {
           return t.updated_at >= dayStartISO && t.updated_at <= dayEndISO
@@ -126,8 +120,6 @@ export async function GET(request: Request) {
         const pomodoroForDay = pomodoro.filter((p: any) => {
           return p.created_at >= dayStartISO && p.created_at <= dayEndISO
         }).length
-
-        console.log(`[v0] Week stats - ${day} (${dayDate.toDateString()}): tasks=${tasksForDay}, pomodoro=${pomodoroForDay}, isFuture=${isFuture}`)
 
         return { name: day, tasks: tasksForDay, pomodoro: pomodoroForDay }
       })
@@ -159,7 +151,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({
-      totalTasks: allTasks.length,
+      totalTasks: tasksInPeriod.length,
       completedTasks: completed.length,
       totalNotes: notes.length,
       totalPomodoro: pomodoro.length,
