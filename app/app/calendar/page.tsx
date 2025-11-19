@@ -45,6 +45,7 @@ export default function CalendarPage() {
       setNotificationPermission(Notification.permission)
     }
 
+    // Clean up old notification markers
     const cleanupOldNotifications = () => {
       const oneHourAgo = Date.now() - (60 * 60 * 1000)
       Object.keys(localStorage).forEach(key => {
@@ -59,7 +60,13 @@ export default function CalendarPage() {
     }
     cleanupOldNotifications()
 
-    return () => {}
+    const notificationInterval = setInterval(() => {
+      checkNotifications(tasksRef.current)
+    }, 10000) // Check every 10 seconds
+
+    return () => {
+      clearInterval(notificationInterval)
+    }
   }, [])
 
   const registerServiceWorker = async () => {
