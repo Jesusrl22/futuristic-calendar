@@ -26,7 +26,6 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const range = searchParams.get("range") || "week"
-    const timezone = searchParams.get("timezone") || "UTC"
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const headers = {
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
     } else if (range === "week") {
       const dayOfWeek = now.getDay()
-      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Monday = 0
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff, 0, 0, 0, 0)
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
     } else {
@@ -77,15 +76,15 @@ export async function GET(request: Request) {
         const hour = i.toString().padStart(2, '0') + ":00"
         const hourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 0, 0, 0)
         const hourEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 59, 59, 999)
-        const hourStartISO = hourStart.toISOString()
-        const hourEndISO = hourEnd.toISOString()
         
         const tasksForHour = completed.filter((t: any) => {
-          return t.updated_at >= hourStartISO && t.updated_at <= hourEndISO
+          const taskDate = new Date(t.updated_at)
+          return taskDate >= hourStart && taskDate <= hourEnd
         }).length
         
         const pomodoroForHour = pomodoro.filter((p: any) => {
-          return p.created_at >= hourStartISO && p.created_at <= hourEndISO
+          const sessionDate = new Date(p.created_at)
+          return sessionDate >= hourStart && sessionDate <= hourEnd
         }).length
         
         chartData.push({ name: hour, tasks: tasksForHour, pomodoro: pomodoroForHour })
@@ -97,15 +96,15 @@ export async function GET(request: Request) {
         dayDate.setDate(startDate.getDate() + i)
         const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0, 0)
         const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
-        const dayStartISO = dayStart.toISOString()
-        const dayEndISO = dayEnd.toISOString()
         
         const tasksForDay = completed.filter((t: any) => {
-          return t.updated_at >= dayStartISO && t.updated_at <= dayEndISO
+          const taskDate = new Date(t.updated_at)
+          return taskDate >= dayStart && taskDate <= dayEnd
         }).length
 
         const pomodoroForDay = pomodoro.filter((p: any) => {
-          return p.created_at >= dayStartISO && p.created_at <= dayEndISO
+          const sessionDate = new Date(p.created_at)
+          return sessionDate >= dayStart && sessionDate <= dayEnd
         }).length
 
         chartData.push({ name: days[i], tasks: tasksForDay, pomodoro: pomodoroForDay })
@@ -128,11 +127,13 @@ export async function GET(request: Request) {
         const weekEndISO = effectiveEnd.toISOString()
         
         const tasksForWeek = completed.filter((t: any) => {
-          return t.updated_at >= weekStartISO && t.updated_at <= weekEndISO
+          const taskDate = new Date(t.updated_at)
+          return taskDate >= new Date(weekStartISO) && taskDate <= new Date(weekEndISO)
         }).length
         
         const pomodoroForWeek = pomodoro.filter((p: any) => {
-          return p.created_at >= weekStartISO && p.created_at <= weekEndISO
+          const sessionDate = new Date(p.created_at)
+          return sessionDate >= new Date(weekStartISO) && sessionDate <= new Date(weekEndISO)
         }).length
         
         chartData.push({ 

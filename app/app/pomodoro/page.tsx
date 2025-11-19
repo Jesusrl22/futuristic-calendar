@@ -45,13 +45,20 @@ export default function PomodoroPage() {
         const data = await response.json()
 
         if (data.profile) {
+          const workDuration = data.profile.pomodoro_work_duration || 25
+          const breakDuration = data.profile.pomodoro_break_duration || 5
+          const longBreakDuration = data.profile.pomodoro_long_break_duration || 15
+          
           const savedDurations = {
-            work: (data.profile.pomodoro_work_duration || 25) * 60,
-            break: (data.profile.pomodoro_break_duration || 5) * 60,
-            longBreak: (data.profile.pomodoro_long_break_duration || 15) * 60,
+            work: Math.max(1, workDuration) * 60,
+            break: Math.max(1, breakDuration) * 60,
+            longBreak: Math.max(1, longBreakDuration) * 60,
           }
+          
           setDurations(savedDurations)
-          setTimeLeft(savedDurations.work)
+          if (mode === "work" && !isRunning) {
+            setTimeLeft(savedDurations.work)
+          }
         }
       } catch (error) {
         console.error("[v0] Error loading pomodoro settings:", error)
@@ -171,26 +178,31 @@ export default function PomodoroPage() {
 
   const saveDurationPreset = async (workMins: number, breakMins: number, longBreakMins: number) => {
     try {
+      const validWork = Math.max(1, Math.min(120, workMins))
+      const validBreak = Math.max(1, Math.min(60, breakMins))
+      const validLongBreak = Math.max(1, Math.min(60, longBreakMins))
+      
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          pomodoro_work_duration: workMins,
-          pomodoro_break_duration: breakMins,
-          pomodoro_long_break_duration: longBreakMins,
+          pomodoro_work_duration: validWork,
+          pomodoro_break_duration: validBreak,
+          pomodoro_long_break_duration: validLongBreak,
         }),
       })
 
       if (response.ok) {
         const newDurations = {
-          work: workMins * 60,
-          break: breakMins * 60,
-          longBreak: longBreakMins * 60,
+          work: validWork * 60,
+          break: validBreak * 60,
+          longBreak: validLongBreak * 60,
         }
         setDurations(newDurations)
         setTimeLeft(newDurations.work)
         setMode("work")
         setIsRunning(false)
+        sessionSavedRef.current = false
       }
     } catch (error) {
       console.error("[v0] Error saving pomodoro settings:", error)

@@ -31,32 +31,36 @@ export default function SettingsPage() {
 
   const fetchProfile = async () => {
     try {
-      console.log("[v0] Fetching profile settings...")
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      
       const response = await fetch("/api/settings")
       
       if (!response.ok) {
-        console.error("[v0] Failed to fetch settings:", response.status)
-        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
         setProfile(prev => ({ ...prev, timezone: detectedTimezone }))
+        localStorage.setItem("timezone", detectedTimezone)
         return
       }
       
       const data = await response.json()
-      console.log("[v0] Profile data received:", data)
 
       if (data.profile) {
-        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        const savedTimezone = data.profile.timezone || detectedTimezone
-        
         setProfile({
           email: data.email || "",
           theme: data.profile.theme || "neon-tech",
           language: data.profile.language || "en",
           notifications: data.profile.notifications ?? true,
-          timezone: savedTimezone,
+          timezone: detectedTimezone,
         })
         
-        localStorage.setItem("timezone", savedTimezone)
+        localStorage.setItem("timezone", detectedTimezone)
+        
+        if (data.profile.timezone !== detectedTimezone) {
+          await fetch("/api/settings", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timezone: detectedTimezone }),
+          })
+        }
       }
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
@@ -66,7 +70,7 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setLoading(true)
     try {
-      console.log("[v0] Starting save with profile:", profile)
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       
       const response = await fetch("/api/settings", {
         method: "PATCH",
@@ -74,22 +78,17 @@ export default function SettingsPage() {
         body: JSON.stringify({
           theme: profile.theme,
           language: profile.language,
-          timezone: profile.timezone,
+          timezone: detectedTimezone,
         }),
       })
       
-      console.log("[v0] Save response status:", response.status)
-      
       const result = await response.json()
-      console.log("[v0] Save response body:", result)
       
       if (response.ok && result.success) {
         localStorage.setItem("notifications", profile.notifications.toString())
-        localStorage.setItem("timezone", profile.timezone)
+        localStorage.setItem("timezone", detectedTimezone)
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
-        
-        console.log("[v0] Settings saved successfully")
         
         toast({
           title: "Settings saved",
@@ -100,7 +99,6 @@ export default function SettingsPage() {
           router.refresh()
         }, 500)
       } else {
-        console.error("[v0] Failed to save:", result)
         toast({
           title: "Error",
           description: `Failed to save settings: ${result.error || "Unknown error"}`,
@@ -108,7 +106,6 @@ export default function SettingsPage() {
         })
       }
     } catch (error: any) {
-      console.error("[v0] Error saving settings:", error)
       toast({
         title: "Error",
         description: `Failed to save settings: ${error.message || "Network error"}`,
@@ -198,24 +195,11 @@ export default function SettingsPage() {
 
                 <div>
                   <Label>Timezone / Region</Label>
-                  <Select
-                    value={profile.timezone}
-                    onValueChange={(value) => {
-                      console.log("[v0] Timezone changed to:", value)
-                      setProfile({ ...profile, timezone: value })
-                    }}
-                  >
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {timezones.map((tz) => (
-                        <SelectItem key={tz.value} value={tz.value}>
-                          {tz.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Input 
+                    value={`${profile.timezone} (Auto-detected)`}
+                    disabled 
+                    className="bg-secondary/50" 
+                  />
                   <p className="text-xs text-muted-foreground mt-1">
                     Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
