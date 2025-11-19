@@ -39,11 +39,11 @@ export async function PATCH(request: Request) {
 
     if (updates.subscription_tier) {
       const creditsMap = {
-        free: 10,
+        free: 0,
         premium: 100,
         pro: 500,
       }
-      updates.ai_credits = creditsMap[updates.subscription_tier as keyof typeof creditsMap] || 10
+      updates.ai_credits = creditsMap[updates.subscription_tier as keyof typeof creditsMap] || 0
     }
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

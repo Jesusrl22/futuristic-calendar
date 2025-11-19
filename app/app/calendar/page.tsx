@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { useTranslation, type Language } from "@/lib/translations"
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -29,6 +30,8 @@ export default function CalendarPage() {
     time: "",
   })
   const tasksRef = useRef<any[]>([])
+  const [lang, setLang] = useState<Language>("en")
+  const { t } = useTranslation(lang)
 
   useEffect(() => {
     tasksRef.current = tasks
@@ -36,6 +39,27 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks()
+    
+    const loadLanguage = async () => {
+      try {
+        const response = await fetch("/api/settings")
+        const data = await response.json()
+        if (data.profile?.language) {
+          setLang(data.profile.language)
+        } else {
+          const savedLang = localStorage.getItem("language") as Language | null
+          if (savedLang) {
+            setLang(savedLang)
+          }
+        }
+      } catch (error) {
+        const savedLang = localStorage.getItem("language") as Language | null
+        if (savedLang) {
+          setLang(savedLang)
+        }
+      }
+    }
+    loadLanguage()
     
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
@@ -177,7 +201,7 @@ export default function CalendarPage() {
 
   const handleCreateTask = async () => {
     if (!selectedDate || !newTask.title.trim()) {
-      alert("Please enter a task title")
+      alert(t("enterTaskTitle"))
       return
     }
 
@@ -238,7 +262,7 @@ export default function CalendarPage() {
   }
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!confirm("Are you sure you want to delete this task?")) {
+    if (!confirm(t("deleteConfirm"))) {
       return
     }
 
@@ -265,7 +289,7 @@ export default function CalendarPage() {
 
   const handleUpdateTask = async () => {
     if (!editingTask || !editingTask.title.trim()) {
-      alert("Please enter a task title")
+      alert(t("enterTaskTitle"))
       return
     }
 
@@ -329,7 +353,7 @@ export default function CalendarPage() {
       <div className="transition-all duration-300">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <h1 className="text-3xl md:text-4xl font-bold hidden md:block">
-            <span className="text-primary neon-text">Calendar</span>
+            <span className="text-primary neon-text">{t("calendar")}</span>
           </h1>
           <Button
             className="neon-glow-hover w-full md:w-auto"
@@ -339,19 +363,19 @@ export default function CalendarPage() {
             }}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Task
+            {t("addTask")}
           </Button>
         </div>
 
         {notificationPermission === "default" && (
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm">Enable notifications to get reminders for your tasks</p>
+              <p className="text-sm">{t("enableNotifications")}</p>
               <Button
                 size="sm"
                 onClick={requestNotificationPermission}
               >
-                Enable
+                {t("enable")}
               </Button>
             </div>
           </Card>
@@ -362,7 +386,7 @@ export default function CalendarPage() {
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <p className="text-sm text-green-500">
-                Notifications enabled - you'll be notified when tasks are due (keep tab open)
+                {t("notificationsEnabled")}
               </p>
             </div>
           </Card>
@@ -371,12 +395,8 @@ export default function CalendarPage() {
         {notificationPermission === "denied" && (
           <Card className="glass-card p-4 mb-6 border-red-500/50">
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-red-500">Notifications are blocked. To enable them:</p>
-              <ul className="text-xs text-muted-foreground ml-4 list-disc">
-                <li>Click the lock icon in your browser address bar</li>
-                <li>Find Notifications and set it to Allow</li>
-                <li>Reload the page</li>
-              </ul>
+              <p className="text-sm text-red-500">{t("notificationsBlocked")}</p>
+              <p className="text-xs text-muted-foreground">{t("notificationsInstructions")}</p>
             </div>
           </Card>
         )}
@@ -465,29 +485,29 @@ export default function CalendarPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="glass-card max-w-md">
             <DialogHeader>
-              <DialogTitle>Create New Task</DialogTitle>
+              <DialogTitle>{t("createNewTask")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Title</Label>
+                <Label>{t("title")}</Label>
                 <Input
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  placeholder="Task title"
+                  placeholder={t("title")}
                   className="bg-secondary/50"
                 />
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t("description")}</Label>
                 <Textarea
                   value={newTask.description}
                   onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  placeholder="Task description"
+                  placeholder={t("description")}
                   className="bg-secondary/50"
                 />
               </div>
               <div>
-                <Label>Time</Label>
+                <Label>{t("time")}</Label>
                 <Input
                   type="time"
                   value={newTask.time}
@@ -497,7 +517,7 @@ export default function CalendarPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Priority</Label>
+                  <Label>{t("priority")}</Label>
                   <Select
                     value={newTask.priority}
                     onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
@@ -506,14 +526,14 @@ export default function CalendarPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="high">{t("high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Category</Label>
+                  <Label>{t("category")}</Label>
                   <Select
                     value={newTask.category}
                     onValueChange={(value) => setNewTask({ ...newTask, category: value })}
@@ -522,17 +542,17 @@ export default function CalendarPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="personal">Personal</SelectItem>
-                      <SelectItem value="work">Work</SelectItem>
-                      <SelectItem value="study">Study</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
+                      <SelectItem value="personal">{t("personal")}</SelectItem>
+                      <SelectItem value="work">{t("work")}</SelectItem>
+                      <SelectItem value="study">{t("study")}</SelectItem>
+                      <SelectItem value="health">{t("health")}</SelectItem>
+                      <SelectItem value="finance">{t("finance")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <Button onClick={handleCreateTask} className="w-full neon-glow-hover">
-                Create Task
+                {t("createTask")}
               </Button>
             </div>
           </DialogContent>
@@ -543,7 +563,7 @@ export default function CalendarPage() {
             <DialogHeader>
               <div className="flex items-center justify-between">
                 <DialogTitle>
-                  Tasks for{" "}
+                  {t("tasksFor")}{" "}
                   {selectedDate?.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                 </DialogTitle>
                 <Button
@@ -554,13 +574,13 @@ export default function CalendarPage() {
                   }}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Task
+                  {t("addTask")}
                 </Button>
               </div>
             </DialogHeader>
             <div className="space-y-3">
               {selectedDateTasks.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No tasks for this day</p>
+                <p className="text-center text-muted-foreground py-8">{t("noTasksForDay")}</p>
               ) : (
                 selectedDateTasks.map((task) => (
                   <Card key={task.id} className="glass-card p-4">
@@ -631,30 +651,30 @@ export default function CalendarPage() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="glass-card max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit Task</DialogTitle>
+              <DialogTitle>{t("editTask")}</DialogTitle>
             </DialogHeader>
             {editingTask && (
               <div className="space-y-4">
                 <div>
-                  <Label>Title</Label>
+                  <Label>{t("title")}</Label>
                   <Input
                     value={editingTask.title}
                     onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
-                    placeholder="Task title"
+                    placeholder={t("title")}
                     className="bg-secondary/50"
                   />
                 </div>
                 <div>
-                  <Label>Description</Label>
+                  <Label>{t("description")}</Label>
                   <Textarea
                     value={editingTask.description || ""}
                     onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
-                    placeholder="Task description"
+                    placeholder={t("description")}
                     className="bg-secondary/50"
                   />
                 </div>
                 <div>
-                  <Label>Due Date & Time</Label>
+                  <Label>{t("dueDateTime")}</Label>
                   <Input
                     type="datetime-local"
                     value={editingTask.due_date ? editingTask.due_date.slice(0, 16) : ""}
@@ -664,7 +684,7 @@ export default function CalendarPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Priority</Label>
+                    <Label>{t("priority")}</Label>
                     <Select
                       value={editingTask.priority}
                       onValueChange={(value) => setEditingTask({ ...editingTask, priority: value })}
@@ -673,14 +693,14 @@ export default function CalendarPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="low">{t("low")}</SelectItem>
+                        <SelectItem value="medium">{t("medium")}</SelectItem>
+                        <SelectItem value="high">{t("high")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Category</Label>
+                    <Label>{t("category")}</Label>
                     <Select
                       value={editingTask.category}
                       onValueChange={(value) => setEditingTask({ ...editingTask, category: value })}
@@ -689,18 +709,18 @@ export default function CalendarPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="personal">Personal</SelectItem>
-                        <SelectItem value="work">Work</SelectItem>
-                        <SelectItem value="study">Study</SelectItem>
-                        <SelectItem value="health">Health</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="personal">{t("personal")}</SelectItem>
+                        <SelectItem value="work">{t("work")}</SelectItem>
+                        <SelectItem value="study">{t("study")}</SelectItem>
+                        <SelectItem value="health">{t("health")}</SelectItem>
+                        <SelectItem value="finance">{t("finance")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleUpdateTask} className="flex-1 neon-glow-hover">
-                    Update Task
+                    {t("updateTask")}
                   </Button>
                   <Button
                     variant="destructive"
@@ -708,7 +728,7 @@ export default function CalendarPage() {
                     className="flex-1"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    {t("delete")}
                   </Button>
                 </div>
               </div>

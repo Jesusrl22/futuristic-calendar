@@ -19,6 +19,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useTranslation, type Language } from "@/lib/translations"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -45,9 +46,33 @@ export default function TasksPage() {
     due_time: "",
   })
   const [isCreating, setIsCreating] = useState(false)
+  const [lang, setLang] = useState<Language>("en")
+  const { t } = useTranslation(lang)
 
   useEffect(() => {
     fetchTasks()
+    
+    const loadLanguage = async () => {
+      try {
+        const response = await fetch("/api/settings")
+        const data = await response.json()
+        if (data.profile?.language) {
+          setLang(data.profile.language)
+        } else {
+          const savedLang = localStorage.getItem("language") as Language | null
+          if (savedLang) {
+            setLang(savedLang)
+          }
+        }
+      } catch (error) {
+        const savedLang = localStorage.getItem("language") as Language | null
+        if (savedLang) {
+          setLang(savedLang)
+        }
+      }
+    }
+    loadLanguage()
+    
     const fetchTimezone = async () => {
       try {
         const response = await fetch("/api/settings")
@@ -110,7 +135,7 @@ export default function TasksPage() {
 
   const createTask = async () => {
     if (!newTask.title.trim()) {
-      alert("Please enter a task title")
+      alert(t("enterTaskTitle"))
       return
     }
 
@@ -189,7 +214,7 @@ export default function TasksPage() {
 
   const updateTask = async () => {
     if (!editForm.title.trim()) {
-      alert("Please enter a task title")
+      alert(t("enterTaskTitle"))
       return
     }
 
@@ -270,42 +295,42 @@ export default function TasksPage() {
       <div>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold hidden md:block">
-            <span className="text-primary neon-text">Tasks</span>
+            <span className="text-primary neon-text">{t("tasks")}</span>
           </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="neon-glow-hover">
                 <Plus className="w-4 h-4 mr-2" />
-                New Task
+                {t("newTask")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Task</DialogTitle>
-                <DialogDescription>Add a new task to your list. Fill in the details below.</DialogDescription>
+                <DialogTitle>{t("createNewTask")}</DialogTitle>
+                <DialogDescription>{t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
+                  <Label htmlFor="title">{t("title")} *</Label>
                   <Input
                     id="title"
-                    placeholder="Task title..."
+                    placeholder={t("title") + "..."}
                     value={newTask.title}
                     onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">{t("description")}</Label>
                   <Textarea
                     id="description"
-                    placeholder="Task description..."
+                    placeholder={t("description") + "..."}
                     value={newTask.description}
                     onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="priority">Priority</Label>
+                    <Label htmlFor="priority">{t("priority")}</Label>
                     <Select
                       value={newTask.priority}
                       onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
@@ -314,34 +339,34 @@ export default function TasksPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="low">{t("low")}</SelectItem>
+                        <SelectItem value="medium">{t("medium")}</SelectItem>
+                        <SelectItem value="high">{t("high")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="category">{t("category")}</Label>
                     <Select
                       value={newTask.category}
                       onValueChange={(value) => setNewTask({ ...newTask, category: value })}
                     >
                       <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={t("category")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="personal">Personal</SelectItem>
-                        <SelectItem value="work">Work</SelectItem>
-                        <SelectItem value="study">Study</SelectItem>
-                        <SelectItem value="health">Health</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="personal">{t("personal")}</SelectItem>
+                        <SelectItem value="work">{t("work")}</SelectItem>
+                        <SelectItem value="study">{t("study")}</SelectItem>
+                        <SelectItem value="health">{t("health")}</SelectItem>
+                        <SelectItem value="finance">{t("finance")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="due_date">Due Date</Label>
+                    <Label htmlFor="due_date">{t("dueDate")}</Label>
                     <Input
                       id="due_date"
                       type="date"
@@ -350,7 +375,7 @@ export default function TasksPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="due_time">Due Time</Label>
+                    <Label htmlFor="due_time">{t("dueTime")}</Label>
                     <Input
                       id="due_time"
                       type="time"
@@ -362,10 +387,10 @@ export default function TasksPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button onClick={createTask} disabled={isCreating}>
-                  {isCreating ? "Creating..." : "Create Task"}
+                  {isCreating ? t("creating") : t("createTask")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -377,7 +402,7 @@ export default function TasksPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search tasks..."
+                placeholder={t("searchTasks")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-secondary/50"
@@ -388,9 +413,9 @@ export default function TasksPage() {
 
         <Tabs value={filter} onValueChange={setFilter}>
           <TabsList className="mb-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
+            <TabsTrigger value="active">{t("activeTasks")}</TabsTrigger>
+            <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value={filter} className="space-y-4">
@@ -407,13 +432,13 @@ export default function TasksPage() {
                       <div className="flex items-center gap-3 mt-2">
                         {task.priority && (
                           <span className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                            {task.priority.toUpperCase()}
+                            {t(task.priority)}
                           </span>
                         )}
-                        {task.category && <span className="text-xs text-muted-foreground">{task.category}</span>}
+                        {task.category && <span className="text-xs text-muted-foreground">{t(task.category)}</span>}
                         {task.due_date && (
                           <span className="text-xs text-muted-foreground">
-                            Due: {formatTaskDateTime(task.due_date)}
+                            {t("due")}: {formatTaskDateTime(task.due_date)}
                           </span>
                         )}
                       </div>
@@ -433,7 +458,7 @@ export default function TasksPage() {
 
             {filteredTasks.length === 0 && (
               <Card className="glass-card p-12 text-center">
-                <p className="text-muted-foreground">No tasks found</p>
+                <p className="text-muted-foreground">{t("noTasksFound")}</p>
               </Card>
             )}
           </TabsContent>
@@ -442,31 +467,31 @@ export default function TasksPage() {
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Task</DialogTitle>
-              <DialogDescription>Update the task details below.</DialogDescription>
+              <DialogTitle>{t("editTask")}</DialogTitle>
+              <DialogDescription>{t("updateTask")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-title">Title *</Label>
+                <Label htmlFor="edit-title">{t("title")} *</Label>
                 <Input
                   id="edit-title"
-                  placeholder="Task title..."
+                  placeholder={t("title") + "..."}
                   value={editForm.title}
                   onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
+                <Label htmlFor="edit-description">{t("description")}</Label>
                 <Textarea
                   id="edit-description"
-                  placeholder="Task description..."
+                  placeholder={t("description") + "..."}
                   value={editForm.description}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-priority">Priority</Label>
+                  <Label htmlFor="edit-priority">{t("priority")}</Label>
                   <Select
                     value={editForm.priority}
                     onValueChange={(value) => setEditForm({ ...editForm, priority: value })}
@@ -475,34 +500,34 @@ export default function TasksPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="high">{t("high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-category">Category</Label>
+                  <Label htmlFor="edit-category">{t("category")}</Label>
                   <Select
                     value={editForm.category}
                     onValueChange={(value) => setEditForm({ ...editForm, category: value })}
                   >
                     <SelectTrigger id="edit-category">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={t("category")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="personal">Personal</SelectItem>
-                      <SelectItem value="work">Work</SelectItem>
-                      <SelectItem value="study">Study</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
+                      <SelectItem value="personal">{t("personal")}</SelectItem>
+                      <SelectItem value="work">{t("work")}</SelectItem>
+                      <SelectItem value="study">{t("study")}</SelectItem>
+                      <SelectItem value="health">{t("health")}</SelectItem>
+                      <SelectItem value="finance">{t("finance")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-due_date">Due Date</Label>
+                  <Label htmlFor="edit-due_date">{t("dueDate")}</Label>
                   <Input
                     id="edit-due_date"
                     type="date"
@@ -511,7 +536,7 @@ export default function TasksPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-due_time">Due Time</Label>
+                  <Label htmlFor="edit-due_time">{t("dueTime")}</Label>
                   <Input
                     id="edit-due_time"
                     type="time"
@@ -523,10 +548,10 @@ export default function TasksPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button onClick={updateTask} disabled={isCreating}>
-                {isCreating ? "Updating..." : "Update Task"}
+                {isCreating ? t("updating") : t("updateTask")}
               </Button>
             </DialogFooter>
           </DialogContent>
