@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
+import { ThemeLoader } from "@/components/theme-loader"
 
 export const metadata: Metadata = {
   title: "Future Task - Smart Task Management",
@@ -23,7 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <ThemeLoader />
+        {children}
+      </body>
     </html>
   )
 }

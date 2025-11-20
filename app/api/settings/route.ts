@@ -90,8 +90,9 @@ export async function PATCH(request: Request) {
 
     const updates: any = { updated_at: new Date().toISOString() }
     if (theme !== undefined) updates.theme = theme
-    // Save theme_preference as JSONB for custom themes
-    if (theme_preference !== undefined) updates.theme_preference = JSON.stringify(theme_preference)
+    if (theme_preference !== undefined) {
+      updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
+    }
     if (language !== undefined) updates.language = language
     if (timezone !== undefined) updates.timezone = timezone
     if (pomodoro_work_duration !== undefined) updates.pomodoro_work_duration = pomodoro_work_duration

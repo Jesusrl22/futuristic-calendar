@@ -67,8 +67,17 @@ export default function SettingsPage() {
       console.log("[v0] User plan from database:", data.profile?.subscription_plan)
 
       if (data.profile) {
-        const userPlan = data.profile.subscription_plan || "free"
-        console.log("[v0] Setting user plan to:", userPlan)
+        const userPlan = (data.profile.subscription_plan || "free").toLowerCase()
+        console.log("[v0] Normalized user plan to:", userPlan)
+
+        let themePreference = data.profile.theme_preference
+        if (typeof themePreference === "string") {
+          try {
+            themePreference = JSON.parse(themePreference)
+          } catch {
+            themePreference = null
+          }
+        }
 
         setProfile({
           email: data.email || "",
@@ -77,11 +86,19 @@ export default function SettingsPage() {
           notifications: data.profile.notifications ?? true,
           timezone: detectedTimezone,
           plan: userPlan,
-          customPrimary: data.profile.theme_preference?.customPrimary || "",
-          customSecondary: data.profile.theme_preference?.customSecondary || "",
+          customPrimary: themePreference?.customPrimary || "",
+          customSecondary: themePreference?.customSecondary || "",
         })
 
         localStorage.setItem("timezone", detectedTimezone)
+        localStorage.setItem("language", data.profile.language || "en")
+        localStorage.setItem("theme", data.profile.theme || "neon-tech")
+        if (themePreference?.customPrimary) {
+          localStorage.setItem("customPrimary", themePreference.customPrimary)
+        }
+        if (themePreference?.customSecondary) {
+          localStorage.setItem("customSecondary", themePreference.customSecondary)
+        }
 
         if (data.profile.timezone !== detectedTimezone) {
           await fetch("/api/settings", {
