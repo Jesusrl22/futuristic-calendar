@@ -47,28 +47,63 @@ export async function GET(request: Request) {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff, 0, 0, 0, 0)
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
     } else {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
-      endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
-    }
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
 
-    const startDateISO = startDate.toISOString()
-    const endDateISO = endDate.toISOString()
+      const currentWeekStart = new Date(firstDayOfMonth)
+
+      while (currentWeekStart.getDate() <= lastDayOfMonth) {
+        const weekEnd = new Date(currentWeekStart)
+        weekEnd.setDate(currentWeekStart.getDate() + 6)
+
+        // Limit to last day of month
+        if (weekEnd.getDate() > lastDayOfMonth || weekEnd.getMonth() !== now.getMonth()) {
+          weekEnd.setDate(lastDayOfMonth)
+        }
+        weekEnd.setHours(23, 59, 59, 999)
+
+        // Limit to current date for data collection
+        const effectiveEnd = weekEnd > endDate ? endDate : weekEnd
+
+        const tasksForWeek = 0 // Placeholder for completed tasks count
+        const pomodoroForWeek = 0 // Placeholder for pomodoro count
+
+        const startDay = currentWeekStart.getDate()
+        const endDay = weekEnd.getDate()
+
+        // Placeholder for chartData array
+        const chartData: any[] = []
+
+        chartData.push({
+          name: `${startDay}-${endDay}`,
+          tasks: tasksForWeek,
+          pomodoro: pomodoroForWeek,
+        })
+
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7)
+
+        // Break if we've passed the last day of the month
+        if (currentWeekStart.getDate() > lastDayOfMonth || currentWeekStart.getMonth() !== now.getMonth()) {
+          break
+        }
+      }
+    }
 
     const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
       fetch(
-        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`,
+        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startDate.toISOString()}&created_at=lte.${endDate.toISOString()}&select=*`,
         { headers },
       ),
       fetch(
-        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startDateISO}&updated_at=lte.${endDateISO}&select=*`,
+        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startDate.toISOString()}&updated_at=lte.${endDate.toISOString()}&select=*`,
         { headers },
       ),
       fetch(
-        `${supabaseUrl}/rest/v1/notes?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`,
+        `${supabaseUrl}/rest/v1/notes?user_id=eq.${userId}&created_at=gte.${startDate.toISOString()}&created_at=lte.${endDate.toISOString()}&select=*`,
         { headers },
       ),
       fetch(
-        `${supabaseUrl}/rest/v1/pomodoro_sessions?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`,
+        `${supabaseUrl}/rest/v1/pomodoro_sessions?user_id=eq.${userId}&created_at=gte.${startDate.toISOString()}&created_at=lte.${endDate.toISOString()}&select=*`,
         { headers },
       ),
     ])
@@ -123,29 +158,25 @@ export async function GET(request: Request) {
       }
     } else {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
       const currentWeekStart = new Date(firstDayOfMonth)
-      let weekNumber = 1
 
       while (currentWeekStart <= lastDayOfMonth) {
         const weekEnd = new Date(currentWeekStart)
         weekEnd.setDate(currentWeekStart.getDate() + 6)
         weekEnd.setHours(23, 59, 59, 999)
 
-        const effectiveEnd = weekEnd > lastDayOfMonth ? lastDayOfMonth : weekEnd > endDate ? endDate : weekEnd
-
-        const weekStartISO = currentWeekStart.toISOString()
-        const weekEndISO = effectiveEnd.toISOString()
+        const effectiveEnd = weekEnd > endDate ? endDate : weekEnd
 
         const tasksForWeek = completed.filter((t: any) => {
           const taskDate = new Date(t.updated_at)
-          return taskDate >= new Date(weekStartISO) && taskDate <= new Date(weekEndISO)
+          return taskDate >= currentWeekStart && taskDate <= effectiveEnd
         }).length
 
         const pomodoroForWeek = pomodoro.filter((p: any) => {
           const sessionDate = new Date(p.created_at)
-          return sessionDate >= new Date(weekStartISO) && sessionDate <= new Date(weekEndISO)
+          return sessionDate >= currentWeekStart && sessionDate <= effectiveEnd
         }).length
 
         const startDay = currentWeekStart.getDate()
@@ -158,9 +189,6 @@ export async function GET(request: Request) {
         })
 
         currentWeekStart.setDate(currentWeekStart.getDate() + 7)
-        weekNumber++
-
-        if (currentWeekStart > endDate) break
       }
     }
 
