@@ -18,7 +18,7 @@ export default function StatsPage() {
   })
   const [chartData, setChartData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<TimeRange>("week")
+  const [timeRange, setTimeRange] = useState<TimeRange>("day")
 
   useEffect(() => {
     fetchStats()
@@ -62,7 +62,7 @@ export default function StatsPage() {
           <h1 className="text-4xl font-bold">
             <span className="text-primary neon-text">Statistics</span>
           </h1>
-          
+
           <div className="flex gap-2">
             <Button
               variant={timeRange === "day" ? "default" : "outline"}
@@ -169,12 +169,11 @@ export default function StatsPage() {
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                   <span className="text-sm">Average Focus Time</span>
                   <span className="font-semibold text-primary">
-                    {timeRange === "day" 
-                      ? `${stats.totalFocusTime}h` 
+                    {timeRange === "day"
+                      ? `${stats.totalFocusTime}h`
                       : timeRange === "week"
-                      ? `${Math.round((stats.totalFocusTime / 7) * 10) / 10}h/day`
-                      : `${Math.round((stats.totalFocusTime / 30) * 10) / 10}h/day`
-                    }
+                        ? `${Math.round((stats.totalFocusTime / 7) * 10) / 10}h/day`
+                        : `${Math.round((stats.totalFocusTime / 30) * 10) / 10}h/day`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">

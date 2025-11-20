@@ -37,7 +37,7 @@ export async function GET(request: Request) {
     const now = new Date()
     let startDate: Date
     let endDate: Date
-    
+
     if (range === "day") {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
@@ -50,15 +50,27 @@ export async function GET(request: Request) {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
     }
-    
+
     const startDateISO = startDate.toISOString()
     const endDateISO = endDate.toISOString()
 
     const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
-      fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`, { headers }),
-      fetch(`${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startDateISO}&updated_at=lte.${endDateISO}&select=*`, { headers }),
-      fetch(`${supabaseUrl}/rest/v1/notes?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`, { headers }),
-      fetch(`${supabaseUrl}/rest/v1/pomodoro_sessions?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`, { headers }),
+      fetch(
+        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`,
+        { headers },
+      ),
+      fetch(
+        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startDateISO}&updated_at=lte.${endDateISO}&select=*`,
+        { headers },
+      ),
+      fetch(
+        `${supabaseUrl}/rest/v1/notes?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`,
+        { headers },
+      ),
+      fetch(
+        `${supabaseUrl}/rest/v1/pomodoro_sessions?user_id=eq.${userId}&created_at=gte.${startDateISO}&created_at=lte.${endDateISO}&select=*`,
+        { headers },
+      ),
     ])
 
     const tasksInPeriod = tasksInPeriodRes.ok ? await tasksInPeriodRes.json() : []
@@ -69,24 +81,24 @@ export async function GET(request: Request) {
     const totalFocusTimeMinutes = pomodoro.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
     const totalFocusTimeHours = Math.round((totalFocusTimeMinutes / 60) * 10) / 10
 
-    let chartData: any[] = []
-    
+    const chartData: any[] = []
+
     if (range === "day") {
       for (let i = 0; i < 24; i++) {
-        const hour = i.toString().padStart(2, '0') + ":00"
+        const hour = i.toString().padStart(2, "0") + ":00"
         const hourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 0, 0, 0)
         const hourEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 59, 59, 999)
-        
+
         const tasksForHour = completed.filter((t: any) => {
           const taskDate = new Date(t.updated_at)
           return taskDate >= hourStart && taskDate <= hourEnd
         }).length
-        
+
         const pomodoroForHour = pomodoro.filter((p: any) => {
           const sessionDate = new Date(p.created_at)
           return sessionDate >= hourStart && sessionDate <= hourEnd
         }).length
-        
+
         chartData.push({ name: hour, tasks: tasksForHour, pomodoro: pomodoroForHour })
       }
     } else if (range === "week") {
@@ -96,7 +108,7 @@ export async function GET(request: Request) {
         dayDate.setDate(startDate.getDate() + i)
         const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0, 0)
         const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
-        
+
         const tasksForDay = completed.filter((t: any) => {
           const taskDate = new Date(t.updated_at)
           return taskDate >= dayStart && taskDate <= dayEnd
@@ -112,39 +124,42 @@ export async function GET(request: Request) {
     } else {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
-      
-      let currentWeekStart = new Date(firstDayOfMonth)
+
+      const currentWeekStart = new Date(firstDayOfMonth)
       let weekNumber = 1
-      
+
       while (currentWeekStart <= lastDayOfMonth) {
         const weekEnd = new Date(currentWeekStart)
         weekEnd.setDate(currentWeekStart.getDate() + 6)
         weekEnd.setHours(23, 59, 59, 999)
-        
-        const effectiveEnd = weekEnd > lastDayOfMonth ? lastDayOfMonth : (weekEnd > endDate ? endDate : weekEnd)
-        
+
+        const effectiveEnd = weekEnd > lastDayOfMonth ? lastDayOfMonth : weekEnd > endDate ? endDate : weekEnd
+
         const weekStartISO = currentWeekStart.toISOString()
         const weekEndISO = effectiveEnd.toISOString()
-        
+
         const tasksForWeek = completed.filter((t: any) => {
           const taskDate = new Date(t.updated_at)
           return taskDate >= new Date(weekStartISO) && taskDate <= new Date(weekEndISO)
         }).length
-        
+
         const pomodoroForWeek = pomodoro.filter((p: any) => {
           const sessionDate = new Date(p.created_at)
           return sessionDate >= new Date(weekStartISO) && sessionDate <= new Date(weekEndISO)
         }).length
-        
-        chartData.push({ 
-          name: `Week ${weekNumber}`, 
-          tasks: tasksForWeek, 
-          pomodoro: pomodoroForWeek 
+
+        const startDay = currentWeekStart.getDate()
+        const endDay = effectiveEnd.getDate()
+
+        chartData.push({
+          name: `${startDay}-${endDay}`,
+          tasks: tasksForWeek,
+          pomodoro: pomodoroForWeek,
         })
-        
+
         currentWeekStart.setDate(currentWeekStart.getDate() + 7)
         weekNumber++
-        
+
         if (currentWeekStart > endDate) break
       }
     }
