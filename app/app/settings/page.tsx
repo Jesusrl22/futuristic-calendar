@@ -37,7 +37,9 @@ export default function SettingsPage() {
   }, [])
 
   useEffect(() => {
+    console.log("[v0] Plan changed to:", profile.plan)
     const themes = getThemesByTier(profile.plan)
+    console.log("[v0] Available themes for plan:", themes.length)
     setAvailableThemes(themes)
     setShowCustom(canUseCustomTheme(profile.plan))
   }, [profile.plan])
@@ -54,23 +56,32 @@ export default function SettingsPage() {
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-      const response = await fetch("/api/settings")
+      const [settingsResponse, profileResponse] = await Promise.all([
+        fetch("/api/settings"),
+        fetch("/api/user/profile"),
+      ])
 
-      if (!response.ok) {
+      if (!settingsResponse.ok) {
         setProfile((prev) => ({ ...prev, timezone: detectedTimezone }))
         localStorage.setItem("timezone", detectedTimezone)
         return
       }
 
-      const data = await response.json()
-      console.log("[v0] Settings data received:", data)
-      console.log("[v0] User plan from database:", data.profile?.subscription_plan)
+      const settingsData = await settingsResponse.json()
+      const profileData = profileResponse.ok ? await profileResponse.json() : null
 
-      if (data.profile) {
-        const userPlan = (data.profile.subscription_plan || "free").toLowerCase()
-        console.log("[v0] Normalized user plan to:", userPlan)
+      console.log("[v0] Settings data:", settingsData)
+      console.log("[v0] Profile data:", profileData)
 
-        let themePreference = data.profile.theme_preference
+      if (settingsData.profile) {
+        const userPlan = (
+          profileData?.subscription_plan ||
+          settingsData.profile?.subscription_plan ||
+          "free"
+        ).toLowerCase()
+        console.log("[v0] User plan detected:", userPlan)
+
+        let themePreference = settingsData.profile.theme_preference
         if (typeof themePreference === "string") {
           try {
             themePreference = JSON.parse(themePreference)
@@ -79,20 +90,23 @@ export default function SettingsPage() {
           }
         }
 
-        setProfile({
-          email: data.email || "",
-          theme: data.profile.theme || "neon-tech",
-          language: data.profile.language || "en",
-          notifications: data.profile.notifications ?? true,
+        const newProfile = {
+          email: settingsData.email || "",
+          theme: settingsData.profile.theme || "neon-tech",
+          language: settingsData.profile.language || "en",
+          notifications: settingsData.profile.notifications ?? true,
           timezone: detectedTimezone,
           plan: userPlan,
           customPrimary: themePreference?.customPrimary || "",
           customSecondary: themePreference?.customSecondary || "",
-        })
+        }
+
+        setProfile(newProfile)
 
         localStorage.setItem("timezone", detectedTimezone)
-        localStorage.setItem("language", data.profile.language || "en")
-        localStorage.setItem("theme", data.profile.theme || "neon-tech")
+        localStorage.setItem("language", newProfile.language)
+        localStorage.setItem("theme", newProfile.theme)
+        localStorage.setItem("userPlan", userPlan)
         if (themePreference?.customPrimary) {
           localStorage.setItem("customPrimary", themePreference.customPrimary)
         }
@@ -100,7 +114,7 @@ export default function SettingsPage() {
           localStorage.setItem("customSecondary", themePreference.customSecondary)
         }
 
-        if (data.profile.timezone !== detectedTimezone) {
+        if (settingsData.profile.timezone !== detectedTimezone) {
           await fetch("/api/settings", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -223,6 +237,16 @@ export default function SettingsPage() {
                       {availableThemes.map((theme) => (
                         <SelectItem key={theme.id} value={theme.id}>
                           <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <div
+                                className="w-4 h-4 rounded border border-white/20"
+                                style={{ background: `hsl(${theme.primary})` }}
+                              />
+                              <div
+                                className="w-4 h-4 rounded border border-white/20"
+                                style={{ background: `hsl(${theme.secondary})` }}
+                              />
+                            </div>
                             {theme.name}
                             <Badge variant="outline" className="text-xs">
                               {theme.tier}
@@ -233,6 +257,9 @@ export default function SettingsPage() {
                       {showCustom && (
                         <SelectItem value="custom">
                           <div className="flex items-center gap-2">
+                            <div className="flex gap-1">
+                              <div className="w-4 h-4 rounded border border-white/20 bg-gradient-to-r from-purple-500 to-pink-500" />
+                            </div>
                             Custom Theme
                             <Badge variant="outline" className="text-xs bg-primary/20">
                               PRO
