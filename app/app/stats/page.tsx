@@ -92,7 +92,7 @@ export default function StatsPage() {
           {[
             { title: "Total Tasks", value: stats.totalTasks, color: "text-blue-500" },
             { title: "Completed", value: stats.completedTasks, color: "text-green-500" },
-            { title: "Notes", value: stats.totalNotes, color: "text-purple-500" },
+            { title: "Pomodoro Sessions", value: stats.totalPomodoro, color: "text-purple-500" },
             { title: "Focus Time", value: `${stats.totalFocusTime}h`, color: "text-primary" },
           ].map((stat, i) => (
             <div key={stat.title}>
