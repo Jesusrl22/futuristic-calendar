@@ -47,46 +47,8 @@ export async function GET(request: Request) {
       startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff, 0, 0, 0, 0)
       endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
     } else {
-      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
-
-      const currentWeekStart = new Date(firstDayOfMonth)
-
-      while (currentWeekStart.getDate() <= lastDayOfMonth) {
-        const weekEnd = new Date(currentWeekStart)
-        weekEnd.setDate(currentWeekStart.getDate() + 6)
-
-        // Limit to last day of month
-        if (weekEnd.getDate() > lastDayOfMonth || weekEnd.getMonth() !== now.getMonth()) {
-          weekEnd.setDate(lastDayOfMonth)
-        }
-        weekEnd.setHours(23, 59, 59, 999)
-
-        // Limit to current date for data collection
-        const effectiveEnd = weekEnd > endDate ? endDate : weekEnd
-
-        const tasksForWeek = 0 // Placeholder for completed tasks count
-        const pomodoroForWeek = 0 // Placeholder for pomodoro count
-
-        const startDay = currentWeekStart.getDate()
-        const endDay = weekEnd.getDate()
-
-        // Placeholder for chartData array
-        const chartData: any[] = []
-
-        chartData.push({
-          name: `${startDay}-${endDay}`,
-          tasks: tasksForWeek,
-          pomodoro: pomodoroForWeek,
-        })
-
-        currentWeekStart.setDate(currentWeekStart.getDate() + 7)
-
-        // Break if we've passed the last day of the month
-        if (currentWeekStart.getDate() > lastDayOfMonth || currentWeekStart.getMonth() !== now.getMonth()) {
-          break
-        }
-      }
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0)
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
     }
 
     const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
@@ -158,37 +120,32 @@ export async function GET(request: Request) {
       }
     } else {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
 
-      const currentWeekStart = new Date(firstDayOfMonth)
+      let currentWeekStart = 1
 
       while (currentWeekStart <= lastDayOfMonth) {
-        const weekEnd = new Date(currentWeekStart)
-        weekEnd.setDate(currentWeekStart.getDate() + 6)
-        weekEnd.setHours(23, 59, 59, 999)
-
-        const effectiveEnd = weekEnd > endDate ? endDate : weekEnd
+        const weekStartDate = new Date(now.getFullYear(), now.getMonth(), currentWeekStart, 0, 0, 0, 0)
+        const weekEndDay = Math.min(currentWeekStart + 6, lastDayOfMonth)
+        const weekEndDate = new Date(now.getFullYear(), now.getMonth(), weekEndDay, 23, 59, 59, 999)
 
         const tasksForWeek = completed.filter((t: any) => {
           const taskDate = new Date(t.updated_at)
-          return taskDate >= currentWeekStart && taskDate <= effectiveEnd
+          return taskDate >= weekStartDate && taskDate <= weekEndDate
         }).length
 
         const pomodoroForWeek = pomodoro.filter((p: any) => {
           const sessionDate = new Date(p.created_at)
-          return sessionDate >= currentWeekStart && sessionDate <= effectiveEnd
+          return sessionDate >= weekStartDate && sessionDate <= weekEndDate
         }).length
 
-        const startDay = currentWeekStart.getDate()
-        const endDay = effectiveEnd.getDate()
-
         chartData.push({
-          name: `${startDay}-${endDay}`,
+          name: `${currentWeekStart}-${weekEndDay}`,
           tasks: tasksForWeek,
           pomodoro: pomodoroForWeek,
         })
 
-        currentWeekStart.setDate(currentWeekStart.getDate() + 7)
+        currentWeekStart += 7
       }
     }
 
