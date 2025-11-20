@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTranslation, type Language } from "@/lib/translations"
 import { useToast } from "@/hooks/use-toast"
+import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/lib/themes"
+import { Badge } from "@/components/ui/badge"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -21,26 +23,45 @@ export default function SettingsPage() {
     language: "en" as Language,
     notifications: true,
     timezone: "UTC",
+    plan: "free",
+    customPrimary: "",
+    customSecondary: "",
   })
   const [loading, setLoading] = useState(false)
+  const [availableThemes, setAvailableThemes] = useState<Theme[]>([])
+  const [showCustom, setShowCustom] = useState(false)
   const { t } = useTranslation(profile.language)
 
   useEffect(() => {
     fetchProfile()
   }, [])
 
+  useEffect(() => {
+    const themes = getThemesByTier(profile.plan)
+    setAvailableThemes(themes)
+    setShowCustom(canUseCustomTheme(profile.plan))
+  }, [profile.plan])
+
+  useEffect(() => {
+    if (profile.theme === "custom") {
+      applyTheme("custom", profile.customPrimary, profile.customSecondary)
+    } else {
+      applyTheme(profile.theme)
+    }
+  }, [profile.theme, profile.customPrimary, profile.customSecondary])
+
   const fetchProfile = async () => {
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-      
+
       const response = await fetch("/api/settings")
-      
+
       if (!response.ok) {
-        setProfile(prev => ({ ...prev, timezone: detectedTimezone }))
+        setProfile((prev) => ({ ...prev, timezone: detectedTimezone }))
         localStorage.setItem("timezone", detectedTimezone)
         return
       }
-      
+
       const data = await response.json()
 
       if (data.profile) {
@@ -50,10 +71,13 @@ export default function SettingsPage() {
           language: data.profile.language || "en",
           notifications: data.profile.notifications ?? true,
           timezone: detectedTimezone,
+          plan: data.profile.plan || "free",
+          customPrimary: data.profile.theme_preference?.customPrimary || "",
+          customSecondary: data.profile.theme_preference?.customSecondary || "",
         })
-        
+
         localStorage.setItem("timezone", detectedTimezone)
-        
+
         if (data.profile.timezone !== detectedTimezone) {
           await fetch("/api/settings", {
             method: "PATCH",
@@ -71,30 +95,39 @@ export default function SettingsPage() {
     setLoading(true)
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-      
+
+      const themePreference =
+        profile.theme === "custom"
+          ? {
+              customPrimary: profile.customPrimary,
+              customSecondary: profile.customSecondary,
+            }
+          : null
+
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: profile.theme,
+          theme_preference: themePreference,
           language: profile.language,
           timezone: detectedTimezone,
         }),
       })
-      
+
       const result = await response.json()
-      
+
       if (response.ok && result.success) {
         localStorage.setItem("notifications", profile.notifications.toString())
         localStorage.setItem("timezone", detectedTimezone)
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
-        
+
         toast({
           title: "Settings saved",
           description: "Your settings have been updated successfully.",
         })
-        
+
         setTimeout(() => {
           router.refresh()
         }, 500)
@@ -165,12 +198,70 @@ export default function SettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="neon-tech">Neon Tech</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="light">Light</SelectItem>
+                      {availableThemes.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
+                          <div className="flex items-center gap-2">
+                            {theme.name}
+                            <Badge variant="outline" className="text-xs">
+                              {theme.tier}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                      {showCustom && (
+                        <SelectItem value="custom">
+                          <div className="flex items-center gap-2">
+                            Custom Theme
+                            <Badge variant="outline" className="text-xs bg-primary/20">
+                              PRO
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {profile.plan === "free" && "Upgrade to Premium or Pro for more themes"}
+                    {profile.plan === "premium" && "Upgrade to Pro for custom themes"}
+                    {profile.plan === "pro" && "You have access to all themes + custom"}
+                  </p>
                 </div>
+
+                {profile.theme === "custom" && showCustom && (
+                  <div className="space-y-4 p-4 border border-primary/20 rounded-lg bg-primary/5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      Custom Theme Colors
+                      <Badge variant="outline" className="text-xs">
+                        PRO
+                      </Badge>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Primary Color (HSL)</Label>
+                        <Input
+                          placeholder="e.g., 280 70% 60%"
+                          value={profile.customPrimary}
+                          onChange={(e) => setProfile({ ...profile, customPrimary: e.target.value })}
+                          className="bg-secondary/50"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Main accent color</p>
+                      </div>
+                      <div>
+                        <Label>Secondary Color (HSL)</Label>
+                        <Input
+                          placeholder="e.g., 0 0% 15%"
+                          value={profile.customSecondary}
+                          onChange={(e) => setProfile({ ...profile, customSecondary: e.target.value })}
+                          className="bg-secondary/50"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">Background/muted color</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Use HSL format: Hue (0-360) Saturation (0-100%) Lightness (0-100%)
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <Label>{t("language")}</Label>
@@ -195,11 +286,7 @@ export default function SettingsPage() {
 
                 <div>
                   <Label>Timezone / Region</Label>
-                  <Input 
-                    value={`${profile.timezone} (Auto-detected)`}
-                    disabled 
-                    className="bg-secondary/50" 
-                  />
+                  <Input value={`${profile.timezone} (Auto-detected)`} disabled className="bg-secondary/50" />
                   <p className="text-xs text-muted-foreground mt-1">
                     Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
