@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const { toast } = useToast()
   const [profile, setProfile] = useState({
     email: "",
-    theme: "neon-tech",
+    theme: "default",
     language: "en" as Language,
     notifications: true,
     timezone: "UTC",
@@ -37,9 +37,13 @@ export default function SettingsPage() {
   }, [])
 
   useEffect(() => {
-    console.log("[v0] Plan changed to:", profile.plan)
+    console.log("[v0] Current plan state:", profile.plan)
     const themes = getThemesByTier(profile.plan)
-    console.log("[v0] Available themes for plan:", themes.length)
+    console.log(
+      "[v0] Available themes count:",
+      themes.length,
+      themes.map((t) => t.id),
+    )
     setAvailableThemes(themes)
     setShowCustom(canUseCustomTheme(profile.plan))
   }, [profile.plan])
@@ -56,32 +60,30 @@ export default function SettingsPage() {
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-      const [settingsResponse, profileResponse] = await Promise.all([
-        fetch("/api/settings"),
-        fetch("/api/user/profile"),
-      ])
+      const profileResponse = await fetch("/api/user/profile")
+      const settingsResponse = await fetch("/api/settings")
 
-      if (!settingsResponse.ok) {
-        setProfile((prev) => ({ ...prev, timezone: detectedTimezone }))
-        localStorage.setItem("timezone", detectedTimezone)
+      if (!profileResponse.ok) {
+        console.error("[v0] Failed to fetch profile")
         return
       }
 
-      const settingsData = await settingsResponse.json()
-      const profileData = profileResponse.ok ? await profileResponse.json() : null
+      const profileData = await profileResponse.json()
+      const settingsData = settingsResponse.ok ? await settingsResponse.json() : null
 
-      console.log("[v0] Settings data:", settingsData)
       console.log("[v0] Profile data:", profileData)
+      console.log("[v0] Settings data:", settingsData)
 
-      if (settingsData.profile) {
-        const userPlan = (
-          profileData?.subscription_plan ||
-          settingsData.profile?.subscription_plan ||
-          "free"
-        ).toLowerCase()
-        console.log("[v0] User plan detected:", userPlan)
+      const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
+      console.log("[v0] Detected user plan:", userPlan)
 
-        let themePreference = settingsData.profile.theme_preference
+      let savedTheme = "default"
+      let themePreference: any = null
+
+      if (settingsData?.profile) {
+        savedTheme = settingsData.profile.theme || "default"
+        themePreference = settingsData.profile.theme_preference
+
         if (typeof themePreference === "string") {
           try {
             themePreference = JSON.parse(themePreference)
@@ -89,38 +91,39 @@ export default function SettingsPage() {
             themePreference = null
           }
         }
+      }
 
-        const newProfile = {
-          email: settingsData.email || "",
-          theme: settingsData.profile.theme || "neon-tech",
-          language: settingsData.profile.language || "en",
-          notifications: settingsData.profile.notifications ?? true,
-          timezone: detectedTimezone,
-          plan: userPlan,
-          customPrimary: themePreference?.customPrimary || "",
-          customSecondary: themePreference?.customSecondary || "",
-        }
+      const newProfile = {
+        email: profileData.email || "",
+        theme: savedTheme,
+        language: (settingsData?.profile?.language || "en") as Language,
+        notifications: settingsData?.profile?.notifications ?? true,
+        timezone: detectedTimezone,
+        plan: userPlan,
+        customPrimary: themePreference?.customPrimary || "",
+        customSecondary: themePreference?.customSecondary || "",
+      }
 
-        setProfile(newProfile)
+      console.log("[v0] Setting profile state:", newProfile)
+      setProfile(newProfile)
 
-        localStorage.setItem("timezone", detectedTimezone)
-        localStorage.setItem("language", newProfile.language)
-        localStorage.setItem("theme", newProfile.theme)
-        localStorage.setItem("userPlan", userPlan)
-        if (themePreference?.customPrimary) {
-          localStorage.setItem("customPrimary", themePreference.customPrimary)
-        }
-        if (themePreference?.customSecondary) {
-          localStorage.setItem("customSecondary", themePreference.customSecondary)
-        }
+      localStorage.setItem("timezone", detectedTimezone)
+      localStorage.setItem("language", newProfile.language)
+      localStorage.setItem("theme", newProfile.theme)
+      localStorage.setItem("userPlan", userPlan)
 
-        if (settingsData.profile.timezone !== detectedTimezone) {
-          await fetch("/api/settings", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ timezone: detectedTimezone }),
-          })
-        }
+      if (themePreference?.customPrimary) {
+        localStorage.setItem("customPrimary", themePreference.customPrimary)
+      }
+      if (themePreference?.customSecondary) {
+        localStorage.setItem("customSecondary", themePreference.customSecondary)
+      }
+
+      // Apply theme immediately
+      if (newProfile.theme === "custom" && themePreference) {
+        applyTheme("custom", themePreference.customPrimary, themePreference.customSecondary)
+      } else {
+        applyTheme(newProfile.theme)
       }
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
@@ -145,7 +148,7 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: profile.theme,
-          theme_preference: themePreference,
+          theme_preference: themePreference ? JSON.stringify(themePreference) : null,
           language: profile.language,
           timezone: detectedTimezone,
         }),
@@ -159,14 +162,22 @@ export default function SettingsPage() {
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
 
+        if (profile.theme === "custom") {
+          localStorage.setItem("customPrimary", profile.customPrimary)
+          localStorage.setItem("customSecondary", profile.customSecondary)
+        }
+
+        // Apply theme immediately
+        if (profile.theme === "custom") {
+          applyTheme("custom", profile.customPrimary, profile.customSecondary)
+        } else {
+          applyTheme(profile.theme)
+        }
+
         toast({
           title: "Settings saved",
           description: "Your settings have been updated successfully.",
         })
-
-        setTimeout(() => {
-          router.refresh()
-        }, 500)
       } else {
         toast({
           title: "Error",

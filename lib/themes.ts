@@ -9,15 +9,15 @@ export interface Theme {
   description: string
 }
 
-// Free themes - basic and simple
+// Free themes - 5 basic themes including default
 export const freeThemes: Theme[] = [
   {
-    id: "classic-dark",
-    name: "Classic Dark",
+    id: "default",
+    name: "Default Dark",
     tier: "free",
-    primary: "0 0% 20%",
-    secondary: "0 0% 40%",
-    description: "Simple dark theme",
+    primary: "84 100% 65%", // Original neon green
+    secondary: "0 0% 15%", // Original dark background
+    description: "Original neon green theme",
   },
   {
     id: "light-mode",
@@ -53,7 +53,7 @@ export const freeThemes: Theme[] = [
   },
 ]
 
-// Premium themes - more sophisticated
+// Premium themes - 5 more sophisticated themes
 export const premiumThemes: Theme[] = [
   {
     id: "neon-tech",
@@ -97,7 +97,7 @@ export const premiumThemes: Theme[] = [
   },
 ]
 
-// Pro themes - premium quality
+// Pro themes - 5 premium quality themes
 export const proThemes: Theme[] = [
   {
     id: "aurora-borealis",
@@ -144,23 +144,30 @@ export const proThemes: Theme[] = [
 export const allThemes = [...freeThemes, ...premiumThemes, ...proThemes]
 
 export function getThemesByTier(userPlan: string): Theme[] {
-  const plan = userPlan.toLowerCase()
+  const plan = userPlan.toLowerCase().trim()
+
+  console.log("[v0] getThemesByTier called with plan:", plan)
 
   if (plan === "pro") {
+    console.log("[v0] Returning all themes for Pro user")
     return allThemes // Pro users get all themes
   } else if (plan === "premium") {
+    console.log("[v0] Returning free + premium themes")
     return [...freeThemes, ...premiumThemes] // Premium gets free + premium
   } else {
+    console.log("[v0] Returning only free themes")
     return freeThemes // Free users only get free themes
   }
 }
 
 export function canUseCustomTheme(userPlan: string): boolean {
-  return userPlan.toLowerCase() === "pro"
+  return userPlan.toLowerCase().trim() === "pro"
 }
 
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
+
+  console.log("[v0] Applying theme:", themeId, customPrimary, customSecondary)
 
   if (themeId === "custom" && customPrimary && customSecondary) {
     // Apply custom theme
@@ -168,16 +175,27 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     root.style.setProperty("--accent", customPrimary)
     root.style.setProperty("--secondary", customSecondary)
     root.style.setProperty("--muted", customSecondary)
+
+    // Save to localStorage for persistence
+    localStorage.setItem("theme", "custom")
+    localStorage.setItem("customPrimary", customPrimary)
+    localStorage.setItem("customSecondary", customSecondary)
     return
   }
 
   // Find the theme
   const theme = allThemes.find((t) => t.id === themeId)
-  if (!theme) return
+  if (!theme) {
+    console.warn("[v0] Theme not found:", themeId)
+    return
+  }
 
   // Apply theme colors
   root.style.setProperty("--primary", theme.primary)
   root.style.setProperty("--accent", theme.primary)
   root.style.setProperty("--secondary", theme.secondary)
   root.style.setProperty("--muted", theme.secondary)
+
+  // Save to localStorage for persistence
+  localStorage.setItem("theme", themeId)
 }

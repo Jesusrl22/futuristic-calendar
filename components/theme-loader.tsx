@@ -5,7 +5,7 @@ import { applyTheme } from "@/lib/themes"
 
 export function ThemeLoader() {
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "neon-tech"
+    const savedTheme = localStorage.getItem("theme") || "default"
     const customPrimary = localStorage.getItem("customPrimary")
     const customSecondary = localStorage.getItem("customSecondary")
 
