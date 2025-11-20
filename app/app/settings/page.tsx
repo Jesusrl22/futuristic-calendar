@@ -63,15 +63,20 @@ export default function SettingsPage() {
       }
 
       const data = await response.json()
+      console.log("[v0] Settings data received:", data)
+      console.log("[v0] User plan from database:", data.profile?.subscription_plan)
 
       if (data.profile) {
+        const userPlan = data.profile.subscription_plan || "free"
+        console.log("[v0] Setting user plan to:", userPlan)
+
         setProfile({
           email: data.email || "",
           theme: data.profile.theme || "neon-tech",
           language: data.profile.language || "en",
           notifications: data.profile.notifications ?? true,
           timezone: detectedTimezone,
-          plan: data.profile.plan || "free",
+          plan: userPlan,
           customPrimary: data.profile.theme_preference?.customPrimary || "",
           customSecondary: data.profile.theme_preference?.customSecondary || "",
         })
