@@ -120,7 +120,7 @@ export async function PUT(request: Request) {
     const { id, ...updates } = await request.json()
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?id=eq.${id}`, {
-      method: "PUT",
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
