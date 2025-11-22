@@ -76,6 +76,20 @@ export default function SettingsPage() {
 
       if (!profileResponse.ok) {
         console.error("[v0] Failed to fetch profile")
+        const existingTheme = localStorage.getItem("theme") || "default"
+        const existingLanguage = localStorage.getItem("language") || "en"
+        const existingPlan = localStorage.getItem("userPlan") || "free"
+
+        setProfile({
+          email: "",
+          theme: existingTheme,
+          language: existingLanguage as Language,
+          notifications: true,
+          timezone: detectedTimezone,
+          plan: existingPlan,
+          customPrimary: localStorage.getItem("customPrimary") || "",
+          customSecondary: localStorage.getItem("customSecondary") || "",
+        })
         setIsInitialLoad(false)
         return
       }
@@ -93,7 +107,7 @@ export default function SettingsPage() {
       let themePreference: any = null
 
       if (settingsData?.profile) {
-        savedTheme = settingsData.profile.theme || "default"
+        savedTheme = settingsData.profile.theme || localStorage.getItem("theme") || "default"
         themePreference = settingsData.profile.theme_preference
 
         if (typeof themePreference === "string") {
@@ -103,15 +117,17 @@ export default function SettingsPage() {
             themePreference = null
           }
         }
+      } else {
+        savedTheme = localStorage.getItem("theme") || "default"
       }
 
-      const customPrimary = themePreference?.customPrimary || ""
-      const customSecondary = themePreference?.customSecondary || ""
+      const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
+      const customSecondary = themePreference?.customSecondary || localStorage.getItem("customSecondary") || ""
 
       const newProfile = {
         email: profileData.email || "",
         theme: savedTheme,
-        language: (settingsData?.profile?.language || "en") as Language,
+        language: (settingsData?.profile?.language || localStorage.getItem("language") || "en") as Language,
         notifications: settingsData?.profile?.notifications ?? true,
         timezone: detectedTimezone,
         plan: userPlan,
@@ -123,19 +139,36 @@ export default function SettingsPage() {
       setProfile(newProfile)
       setIsInitialLoad(false)
 
-      localStorage.setItem("timezone", detectedTimezone)
-      localStorage.setItem("language", newProfile.language)
-      localStorage.setItem("theme", newProfile.theme)
-      localStorage.setItem("userPlan", userPlan)
+      if (settingsData?.profile) {
+        localStorage.setItem("theme", newProfile.theme)
+        localStorage.setItem("language", newProfile.language)
 
-      if (customPrimary) {
-        localStorage.setItem("customPrimary", customPrimary)
+        if (customPrimary) {
+          localStorage.setItem("customPrimary", customPrimary)
+        }
+        if (customSecondary) {
+          localStorage.setItem("customSecondary", customSecondary)
+        }
       }
-      if (customSecondary) {
-        localStorage.setItem("customSecondary", customSecondary)
-      }
+
+      localStorage.setItem("timezone", detectedTimezone)
+      localStorage.setItem("userPlan", userPlan)
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
+      const existingTheme = localStorage.getItem("theme") || "default"
+      const existingLanguage = localStorage.getItem("language") || "en"
+      const existingPlan = localStorage.getItem("userPlan") || "free"
+
+      setProfile({
+        email: "",
+        theme: existingTheme,
+        language: existingLanguage as Language,
+        notifications: true,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        plan: existingPlan,
+        customPrimary: localStorage.getItem("customPrimary") || "",
+        customSecondary: localStorage.getItem("customSecondary") || "",
+      })
       setIsInitialLoad(false)
     }
   }
@@ -153,18 +186,22 @@ export default function SettingsPage() {
             }
           : null
 
+      console.log("[v0] Saving theme to database:", profile.theme)
+      console.log("[v0] Theme preference:", themePreference)
+
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: profile.theme,
-          theme_preference: themePreference ? JSON.stringify(themePreference) : null,
+          theme_preference: themePreference,
           language: profile.language,
           timezone: detectedTimezone,
         }),
       })
 
       const result = await response.json()
+      console.log("[v0] Save response:", result)
 
       if (response.ok && result.success) {
         localStorage.setItem("notifications", profile.notifications.toString())
@@ -175,6 +212,9 @@ export default function SettingsPage() {
         if (profile.theme === "custom") {
           localStorage.setItem("customPrimary", profile.customPrimary)
           localStorage.setItem("customSecondary", profile.customSecondary)
+        } else {
+          localStorage.removeItem("customPrimary")
+          localStorage.removeItem("customSecondary")
         }
 
         if (profile.theme === "custom") {
@@ -182,6 +222,8 @@ export default function SettingsPage() {
         } else {
           applyTheme(profile.theme)
         }
+
+        console.log("[v0] Theme saved successfully to localStorage:", profile.theme)
 
         toast({
           title: "Settings saved",
@@ -195,6 +237,7 @@ export default function SettingsPage() {
         })
       }
     } catch (error: any) {
+      console.error("[v0] Error saving settings:", error)
       toast({
         title: "Error",
         description: `Failed to save settings: ${error.message || "Network error"}`,
