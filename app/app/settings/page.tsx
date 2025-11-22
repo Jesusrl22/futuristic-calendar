@@ -89,15 +89,11 @@ export default function SettingsPage() {
       const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
       console.log("[v0] Detected user plan:", userPlan)
 
-      let savedTheme = localStorage.getItem("theme") || "default"
+      let savedTheme = "default"
       let themePreference: any = null
 
       if (settingsData?.profile) {
-        const dbTheme = settingsData.profile.theme || "default"
-        if (dbTheme !== savedTheme) {
-          savedTheme = dbTheme
-        }
-
+        savedTheme = settingsData.profile.theme || "default"
         themePreference = settingsData.profile.theme_preference
 
         if (typeof themePreference === "string") {
@@ -109,8 +105,8 @@ export default function SettingsPage() {
         }
       }
 
-      const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
-      const customSecondary = themePreference?.customSecondary || localStorage.getItem("customSecondary") || ""
+      const customPrimary = themePreference?.customPrimary || ""
+      const customSecondary = themePreference?.customSecondary || ""
 
       const newProfile = {
         email: profileData.email || "",
