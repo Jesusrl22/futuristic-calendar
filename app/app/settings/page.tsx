@@ -28,6 +28,7 @@ export default function SettingsPage() {
     customSecondary: "",
   })
   const [loading, setLoading] = useState(false)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [availableThemes, setAvailableThemes] = useState<Theme[]>([])
   const [showCustom, setShowCustom] = useState(false)
   const { t } = useTranslation(profile.language)
@@ -49,12 +50,14 @@ export default function SettingsPage() {
   }, [profile.plan])
 
   useEffect(() => {
-    if (profile.theme === "custom") {
-      applyTheme("custom", profile.customPrimary, profile.customSecondary)
-    } else {
-      applyTheme(profile.theme)
+    if (!isInitialLoad) {
+      if (profile.theme === "custom") {
+        applyTheme("custom", profile.customPrimary, profile.customSecondary)
+      } else {
+        applyTheme(profile.theme)
+      }
     }
-  }, [profile.theme, profile.customPrimary, profile.customSecondary])
+  }, [profile.theme, profile.customPrimary, profile.customSecondary, isInitialLoad])
 
   const fetchProfile = async () => {
     try {
@@ -65,6 +68,7 @@ export default function SettingsPage() {
 
       if (!profileResponse.ok) {
         console.error("[v0] Failed to fetch profile")
+        setIsInitialLoad(false)
         return
       }
 
@@ -77,11 +81,15 @@ export default function SettingsPage() {
       const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
       console.log("[v0] Detected user plan:", userPlan)
 
-      let savedTheme = "default"
+      let savedTheme = localStorage.getItem("theme") || "default"
       let themePreference: any = null
 
       if (settingsData?.profile) {
-        savedTheme = settingsData.profile.theme || "default"
+        const dbTheme = settingsData.profile.theme || "default"
+        if (dbTheme !== savedTheme) {
+          savedTheme = dbTheme
+        }
+
         themePreference = settingsData.profile.theme_preference
 
         if (typeof themePreference === "string") {
@@ -93,6 +101,9 @@ export default function SettingsPage() {
         }
       }
 
+      const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
+      const customSecondary = themePreference?.customSecondary || localStorage.getItem("customSecondary") || ""
+
       const newProfile = {
         email: profileData.email || "",
         theme: savedTheme,
@@ -100,33 +111,28 @@ export default function SettingsPage() {
         notifications: settingsData?.profile?.notifications ?? true,
         timezone: detectedTimezone,
         plan: userPlan,
-        customPrimary: themePreference?.customPrimary || "",
-        customSecondary: themePreference?.customSecondary || "",
+        customPrimary,
+        customSecondary,
       }
 
       console.log("[v0] Setting profile state:", newProfile)
       setProfile(newProfile)
+      setIsInitialLoad(false)
 
       localStorage.setItem("timezone", detectedTimezone)
       localStorage.setItem("language", newProfile.language)
       localStorage.setItem("theme", newProfile.theme)
       localStorage.setItem("userPlan", userPlan)
 
-      if (themePreference?.customPrimary) {
-        localStorage.setItem("customPrimary", themePreference.customPrimary)
+      if (customPrimary) {
+        localStorage.setItem("customPrimary", customPrimary)
       }
-      if (themePreference?.customSecondary) {
-        localStorage.setItem("customSecondary", themePreference.customSecondary)
-      }
-
-      // Apply theme immediately
-      if (newProfile.theme === "custom" && themePreference) {
-        applyTheme("custom", themePreference.customPrimary, themePreference.customSecondary)
-      } else {
-        applyTheme(newProfile.theme)
+      if (customSecondary) {
+        localStorage.setItem("customSecondary", customSecondary)
       }
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
+      setIsInitialLoad(false)
     }
   }
 
@@ -167,7 +173,6 @@ export default function SettingsPage() {
           localStorage.setItem("customSecondary", profile.customSecondary)
         }
 
-        // Apply theme immediately
         if (profile.theme === "custom") {
           applyTheme("custom", profile.customPrimary, profile.customSecondary)
         } else {
