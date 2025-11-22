@@ -39,7 +39,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks()
-    
+
     const loadLanguage = async () => {
       try {
         const response = await fetch("/api/settings")
@@ -60,19 +60,19 @@ export default function CalendarPage() {
       }
     }
     loadLanguage()
-    
+
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
     }
 
     const cleanupOldNotifications = () => {
-      const oneHourAgo = Date.now() - (60 * 60 * 1000)
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('notified-')) {
-          const timestamp = localStorage.getItem(key + '-time')
-          if (timestamp && parseInt(timestamp) < oneHourAgo) {
+      const oneHourAgo = Date.now() - 60 * 60 * 1000
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("notified-")) {
+          const timestamp = localStorage.getItem(key + "-time")
+          if (timestamp && Number.parseInt(timestamp) < oneHourAgo) {
             localStorage.removeItem(key)
-            localStorage.removeItem(key + '-time')
+            localStorage.removeItem(key + "-time")
           }
         }
       })
@@ -144,10 +144,10 @@ export default function CalendarPage() {
       console.log("[v0] Notifications not available or not granted")
       return
     }
-    
+
     const now = new Date()
     const nowTime = now.getTime()
-    
+
     console.log(`[v0] 🔍 Checking ${tasksToCheck.length} tasks for notifications at ${now.toLocaleTimeString()}`)
 
     tasksToCheck.forEach((task) => {
@@ -159,7 +159,14 @@ export default function CalendarPage() {
       const isoMatch = task.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (isoMatch) {
         const [, year, month, day, hours, minutes] = isoMatch
-        taskDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), 0)
+        taskDate = new Date(
+          Number.parseInt(year),
+          Number.parseInt(month) - 1,
+          Number.parseInt(day),
+          Number.parseInt(hours),
+          Number.parseInt(minutes),
+          0,
+        )
       } else {
         taskDate = new Date(task.due_date)
       }
@@ -171,12 +178,14 @@ export default function CalendarPage() {
 
       console.log(`[v0] 📋 Task: "${task.title}"`)
       console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
-      console.log(`[v0]    Time until: ${minutesUntilTask} min ${secondsUntilTask % 60} sec (${secondsUntilTask}s total)`)
+      console.log(
+        `[v0]    Time until: ${minutesUntilTask} min ${secondsUntilTask % 60} sec (${secondsUntilTask}s total)`,
+      )
 
       if (secondsUntilTask >= -30 && secondsUntilTask <= 30) {
         const notificationKey = `notified-${task.id}`
         const alreadyNotified = localStorage.getItem(notificationKey)
-        
+
         if (!alreadyNotified) {
           console.log(`[v0] 🔔 SENDING NOTIFICATION for "${task.title}"`)
           try {
@@ -187,7 +196,7 @@ export default function CalendarPage() {
               requireInteraction: true,
             })
             localStorage.setItem(notificationKey, "true")
-            localStorage.setItem(notificationKey + '-time', Date.now().toString())
+            localStorage.setItem(notificationKey + "-time", Date.now().toString())
             console.log(`[v0] ✅ Notification sent successfully`)
           } catch (error) {
             console.error("[v0] ❌ Failed to show notification:", error)
@@ -208,7 +217,7 @@ export default function CalendarPage() {
     const year = selectedDate.getFullYear()
     const month = String(selectedDate.getMonth() + 1).padStart(2, "0")
     const day = String(selectedDate.getDate()).padStart(2, "0")
-    
+
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
@@ -312,8 +321,10 @@ export default function CalendarPage() {
 
     try {
       const response = await fetch("/api/tasks", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           id: editingTask.id,
           title: editingTask.title,
@@ -324,26 +335,55 @@ export default function CalendarPage() {
           completed: editingTask.completed,
         }),
       })
-
-      if (!response.ok) {
-        const data = await response.json()
-        alert(data.error || "Failed to update task")
-      } else {
+      if (response.ok) {
+        fetchTasks()
         setIsEditDialogOpen(false)
         setEditingTask(null)
-        await fetchTasks()
-        setTimeout(() => checkNotifications(tasksRef.current), 500)
       }
     } catch (error) {
       console.error("Error updating task:", error)
-      alert("Failed to update task. Please try again.")
+    }
+  }
+
+  const updateTask = async (id: string, updates: any) => {
+    try {
+      if (updates.due_date) {
+        localStorage.removeItem(`notified-${id}`)
+        localStorage.removeItem(`notified-${id}-time`)
+        console.log(`[v0] Cleared notification flag for task ${id} due to time change`)
+      }
+
+      const response = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, ...updates }),
+      })
+      if (response.ok) {
+        fetchTasks()
+        setIsEditDialogOpen(false)
+        setEditingTask(null)
+      }
+    } catch (error) {
+      console.error("Error updating task:", error)
     }
   }
 
   const days = getDaysInMonth(currentDate)
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ]
 
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : []
@@ -371,10 +411,7 @@ export default function CalendarPage() {
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
             <div className="flex items-center justify-between">
               <p className="text-sm">{t("enableNotifications")}</p>
-              <Button
-                size="sm"
-                onClick={requestNotificationPermission}
-              >
+              <Button size="sm" onClick={requestNotificationPermission}>
                 {t("enable")}
               </Button>
             </div>
@@ -385,9 +422,7 @@ export default function CalendarPage() {
           <Card className="glass-card p-4 mb-6 border-green-500/50">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-sm text-green-500">
-                {t("notificationsEnabled")}
-              </p>
+              <p className="text-sm text-green-500">{t("notificationsEnabled")}</p>
             </div>
           </Card>
         )}
@@ -605,18 +640,19 @@ export default function CalendarPage() {
                             {task.priority}
                           </Badge>
                           <Badge variant="outline">{task.category}</Badge>
-                          {task.due_date && (() => {
-                            const isoString = task.due_date
-                            const match = isoString.match(/T(\d{2}):(\d{2})/)
-                            if (match) {
-                              return (
-                                <span className="text-xs text-muted-foreground">
-                                  {match[1]}:{match[2]}
-                                </span>
-                              )
-                            }
-                            return null
-                          })()}
+                          {task.due_date &&
+                            (() => {
+                              const isoString = task.due_date
+                              const match = isoString.match(/T(\d{2}):(\d{2})/)
+                              if (match) {
+                                return (
+                                  <span className="text-xs text-muted-foreground">
+                                    {match[1]}:{match[2]}
+                                  </span>
+                                )
+                              }
+                              return null
+                            })()}
                         </div>
                       </div>
                       <div className="flex gap-1">
@@ -722,11 +758,7 @@ export default function CalendarPage() {
                   <Button onClick={handleUpdateTask} className="flex-1 neon-glow-hover">
                     {t("updateTask")}
                   </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => handleDeleteTask(editingTask.id)}
-                    className="flex-1"
-                  >
+                  <Button variant="destructive" onClick={() => handleDeleteTask(editingTask.id)} className="flex-1">
                     <Trash2 className="w-4 h-4 mr-2" />
                     {t("delete")}
                   </Button>

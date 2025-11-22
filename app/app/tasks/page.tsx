@@ -51,7 +51,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks()
-    
+
     const loadLanguage = async () => {
       try {
         const response = await fetch("/api/settings")
@@ -72,7 +72,7 @@ export default function TasksPage() {
       }
     }
     loadLanguage()
-    
+
     const fetchTimezone = async () => {
       try {
         const response = await fetch("/api/settings")
@@ -194,13 +194,13 @@ export default function TasksPage() {
     setEditingTask(task)
     let dueDate = ""
     let dueTime = ""
-    
+
     if (task.due_date) {
       const isoString = task.due_date
       dueDate = isoString.slice(0, 10) // YYYY-MM-DD
       dueTime = isoString.slice(11, 16) // HH:MM
     }
-    
+
     setEditForm({
       title: task.title,
       description: task.description || "",
@@ -282,11 +282,17 @@ export default function TasksPage() {
   }
 
   const formatTaskDateTime = (dateString: string) => {
+    const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
+    if (isoMatch) {
+      const [, year, month, day, hours, minutes] = isoMatch
+      return `${day}/${month}/${year} ${hours}:${minutes}`
+    }
+    // Fallback to Date object if format is different
     const date = new Date(dateString)
     const formattedDate = date.toLocaleDateString("en-GB")
     const hours = String(date.getHours()).padStart(2, "0")
     const minutes = String(date.getMinutes()).padStart(2, "0")
-    
+
     return `${formattedDate} ${hours}:${minutes}`
   }
 
@@ -307,7 +313,9 @@ export default function TasksPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>{t("createNewTask")}</DialogTitle>
-                <DialogDescription>{t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}</DialogDescription>
+                <DialogDescription>
+                  {t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
