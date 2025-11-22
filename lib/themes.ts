@@ -4,8 +4,12 @@ export interface Theme {
   id: string
   name: string
   tier: ThemeTier
-  primary: string
-  secondary: string
+  primary: string // Main accent color
+  secondary: string // Secondary accent
+  background: string // Main background
+  foreground: string // Main text color
+  card: string // Card background
+  cardForeground: string // Card text color
   description: string
 }
 
@@ -15,40 +19,60 @@ export const freeThemes: Theme[] = [
     id: "default",
     name: "Default Dark",
     tier: "free",
-    primary: "84 100% 65%", // Original neon green
-    secondary: "0 0% 15%", // Original dark background
+    primary: "84 100% 65%", // Neon green
+    secondary: "84 60% 45%",
+    background: "0 0% 5%", // Very dark
+    foreground: "0 0% 98%", // Almost white text
+    card: "0 0% 10%",
+    cardForeground: "0 0% 98%",
     description: "Original neon green theme",
   },
   {
     id: "light-mode",
     name: "Light Mode",
     tier: "free",
-    primary: "0 0% 95%",
-    secondary: "0 0% 85%",
+    primary: "210 70% 50%", // Blue accent
+    secondary: "210 50% 70%",
+    background: "0 0% 100%", // White
+    foreground: "0 0% 10%", // Dark text
+    card: "0 0% 95%",
+    cardForeground: "0 0% 10%",
     description: "Clean light theme",
   },
   {
     id: "ocean-blue",
     name: "Ocean Blue",
     tier: "free",
-    primary: "210 50% 45%",
-    secondary: "210 40% 60%",
+    primary: "210 80% 55%", // Bright blue
+    secondary: "200 60% 45%",
+    background: "215 30% 15%", // Dark blue-gray
+    foreground: "210 40% 98%", // Light blue-white
+    card: "215 25% 20%",
+    cardForeground: "210 40% 98%",
     description: "Calm blue tones",
   },
   {
     id: "forest-green",
     name: "Forest Green",
     tier: "free",
-    primary: "140 40% 40%",
-    secondary: "140 30% 55%",
+    primary: "140 60% 50%", // Bright green
+    secondary: "130 50% 40%",
+    background: "140 20% 12%", // Dark green-gray
+    foreground: "140 30% 95%", // Light greenish-white
+    card: "140 20% 18%",
+    cardForeground: "140 30% 95%",
     description: "Natural green theme",
   },
   {
     id: "midnight",
     name: "Midnight",
     tier: "free",
-    primary: "220 20% 15%",
-    secondary: "220 15% 30%",
+    primary: "220 70% 55%", // Bright blue
+    secondary: "220 50% 45%",
+    background: "220 30% 10%", // Very dark blue
+    foreground: "220 20% 98%", // Cool white
+    card: "220 25% 15%",
+    cardForeground: "220 20% 98%",
     description: "Deep dark blue",
   },
 ]
@@ -59,40 +83,60 @@ export const premiumThemes: Theme[] = [
     id: "neon-tech",
     name: "Neon Tech",
     tier: "premium",
-    primary: "84 100% 65%",
-    secondary: "0 0% 15%",
-    description: "Neon green tech aesthetic",
+    primary: "180 100% 50%", // Cyan neon
+    secondary: "280 80% 60%", // Purple accent
+    background: "0 0% 8%",
+    foreground: "180 100% 95%",
+    card: "0 0% 12%",
+    cardForeground: "180 100% 95%",
+    description: "Cyberpunk neon aesthetic",
   },
   {
     id: "sunset-orange",
     name: "Sunset Orange",
     tier: "premium",
-    primary: "25 95% 55%",
-    secondary: "340 85% 55%",
+    primary: "25 95% 60%", // Bright orange
+    secondary: "10 90% 55%", // Red-orange
+    background: "25 30% 12%",
+    foreground: "25 40% 98%",
+    card: "25 25% 18%",
+    cardForeground: "25 40% 98%",
     description: "Warm sunset gradient",
   },
   {
     id: "purple-haze",
     name: "Purple Haze",
     tier: "premium",
-    primary: "270 70% 60%",
-    secondary: "290 60% 45%",
+    primary: "270 80% 65%", // Bright purple
+    secondary: "290 70% 55%",
+    background: "270 30% 12%",
+    foreground: "270 30% 98%",
+    card: "270 25% 18%",
+    cardForeground: "270 30% 98%",
     description: "Rich purple tones",
   },
   {
     id: "cyber-pink",
     name: "Cyber Pink",
     tier: "premium",
-    primary: "330 80% 60%",
-    secondary: "200 70% 50%",
+    primary: "330 85% 65%", // Hot pink
+    secondary: "200 80% 60%", // Cyan
+    background: "330 20% 10%",
+    foreground: "330 30% 98%",
+    card: "330 15% 15%",
+    cardForeground: "330 30% 98%",
     description: "Cyberpunk vibes",
   },
   {
     id: "mint-fresh",
     name: "Mint Fresh",
     tier: "premium",
-    primary: "160 60% 55%",
-    secondary: "180 50% 45%",
+    primary: "160 70% 55%", // Bright mint
+    secondary: "180 60% 50%",
+    background: "160 25% 12%",
+    foreground: "160 30% 98%",
+    card: "160 20% 18%",
+    cardForeground: "160 30% 98%",
     description: "Cool mint aesthetic",
   },
 ]
@@ -103,40 +147,60 @@ export const proThemes: Theme[] = [
     id: "aurora-borealis",
     name: "Aurora Borealis",
     tier: "pro",
-    primary: "180 80% 50%",
-    secondary: "280 70% 55%",
+    primary: "180 85% 55%", // Cyan-teal
+    secondary: "280 75% 60%", // Purple
+    background: "200 30% 10%",
+    foreground: "180 40% 98%",
+    card: "200 25% 15%",
+    cardForeground: "180 40% 98%",
     description: "Northern lights inspired",
   },
   {
     id: "golden-hour",
     name: "Golden Hour",
     tier: "pro",
-    primary: "45 90% 60%",
-    secondary: "35 85% 50%",
+    primary: "45 95% 65%", // Bright gold
+    secondary: "35 90% 60%", // Orange-gold
+    background: "40 25% 12%",
+    foreground: "45 30% 98%",
+    card: "40 20% 18%",
+    cardForeground: "45 30% 98%",
     description: "Warm golden gradient",
   },
   {
     id: "deep-ocean",
     name: "Deep Ocean",
     tier: "pro",
-    primary: "200 80% 35%",
-    secondary: "220 70% 25%",
+    primary: "200 85% 50%", // Deep blue
+    secondary: "220 75% 45%",
+    background: "210 40% 8%",
+    foreground: "200 30% 98%",
+    card: "210 35% 12%",
+    cardForeground: "200 30% 98%",
     description: "Mysterious ocean depths",
   },
   {
     id: "lavender-dreams",
     name: "Lavender Dreams",
     tier: "pro",
-    primary: "280 60% 65%",
-    secondary: "260 50% 55%",
+    primary: "280 70% 70%", // Light lavender
+    secondary: "260 60% 65%",
+    background: "270 25% 12%",
+    foreground: "280 20% 98%",
+    card: "270 20% 18%",
+    cardForeground: "280 20% 98%",
     description: "Soft lavender gradient",
   },
   {
     id: "fire-ember",
     name: "Fire & Ember",
     tier: "pro",
-    primary: "15 90% 60%",
-    secondary: "0 85% 50%",
+    primary: "15 95% 65%", // Bright red-orange
+    secondary: "0 90% 60%", // Red
+    background: "10 30% 10%",
+    foreground: "15 30% 98%",
+    card: "10 25% 15%",
+    cardForeground: "15 30% 98%",
     description: "Fiery red and orange",
   },
 ]
@@ -144,19 +208,20 @@ export const proThemes: Theme[] = [
 export const allThemes = [...freeThemes, ...premiumThemes, ...proThemes]
 
 export function getThemesByTier(userPlan: string): Theme[] {
-  const plan = userPlan.toLowerCase().trim()
+  const plan = (userPlan || "free").toLowerCase().trim()
 
-  console.log("[v0] getThemesByTier called with plan:", plan)
+  console.log("[v0] getThemesByTier - Input plan:", userPlan, "| Normalized:", plan)
 
   if (plan === "pro") {
-    console.log("[v0] Returning all themes for Pro user")
-    return allThemes // Pro users get all themes
+    console.log("[v0] Returning ALL themes (Free + Premium + Pro) = ", allThemes.length, "themes")
+    return allThemes
   } else if (plan === "premium") {
-    console.log("[v0] Returning free + premium themes")
-    return [...freeThemes, ...premiumThemes] // Premium gets free + premium
+    const themes = [...freeThemes, ...premiumThemes]
+    console.log("[v0] Returning Free + Premium themes =", themes.length, "themes")
+    return themes
   } else {
-    console.log("[v0] Returning only free themes")
-    return freeThemes // Free users only get free themes
+    console.log("[v0] Returning Free themes only =", freeThemes.length, "themes")
+    return freeThemes
   }
 }
 
@@ -170,32 +235,35 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
   console.log("[v0] Applying theme:", themeId, customPrimary, customSecondary)
 
   if (themeId === "custom" && customPrimary && customSecondary) {
-    // Apply custom theme
     root.style.setProperty("--primary", customPrimary)
     root.style.setProperty("--accent", customPrimary)
     root.style.setProperty("--secondary", customSecondary)
     root.style.setProperty("--muted", customSecondary)
+    root.style.setProperty("--background", "0 0% 8%")
+    root.style.setProperty("--foreground", "0 0% 98%")
+    root.style.setProperty("--card", "0 0% 12%")
+    root.style.setProperty("--card-foreground", "0 0% 98%")
 
-    // Save to localStorage for persistence
     localStorage.setItem("theme", "custom")
     localStorage.setItem("customPrimary", customPrimary)
     localStorage.setItem("customSecondary", customSecondary)
     return
   }
 
-  // Find the theme
   const theme = allThemes.find((t) => t.id === themeId)
   if (!theme) {
     console.warn("[v0] Theme not found:", themeId)
     return
   }
 
-  // Apply theme colors
   root.style.setProperty("--primary", theme.primary)
   root.style.setProperty("--accent", theme.primary)
   root.style.setProperty("--secondary", theme.secondary)
   root.style.setProperty("--muted", theme.secondary)
+  root.style.setProperty("--background", theme.background)
+  root.style.setProperty("--foreground", theme.foreground)
+  root.style.setProperty("--card", theme.card)
+  root.style.setProperty("--card-foreground", theme.cardForeground)
 
-  // Save to localStorage for persistence
   localStorage.setItem("theme", themeId)
 }

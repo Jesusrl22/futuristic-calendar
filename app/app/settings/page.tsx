@@ -38,13 +38,21 @@ export default function SettingsPage() {
   }, [])
 
   useEffect(() => {
-    console.log("[v0] Current plan state:", profile.plan)
+    console.log("[v0] Settings - Current plan state:", profile.plan)
+    console.log("[v0] Settings - Plan type:", typeof profile.plan)
+    console.log("[v0] Settings - Plan trimmed:", profile.plan.trim())
+
     const themes = getThemesByTier(profile.plan)
+    console.log("[v0] Settings - Available themes count:", themes.length)
     console.log(
-      "[v0] Available themes count:",
-      themes.length,
+      "[v0] Settings - Theme IDs:",
       themes.map((t) => t.id),
     )
+    console.log(
+      "[v0] Settings - Theme tiers:",
+      themes.map((t) => t.tier),
+    )
+
     setAvailableThemes(themes)
     setShowCustom(canUseCustomTheme(profile.plan))
   }, [profile.plan])
