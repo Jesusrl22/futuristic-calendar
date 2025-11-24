@@ -58,12 +58,17 @@ export default function SettingsPage() {
   }, [profile.plan])
 
   useEffect(() => {
-    if (!isInitialLoad) {
-      if (profile.theme === "custom") {
-        applyTheme("custom", profile.customPrimary, profile.customSecondary)
-      } else {
-        applyTheme(profile.theme)
-      }
+    // Don't apply theme during initial load - let ThemeLoader handle it from localStorage
+    if (isInitialLoad) {
+      return
+    }
+
+    console.log("[v0] Applying theme from settings:", profile.theme)
+
+    if (profile.theme === "custom") {
+      applyTheme("custom", profile.customPrimary, profile.customSecondary)
+    } else {
+      applyTheme(profile.theme)
     }
   }, [profile.theme, profile.customPrimary, profile.customSecondary, isInitialLoad])
 
@@ -220,14 +225,12 @@ export default function SettingsPage() {
 
     setProfile((prev) => ({ ...prev, theme: themeId }))
 
+    localStorage.setItem("theme", themeId)
+
     if (themeId === "custom") {
-      applyTheme("custom", profile.customPrimary, profile.customSecondary)
-      localStorage.setItem("theme", "custom")
       localStorage.setItem("customPrimary", profile.customPrimary)
       localStorage.setItem("customSecondary", profile.customSecondary)
     } else {
-      applyTheme(themeId)
-      localStorage.setItem("theme", themeId)
       localStorage.removeItem("customPrimary")
       localStorage.removeItem("customSecondary")
     }
