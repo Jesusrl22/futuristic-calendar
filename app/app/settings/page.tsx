@@ -63,13 +63,17 @@ export default function SettingsPage() {
       return
     }
 
-    console.log("[v0] Applying theme from settings:", profile.theme)
+    const timer = setTimeout(() => {
+      console.log("[v0] Applying theme from settings:", profile.theme)
 
-    if (profile.theme === "custom") {
-      applyTheme("custom", profile.customPrimary, profile.customSecondary)
-    } else {
-      applyTheme(profile.theme)
-    }
+      if (profile.theme === "custom") {
+        applyTheme("custom", profile.customPrimary, profile.customSecondary)
+      } else {
+        applyTheme(profile.theme)
+      }
+    }, 0)
+
+    return () => clearTimeout(timer)
   }, [profile.theme, profile.customPrimary, profile.customSecondary, isInitialLoad])
 
   const fetchProfile = async () => {
@@ -225,17 +229,19 @@ export default function SettingsPage() {
 
     setProfile((prev) => ({ ...prev, theme: themeId }))
 
-    localStorage.setItem("theme", themeId)
+    setTimeout(() => {
+      localStorage.setItem("theme", themeId)
 
-    if (themeId === "custom") {
-      localStorage.setItem("customPrimary", profile.customPrimary)
-      localStorage.setItem("customSecondary", profile.customSecondary)
-    } else {
-      localStorage.removeItem("customPrimary")
-      localStorage.removeItem("customSecondary")
-    }
+      if (themeId === "custom") {
+        localStorage.setItem("customPrimary", profile.customPrimary)
+        localStorage.setItem("customSecondary", profile.customSecondary)
+      } else {
+        localStorage.removeItem("customPrimary")
+        localStorage.removeItem("customSecondary")
+      }
 
-    console.log("[v0] Theme immediately saved to localStorage:", themeId)
+      console.log("[v0] Theme immediately saved to localStorage:", themeId)
+    }, 0)
   }
 
   const timezones = [
