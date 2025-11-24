@@ -248,6 +248,27 @@ export default function SettingsPage() {
     }
   }
 
+  const handleThemeChange = (themeId: string) => {
+    console.log("[v0] Theme changed to:", themeId)
+
+    setProfile((prev) => ({ ...prev, theme: themeId }))
+
+    // Apply theme immediately and save to localStorage
+    if (themeId === "custom") {
+      applyTheme("custom", profile.customPrimary, profile.customSecondary)
+      localStorage.setItem("theme", "custom")
+      localStorage.setItem("customPrimary", profile.customPrimary)
+      localStorage.setItem("customSecondary", profile.customSecondary)
+    } else {
+      applyTheme(themeId)
+      localStorage.setItem("theme", themeId)
+      localStorage.removeItem("customPrimary")
+      localStorage.removeItem("customSecondary")
+    }
+
+    console.log("[v0] Theme immediately saved to localStorage:", themeId)
+  }
+
   const timezones = [
     { value: "UTC", label: "UTC (Coordinated Universal Time)" },
     { value: "Europe/Madrid", label: "Europe/Madrid (Spain - UTC+1/+2)" },
@@ -292,7 +313,7 @@ export default function SettingsPage() {
 
                 <div>
                   <Label>{t("theme")}</Label>
-                  <Select value={profile.theme} onValueChange={(value) => setProfile({ ...profile, theme: value })}>
+                  <Select value={profile.theme} onValueChange={handleThemeChange}>
                     <SelectTrigger className="bg-secondary/50">
                       <SelectValue />
                     </SelectTrigger>
