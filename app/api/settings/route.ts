@@ -40,7 +40,26 @@ export async function GET() {
     }
 
     const profile = await profileResponse.json()
-    return NextResponse.json({ profile: profile[0], email: authUser.email })
+    const userProfile = profile[0]
+    if (userProfile.theme_preference) {
+      try {
+        const themePreference =
+          typeof userProfile.theme_preference === "string"
+            ? JSON.parse(userProfile.theme_preference)
+            : userProfile.theme_preference
+
+        if (themePreference.customPrimary) {
+          userProfile.customPrimary = themePreference.customPrimary
+        }
+        if (themePreference.customSecondary) {
+          userProfile.customSecondary = themePreference.customSecondary
+        }
+      } catch (e) {
+        console.error("[v0] Failed to parse theme_preference:", e)
+      }
+    }
+
+    return NextResponse.json({ profile: userProfile, email: authUser.email })
   } catch (error) {
     console.error("Error fetching settings:", error)
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })

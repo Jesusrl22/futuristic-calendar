@@ -14,18 +14,35 @@ import { useToast } from "@/hooks/use-toast"
 import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/lib/themes"
 import { Badge } from "@/components/ui/badge"
 
+type ProfileType = {
+  email: string
+  theme: string
+  customPrimary: string
+  customSecondary: string
+  language: Language
+  notifications: boolean
+  timezone: string
+  plan: string
+  pomodoroWorkDuration: number
+  pomodoroBreakDuration: number
+  pomodoroLongBreakDuration: number
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [profile, setProfile] = useState({
+  const [profile, setProfile] = useState<ProfileType>({
     email: "",
     theme: "default",
     language: "en" as Language,
     notifications: true,
     timezone: "UTC",
     plan: "free",
-    customPrimary: "",
-    customSecondary: "",
+    customPrimary: "#7c3aed",
+    customSecondary: "#ec4899",
+    pomodoroWorkDuration: 25,
+    pomodoroBreakDuration: 5,
+    pomodoroLongBreakDuration: 15,
   })
   const [loading, setLoading] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
@@ -77,97 +94,66 @@ export default function SettingsPage() {
   }, [profile.theme, profile.customPrimary, profile.customSecondary, isInitialLoad])
 
   const fetchProfile = async () => {
+    setLoading(true)
     try {
-      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
-      const profileResponse = await fetch("/api/user/profile")
-      const settingsResponse = await fetch("/api/settings")
-
-      if (!profileResponse.ok) {
-        console.error("[v0] Failed to fetch profile")
-        setIsInitialLoad(false)
-        return
-      }
-
-      const profileData = await profileResponse.json()
-      const settingsData = settingsResponse.ok ? await settingsResponse.json() : null
-
-      console.log("[v0] ===== PLAN DETECTION DEBUG =====")
-      console.log("[v0] Profile data:", profileData)
-      console.log("[v0] Profile subscription_plan field:", profileData.subscription_plan)
-      console.log("[v0] Profile subscription_plan type:", typeof profileData.subscription_plan)
+      console.log("[v0] Fetching settings from API...")
+      const response = await fetch("/api/settings")
+      const settingsData = await response.json()
       console.log("[v0] Settings data:", settingsData)
-      console.log("[v0] ===================================")
 
-      const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
-      console.log("[v0] Detected user plan (final):", userPlan)
-      console.log("[v0] User plan type:", typeof userPlan)
-      console.log("[v0] User plan length:", userPlan.length)
-      console.log("[v0] User plan === 'pro':", userPlan === "pro")
-      console.log("[v0] User plan === 'premium':", userPlan === "premium")
-      console.log("[v0] User plan === 'free':", userPlan === "free")
+      const savedTheme = localStorage.getItem("theme") || "default"
 
-      const existingTheme = localStorage.getItem("theme")
-      let savedTheme = existingTheme || "default"
-      let themePreference: any = null
+      if (settingsData?.profile) {
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+        let plan = settingsData.profile.subscription_plan || "free"
 
-      if (settingsData?.profile?.theme) {
-        savedTheme = settingsData.profile.theme
-        themePreference = settingsData.profile.theme_preference
+        plan =
+          typeof plan === "string"
+            ? plan
+                .toLowerCase()
+                .trim()
+                .replace(/[\s\-_]/g, "")
+            : String(plan)
+                .toLowerCase()
+                .trim()
+                .replace(/[\s\-_]/g, "")
 
-        if (typeof themePreference === "string") {
-          try {
-            themePreference = JSON.parse(themePreference)
-          } catch {
-            themePreference = null
-          }
+        const newProfile: ProfileType = {
+          email: settingsData.email || "",
+          theme: settingsData.profile.theme || savedTheme || "default",
+          customPrimary: settingsData.profile.customPrimary || localStorage.getItem("customPrimary") || "#7c3aed",
+          customSecondary: settingsData.profile.customSecondary || localStorage.getItem("customSecondary") || "#ec4899",
+          language: settingsData.profile.language || localStorage.getItem("language") || "en",
+          notifications: true,
+          timezone: settingsData.profile.timezone || detectedTimezone,
+          pomodoroWorkDuration: settingsData.profile.pomodoro_work_duration || 25,
+          pomodoroBreakDuration: settingsData.profile.pomodoro_break_duration || 5,
+          pomodoroLongBreakDuration: settingsData.profile.pomodoro_long_break_duration || 15,
+          plan: plan,
         }
 
-        if (savedTheme !== existingTheme) {
-          localStorage.setItem("theme", savedTheme)
-          console.log("[v0] Updated localStorage with theme from database:", savedTheme)
+        console.log("[v0] New profile object:", newProfile)
+
+        if (newProfile.customPrimary) {
+          localStorage.setItem("customPrimary", newProfile.customPrimary)
         }
-      } else {
-        console.log("[v0] No theme in database, keeping localStorage value:", existingTheme)
+        if (newProfile.customSecondary) {
+          localStorage.setItem("customSecondary", newProfile.customSecondary)
+        }
+
+        if (settingsData.profile.theme && settingsData.profile.theme !== savedTheme) {
+          localStorage.setItem("theme", newProfile.theme)
+          console.log("[v0] Synced theme from database to localStorage:", newProfile.theme)
+        }
+
+        setProfile(newProfile)
+        setIsInitialLoad(false)
+        console.log("[v0] Profile loaded successfully with theme:", newProfile.theme)
       }
-
-      const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
-      const customSecondary = themePreference?.customSecondary || localStorage.getItem("customSecondary") || ""
-
-      const newProfile = {
-        email: profileData.email || "",
-        theme: savedTheme,
-        language: (settingsData?.profile?.language || localStorage.getItem("language") || "en") as Language,
-        notifications: settingsData?.profile?.notifications ?? true,
-        timezone: detectedTimezone,
-        plan: userPlan,
-        customPrimary,
-        customSecondary,
-      }
-
-      console.log("[v0] Setting profile state with plan:", newProfile.plan)
-      console.log("[v0] New profile object:", newProfile)
-
-      setProfile(newProfile)
-      setIsInitialLoad(false)
-
-      localStorage.setItem("notifications", profile.notifications.toString())
-      localStorage.setItem("timezone", detectedTimezone)
-      localStorage.setItem("language", profile.language)
-      localStorage.setItem("theme", profile.theme)
-
-      if (profile.theme === "custom") {
-        localStorage.setItem("customPrimary", profile.customPrimary)
-        localStorage.setItem("customSecondary", profile.customSecondary)
-      } else {
-        localStorage.removeItem("customPrimary")
-        localStorage.removeItem("customSecondary")
-      }
-
-      console.log("[v0] Profile loaded successfully with theme:", savedTheme)
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
-      setIsInitialLoad(false)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -195,6 +181,9 @@ export default function SettingsPage() {
           theme_preference: themePreference,
           language: profile.language,
           timezone: detectedTimezone,
+          pomodoro_work_duration: profile.pomodoroWorkDuration,
+          pomodoro_break_duration: profile.pomodoroBreakDuration,
+          pomodoro_long_break_duration: profile.pomodoroLongBreakDuration,
         }),
       })
 
@@ -448,7 +437,7 @@ export default function SettingsPage() {
                     <Label>Pomodoro Duration</Label>
                     <p className="text-sm text-muted-foreground">Default work session length</p>
                   </div>
-                  <Select defaultValue="25">
+                  <Select defaultValue={profile.pomodoroWorkDuration.toString()}>
                     <SelectTrigger className="w-32 bg-secondary/50">
                       <SelectValue />
                     </SelectTrigger>
