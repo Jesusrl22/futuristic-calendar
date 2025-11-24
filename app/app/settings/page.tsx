@@ -376,11 +376,11 @@ export default function SettingsPage() {
                 {profile.theme === "custom" && showCustom && (
                   <div className="space-y-4 mt-4 p-4 border rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      {t.settings.customThemeDescription || "Create your own theme by selecting two colors"}
+                      {t.settingsPage?.customThemeDescription || "Create your own theme by selecting two colors"}
                     </p>
                     <div className="grid gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="customPrimary">{t.settings.primaryColor || "Primary Color"}</Label>
+                        <Label htmlFor="customPrimary">{t.settingsPage?.primaryColor || "Primary Color"}</Label>
                         <Input
                           id="customPrimary"
                           type="color"
@@ -390,7 +390,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="customSecondary">{t.settings.secondaryColor || "Secondary Color"}</Label>
+                        <Label htmlFor="customSecondary">{t.settingsPage?.secondaryColor || "Secondary Color"}</Label>
                         <Input
                           id="customSecondary"
                           type="color"

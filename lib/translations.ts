@@ -11,7 +11,7 @@ export const translations = {
     ai: "AI Assistant",
     achievements: "Achievements",
     subscription: "Subscription",
-    settings: "Settings",
+    settings: "Settings", // Keep as string for menu
     logout: "Logout",
 
     // Auth
@@ -78,7 +78,7 @@ export const translations = {
     updating: "Updating...",
 
     // Settings
-    settings: {
+    settingsPage: {
       theme: "Theme",
       selectTheme: "Select Theme",
       language: "Language",
@@ -106,7 +106,7 @@ export const translations = {
     ai: "Asistente IA",
     achievements: "Logros",
     subscription: "Suscripción",
-    settings: "Configuración",
+    settings: "Configuración", // Keep as string for menu
     logout: "Cerrar sesión",
 
     // Auth
@@ -174,16 +174,16 @@ export const translations = {
     updating: "Actualizando...",
 
     // Settings
-    settings: {
+    settingsPage: {
       theme: "Tema",
       selectTheme: "Seleccionar Tema",
       language: "Idioma",
       notifications: "Notificaciones",
-      timezone: "Zona horaria",
+      timezone: "Zona Horaria",
       pomodoroSettings: "Configuración Pomodoro",
-      workDuration: "Duración del trabajo (minutos)",
-      shortBreak: "Descanso corto (minutos)",
-      longBreak: "Descanso largo (minutos)",
+      workDuration: "Duración Trabajo (minutos)",
+      shortBreak: "Descanso Corto (minutos)",
+      longBreak: "Descanso Largo (minutos)",
       customThemeDescription: "Crea tu propio tema seleccionando dos colores",
       primaryColor: "Color Primario",
       secondaryColor: "Color Secundario",
@@ -270,7 +270,7 @@ export const translations = {
     updating: "Mise à jour...",
 
     // Settings
-    settings: {
+    settingsPage: {
       theme: "Thème",
       selectTheme: "Sélectionner le thème",
       language: "Langue",
@@ -281,8 +281,8 @@ export const translations = {
       shortBreak: "Pause courte (minutes)",
       longBreak: "Pause longue (minutes)",
       customThemeDescription: "Créez votre propre thème en sélectionnant deux couleurs",
-      primaryColor: "Couleur Primaire",
-      secondaryColor: "Couleur Secondaire",
+      primaryColor: "Couleur primaire",
+      secondaryColor: "Couleur secondaire",
       upgradeForTheme: "Passez à {plan} pour débloquer ce thème",
     },
   },
@@ -366,7 +366,7 @@ export const translations = {
     updating: "Aktualisieren...",
 
     // Settings
-    settings: {
+    settingsPage: {
       theme: "Thema",
       selectTheme: "Thema auswählen",
       language: "Sprache",
@@ -376,10 +376,10 @@ export const translations = {
       workDuration: "Arbeitsdauer (Minuten)",
       shortBreak: "Kurze Pause (Minuten)",
       longBreak: "Lange Pause (Minuten)",
-      customThemeDescription: "Erstellen Sie Ihr eigenes Thema, indem Sie zwei Farben auswählen",
+      customThemeDescription: "Erstellen Sie Ihr eigenes Thema durch Auswahl von zwei Farben",
       primaryColor: "Primärfarbe",
       secondaryColor: "Sekundärfarbe",
-      upgradeForTheme: "Upgraden Sie auf {plan}, um dieses Thema freizuschalten",
+      upgradeForTheme: "Upgrade auf {plan}, um dieses Thema freizuschalten",
     },
   },
   it: {
@@ -462,23 +462,23 @@ export const translations = {
     updating: "Aggiornamento...",
 
     // Settings
-    settings: {
+    settingsPage: {
       theme: "Tema",
-      selectTheme: "Seleziona Tema",
+      selectTheme: "Seleziona tema",
       language: "Lingua",
       notifications: "Notifiche",
       timezone: "Fuso orario",
       pomodoroSettings: "Impostazioni Pomodoro",
-      workDuration: "Durata del lavoro (minuti)",
+      workDuration: "Durata lavoro (minuti)",
       shortBreak: "Pausa breve (minuti)",
       longBreak: "Pausa lunga (minuti)",
       customThemeDescription: "Crea il tuo tema selezionando due colori",
-      primaryColor: "Colore Primario",
-      secondaryColor: "Colore Secondario",
+      primaryColor: "Colore primario",
+      secondaryColor: "Colore secondario",
       upgradeForTheme: "Passa a {plan} per sbloccare questo tema",
     },
   },
-}
+} as const
 
 export type Language = "en" | "es" | "fr" | "de" | "it"
 
