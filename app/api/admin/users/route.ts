@@ -12,7 +12,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, email, name, subscription_tier, subscription_expires_at, created_at")
+      .select("id, email, name, subscription_plan, subscription_expires_at, created_at")
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -38,12 +38,16 @@ export async function PATCH(request: Request) {
     }
 
     if (updates.subscription_tier) {
+      // Rename subscription_tier to subscription_plan
+      updates.subscription_plan = updates.subscription_tier
+      updates.subscription_tier = updates.subscription_tier // Keep both for now
+
       const creditsMap = {
         free: 0,
         premium: 100,
         pro: 500,
       }
-      updates.ai_credits = creditsMap[updates.subscription_tier as keyof typeof creditsMap] || 0
+      updates.ai_credits = creditsMap[updates.subscription_plan as keyof typeof creditsMap] || 0
     }
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -53,6 +57,8 @@ export async function PATCH(request: Request) {
       },
     })
 
+    console.log("[API] Updating user with plan:", updates.subscription_plan, "and credits:", updates.ai_credits)
+
     const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select()
 
     if (error) {
@@ -60,7 +66,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log("[API] Updated user with AI credits:", updates.ai_credits)
+    console.log("[API] Updated user successfully")
 
     return NextResponse.json({ user: data?.[0] })
   } catch (error) {

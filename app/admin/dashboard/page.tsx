@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ interface User {
   id: string
   email: string
   name: string | null
-  subscription_tier: string | null
+  subscription_plan: string | null
   subscription_expires_at: string | null
   created_at: string
 }
@@ -101,12 +101,16 @@ export default function AdminDashboardPage() {
         throw new Error(data.error || "Failed to update user")
       }
 
-      const updatedUser = { ...users.find((u) => u.id === userId)!, ...updates }
+      const updatedUser = {
+        ...users.find((u) => u.id === userId)!,
+        subscription_plan: newTier,
+        ...updates,
+      }
       setUsers(users.map((u) => (u.id === userId ? updatedUser : u)))
       setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? updatedUser : u)))
 
       const creditsInfo = {
-        free: "10 AI credits",
+        free: "0 AI credits",
         premium: "100 AI credits",
         pro: "500 AI credits",
       }
@@ -126,7 +130,7 @@ export default function AdminDashboardPage() {
   const handleSetExpiration = () => {
     if (selectedUser) {
       const expiresAt = expirationDate ? new Date(expirationDate).toISOString() : null
-      updateUserTier(selectedUser.id, selectedUser.subscription_tier || "free", expiresAt)
+      updateUserTier(selectedUser.id, selectedUser.subscription_plan || "free", expiresAt)
       setSelectedUser(null)
       setExpirationDate("")
     }
@@ -192,13 +196,13 @@ export default function AdminDashboardPage() {
           <Card className="p-6 bg-card/50 backdrop-blur">
             <div className="text-sm text-muted-foreground mb-2">Premium Users</div>
             <div className="text-3xl font-bold text-purple-500">
-              {users.filter((u) => u.subscription_tier === "premium").length}
+              {users.filter((u) => u.subscription_plan === "premium").length}
             </div>
           </Card>
           <Card className="p-6 bg-card/50 backdrop-blur">
             <div className="text-sm text-muted-foreground mb-2">Pro Users</div>
             <div className="text-3xl font-bold text-yellow-500">
-              {users.filter((u) => u.subscription_tier === "pro").length}
+              {users.filter((u) => u.subscription_plan === "pro").length}
             </div>
           </Card>
         </div>
@@ -248,10 +252,10 @@ export default function AdminDashboardPage() {
                       <td className="p-4">
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${getTierBadge(
-                            user.subscription_tier,
+                            user.subscription_plan,
                           )}`}
                         >
-                          {user.subscription_tier?.toUpperCase() || "FREE"}
+                          {user.subscription_plan?.toUpperCase() || "FREE"}
                         </span>
                       </td>
                       <td className="p-4 text-sm">
@@ -263,7 +267,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-4">
                         <Select
-                          value={user.subscription_tier || "free"}
+                          value={user.subscription_plan || "free"}
                           onValueChange={(value) => updateUserTier(user.id, value)}
                         >
                           <SelectTrigger className="w-[140px]">
@@ -317,7 +321,7 @@ export default function AdminDashboardPage() {
                                   variant="outline"
                                   onClick={() => {
                                     setExpirationDate("")
-                                    updateUserTier(user.id, user.subscription_tier || "free", null)
+                                    updateUserTier(user.id, user.subscription_plan || "free", null)
                                     setSelectedUser(null)
                                   }}
                                 >
