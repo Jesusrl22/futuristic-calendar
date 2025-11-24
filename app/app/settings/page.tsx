@@ -103,11 +103,12 @@ export default function SettingsPage() {
       const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
       console.log("[v0] Detected user plan:", userPlan)
 
-      let savedTheme = "default"
+      const existingThemeInStorage = localStorage.getItem("theme")
+      let savedTheme = existingThemeInStorage || "default"
       let themePreference: any = null
 
-      if (settingsData?.profile) {
-        savedTheme = settingsData.profile.theme || localStorage.getItem("theme") || "default"
+      if (settingsData?.profile && !existingThemeInStorage) {
+        savedTheme = settingsData.profile.theme || "default"
         themePreference = settingsData.profile.theme_preference
 
         if (typeof themePreference === "string") {
@@ -117,8 +118,6 @@ export default function SettingsPage() {
             themePreference = null
           }
         }
-      } else {
-        savedTheme = localStorage.getItem("theme") || "default"
       }
 
       const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
@@ -139,20 +138,21 @@ export default function SettingsPage() {
       setProfile(newProfile)
       setIsInitialLoad(false)
 
-      if (settingsData?.profile) {
-        localStorage.setItem("theme", newProfile.theme)
-        localStorage.setItem("language", newProfile.language)
-
-        if (customPrimary) {
-          localStorage.setItem("customPrimary", customPrimary)
-        }
-        if (customSecondary) {
-          localStorage.setItem("customSecondary", customSecondary)
+      if (!existingThemeInStorage && settingsData?.profile) {
+        if (newProfile.theme && newProfile.theme !== "default") {
+          localStorage.setItem("theme", newProfile.theme)
         }
       }
 
-      localStorage.setItem("timezone", detectedTimezone)
+      localStorage.setItem("language", newProfile.language)
       localStorage.setItem("userPlan", userPlan)
+
+      if (customPrimary) {
+        localStorage.setItem("customPrimary", customPrimary)
+      }
+      if (customSecondary) {
+        localStorage.setItem("customSecondary", customSecondary)
+      }
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
       const existingTheme = localStorage.getItem("theme") || "default"
@@ -253,7 +253,6 @@ export default function SettingsPage() {
 
     setProfile((prev) => ({ ...prev, theme: themeId }))
 
-    // Apply theme immediately and save to localStorage
     if (themeId === "custom") {
       applyTheme("custom", profile.customPrimary, profile.customSecondary)
       localStorage.setItem("theme", "custom")
