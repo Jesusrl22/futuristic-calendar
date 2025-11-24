@@ -98,11 +98,12 @@ export default function SettingsPage() {
       const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
       console.log("[v0] Detected user plan:", userPlan)
 
-      let savedTheme = "default"
+      const existingTheme = localStorage.getItem("theme")
+      let savedTheme = existingTheme || "default"
       let themePreference: any = null
 
-      if (settingsData?.profile) {
-        savedTheme = settingsData.profile.theme || "default"
+      if (settingsData?.profile?.theme) {
+        savedTheme = settingsData.profile.theme
         themePreference = settingsData.profile.theme_preference
 
         if (typeof themePreference === "string") {
@@ -112,10 +113,17 @@ export default function SettingsPage() {
             themePreference = null
           }
         }
+
+        if (savedTheme !== existingTheme) {
+          localStorage.setItem("theme", savedTheme)
+          console.log("[v0] Updated localStorage with theme from database:", savedTheme)
+        }
+      } else {
+        console.log("[v0] No theme in database, keeping localStorage value:", existingTheme)
       }
 
-      const customPrimary = themePreference?.customPrimary || ""
-      const customSecondary = themePreference?.customSecondary || ""
+      const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
+      const customSecondary = themePreference?.customSecondary || localStorage.getItem("customSecondary") || ""
 
       const newProfile = {
         email: profileData.email || "",
@@ -132,23 +140,18 @@ export default function SettingsPage() {
       setProfile(newProfile)
       setIsInitialLoad(false)
 
-      localStorage.setItem("theme", savedTheme)
       localStorage.setItem("language", newProfile.language)
       localStorage.setItem("userPlan", userPlan)
 
       if (customPrimary) {
         localStorage.setItem("customPrimary", customPrimary)
-      } else {
-        localStorage.removeItem("customPrimary")
       }
 
       if (customSecondary) {
         localStorage.setItem("customSecondary", customSecondary)
-      } else {
-        localStorage.removeItem("customSecondary")
       }
 
-      console.log("[v0] Synced theme from database to localStorage:", savedTheme)
+      console.log("[v0] Profile loaded successfully with theme:", savedTheme)
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
       setIsInitialLoad(false)
