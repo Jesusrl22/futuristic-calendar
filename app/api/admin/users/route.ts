@@ -10,9 +10,9 @@ export async function GET() {
       },
     })
 
-    const { data, error } = await supabase
+    const { data: users, error } = await supabase
       .from("users")
-      .select("id, email, name, subscription_plan, subscription_expires_at, created_at")
+      .select("id, email, name, subscription_plan, subscription_expires_at, created_at, ai_credits")
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -20,9 +20,51 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log("[API] Fetched users:", data?.length || 0)
+    const usersWithStats = await Promise.all(
+      (users || []).map(async (user) => {
+        // Count tasks
+        const { count: tasksCount } = await supabase
+          .from("tasks")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
 
-    return NextResponse.json({ users: data || [] })
+        // Count notes
+        const { count: notesCount } = await supabase
+          .from("notes")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+
+        // Count pomodoro sessions
+        const { count: pomodorosCount } = await supabase
+          .from("pomodoro_sessions")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+
+        // Calculate credits used (initial credits - current credits)
+        const initialCredits = {
+          free: 0,
+          premium: 100,
+          pro: 500,
+        }
+        const planCredits = initialCredits[(user.subscription_plan || "free") as keyof typeof initialCredits] || 0
+        const creditsUsed = planCredits - (user.ai_credits || 0)
+
+        return {
+          ...user,
+          stats: {
+            tasks: tasksCount || 0,
+            notes: notesCount || 0,
+            pomodoros: pomodorosCount || 0,
+            creditsUsed: creditsUsed,
+            creditsRemaining: user.ai_credits || 0,
+          },
+        }
+      }),
+    )
+
+    console.log("[API] Fetched users with stats:", usersWithStats.length)
+
+    return NextResponse.json({ users: usersWithStats })
   } catch (error) {
     console.error("[API] Unexpected error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

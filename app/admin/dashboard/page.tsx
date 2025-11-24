@@ -23,6 +23,13 @@ interface User {
   subscription_plan: string | null
   subscription_expires_at: string | null
   created_at: string
+  stats?: {
+    tasks: number
+    notes: number
+    pomodoros: number
+    creditsUsed: number
+    creditsRemaining: number
+  }
 }
 
 export default function AdminDashboardPage() {
@@ -251,6 +258,10 @@ export default function AdminDashboardPage() {
                   <th className="text-left p-4 font-semibold">User</th>
                   <th className="text-left p-4 font-semibold">Email</th>
                   <th className="text-left p-4 font-semibold">Current Tier</th>
+                  <th className="text-center p-4 font-semibold">Tasks</th>
+                  <th className="text-center p-4 font-semibold">Notes</th>
+                  <th className="text-center p-4 font-semibold">Pomodoros</th>
+                  <th className="text-center p-4 font-semibold">AI Credits</th>
                   <th className="text-left p-4 font-semibold">Expires</th>
                   <th className="text-left p-4 font-semibold">Change Tier</th>
                   <th className="text-left p-4 font-semibold">Actions</th>
@@ -259,13 +270,13 @@ export default function AdminDashboardPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       Loading users...
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       {searchTerm ? "No users found matching your search" : "No users in database"}
                     </td>
                   </tr>
@@ -285,6 +296,23 @@ export default function AdminDashboardPage() {
                         >
                           {user.subscription_plan?.toUpperCase() || "FREE"}
                         </span>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className="font-semibold text-blue-500">{user.stats?.tasks || 0}</span>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className="font-semibold text-green-500">{user.stats?.notes || 0}</span>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className="font-semibold text-purple-500">{user.stats?.pomodoros || 0}</span>
+                      </td>
+                      <td className="p-4 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-sm font-semibold text-orange-500">
+                            {user.stats?.creditsRemaining || 0} left
+                          </span>
+                          <span className="text-xs text-muted-foreground">{user.stats?.creditsUsed || 0} used</span>
+                        </div>
                       </td>
                       <td className="p-4 text-sm">
                         {user.subscription_expires_at ? (
