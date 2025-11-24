@@ -33,6 +33,8 @@ export default function AdminDashboardPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [expirationDate, setExpirationDate] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -119,6 +121,32 @@ export default function AdminDashboardPage() {
     } catch (error) {
       console.error("[v0] Error updating user tier:", error)
       alert("Error updating user. Please try again.")
+    }
+  }
+
+  const deleteUser = async (userId: string) => {
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user")
+      }
+
+      setUsers(users.filter((u) => u.id !== userId))
+      setFilteredUsers(filteredUsers.filter((u) => u.id !== userId))
+
+      alert("User deleted successfully!")
+      setDeleteDialogOpen(false)
+      setUserToDelete(null)
+    } catch (error) {
+      console.error("[v0] Error deleting user:", error)
+      alert("Error deleting user. Please try again.")
     }
   }
 
@@ -281,56 +309,69 @@ export default function AdminDashboardPage() {
                         </Select>
                       </td>
                       <td className="p-4">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user)
-                                setExpirationDate(user.subscription_expires_at?.split("T")[0] || "")
-                              }}
-                            >
-                              Set Expiration
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Set Plan Expiration</DialogTitle>
-                              <DialogDescription>
-                                Set an expiration date for {user.name || user.email}'s subscription plan. Leave empty
-                                for no expiration (until user cancels).
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="expiration">Expiration Date</Label>
-                                <Input
-                                  id="expiration"
-                                  type="date"
-                                  value={expirationDate}
-                                  onChange={(e) => setExpirationDate(e.target.value)}
-                                />
-                                <p className="text-xs text-muted-foreground">Leave empty to remove expiration date</p>
+                        <div className="flex gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user)
+                                  setExpirationDate(user.subscription_expires_at?.split("T")[0] || "")
+                                }}
+                              >
+                                Set Expiration
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Set Plan Expiration</DialogTitle>
+                                <DialogDescription>
+                                  Set an expiration date for {user.name || user.email}'s subscription plan. Leave empty
+                                  for no expiration (until user cancels).
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="expiration">Expiration Date</Label>
+                                  <Input
+                                    id="expiration"
+                                    type="date"
+                                    value={expirationDate}
+                                    onChange={(e) => setExpirationDate(e.target.value)}
+                                  />
+                                  <p className="text-xs text-muted-foreground">Leave empty to remove expiration date</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button onClick={handleSetExpiration} className="flex-1">
+                                    Save
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      setExpirationDate("")
+                                      updateUserTier(user.id, user.subscription_plan || "free", null)
+                                      setSelectedUser(null)
+                                    }}
+                                  >
+                                    Remove Expiration
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex gap-2">
-                                <Button onClick={handleSetExpiration} className="flex-1">
-                                  Save
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => {
-                                    setExpirationDate("")
-                                    updateUserTier(user.id, user.subscription_plan || "free", null)
-                                    setSelectedUser(null)
-                                  }}
-                                >
-                                  Remove Expiration
-                                </Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                            </DialogContent>
+                          </Dialog>
+
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              setUserToDelete(user)
+                              setDeleteDialogOpen(true)
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -339,6 +380,26 @@ export default function AdminDashboardPage() {
             </table>
           </div>
         </Card>
+
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete User</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete {userToDelete?.name || userToDelete?.email}? This action cannot be
+                undone and will permanently remove all user data including tasks, notes, and pomodoro sessions.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex gap-2 justify-end pt-4">
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={() => userToDelete && deleteUser(userToDelete.id)}>
+                Delete User
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

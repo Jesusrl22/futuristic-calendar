@@ -74,3 +74,37 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { userId } = await request.json()
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID required" }, { status: 400 })
+    }
+
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+
+    console.log("[API] Deleting user:", userId)
+
+    // Delete user from database
+    const { error } = await supabase.from("users").delete().eq("id", userId)
+
+    if (error) {
+      console.error("[API] Error deleting user:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    console.log("[API] User deleted successfully")
+
+    return NextResponse.json({ success: true, message: "User deleted successfully" })
+  } catch (error) {
+    console.error("[API] Unexpected error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
