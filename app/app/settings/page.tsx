@@ -248,16 +248,38 @@ export default function SettingsPage() {
     setTimeout(() => {
       localStorage.setItem("theme", themeId)
 
-      if (themeId === "custom") {
+      if (themeId === "custom" && profile.customPrimary && profile.customSecondary) {
+        console.log("[v0] Saving custom colors:", profile.customPrimary, profile.customSecondary)
         localStorage.setItem("customPrimary", profile.customPrimary)
         localStorage.setItem("customSecondary", profile.customSecondary)
-      } else {
+      } else if (themeId !== "custom") {
         localStorage.removeItem("customPrimary")
         localStorage.removeItem("customSecondary")
       }
 
       console.log("[v0] Theme immediately saved to localStorage:", themeId)
     }, 0)
+  }
+
+  const handleCustomColorChange = (type: "primary" | "secondary", value: string) => {
+    const updatedProfile = {
+      ...profile,
+      [type === "primary" ? "customPrimary" : "customSecondary"]: value,
+    }
+    setProfile(updatedProfile)
+
+    if (profile.theme === "custom") {
+      setTimeout(() => {
+        localStorage.setItem(type === "primary" ? "customPrimary" : "customSecondary", value)
+        console.log(`[v0] Updated custom ${type} color in localStorage:`, value)
+
+        if (type === "primary" && updatedProfile.customSecondary) {
+          applyTheme("custom", value, updatedProfile.customSecondary)
+        } else if (type === "secondary" && updatedProfile.customPrimary) {
+          applyTheme("custom", updatedProfile.customPrimary, value)
+        }
+      }, 0)
+    }
   }
 
   const timezones = [
@@ -352,38 +374,32 @@ export default function SettingsPage() {
                 </div>
 
                 {profile.theme === "custom" && showCustom && (
-                  <div className="space-y-4 p-4 border border-primary/20 rounded-lg bg-primary/5">
-                    <h3 className="text-sm font-semibold flex items-center gap-2">
-                      Custom Theme Colors
-                      <Badge variant="outline" className="text-xs">
-                        PRO
-                      </Badge>
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Primary Color (HSL)</Label>
+                  <div className="space-y-4 mt-4 p-4 border rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      {t.settings.customThemeDescription || "Create your own theme by selecting two colors"}
+                    </p>
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="customPrimary">{t.settings.primaryColor || "Primary Color"}</Label>
                         <Input
-                          placeholder="e.g., 280 70% 60%"
-                          value={profile.customPrimary}
-                          onChange={(e) => setProfile({ ...profile, customPrimary: e.target.value })}
-                          className="bg-secondary/50"
+                          id="customPrimary"
+                          type="color"
+                          value={profile.customPrimary || "#84cc16"}
+                          onChange={(e) => handleCustomColorChange("primary", e.target.value)}
+                          className="h-10 w-full"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">Main accent color</p>
                       </div>
-                      <div>
-                        <Label>Secondary Color (HSL)</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="customSecondary">{t.settings.secondaryColor || "Secondary Color"}</Label>
                         <Input
-                          placeholder="e.g., 0 0% 15%"
-                          value={profile.customSecondary}
-                          onChange={(e) => setProfile({ ...profile, customSecondary: e.target.value })}
-                          className="bg-secondary/50"
+                          id="customSecondary"
+                          type="color"
+                          value={profile.customSecondary || "#3b82f6"}
+                          onChange={(e) => handleCustomColorChange("secondary", e.target.value)}
+                          className="h-10 w-full"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">Background/muted color</p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Use HSL format: Hue (0-360) Saturation (0-100%) Lightness (0-100%)
-                    </p>
                   </div>
                 )}
 
