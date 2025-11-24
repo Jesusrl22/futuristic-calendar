@@ -76,20 +76,6 @@ export default function SettingsPage() {
 
       if (!profileResponse.ok) {
         console.error("[v0] Failed to fetch profile")
-        const existingTheme = localStorage.getItem("theme") || "default"
-        const existingLanguage = localStorage.getItem("language") || "en"
-        const existingPlan = localStorage.getItem("userPlan") || "free"
-
-        setProfile({
-          email: "",
-          theme: existingTheme,
-          language: existingLanguage as Language,
-          notifications: true,
-          timezone: detectedTimezone,
-          plan: existingPlan,
-          customPrimary: localStorage.getItem("customPrimary") || "",
-          customSecondary: localStorage.getItem("customSecondary") || "",
-        })
         setIsInitialLoad(false)
         return
       }
@@ -103,11 +89,10 @@ export default function SettingsPage() {
       const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
       console.log("[v0] Detected user plan:", userPlan)
 
-      const existingThemeInStorage = localStorage.getItem("theme")
-      let savedTheme = existingThemeInStorage || "default"
+      let savedTheme = "default"
       let themePreference: any = null
 
-      if (settingsData?.profile && !existingThemeInStorage) {
+      if (settingsData?.profile) {
         savedTheme = settingsData.profile.theme || "default"
         themePreference = settingsData.profile.theme_preference
 
@@ -120,8 +105,8 @@ export default function SettingsPage() {
         }
       }
 
-      const customPrimary = themePreference?.customPrimary || localStorage.getItem("customPrimary") || ""
-      const customSecondary = themePreference?.customSecondary || localStorage.getItem("customSecondary") || ""
+      const customPrimary = themePreference?.customPrimary || ""
+      const customSecondary = themePreference?.customSecondary || ""
 
       const newProfile = {
         email: profileData.email || "",
@@ -138,37 +123,25 @@ export default function SettingsPage() {
       setProfile(newProfile)
       setIsInitialLoad(false)
 
-      if (!existingThemeInStorage && settingsData?.profile) {
-        if (newProfile.theme && newProfile.theme !== "default") {
-          localStorage.setItem("theme", newProfile.theme)
-        }
-      }
-
+      localStorage.setItem("theme", savedTheme)
       localStorage.setItem("language", newProfile.language)
       localStorage.setItem("userPlan", userPlan)
 
       if (customPrimary) {
         localStorage.setItem("customPrimary", customPrimary)
+      } else {
+        localStorage.removeItem("customPrimary")
       }
+
       if (customSecondary) {
         localStorage.setItem("customSecondary", customSecondary)
+      } else {
+        localStorage.removeItem("customSecondary")
       }
+
+      console.log("[v0] Synced theme from database to localStorage:", savedTheme)
     } catch (error) {
       console.error("[v0] Error fetching settings:", error)
-      const existingTheme = localStorage.getItem("theme") || "default"
-      const existingLanguage = localStorage.getItem("language") || "en"
-      const existingPlan = localStorage.getItem("userPlan") || "free"
-
-      setProfile({
-        email: "",
-        theme: existingTheme,
-        language: existingLanguage as Language,
-        notifications: true,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        plan: existingPlan,
-        customPrimary: localStorage.getItem("customPrimary") || "",
-        customSecondary: localStorage.getItem("customSecondary") || "",
-      })
       setIsInitialLoad(false)
     }
   }
@@ -217,13 +190,7 @@ export default function SettingsPage() {
           localStorage.removeItem("customSecondary")
         }
 
-        if (profile.theme === "custom") {
-          applyTheme("custom", profile.customPrimary, profile.customSecondary)
-        } else {
-          applyTheme(profile.theme)
-        }
-
-        console.log("[v0] Theme saved successfully to localStorage:", profile.theme)
+        console.log("[v0] Theme saved successfully to database and localStorage:", profile.theme)
 
         toast({
           title: "Settings saved",
