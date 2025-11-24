@@ -61,8 +61,9 @@ export const translations = {
     enable: "Enable",
     notificationsEnabled: "Notifications enabled - you'll be notified when tasks are due (keep tab open)",
     notificationsBlocked: "Notifications are blocked. To enable them:",
-    notificationsInstructions: "Click the lock icon in your browser address bar, find Notifications and set it to Allow, then reload the page",
-    
+    notificationsInstructions:
+      "Click the lock icon in your browser address bar, find Notifications and set it to Allow, then reload the page",
+
     // Tasks
     newTask: "New Task",
     allTasks: "All",
@@ -75,6 +76,23 @@ export const translations = {
     noTasksFound: "No tasks found",
     creating: "Creating...",
     updating: "Updating...",
+
+    // Settings
+    settings: {
+      theme: "Theme",
+      selectTheme: "Select Theme",
+      language: "Language",
+      notifications: "Notifications",
+      timezone: "Timezone",
+      pomodoroSettings: "Pomodoro Settings",
+      workDuration: "Work Duration (minutes)",
+      shortBreak: "Short Break (minutes)",
+      longBreak: "Long Break (minutes)",
+      customThemeDescription: "Create your own theme by selecting two colors",
+      primaryColor: "Primary Color",
+      secondaryColor: "Secondary Color",
+      upgradeForTheme: "Upgrade to {plan} to unlock this theme",
+    },
   },
   es: {
     // Navigation
@@ -136,10 +154,12 @@ export const translations = {
     dueDateTime: "Fecha y Hora de Vencimiento",
     enableNotifications: "Habilita las notificaciones para recibir recordatorios de tus tareas",
     enable: "Habilitar",
-    notificationsEnabled: "Notificaciones habilitadas - recibirás notificaciones cuando venzan las tareas (mantén la pestaña abierta)",
+    notificationsEnabled:
+      "Notificaciones habilitadas - recibirás notificaciones cuando venzan las tareas (mantén la pestaña abierta)",
     notificationsBlocked: "Las notificaciones están bloqueadas. Para habilitarlas:",
-    notificationsInstructions: "Haz clic en el icono del candado en la barra de direcciones, trouvez Notifications y configurez-le sur Autoriser, puis rechargez la page",
-    
+    notificationsInstructions:
+      "Haz clic en el icono del candado en la barra de direcciones, trouvez Notifications et configurez-le sur Autoriser, puis rechargez la page",
+
     // Tasks
     newTask: "Nueva Tarea",
     allTasks: "Todas",
@@ -152,6 +172,23 @@ export const translations = {
     noTasksFound: "No se encontraron tareas",
     creating: "Creando...",
     updating: "Actualizando...",
+
+    // Settings
+    settings: {
+      theme: "Tema",
+      selectTheme: "Seleccionar Tema",
+      language: "Idioma",
+      notifications: "Notificaciones",
+      timezone: "Zona horaria",
+      pomodoroSettings: "Configuración Pomodoro",
+      workDuration: "Duración del trabajo (minutos)",
+      shortBreak: "Descanso corto (minutos)",
+      longBreak: "Descanso largo (minutos)",
+      customThemeDescription: "Crea tu propio tema seleccionando dos colores",
+      primaryColor: "Color Primario",
+      secondaryColor: "Color Secundario",
+      upgradeForTheme: "Actualiza a {plan} para desbloquear este tema",
+    },
   },
   fr: {
     // Navigation
@@ -213,10 +250,12 @@ export const translations = {
     dueDateTime: "Date et heure d'échéance",
     enableNotifications: "Activer les notifications pour recevoir des rappels pour vos tâches",
     enable: "Activer",
-    notificationsEnabled: "Notifications activées - vous serez notifié lorsque les tâches sont dues (garder l'onglet ouvert)",
+    notificationsEnabled:
+      "Notifications activées - vous serez notifié lorsque les tâches sont dues (garder l'onglet ouvert)",
     notificationsBlocked: "Les notifications sont bloquées. Pour les activer:",
-    notificationsInstructions: "Cliquez sur l'icône du cadenas dans la barre d'adresse, trouvez Notifications et configurez-le sur Autoriser, puis rechargez la page",
-    
+    notificationsInstructions:
+      "Cliquez sur l'icône du cadenas dans la barre d'adresse, trouvez Notifications et configurez-le sur Autoriser, puis rechargez la page",
+
     // Tasks
     newTask: "Nouvelle tâche",
     allTasks: "Toutes",
@@ -229,6 +268,23 @@ export const translations = {
     noTasksFound: "Aucune tâche trouvée",
     creating: "Création...",
     updating: "Mise à jour...",
+
+    // Settings
+    settings: {
+      theme: "Thème",
+      selectTheme: "Sélectionner le thème",
+      language: "Langue",
+      notifications: "Notifications",
+      timezone: "Fuseau horaire",
+      pomodoroSettings: "Paramètres Pomodoro",
+      workDuration: "Durée du travail (minutes)",
+      shortBreak: "Pause courte (minutes)",
+      longBreak: "Pause longue (minutes)",
+      customThemeDescription: "Créez votre propre thème en sélectionnant deux couleurs",
+      primaryColor: "Couleur Primaire",
+      secondaryColor: "Couleur Secondaire",
+      upgradeForTheme: "Passez à {plan} pour débloquer ce thème",
+    },
   },
   de: {
     // Navigation
@@ -290,10 +346,12 @@ export const translations = {
     dueDateTime: "Fälligkeitsdatum und -zeit",
     enableNotifications: "Aktivieren Sie Benachrichtigungen, um Erinnerungen für Ihre Aufgaben zu erhalten",
     enable: "Aktivieren",
-    notificationsEnabled: "Benachrichtigungen aktiviert - Sie werden benachrichtigt, wenn Aufgaben fällig sind (Tab offen halten)",
+    notificationsEnabled:
+      "Benachrichtigungen aktiviert - Sie werden benachrichtigt, wenn Aufgaben fällig sind (Tab offen halten)",
     notificationsBlocked: "Benachrichtigungen sind blockiert. Um sie zu aktivieren:",
-    notificationsInstructions: "Klicken Sie auf das Schlosssymbol in der Adressleiste, suchen Sie Benachrichtigungen und stellen Sie es auf Zulassen ein, dann laden Sie die Seite neu",
-    
+    notificationsInstructions:
+      "Klicken Sie auf das Schlosssymbol in der Adressleiste, suchen Sie Benachrichtigungen und stellen Sie es auf Zulassen ein, dann laden Sie die Seite neu",
+
     // Tasks
     newTask: "Neue Aufgabe",
     allTasks: "Alle",
@@ -306,6 +364,23 @@ export const translations = {
     noTasksFound: "Keine Aufgaben gefunden",
     creating: "Erstellen...",
     updating: "Aktualisieren...",
+
+    // Settings
+    settings: {
+      theme: "Thema",
+      selectTheme: "Thema auswählen",
+      language: "Sprache",
+      notifications: "Benachrichtigungen",
+      timezone: "Zeitzone",
+      pomodoroSettings: "Pomodoro-Einstellungen",
+      workDuration: "Arbeitsdauer (Minuten)",
+      shortBreak: "Kurze Pause (Minuten)",
+      longBreak: "Lange Pause (Minuten)",
+      customThemeDescription: "Erstellen Sie Ihr eigenes Thema, indem Sie zwei Farben auswählen",
+      primaryColor: "Primärfarbe",
+      secondaryColor: "Sekundärfarbe",
+      upgradeForTheme: "Upgraden Sie auf {plan}, um dieses Thema freizuschalten",
+    },
   },
   it: {
     // Navigation
@@ -367,10 +442,12 @@ export const translations = {
     dueDateTime: "Data e ora di scadenza",
     enableNotifications: "Abilita le notifiche per ricevere promemoria per le tue attività",
     enable: "Abilita",
-    notificationsEnabled: "Notifiche abilitate - riceverai notifiche quando le attività scadono (mantieni la scheda aperta)",
+    notificationsEnabled:
+      "Notifiche abilitate - riceverai notifiche quando le attività scadono (mantieni la scheda aperta)",
     notificationsBlocked: "Le notifiche sono bloccate. Per abilitarle:",
-    notificationsInstructions: "Fai clic sull'icona del lucchetto nella barra degli indirizzi, trova Notifiche e impostalo su Consenti, quindi ricarica la pagina",
-    
+    notificationsInstructions:
+      "Fai clic sull'icona del lucchetto nella barra degli indirizzi, trova Notifiche e impostalo su Consenti, quindi ricarica la pagina",
+
     // Tasks
     newTask: "Nuova attività",
     allTasks: "Tutte",
@@ -383,6 +460,23 @@ export const translations = {
     noTasksFound: "Nessuna attività trovata",
     creating: "Creazione...",
     updating: "Aggiornamento...",
+
+    // Settings
+    settings: {
+      theme: "Tema",
+      selectTheme: "Seleziona Tema",
+      language: "Lingua",
+      notifications: "Notifiche",
+      timezone: "Fuso orario",
+      pomodoroSettings: "Impostazioni Pomodoro",
+      workDuration: "Durata del lavoro (minuti)",
+      shortBreak: "Pausa breve (minuti)",
+      longBreak: "Pausa lunga (minuti)",
+      customThemeDescription: "Crea il tuo tema selezionando due colori",
+      primaryColor: "Colore Primario",
+      secondaryColor: "Colore Secondario",
+      upgradeForTheme: "Passa a {plan} per sbloccare questo tema",
+    },
   },
 }
 
