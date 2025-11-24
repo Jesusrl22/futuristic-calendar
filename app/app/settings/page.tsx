@@ -92,11 +92,20 @@ export default function SettingsPage() {
       const profileData = await profileResponse.json()
       const settingsData = settingsResponse.ok ? await settingsResponse.json() : null
 
+      console.log("[v0] ===== PLAN DETECTION DEBUG =====")
       console.log("[v0] Profile data:", profileData)
+      console.log("[v0] Profile subscription_plan field:", profileData.subscription_plan)
+      console.log("[v0] Profile subscription_plan type:", typeof profileData.subscription_plan)
       console.log("[v0] Settings data:", settingsData)
+      console.log("[v0] ===================================")
 
       const userPlan = (profileData.subscription_plan || "free").toLowerCase().trim()
-      console.log("[v0] Detected user plan:", userPlan)
+      console.log("[v0] Detected user plan (final):", userPlan)
+      console.log("[v0] User plan type:", typeof userPlan)
+      console.log("[v0] User plan length:", userPlan.length)
+      console.log("[v0] User plan === 'pro':", userPlan === "pro")
+      console.log("[v0] User plan === 'premium':", userPlan === "premium")
+      console.log("[v0] User plan === 'free':", userPlan === "free")
 
       const existingTheme = localStorage.getItem("theme")
       let savedTheme = existingTheme || "default"
@@ -136,19 +145,23 @@ export default function SettingsPage() {
         customSecondary,
       }
 
-      console.log("[v0] Setting profile state:", newProfile)
+      console.log("[v0] Setting profile state with plan:", newProfile.plan)
+      console.log("[v0] New profile object:", newProfile)
+
       setProfile(newProfile)
       setIsInitialLoad(false)
 
-      localStorage.setItem("language", newProfile.language)
-      localStorage.setItem("userPlan", userPlan)
+      localStorage.setItem("notifications", profile.notifications.toString())
+      localStorage.setItem("timezone", detectedTimezone)
+      localStorage.setItem("language", profile.language)
+      localStorage.setItem("theme", profile.theme)
 
-      if (customPrimary) {
-        localStorage.setItem("customPrimary", customPrimary)
-      }
-
-      if (customSecondary) {
-        localStorage.setItem("customSecondary", customSecondary)
+      if (profile.theme === "custom") {
+        localStorage.setItem("customPrimary", profile.customPrimary)
+        localStorage.setItem("customSecondary", profile.customSecondary)
+      } else {
+        localStorage.removeItem("customPrimary")
+        localStorage.removeItem("customSecondary")
       }
 
       console.log("[v0] Profile loaded successfully with theme:", savedTheme)
