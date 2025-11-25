@@ -85,6 +85,9 @@ export async function PATCH(request: Request) {
       pomodoro_long_break_duration,
     } = body
 
+    console.log("[v0] API PATCH received theme:", theme)
+    console.log("[v0] API PATCH received theme_preference:", theme_preference)
+
     const userResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/user`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -103,12 +106,15 @@ export async function PATCH(request: Request) {
     if (theme !== undefined) updates.theme = theme
     if (theme_preference !== undefined) {
       updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
+      console.log("[v0] Stringified theme_preference:", updates.theme_preference)
     }
     if (language !== undefined) updates.language = language
     if (timezone !== undefined) updates.timezone = timezone
     if (pomodoro_work_duration !== undefined) updates.pomodoro_work_duration = pomodoro_work_duration
     if (pomodoro_break_duration !== undefined) updates.pomodoro_break_duration = pomodoro_break_duration
     if (pomodoro_long_break_duration !== undefined) updates.pomodoro_long_break_duration = pomodoro_long_break_duration
+
+    console.log("[v0] Updates object being sent to Supabase:", updates)
 
     const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
@@ -123,6 +129,7 @@ export async function PATCH(request: Request) {
 
     if (!updateResponse.ok) {
       const errorText = await updateResponse.text()
+      console.log("[v0] Supabase update failed:", errorText)
       return NextResponse.json(
         {
           error: "Failed to update settings",
@@ -134,9 +141,11 @@ export async function PATCH(request: Request) {
     }
 
     const updatedUser = await updateResponse.json()
+    console.log("[v0] Supabase update successful:", updatedUser)
 
     return NextResponse.json({ success: true, user: updatedUser[0] || updatedUser })
   } catch (error: any) {
+    console.log("[v0] API PATCH error:", error.message)
     return NextResponse.json(
       {
         error: "Failed to update settings",

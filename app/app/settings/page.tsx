@@ -146,6 +146,10 @@ export default function SettingsPage() {
             }
           : null
 
+      console.log("[v0] Saving settings with theme:", profile.theme)
+      console.log("[v0] Custom colors:", profile.customPrimary, profile.customSecondary)
+      console.log("[v0] Theme preference object:", themePreference)
+
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -161,6 +165,7 @@ export default function SettingsPage() {
       })
 
       const result = await response.json()
+      console.log("[v0] Save response:", result)
 
       if (response.ok && result.success) {
         localStorage.setItem("notifications", profile.notifications.toString())
