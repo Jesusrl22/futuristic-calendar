@@ -64,16 +64,16 @@ export const freeThemes: Theme[] = [
     description: "Natural green theme",
   },
   {
-    id: "midnight",
-    name: "Midnight",
+    id: "pink-blossom",
+    name: "Pink Blossom",
     tier: "free",
-    primary: "220 70% 55%", // Bright blue
-    secondary: "220 50% 45%",
-    background: "220 30% 10%", // Very dark blue
-    foreground: "220 20% 98%", // Cool white
-    card: "220 25% 15%",
-    cardForeground: "220 20% 98%",
-    description: "Deep dark blue",
+    primary: "330 75% 65%", // Soft pink
+    secondary: "340 65% 55%", // Rose pink
+    background: "330 15% 96%", // Very light pink-white
+    foreground: "330 30% 15%", // Dark pink-gray text
+    card: "330 20% 92%",
+    cardForeground: "330 30% 15%",
+    description: "Soft pink light theme",
   },
 ]
 
@@ -229,16 +229,61 @@ export function canUseCustomTheme(userPlan: string): boolean {
   return userPlan.toLowerCase().trim() === "pro"
 }
 
+function hexToHSL(hex: string): string {
+  // Remove the # if present
+  hex = hex.replace(/^#/, "")
+
+  // Parse the hex values
+  const r = Number.parseInt(hex.substring(0, 2), 16) / 255
+  const g = Number.parseInt(hex.substring(2, 4), 16) / 255
+  const b = Number.parseInt(hex.substring(4, 6), 16) / 255
+
+  const max = Math.max(r, g, b)
+  const min = Math.min(r, g, b)
+  let h = 0
+  let s = 0
+  const l = (max + min) / 2
+
+  if (max !== min) {
+    const d = max - min
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+
+    switch (max) {
+      case r:
+        h = ((g - b) / d + (g < b ? 6 : 0)) / 6
+        break
+      case g:
+        h = ((b - r) / d + 2) / 6
+        break
+      case b:
+        h = ((r - g) / d + 4) / 6
+        break
+    }
+  }
+
+  // Convert to HSL format for CSS variables (H S% L%)
+  const hDeg = Math.round(h * 360)
+  const sPercent = Math.round(s * 100)
+  const lPercent = Math.round(l * 100)
+
+  return `${hDeg} ${sPercent}% ${lPercent}%`
+}
+
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
 
   console.log("[v0] Applying theme:", themeId, customPrimary, customSecondary)
 
   if (themeId === "custom" && customPrimary && customSecondary) {
-    root.style.setProperty("--primary", customPrimary)
-    root.style.setProperty("--accent", customPrimary)
-    root.style.setProperty("--secondary", customSecondary)
-    root.style.setProperty("--muted", customSecondary)
+    const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
+    const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
+
+    console.log("[v0] Custom colors converted to HSL:", primaryHSL, secondaryHSL)
+
+    root.style.setProperty("--primary", primaryHSL)
+    root.style.setProperty("--accent", primaryHSL)
+    root.style.setProperty("--secondary", secondaryHSL)
+    root.style.setProperty("--muted", secondaryHSL)
     root.style.setProperty("--background", "0 0% 8%")
     root.style.setProperty("--foreground", "0 0% 98%")
     root.style.setProperty("--card", "0 0% 12%")

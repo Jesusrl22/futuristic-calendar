@@ -257,18 +257,20 @@ export default function SettingsPage() {
     }
     setProfile(updatedProfile)
 
-    if (profile.theme === "custom") {
-      setTimeout(() => {
-        localStorage.setItem(type === "primary" ? "customPrimary" : "customSecondary", value)
-        console.log(`[v0] Updated custom ${type} color in localStorage:`, value)
+    setTimeout(() => {
+      const primary = type === "primary" ? value : updatedProfile.customPrimary || "#84cc16"
+      const secondary = type === "secondary" ? value : updatedProfile.customSecondary || "#3b82f6"
 
-        if (type === "primary" && updatedProfile.customSecondary) {
-          applyTheme("custom", value, updatedProfile.customSecondary)
-        } else if (type === "secondary" && updatedProfile.customPrimary) {
-          applyTheme("custom", updatedProfile.customPrimary, value)
-        }
-      }, 0)
-    }
+      console.log(`[v0] Custom color ${type} changed to:`, value)
+      console.log("[v0] Applying custom theme with colors:", primary, secondary)
+
+      localStorage.setItem("customPrimary", primary)
+      localStorage.setItem("customSecondary", secondary)
+
+      if (profile.theme === "custom") {
+        applyTheme("custom", primary, secondary)
+      }
+    }, 0)
   }
 
   const timezones = [
