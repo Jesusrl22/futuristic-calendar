@@ -140,10 +140,10 @@ export default function SettingsPage() {
 
       const themePreference =
         profile.theme === "custom"
-          ? {
+          ? JSON.stringify({
               customPrimary: profile.customPrimary || "#7c3aed",
               customSecondary: profile.customSecondary || "#ec4899",
-            }
+            })
           : null
 
       const response = await fetch("/api/settings", {
@@ -169,8 +169,10 @@ export default function SettingsPage() {
         localStorage.setItem("theme", profile.theme)
 
         if (profile.theme === "custom") {
-          localStorage.setItem("customPrimary", profile.customPrimary || "#7c3aed")
-          localStorage.setItem("customSecondary", profile.customSecondary || "#ec4899")
+          const primaryColor = profile.customPrimary || "#7c3aed"
+          const secondaryColor = profile.customSecondary || "#ec4899"
+          localStorage.setItem("customPrimary", primaryColor)
+          localStorage.setItem("customSecondary", secondaryColor)
         } else {
           localStorage.removeItem("customPrimary")
           localStorage.removeItem("customSecondary")
