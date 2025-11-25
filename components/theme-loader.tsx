@@ -1,10 +1,21 @@
 "use client"
 
 import { useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { applyTheme } from "@/lib/themes"
 
 export function ThemeLoader() {
+  const pathname = usePathname()
+
   useEffect(() => {
+    const isLandingPage = pathname === "/" || pathname === "/blog"
+
+    if (isLandingPage) {
+      console.log("[v0] ThemeLoader - Landing page detected, using default theme")
+      applyTheme("default")
+      return
+    }
+
     const savedTheme = localStorage.getItem("theme") || "default"
     const customPrimary = localStorage.getItem("customPrimary")
     const customSecondary = localStorage.getItem("customSecondary")
@@ -56,7 +67,7 @@ export function ThemeLoader() {
 
     // Sync after initial load
     syncThemeFromDB()
-  }, [])
+  }, [pathname])
 
   return null
 }
