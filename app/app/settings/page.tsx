@@ -141,8 +141,8 @@ export default function SettingsPage() {
       const themePreference =
         profile.theme === "custom"
           ? {
-              customPrimary: profile.customPrimary,
-              customSecondary: profile.customSecondary,
+              customPrimary: profile.customPrimary || "#7c3aed",
+              customSecondary: profile.customSecondary || "#ec4899",
             }
           : null
 
@@ -169,8 +169,8 @@ export default function SettingsPage() {
         localStorage.setItem("theme", profile.theme)
 
         if (profile.theme === "custom") {
-          localStorage.setItem("customPrimary", profile.customPrimary)
-          localStorage.setItem("customSecondary", profile.customSecondary)
+          localStorage.setItem("customPrimary", profile.customPrimary || "#7c3aed")
+          localStorage.setItem("customSecondary", profile.customSecondary || "#ec4899")
         } else {
           localStorage.removeItem("customPrimary")
           localStorage.removeItem("customSecondary")
