@@ -13,14 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -48,21 +41,19 @@ export default function PomodoroPage() {
           const workDuration = data.profile.pomodoro_work_duration || 25
           const breakDuration = data.profile.pomodoro_break_duration || 5
           const longBreakDuration = data.profile.pomodoro_long_break_duration || 15
-          
+
           const savedDurations = {
             work: Math.max(1, workDuration) * 60,
             break: Math.max(1, breakDuration) * 60,
             longBreak: Math.max(1, longBreakDuration) * 60,
           }
-          
+
           setDurations(savedDurations)
           if (mode === "work" && !isRunning) {
             setTimeLeft(savedDurations.work)
           }
         }
-      } catch (error) {
-        console.error("[v0] Error loading pomodoro settings:", error)
-      }
+      } catch (error) {}
     }
 
     loadSettings()
@@ -78,13 +69,13 @@ export default function PomodoroPage() {
           timeLeft,
           sessions,
           durations,
-        })
+        }),
       )
     }
 
     // Save state when component unmounts or user leaves
     window.addEventListener("beforeunload", saveStateOnExit)
-    
+
     return () => {
       saveStateOnExit()
       window.removeEventListener("beforeunload", saveStateOnExit)
@@ -96,15 +87,15 @@ export default function PomodoroPage() {
     if (savedState) {
       try {
         const state = JSON.parse(savedState)
-        setMode(state.mode)
-        setTimeLeft(state.timeLeft)
-        setSessions(state.sessions)
-        if (state.durations) {
-          setDurations(state.durations)
-        }
-      } catch (error) {
-        console.error("[v0] Error restoring pomodoro state:", error)
-      }
+        setTimeout(() => {
+          setMode(state.mode)
+          setTimeLeft(state.timeLeft)
+          setSessions(state.sessions)
+          if (state.durations) {
+            setDurations(state.durations)
+          }
+        }, 0)
+      } catch (error) {}
     }
   }, [])
 
@@ -127,12 +118,11 @@ export default function PomodoroPage() {
       return
     }
     sessionSavedRef.current = true
-    
+
     setIsRunning(false)
 
     if (mode === "work") {
       try {
-        console.log("[v0] Saving pomodoro session")
         const durationInMinutes = Math.round(durations.work / 60)
         const response = await fetch("/api/pomodoro", {
           method: "POST",
@@ -140,14 +130,9 @@ export default function PomodoroPage() {
           body: JSON.stringify({ duration: durationInMinutes }),
         })
 
-        if (response.ok) {
-          console.log("[v0] Pomodoro session saved successfully")
-        } else {
-          console.error("[v0] Failed to save pomodoro session:", await response.text())
+        if (!response.ok) {
         }
-      } catch (error) {
-        console.error("[v0] Error saving pomodoro session:", error)
-      }
+      } catch (error) {}
 
       setSessions((prev) => prev + 1)
       setMode(sessions + 1 >= 4 ? "longBreak" : "break")
@@ -157,7 +142,7 @@ export default function PomodoroPage() {
       setTimeLeft(durations.work)
       if (mode === "longBreak") setSessions(0)
     }
-    
+
     setTimeout(() => {
       sessionSavedRef.current = false
     }, 1000)
@@ -181,7 +166,7 @@ export default function PomodoroPage() {
       const validWork = Math.max(1, Math.min(120, workMins))
       const validBreak = Math.max(1, Math.min(60, breakMins))
       const validLongBreak = Math.max(1, Math.min(60, longBreakMins))
-      
+
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -204,13 +189,11 @@ export default function PomodoroPage() {
         setIsRunning(false)
         sessionSavedRef.current = false
       }
-    } catch (error) {
-      console.error("[v0] Error saving pomodoro settings:", error)
-    }
+    } catch (error) {}
   }
 
   const handleCustomDuration = () => {
-    const mins = parseInt(customMinutes)
+    const mins = Number.parseInt(customMinutes)
     if (mins > 0 && mins <= 120) {
       saveDurationPreset(mins, Math.floor(mins / 5), Math.floor(mins / 2))
       setShowCustomDialog(false)
@@ -238,15 +221,9 @@ export default function PomodoroPage() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Timer Presets</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => saveDurationPreset(15, 3, 10)}>
-                Short (15/3/10 min)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => saveDurationPreset(25, 5, 15)}>
-                Standard (25/5/15 min)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => saveDurationPreset(45, 10, 30)}>
-                Long (45/10/30 min)
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => saveDurationPreset(15, 3, 10)}>Short (15/3/10 min)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => saveDurationPreset(25, 5, 15)}>Standard (25/5/15 min)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => saveDurationPreset(45, 10, 30)}>Long (45/10/30 min)</DropdownMenuItem>
               <DropdownMenuItem onClick={() => saveDurationPreset(60, 15, 30)}>
                 Extended (60/15/30 min)
               </DropdownMenuItem>
@@ -340,8 +317,8 @@ export default function PomodoroPage() {
                 placeholder="25"
               />
               <p className="text-xs text-muted-foreground">
-                Break: {Math.floor(parseInt(customMinutes || "25") / 5)} min | Long Break:{" "}
-                {Math.floor(parseInt(customMinutes || "25") / 2)} min
+                Break: {Math.floor(Number.parseInt(customMinutes || "25") / 5)} min | Long Break:{" "}
+                {Math.floor(Number.parseInt(customMinutes || "25") / 2)} min
               </p>
             </div>
             <Button onClick={handleCustomDuration} className="w-full">
