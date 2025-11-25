@@ -102,6 +102,7 @@ export async function PATCH(request: Request) {
     const updates: any = { updated_at: new Date().toISOString() }
     if (theme !== undefined) updates.theme = theme
     if (theme_preference !== undefined) {
+      // Always serialize theme_preference as JSON string for database storage
       updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
     }
     if (language !== undefined) updates.language = language
