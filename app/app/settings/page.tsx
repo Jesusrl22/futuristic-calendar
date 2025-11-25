@@ -140,10 +140,10 @@ export default function SettingsPage() {
 
       const themePreference =
         profile.theme === "custom"
-          ? JSON.stringify({
+          ? {
               customPrimary: profile.customPrimary || "#7c3aed",
               customSecondary: profile.customSecondary || "#ec4899",
-            })
+            }
           : null
 
       const response = await fetch("/api/settings", {
@@ -173,6 +173,10 @@ export default function SettingsPage() {
           const secondaryColor = profile.customSecondary || "#ec4899"
           localStorage.setItem("customPrimary", primaryColor)
           localStorage.setItem("customSecondary", secondaryColor)
+          // Apply theme immediately after saving
+          setTimeout(() => {
+            applyTheme("custom", primaryColor, secondaryColor)
+          }, 0)
         } else {
           localStorage.removeItem("customPrimary")
           localStorage.removeItem("customSecondary")
