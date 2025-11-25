@@ -12,23 +12,19 @@ function getUserIdFromToken(token: string): string | null {
 
 export async function POST(request: Request) {
   try {
-    console.log("[v0] Pomodoro session save started")
     const cookieStore = await cookies()
     const accessToken = cookieStore.get("sb-access-token")?.value
 
     if (!accessToken) {
-      console.log("[v0] No access token found")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const userId = getUserIdFromToken(accessToken)
     if (!userId) {
-      console.log("[v0] Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
     const body = await request.json()
-    console.log("[v0] Saving pomodoro session:", { userId, duration: body.duration })
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const headers = {
@@ -40,11 +36,9 @@ export async function POST(request: Request) {
 
     const sessionData = {
       user_id: userId,
-      duration: body.duration, // already in minutes from frontend
+      duration: body.duration,
       completed: true,
     }
-    console.log("[v0] Request data:", sessionData)
-    console.log("[v0] Request URL:", `${supabaseUrl}/rest/v1/pomodoro_sessions`)
 
     const response = await fetch(`${supabaseUrl}/rest/v1/pomodoro_sessions`, {
       method: "POST",
@@ -52,20 +46,16 @@ export async function POST(request: Request) {
       body: JSON.stringify(sessionData),
     })
 
-    console.log("[v0] Response status:", response.status)
-    
     if (!response.ok) {
       const error = await response.text()
-      console.log("[v0] Failed to save pomodoro session:", error)
       return NextResponse.json({ error: "Failed to save session", details: error }, { status: response.status })
     }
 
     const session = await response.json()
-    console.log("[v0] Pomodoro session saved successfully:", session)
 
     return NextResponse.json({ success: true, session })
   } catch (error) {
-    console.error("[v0] Error saving pomodoro session:", error)
+    console.error("Error saving pomodoro session:", error)
     return NextResponse.json({ error: "Failed to save session", details: String(error) }, { status: 500 })
   }
 }

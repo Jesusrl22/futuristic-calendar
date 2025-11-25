@@ -210,17 +210,11 @@ export const allThemes = [...freeThemes, ...premiumThemes, ...proThemes]
 export function getThemesByTier(userPlan: string): Theme[] {
   const plan = (userPlan || "free").toLowerCase().trim()
 
-  console.log("[v0] getThemesByTier - Input plan:", userPlan, "| Normalized:", plan)
-
   if (plan === "pro") {
-    console.log("[v0] Returning ALL themes (Free + Premium + Pro) = ", allThemes.length, "themes")
     return allThemes
   } else if (plan === "premium") {
-    const themes = [...freeThemes, ...premiumThemes]
-    console.log("[v0] Returning Free + Premium themes =", themes.length, "themes")
-    return themes
+    return [...freeThemes, ...premiumThemes]
   } else {
-    console.log("[v0] Returning Free themes only =", freeThemes.length, "themes")
     return freeThemes
   }
 }
@@ -272,13 +266,9 @@ function hexToHSL(hex: string): string {
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
 
-  console.log("[v0] Applying theme:", themeId, customPrimary, customSecondary)
-
   if (themeId === "custom" && customPrimary && customSecondary) {
     const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
-
-    console.log("[v0] Custom colors converted to HSL:", primaryHSL, secondaryHSL)
 
     root.style.setProperty("--primary", primaryHSL)
     root.style.setProperty("--accent", primaryHSL)
@@ -297,7 +287,6 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
 
   const theme = allThemes.find((t) => t.id === themeId)
   if (!theme) {
-    console.warn("[v0] Theme not found:", themeId)
     return
   }
 

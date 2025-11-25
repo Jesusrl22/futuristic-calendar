@@ -31,15 +31,8 @@ export default function AchievementsPage() {
 
   useEffect(() => {
     fetchAchievements()
-    if ("Notification" in window) {
-      console.log("[v0] Notification permission:", Notification.permission)
-      if (Notification.permission === "default") {
-        Notification.requestPermission().then((permission) => {
-          console.log("[v0] Notification permission result:", permission)
-        })
-      }
-    } else {
-      console.log("[v0] Browser does not support notifications")
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
     }
   }, [])
 
@@ -48,33 +41,25 @@ export default function AchievementsPage() {
       const response = await fetch("/api/achievements")
       const data = await response.json()
 
-      console.log("[v0] Achievements data:", data)
-
       setAchievements(data.achievements || [])
       setStats(data.stats || { tasks: 0, notes: 0, pomodoro: 0 })
 
       if (data.newUnlocks > 0) {
         toast({
           title: "🎉 Achievement Unlocked!",
-          description: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
+          description: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? "s" : ""}!`,
           duration: 5000,
         })
 
-        if ("Notification" in window) {
-          console.log("[v0] Attempting to send notification, permission:", Notification.permission)
-          if (Notification.permission === "granted") {
-            try {
-              const notification = new Notification("Achievement Unlocked! 🎉", {
-                body: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? 's' : ''}!`,
-                icon: "/favicon.ico",
-                tag: "achievement-unlock",
-              })
-              console.log("[v0] Notification sent successfully")
-            } catch (error) {
-              console.error("[v0] Error sending notification:", error)
-            }
-          } else {
-            console.log("[v0] Notification permission not granted")
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            new Notification("Achievement Unlocked! 🎉", {
+              body: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? "s" : ""}!`,
+              icon: "/favicon.ico",
+              tag: "achievement-unlock",
+            })
+          } catch (error) {
+            console.error("Error sending notification:", error)
           }
         }
       }

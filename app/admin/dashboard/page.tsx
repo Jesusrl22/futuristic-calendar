@@ -62,7 +62,7 @@ export default function AdminDashboardPage() {
       setIsAdmin(true)
       fetchUsers()
     } catch (error) {
-      console.error("[v0] Admin access check error:", error)
+      console.error("Admin access check error:", error)
       router.push("/admin")
     }
   }
@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
       setUsers(data.users || [])
       setFilteredUsers(data.users || [])
     } catch (error) {
-      console.error("[v0] Error fetching users:", error)
+      // Silently handle error
     } finally {
       setLoading(false)
     }
@@ -126,7 +126,6 @@ export default function AdminDashboardPage() {
       const credits = creditsInfo[newTier as keyof typeof creditsInfo] || "AI credits"
       alert(`User updated successfully!\nPlan: ${newTier.toUpperCase()}\nCredits assigned: ${credits}`)
     } catch (error) {
-      console.error("[v0] Error updating user tier:", error)
       alert("Error updating user. Please try again.")
     }
   }
@@ -152,7 +151,6 @@ export default function AdminDashboardPage() {
       setDeleteDialogOpen(false)
       setUserToDelete(null)
     } catch (error) {
-      console.error("[v0] Error deleting user:", error)
       alert("Error deleting user. Please try again.")
     }
   }

@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation, type Language } from "@/lib/translations"
+import { supabase } from "@/lib/supabase"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -74,20 +75,15 @@ export default function TasksPage() {
     loadLanguage()
 
     const fetchTimezone = async () => {
-      try {
-        const response = await fetch("/api/settings")
-        const data = await response.json()
-        if (data.profile?.timezone) {
-          setUserTimezone(data.profile.timezone)
-          localStorage.setItem("timezone", data.profile.timezone)
-          console.log("[v0] Loaded timezone from database:", data.profile.timezone)
-        } else {
-          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-          setUserTimezone(detectedTimezone)
-          console.log("[v0] Using detected timezone:", detectedTimezone)
-        }
-      } catch (error) {
-        console.error("[v0] Error fetching timezone:", error)
+      const { data } = await supabase
+        .from("users")
+        .select("timezone")
+        .eq("id", (await supabase.auth.getUser()).data.user?.id)
+        .single()
+
+      if (data?.timezone) {
+        setUserTimezone(data.timezone)
+      } else {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
         setUserTimezone(detectedTimezone)
       }
@@ -146,9 +142,25 @@ export default function TasksPage() {
         const [year, month, day] = newTask.due_date.split("-")
         if (newTask.due_time) {
           const [hours, minutes] = newTask.due_time.split(":")
-          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
+          const localDate = new Date(
+            Number.parseInt(year),
+            Number.parseInt(month) - 1,
+            Number.parseInt(day),
+            Number.parseInt(hours),
+            Number.parseInt(minutes),
+            0,
+          )
+          dueDate = localDate.toISOString()
         } else {
-          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T23:59:59`
+          const localDate = new Date(
+            Number.parseInt(year),
+            Number.parseInt(month) - 1,
+            Number.parseInt(day),
+            23,
+            59,
+            59,
+          )
+          dueDate = localDate.toISOString()
         }
       }
 
@@ -183,7 +195,6 @@ export default function TasksPage() {
         fetchTasks()
       }
     } catch (error) {
-      console.error("Error creating task:", error)
       alert("Failed to create task. Please try again.")
     } finally {
       setIsCreating(false)
@@ -225,9 +236,25 @@ export default function TasksPage() {
         const [year, month, day] = editForm.due_date.split("-")
         if (editForm.due_time) {
           const [hours, minutes] = editForm.due_time.split(":")
-          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
+          const localDate = new Date(
+            Number.parseInt(year),
+            Number.parseInt(month) - 1,
+            Number.parseInt(day),
+            Number.parseInt(hours),
+            Number.parseInt(minutes),
+            0,
+          )
+          dueDate = localDate.toISOString()
         } else {
-          dueDate = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T23:59:59`
+          const localDate = new Date(
+            Number.parseInt(year),
+            Number.parseInt(month) - 1,
+            Number.parseInt(day),
+            23,
+            59,
+            59,
+          )
+          dueDate = localDate.toISOString()
         }
       }
 
@@ -254,7 +281,6 @@ export default function TasksPage() {
         fetchTasks()
       }
     } catch (error) {
-      console.error("Error updating task:", error)
       alert("Failed to update task. Please try again.")
     } finally {
       setIsCreating(false)

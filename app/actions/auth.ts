@@ -24,8 +24,6 @@ export async function signUp(formData: FormData) {
     return { error: "Password must be at least 6 characters" }
   }
 
-  console.log("[v0] Starting signup for:", email)
-
   const supabase = createAdminClient()
 
   try {
@@ -34,8 +32,6 @@ export async function signUp(formData: FormData) {
       password,
       email_confirm: true,
     })
-
-    console.log("[v0] Auth signup response:", { userId: authData?.user?.id, error: authError?.message })
 
     if (authError) throw authError
     if (!authData.user) throw new Error("Failed to create user")
@@ -50,14 +46,13 @@ export async function signUp(formData: FormData) {
     })
 
     if (profileError) {
-      console.error("[v0] Profile creation error:", profileError)
+      console.error("Profile creation error:", profileError)
       throw new Error(`Database error creating user profile: ${profileError.message}`)
     }
 
-    console.log("[v0] User created successfully")
     return { success: true, message: "Account created successfully! Please sign in." }
   } catch (err: any) {
-    console.error("[v0] Signup error:", err)
+    console.error("Signup error:", err)
     return { error: err.message || "Database error creating new user" }
   }
 }
@@ -70,8 +65,6 @@ export async function signIn(formData: FormData) {
     return { error: "Email and password are required" }
   }
 
-  console.log("[v0] Attempting login for:", email)
-
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   try {
@@ -83,8 +76,6 @@ export async function signIn(formData: FormData) {
     if (error) throw error
     if (!data.session) throw new Error("Failed to create session")
 
-    console.log("[v0] Login successful, setting cookies")
-
     const cookieStore = await cookies()
 
     cookieStore.set("sb-access-token", data.session.access_token, {
@@ -92,7 +83,7 @@ export async function signIn(formData: FormData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     })
 
     cookieStore.set("sb-refresh-token", data.session.refresh_token, {
@@ -100,13 +91,12 @@ export async function signIn(formData: FormData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 30,
     })
 
-    console.log("[v0] Cookies set successfully")
     return { success: true }
   } catch (err: any) {
-    console.error("[v0] Login error:", err)
+    console.error("Login error:", err)
     return { error: err.message || "Invalid credentials" }
   }
 }

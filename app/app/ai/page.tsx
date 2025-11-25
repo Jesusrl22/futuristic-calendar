@@ -35,7 +35,7 @@ export default function AIPage() {
         }
       }
     } catch (error) {
-      console.error("[v0] Error fetching profile:", error)
+      console.error("Error fetching profile:", error)
     } finally {
       setCheckingAccess(false)
     }
@@ -55,26 +55,23 @@ export default function AIPage() {
     setLoading(true)
 
     try {
-      console.log("[v0] Sending message to AI...")
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       })
 
-      console.log("[v0] AI response status:", response.status)
       const data = await response.json()
 
       if (data.error) {
-        console.error("[v0] AI error:", data.error)
+        console.error("AI error:", data.error)
         throw new Error(data.error)
       }
 
-      console.log("[v0] AI response received successfully")
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
       setCredits(data.remainingCredits)
     } catch (error) {
-      console.error("[v0] AI chat error:", error)
+      console.error("AI chat error:", error)
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Sorry, I encountered an error. Please try again." },

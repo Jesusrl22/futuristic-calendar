@@ -55,34 +55,17 @@ export default function SettingsPage() {
   }, [])
 
   useEffect(() => {
-    console.log("[v0] Settings - Current plan state:", profile.plan)
-    console.log("[v0] Settings - Plan type:", typeof profile.plan)
-    console.log("[v0] Settings - Plan trimmed:", profile.plan.trim())
-
     const themes = getThemesByTier(profile.plan)
-    console.log("[v0] Settings - Available themes count:", themes.length)
-    console.log(
-      "[v0] Settings - Theme IDs:",
-      themes.map((t) => t.id),
-    )
-    console.log(
-      "[v0] Settings - Theme tiers:",
-      themes.map((t) => t.tier),
-    )
-
     setAvailableThemes(themes)
     setShowCustom(canUseCustomTheme(profile.plan))
   }, [profile.plan])
 
   useEffect(() => {
-    // Don't apply theme during initial load - let ThemeLoader handle it from localStorage
     if (isInitialLoad) {
       return
     }
 
     const timer = setTimeout(() => {
-      console.log("[v0] Applying theme from settings:", profile.theme)
-
       if (profile.theme === "custom") {
         applyTheme("custom", profile.customPrimary, profile.customSecondary)
       } else {
@@ -96,10 +79,8 @@ export default function SettingsPage() {
   const fetchProfile = async () => {
     setLoading(true)
     try {
-      console.log("[v0] Fetching settings from API...")
       const response = await fetch("/api/settings")
       const settingsData = await response.json()
-      console.log("[v0] Settings data:", settingsData)
 
       const savedTheme = localStorage.getItem("theme") || "default"
 
@@ -132,8 +113,6 @@ export default function SettingsPage() {
           plan: plan,
         }
 
-        console.log("[v0] New profile object:", newProfile)
-
         if (newProfile.customPrimary) {
           localStorage.setItem("customPrimary", newProfile.customPrimary)
         }
@@ -143,15 +122,12 @@ export default function SettingsPage() {
 
         if (settingsData.profile.theme && settingsData.profile.theme !== savedTheme) {
           localStorage.setItem("theme", newProfile.theme)
-          console.log("[v0] Synced theme from database to localStorage:", newProfile.theme)
         }
 
         setProfile(newProfile)
         setIsInitialLoad(false)
-        console.log("[v0] Profile loaded successfully with theme:", newProfile.theme)
       }
     } catch (error) {
-      console.error("[v0] Error fetching settings:", error)
     } finally {
       setLoading(false)
     }
@@ -170,9 +146,6 @@ export default function SettingsPage() {
             }
           : null
 
-      console.log("[v0] Saving theme to database:", profile.theme)
-      console.log("[v0] Theme preference:", themePreference)
-
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -188,7 +161,6 @@ export default function SettingsPage() {
       })
 
       const result = await response.json()
-      console.log("[v0] Save response:", result)
 
       if (response.ok && result.success) {
         localStorage.setItem("notifications", profile.notifications.toString())
@@ -204,8 +176,6 @@ export default function SettingsPage() {
           localStorage.removeItem("customSecondary")
         }
 
-        console.log("[v0] Theme saved successfully to database and localStorage:", profile.theme)
-
         toast({
           title: "Settings saved",
           description: "Your settings have been updated successfully.",
@@ -218,7 +188,6 @@ export default function SettingsPage() {
         })
       }
     } catch (error: any) {
-      console.error("[v0] Error saving settings:", error)
       toast({
         title: "Error",
         description: `Failed to save settings: ${error.message || "Network error"}`,
@@ -230,23 +199,18 @@ export default function SettingsPage() {
   }
 
   const handleThemeChange = (themeId: string) => {
-    console.log("[v0] Theme changed to:", themeId)
-
     setProfile((prev) => ({ ...prev, theme: themeId }))
 
     setTimeout(() => {
       localStorage.setItem("theme", themeId)
 
       if (themeId === "custom" && profile.customPrimary && profile.customSecondary) {
-        console.log("[v0] Saving custom colors:", profile.customPrimary, profile.customSecondary)
         localStorage.setItem("customPrimary", profile.customPrimary)
         localStorage.setItem("customSecondary", profile.customSecondary)
       } else if (themeId !== "custom") {
         localStorage.removeItem("customPrimary")
         localStorage.removeItem("customSecondary")
       }
-
-      console.log("[v0] Theme immediately saved to localStorage:", themeId)
     }, 0)
   }
 
@@ -260,9 +224,6 @@ export default function SettingsPage() {
     setTimeout(() => {
       const primary = type === "primary" ? value : updatedProfile.customPrimary || "#84cc16"
       const secondary = type === "secondary" ? value : updatedProfile.customSecondary || "#3b82f6"
-
-      console.log(`[v0] Custom color ${type} changed to:`, value)
-      console.log("[v0] Applying custom theme with colors:", primary, secondary)
 
       localStorage.setItem("customPrimary", primary)
       localStorage.setItem("customSecondary", secondary)

@@ -12,15 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { useTranslation, type Language } from "@/lib/translations"
+import type { Task } from "@/types/task"
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [tasks, setTasks] = useState<any[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<any>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
   const [newTask, setNewTask] = useState({
     title: "",
@@ -29,7 +30,7 @@ export default function CalendarPage() {
     category: "personal",
     time: "",
   })
-  const tasksRef = useRef<any[]>([])
+  const tasksRef = useRef<Task[]>([])
   const [lang, setLang] = useState<Language>("en")
   const { t } = useTranslation(lang)
 
@@ -139,70 +140,33 @@ export default function CalendarPage() {
     })
   }
 
-  const checkNotifications = (tasksToCheck: any[]) => {
-    if (!("Notification" in window) || Notification.permission !== "granted") {
-      console.log("[v0] Notifications not available or not granted")
+  const checkNotifications = (currentTasks: Task[]) => {
+    if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") {
       return
     }
 
     const now = new Date()
-    const nowTime = now.getTime()
-
-    console.log(`[v0] 🔍 Checking ${tasksToCheck.length} tasks for notifications at ${now.toLocaleTimeString()}`)
+    const tasksToCheck = currentTasks.filter((task) => !task.completed && task.due_date)
 
     tasksToCheck.forEach((task) => {
-      if (task.completed || !task.due_date) {
-        return
-      }
+      const taskDate = new Date(task.due_date)
+      const timeDiff = taskDate.getTime() - now.getTime()
+      const minutesDiff = Math.floor(timeDiff / 1000 / 60)
+      const alreadyNotified = localStorage.getItem(`notified-${task.id}`)
 
-      let taskDate: Date
-      const isoMatch = task.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
-      if (isoMatch) {
-        const [, year, month, day, hours, minutes] = isoMatch
-        taskDate = new Date(
-          Number.parseInt(year),
-          Number.parseInt(month) - 1,
-          Number.parseInt(day),
-          Number.parseInt(hours),
-          Number.parseInt(minutes),
-          0,
-        )
-      } else {
-        taskDate = new Date(task.due_date)
-      }
+      if (minutesDiff <= 0 && minutesDiff > -5 && !alreadyNotified) {
+        new Notification("Task Due!", {
+          body: `"${task.title}" is due now!`,
+          icon: "/icon-192.png",
+        })
 
-      const taskTime = taskDate.getTime()
-      const timeUntilTask = taskTime - nowTime
-      const secondsUntilTask = Math.floor(timeUntilTask / 1000)
-      const minutesUntilTask = Math.floor(secondsUntilTask / 60)
-
-      console.log(`[v0] 📋 Task: "${task.title}"`)
-      console.log(`[v0]    Due: ${taskDate.toLocaleString()}`)
-      console.log(
-        `[v0]    Time until: ${minutesUntilTask} min ${secondsUntilTask % 60} sec (${secondsUntilTask}s total)`,
-      )
-
-      if (secondsUntilTask >= -30 && secondsUntilTask <= 30) {
-        const notificationKey = `notified-${task.id}`
-        const alreadyNotified = localStorage.getItem(notificationKey)
-
-        if (!alreadyNotified) {
-          console.log(`[v0] 🔔 SENDING NOTIFICATION for "${task.title}"`)
-          try {
-            new Notification(`🔔 ${task.title}`, {
-              body: task.description || "Your task is due now!",
-              icon: "/favicon.ico",
-              tag: `${task.id}-due`,
-              requireInteraction: true,
-            })
-            localStorage.setItem(notificationKey, "true")
-            localStorage.setItem(notificationKey + "-time", Date.now().toString())
-            console.log(`[v0] ✅ Notification sent successfully`)
-          } catch (error) {
-            console.error("[v0] ❌ Failed to show notification:", error)
-          }
-        } else {
-          console.log(`[v0] ⏭️ Already notified for this task`)
+        localStorage.setItem(`notified-${task.id}`, "true")
+        localStorage.setItem(`notified-${task.id}-time`, task.due_date)
+      } else if (alreadyNotified) {
+        const notifiedTime = localStorage.getItem(`notified-${task.id}-time`)
+        if (notifiedTime !== task.due_date) {
+          localStorage.removeItem(`notified-${task.id}`)
+          localStorage.removeItem(`notified-${task.id}-time`)
         }
       }
     })
@@ -221,9 +185,20 @@ export default function CalendarPage() {
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
-      dueDate = `${year}-${month}-${day}T${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}:00`
+      // Create date in local timezone
+      const localDate = new Date(
+        year,
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        Number.parseInt(hours),
+        Number.parseInt(minutes),
+        0,
+      )
+      dueDate = localDate.toISOString()
     } else {
-      dueDate = `${year}-${month}-${day}T23:59:59`
+      // Default to end of day in local timezone
+      const localDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
+      dueDate = localDate.toISOString()
     }
 
     try {
@@ -252,7 +227,6 @@ export default function CalendarPage() {
         setTimeout(() => checkNotifications(tasksRef.current), 500)
       }
     } catch (error) {
-      console.error("Error creating task:", error)
       alert("Failed to create task. Please try again.")
     }
   }
@@ -311,7 +285,15 @@ export default function CalendarPage() {
       const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (match) {
         const [, year, month, day, hours, minutes] = match
-        dueDate = `${year}-${month}-${day}T${hours}:${minutes}:00`
+        const localDate = new Date(
+          Number.parseInt(year),
+          Number.parseInt(month) - 1,
+          Number.parseInt(day),
+          Number.parseInt(hours),
+          Number.parseInt(minutes),
+          0,
+        )
+        dueDate = localDate.toISOString()
       } else {
         dueDate = editingTask.due_date
       }
@@ -341,32 +323,7 @@ export default function CalendarPage() {
         setEditingTask(null)
       }
     } catch (error) {
-      console.error("Error updating task:", error)
-    }
-  }
-
-  const updateTask = async (id: string, updates: any) => {
-    try {
-      if (updates.due_date) {
-        localStorage.removeItem(`notified-${id}`)
-        localStorage.removeItem(`notified-${id}-time`)
-        console.log(`[v0] Cleared notification flag for task ${id} due to time change`)
-      }
-
-      const response = await fetch("/api/tasks", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id, ...updates }),
-      })
-      if (response.ok) {
-        fetchTasks()
-        setIsEditDialogOpen(false)
-        setEditingTask(null)
-      }
-    } catch (error) {
-      console.error("Error updating task:", error)
+      alert("Failed to update task")
     }
   }
 
