@@ -208,23 +208,6 @@ export default function SignupPage() {
   if (hasSession) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-        <div className="absolute top-4 right-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="bg-secondary/50">
-                <Globe className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleLanguageChange("en")}>English</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange("es")}>Español</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange("fr")}>Français</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange("de")}>Deutsch</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleLanguageChange("it")}>Italiano</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
         <div className="w-full max-w-md">
@@ -260,23 +243,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
-      <div className="absolute top-4 right-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="bg-secondary/50">
-              <Globe className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleLanguageChange("en")}>English</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleLanguageChange("es")}>Español</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleLanguageChange("fr")}>Français</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleLanguageChange("de")}>Deutsch</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleLanguageChange("it")}>Italiano</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
       <div className="w-full max-w-md">
@@ -287,6 +253,32 @@ export default function SignupPage() {
             </div>
             <h1 className="text-3xl font-bold mb-2">{t.createAccount}</h1>
             <p className="text-muted-foreground">{t.subtitle}</p>
+          </div>
+
+          <div className="mb-6 flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="bg-secondary/50 gap-2">
+                  <Globe className="h-4 w-4" />
+                  {language === "en"
+                    ? "English"
+                    : language === "es"
+                      ? "Español"
+                      : language === "fr"
+                        ? "Français"
+                        : language === "de"
+                          ? "Deutsch"
+                          : "Italiano"}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                <DropdownMenuItem onClick={() => handleLanguageChange("en")}>English</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleLanguageChange("es")}>Español</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleLanguageChange("fr")}>Français</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleLanguageChange("de")}>Deutsch</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleLanguageChange("it")}>Italiano</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">

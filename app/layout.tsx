@@ -21,17 +21,19 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.reactNode
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
+      <head>
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3746054566396266"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
+      </head>
+      <body className="font-sans antialiased">
         <ThemeLoader />
         {children}
       </body>
