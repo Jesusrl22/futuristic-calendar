@@ -24,7 +24,7 @@ export function getSubscriptionAccess(tier: SubscriptionTier | null): Subscripti
       return {
         notes: true,
         wishlist: true,
-        ai: false,
+        ai: true,
         futureTasks: true,
         admin: false,
       }
@@ -43,4 +43,32 @@ export function getSubscriptionAccess(tier: SubscriptionTier | null): Subscripti
 export function canAccessFeature(tier: SubscriptionTier | null, feature: keyof SubscriptionAccess): boolean {
   const access = getSubscriptionAccess(tier)
   return access[feature]
+}
+
+export function canAccessAdvancedPomodoro(tier: SubscriptionTier | null): boolean {
+  const normalizedTier = tier?.toLowerCase() as SubscriptionTier
+  return normalizedTier === "premium" || normalizedTier === "pro"
+}
+
+export function canAccessStatistics(tier: SubscriptionTier | null): boolean {
+  const normalizedTier = tier?.toLowerCase() as SubscriptionTier
+  return normalizedTier === "pro"
+}
+
+export function canAccessCustomTheme(tier: SubscriptionTier | null): boolean {
+  const normalizedTier = tier?.toLowerCase() as SubscriptionTier
+  return normalizedTier === "pro"
+}
+
+export function getAICredits(tier: SubscriptionTier | null): number {
+  const normalizedTier = tier?.toLowerCase() as SubscriptionTier
+  switch (normalizedTier) {
+    case "pro":
+      return 500
+    case "premium":
+      return 100
+    case "free":
+    default:
+      return 0
+  }
 }

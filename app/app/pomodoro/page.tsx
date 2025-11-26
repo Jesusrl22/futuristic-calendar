@@ -16,6 +16,7 @@ import {
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { canAccessAdvancedPomodoro } from "@/lib/subscription"
 
 export default function PomodoroPage() {
   const [durations, setDurations] = useState({
@@ -30,8 +31,24 @@ export default function PomodoroPage() {
   const [showCustomDialog, setShowCustomDialog] = useState(false)
   const [customMinutes, setCustomMinutes] = useState("25")
   const sessionSavedRef = useRef(false)
+  const [userTier, setUserTier] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const fetchUserTier = async () => {
+      try {
+        const response = await fetch("/api/user/profile")
+        if (response.ok) {
+          const data = await response.json()
+          setUserTier(data.subscription_plan || "free")
+        }
+      } catch (error) {
+        console.error("Error fetching user tier:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     const loadSettings = async () => {
       try {
         const response = await fetch("/api/settings")
@@ -56,6 +73,7 @@ export default function PomodoroPage() {
       } catch (error) {}
     }
 
+    fetchUserTier()
     loadSettings()
   }, [])
 
@@ -204,6 +222,16 @@ export default function PomodoroPage() {
   const seconds = timeLeft % 60
   const progress = ((durations[mode] - timeLeft) / durations[mode]) * 100
 
+  const hasAdvancedAccess = canAccessAdvancedPomodoro(userTier)
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -212,26 +240,39 @@ export default function PomodoroPage() {
             <span className="text-primary neon-text">Pomodoro Timer</span>
           </h1>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Settings className="w-5 h-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Timer Presets</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => saveDurationPreset(15, 3, 10)}>Short (15/3/10 min)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => saveDurationPreset(25, 5, 15)}>Standard (25/5/15 min)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => saveDurationPreset(45, 10, 30)}>Long (45/10/30 min)</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => saveDurationPreset(60, 15, 30)}>
-                Extended (60/15/30 min)
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowCustomDialog(true)}>Custom Duration...</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {hasAdvancedAccess && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Timer Presets</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => saveDurationPreset(15, 3, 10)}>Short (15/3/10 min)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => saveDurationPreset(25, 5, 15)}>
+                  Standard (25/5/15 min)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => saveDurationPreset(45, 10, 30)}>Long (45/10/30 min)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => saveDurationPreset(60, 15, 30)}>
+                  Extended (60/15/30 min)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowCustomDialog(true)}>Custom Duration...</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
+
+        {!hasAdvancedAccess && (
+          <Card className="glass-card p-4 neon-glow mb-6 bg-primary/10">
+            <p className="text-sm text-center">
+              Upgrade to <span className="font-bold text-primary">Premium</span> to unlock advanced pomodoro settings
+              with multiple presets and custom durations!
+            </p>
+          </Card>
+        )}
 
         <div className="max-w-2xl mx-auto">
           <Card className="glass-card p-12 neon-glow text-center">

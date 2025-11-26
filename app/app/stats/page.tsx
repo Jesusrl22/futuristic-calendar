@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
+import { canAccessStatistics } from "@/lib/subscription"
+import { UpgradeModal } from "@/components/upgrade-modal"
 
 type TimeRange = "day" | "week" | "month"
 
@@ -18,11 +20,32 @@ export default function StatsPage() {
   })
   const [chartData, setChartData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [userTier, setUserTier] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>("day")
 
   useEffect(() => {
-    fetchStats()
-  }, [timeRange])
+    checkAccess()
+  }, [])
+
+  useEffect(() => {
+    if (userTier && canAccessStatistics(userTier)) {
+      fetchStats()
+    }
+  }, [timeRange, userTier])
+
+  const checkAccess = async () => {
+    try {
+      const response = await fetch("/api/user/profile")
+      if (response.ok) {
+        const data = await response.json()
+        setUserTier(data.subscription_plan || "free")
+      }
+    } catch (error) {
+      console.error("Error checking access:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchStats = async () => {
     try {
@@ -40,8 +63,6 @@ export default function StatsPage() {
       }
     } catch (error) {
       console.error("Error fetching stats:", error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -50,9 +71,13 @@ export default function StatsPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading statistics...</div>
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     )
+  }
+
+  if (!canAccessStatistics(userTier)) {
+    return <UpgradeModal feature="Statistics" requiredPlan="pro" />
   }
 
   return (

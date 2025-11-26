@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { canAccessFeature } from "@/lib/subscription"
+import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function WishlistPage() {
   const [items, setItems] = useState<any[]>([])
@@ -33,10 +35,18 @@ export default function WishlistPage() {
 
   const checkSubscriptionAndFetch = async () => {
     try {
-      setLoading(false)
-      fetchItems()
+      const response = await fetch("/api/user/profile")
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriptionTier(data.subscription_plan || "free")
+
+        if (canAccessFeature(data.subscription_plan, "wishlist")) {
+          fetchItems()
+        }
+      }
     } catch (error) {
       console.error("Error checking subscription:", error)
+    } finally {
       setLoading(false)
     }
   }
@@ -121,6 +131,10 @@ export default function WishlistPage() {
         <p>Loading...</p>
       </div>
     )
+  }
+
+  if (!canAccessFeature(subscriptionTier, "wishlist")) {
+    return <UpgradeModal feature="Wishlist" requiredPlan="premium" />
   }
 
   return (

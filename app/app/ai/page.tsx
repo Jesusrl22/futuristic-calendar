@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Zap } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
+import { getAICredits } from "@/lib/subscription"
 
 export default function AIPage() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
@@ -29,8 +30,10 @@ export default function AIPage() {
       const response = await fetch("/api/user/profile")
       if (response.ok) {
         const data = await response.json()
-        setSubscriptionTier(data?.subscription_tier || "free")
-        if (data?.subscription_tier === "pro") {
+        setSubscriptionTier(data.subscription_plan || "free")
+
+        const tierCredits = getAICredits(data.subscription_plan)
+        if (tierCredits > 0) {
           setCredits(data?.ai_credits || 0)
         }
       }
@@ -89,8 +92,8 @@ export default function AIPage() {
     )
   }
 
-  if (subscriptionTier !== "pro") {
-    return <UpgradeModal feature="AI Assistant" requiredPlan="pro" />
+  if (subscriptionTier === "free") {
+    return <UpgradeModal feature="AI Assistant" requiredPlan="premium" />
   }
 
   return (

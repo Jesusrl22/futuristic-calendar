@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2, Edit2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { canAccessFeature } from "@/lib/subscription"
+import { UpgradeModal } from "@/components/upgrade-modal"
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<any[]>([])
@@ -23,10 +25,18 @@ export default function NotesPage() {
 
   const checkSubscriptionAndFetch = async () => {
     try {
-      setLoading(false)
-      fetchNotes()
+      const response = await fetch("/api/user/profile")
+      if (response.ok) {
+        const data = await response.json()
+        setSubscriptionTier(data.subscription_plan || "free")
+
+        if (canAccessFeature(data.subscription_plan, "notes")) {
+          fetchNotes()
+        }
+      }
     } catch (error) {
       console.error("Error checking subscription:", error)
+    } finally {
       setLoading(false)
     }
   }
@@ -97,6 +107,10 @@ export default function NotesPage() {
         <p>Loading...</p>
       </div>
     )
+  }
+
+  if (!canAccessFeature(subscriptionTier, "notes")) {
+    return <UpgradeModal feature="Notes" requiredPlan="premium" />
   }
 
   return (
