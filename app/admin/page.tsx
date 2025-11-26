@@ -41,12 +41,10 @@ export default function AdminLoginPage() {
     setError("")
 
     try {
-      // Simple admin authentication
       const adminUsername = "admin"
-      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123"
+      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "535353-Jrl"
 
       if (username === adminUsername && password === adminPassword) {
-        // Set admin session
         sessionStorage.setItem("admin_authenticated", "true")
         window.location.href = "/admin/dashboard"
       } else {

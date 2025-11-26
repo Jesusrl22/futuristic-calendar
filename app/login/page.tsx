@@ -8,14 +8,108 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { Globe } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
+const translations = {
+  en: {
+    welcome: "Welcome Back",
+    subtitle: "Sign in to your account to continue",
+    email: "Email",
+    password: "Password",
+    signIn: "Sign In",
+    signingIn: "Signing in...",
+    noAccount: "Don't have an account?",
+    signUp: "Sign up",
+    backHome: "← Back to home",
+    alreadyLoggedIn: "Already Logged In",
+    activeSession: "You have an active session",
+    continueApp: "Continue to App",
+    logoutDifferent: "Logout and Sign In with Different Account",
+  },
+  es: {
+    welcome: "Bienvenido de Nuevo",
+    subtitle: "Inicia sesión para continuar",
+    email: "Correo",
+    password: "Contraseña",
+    signIn: "Iniciar Sesión",
+    signingIn: "Iniciando sesión...",
+    noAccount: "¿No tienes cuenta?",
+    signUp: "Regístrate",
+    backHome: "← Volver al inicio",
+    alreadyLoggedIn: "Ya Has Iniciado Sesión",
+    activeSession: "Tienes una sesión activa",
+    continueApp: "Continuar a la App",
+    logoutDifferent: "Cerrar Sesión para Iniciar con Otra Cuenta",
+  },
+  fr: {
+    welcome: "Bienvenue",
+    subtitle: "Connectez-vous pour continuer",
+    email: "Email",
+    password: "Mot de passe",
+    signIn: "Se Connecter",
+    signingIn: "Connexion...",
+    noAccount: "Pas de compte?",
+    signUp: "S'inscrire",
+    backHome: "← Retour à l'accueil",
+    alreadyLoggedIn: "Déjà Connecté",
+    activeSession: "Vous avez une session active",
+    continueApp: "Continuer vers l'App",
+    logoutDifferent: "Déconnexion pour Changer de Compte",
+  },
+  de: {
+    welcome: "Willkommen Zurück",
+    subtitle: "Melden Sie sich an, um fortzufahren",
+    email: "E-Mail",
+    password: "Passwort",
+    signIn: "Anmelden",
+    signingIn: "Anmeldung...",
+    noAccount: "Kein Konto?",
+    signUp: "Registrieren",
+    backHome: "← Zurück zur Startseite",
+    alreadyLoggedIn: "Bereits Angemeldet",
+    activeSession: "Sie haben eine aktive Sitzung",
+    continueApp: "Zur App",
+    logoutDifferent: "Abmelden und mit Anderem Konto Anmelden",
+  },
+  it: {
+    welcome: "Bentornato",
+    subtitle: "Accedi per continuare",
+    email: "Email",
+    password: "Password",
+    signIn: "Accedi",
+    signingIn: "Accesso...",
+    noAccount: "Non hai un account?",
+    signUp: "Registrati",
+    backHome: "← Torna alla home",
+    alreadyLoggedIn: "Già Connesso",
+    activeSession: "Hai una sessione attiva",
+    continueApp: "Continua all'App",
+    logoutDifferent: "Esci per Accedere con un Altro Account",
+  },
+}
 
 export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [hasSession, setHasSession] = useState(false)
+  const [language, setLanguage] = useState<keyof typeof translations>("en")
   const router = useRouter()
 
   useEffect(() => {
+    const savedLang = localStorage.getItem("language") as keyof typeof translations
+    const browserLang = navigator.language.split("-")[0] as keyof typeof translations
+    const lang = savedLang || (translations[browserLang] ? browserLang : "en")
+    setLanguage(lang)
+
+    const root = document.documentElement
+    root.style.setProperty("--primary", "84 100% 65%")
+    root.style.setProperty("--secondary", "84 50% 25%")
+    root.style.setProperty("--background", "0 0% 15%")
+    root.style.setProperty("--foreground", "0 0% 98%")
+    root.style.setProperty("--card", "0 0% 20%")
+    root.style.setProperty("--card-foreground", "0 0% 98%")
+
     const checkSession = async () => {
       try {
         const response = await fetch("/api/auth/check-session")
@@ -31,6 +125,11 @@ export default function LoginPage() {
     }
     checkSession()
   }, [])
+
+  const handleLanguageChange = (lang: keyof typeof translations) => {
+    setLanguage(lang)
+    localStorage.setItem("language", lang)
+  }
 
   const handleLogout = async () => {
     try {
@@ -71,9 +170,28 @@ export default function LoginPage() {
     }
   }
 
+  const t = translations[language]
+
   if (hasSession) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+        <div className="absolute top-4 right-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="bg-secondary/50">
+                <Globe className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleLanguageChange("en")}>English</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange("es")}>Español</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange("fr")}>Français</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange("de")}>Deutsch</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleLanguageChange("it")}>Italiano</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
         <div className="w-full max-w-md">
@@ -82,23 +200,23 @@ export default function LoginPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
                 <span className="text-3xl font-bold text-primary">FT</span>
               </div>
-              <h1 className="text-3xl font-bold mb-2">Already Logged In</h1>
-              <p className="text-muted-foreground">You have an active session</p>
+              <h1 className="text-3xl font-bold mb-2">{t.alreadyLoggedIn}</h1>
+              <p className="text-muted-foreground">{t.activeSession}</p>
             </div>
 
             <div className="space-y-4">
               <Button onClick={() => (window.location.href = "/app")} className="w-full neon-glow-hover">
-                Continue to App
+                {t.continueApp}
               </Button>
 
               <Button onClick={handleLogout} variant="outline" className="w-full bg-transparent">
-                Logout and Sign In with Different Account
+                {t.logoutDifferent}
               </Button>
             </div>
 
             <div className="mt-6 text-center">
               <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                ← Back to home
+                {t.backHome}
               </Link>
             </div>
           </Card>
@@ -109,6 +227,23 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background relative overflow-hidden">
+      <div className="absolute top-4 right-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="bg-secondary/50">
+              <Globe className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleLanguageChange("en")}>English</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLanguageChange("es")}>Español</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLanguageChange("fr")}>Français</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLanguageChange("de")}>Deutsch</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLanguageChange("it")}>Italiano</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] -z-10" />
 
       <div className="w-full max-w-md">
@@ -117,13 +252,13 @@ export default function LoginPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
               <span className="text-3xl font-bold text-primary">FT</span>
             </div>
-            <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to your account to continue</p>
+            <h1 className="text-3xl font-bold mb-2">{t.welcome}</h1>
+            <p className="text-muted-foreground">{t.subtitle}</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.email}</Label>
               <Input
                 id="email"
                 name="email"
@@ -135,7 +270,7 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.password}</Label>
               <Input
                 id="password"
                 name="password"
@@ -149,20 +284,20 @@ export default function LoginPage() {
             {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</div>}
 
             <Button type="submit" className="w-full neon-glow-hover" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t.signingIn : t.signIn}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Don't have an account? </span>
+            <span className="text-muted-foreground">{t.noAccount} </span>
             <Link href="/signup" className="text-primary hover:underline">
-              Sign up
+              {t.signUp}
             </Link>
           </div>
 
           <div className="mt-4 text-center">
             <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              ← Back to home
+              {t.backHome}
             </Link>
           </div>
         </Card>
