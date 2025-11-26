@@ -11,10 +11,13 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/favicon.ico", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: "/apple-touch-icon.jpg",
+    apple: [{ url: "/apple-touch-icon.jpg", sizes: "180x180", type: "image/jpeg" }],
+  },
+  other: {
+    "google-adsense-account": "ca-pub-3746054566396266",
   },
 }
 
@@ -26,15 +29,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="google-adsense-account" content="ca-pub-3746054566396266" />
+      </head>
+      <body className="font-sans antialiased">
+        <ThemeLoader />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3746054566396266"
           crossOrigin="anonymous"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
-      </head>
-      <body className="font-sans antialiased">
-        <ThemeLoader />
         {children}
       </body>
     </html>
