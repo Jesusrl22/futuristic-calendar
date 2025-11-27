@@ -249,20 +249,20 @@ export default function AdminDashboardPage() {
         </Card>
 
         <Card className="overflow-hidden bg-card/50 backdrop-blur">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px]">
+          <div className="w-full">
+            <table className="w-full text-sm">
               <thead className="border-b border-border/50">
                 <tr className="bg-secondary/50">
-                  <th className="text-left p-4 font-semibold min-w-[180px]">User</th>
-                  <th className="text-left p-4 font-semibold min-w-[200px]">Email</th>
-                  <th className="text-left p-4 font-semibold min-w-[120px]">Current Tier</th>
-                  <th className="text-center p-4 font-semibold w-[80px]">Tasks</th>
-                  <th className="text-center p-4 font-semibold w-[80px]">Notes</th>
-                  <th className="text-center p-4 font-semibold w-[100px]">Pomodoros</th>
-                  <th className="text-center p-4 font-semibold w-[120px]">AI Credits</th>
-                  <th className="text-left p-4 font-semibold min-w-[120px]">Expires</th>
-                  <th className="text-left p-4 font-semibold min-w-[150px]">Change Tier</th>
-                  <th className="text-left p-4 font-semibold min-w-[200px]">Actions</th>
+                  <th className="text-left p-2 font-semibold">User</th>
+                  <th className="text-left p-2 font-semibold">Email</th>
+                  <th className="text-left p-2 font-semibold">Tier</th>
+                  <th className="text-center p-2 font-semibold text-xs">Tasks</th>
+                  <th className="text-center p-2 font-semibold text-xs">Notes</th>
+                  <th className="text-center p-2 font-semibold text-xs">Pomodoros</th>
+                  <th className="text-center p-2 font-semibold text-xs">AI Credits</th>
+                  <th className="text-left p-2 font-semibold text-xs">Expires</th>
+                  <th className="text-left p-2 font-semibold">Change</th>
+                  <th className="text-center p-2 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -281,50 +281,52 @@ export default function AdminDashboardPage() {
                 ) : (
                   filteredUsers.map((user) => (
                     <tr key={user.id} className="border-b border-border/30 hover:bg-secondary/30 transition-colors">
-                      <td className="p-4">
-                        <div className="font-medium">{user.name || "No name"}</div>
-                        <div className="text-sm text-muted-foreground">Joined {formatDate(user.created_at)}</div>
+                      <td className="p-2">
+                        <div className="font-medium text-xs">{user.name || "No name"}</div>
+                        <div className="text-[10px] text-muted-foreground">{formatDate(user.created_at)}</div>
                       </td>
-                      <td className="p-4 text-sm">{user.email}</td>
-                      <td className="p-4">
+                      <td className="p-2 text-xs max-w-[150px] truncate" title={user.email}>
+                        {user.email}
+                      </td>
+                      <td className="p-2">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${getTierBadge(
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${getTierBadge(
                             user.subscription_plan,
                           )}`}
                         >
                           {user.subscription_plan?.toUpperCase() || "FREE"}
                         </span>
                       </td>
-                      <td className="p-4 text-center">
-                        <span className="font-semibold text-blue-500">{user.stats?.tasks || 0}</span>
+                      <td className="p-2 text-center">
+                        <span className="font-semibold text-blue-500 text-xs">{user.stats?.tasks || 0}</span>
                       </td>
-                      <td className="p-4 text-center">
-                        <span className="font-semibold text-green-500">{user.stats?.notes || 0}</span>
+                      <td className="p-2 text-center">
+                        <span className="font-semibold text-green-500 text-xs">{user.stats?.notes || 0}</span>
                       </td>
-                      <td className="p-4 text-center">
-                        <span className="font-semibold text-purple-500">{user.stats?.pomodoros || 0}</span>
+                      <td className="p-2 text-center">
+                        <span className="font-semibold text-purple-500 text-xs">{user.stats?.pomodoros || 0}</span>
                       </td>
-                      <td className="p-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <span className="text-sm font-semibold text-orange-500">
-                            {user.stats?.creditsRemaining || 0} left
+                      <td className="p-2 text-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] font-semibold text-orange-500">
+                            {user.stats?.creditsRemaining || 0}
                           </span>
-                          <span className="text-xs text-muted-foreground">{user.stats?.creditsUsed || 0} used</span>
+                          <span className="text-[9px] text-muted-foreground">/{user.stats?.creditsUsed || 0}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-sm">
+                      <td className="p-2 text-[10px]">
                         {user.subscription_expires_at ? (
                           <span className="text-muted-foreground">{formatDate(user.subscription_expires_at)}</span>
                         ) : (
-                          <span className="text-muted-foreground italic">No expiration</span>
+                          <span className="text-muted-foreground italic">Never</span>
                         )}
                       </td>
-                      <td className="p-4">
+                      <td className="p-2">
                         <Select
                           value={user.subscription_plan || "free"}
                           onValueChange={(value) => updateUserTier(user.id, value)}
                         >
-                          <SelectTrigger className="w-[140px]">
+                          <SelectTrigger className="w-[90px] h-7 text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -334,19 +336,20 @@ export default function AdminDashboardPage() {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="p-4">
-                        <div className="flex gap-2">
+                      <td className="p-2">
+                        <div className="flex gap-1">
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-7 text-[10px] px-2 bg-transparent"
                                 onClick={() => {
                                   setSelectedUser(user)
                                   setExpirationDate(user.subscription_expires_at?.split("T")[0] || "")
                                 }}
                               >
-                                Set Expiration
+                                Expires
                               </Button>
                             </DialogTrigger>
                             <DialogContent>
@@ -390,6 +393,7 @@ export default function AdminDashboardPage() {
                           <Button
                             variant="destructive"
                             size="sm"
+                            className="h-7 text-[10px] px-2"
                             onClick={() => {
                               setUserToDelete(user)
                               setDeleteDialogOpen(true)
@@ -404,9 +408,6 @@ export default function AdminDashboardPage() {
                 )}
               </tbody>
             </table>
-          </div>
-          <div className="p-4 text-center text-sm text-muted-foreground border-t border-border/30">
-            Scroll horizontally to see all columns →
           </div>
         </Card>
 
