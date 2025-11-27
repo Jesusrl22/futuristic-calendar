@@ -250,19 +250,19 @@ export default function AdminDashboardPage() {
 
         <Card className="overflow-hidden bg-card/50 backdrop-blur">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[1200px]">
               <thead className="border-b border-border/50">
                 <tr className="bg-secondary/50">
-                  <th className="text-left p-4 font-semibold">User</th>
-                  <th className="text-left p-4 font-semibold">Email</th>
-                  <th className="text-left p-4 font-semibold">Current Tier</th>
-                  <th className="text-center p-4 font-semibold">Tasks</th>
-                  <th className="text-center p-4 font-semibold">Notes</th>
-                  <th className="text-center p-4 font-semibold">Pomodoros</th>
-                  <th className="text-center p-4 font-semibold">AI Credits</th>
-                  <th className="text-left p-4 font-semibold">Expires</th>
-                  <th className="text-left p-4 font-semibold">Change Tier</th>
-                  <th className="text-left p-4 font-semibold">Actions</th>
+                  <th className="text-left p-4 font-semibold min-w-[180px]">User</th>
+                  <th className="text-left p-4 font-semibold min-w-[200px]">Email</th>
+                  <th className="text-left p-4 font-semibold min-w-[120px]">Current Tier</th>
+                  <th className="text-center p-4 font-semibold w-[80px]">Tasks</th>
+                  <th className="text-center p-4 font-semibold w-[80px]">Notes</th>
+                  <th className="text-center p-4 font-semibold w-[100px]">Pomodoros</th>
+                  <th className="text-center p-4 font-semibold w-[120px]">AI Credits</th>
+                  <th className="text-left p-4 font-semibold min-w-[120px]">Expires</th>
+                  <th className="text-left p-4 font-semibold min-w-[150px]">Change Tier</th>
+                  <th className="text-left p-4 font-semibold min-w-[200px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -404,6 +404,9 @@ export default function AdminDashboardPage() {
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="p-4 text-center text-sm text-muted-foreground border-t border-border/30">
+            Scroll horizontally to see all columns →
           </div>
         </Card>
 
