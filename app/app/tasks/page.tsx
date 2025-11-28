@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation, type Language } from "@/lib/translations"
 import { supabase } from "@/lib/supabase"
+import { AdSenseBanner } from "@/components/adsense-banner"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -323,15 +324,15 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div>
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold hidden md:block">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold hidden md:block">
             <span className="text-primary neon-text">{t("tasks")}</span>
           </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="neon-glow-hover">
+              <Button className="neon-glow-hover w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 {t("newTask")}
               </Button>
@@ -431,69 +432,76 @@ export default function TasksPage() {
           </Dialog>
         </div>
 
-        <Card className="glass-card p-6 neon-glow mb-6">
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder={t("searchTasks")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-secondary/50"
-              />
-            </div>
-          </div>
-        </Card>
+        <AdSenseBanner adFormat="horizontal" className="mb-6" />
 
-        <Tabs value={filter} onValueChange={setFilter}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
-            <TabsTrigger value="active">{t("activeTasks")}</TabsTrigger>
-            <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              placeholder={t("searchTasks")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-secondary/50"
+            />
+          </div>
+        </div>
+
+        <Tabs value={filter} onValueChange={setFilter} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="all">{t("all")}</TabsTrigger>
+            <TabsTrigger value="active">{t("active")}</TabsTrigger>
+            <TabsTrigger value="completed">{t("completed")}</TabsTrigger>
+            <TabsTrigger value="today">{t("today")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value={filter} className="space-y-4">
-            {filteredTasks.map((task) => (
-              <div key={task.id}>
-                <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
-                  <div className="flex items-center gap-4">
-                    <Checkbox checked={task.completed} onCheckedChange={() => toggleTask(task.id, task.completed)} />
-                    <div className="flex-1">
-                      <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                        {task.title}
-                      </h3>
-                      {task.description && <p className="text-sm text-muted-foreground mt-1">{task.description}</p>}
-                      <div className="flex items-center gap-3 mt-2">
-                        {task.priority && (
-                          <span className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                            {t(task.priority)}
-                          </span>
-                        )}
-                        {task.category && <span className="text-xs text-muted-foreground">{t(task.category)}</span>}
-                        {task.due_date && (
-                          <span className="text-xs text-muted-foreground">
-                            {t("due")}: {formatTaskDateTime(task.due_date)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openEditDialog(task)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            ))}
-
-            {filteredTasks.length === 0 && (
+            {filteredTasks.length === 0 ? (
               <Card className="glass-card p-12 text-center">
-                <p className="text-muted-foreground">{t("noTasksFound")}</p>
+                <p className="text-muted-foreground">{t("noTasks")}</p>
               </Card>
+            ) : (
+              <>
+                {filteredTasks.map((task: any) => (
+                  <div key={task.id}>
+                    <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
+                      <div className="flex items-center gap-4">
+                        <Checkbox
+                          checked={task.completed}
+                          onCheckedChange={() => toggleTask(task.id, task.completed)}
+                        />
+                        <div className="flex-1">
+                          <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                            {task.title}
+                          </h3>
+                          {task.description && <p className="text-sm text-muted-foreground mt-1">{task.description}</p>}
+                          <div className="flex items-center gap-3 mt-2">
+                            {task.priority && (
+                              <span className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                                {t(task.priority)}
+                              </span>
+                            )}
+                            {task.category && <span className="text-xs text-muted-foreground">{t(task.category)}</span>}
+                            {task.due_date && (
+                              <span className="text-xs text-muted-foreground">
+                                {t("due")}: {formatTaskDateTime(task.due_date)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(task)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+                <AdSenseBanner adFormat="auto" className="mt-4" />
+              </>
             )}
           </TabsContent>
         </Tabs>

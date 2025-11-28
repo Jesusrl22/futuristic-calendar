@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { canAccessAdvancedPomodoro } from "@/lib/subscription"
+import { AdSenseBanner } from "@/components/adsense-banner"
 
 export default function PomodoroPage() {
   const [durations, setDurations] = useState({
@@ -233,10 +234,10 @@ export default function PomodoroPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold">
             <span className="text-primary neon-text">Pomodoro Timer</span>
           </h1>
 
@@ -265,6 +266,8 @@ export default function PomodoroPage() {
           )}
         </div>
 
+        <AdSenseBanner adFormat="horizontal" className="mb-6" />
+
         {!hasAdvancedAccess && (
           <Card className="glass-card p-4 neon-glow mb-6 bg-primary/10">
             <p className="text-sm text-center">
@@ -275,7 +278,7 @@ export default function PomodoroPage() {
         )}
 
         <div className="max-w-2xl mx-auto">
-          <Card className="glass-card p-12 neon-glow text-center">
+          <Card className="glass-card p-8 md:p-12 neon-glow text-center">
             <div className="flex justify-center gap-4 mb-8">
               {(["work", "break", "longBreak"] as const).map((m) => (
                 <Button
@@ -335,6 +338,8 @@ export default function PomodoroPage() {
             </div>
           </Card>
         </div>
+
+        <AdSenseBanner adFormat="auto" className="mt-6 max-w-2xl mx-auto" />
       </motion.div>
 
       <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>

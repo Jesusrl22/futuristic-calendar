@@ -3,15 +3,16 @@
 import { useEffect, useState, useRef } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation, type Language } from "@/lib/translations"
+import { AdSenseBanner } from "@/components/adsense-banner"
 import type { Task } from "@/types/task"
 
 export default function CalendarPage() {
@@ -364,6 +365,8 @@ export default function CalendarPage() {
           </Button>
         </div>
 
+        <AdSenseBanner adFormat="horizontal" className="mb-6" />
+
         {notificationPermission === "default" && (
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
             <div className="flex items-center justify-between">
@@ -473,6 +476,8 @@ export default function CalendarPage() {
             })}
           </div>
         </Card>
+
+        <AdSenseBanner adFormat="auto" className="mt-6" />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="glass-card max-w-md">
