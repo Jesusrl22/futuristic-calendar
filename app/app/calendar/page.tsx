@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation, type Language } from "@/lib/translations"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
+import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import type { Task } from "@/types/task"
 
 export default function CalendarPage() {
@@ -366,7 +367,19 @@ export default function CalendarPage() {
           </Button>
         </div>
 
-        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
+        <AdsterraBanner
+          adKey="dd82d93d86b369641ec4dd731423cb09"
+          width={728}
+          height={90}
+          className="mb-6 hidden md:block"
+        />
+
+        <AdsterraMobileBanner
+          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+          width={320}
+          height={50}
+          className="mb-6 block md:hidden"
+        />
 
         {notificationPermission === "default" && (
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
@@ -481,7 +494,14 @@ export default function CalendarPage() {
         <AdsterraNativeBanner
           containerId="container-105a3c31d27607df87969077c87047d4"
           scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
-          className="mt-6"
+          className="mt-6 hidden md:block"
+        />
+
+        <AdsterraMobileBanner
+          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+          width={320}
+          height={50}
+          className="mt-6 block md:hidden"
         />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

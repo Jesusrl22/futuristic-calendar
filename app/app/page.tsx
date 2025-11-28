@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { CheckSquare, FileText, Timer, Zap } from "@/components/icons"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
+import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 
 export default function AppPage() {
   const [user, setUser] = useState<any>(null)
@@ -106,13 +107,16 @@ export default function AppPage() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
+      <h1 className="text-3xl md:text-4xl font-bold mb-8">
+        <span className="text-primary neon-text">Dashboard</span>
+      </h1>
+
+      <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
+      <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mb-6" />
+
       <div>
-        {user?.subscription_plan === "free" && (
-          <div className="mb-6">
-            <AdsterraBanner />
-          </div>
-        )}
+        {user?.subscription_plan === "free" && <div className="mb-6">{/* Removing desktop banner import */}</div>}
 
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 hidden md:block">
@@ -174,7 +178,12 @@ export default function AppPage() {
 
         {user?.subscription_plan === "free" && (
           <div className="mt-6">
-            <AdsterraNativeBanner />
+            <AdsterraNativeBanner
+              containerId="container-105a3c31d27607df87969077c87047d4"
+              scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
+              className="mt-6"
+            />
+            <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mt-6" />
           </div>
         )}
       </div>

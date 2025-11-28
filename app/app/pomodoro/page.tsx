@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label"
 import { canAccessAdvancedPomodoro } from "@/lib/subscription"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
+import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 
 export default function PomodoroPage() {
   const [durations, setDurations] = useState({
@@ -267,7 +268,18 @@ export default function PomodoroPage() {
           )}
         </div>
 
-        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
+        <AdsterraBanner
+          adKey="dd82d93d86b369641ec4dd731423cb09"
+          width={728}
+          height={90}
+          className="mb-6 hidden md:block"
+        />
+        <AdsterraMobileBanner
+          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+          width={320}
+          height={50}
+          className="mb-6 block md:hidden"
+        />
 
         {!hasAdvancedAccess && (
           <Card className="glass-card p-4 neon-glow mb-6 bg-primary/10">
@@ -278,7 +290,7 @@ export default function PomodoroPage() {
           </Card>
         )}
 
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto space-y-8">
           <Card className="glass-card p-8 md:p-12 neon-glow text-center">
             <div className="flex justify-center gap-4 mb-8">
               {(["work", "break", "longBreak"] as const).map((m) => (
@@ -340,17 +352,16 @@ export default function PomodoroPage() {
           </Card>
         </div>
 
-        <AdsterraBanner
-          adKey="dd82d93d86b369641ec4dd731423cb09"
-          width={728}
-          height={90}
-          className="mt-6 max-w-2xl mx-auto"
-        />
-
         <AdsterraNativeBanner
           containerId="container-105a3c31d27607df87969077c87047d4"
           scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
-          className="mt-6 max-w-2xl mx-auto"
+          className="mt-6 hidden md:block"
+        />
+        <AdsterraMobileBanner
+          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+          width={320}
+          height={50}
+          className="mt-6 block md:hidden"
         />
       </motion.div>
 

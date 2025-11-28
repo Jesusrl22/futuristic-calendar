@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getAvailableAchievements, type AchievementTier } from "@/lib/achievements"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
+import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<any[]>([])
@@ -103,7 +104,20 @@ export default function AchievementsPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         {userTier === "free" && (
           <div className="mb-6">
-            <AdsterraBanner />
+            {/* Desktop banner (728x90) */}
+            <AdsterraBanner
+              adKey="dd82d93d86b369641ec4dd731423cb09"
+              width={728}
+              height={90}
+              className="hidden md:block"
+            />
+            {/* Mobile banner (320x50) */}
+            <AdsterraMobileBanner
+              adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+              width={320}
+              height={50}
+              className="block md:hidden"
+            />
           </div>
         )}
 
@@ -267,7 +281,19 @@ export default function AchievementsPage() {
 
         {userTier === "free" && (
           <div className="mt-6">
-            <AdsterraNativeBanner />
+            {/* Desktop native banner */}
+            <AdsterraNativeBanner
+              containerId="container-105a3c31d27607df87969077c87047d4"
+              scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
+              className="hidden md:block"
+            />
+            {/* Mobile banner */}
+            <AdsterraMobileBanner
+              adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+              width={320}
+              height={50}
+              className="block md:hidden"
+            />
           </div>
         )}
       </motion.div>

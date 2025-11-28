@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/lib/themes"
 import { Badge } from "@/components/ui/badge"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
+import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 
 type ProfileType = {
   email: string
@@ -478,7 +479,19 @@ export default function SettingsPage() {
 
         {profile.plan === "free" && (
           <div className="mt-6">
-            <AdsterraNativeBanner />
+            {/* Desktop native banner - only shows on desktop */}
+            <AdsterraNativeBanner
+              containerId="container-105a3c31d27607df87969077c87047d4"
+              scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
+              className="hidden md:block"
+            />
+            {/* Mobile banner - only shows on mobile */}
+            <AdsterraMobileBanner
+              adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
+              width={320}
+              height={50}
+              className="block md:hidden"
+            />
           </div>
         )}
       </div>
