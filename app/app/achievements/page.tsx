@@ -7,6 +7,8 @@ import { Trophy, Lock } from "@/components/icons"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { getAvailableAchievements, type AchievementTier } from "@/lib/achievements"
+import { AdsterraBanner } from "@/components/adsterra-banner"
+import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<any[]>([])
@@ -99,6 +101,12 @@ export default function AchievementsPage() {
   return (
     <div className="p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        {userTier === "free" && (
+          <div className="mb-6">
+            <AdsterraBanner />
+          </div>
+        )}
+
         <h1 className="text-4xl font-bold mb-8">
           <span className="text-primary neon-text">Achievements</span>
         </h1>
@@ -254,6 +262,12 @@ export default function AchievementsPage() {
                 )
               })}
             </div>
+          </div>
+        )}
+
+        {userTier === "free" && (
+          <div className="mt-6">
+            <AdsterraNativeBanner />
           </div>
         )}
       </motion.div>

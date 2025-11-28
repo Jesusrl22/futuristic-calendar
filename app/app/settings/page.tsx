@@ -13,6 +13,7 @@ import { useTranslation, type Language } from "@/lib/translations"
 import { useToast } from "@/hooks/use-toast"
 import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/lib/themes"
 import { Badge } from "@/components/ui/badge"
+import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 
 type ProfileType = {
   email: string
@@ -474,6 +475,12 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {profile.plan === "free" && (
+          <div className="mt-6">
+            <AdsterraNativeBanner />
+          </div>
+        )}
       </div>
     </div>
   )

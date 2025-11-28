@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { CheckSquare, FileText, Timer, Zap } from "@/components/icons"
+import { AdsterraBanner } from "@/components/adsterra-banner"
+import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 
 export default function AppPage() {
   const [user, setUser] = useState<any>(null)
@@ -39,7 +41,7 @@ export default function AppPage() {
     }
 
     checkAuth()
-    
+
     const interval = setInterval(() => {
       fetchUserProfile()
     }, 5000)
@@ -59,7 +61,7 @@ export default function AppPage() {
       if (response.ok) {
         const data = await response.json()
         setUser(data)
-        setStats(prev => ({ ...prev, credits: data.ai_credits || 0 }))
+        setStats((prev) => ({ ...prev, credits: data.ai_credits || 0 }))
       }
     } catch (error) {
       console.error("[v0] Error fetching profile:", error)
@@ -73,7 +75,7 @@ export default function AppPage() {
       const response = await fetch("/api/stats?range=month")
       if (response.ok) {
         const data = await response.json()
-        setStats(prev => ({
+        setStats((prev) => ({
           ...prev,
           tasks: data.completedTasks || 0,
           notes: data.totalNotes || 0,
@@ -106,6 +108,12 @@ export default function AppPage() {
   return (
     <div className="p-8">
       <div>
+        {user?.subscription_plan === "free" && (
+          <div className="mb-6">
+            <AdsterraBanner />
+          </div>
+        )}
+
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2 hidden md:block">
             Welcome, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
@@ -163,6 +171,12 @@ export default function AppPage() {
             </div>
           </Card>
         </div>
+
+        {user?.subscription_plan === "free" && (
+          <div className="mt-6">
+            <AdsterraNativeBanner />
+          </div>
+        )}
       </div>
     </div>
   )
