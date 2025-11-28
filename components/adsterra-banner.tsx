@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
+import { useMediaQuery } from "@/hooks/use-mobile"
 
 interface AdsterraBannerProps {
   adKey: string
@@ -13,6 +14,7 @@ export function AdsterraBanner({ adKey, width, height, className = "" }: Adsterr
   const [userTier, setUserTier] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const adContainerRef = useRef<HTMLDivElement>(null)
+  const isMobile = useMediaQuery("(max-width: 768px)")
 
   useEffect(() => {
     const fetchUserTier = async () => {
@@ -33,7 +35,7 @@ export function AdsterraBanner({ adKey, width, height, className = "" }: Adsterr
   }, [])
 
   useEffect(() => {
-    if (!loading && userTier === "free" && adContainerRef.current) {
+    if (!loading && userTier === "free" && !isMobile && adContainerRef.current) {
       const script = document.createElement("script")
       script.type = "text/javascript"
       script.innerHTML = `
@@ -52,9 +54,9 @@ export function AdsterraBanner({ adKey, width, height, className = "" }: Adsterr
       invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`
       adContainerRef.current.appendChild(invokeScript)
     }
-  }, [loading, userTier, adKey, width, height])
+  }, [loading, userTier, adKey, width, height, isMobile])
 
-  if (loading || userTier !== "free") {
+  if (loading || userTier !== "free" || isMobile) {
     return null
   }
 

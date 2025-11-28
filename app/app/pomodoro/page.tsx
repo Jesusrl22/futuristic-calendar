@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { canAccessAdvancedPomodoro } from "@/lib/subscription"
 import { AdsterraBanner } from "@/components/adsterra-banner"
+import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 
 export default function PomodoroPage() {
   const [durations, setDurations] = useState({
@@ -343,6 +344,12 @@ export default function PomodoroPage() {
           adKey="dd82d93d86b369641ec4dd731423cb09"
           width={728}
           height={90}
+          className="mt-6 max-w-2xl mx-auto"
+        />
+
+        <AdsterraNativeBanner
+          containerId="container-105a3c31d27607df87969077c87047d4"
+          scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
           className="mt-6 max-w-2xl mx-auto"
         />
       </motion.div>

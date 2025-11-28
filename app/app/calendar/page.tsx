@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation, type Language } from "@/lib/translations"
 import { AdsterraBanner } from "@/components/adsterra-banner"
+import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import type { Task } from "@/types/task"
 
 export default function CalendarPage() {
@@ -477,7 +478,11 @@ export default function CalendarPage() {
           </div>
         </Card>
 
-        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mt-6" />
+        <AdsterraNativeBanner
+          containerId="container-105a3c31d27607df87969077c87047d4"
+          scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
+          className="mt-6"
+        />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="glass-card max-w-md">

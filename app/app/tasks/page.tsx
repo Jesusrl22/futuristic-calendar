@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation, type Language } from "@/lib/translations"
 import { supabase } from "@/lib/supabase"
 import { AdsterraBanner } from "@/components/adsterra-banner"
+import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -500,7 +501,11 @@ export default function TasksPage() {
                     </Card>
                   </div>
                 ))}
-                <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mt-4" />
+                <AdsterraNativeBanner
+                  containerId="container-105a3c31d27607df87969077c87047d4"
+                  scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
+                  className="mt-4"
+                />
               </>
             )}
           </TabsContent>
