@@ -3,13 +3,14 @@
 import { useEffect, useState, useRef } from "react"
 import { useMediaQuery } from "@/hooks/use-mobile"
 
-interface AdsterraNativeBannerProps {
-  containerId: string
-  scriptSrc: string
+interface AdsterraMobileBannerProps {
+  adKey: string
+  width: number
+  height: number
   className?: string
 }
 
-export function AdsterraNativeBanner({ containerId, scriptSrc, className = "" }: AdsterraNativeBannerProps) {
+export function AdsterraMobileBanner({ adKey, width, height, className = "" }: AdsterraMobileBannerProps) {
   const [userTier, setUserTier] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const adContainerRef = useRef<HTMLDivElement>(null)
@@ -34,30 +35,34 @@ export function AdsterraNativeBanner({ containerId, scriptSrc, className = "" }:
   }, [])
 
   useEffect(() => {
-    if (
-      !loading &&
-      userTier === "free" &&
-      !isMobile &&
-      adContainerRef.current &&
-      !adContainerRef.current.querySelector("script")
-    ) {
+    if (!loading && userTier === "free" && isMobile && adContainerRef.current) {
       const script = document.createElement("script")
-      script.async = true
-      script.setAttribute("data-cfasync", "false")
-      script.src = scriptSrc
+      script.type = "text/javascript"
+      script.innerHTML = `
+        atOptions = {
+          'key' : '${adKey}',
+          'format' : 'iframe',
+          'height' : ${height},
+          'width' : ${width},
+          'params' : {}
+        };
+      `
       adContainerRef.current.appendChild(script)
-    }
-  }, [loading, userTier, scriptSrc, isMobile])
 
-  if (loading || userTier !== "free" || isMobile) {
+      const invokeScript = document.createElement("script")
+      invokeScript.type = "text/javascript"
+      invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`
+      adContainerRef.current.appendChild(invokeScript)
+    }
+  }, [loading, userTier, adKey, width, height, isMobile])
+
+  if (loading || userTier !== "free" || !isMobile) {
     return null
   }
 
   return (
     <div className={`w-full flex justify-center my-4 ${className}`}>
-      <div ref={adContainerRef}>
-        <div id={containerId}></div>
-      </div>
+      <div ref={adContainerRef} className="inline-block" style={{ minWidth: `${width}px`, minHeight: `${height}px` }} />
     </div>
   )
 }
