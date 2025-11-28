@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { canAccessAdvancedPomodoro } from "@/lib/subscription"
-import { AdSenseBanner } from "@/components/adsense-banner"
+import { AdsterraBanner } from "@/components/adsterra-banner"
 
 export default function PomodoroPage() {
   const [durations, setDurations] = useState({
@@ -266,7 +266,7 @@ export default function PomodoroPage() {
           )}
         </div>
 
-        <AdSenseBanner adFormat="horizontal" className="mb-6" />
+        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
 
         {!hasAdvancedAccess && (
           <Card className="glass-card p-4 neon-glow mb-6 bg-primary/10">
@@ -339,7 +339,12 @@ export default function PomodoroPage() {
           </Card>
         </div>
 
-        <AdSenseBanner adFormat="auto" className="mt-6 max-w-2xl mx-auto" />
+        <AdsterraBanner
+          adKey="dd82d93d86b369641ec4dd731423cb09"
+          width={728}
+          height={90}
+          className="mt-6 max-w-2xl mx-auto"
+        />
       </motion.div>
 
       <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>

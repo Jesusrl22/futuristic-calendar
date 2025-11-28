@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/ico
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation, type Language } from "@/lib/translations"
-import { AdSenseBanner } from "@/components/adsense-banner"
+import { AdsterraBanner } from "@/components/adsterra-banner"
 import type { Task } from "@/types/task"
 
 export default function CalendarPage() {
@@ -365,7 +365,7 @@ export default function CalendarPage() {
           </Button>
         </div>
 
-        <AdSenseBanner adFormat="horizontal" className="mb-6" />
+        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
 
         {notificationPermission === "default" && (
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
@@ -477,7 +477,7 @@ export default function CalendarPage() {
           </div>
         </Card>
 
-        <AdSenseBanner adFormat="auto" className="mt-6" />
+        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mt-6" />
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="glass-card max-w-md">

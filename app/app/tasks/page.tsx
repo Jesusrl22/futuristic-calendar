@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation, type Language } from "@/lib/translations"
 import { supabase } from "@/lib/supabase"
-import { AdSenseBanner } from "@/components/adsense-banner"
+import { AdsterraBanner } from "@/components/adsterra-banner"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -432,7 +432,7 @@ export default function TasksPage() {
           </Dialog>
         </div>
 
-        <AdSenseBanner adFormat="horizontal" className="mb-6" />
+        <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
 
         <div className="mb-6">
           <div className="relative">
@@ -500,7 +500,7 @@ export default function TasksPage() {
                     </Card>
                   </div>
                 ))}
-                <AdSenseBanner adFormat="auto" className="mt-4" />
+                <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mt-4" />
               </>
             )}
           </TabsContent>
