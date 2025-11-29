@@ -352,7 +352,7 @@ export default function CalendarPage() {
     <div className="p-4 md:p-8">
       <div className="transition-all duration-300">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold">
+          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
             <span className="text-primary neon-text">{t("calendar")}</span>
           </h1>
           <Button

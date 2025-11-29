@@ -108,7 +108,7 @@ export default function AppPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">
+      <h1 className="hidden md:block text-2xl md:text-4xl font-bold mb-6 md:mb-8">
         <span className="text-primary neon-text">Dashboard</span>
       </h1>
 
