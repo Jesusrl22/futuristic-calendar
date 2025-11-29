@@ -351,8 +351,8 @@ export default function CalendarPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="transition-all duration-300">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold hidden md:block">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">
             <span className="text-primary neon-text">{t("calendar")}</span>
           </h1>
           <Button
@@ -432,9 +432,13 @@ export default function CalendarPage() {
           </div>
 
           <div className="grid grid-cols-7 gap-1 md:gap-2">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="text-center font-semibold text-xs md:text-sm text-muted-foreground p-2">
-                {day}
+            {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+              <div
+                key={`${day}-${index}`}
+                className="text-center font-semibold text-xs md:text-sm text-muted-foreground p-1 md:p-2"
+              >
+                <span className="md:hidden">{day}</span>
+                <span className="hidden md:inline">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][index]}</span>
               </div>
             ))}
             {days.map((day, index) => {

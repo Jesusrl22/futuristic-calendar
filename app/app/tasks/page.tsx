@@ -328,8 +328,8 @@ export default function TasksPage() {
   return (
     <div className="p-4 md:p-8">
       <div>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold hidden md:block">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold">
             <span className="text-primary neon-text">{t("tasks")}</span>
           </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -482,32 +482,51 @@ export default function TasksPage() {
                         <Checkbox
                           checked={task.completed}
                           onCheckedChange={() => toggleTask(task.id, task.completed)}
+                          className="flex-shrink-0"
                         />
-                        <div className="flex-1">
-                          <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                        <div className="flex-1 min-w-0">
+                          <h3
+                            className={`font-semibold text-sm md:text-base break-words ${task.completed ? "line-through text-muted-foreground" : ""}`}
+                          >
                             {task.title}
                           </h3>
-                          {task.description && <p className="text-sm text-muted-foreground mt-1">{task.description}</p>}
-                          <div className="flex items-center gap-3 mt-2">
+                          {task.description && (
+                            <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {task.description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
                             {task.priority && (
-                              <span className={`text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                              <span className={`text-[10px] md:text-xs font-medium ${getPriorityColor(task.priority)}`}>
                                 {t(task.priority)}
                               </span>
                             )}
-                            {task.category && <span className="text-xs text-muted-foreground">{t(task.category)}</span>}
+                            {task.category && (
+                              <span className="text-[10px] md:text-xs text-muted-foreground">{t(task.category)}</span>
+                            )}
                             {task.due_date && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-[10px] md:text-xs text-muted-foreground">
                                 {t("due")}: {formatTaskDateTime(task.due_date)}
                               </span>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => openEditDialog(task)}>
-                            <Edit className="w-4 h-4" />
+                        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 md:h-10 md:w-10"
+                            onClick={() => openEditDialog(task)}
+                          >
+                            <Edit className="w-3 h-3 md:w-4 md:h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 md:h-10 md:w-10"
+                            onClick={() => deleteTask(task.id)}
+                          >
+                            <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-destructive" />
                           </Button>
                         </div>
                       </div>

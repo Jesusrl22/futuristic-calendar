@@ -108,7 +108,7 @@ export default function AppPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <h1 className="text-3xl md:text-4xl font-bold mb-8">
+      <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">
         <span className="text-primary neon-text">Dashboard</span>
       </h1>
 
@@ -118,11 +118,11 @@ export default function AppPage() {
       <div>
         {user?.subscription_plan === "free" && <div className="mb-6">{/* Removing desktop banner import */}</div>}
 
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 hidden md:block">
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-xl md:text-3xl font-bold mb-2">
             Welcome, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
-          </h1>
-          <p className="text-muted-foreground">
+          </h2>
+          <p className="text-sm md:text-base text-muted-foreground">
             Here's your productivity overview ·
             <span
               className={`ml-2 font-medium ${
@@ -155,9 +155,9 @@ export default function AppPage() {
 
         {/* Quick Actions */}
         <div>
-          <Card className="glass-card p-8 neon-glow">
-            <h2 className="text-2xl font-bold mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="glass-card p-4 md:p-8 neon-glow">
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {[
                 { title: "Create Task", href: "/app/tasks", icon: "📝" },
                 { title: "Start Pomodoro", href: "/app/pomodoro", icon: "⏱️" },
@@ -166,10 +166,12 @@ export default function AppPage() {
                 <a
                   key={action.title}
                   href={action.href}
-                  className="p-6 rounded-lg bg-secondary/50 hover:bg-secondary transition-all duration-300 cursor-pointer group border border-border/50 hover:border-primary/50"
+                  className="p-4 md:p-6 rounded-lg bg-secondary/50 hover:bg-secondary transition-all duration-300 cursor-pointer group border border-border/50 hover:border-primary/50"
                 >
-                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{action.icon}</div>
-                  <h3 className="font-semibold">{action.title}</h3>
+                  <div className="text-3xl md:text-4xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                    {action.icon}
+                  </div>
+                  <h3 className="font-semibold text-sm md:text-base">{action.title}</h3>
                 </a>
               ))}
             </div>
