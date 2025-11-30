@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState, useEffect } from "react"
 import { useTranslation, type Language } from "@/lib/translations"
-import { canAccessAI } from "@/lib/subscription"
+// import { canAccessAI } from "@/lib/subscription"
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
@@ -96,7 +96,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     }
   }
 
-  const hasAIAccess = canAccessAI(subscriptionTier as any, purchasedCredits)
+  // const hasAIAccess = canAccessAI(subscriptionTier as any, purchasedCredits)
 
   return (
     <div className="flex flex-col h-full w-full border-r border-border/50 bg-card/50 backdrop-blur-sm">
@@ -115,19 +115,6 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <nav className="space-y-1">
           {menuItemsTranslated.map((item) => {
             const isActive = pathname === item.href
-            const isAIItem = item.href === "/app/ai"
-            const isDisabled = isAIItem && !hasAIAccess
-
-            if (isDisabled) {
-              return (
-                <div key={item.href} className="relative">
-                  <Button variant="ghost" className="w-full justify-start gap-3 opacity-50 cursor-not-allowed" disabled>
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </Button>
-                </div>
-              )
-            }
 
             return (
               <Link key={item.href} href={item.href} onClick={handleNavClick}>
