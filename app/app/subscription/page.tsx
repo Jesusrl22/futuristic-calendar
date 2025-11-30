@@ -11,7 +11,15 @@ const plans = [
     name: "Free",
     price: 0,
     credits: 0,
-    features: ["0 AI credits/month", "Unlimited tasks & notes", "Basic statistics", "Calendar view", "Pomodoro timer"],
+    features: [
+      "0 AI credits/month",
+      "Full Calendar access",
+      "Unlimited tasks",
+      "Basic Pomodoro timer",
+      "5 Free themes",
+      "Free tier achievements",
+      "Basic settings",
+    ],
   },
   {
     name: "Premium",
@@ -20,9 +28,11 @@ const plans = [
     features: [
       "100 AI credits/month",
       "Everything in Free",
-      "Team collaboration",
-      "Priority support",
-      "Custom integrations",
+      "Advanced Pomodoro (custom durations)",
+      "Notes feature",
+      "Wishlist feature",
+      "10 themes (Free + Premium)",
+      "Premium achievements",
     ],
     popular: true,
   },
@@ -33,10 +43,11 @@ const plans = [
     features: [
       "500 AI credits/month",
       "Everything in Premium",
-      "Advanced analytics",
-      "API access",
-      "Custom themes",
-      "Export data",
+      "Statistics & analytics",
+      "Custom theme creator",
+      "All 15 themes + custom",
+      "Pro achievements",
+      "Priority support",
     ],
   },
 ]
@@ -49,7 +60,7 @@ export default function SubscriptionPage() {
 
   useEffect(() => {
     fetchSubscription()
-    
+
     const interval = setInterval(() => {
       fetchSubscription()
     }, 5000)

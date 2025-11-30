@@ -43,6 +43,11 @@ const translations = {
     saveAnnually: "Save 20% with annual billing",
     free: "Free",
     freeDesc: "Perfect for getting started",
+    freeCalendar: "Full calendar access",
+    freeTasks: "Unlimited tasks",
+    freePomodoro: "Basic Pomodoro timer",
+    freeThemes: "5 Free themes",
+    freeAchievements: "Free achievements",
     aiCredits: "50 AI credits/month",
     basicTasks: "Basic task management",
     basicNotes: "Notes & wishlist",
@@ -50,11 +55,17 @@ const translations = {
     pro: "Pro",
     proDesc: "For power users",
     proAiCredits: "500 AI credits/month",
-    advancedTasks: "Advanced task analytics",
-    proNotes: "Unlimited notes",
-    proPomodoro: "Custom pomodoro settings",
+    proStatistics: "Statistics & analytics",
+    proCustomTheme: "Custom theme creator",
+    proAllThemes: "All 15 themes + custom",
+    proAchievements: "All achievements",
     premium: "Premium",
-    premiumDesc: "For teams and professionals",
+    premiumDesc: "For productivity enthusiasts",
+    premiumAiCredits: "100 AI credits/month",
+    premiumPomodoro: "Advanced Pomodoro settings",
+    premiumNotes: "Notes & Wishlist",
+    premiumThemes: "10 themes (Free + Premium)",
+    premiumAchievements: "Premium achievements",
     teamFeatures: "Team collaboration",
     prioritySupport: "Priority support",
     customIntegrations: "Custom integrations",
@@ -114,6 +125,11 @@ const translations = {
     saveAnnually: "Ahorra 20% con facturación anual",
     free: "Gratis",
     freeDesc: "Perfecto para empezar",
+    freeCalendar: "Acceso completo al calendario",
+    freeTasks: "Tareas ilimitadas",
+    freePomodoro: "Temporizador Pomodoro básico",
+    freeThemes: "5 temas gratuitos",
+    freeAchievements: "Logros gratuitos",
     aiCredits: "50 créditos IA/mes",
     basicTasks: "Gestión básica de tareas",
     basicNotes: "Notas y lista de deseos",
@@ -121,11 +137,17 @@ const translations = {
     pro: "Pro",
     proDesc: "Para usuarios avanzados",
     proAiCredits: "500 créditos IA/mes",
-    advancedTasks: "Analíticas avanzadas de tareas",
-    proNotes: "Notas ilimitadas",
-    proPomodoro: "Ajustes personalizados de pomodoro",
+    proStatistics: "Estadísticas y análisis",
+    proCustomTheme: "Creador de temas personalizados",
+    proAllThemes: "Todos los 15 temas + personalizados",
+    proAchievements: "Todos los logros",
     premium: "Premium",
-    premiumDesc: "Para equipos y profesionales",
+    premiumDesc: "Para entusiastas de la productividad",
+    premiumAiCredits: "100 créditos IA/mes",
+    premiumPomodoro: "Configuración avanzada de Pomodoro",
+    premiumNotes: "Notas y lista de deseos",
+    premiumThemes: "10 temas (Gratuitos + Premium)",
+    premiumAchievements: "Logros Premium",
     teamFeatures: "Colaboración en equipo",
     prioritySupport: "Soporte prioritario",
     customIntegrations: "Integraciones personalizadas",
@@ -140,7 +162,7 @@ const translations = {
     blogPost1Desc:
       "Aprende a dividir tu trabajo en intervalos enfocados para maximizar la productividad y evitar el agotamiento. Descubre la ciencia detrás de este método de gestión del tiempo.",
     blogPost1ReadTime: "5 min read",
-    blogPost2Title: "Métodos de Estudio Efectivos para Estudiantes",
+    blogPost2Title: "Métodos de Estudio Eficaces para Estudiantes",
     blogPost2Desc:
       "Descubre técnicas de estudio probadas como la repetición espaciada, el recuerdo activo y los mapas mentales para mejorar la retención y destacar en tus exámenes.",
     blogPost2ReadTime: "7 min read",
@@ -186,6 +208,11 @@ const translations = {
     saveAnnually: "Économisez 20% avec la facturation annuelle",
     free: "Gratuit",
     freeDesc: "Parfait pour commencer",
+    freeCalendar: "Accès complet au calendrier",
+    freeTasks: "Tâches illimitées",
+    freePomodoro: "Minuteur Pomodoro basique",
+    freeThemes: "5 thèmes gratuits",
+    freeAchievements: "Logros gratuits",
     aiCredits: "50 crédits IA/mois",
     basicTasks: "Gestion de tâches basique",
     basicNotes: "Notes et liste de souhaits",
@@ -193,11 +220,17 @@ const translations = {
     pro: "Pro",
     proDesc: "Pour les utilisateurs avancés",
     proAiCredits: "500 crédits IA/mois",
-    advancedTasks: "Analyses avancées des tâches",
-    proNotes: "Notes illimitées",
-    proPomodoro: "Paramètres Pomodoro personnalisés",
+    proStatistics: "Statistiques et analyses",
+    proCustomTheme: "Créateur de thèmes personnalisés",
+    proAllThemes: "Tous les 15 thèmes + personnalisés",
+    proAchievements: "Tous les logros",
     premium: "Premium",
-    premiumDesc: "Pour les équipes et professionnels",
+    premiumDesc: "Pour les entusiastes de la productivité",
+    premiumAiCredits: "100 crédits IA/mois",
+    premiumPomodoro: "Paramètres Pomodoro avancés",
+    premiumNotes: "Notes et liste de souhaits",
+    premiumThemes: "10 thèmes (Gratuits + Premium)",
+    premiumAchievements: "Logros Premium",
     teamFeatures: "Collaboration d'équipe",
     prioritySupport: "Support prioritaire",
     customIntegrations: "Intégrations personnalisées",
@@ -258,6 +291,11 @@ const translations = {
     saveAnnually: "Sparen Sie 20% mit jährlicher Abrechnung",
     free: "Kostenlos",
     freeDesc: "Perfekt für den Einstieg",
+    freeCalendar: "Voller Kalenderzugang",
+    freeTasks: "Unbegrenzte Aufgaben",
+    freePomodoro: "Grundlegender Pomodoro-Timer",
+    freeThemes: "5 kostenlose Themen",
+    freeAchievements: "Kostenlose Erfolge",
     aiCredits: "50 KI-Credits/Monat",
     basicTasks: "Basis-Aufgabenverwaltung",
     basicNotes: "Notizen & Wunschliste",
@@ -265,11 +303,17 @@ const translations = {
     pro: "Pro",
     proDesc: "Für Power-User",
     proAiCredits: "500 KI-Credits/Monat",
-    advancedTasks: "Erweiterte Aufgabenanalysen",
-    proNotes: "Unbegrenzte Notizen",
-    proPomodoro: "Benutzerdefinierte Pomodoro-Einstellungen",
+    proStatistics: "Statistiken & Analysen",
+    proCustomTheme: "Benutzerdefinierte Themen-Creator",
+    proAllThemes: "Alle 15 Themen + benutzerdefiniert",
+    proAchievements: "Alle Erfolge",
     premium: "Premium",
-    premiumDesc: "Für Teams und Profis",
+    premiumDesc: "Für Produktivitätsbegeisterte",
+    premiumAiCredits: "100 KI-Credits/Monat",
+    premiumPomodoro: "Erweiterte Pomodoro-Einstellungen",
+    premiumNotes: "Notizen & Wunschliste",
+    premiumThemes: "10 Themen (Kostenlos + Premium)",
+    premiumAchievements: "Premium-Erfolge",
     teamFeatures: "Team-Zusammenarbeit",
     prioritySupport: "Prioritäts-Support",
     customIntegrations: "Benutzerdefinierte Integrationen",
@@ -330,6 +374,11 @@ const translations = {
     saveAnnually: "Risparmia il 20% con fatturazione annuale",
     free: "Gratuito",
     freeDesc: "Perfetto per iniziare",
+    freeCalendar: "Accesso completo al calendario",
+    freeTasks: "Attività illimitate",
+    freePomodoro: "Timer Pomodoro di base",
+    freeThemes: "5 temi gratuiti",
+    freeAchievements: "Erogazioni gratuite",
     aiCredits: "50 crediti IA/mese",
     basicTasks: "Gestione attività base",
     basicNotes: "Note e lista desideri",
@@ -337,11 +386,17 @@ const translations = {
     pro: "Pro",
     proDesc: "Per utenti esperti",
     proAiCredits: "500 crediti IA/mese",
-    advancedTasks: "Analisi attività avanzate",
-    proNotes: "Note illimitate",
-    proPomodoro: "Impostazioni Pomodoro personalizzate",
+    proStatistics: "Statistiche & Analisi",
+    proCustomTheme: "Creatore di temi personalizzato",
+    proAllThemes: "Tutti i 15 temi + personalizzato",
+    proAchievements: "Tutte le erogazioni",
     premium: "Premium",
-    premiumDesc: "Per team e professionisti",
+    premiumDesc: "Per entusiasti della produttività",
+    premiumAiCredits: "100 crediti IA/mese",
+    premiumPomodoro: "Impostazioni Pomodoro avanzate",
+    premiumNotes: "Note e lista desideri",
+    premiumThemes: "10 temi ( gratuiti + Premium)",
+    premiumAchievements: "Erogazioni Premium",
     teamFeatures: "Collaborazione di team",
     prioritySupport: "Supporto prioritario",
     customIntegrations: "Integrazioni personalizzate",
@@ -583,15 +638,23 @@ export default function HomePageClient() {
               <ul className="space-y-3 pt-4">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.basicTasks}</span>
+                  <span className="text-sm">{t.freeCalendar}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.basicNotes}</span>
+                  <span className="text-sm">{t.freeTasks}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.basicPomodoro}</span>
+                  <span className="text-sm">{t.freePomodoro}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.freeThemes}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.freeAchievements}</span>
                 </li>
               </ul>
               <Link href="/signup">
@@ -617,19 +680,23 @@ export default function HomePageClient() {
               <ul className="space-y-3 pt-4">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">100 AI credits/month</span>
+                  <span className="text-sm">{t.premiumAiCredits}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.teamFeatures}</span>
+                  <span className="text-sm">{t.premiumPomodoro}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.prioritySupport}</span>
+                  <span className="text-sm">{t.premiumNotes}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.customIntegrations}</span>
+                  <span className="text-sm">{t.premiumThemes}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.premiumAchievements}</span>
                 </li>
               </ul>
               <Link href="/signup">
@@ -654,15 +721,19 @@ export default function HomePageClient() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.advancedTasks}</span>
+                  <span className="text-sm">{t.proStatistics}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proNotes}</span>
+                  <span className="text-sm">{t.proCustomTheme}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proPomodoro}</span>
+                  <span className="text-sm">{t.proAllThemes}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.proAchievements}</span>
                 </li>
               </ul>
               <Link href="/signup">
