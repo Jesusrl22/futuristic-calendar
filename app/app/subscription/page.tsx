@@ -5,7 +5,12 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { Check, Zap, Crown, ShoppingCart } from "@/components/icons"
-import { CreditPacksModal } from "@/components/credit-packs-modal"
+import dynamic from "next/dynamic"
+
+const CreditPacksModal = dynamic(() => import("@/components/credit-packs-modal").then((mod) => mod.CreditPacksModal), {
+  ssr: false,
+  loading: () => <div>Loading...</div>,
+})
 
 const plans = [
   {
