@@ -40,7 +40,7 @@ export async function signUp(formData: FormData) {
       id: authData.user.id,
       email: authData.user.email,
       subscription_tier: "free",
-      ai_credits: 10,
+      ai_credits: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })

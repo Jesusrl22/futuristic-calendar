@@ -55,7 +55,7 @@ export async function signup(email: string, password: string, name: string) {
       name,
       theme: "neon-tech",
       language: "en",
-      ai_credits: 100,
+      ai_credits: 0, // Updated to set ai_credits to 0 for new FREE users
     })
   }
 

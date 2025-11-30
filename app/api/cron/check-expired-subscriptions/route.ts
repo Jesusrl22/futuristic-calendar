@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         subscription_tier: "free",
         subscription_plan: "free",
         plan: "free",
-        ai_credits: 10,
+        ai_credits: 0,
         subscription_expires_at: null,
       })
       .in("id", userIds)

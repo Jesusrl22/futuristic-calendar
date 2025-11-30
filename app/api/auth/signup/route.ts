@@ -105,7 +105,7 @@ export async function POST(request: Request) {
         subscription_tier: "free",
         subscription_plan: "free",
         plan: "free",
-        ai_credits: 10,
+        ai_credits: 0, // FREE users start with 0 credits
         theme: "dark",
         theme_preference: "dark",
         subscription_status: "active",

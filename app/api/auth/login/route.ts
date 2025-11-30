@@ -60,7 +60,7 @@ export async function POST(request: Request) {
           name: loginData.user.user_metadata?.name || loginData.user.email.split("@")[0],
           subscription_tier: "free",
           plan: "free",
-          ai_credits: 10,
+          ai_credits: 0, // Updated value
         }),
       })
 
