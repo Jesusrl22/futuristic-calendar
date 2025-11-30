@@ -111,22 +111,20 @@ export default function AppPage() {
     { title: "Tasks (This Month)", value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
     { title: "Notes (This Month)", value: stats.notes, icon: FileText, color: "text-purple-500" },
     { title: "Pomodoros (This Month)", value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
-    ...(hasCredits
-      ? [
-          {
-            title: "AI Credits",
-            value: totalCredits,
-            icon: Zap,
-            color: "text-primary",
-            subtitle:
-              stats.monthlyCredits > 0 && stats.purchasedCredits > 0
-                ? `${stats.monthlyCredits} monthly · ${stats.purchasedCredits} purchased`
-                : stats.monthlyCredits > 0
-                  ? "Monthly credits"
-                  : "Purchased credits",
-          },
-        ]
-      : []),
+    {
+      title: "AI Credits",
+      value: hasCredits ? totalCredits : 0,
+      icon: Zap,
+      color: "text-primary",
+      subtitle: hasCredits
+        ? stats.monthlyCredits > 0 && stats.purchasedCredits > 0
+          ? `${stats.monthlyCredits} monthly · ${stats.purchasedCredits} purchased`
+          : stats.monthlyCredits > 0
+            ? "Monthly credits"
+            : "Purchased credits"
+        : "Upgrade or buy credit packs",
+      noCredits: !hasCredits,
+    },
   ]
 
   return (
@@ -165,13 +163,27 @@ export default function AppPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statCards.map((stat) => (
             <div key={stat.title}>
-              <Card className="glass-card p-6 neon-glow-hover transition-all duration-300 cursor-pointer group">
+              <Card
+                className={`glass-card p-6 neon-glow-hover transition-all duration-300 group ${
+                  stat.noCredits ? "cursor-pointer" : ""
+                }`}
+                onClick={() => {
+                  if (stat.noCredits) {
+                    window.location.href = "/app/subscription"
+                  }
+                }}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <stat.icon className={`w-8 h-8 ${stat.color} group-hover:scale-110 transition-transform`} />
+                  {stat.noCredits && (
+                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">Locked</span>
+                  )}
                 </div>
                 <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
                 <p className="text-sm text-muted-foreground">{stat.title}</p>
-                {stat.subtitle && <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>}
+                <p className={`text-xs mt-1 ${stat.noCredits ? "text-primary font-medium" : "text-muted-foreground"}`}>
+                  {stat.subtitle}
+                </p>
               </Card>
             </div>
           ))}
