@@ -33,7 +33,7 @@ export function getSubscriptionAccess(tier: SubscriptionTier | null): Subscripti
       return {
         notes: false,
         wishlist: false,
-        ai: false,
+        ai: false, // Will be checked separately with purchased credits
         futureTasks: false,
         admin: false,
       }
@@ -71,4 +71,14 @@ export function getAICredits(tier: SubscriptionTier | null): number {
     default:
       return 0
   }
+}
+
+export function canAccessAI(tier: SubscriptionTier | null, purchasedCredits = 0): boolean {
+  const normalizedTier = tier?.toLowerCase() as SubscriptionTier
+  // Premium and Pro always have access
+  if (normalizedTier === "premium" || normalizedTier === "pro") {
+    return true
+  }
+  // Free users can access if they have purchased credits
+  return purchasedCredits > 0
 }

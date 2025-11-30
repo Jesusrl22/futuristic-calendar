@@ -87,6 +87,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       response: text,
       remainingCredits: newTotalCredits,
+      remainingMonthlyCredits: newMonthlyCredits,
+      remainingPurchasedCredits: newPurchasedCredits,
     })
   } catch (error) {
     console.error("[v0] AI Chat Error:", error)

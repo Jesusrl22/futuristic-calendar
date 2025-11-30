@@ -15,31 +15,20 @@ import {
   LogOut,
 } from "@/components/icons"
 import Link from "next/link"
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState, useEffect } from "react"
 import { useTranslation, type Language } from "@/lib/translations"
-
-const menuItems = [
-  { icon: Home, label: "Dashboard", href: "/app" },
-  { icon: Calendar, label: "Calendar", href: "/app/calendar" },
-  { icon: CheckSquare, label: "Tasks", href: "/app/tasks" },
-  { icon: FileText, label: "Notes", href: "/app/notes" },
-  { icon: Heart, label: "Wishlist", href: "/app/wishlist" },
-  { icon: Timer, label: "Pomodoro", href: "/app/pomodoro" },
-  { icon: BarChart3, label: "Statistics", href: "/app/stats" },
-  { icon: Bot, label: "AI Assistant", href: "/app/ai" },
-  { icon: Trophy, label: "Achievements", href: "/app/achievements" },
-  { icon: CreditCard, label: "Subscription", href: "/app/subscription" },
-  { icon: Settings, label: "Settings", href: "/app/settings" },
-]
+import { canAccessAI } from "@/lib/subscription"
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
   const [lang, setLang] = useState<Language>("en")
   const { t } = useTranslation(lang)
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null)
+  const [purchasedCredits, setPurchasedCredits] = useState(0)
 
   useEffect(() => {
     const loadLanguage = async () => {
@@ -64,6 +53,22 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       }
     }
     loadLanguage()
+  }, [])
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("/api/user/profile")
+        if (response.ok) {
+          const data = await response.json()
+          setSubscriptionTier(data.subscription_plan || "free")
+          setPurchasedCredits(data.ai_credits_purchased || 0)
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+      }
+    }
+    fetchProfile()
   }, [])
 
   const menuItemsTranslated = [
@@ -91,6 +96,8 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     }
   }
 
+  const hasAIAccess = canAccessAI(subscriptionTier as any, purchasedCredits)
+
   return (
     <div className="flex flex-col h-full w-full border-r border-border/50 bg-card/50 backdrop-blur-sm">
       {/* Logo */}
@@ -108,6 +115,20 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <nav className="space-y-1">
           {menuItemsTranslated.map((item) => {
             const isActive = pathname === item.href
+            const isAIItem = item.href === "/app/ai"
+            const isDisabled = isAIItem && !hasAIAccess
+
+            if (isDisabled) {
+              return (
+                <div key={item.href} className="relative">
+                  <Button variant="ghost" className="w-full justify-start gap-3 opacity-50 cursor-not-allowed" disabled>
+                    <item.icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </Button>
+                </div>
+              )
+            }
+
             return (
               <Link key={item.href} href={item.href} onClick={handleNavClick}>
                 <Button

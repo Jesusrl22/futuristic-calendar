@@ -13,7 +13,8 @@ export default function AppPage() {
     tasks: 0,
     notes: 0,
     pomodoro: 0,
-    credits: 0,
+    monthlyCredits: 0,
+    purchasedCredits: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -62,7 +63,11 @@ export default function AppPage() {
       if (response.ok) {
         const data = await response.json()
         setUser(data)
-        setStats((prev) => ({ ...prev, credits: data.ai_credits || 0 }))
+        setStats((prev) => ({
+          ...prev,
+          monthlyCredits: data.ai_credits_monthly || 0,
+          purchasedCredits: data.ai_credits_purchased || 0,
+        }))
       }
     } catch (error) {
       console.error("[v0] Error fetching profile:", error)
@@ -99,12 +104,28 @@ export default function AppPage() {
     )
   }
 
+  const totalCredits = stats.monthlyCredits + stats.purchasedCredits
+  const hasCredits = totalCredits > 0
+
   const statCards = [
     { title: "Tasks (This Month)", value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
     { title: "Notes (This Month)", value: stats.notes, icon: FileText, color: "text-purple-500" },
     { title: "Pomodoros (This Month)", value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
-    ...(user?.subscription_tier !== "free"
-      ? [{ title: "AI Credits", value: stats.credits, icon: Zap, color: "text-primary" }]
+    ...(hasCredits
+      ? [
+          {
+            title: "AI Credits",
+            value: totalCredits,
+            icon: Zap,
+            color: "text-primary",
+            subtitle:
+              stats.monthlyCredits > 0 && stats.purchasedCredits > 0
+                ? `${stats.monthlyCredits} monthly · ${stats.purchasedCredits} purchased`
+                : stats.monthlyCredits > 0
+                  ? "Monthly credits"
+                  : "Purchased credits",
+          },
+        ]
       : []),
   ]
 
@@ -150,6 +171,7 @@ export default function AppPage() {
                 </div>
                 <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
                 <p className="text-sm text-muted-foreground">{stat.title}</p>
+                {stat.subtitle && <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>}
               </Card>
             </div>
           ))}

@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Zap } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
-import { getAICredits } from "@/lib/subscription"
+import { canAccessAI } from "@/lib/subscription"
 
 export default function AIPage() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
-  const [credits, setCredits] = useState(0)
+  const [monthlyCredits, setMonthlyCredits] = useState(0)
+  const [purchasedCredits, setPurchasedCredits] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null)
   const [checkingAccess, setCheckingAccess] = useState(true)
@@ -31,11 +32,8 @@ export default function AIPage() {
       if (response.ok) {
         const data = await response.json()
         setSubscriptionTier(data.subscription_plan || "free")
-
-        const tierCredits = getAICredits(data.subscription_plan)
-        if (tierCredits > 0) {
-          setCredits(data?.ai_credits || 0)
-        }
+        setMonthlyCredits(data?.ai_credits_monthly || 0)
+        setPurchasedCredits(data?.ai_credits_purchased || 0)
       }
     } catch (error) {
       console.error("Error fetching profile:", error)
@@ -47,7 +45,8 @@ export default function AIPage() {
   const handleSend = async () => {
     if (!input.trim() || loading) return
 
-    if (credits < 2) {
+    const totalCredits = monthlyCredits + purchasedCredits
+    if (totalCredits < 2) {
       alert("Not enough AI credits. You need at least 2 credits per message.")
       return
     }
@@ -72,7 +71,8 @@ export default function AIPage() {
       }
 
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
-      setCredits(data.remainingCredits)
+      setMonthlyCredits(data.remainingMonthlyCredits)
+      setPurchasedCredits(data.remainingPurchasedCredits)
     } catch (error) {
       console.error("AI chat error:", error)
       setMessages((prev) => [
@@ -86,55 +86,78 @@ export default function AIPage() {
 
   if (checkingAccess) {
     return (
-      <div className="p-8 flex items-center justify-center">
+      <div className="p-4 md:p-8 flex items-center justify-center">
         <p>Loading...</p>
       </div>
     )
   }
 
-  if (subscriptionTier === "free") {
-    return <UpgradeModal feature="AI Assistant" requiredPlan="premium" />
+  if (!canAccessAI(subscriptionTier as any, purchasedCredits)) {
+    return (
+      <div className="p-4 md:p-8">
+        <UpgradeModal
+          feature="AI Assistant"
+          requiredPlan="premium"
+          customMessage="Upgrade to Premium/Pro or purchase credit packs to access the AI Assistant"
+        />
+      </div>
+    )
   }
 
+  const totalCredits = monthlyCredits + purchasedCredits
+
   return (
-    <div className="p-8 h-[calc(100vh-4rem)]">
+    <div className="p-4 md:p-8 h-[calc(100vh-4rem)]">
       <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-4">
+          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
             <span className="text-primary neon-text">AI Assistant</span>
           </h1>
-          <Card className="glass-card px-4 py-2 neon-glow">
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-primary" />
-              <span className="font-semibold">{credits} credits</span>
-            </div>
-          </Card>
+          <div className="flex gap-2 w-full md:w-auto">
+            {monthlyCredits > 0 && (
+              <Card className="glass-card px-3 py-2 neon-glow flex-1 md:flex-none">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold">{monthlyCredits} monthly</span>
+                </div>
+              </Card>
+            )}
+            {purchasedCredits > 0 && (
+              <Card className="glass-card px-3 py-2 neon-glow flex-1 md:flex-none">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-semibold">{purchasedCredits} purchased</span>
+                </div>
+              </Card>
+            )}
+          </div>
         </div>
 
         <Card className="glass-card flex-1 flex flex-col neon-glow overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             {messages.length === 0 && (
-              <div className="text-center text-muted-foreground py-12">
-                <p className="text-lg mb-2">Welcome to your AI Assistant</p>
-                <p className="text-sm">Ask me anything! Each message costs 2 credits.</p>
+              <div className="text-center text-muted-foreground py-8 md:py-12">
+                <p className="text-base md:text-lg mb-2">Welcome to your AI Assistant</p>
+                <p className="text-xs md:text-sm">Ask me anything! Each message costs 2 credits.</p>
+                <p className="text-xs text-muted-foreground mt-2">Total available: {totalCredits} credits</p>
               </div>
             )}
 
             {messages.map((message, index) => (
               <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                 <div
-                  className={`max-w-[80%] p-4 rounded-lg ${
+                  className={`max-w-[85%] md:max-w-[80%] p-3 md:p-4 rounded-lg ${
                     message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50 text-foreground"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-xs md:text-sm whitespace-pre-wrap break-words">{message.content}</p>
                 </div>
               </div>
             ))}
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-secondary/50 p-4 rounded-lg">
+                <div className="bg-secondary/50 p-3 md:p-4 rounded-lg">
                   <div className="flex gap-2">
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
@@ -147,17 +170,17 @@ export default function AIPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-6 border-t border-border/50">
-            <div className="flex gap-4">
+          <div className="p-4 md:p-6 border-t border-border/50">
+            <div className="flex gap-2 md:gap-4">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Type your message..."
-                className="bg-secondary/50"
+                className="bg-secondary/50 text-sm md:text-base"
                 disabled={loading}
               />
-              <Button onClick={handleSend} disabled={loading || !input.trim()} className="neon-glow-hover">
+              <Button onClick={handleSend} disabled={loading || !input.trim()} className="neon-glow-hover shrink-0">
                 <Send className="w-4 h-4" />
               </Button>
             </div>
