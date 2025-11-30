@@ -1,34 +1,38 @@
 export const CREDIT_PACKS = [
   {
-    id: "pack_50",
-    credits: 50,
-    price: 4.99,
-    priceWithVAT: 6.04,
+    id: "pack_starter",
+    name: "Starter",
+    credits: 500,
+    price: 2.99,
+    priceWithVAT: 2.99, // Price already includes VAT
     discount: 0,
     popular: false,
   },
   {
-    id: "pack_100",
-    credits: 100,
-    price: 8.99,
-    priceWithVAT: 10.88,
-    discount: 10,
+    id: "pack_popular",
+    name: "Popular",
+    credits: 2000,
+    price: 9.99,
+    priceWithVAT: 9.99, // Price already includes VAT
+    discount: 0,
     popular: true,
   },
   {
-    id: "pack_250",
-    credits: 250,
-    price: 19.99,
-    priceWithVAT: 24.19,
-    discount: 20,
+    id: "pack_professional",
+    name: "Professional",
+    credits: 5000,
+    price: 17.99,
+    priceWithVAT: 17.99, // Price already includes VAT
+    discount: 0,
     popular: false,
   },
   {
-    id: "pack_500",
-    credits: 500,
-    price: 34.99,
-    priceWithVAT: 42.34,
-    discount: 30,
+    id: "pack_enterprise",
+    name: "Enterprise",
+    credits: 12000,
+    price: 39.99,
+    priceWithVAT: 39.99, // Price already includes VAT
+    discount: 0,
     popular: false,
   },
 ]

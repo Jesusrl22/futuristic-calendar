@@ -67,27 +67,27 @@ export function CreditPacksModal({ open, onOpenChange, userPlan }: CreditPacksMo
             {pack.popular && (
               <div className="flex items-center gap-2 mb-4 text-primary">
                 <Crown className="w-4 h-4" />
-                <span className="text-xs font-semibold">BEST VALUE</span>
+                <span className="text-xs font-semibold">MOST POPULAR</span>
               </div>
             )}
 
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold">{pack.credits} Credits</h3>
+                <p className="text-xs text-muted-foreground uppercase font-semibold">{pack.name}</p>
+                <h3 className="text-xl font-bold">{pack.credits.toLocaleString()} Credits</h3>
                 <p className="text-sm text-muted-foreground">Never expire</p>
               </div>
               <div className="text-center">
                 <Zap className="w-10 h-10 text-primary mx-auto mb-1" />
-                <p className="text-2xl font-bold">{pack.credits}</p>
+                <p className="text-2xl font-bold">{pack.credits.toLocaleString()}</p>
               </div>
             </div>
 
             <div className="mb-4">
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-bold">€{pack.priceWithVAT.toFixed(2)}</span>
-                <span className="text-sm text-muted-foreground">(IVA incluido)</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">€{pack.price.toFixed(2)} sin IVA</p>
+              <p className="text-xs text-muted-foreground mt-1">IVA incluido</p>
               {pack.discount > 0 && <p className="text-xs text-primary font-semibold mt-1">Save {pack.discount}%</p>}
             </div>
 
