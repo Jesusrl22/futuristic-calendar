@@ -33,16 +33,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <meta name="google-adsense-account" content="ca-pub-3746054566396266" />
-      </head>
       <body className="font-sans antialiased">
         <ThemeLoader />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3746054566396266"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
         />
         {children}
       </body>
