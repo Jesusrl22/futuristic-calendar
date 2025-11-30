@@ -34,9 +34,10 @@ export async function POST(req: NextRequest) {
       "Content-Type": "application/json",
     }
 
-    const profileRes = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=ai_credits,subscription_tier`, {
-      headers,
-    })
+    const profileRes = await fetch(
+      `${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=ai_credits,ai_credits_monthly,ai_credits_purchased,subscription_tier`,
+      { headers },
+    )
 
     if (!profileRes.ok) {
       return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
@@ -45,14 +46,37 @@ export async function POST(req: NextRequest) {
     const profiles = await profileRes.json()
     const profile = profiles[0]
 
-    if (!profile || profile.ai_credits < 2) {
+    const monthlyCredits = profile.ai_credits_monthly || 0
+    const purchasedCredits = profile.ai_credits_purchased || 0
+    const totalCredits = monthlyCredits + purchasedCredits
+
+    if (!profile || totalCredits < 2) {
       return NextResponse.json({ error: "Insufficient credits" }, { status: 402 })
     }
+
+    let newMonthlyCredits = monthlyCredits
+    let newPurchasedCredits = purchasedCredits
+
+    if (monthlyCredits >= 2) {
+      newMonthlyCredits -= 2
+    } else if (monthlyCredits > 0) {
+      const remaining = 2 - monthlyCredits
+      newMonthlyCredits = 0
+      newPurchasedCredits -= remaining
+    } else {
+      newPurchasedCredits -= 2
+    }
+
+    const newTotalCredits = newMonthlyCredits + newPurchasedCredits
 
     await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${userId}`, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ ai_credits: profile.ai_credits - 2 }),
+      body: JSON.stringify({
+        ai_credits_monthly: newMonthlyCredits,
+        ai_credits_purchased: newPurchasedCredits,
+        ai_credits: newTotalCredits,
+      }),
     })
 
     const { text } = await generateText({
@@ -62,7 +86,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       response: text,
-      remainingCredits: profile.ai_credits - 2,
+      remainingCredits: newTotalCredits,
     })
   } catch (error) {
     console.error("[v0] AI Chat Error:", error)

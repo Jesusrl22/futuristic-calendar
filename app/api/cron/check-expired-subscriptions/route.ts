@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const now = new Date().toISOString()
     const { data: expiredUsers, error: fetchError } = await supabase
       .from("users")
-      .select("id, email, name, subscription_tier, subscription_expires_at")
+      .select("id, email, name, subscription_tier, subscription_expires_at, ai_credits_purchased")
       .not("subscription_expires_at", "is", null)
       .lt("subscription_expires_at", now)
       .neq("subscription_tier", "free")
@@ -35,28 +35,25 @@ export async function POST(request: Request) {
       })
     }
 
-    const userIds = expiredUsers.map((u) => u.id)
-    const { data: updatedUsers, error: updateError } = await supabase
-      .from("users")
-      .update({
-        subscription_tier: "free",
-        subscription_plan: "free",
-        plan: "free",
-        ai_credits: 0,
-        subscription_expires_at: null,
-      })
-      .in("id", userIds)
-      .select()
-
-    if (updateError) {
-      console.error("Error downgrading users:", updateError)
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+    for (const user of expiredUsers) {
+      const purchasedCredits = user.ai_credits_purchased || 0
+      await supabase
+        .from("users")
+        .update({
+          subscription_tier: "free",
+          subscription_plan: "free",
+          plan: "free",
+          ai_credits_monthly: 0,
+          ai_credits: purchasedCredits, // Keep only purchased credits
+          subscription_expires_at: null,
+        })
+        .eq("id", user.id)
     }
 
     return NextResponse.json({
       message: "Successfully processed expired subscriptions",
-      count: updatedUsers?.length || 0,
-      users: updatedUsers?.map((u) => ({ id: u.id, email: u.email, name: u.name })),
+      count: expiredUsers.length,
+      users: expiredUsers.map((u) => ({ id: u.id, email: u.email, name: u.name })),
     })
   } catch (error) {
     console.error("Unexpected error in cron job:", error)

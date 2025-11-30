@@ -103,7 +103,9 @@ export default function AppPage() {
     { title: "Tasks (This Month)", value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
     { title: "Notes (This Month)", value: stats.notes, icon: FileText, color: "text-purple-500" },
     { title: "Pomodoros (This Month)", value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
-    { title: "AI Credits", value: stats.credits, icon: Zap, color: "text-primary" },
+    ...(user?.subscription_tier !== "free"
+      ? [{ title: "AI Credits", value: stats.credits, icon: Zap, color: "text-primary" }]
+      : []),
   ]
 
   return (

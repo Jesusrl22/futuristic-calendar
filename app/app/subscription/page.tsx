@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { Check, Zap, Crown } from "@/components/icons"
+import { Check, Zap, Crown, ShoppingCart } from "@/components/icons"
+import { CreditPacksModal } from "@/components/credit-packs-modal"
 
 const plans = [
   {
@@ -55,8 +56,11 @@ const plans = [
 export default function SubscriptionPage() {
   const [currentPlan, setCurrentPlan] = useState("free")
   const [credits, setCredits] = useState(0)
+  const [monthlyCredits, setMonthlyCredits] = useState(0)
+  const [purchasedCredits, setPurchasedCredits] = useState(0)
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showCreditPacks, setShowCreditPacks] = useState(false)
 
   useEffect(() => {
     fetchSubscription()
@@ -80,6 +84,8 @@ export default function SubscriptionPage() {
         const data = await response.json()
         setCurrentPlan(data.subscription_tier || "free")
         setCredits(data.ai_credits || 0)
+        setMonthlyCredits(data.ai_credits_monthly || 0)
+        setPurchasedCredits(data.ai_credits_purchased || 0)
         setExpiresAt(data.subscription_expires_at || null)
       }
     } catch (error) {
@@ -90,6 +96,7 @@ export default function SubscriptionPage() {
   }
 
   const handleUpgrade = async (planName: string) => {
+    return
     alert(`Upgrade to ${planName} plan - Payment integration coming soon!`)
   }
 
@@ -99,33 +106,64 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Loading subscription...</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <h1 className="text-4xl font-bold mb-8">
+          <h1 className="hidden md:block text-4xl font-bold mb-8">
             <span className="text-primary neon-text">Subscription</span>
           </h1>
 
-          <Card className="glass-card p-6 neon-glow mb-8">
-            <div className="flex items-center justify-between">
+          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <h3 className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mb-1">
+              🔧 Payment System Configuration in Progress
+            </h3>
+            <p className="text-xs text-yellow-600/80 dark:text-yellow-400/80">
+              Subscription upgrades and credit purchases are temporarily disabled while we configure the payment
+              provider (Stripe or PayPal Business). Check back soon!
+            </p>
+          </div>
+
+          <Card className="glass-card p-4 md:p-6 neon-glow mb-6 md:mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold mb-2">Current Plan: {currentPlan.toUpperCase()}</h2>
-                <p className="text-muted-foreground">Manage your subscription and billing</p>
-                {expiresAt && <p className="text-sm text-orange-500 mt-2">Plan expires: {formatDate(expiresAt)}</p>}
+                <h2 className="text-xl md:text-2xl font-bold mb-2">Current Plan: {currentPlan.toUpperCase()}</h2>
+                <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>
+                {expiresAt && (
+                  <p className="text-xs md:text-sm text-orange-500 mt-2">Plan expires: {formatDate(expiresAt)}</p>
+                )}
               </div>
-              <div className="text-center">
-                <Zap className="w-12 h-12 text-primary mx-auto mb-2" />
-                <p className="text-2xl font-bold text-primary">{credits} credits</p>
-                <p className="text-xs text-muted-foreground">remaining</p>
-              </div>
+              {currentPlan !== "free" && (
+                <div className="text-center">
+                  <Zap className="w-10 h-10 md:w-12 md:h-12 text-primary mx-auto mb-2" />
+                  <p className="text-xl md:text-2xl font-bold text-primary">{credits} credits</p>
+                  <p className="text-xs text-muted-foreground">
+                    {monthlyCredits} monthly + {purchasedCredits} purchased
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mb-6 md:mb-8">
+            <Button
+              onClick={() => setShowCreditPacks(true)}
+              className="w-full md:w-auto neon-glow-hover"
+              size="lg"
+              disabled
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Buy Extra AI Credits (Coming Soon)
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">
+              Purchase credits that never expire. Stack with your monthly allowance!
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {plans.map((plan, index) => (
               <motion.div
                 key={plan.name}
@@ -134,32 +172,32 @@ export default function SubscriptionPage() {
                 transition={{ duration: 0.4, delay: index * 0.1 }}
               >
                 <Card
-                  className={`glass-card p-6 h-full flex flex-col ${
+                  className={`glass-card p-4 md:p-6 h-full flex flex-col ${
                     plan.popular ? "neon-glow border-2 border-primary" : ""
                   }`}
                 >
                   {plan.popular && (
                     <div className="flex items-center gap-2 mb-4 text-primary">
-                      <Crown className="w-5 h-5" />
-                      <span className="text-sm font-semibold">MOST POPULAR</span>
+                      <Crown className="w-4 h-4 md:w-5 md:h-5" />
+                      <span className="text-xs md:text-sm font-semibold">MOST POPULAR</span>
                     </div>
                   )}
 
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold">€{plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
+                  <h3 className="text-xl md:text-2xl font-bold mb-2">{plan.name}</h3>
+                  <div className="mb-4 md:mb-6">
+                    <span className="text-3xl md:text-4xl font-bold">€{plan.price}</span>
+                    <span className="text-sm md:text-base text-muted-foreground">/month</span>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-6 text-sm text-primary">
+                  <div className="flex items-center gap-2 mb-4 md:mb-6 text-xs md:text-sm text-primary">
                     <Zap className="w-4 h-4" />
                     <span>{plan.credits} AI credits/month</span>
                   </div>
 
-                  <ul className="space-y-3 mb-6 flex-1">
+                  <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6 flex-1">
                     {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                      <li key={feature} className="flex items-start gap-2 text-xs md:text-sm">
+                        <Check className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -169,15 +207,17 @@ export default function SubscriptionPage() {
                     className={`w-full ${
                       currentPlan === plan.name.toLowerCase() ? "bg-secondary" : plan.popular ? "neon-glow-hover" : ""
                     }`}
-                    disabled={currentPlan === plan.name.toLowerCase()}
+                    disabled={true}
                     onClick={() => handleUpgrade(plan.name)}
                   >
-                    {currentPlan === plan.name.toLowerCase() ? "Current Plan" : "Upgrade"}
+                    {currentPlan === plan.name.toLowerCase() ? "Current Plan" : "Coming Soon"}
                   </Button>
                 </Card>
               </motion.div>
             ))}
           </div>
+
+          <CreditPacksModal open={showCreditPacks} onOpenChange={setShowCreditPacks} userPlan={currentPlan} />
         </motion.div>
       )}
     </div>
