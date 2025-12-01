@@ -54,7 +54,7 @@ const plans = [
     monthlyPrice: 6.49,
     annualPrice: 64.9,
     credits: 500,
-    monthlyPlanId: null, // Add when you provide Pro monthly plan ID
+    monthlyPlanId: "P-4L790010RN962751KNEW7AZY", // Added Pro monthly plan ID from PayPal
     annualPlanId: null, // Add when you provide Pro annual plan ID
     features: [
       "500 AI credits/month",
