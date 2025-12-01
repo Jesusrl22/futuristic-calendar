@@ -34,7 +34,7 @@ export function PayPalSubscriptionButton({ planId, planName, onSuccess }: PayPal
               shape: "rect",
               color: "gold",
               layout: "vertical",
-              label: "subscribe",
+              label: "paypal",
             },
             createSubscription: (data: any, actions: any) =>
               actions.subscription.create({
