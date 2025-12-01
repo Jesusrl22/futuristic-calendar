@@ -34,7 +34,7 @@ const plans = [
   {
     name: "Premium",
     monthlyPrice: 2.49,
-    annualPrice: 23.88, // 2.49 * 12 * 0.8 (20% discount)
+    annualPrice: 24.99,
     credits: 100,
     monthlyPlanId: "P-29883874AF135140VNDN3GSI",
     annualPlanId: "P-59N82236FG469130PNDN3XEQ",
@@ -52,7 +52,7 @@ const plans = [
   {
     name: "Pro",
     monthlyPrice: 6.49,
-    annualPrice: 62.3, // 6.49 * 12 * 0.8 (20% discount)
+    annualPrice: 64.9,
     credits: 500,
     monthlyPlanId: null, // Add when you provide Pro monthly plan ID
     annualPlanId: null, // Add when you provide Pro annual plan ID
