@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import { Check, Zap, Crown, ShoppingCart } from "@/components/icons"
 import dynamic from "next/dynamic"
+import { PayPalSubscriptionButton } from "@/components/paypal-subscription-button"
 
 const CreditPacksModal = dynamic(() => import("@/components/credit-packs-modal").then((mod) => mod.CreditPacksModal), {
   ssr: false,
@@ -17,6 +18,7 @@ const plans = [
     name: "Free",
     price: 0,
     credits: 0,
+    planId: null,
     features: [
       "0 AI credits/month",
       "Full Calendar access",
@@ -31,6 +33,7 @@ const plans = [
     name: "Premium",
     price: 2.49,
     credits: 100,
+    planId: "P-29883874AF135140VNDN3GSI", // PayPal Plan ID for Premium
     features: [
       "100 AI credits/month",
       "Everything in Free",
@@ -46,6 +49,7 @@ const plans = [
     name: "Pro",
     price: 6.49,
     credits: 500,
+    planId: null, // Will add when you provide Pro plan ID
     features: [
       "500 AI credits/month",
       "Everything in Premium",
@@ -208,15 +212,27 @@ export default function SubscriptionPage() {
                     ))}
                   </ul>
 
-                  <Button
-                    className={`w-full ${
-                      currentPlan === plan.name.toLowerCase() ? "bg-secondary" : plan.popular ? "neon-glow-hover" : ""
-                    }`}
-                    disabled={true}
-                    onClick={() => handleUpgrade(plan.name)}
-                  >
-                    {currentPlan === plan.name.toLowerCase() ? "Current Plan" : "Coming Soon"}
-                  </Button>
+                  {currentPlan === plan.name.toLowerCase() ? (
+                    <Button className="w-full bg-secondary" disabled>
+                      Current Plan
+                    </Button>
+                  ) : plan.planId ? (
+                    <PayPalSubscriptionButton
+                      planId={plan.planId}
+                      planName={plan.name}
+                      onSuccess={(subId) => {
+                        fetchSubscription()
+                      }}
+                    />
+                  ) : plan.name === "Pro" ? (
+                    <Button className="w-full" disabled>
+                      Coming Soon
+                    </Button>
+                  ) : (
+                    <Button className="w-full bg-secondary" disabled>
+                      Current Plan
+                    </Button>
+                  )}
                 </Card>
               </motion.div>
             ))}
