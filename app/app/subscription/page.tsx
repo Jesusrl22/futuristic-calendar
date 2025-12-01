@@ -250,6 +250,10 @@ export default function SubscriptionPage() {
                       <Button className="w-full bg-secondary" disabled>
                         Current Plan
                       </Button>
+                    ) : plan.name === "Free" ? (
+                      <Button className="w-full bg-secondary" disabled>
+                        Current Plan
+                      </Button>
                     ) : planId ? (
                       <PayPalSubscriptionButton
                         planId={planId}
@@ -258,13 +262,9 @@ export default function SubscriptionPage() {
                           fetchSubscription()
                         }}
                       />
-                    ) : plan.name === "Pro" ? (
+                    ) : (
                       <Button className="w-full" disabled>
                         Coming Soon
-                      </Button>
-                    ) : (
-                      <Button className="w-full bg-secondary" disabled>
-                        Current Plan
                       </Button>
                     )}
                   </Card>
