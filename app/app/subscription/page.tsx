@@ -70,13 +70,13 @@ const plans = [
 
 export default function SubscriptionPage() {
   const [currentPlan, setCurrentPlan] = useState("free")
-  const [credits, setCredits] = useState(0)
   const [monthlyCredits, setMonthlyCredits] = useState(0)
   const [purchasedCredits, setPurchasedCredits] = useState(0)
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showCreditPacks, setShowCreditPacks] = useState(false)
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly")
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     fetchSubscription()
@@ -99,7 +99,6 @@ export default function SubscriptionPage() {
       if (response.ok) {
         const data = await response.json()
         setCurrentPlan(data.subscription_tier || "free")
-        setCredits(data.ai_credits || 0)
         setMonthlyCredits(data.ai_credits_monthly || 0)
         setPurchasedCredits(data.ai_credits_purchased || 0)
         setExpiresAt(data.subscription_expires_at || null)
@@ -116,10 +115,41 @@ export default function SubscriptionPage() {
     alert(`Upgrade to ${planName} plan - Payment integration coming soon!`)
   }
 
+  const handleCancelSubscription = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to cancel your subscription? You will lose your monthly credits but keep any purchased credits.",
+      )
+    ) {
+      return
+    }
+
+    setCancelling(true)
+    try {
+      const response = await fetch("/api/subscription/cancel", {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        alert("Subscription cancelled successfully. You now have the Free plan.")
+        await fetchSubscription()
+      } else {
+        alert("Failed to cancel subscription. Please try again.")
+      }
+    } catch (error) {
+      console.error("Error cancelling subscription:", error)
+      alert("An error occurred. Please try again.")
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
   }
+
+  const totalCredits = monthlyCredits + purchasedCredits
 
   return (
     <div className="p-4 md:p-8">
@@ -142,17 +172,38 @@ export default function SubscriptionPage() {
                   <p className="text-xs md:text-sm text-orange-500 mt-2">Plan expires: {formatDate(expiresAt)}</p>
                 )}
               </div>
-              {currentPlan !== "free" && (
+              {totalCredits > 0 && (
                 <div className="text-center">
                   <Zap className="w-10 h-10 md:w-12 md:h-12 text-primary mx-auto mb-2" />
-                  <p className="text-xl md:text-2xl font-bold text-primary">{credits} credits</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">{totalCredits} credits</p>
                   <p className="text-xs text-muted-foreground">
-                    {monthlyCredits} monthly + {purchasedCredits} purchased
+                    {monthlyCredits} monthly · {purchasedCredits} purchased
                   </p>
                 </div>
               )}
             </div>
           </Card>
+
+          {currentPlan !== "free" && (
+            <Card className="glass-card p-4 mb-6 border-orange-500/50">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold mb-1">Cancel Subscription</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Downgrade to Free plan. You'll keep purchased credits but lose monthly credits.
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  onClick={handleCancelSubscription}
+                  disabled={cancelling}
+                  className="w-full md:w-auto"
+                >
+                  {cancelling ? "Cancelling..." : "Cancel Plan"}
+                </Button>
+              </div>
+            </Card>
+          )}
 
           <div className="mb-6 md:mb-8">
             <Button
@@ -196,6 +247,7 @@ export default function SubscriptionPage() {
               const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice
               const planId = billingPeriod === "monthly" ? plan.monthlyPlanId : plan.annualPlanId
               const periodLabel = billingPeriod === "monthly" ? "month" : "year"
+              const isCurrentPlan = currentPlan.toLowerCase() === plan.name.toLowerCase()
 
               return (
                 <motion.div
@@ -236,13 +288,18 @@ export default function SubscriptionPage() {
                       ))}
                     </ul>
 
-                    {currentPlan.toLowerCase() === plan.name.toLowerCase() ? (
+                    {isCurrentPlan ? (
                       <Button className="w-full bg-secondary" disabled>
                         Current Plan
                       </Button>
-                    ) : plan.name === "Free" && currentPlan.toLowerCase() === "free" ? (
-                      <Button className="w-full bg-secondary" disabled>
-                        Current Plan
+                    ) : plan.name === "Free" ? (
+                      <Button
+                        className="w-full bg-transparent"
+                        variant="outline"
+                        onClick={handleCancelSubscription}
+                        disabled={cancelling || currentPlan === "free"}
+                      >
+                        {cancelling ? "Processing..." : "Downgrade to Free"}
                       </Button>
                     ) : planId ? (
                       <PayPalSubscriptionButton
