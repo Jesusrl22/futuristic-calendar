@@ -93,6 +93,81 @@ export const translations = {
       secondaryColor: "Secondary Color",
       upgradeForTheme: "Upgrade to {plan} to unlock this theme",
     },
+
+    // Dashboard
+    welcomeBack: "Welcome Back",
+    quickOverview: "Quick Overview",
+    recentActivity: "Recent Activity",
+    upcomingTasks: "Upcoming Tasks",
+    aiCreditsAvailable: "AI Credits Available",
+    monthlyCredits: "Monthly Credits",
+    purchasedCredits: "Purchased Credits",
+    locked: "Locked",
+    upgradeOrBuyCredits: "Upgrade or buy credit packs",
+
+    // Subscription
+    subscriptionManagement: "Subscription Management",
+    currentPlan: "Current Plan",
+    upgradePlan: "Upgrade Plan",
+    creditPacks: "Credit Packs",
+    buyCreditPacks: "Buy Credit Packs",
+    neverExpire: "Never expire",
+    includesVAT: "VAT included",
+    comingSoon: "Coming Soon",
+    paymentConfiguring: "Payment system is being configured",
+    monthly: "Monthly",
+    annual: "Annual",
+    perMonth: "/month",
+    perYear: "/year",
+
+    // Pomodoro
+    pomodoroTimer: "Pomodoro Timer",
+    work: "Work",
+    shortBreak: "Short Break",
+    longBreak: "Long Break",
+    start: "Start",
+    pause: "Pause",
+    reset: "Reset",
+    session: "Session",
+    completedSessions: "Completed Sessions",
+
+    // Wishlist
+    myWishlist: "My Wishlist",
+    addWish: "Add Wish",
+    createNewWish: "Create New Wish",
+    wishTitle: "Wish Title",
+    wishDescription: "Description",
+    price: "Price",
+    url: "URL",
+
+    // Notes
+    myNotes: "My Notes",
+    newNote: "New Note",
+    createNote: "Create Note",
+    editNote: "Edit Note",
+    noteTitle: "Note Title",
+    noteContent: "Content",
+
+    // Statistics
+    yourStatistics: "Your Statistics",
+    tasksCompleted: "Tasks Completed",
+    totalPomodoros: "Total Pomodoros",
+    productivityScore: "Productivity Score",
+    weeklyGoal: "Weekly Goal",
+
+    // Achievements
+    yourAchievements: "Your Achievements",
+    unlocked: "Unlocked",
+    locked: "Locked",
+    progress: "Progress",
+
+    // AI Assistant
+    aiAssistant: "AI Assistant",
+    askAnything: "Ask me anything...",
+    send: "Send",
+    creditsRemaining: "credits remaining",
+    upgradeToAccess: "Upgrade to Premium or Pro to access AI Assistant",
+    buyCredits: "Or buy credit packs",
   },
   es: {
     // Navigation
@@ -189,6 +264,81 @@ export const translations = {
       secondaryColor: "Color Secundario",
       upgradeForTheme: "Actualiza a {plan} para desbloquear este tema",
     },
+
+    // Dashboard
+    welcomeBack: "Bienvenido de Nuevo",
+    quickOverview: "Resumen Rápido",
+    recentActivity: "Actividad Reciente",
+    upcomingTasks: "Próximas Tareas",
+    aiCreditsAvailable: "Créditos IA Disponibles",
+    monthlyCredits: "Créditos Mensuales",
+    purchasedCredits: "Créditos Comprados",
+    locked: "Bloqueado",
+    upgradeOrBuyCredits: "Mejora o compra packs de créditos",
+
+    // Subscription
+    subscriptionManagement: "Gestión de Suscripción",
+    currentPlan: "Plan Actual",
+    upgradePlan: "Mejorar Plan",
+    creditPacks: "Packs de Créditos",
+    buyCreditPacks: "Comprar Packs de Créditos",
+    neverExpire: "Nunca caducan",
+    includesVAT: "IVA incluido",
+    comingSoon: "Próximamente",
+    paymentConfiguring: "Sistema de pago en configuración",
+    monthly: "Mensual",
+    annual: "Anual",
+    perMonth: "/mes",
+    perYear: "/año",
+
+    // Pomodoro
+    pomodoroTimer: "Temporizador Pomodoro",
+    work: "Trabajo",
+    shortBreak: "Descanso Corto",
+    longBreak: "Descanso Largo",
+    start: "Iniciar",
+    pause: "Pausar",
+    reset: "Reiniciar",
+    session: "Sesión",
+    completedSessions: "Sesiones Completadas",
+
+    // Wishlist
+    myWishlist: "Mi Lista de Deseos",
+    addWish: "Agregar Deseo",
+    createNewWish: "Crear Nuevo Deseo",
+    wishTitle: "Título del Deseo",
+    wishDescription: "Descripción",
+    price: "Precio",
+    url: "URL",
+
+    // Notes
+    myNotes: "Mis Notas",
+    newNote: "Nueva Nota",
+    createNote: "Crear Nota",
+    editNote: "Editar Nota",
+    noteTitle: "Título de la Nota",
+    noteContent: "Contenido",
+
+    // Statistics
+    yourStatistics: "Tus Estadísticas",
+    tasksCompleted: "Tareas Completadas",
+    totalPomodoros: "Total de Pomodoros",
+    productivityScore: "Puntuación de Productividad",
+    weeklyGoal: "Objetivo Semanal",
+
+    // Achievements
+    yourAchievements: "Tus Logros",
+    unlocked: "Desbloqueado",
+    locked: "Bloqueado",
+    progress: "Progreso",
+
+    // AI Assistant
+    aiAssistant: "Asistente IA",
+    askAnything: "Pregúntame cualquier cosa...",
+    send: "Enviar",
+    creditsRemaining: "créditos restantes",
+    upgradeToAccess: "Mejora a Premium o Pro para acceder al Asistente IA",
+    buyCredits: "O compra packs de créditos",
   },
   fr: {
     // Navigation
@@ -285,6 +435,81 @@ export const translations = {
       secondaryColor: "Couleur secondaire",
       upgradeForTheme: "Passez à {plan} pour débloquer ce thème",
     },
+
+    // Dashboard
+    welcomeBack: "Bon Retour",
+    quickOverview: "Aperçu Rapide",
+    recentActivity: "Activité Récente",
+    upcomingTasks: "Tâches à Venir",
+    aiCreditsAvailable: "Crédits IA Disponibles",
+    monthlyCredits: "Crédits Mensuels",
+    purchasedCredits: "Crédits Achetés",
+    locked: "Verrouillé",
+    upgradeOrBuyCredits: "Améliorer ou acheter des packs de crédits",
+
+    // Subscription
+    subscriptionManagement: "Gestion de l'Abonnement",
+    currentPlan: "Plan Actuel",
+    upgradePlan: "Améliorer le Plan",
+    creditPacks: "Packs de Crédits",
+    buyCreditPacks: "Acheter des Packs de Crédits",
+    neverExpire: "N'expirent jamais",
+    includesVAT: "TVA incluse",
+    comingSoon: "Bientôt Disponible",
+    paymentConfiguring: "Système de paiement en configuration",
+    monthly: "Mensuel",
+    annual: "Annuel",
+    perMonth: "/mois",
+    perYear: "/an",
+
+    // Pomodoro
+    pomodoroTimer: "Minuteur Pomodoro",
+    work: "Travail",
+    shortBreak: "Pause Courte",
+    longBreak: "Pause Longue",
+    start: "Démarrer",
+    pause: "Pause",
+    reset: "Réinitialiser",
+    session: "Session",
+    completedSessions: "Sessions Terminées",
+
+    // Wishlist
+    myWishlist: "Ma Liste de Souhaits",
+    addWish: "Ajouter un Souhait",
+    createNewWish: "Créer un Nouveau Souhait",
+    wishTitle: "Titre du Souhait",
+    wishDescription: "Description",
+    price: "Prix",
+    url: "URL",
+
+    // Notes
+    myNotes: "Mes Notes",
+    newNote: "Nouvelle Note",
+    createNote: "Créer une Note",
+    editNote: "Modifier la Note",
+    noteTitle: "Titre de la Note",
+    noteContent: "Contenu",
+
+    // Statistics
+    yourStatistics: "Vos Statistiques",
+    tasksCompleted: "Tâches Terminées",
+    totalPomodoros: "Total de Pomodoros",
+    productivityScore: "Score de Productivité",
+    weeklyGoal: "Objectif Hebdomadaire",
+
+    // Achievements
+    yourAchievements: "Vos Réalisations",
+    unlocked: "Débloqué",
+    locked: "Verrouillé",
+    progress: "Progrès",
+
+    // AI Assistant
+    aiAssistant: "Assistant IA",
+    askAnything: "Demandez-moi n'importe quoi...",
+    send: "Envoyer",
+    creditsRemaining: "crédits restants",
+    upgradeToAccess: "Passez à Premium ou Pro pour accéder à l'Assistant IA",
+    buyCredits: "Ou achetez des packs de crédits",
   },
   de: {
     // Navigation
@@ -381,6 +606,81 @@ export const translations = {
       secondaryColor: "Sekundärfarbe",
       upgradeForTheme: "Upgrade auf {plan}, um dieses Thema freizuschalten",
     },
+
+    // Dashboard
+    welcomeBack: "Willkommen Zurück",
+    quickOverview: "Schnellübersicht",
+    recentActivity: "Letzte Aktivität",
+    upcomingTasks: "Anstehende Aufgaben",
+    aiCreditsAvailable: "Verfügbare KI-Credits",
+    monthlyCredits: "Monatliche Credits",
+    purchasedCredits: "Gekaufte Credits",
+    locked: "Gesperrt",
+    upgradeOrBuyCredits: "Upgraden oder Credit-Packs kaufen",
+
+    // Subscription
+    subscriptionManagement: "Abonnementverwaltung",
+    currentPlan: "Aktueller Plan",
+    upgradePlan: "Plan Upgraden",
+    creditPacks: "Credit-Packs",
+    buyCreditPacks: "Credit-Packs Kaufen",
+    neverExpire: "Läuft nie ab",
+    includesVAT: "inkl. MwSt.",
+    comingSoon: "Demnächst",
+    paymentConfiguring: "Zahlungssystem wird konfiguriert",
+    monthly: "Monatlich",
+    annual: "Jährlich",
+    perMonth: "/Monat",
+    perYear: "/Jahr",
+
+    // Pomodoro
+    pomodoroTimer: "Pomodoro-Timer",
+    work: "Arbeit",
+    shortBreak: "Kurze Pause",
+    longBreak: "Lange Pause",
+    start: "Start",
+    pause: "Pause",
+    reset: "Zurücksetzen",
+    session: "Sitzung",
+    completedSessions: "Abgeschlossene Sitzungen",
+
+    // Wishlist
+    myWishlist: "Meine Wunschliste",
+    addWish: "Wunsch Hinzufügen",
+    createNewWish: "Neuen Wunsch Erstellen",
+    wishTitle: "Wunschtitel",
+    wishDescription: "Beschreibung",
+    price: "Preis",
+    url: "URL",
+
+    // Notes
+    myNotes: "Meine Notizen",
+    newNote: "Neue Notiz",
+    createNote: "Notiz Erstellen",
+    editNote: "Notiz Bearbeiten",
+    noteTitle: "Notiztitel",
+    noteContent: "Inhalt",
+
+    // Statistics
+    yourStatistics: "Ihre Statistiken",
+    tasksCompleted: "Erledigte Aufgaben",
+    totalPomodoros: "Gesamt-Pomodoros",
+    productivityScore: "Produktivitätswert",
+    weeklyGoal: "Wochenziel",
+
+    // Achievements
+    yourAchievements: "Ihre Erfolge",
+    unlocked: "Freigeschaltet",
+    locked: "Gesperrt",
+    progress: "Fortschritt",
+
+    // AI Assistant
+    aiAssistant: "KI-Assistent",
+    askAnything: "Frag mich alles...",
+    send: "Senden",
+    creditsRemaining: "Credits verbleibend",
+    upgradeToAccess: "Upgrade auf Premium oder Pro für KI-Assistenten-Zugang",
+    buyCredits: "Oder Credit-Packs kaufen",
   },
   it: {
     // Navigation
@@ -477,6 +777,81 @@ export const translations = {
       secondaryColor: "Colore secondario",
       upgradeForTheme: "Passa a {plan} per sbloccare questo tema",
     },
+
+    // Dashboard
+    welcomeBack: "Bentornato",
+    quickOverview: "Panoramica Rapida",
+    recentActivity: "Attività Recente",
+    upcomingTasks: "Attività in Arrivo",
+    aiCreditsAvailable: "Crediti IA Disponibili",
+    monthlyCredits: "Crediti Mensili",
+    purchasedCredits: "Crediti Acquistati",
+    locked: "Bloccato",
+    upgradeOrBuyCredits: "Aggiorna o acquista pacchetti di crediti",
+
+    // Subscription
+    subscriptionManagement: "Gestione Abbonamento",
+    currentPlan: "Piano Attuale",
+    upgradePlan: "Aggiorna Piano",
+    creditPacks: "Pacchetti di Crediti",
+    buyCreditPacks: "Acquista Pacchetti di Crediti",
+    neverExpire: "Non scadono mai",
+    includesVAT: "IVA inclusa",
+    comingSoon: "Prossimamente",
+    paymentConfiguring: "Sistema di pagamento in configurazione",
+    monthly: "Mensile",
+    annual: "Annuale",
+    perMonth: "/mese",
+    perYear: "/anno",
+
+    // Pomodoro
+    pomodoroTimer: "Timer Pomodoro",
+    work: "Lavoro",
+    shortBreak: "Pausa Breve",
+    longBreak: "Pausa Lunga",
+    start: "Avvia",
+    pause: "Pausa",
+    reset: "Reimposta",
+    session: "Sessione",
+    completedSessions: "Sessioni Completate",
+
+    // Wishlist
+    myWishlist: "La Mia Lista Desideri",
+    addWish: "Aggiungi Desiderio",
+    createNewWish: "Crea Nuovo Desiderio",
+    wishTitle: "Titolo Desiderio",
+    wishDescription: "Descrizione",
+    price: "Prezzo",
+    url: "URL",
+
+    // Notes
+    myNotes: "Le Mie Note",
+    newNote: "Nuova Nota",
+    createNote: "Crea Nota",
+    editNote: "Modifica Nota",
+    noteTitle: "Titolo Nota",
+    noteContent: "Contenuto",
+
+    // Statistics
+    yourStatistics: "Le Tue Statistiche",
+    tasksCompleted: "Attività Completate",
+    totalPomodoros: "Pomodoros Totali",
+    productivityScore: "Punteggio di Produttività",
+    weeklyGoal: "Obiettivo Settimanale",
+
+    // Achievements
+    yourAchievements: "I Tuoi Successi",
+    unlocked: "Sbloccato",
+    locked: "Bloccato",
+    progress: "Progresso",
+
+    // AI Assistant
+    aiAssistant: "Assistente IA",
+    askAnything: "Chiedimi qualsiasi cosa...",
+    send: "Invia",
+    creditsRemaining: "crediti rimanenti",
+    upgradeToAccess: "Passa a Premium o Pro per accedere all'Assistente IA",
+    buyCredits: "O acquista pacchetti di crediti",
   },
 } as const
 

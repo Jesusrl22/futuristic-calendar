@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState, useEffect } from "react"
 import { useTranslation, type Language } from "@/lib/translations"
+import { LanguageSelector } from "@/components/language-selector"
 // import { canAccessAI } from "@/lib/subscription"
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -45,7 +46,6 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           }
         }
       } catch (error) {
-        console.error("[v0] Error loading language:", error)
         const savedLang = localStorage.getItem("language") as Language | null
         if (savedLang) {
           setLang(savedLang)
@@ -96,6 +96,22 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     }
   }
 
+  const handleLanguageChange = async (newLang: Language) => {
+    setLang(newLang)
+    localStorage.setItem("language", newLang)
+
+    // Save to database
+    try {
+      await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: newLang }),
+      })
+    } catch (error) {
+      // Language saved to localStorage, will sync on next settings save
+    }
+  }
+
   // const hasAIAccess = canAccessAI(subscriptionTier as any, purchasedCredits)
 
   return (
@@ -134,7 +150,9 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </ScrollArea>
 
       {/* Notifications and Logout */}
-      <div className="p-4 border-t border-border/50">
+      <div className="p-4 border-t border-border/50 space-y-1">
+        <LanguageSelector currentLang={lang} onLanguageChange={handleLanguageChange} />
+
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 hover:bg-destructive/10 hover:text-destructive"
