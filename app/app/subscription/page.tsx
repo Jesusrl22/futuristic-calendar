@@ -236,11 +236,11 @@ export default function SubscriptionPage() {
                       ))}
                     </ul>
 
-                    {currentPlan === plan.name.toLowerCase() ? (
+                    {currentPlan.toLowerCase() === plan.name.toLowerCase() ? (
                       <Button className="w-full bg-secondary" disabled>
                         Current Plan
                       </Button>
-                    ) : plan.name === "Free" ? (
+                    ) : plan.name === "Free" && currentPlan.toLowerCase() === "free" ? (
                       <Button className="w-full bg-secondary" disabled>
                         Current Plan
                       </Button>

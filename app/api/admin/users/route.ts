@@ -12,7 +12,9 @@ export async function GET() {
 
     const { data: users, error } = await supabase
       .from("users")
-      .select("id, email, name, subscription_plan, subscription_expires_at, created_at, ai_credits")
+      .select(
+        "id, email, name, subscription_plan, subscription_expires_at, created_at, ai_credits_monthly, ai_credits_purchased",
+      )
       .order("created_at", { ascending: false })
 
     if (error) {
@@ -42,7 +44,10 @@ export async function GET() {
           pro: 500,
         }
         const planCredits = initialCredits[(user.subscription_plan || "free") as keyof typeof initialCredits] || 0
-        const creditsUsed = planCredits - (user.ai_credits || 0)
+        const monthlyCredits = user.ai_credits_monthly || 0
+        const purchasedCredits = user.ai_credits_purchased || 0
+        const totalCredits = monthlyCredits + purchasedCredits
+        const creditsUsed = planCredits > 0 ? planCredits - monthlyCredits : 0
 
         return {
           ...user,
@@ -51,7 +56,7 @@ export async function GET() {
             notes: notesCount || 0,
             pomodoros: pomodorosCount || 0,
             creditsUsed: creditsUsed,
-            creditsRemaining: user.ai_credits || 0,
+            creditsRemaining: totalCredits,
           },
         }
       }),
@@ -80,7 +85,9 @@ export async function PATCH(request: Request) {
         premium: 100,
         pro: 500,
       }
-      updates.ai_credits = creditsMap[updates.subscription_plan as keyof typeof creditsMap] || 0
+      // Assign monthly credits based on plan
+      updates.ai_credits_monthly = creditsMap[updates.subscription_plan as keyof typeof creditsMap] || 0
+      // Keep purchased credits unchanged (don't overwrite them)
     }
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
