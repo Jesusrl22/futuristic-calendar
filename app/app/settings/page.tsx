@@ -15,6 +15,7 @@ import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/li
 import { Badge } from "@/components/ui/badge"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
+import { useLanguage } from "@/contexts/language-context"
 
 type ProfileType = {
   email: string
@@ -33,10 +34,12 @@ type ProfileType = {
 export default function SettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage()
+
   const [profile, setProfile] = useState<ProfileType>({
     email: "",
     theme: "default",
-    language: "en" as Language,
+    language: globalLanguage,
     notifications: true,
     timezone: "UTC",
     plan: "free",
@@ -106,7 +109,7 @@ export default function SettingsPage() {
           theme: settingsData.profile.theme || savedTheme || "default",
           customPrimary: settingsData.profile.customPrimary || localStorage.getItem("customPrimary") || "#7c3aed",
           customSecondary: settingsData.profile.customSecondary || localStorage.getItem("customSecondary") || "#ec4899",
-          language: settingsData.profile.language || localStorage.getItem("language") || "en",
+          language: settingsData.profile.language || localStorage.getItem("language") || globalLanguage,
           notifications: true,
           timezone: settingsData.profile.timezone || detectedTimezone,
           pomodoroWorkDuration: settingsData.profile.pomodoro_work_duration || 25,
@@ -170,6 +173,8 @@ export default function SettingsPage() {
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
 
+        setGlobalLanguage(profile.language)
+
         if (profile.theme === "custom") {
           const primaryColor = profile.customPrimary || "#7c3aed"
           const secondaryColor = profile.customSecondary || "#ec4899"
@@ -179,25 +184,25 @@ export default function SettingsPage() {
             applyTheme("custom", primaryColor, secondaryColor)
           }, 0)
         } else {
-          localStorage.removeItem("customPrimary")
-          localStorage.removeItem("customSecondary")
+          applyTheme(profile.theme)
         }
 
         toast({
-          title: "Settings saved",
-          description: "Your settings have been updated successfully.",
+          title: t("success"),
+          description: "Settings saved successfully",
         })
       } else {
         toast({
-          title: "Error",
-          description: `Failed to save settings: ${result.error || "Unknown error"}`,
+          title: t("error"),
+          description: result.error || "Failed to save settings",
           variant: "destructive",
         })
       }
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error saving settings:", error)
       toast({
-        title: "Error",
-        description: `Failed to save settings: ${error.message || "Network error"}`,
+        title: t("error"),
+        description: "Failed to save settings",
         variant: "destructive",
       })
     } finally {

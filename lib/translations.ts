@@ -1,3 +1,5 @@
+"use client"
+
 export const translations = {
   en: {
     // Navigation
@@ -857,16 +859,25 @@ export const translations = {
 
 export type Language = "en" | "es" | "fr" | "de" | "it"
 
-export function useTranslation(lang: Language = "en") {
+import { useContext } from "react"
+import { LanguageContext } from "@/contexts/language-context"
+
+export function useTranslation(lang?: Language) {
+  let contextLang: Language | undefined
+  const context = useContext(LanguageContext)
+  contextLang = context?.language
+
+  const effectiveLang = lang || contextLang || "en"
+
   return {
     t: (key: string) => {
       const keys = key.split(".")
-      let value: any = translations[lang]
+      let value: any = translations[effectiveLang]
       for (const k of keys) {
         value = value?.[k]
       }
       return value || key
     },
-    lang,
+    lang: effectiveLang,
   }
 }

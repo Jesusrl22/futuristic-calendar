@@ -19,7 +19,8 @@ import {
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTranslation, type Language } from "@/lib/translations"
+import { useTranslation } from "@/lib/translations"
+import { useLanguage } from "@/contexts/language-context"
 import { supabase } from "@/lib/supabase"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
@@ -50,32 +51,11 @@ export default function TasksPage() {
     due_time: "",
   })
   const [isCreating, setIsCreating] = useState(false)
-  const [lang, setLang] = useState<Language>("en")
-  const { t } = useTranslation(lang)
+  const { language } = useLanguage()
+  const { t } = useTranslation(language)
 
   useEffect(() => {
     fetchTasks()
-
-    const loadLanguage = async () => {
-      try {
-        const response = await fetch("/api/settings")
-        const data = await response.json()
-        if (data.profile?.language) {
-          setLang(data.profile.language)
-        } else {
-          const savedLang = localStorage.getItem("language") as Language | null
-          if (savedLang) {
-            setLang(savedLang)
-          }
-        }
-      } catch (error) {
-        const savedLang = localStorage.getItem("language") as Language | null
-        if (savedLang) {
-          setLang(savedLang)
-        }
-      }
-    }
-    loadLanguage()
 
     const fetchTimezone = async () => {
       const { data } = await supabase
@@ -461,17 +441,16 @@ export default function TasksPage() {
         </div>
 
         <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="all">{t("all")}</TabsTrigger>
-            <TabsTrigger value="active">{t("active")}</TabsTrigger>
-            <TabsTrigger value="completed">{t("completed")}</TabsTrigger>
-            <TabsTrigger value="today">{t("today")}</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
+            <TabsTrigger value="active">{t("activeTasks")}</TabsTrigger>
+            <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value={filter} className="space-y-4">
             {filteredTasks.length === 0 ? (
               <Card className="glass-card p-12 text-center">
-                <p className="text-muted-foreground">{t("noTasks")}</p>
+                <p className="text-muted-foreground">{t("noTasksFound")}</p>
               </Card>
             ) : (
               <>
@@ -555,7 +534,9 @@ export default function TasksPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{t("editTask")}</DialogTitle>
-              <DialogDescription>{t("updateTask")}</DialogDescription>
+              <DialogDescription>
+                {t("edit")} {t("tasks").toLowerCase()}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">

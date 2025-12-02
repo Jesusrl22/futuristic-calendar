@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import Script from "next/script"
 import "./globals.css"
 import { ThemeLoader } from "@/components/theme-loader"
+import { LanguageProvider } from "@/contexts/language-context"
 
 export const metadata: Metadata = {
   title: "Future Task - Smart Task Management",
@@ -41,7 +42,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   )

@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTranslation, type Language } from "@/lib/translations"
+import { useTranslation } from "@/lib/translations"
+import { useLanguage } from "@/contexts/language-context"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
@@ -34,8 +35,8 @@ export default function CalendarPage() {
     time: "",
   })
   const tasksRef = useRef<Task[]>([])
-  const [lang, setLang] = useState<Language>("en")
-  const { t } = useTranslation(lang)
+  const { language } = useLanguage()
+  const { t } = useTranslation(language)
 
   useEffect(() => {
     tasksRef.current = tasks
@@ -43,27 +44,6 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchTasks()
-
-    const loadLanguage = async () => {
-      try {
-        const response = await fetch("/api/settings")
-        const data = await response.json()
-        if (data.profile?.language) {
-          setLang(data.profile.language)
-        } else {
-          const savedLang = localStorage.getItem("language") as Language | null
-          if (savedLang) {
-            setLang(savedLang)
-          }
-        }
-      } catch (error) {
-        const savedLang = localStorage.getItem("language") as Language | null
-        if (savedLang) {
-          setLang(savedLang)
-        }
-      }
-    }
-    loadLanguage()
 
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission)
