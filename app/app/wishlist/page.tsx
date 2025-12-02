@@ -12,8 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { canAccessFeature } from "@/lib/subscription"
 import { UpgradeModal } from "@/components/upgrade-modal"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function WishlistPage() {
+  const { t } = useTranslation()
   const [items, setItems] = useState<any[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -128,7 +130,7 @@ export default function WishlistPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("loading")}</p>
       </div>
     )
   }
@@ -140,42 +142,42 @@ export default function WishlistPage() {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold">
-          <span className="text-primary neon-text">Wishlist</span>
+        <h1 className="text-4xl font-bold hidden md:block">
+          <span className="text-primary neon-text">{t("wishlist")}</span>
         </h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="neon-glow-hover">
               <Plus className="w-4 h-4 mr-2" />
-              Add Item
+              {t("add")}
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-card">
             <DialogHeader>
-              <DialogTitle>Add Wishlist Item</DialogTitle>
+              <DialogTitle>{t("addWish")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label>Title</Label>
+                <Label>{t("title")}</Label>
                 <Input
                   value={itemForm.title}
                   onChange={(e) => setItemForm({ ...itemForm, title: e.target.value })}
-                  placeholder="Item title"
+                  placeholder={t("wishTitle")}
                   className="bg-secondary/50"
                 />
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t("description")}</Label>
                 <Textarea
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
-                  placeholder="Item description"
+                  placeholder={t("wishDescription")}
                   className="bg-secondary/50"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Price</Label>
+                  <Label>{t("price")}</Label>
                   <Input
                     type="number"
                     value={itemForm.price}
@@ -185,7 +187,7 @@ export default function WishlistPage() {
                   />
                 </div>
                 <div>
-                  <Label>Priority</Label>
+                  <Label>{t("priority")}</Label>
                   <Select
                     value={itemForm.priority}
                     onValueChange={(value) => setItemForm({ ...itemForm, priority: value })}
@@ -194,15 +196,15 @@ export default function WishlistPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="high">{t("high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label>URL (optional)</Label>
+                <Label>{t("url")}</Label>
                 <Input
                   value={itemForm.url}
                   onChange={(e) => setItemForm({ ...itemForm, url: e.target.value })}
@@ -211,7 +213,7 @@ export default function WishlistPage() {
                 />
               </div>
               <Button onClick={handleSaveItem} className="w-full neon-glow-hover">
-                Add to Wishlist
+                {t("add")}
               </Button>
             </div>
           </DialogContent>
@@ -221,31 +223,31 @@ export default function WishlistPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="glass-card">
           <DialogHeader>
-            <DialogTitle>Edit Wishlist Item</DialogTitle>
+            <DialogTitle>{t("editWish")}</DialogTitle>
           </DialogHeader>
           {editingItem && (
             <div className="space-y-4">
               <div>
-                <Label>Title</Label>
+                <Label>{t("title")}</Label>
                 <Input
                   value={editingItem.title}
                   onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
-                  placeholder="Item title"
+                  placeholder={t("wishTitle")}
                   className="bg-secondary/50"
                 />
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t("description")}</Label>
                 <Textarea
                   value={editingItem.description}
                   onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
-                  placeholder="Item description"
+                  placeholder={t("wishDescription")}
                   className="bg-secondary/50"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Price</Label>
+                  <Label>{t("price")}</Label>
                   <Input
                     type="number"
                     value={editingItem.price || ""}
@@ -255,7 +257,7 @@ export default function WishlistPage() {
                   />
                 </div>
                 <div>
-                  <Label>Priority</Label>
+                  <Label>{t("priority")}</Label>
                   <Select
                     value={editingItem.priority}
                     onValueChange={(value) => setEditingItem({ ...editingItem, priority: value })}
@@ -264,15 +266,15 @@ export default function WishlistPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="low">{t("low")}</SelectItem>
+                      <SelectItem value="medium">{t("medium")}</SelectItem>
+                      <SelectItem value="high">{t("high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <div>
-                <Label>URL (optional)</Label>
+                <Label>{t("url")}</Label>
                 <Input
                   value={editingItem.url || ""}
                   onChange={(e) => setEditingItem({ ...editingItem, url: e.target.value })}
@@ -281,7 +283,7 @@ export default function WishlistPage() {
                 />
               </div>
               <Button onClick={handleEditItem} className="w-full neon-glow-hover">
-                Save Changes
+                {t("save")}
               </Button>
             </div>
           )}
@@ -290,25 +292,33 @@ export default function WishlistPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="glass-card p-6 neon-glow-hover">
-          <h3 className="text-sm text-muted-foreground mb-2">Total Items</h3>
+          <h3 className="text-sm text-muted-foreground mb-2">{t("allTasks")}</h3>
           <p className="text-3xl font-bold">{items.length}</p>
         </Card>
         <Card className="glass-card p-6 neon-glow-hover">
-          <h3 className="text-sm text-muted-foreground mb-2">Total Value</h3>
+          <h3 className="text-sm text-muted-foreground mb-2">{t("totalValue")}</h3>
           <p className="text-3xl font-bold">${totalValue.toFixed(2)}</p>
         </Card>
         <Card className="glass-card p-6 neon-glow-hover">
-          <h3 className="text-sm text-muted-foreground mb-2">High Priority</h3>
+          <h3 className="text-sm text-muted-foreground mb-2">
+            {t("high")} {t("priority")}
+          </h3>
           <p className="text-3xl font-bold">{items.filter((i) => i.priority === "high").length}</p>
         </Card>
       </div>
 
       <Tabs value={filter} onValueChange={setFilter}>
         <TabsList className="mb-6">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="high">High Priority</TabsTrigger>
-          <TabsTrigger value="medium">Medium Priority</TabsTrigger>
-          <TabsTrigger value="low">Low Priority</TabsTrigger>
+          <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
+          <TabsTrigger value="high">
+            {t("high")} {t("priority")}
+          </TabsTrigger>
+          <TabsTrigger value="medium">
+            {t("medium")} {t("priority")}
+          </TabsTrigger>
+          <TabsTrigger value="low">
+            {t("low")} {t("priority")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={filter} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -354,7 +364,7 @@ export default function WishlistPage() {
 
       {filteredItems.length === 0 && (
         <Card className="glass-card p-12 text-center">
-          <p className="text-muted-foreground">No items in wishlist</p>
+          <p className="text-muted-foreground">{t("noTasksFound")}</p>
         </Card>
       )}
     </div>

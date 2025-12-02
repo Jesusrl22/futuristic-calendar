@@ -9,8 +9,10 @@ import { Plus, Search, Trash2, Edit2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { canAccessFeature } from "@/lib/subscription"
 import { UpgradeModal } from "@/components/upgrade-modal"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function NotesPage() {
+  const { t } = useTranslation()
   const [notes, setNotes] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -104,7 +106,7 @@ export default function NotesPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("notes.loading")}</p>
       </div>
     )
   }
@@ -117,7 +119,7 @@ export default function NotesPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">
-          <span className="text-primary neon-text">Notes</span>
+          <span className="text-primary neon-text">{t("notes.title")}</span>
         </h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -129,28 +131,28 @@ export default function NotesPage() {
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              New Note
+              {t("notes.new_note")}
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-card">
             <DialogHeader>
-              <DialogTitle>{editingNote ? "Edit Note" : "Create New Note"}</DialogTitle>
+              <DialogTitle>{editingNote ? t("notes.edit_note") : t("notes.create_note")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Input
-                placeholder="Note title"
+                placeholder={t("notes.title_placeholder")}
                 value={noteForm.title}
                 onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
                 className="bg-secondary/50"
               />
               <Textarea
-                placeholder="Note content"
+                placeholder={t("notes.content_placeholder")}
                 value={noteForm.content}
                 onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
                 className="bg-secondary/50 min-h-[200px]"
               />
               <Button onClick={handleSaveNote} className="w-full neon-glow-hover">
-                {editingNote ? "Update Note" : "Create Note"}
+                {editingNote ? t("notes.update_note") : t("notes.create_note")}
               </Button>
             </div>
           </DialogContent>
@@ -161,7 +163,7 @@ export default function NotesPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search notes..."
+            placeholder={t("notes.search_placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-secondary/50"
@@ -201,7 +203,7 @@ export default function NotesPage() {
 
       {filteredNotes.length === 0 && (
         <Card className="glass-card p-12 text-center">
-          <p className="text-muted-foreground">No notes found</p>
+          <p className="text-muted-foreground">{t("notes.no_notes_found")}</p>
         </Card>
       )}
     </div>

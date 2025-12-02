@@ -6,8 +6,10 @@ import { CheckSquare, FileText, Timer, Zap } from "@/components/icons"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function AppPage() {
+  const { t } = useTranslation()
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({
     tasks: 0,
@@ -98,7 +100,7 @@ export default function AppPage() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     )
@@ -108,21 +110,21 @@ export default function AppPage() {
   const hasCredits = totalCredits > 0
 
   const statCards = [
-    { title: "Tasks (This Month)", value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
-    { title: "Notes (This Month)", value: stats.notes, icon: FileText, color: "text-purple-500" },
-    { title: "Pomodoros (This Month)", value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
+    { title: t("tasks"), value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
+    { title: t("notes"), value: stats.notes, icon: FileText, color: "text-purple-500" },
+    { title: t("pomodoros"), value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
     {
-      title: "AI Credits",
+      title: t("ai_credits"),
       value: hasCredits ? totalCredits : 0,
       icon: Zap,
       color: "text-primary",
       subtitle: hasCredits
         ? stats.monthlyCredits > 0 && stats.purchasedCredits > 0
-          ? `${stats.monthlyCredits} monthly · ${stats.purchasedCredits} purchased`
+          ? `${stats.monthlyCredits} ${t("monthly")} · ${stats.purchasedCredits} ${t("purchased")}`
           : stats.monthlyCredits > 0
-            ? "Monthly credits"
-            : "Purchased credits"
-        : "Upgrade or buy credit packs",
+            ? t("monthly_credits")
+            : t("purchased_credits")
+        : t("upgrade_or_buy_credit_packs"),
       noCredits: !hasCredits,
     },
   ]
@@ -130,7 +132,7 @@ export default function AppPage() {
   return (
     <div className="p-4 md:p-8">
       <h1 className="hidden md:block text-2xl md:text-4xl font-bold mb-6 md:mb-8">
-        <span className="text-primary neon-text">Dashboard</span>
+        <span className="text-primary neon-text">{t("dashboard")}</span>
       </h1>
 
       <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
@@ -141,10 +143,10 @@ export default function AppPage() {
 
         <div className="mb-6 md:mb-8">
           <h2 className="text-xl md:text-3xl font-bold mb-2">
-            Welcome, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
+            {t("welcome")}, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
-            Here's your productivity overview ·
+            {t("productivity_overview")} ·
             <span
               className={`ml-2 font-medium ${
                 user?.subscription_tier === "pro"
@@ -154,7 +156,7 @@ export default function AppPage() {
                     : "text-gray-500"
               }`}
             >
-              {user?.subscription_tier?.toUpperCase() || "FREE"} Plan
+              {user?.subscription_tier?.toUpperCase() || t("free_plan")}
             </span>
           </p>
         </div>
@@ -176,7 +178,7 @@ export default function AppPage() {
                 <div className="flex items-center justify-between mb-4">
                   <stat.icon className={`w-8 h-8 ${stat.color} group-hover:scale-110 transition-transform`} />
                   {stat.noCredits && (
-                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">Locked</span>
+                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">{t("locked")}</span>
                   )}
                 </div>
                 <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
@@ -192,12 +194,12 @@ export default function AppPage() {
         {/* Quick Actions */}
         <div>
           <Card className="glass-card p-4 md:p-8 neon-glow">
-            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Quick Actions</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("quick_actions")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               {[
-                { title: "Create Task", href: "/app/tasks", icon: "📝" },
-                { title: "Start Pomodoro", href: "/app/pomodoro", icon: "⏱️" },
-                { title: "Ask AI", href: "/app/ai", icon: "🤖" },
+                { title: t("create_task"), href: "/app/tasks", icon: "📝" },
+                { title: t("start_pomodoro"), href: "/app/pomodoro", icon: "⏱️" },
+                { title: t("ask_ai"), href: "/app/ai", icon: "🤖" },
               ].map((action) => (
                 <a
                   key={action.title}

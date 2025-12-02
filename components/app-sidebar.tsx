@@ -18,16 +18,13 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useState, useEffect } from "react"
-import { useTranslation, type Language } from "@/lib/translations"
-import { LanguageSelector } from "@/components/language-selector"
-// import { canAccessAI } from "@/lib/subscription"
+import { useEffect, useState } from "react"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [lang, setLang] = useState<Language>("en")
-  const { t } = useTranslation(lang)
+  const { t, language, setLanguage } = useTranslation()
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null)
   const [purchasedCredits, setPurchasedCredits] = useState(0)
 
@@ -37,23 +34,14 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         const response = await fetch("/api/settings")
         const data = await response.json()
         if (data.profile?.language) {
-          setLang(data.profile.language)
-          localStorage.setItem("language", data.profile.language)
-        } else {
-          const savedLang = localStorage.getItem("language") as Language | null
-          if (savedLang) {
-            setLang(savedLang)
-          }
+          setLanguage(data.profile.language)
         }
       } catch (error) {
-        const savedLang = localStorage.getItem("language") as Language | null
-        if (savedLang) {
-          setLang(savedLang)
-        }
+        // Language will default to context's initial value
       }
     }
     loadLanguage()
-  }, [])
+  }, [setLanguage])
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -96,24 +84,6 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     }
   }
 
-  const handleLanguageChange = async (newLang: Language) => {
-    setLang(newLang)
-    localStorage.setItem("language", newLang)
-
-    // Save to database
-    try {
-      await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: newLang }),
-      })
-    } catch (error) {
-      // Language saved to localStorage, will sync on next settings save
-    }
-  }
-
-  // const hasAIAccess = canAccessAI(subscriptionTier as any, purchasedCredits)
-
   return (
     <div className="flex flex-col h-full w-full border-r border-border/50 bg-card/50 backdrop-blur-sm">
       {/* Logo */}
@@ -149,10 +119,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         </nav>
       </ScrollArea>
 
-      {/* Notifications and Logout */}
       <div className="p-4 border-t border-border/50 space-y-1">
-        <LanguageSelector currentLang={lang} onLanguageChange={handleLanguageChange} />
-
         <Button
           variant="ghost"
           className="w-full justify-start gap-3 hover:bg-destructive/10 hover:text-destructive"

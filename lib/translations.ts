@@ -863,21 +863,19 @@ import { useContext } from "react"
 import { LanguageContext } from "@/contexts/language-context"
 
 export function useTranslation(lang?: Language) {
-  let contextLang: Language | undefined
   const context = useContext(LanguageContext)
-  contextLang = context?.language
 
-  const effectiveLang = lang || contextLang || "en"
+  // Use context language if available, otherwise fallback to provided lang or 'en'
+  const currentLang = context?.language || lang || "en"
 
-  return {
-    t: (key: string) => {
-      const keys = key.split(".")
-      let value: any = translations[effectiveLang]
-      for (const k of keys) {
-        value = value?.[k]
-      }
-      return value || key
-    },
-    lang: effectiveLang,
+  const t = (key: string) => {
+    const keys = key.split(".")
+    let value: any = translations[currentLang]
+    for (const k of keys) {
+      value = value?.[k]
+    }
+    return value || key
   }
+
+  return { t, language: currentLang }
 }

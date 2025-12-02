@@ -20,8 +20,10 @@ import { canAccessAdvancedPomodoro } from "@/lib/subscription"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
+import { useTranslation } from "react-i18next"
 
 export default function PomodoroPage() {
+  const { t } = useTranslation("pomodoro")
   const [durations, setDurations] = useState({
     work: 25 * 60,
     break: 5 * 60,
@@ -230,7 +232,7 @@ export default function PomodoroPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("loading")}</p>
       </div>
     )
   }
@@ -240,7 +242,7 @@ export default function PomodoroPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <h1 className="hidden md:block text-3xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">Pomodoro Timer</span>
+            <span className="text-primary neon-text">{t("timerTitle")}</span>
           </h1>
 
           {hasAdvancedAccess && (
@@ -251,18 +253,16 @@ export default function PomodoroPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Timer Presets</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("timerPresets")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => saveDurationPreset(15, 3, 10)}>Short (15/3/10 min)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => saveDurationPreset(25, 5, 15)}>
-                  Standard (25/5/15 min)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => saveDurationPreset(45, 10, 30)}>Long (45/10/30 min)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => saveDurationPreset(15, 3, 10)}>{t("presetShort")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => saveDurationPreset(25, 5, 15)}>{t("presetStandard")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => saveDurationPreset(45, 10, 30)}>{t("presetLong")}</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => saveDurationPreset(60, 15, 30)}>
-                  Extended (60/15/30 min)
+                  {t("presetExtended")}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowCustomDialog(true)}>Custom Duration...</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowCustomDialog(true)}>{t("customDuration")}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -284,8 +284,7 @@ export default function PomodoroPage() {
         {!hasAdvancedAccess && (
           <Card className="glass-card p-4 neon-glow mb-6 bg-primary/10">
             <p className="text-sm text-center">
-              Upgrade to <span className="font-bold text-primary">Premium</span> to unlock advanced pomodoro settings
-              with multiple presets and custom durations!
+              {t("upgradeMessage")} <span className="font-bold text-primary">{t("premium")}</span> {t("toUnlock")}
             </p>
           </Card>
         )}
@@ -300,7 +299,7 @@ export default function PomodoroPage() {
                   onClick={() => handleModeChange(m)}
                   className={mode === m ? "neon-glow-hover" : ""}
                 >
-                  {m === "work" ? "Work" : m === "break" ? "Break" : "Long Break"}
+                  {m === "work" ? t("work") : m === "break" ? t("break") : t("longBreak")}
                 </Button>
               ))}
             </div>
@@ -346,7 +345,7 @@ export default function PomodoroPage() {
             </div>
 
             <div className="mt-8 pt-8 border-t border-border/50">
-              <p className="text-sm text-muted-foreground">Sessions completed today</p>
+              <p className="text-sm text-muted-foreground">{t("sessionsCompleted")}</p>
               <p className="text-3xl font-bold text-primary mt-2">{sessions}</p>
             </div>
           </Card>
@@ -368,14 +367,12 @@ export default function PomodoroPage() {
       <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Custom Pomodoro Duration</DialogTitle>
-            <DialogDescription>
-              Set your own work duration. Break and long break will be calculated automatically.
-            </DialogDescription>
+            <DialogTitle>{t("customPomodoroDuration")}</DialogTitle>
+            <DialogDescription>{t("setCustomDuration")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-minutes">Work Duration (minutes)</Label>
+              <Label htmlFor="custom-minutes">{t("workDuration")}</Label>
               <Input
                 id="custom-minutes"
                 type="number"
@@ -386,12 +383,12 @@ export default function PomodoroPage() {
                 placeholder="25"
               />
               <p className="text-xs text-muted-foreground">
-                Break: {Math.floor(Number.parseInt(customMinutes || "25") / 5)} min | Long Break:{" "}
+                {t("break")}: {Math.floor(Number.parseInt(customMinutes || "25") / 5)} min | {t("longBreak")}:{" "}
                 {Math.floor(Number.parseInt(customMinutes || "25") / 2)} min
               </p>
             </div>
             <Button onClick={handleCustomDuration} className="w-full">
-              Save Custom Duration
+              {t("saveCustomDuration")}
             </Button>
           </div>
         </DialogContent>
