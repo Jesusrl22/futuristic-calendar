@@ -15,6 +15,7 @@ export function AdsterraBanner({ adKey, width, height, className = "" }: Adsterr
   const [loading, setLoading] = useState(true)
   const adContainerRef = useRef<HTMLDivElement>(null)
   const isMobile = useMediaQuery("(max-width: 768px)")
+  const scriptLoadedRef = useRef(false)
 
   useEffect(() => {
     const fetchUserTier = async () => {
@@ -35,23 +36,23 @@ export function AdsterraBanner({ adKey, width, height, className = "" }: Adsterr
   }, [])
 
   useEffect(() => {
-    if (!loading && userTier === "free" && !isMobile && adContainerRef.current) {
-      const script = document.createElement("script")
-      script.type = "text/javascript"
-      script.innerHTML = `
-        atOptions = {
-          'key' : '${adKey}',
-          'format' : 'iframe',
-          'height' : ${height},
-          'width' : ${width},
-          'params' : {}
-        };
-      `
-      adContainerRef.current.appendChild(script)
+    if (!loading && userTier === "free" && !isMobile && adContainerRef.current && !scriptLoadedRef.current) {
+      scriptLoadedRef.current = true
 
+      // Set atOptions on window object
+      ;(window as any).atOptions = {
+        key: adKey,
+        format: "iframe",
+        height: height,
+        width: width,
+        params: {},
+      }
+
+      // Load the invoke script
       const invokeScript = document.createElement("script")
       invokeScript.type = "text/javascript"
       invokeScript.src = `//www.highperformanceformat.com/${adKey}/invoke.js`
+      invokeScript.async = true
       adContainerRef.current.appendChild(invokeScript)
     }
   }, [loading, userTier, adKey, width, height, isMobile])
