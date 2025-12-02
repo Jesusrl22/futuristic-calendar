@@ -76,6 +76,7 @@ export default function SubscriptionPage() {
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [showCreditPacks, setShowCreditPacks] = useState(false)
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly")
 
   useEffect(() => {
     fetchSubscription()
@@ -168,10 +169,33 @@ export default function SubscriptionPage() {
             </p>
           </div>
 
+          <div className="flex justify-center mb-6 md:mb-8">
+            <div className="inline-flex items-center gap-2 p-1 bg-muted rounded-lg">
+              <Button
+                variant={billingPeriod === "monthly" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setBillingPeriod("monthly")}
+                className={billingPeriod === "monthly" ? "neon-glow" : ""}
+              >
+                Monthly
+              </Button>
+              <Button
+                variant={billingPeriod === "annual" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setBillingPeriod("annual")}
+                className={billingPeriod === "annual" ? "neon-glow" : ""}
+              >
+                Annual
+                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">Save 20%</span>
+              </Button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
             {plans.map((plan, index) => {
-              const price = plan.monthlyPrice
-              const planId = plan.monthlyPlanId
+              const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice
+              const planId = billingPeriod === "monthly" ? plan.monthlyPlanId : plan.annualPlanId
+              const periodLabel = billingPeriod === "monthly" ? "month" : "year"
 
               return (
                 <motion.div
@@ -193,20 +217,9 @@ export default function SubscriptionPage() {
                     )}
 
                     <h3 className="text-xl md:text-2xl font-bold mb-2">{plan.name}</h3>
-                    <div className="mb-4 md:mb-6 space-y-2">
-                      <div>
-                        <span className="text-2xl md:text-3xl font-bold">€{plan.monthlyPrice.toFixed(2)}</span>
-                        <span className="text-sm text-muted-foreground">/month</span>
-                      </div>
-                      {plan.annualPrice > 0 && (
-                        <div>
-                          <span className="text-2xl md:text-3xl font-bold">€{plan.annualPrice.toFixed(2)}</span>
-                          <span className="text-sm text-muted-foreground">/year</span>
-                          <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">
-                            Save 20%
-                          </span>
-                        </div>
-                      )}
+                    <div className="mb-4 md:mb-6">
+                      <span className="text-2xl md:text-3xl font-bold">€{price.toFixed(2)}</span>
+                      <span className="text-sm text-muted-foreground">/{periodLabel}</span>
                     </div>
 
                     <div className="flex items-center gap-2 mb-4 md:mb-6 text-xs md:text-sm text-primary">
@@ -231,38 +244,18 @@ export default function SubscriptionPage() {
                       <Button className="w-full bg-secondary" disabled>
                         Current Plan
                       </Button>
+                    ) : planId ? (
+                      <PayPalSubscriptionButton
+                        planId={planId}
+                        planName={`${plan.name} ${billingPeriod === "monthly" ? "Monthly" : "Annual"}`}
+                        onSuccess={(subId) => {
+                          fetchSubscription()
+                        }}
+                      />
                     ) : (
-                      <div className="space-y-2">
-                        {plan.monthlyPlanId && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Monthly Plan:</p>
-                            <PayPalSubscriptionButton
-                              planId={plan.monthlyPlanId}
-                              planName={`${plan.name} Monthly`}
-                              onSuccess={(subId) => {
-                                fetchSubscription()
-                              }}
-                            />
-                          </div>
-                        )}
-                        {plan.annualPlanId && (
-                          <div>
-                            <p className="text-xs text-muted-foreground mb-1">Annual Plan:</p>
-                            <PayPalSubscriptionButton
-                              planId={plan.annualPlanId}
-                              planName={`${plan.name} Annual`}
-                              onSuccess={(subId) => {
-                                fetchSubscription()
-                              }}
-                            />
-                          </div>
-                        )}
-                        {!plan.monthlyPlanId && !plan.annualPlanId && (
-                          <Button className="w-full" disabled>
-                            Coming Soon
-                          </Button>
-                        )}
-                      </div>
+                      <Button className="w-full" disabled>
+                        Coming Soon
+                      </Button>
                     )}
                   </Card>
                 </motion.div>
