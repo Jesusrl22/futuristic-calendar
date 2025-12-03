@@ -78,7 +78,9 @@ export async function PATCH(request: Request) {
   try {
     const { userId, updates } = await request.json()
 
-    console.log("[v0] Admin API PATCH received:", { userId, updates })
+    console.log("[v0] ===== ADMIN UPDATE START =====")
+    console.log("[v0] Admin API PATCH - userId:", userId)
+    console.log("[v0] Admin API PATCH - updates received:", updates)
 
     if (!userId) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
@@ -103,9 +105,9 @@ export async function PATCH(request: Request) {
         updates.subscription_expires_at = null
       }
 
-      console.log("[v0] Final updates to apply:", updates)
-
-      // Keep ai_credits_purchased unchanged (don't include it in updates)
+      console.log("[v0] Admin API PATCH - plan being set to:", planName)
+      console.log("[v0] Admin API PATCH - monthly credits being set to:", updates.ai_credits_monthly)
+      console.log("[v0] Admin API PATCH - final updates object:", updates)
     }
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -115,18 +117,31 @@ export async function PATCH(request: Request) {
       },
     })
 
+    const { data: beforeUpdate, error: fetchError } = await supabase
+      .from("users")
+      .select("id, email, subscription_tier, subscription_plan, ai_credits_monthly, ai_credits_purchased")
+      .eq("id", userId)
+      .single()
+
+    if (fetchError) {
+      console.error("[v0] Admin API PATCH - Error fetching user before update:", fetchError)
+    } else {
+      console.log("[v0] Admin API PATCH - User BEFORE update:", beforeUpdate)
+    }
+
     const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select()
 
     if (error) {
-      console.error("[v0] Supabase update error:", error)
+      console.error("[v0] Admin API PATCH - Supabase update error:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    console.log("[v0] User updated successfully:", data?.[0])
+    console.log("[v0] Admin API PATCH - User AFTER update:", data?.[0])
+    console.log("[v0] ===== ADMIN UPDATE END =====")
 
     return NextResponse.json({ user: data?.[0] })
   } catch (error) {
-    console.error("[v0] PATCH error:", error)
+    console.error("[v0] Admin API PATCH - Unexpected error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

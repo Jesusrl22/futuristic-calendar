@@ -24,6 +24,8 @@ export async function GET() {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
+    console.log("[v0] Profile API - Fetching user:", userId)
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=id,email,name,subscription_plan,subscription_tier,subscription_expires_at,ai_credits_monthly,ai_credits_purchased,theme,language,theme_preference,pomodoro_duration,short_break,long_break,notifications_enabled,created_at,updated_at,role`,
       {
@@ -38,18 +40,28 @@ export async function GET() {
     )
 
     if (!response.ok) {
+      console.error("[v0] Profile API - Fetch failed:", response.status)
       return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 })
     }
 
     const users = await response.json()
 
     if (!users || users.length === 0) {
+      console.error("[v0] Profile API - User not found")
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    return NextResponse.json(users[0])
+    const user = users[0]
+    console.log("[v0] Profile API - User data:", {
+      subscription_plan: user.subscription_plan,
+      subscription_tier: user.subscription_tier,
+      ai_credits_monthly: user.ai_credits_monthly,
+      ai_credits_purchased: user.ai_credits_purchased,
+    })
+
+    return NextResponse.json(user)
   } catch (error) {
-    console.error("[API] Error fetching user profile:", error)
+    console.error("[v0] Profile API - Error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
