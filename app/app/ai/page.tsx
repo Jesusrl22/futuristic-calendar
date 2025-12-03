@@ -31,7 +31,7 @@ export default function AIPage() {
       const response = await fetch("/api/user/profile")
       if (response.ok) {
         const data = await response.json()
-        setSubscriptionTier(data.subscription_plan || "free")
+        setSubscriptionTier(data.subscription_tier || "free")
         setMonthlyCredits(data?.ai_credits_monthly || 0)
         setPurchasedCredits(data?.ai_credits_purchased || 0)
       }

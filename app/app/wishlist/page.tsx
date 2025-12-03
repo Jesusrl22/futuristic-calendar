@@ -40,9 +40,9 @@ export default function WishlistPage() {
       const response = await fetch("/api/user/profile")
       if (response.ok) {
         const data = await response.json()
-        setSubscriptionTier(data.subscription_plan || "free")
+        setSubscriptionTier(data.subscription_tier || "free")
 
-        if (canAccessFeature(data.subscription_plan, "wishlist")) {
+        if (canAccessFeature(data.subscription_tier, "wishlist")) {
           fetchItems()
         }
       }

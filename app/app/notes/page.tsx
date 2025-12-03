@@ -30,9 +30,9 @@ export default function NotesPage() {
       const response = await fetch("/api/user/profile")
       if (response.ok) {
         const data = await response.json()
-        setSubscriptionTier(data.subscription_plan || "free")
+        setSubscriptionTier(data.subscription_tier || "free")
 
-        if (canAccessFeature(data.subscription_plan, "notes")) {
+        if (canAccessFeature(data.subscription_tier, "notes")) {
           fetchNotes()
         }
       }

@@ -29,7 +29,7 @@ export default function AchievementsPage() {
       const response = await fetch("/api/user/profile")
       if (response.ok) {
         const data = await response.json()
-        setUserTier((data.subscription_plan || "free") as AchievementTier)
+        setUserTier((data.subscription_tier || "free") as AchievementTier)
       }
     } catch (error) {
       console.error("Error fetching user tier:", error)

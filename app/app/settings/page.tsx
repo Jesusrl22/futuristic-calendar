@@ -91,7 +91,7 @@ export default function SettingsPage() {
 
       if (settingsData?.profile) {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        let plan = settingsData.profile.subscription_plan || "free"
+        let plan = settingsData.profile.subscription_tier || "free"
 
         plan =
           typeof plan === "string"
