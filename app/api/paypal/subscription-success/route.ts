@@ -30,19 +30,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Calculate credits and expiration
-    const credits = planName === "premium" ? 100 : 500
+    const normalizedPlan = planName.toLowerCase()
+    const credits = normalizedPlan === "premium" ? 100 : 500
+
+    // Calculate expiration date (1 month from now)
     const expiresAt = new Date()
     expiresAt.setMonth(expiresAt.getMonth() + 1)
 
-    // Update user subscription
     const { error } = await supabase
       .from("users")
       .update({
-        subscription_tier: planName,
+        subscription_plan: normalizedPlan,
+        subscription_tier: normalizedPlan,
+        plan: normalizedPlan,
         subscription_expires_at: expiresAt.toISOString(),
         paypal_subscription_id: subscriptionId,
         ai_credits_monthly: credits,
+        last_credit_reset: new Date().toISOString(),
       })
       .eq("id", user.id)
 

@@ -77,17 +77,31 @@ export async function PATCH(request: Request) {
     }
 
     if (updates.subscription_tier) {
-      updates.subscription_plan = updates.subscription_tier
-      updates.subscription_tier = updates.subscription_tier
+      const planName = updates.subscription_tier.toLowerCase()
 
       const creditsMap = {
         free: 0,
         premium: 100,
         pro: 500,
       }
-      // Assign monthly credits based on plan
-      updates.ai_credits_monthly = creditsMap[updates.subscription_plan as keyof typeof creditsMap] || 0
-      // Keep purchased credits unchanged (don't overwrite them)
+
+      // Calculate expiration date (1 month from now, except for free)
+      let expiresAt = null
+      if (planName !== "free") {
+        const expiration = new Date()
+        expiration.setMonth(expiration.getMonth() + 1)
+        expiresAt = expiration.toISOString()
+      }
+
+      // Update ALL plan-related fields
+      updates.subscription_plan = planName
+      updates.subscription_tier = planName
+      updates.plan = planName
+      updates.ai_credits_monthly = creditsMap[planName as keyof typeof creditsMap] || 0
+      updates.subscription_expires_at = expiresAt
+      updates.last_credit_reset = new Date().toISOString()
+
+      // Keep ai_credits_purchased unchanged (don't include it in updates)
     }
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
