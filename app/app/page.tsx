@@ -35,7 +35,7 @@ export default function AppPage() {
           return
         }
 
-        setUser(data.user)
+        setUser(data)
         fetchUserProfile()
         fetchStats()
       } catch (error) {
@@ -64,10 +64,15 @@ export default function AppPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        console.log("[v0] User profile data:", {
-          ai_credits_monthly: data.ai_credits_monthly,
-          ai_credits_purchased: data.ai_credits_purchased,
-          subscription_tier: data.subscription_tier,
+        console.log("[v0] Full user profile:", data)
+        console.log("[v0] Credits breakdown:", {
+          monthly: data.ai_credits_monthly,
+          purchased: data.ai_credits_purchased,
+          total: (data.ai_credits_monthly || 0) + (data.ai_credits_purchased || 0),
+        })
+        console.log("[v0] Subscription info:", {
+          plan: data.subscription_plan,
+          tier: data.subscription_tier,
         })
         setUser(data)
         setStats((prev) => ({
@@ -154,14 +159,14 @@ export default function AppPage() {
             {t("productivity_overview")} ·
             <span
               className={`ml-2 font-medium ${
-                user?.subscription_tier === "pro"
+                user?.subscription_plan === "pro"
                   ? "text-yellow-500"
-                  : user?.subscription_tier === "premium"
+                  : user?.subscription_plan === "premium"
                     ? "text-purple-500"
                     : "text-gray-500"
               }`}
             >
-              {user?.subscription_tier?.toUpperCase() || t("free_plan")}
+              {user?.subscription_plan?.toUpperCase() || t("free_plan")}
             </span>
           </p>
         </div>
