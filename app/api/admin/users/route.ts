@@ -13,13 +13,16 @@ export async function GET() {
     const { data: users, error } = await supabase
       .from("users")
       .select(
-        "id, email, name, subscription_plan, subscription_expires_at, created_at, ai_credits_monthly, ai_credits_purchased",
+        "id, email, name, subscription_tier, subscription_expires_at, created_at, ai_credits_monthly, ai_credits_purchased",
       )
       .order("created_at", { ascending: false })
 
     if (error) {
+      console.error("[v0] GET users error:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    console.log("[v0] Fetched users from DB:", users?.length)
 
     const usersWithStats = await Promise.all(
       (users || []).map(async (user) => {
@@ -43,7 +46,7 @@ export async function GET() {
           premium: 100,
           pro: 500,
         }
-        const planCredits = initialCredits[(user.subscription_plan || "free") as keyof typeof initialCredits] || 0
+        const planCredits = initialCredits[(user.subscription_tier || "free") as keyof typeof initialCredits] || 0
         const monthlyCredits = user.ai_credits_monthly || 0
         const purchasedCredits = user.ai_credits_purchased || 0
         const totalCredits = monthlyCredits + purchasedCredits
@@ -51,6 +54,7 @@ export async function GET() {
 
         return {
           ...user,
+          subscription_plan: user.subscription_tier, // Map subscription_tier to subscription_plan for backwards compatibility
           stats: {
             tasks: tasksCount || 0,
             notes: notesCount || 0,
@@ -62,8 +66,10 @@ export async function GET() {
       }),
     )
 
+    console.log("[v0] Returning users with stats:", usersWithStats[0])
     return NextResponse.json({ users: usersWithStats })
   } catch (error) {
+    console.error("[v0] GET error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
