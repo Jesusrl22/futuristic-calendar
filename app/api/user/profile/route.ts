@@ -24,15 +24,18 @@ export async function GET() {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=*`, {
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=id,email,name,subscription_plan,subscription_tier,subscription_expires_at,ai_credits_monthly,ai_credits_purchased,theme,language,theme_preference,pomodoro_duration,short_break,long_break,notifications_enabled,created_at,updated_at,role`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    })
+    )
 
     if (!response.ok) {
       return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 })

@@ -64,6 +64,11 @@ export default function AppPage() {
       })
       if (response.ok) {
         const data = await response.json()
+        console.log("[v0] User profile data:", {
+          ai_credits_monthly: data.ai_credits_monthly,
+          ai_credits_purchased: data.ai_credits_purchased,
+          subscription_tier: data.subscription_tier,
+        })
         setUser(data)
         setStats((prev) => ({
           ...prev,

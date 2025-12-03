@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { applyTheme } from "@/lib/themes"
 
 export function ThemeLoader() {
   const pathname = usePathname()
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     const isPublicPage =
@@ -17,20 +18,11 @@ export function ThemeLoader() {
 
     if (isPublicPage) {
       applyTheme("default")
+      setIsInitialized(true)
       return
     }
 
-    const savedTheme = localStorage.getItem("theme") || "default"
-    const customPrimary = localStorage.getItem("customPrimary")
-    const customSecondary = localStorage.getItem("customSecondary")
-
-    if (savedTheme === "custom" && customPrimary && customSecondary) {
-      applyTheme("custom", customPrimary, customSecondary)
-    } else {
-      applyTheme(savedTheme)
-    }
-
-    const syncThemeFromDB = async () => {
+    const initializeTheme = async () => {
       try {
         const response = await fetch("/api/settings")
         if (response.ok) {
@@ -66,32 +58,44 @@ export function ThemeLoader() {
             customSecondaryDB = data.profile.customSecondary
           }
 
-          const themeChanged = dbTheme !== savedTheme
-          const colorsChanged =
-            dbTheme === "custom" &&
-            savedTheme === "custom" &&
-            (customPrimaryDB !== customPrimary || customSecondaryDB !== customSecondary)
+          localStorage.setItem("theme", dbTheme)
 
-          if (themeChanged || colorsChanged) {
-            localStorage.setItem("theme", dbTheme)
+          if (dbTheme === "custom" && customPrimaryDB && customSecondaryDB) {
+            localStorage.setItem("customPrimary", customPrimaryDB)
+            localStorage.setItem("customSecondary", customSecondaryDB)
+            applyTheme("custom", customPrimaryDB, customSecondaryDB)
+          } else {
+            localStorage.removeItem("customPrimary")
+            localStorage.removeItem("customSecondary")
+            applyTheme(dbTheme)
+          }
+        } else {
+          const savedTheme = localStorage.getItem("theme") || "default"
+          const customPrimary = localStorage.getItem("customPrimary")
+          const customSecondary = localStorage.getItem("customSecondary")
 
-            if (dbTheme === "custom" && customPrimaryDB && customSecondaryDB) {
-              localStorage.setItem("customPrimary", customPrimaryDB)
-              localStorage.setItem("customSecondary", customSecondaryDB)
-              applyTheme("custom", customPrimaryDB, customSecondaryDB)
-            } else {
-              localStorage.removeItem("customPrimary")
-              localStorage.removeItem("customSecondary")
-              applyTheme(dbTheme)
-            }
+          if (savedTheme === "custom" && customPrimary && customSecondary) {
+            applyTheme("custom", customPrimary, customSecondary)
+          } else {
+            applyTheme(savedTheme)
           }
         }
       } catch (error) {
-        // Keep localStorage theme if DB sync fails
+        const savedTheme = localStorage.getItem("theme") || "default"
+        const customPrimary = localStorage.getItem("customPrimary")
+        const customSecondary = localStorage.getItem("customSecondary")
+
+        if (savedTheme === "custom" && customPrimary && customSecondary) {
+          applyTheme("custom", customPrimary, customSecondary)
+        } else {
+          applyTheme(savedTheme)
+        }
+      } finally {
+        setIsInitialized(true)
       }
     }
 
-    syncThemeFromDB()
+    initializeTheme()
   }, [pathname])
 
   return null
