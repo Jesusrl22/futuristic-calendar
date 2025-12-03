@@ -95,6 +95,8 @@ export default function AdminDashboardPage() {
         updates.subscription_expires_at = expiresAt
       }
 
+      console.log("[v0] Updating user plan:", { userId, newTier, updates })
+
       const response = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -105,18 +107,13 @@ export default function AdminDashboardPage() {
       })
 
       const data = await response.json()
+      console.log("[v0] Update response:", data)
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to update user")
       }
 
-      const updatedUser = {
-        ...users.find((u) => u.id === userId)!,
-        subscription_plan: newTier,
-        ...updates,
-      }
-      setUsers(users.map((u) => (u.id === userId ? updatedUser : u)))
-      setFilteredUsers(filteredUsers.map((u) => (u.id === userId ? updatedUser : u)))
+      await fetchUsers()
 
       const creditsInfo = {
         free: "0 AI credits",
@@ -126,6 +123,7 @@ export default function AdminDashboardPage() {
       const credits = creditsInfo[newTier as keyof typeof creditsInfo] || "AI credits"
       alert(`User updated successfully!\nPlan: ${newTier.toUpperCase()}\nCredits assigned: ${credits}`)
     } catch (error) {
+      console.error("[v0] Error updating user:", error)
       alert("Error updating user. Please try again.")
     }
   }

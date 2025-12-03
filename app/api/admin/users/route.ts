@@ -72,6 +72,8 @@ export async function PATCH(request: Request) {
   try {
     const { userId, updates } = await request.json()
 
+    console.log("[v0] Admin API PATCH received:", { userId, updates })
+
     if (!userId) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
@@ -85,14 +87,17 @@ export async function PATCH(request: Request) {
         pro: 500,
       }
 
-      // Only PayPal subscriptions will have expiration dates
-      // Update ALL plan-related fields
       updates.subscription_plan = planName
       updates.subscription_tier = planName
       updates.plan = planName
       updates.ai_credits_monthly = creditsMap[planName as keyof typeof creditsMap] || 0
-      updates.subscription_expires_at = null // No expiration for admin-assigned plans
       updates.last_credit_reset = new Date().toISOString()
+
+      if (!updates.subscription_expires_at) {
+        updates.subscription_expires_at = null
+      }
+
+      console.log("[v0] Final updates to apply:", updates)
 
       // Keep ai_credits_purchased unchanged (don't include it in updates)
     }
@@ -107,11 +112,15 @@ export async function PATCH(request: Request) {
     const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select()
 
     if (error) {
+      console.error("[v0] Supabase update error:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log("[v0] User updated successfully:", data?.[0])
+
     return NextResponse.json({ user: data?.[0] })
   } catch (error) {
+    console.error("[v0] PATCH error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
