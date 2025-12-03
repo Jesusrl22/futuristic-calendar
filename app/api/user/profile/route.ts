@@ -27,7 +27,7 @@ export async function GET() {
     console.log("[v0] Profile API - Fetching user:", userId)
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=id,email,name,subscription_plan,subscription_tier,subscription_expires_at,ai_credits_monthly,ai_credits_purchased,theme,language,theme_preference,pomodoro_duration,short_break,long_break,notifications_enabled,created_at,updated_at,role`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=id,email,name,subscription_plan,subscription_tier,subscription_expires_at,ai_credits_monthly,ai_credits_purchased,theme,language,theme_preference,pomodoro_work_duration,pomodoro_break_duration,pomodoro_long_break_duration,pomodoro_sessions_until_long_break,created_at,updated_at,is_admin`,
       {
         headers: {
           apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
