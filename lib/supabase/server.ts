@@ -35,3 +35,5 @@ export async function createClient() {
 
   return supabase
 }
+
+export const createServerClient = createClient
