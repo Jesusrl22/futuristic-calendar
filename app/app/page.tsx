@@ -65,14 +65,11 @@ export default function AppPage() {
       if (response.ok) {
         const data = await response.json()
         console.log("[v0] Full user profile:", data)
+        console.log("[v0] Subscription tier:", data.subscription_tier)
         console.log("[v0] Credits breakdown:", {
           monthly: data.ai_credits_monthly,
           purchased: data.ai_credits_purchased,
           total: (data.ai_credits_monthly || 0) + (data.ai_credits_purchased || 0),
-        })
-        console.log("[v0] Subscription info:", {
-          plan: data.subscription_plan,
-          tier: data.subscription_tier,
         })
         setUser(data)
         setStats((prev) => ({
@@ -149,7 +146,7 @@ export default function AppPage() {
       <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mb-6" />
 
       <div>
-        {user?.subscription_plan === "free" && <div className="mb-6">{/* Removing desktop banner import */}</div>}
+        {user?.subscription_tier === "free" && <div className="mb-6">{/* Removing desktop banner import */}</div>}
 
         <div className="mb-6 md:mb-8">
           <h2 className="text-xl md:text-3xl font-bold mb-2">
@@ -159,14 +156,14 @@ export default function AppPage() {
             {t("productivity_overview")} ·
             <span
               className={`ml-2 font-medium ${
-                user?.subscription_plan === "pro"
+                user?.subscription_tier === "pro"
                   ? "text-yellow-500"
-                  : user?.subscription_plan === "premium"
+                  : user?.subscription_tier === "premium"
                     ? "text-purple-500"
                     : "text-gray-500"
               }`}
             >
-              {user?.subscription_plan?.toUpperCase() || t("free_plan")}
+              {user?.subscription_tier?.toUpperCase() || t("free_plan")}
             </span>
           </p>
         </div>
@@ -226,7 +223,7 @@ export default function AppPage() {
           </Card>
         </div>
 
-        {user?.subscription_plan === "free" && (
+        {user?.subscription_tier === "free" && (
           <div className="mt-6">
             <AdsterraNativeBanner
               containerId="container-105a3c31d27607df87969077c87047d4"
