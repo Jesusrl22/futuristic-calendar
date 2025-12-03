@@ -85,20 +85,13 @@ export async function PATCH(request: Request) {
         pro: 500,
       }
 
-      // Calculate expiration date (1 month from now, except for free)
-      let expiresAt = null
-      if (planName !== "free") {
-        const expiration = new Date()
-        expiration.setMonth(expiration.getMonth() + 1)
-        expiresAt = expiration.toISOString()
-      }
-
+      // Only PayPal subscriptions will have expiration dates
       // Update ALL plan-related fields
       updates.subscription_plan = planName
       updates.subscription_tier = planName
       updates.plan = planName
       updates.ai_credits_monthly = creditsMap[planName as keyof typeof creditsMap] || 0
-      updates.subscription_expires_at = expiresAt
+      updates.subscription_expires_at = null // No expiration for admin-assigned plans
       updates.last_credit_reset = new Date().toISOString()
 
       // Keep ai_credits_purchased unchanged (don't include it in updates)
