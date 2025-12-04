@@ -106,7 +106,7 @@ export default function NotesPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <p>{t("notes.loading")}</p>
+        <p>{t("notes_loading")}</p>
       </div>
     )
   }
@@ -119,7 +119,7 @@ export default function NotesPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-4xl font-bold">
-          <span className="text-primary neon-text">{t("notes.title")}</span>
+          <span className="text-primary neon-text">{t("notes")}</span>
         </h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -131,28 +131,28 @@ export default function NotesPage() {
               }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              {t("notes.new_note")}
+              {t("notes_new_note")}
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-card">
             <DialogHeader>
-              <DialogTitle>{editingNote ? t("notes.edit_note") : t("notes.create_note")}</DialogTitle>
+              <DialogTitle>{editingNote ? t("notes_edit_note") : t("notes_create_note")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <Input
-                placeholder={t("notes.title_placeholder")}
+                placeholder={t("notes_title_placeholder")}
                 value={noteForm.title}
                 onChange={(e) => setNoteForm({ ...noteForm, title: e.target.value })}
                 className="bg-secondary/50"
               />
               <Textarea
-                placeholder={t("notes.content_placeholder")}
+                placeholder={t("notes_content_placeholder")}
                 value={noteForm.content}
                 onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
                 className="bg-secondary/50 min-h-[200px]"
               />
               <Button onClick={handleSaveNote} className="w-full neon-glow-hover">
-                {editingNote ? t("notes.update_note") : t("notes.create_note")}
+                {editingNote ? t("notes_update_note") : t("notes_create_note")}
               </Button>
             </div>
           </DialogContent>
@@ -163,7 +163,7 @@ export default function NotesPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder={t("notes.search_placeholder")}
+            placeholder={t("notes_search_placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-secondary/50"
@@ -203,7 +203,7 @@ export default function NotesPage() {
 
       {filteredNotes.length === 0 && (
         <Card className="glass-card p-12 text-center">
-          <p className="text-muted-foreground">{t("notes.no_notes_found")}</p>
+          <p className="text-muted-foreground">{t("notes_no_notes_found")}</p>
         </Card>
       )}
     </div>
