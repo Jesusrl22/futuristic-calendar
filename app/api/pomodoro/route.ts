@@ -45,7 +45,6 @@ export async function POST(request: Request) {
       user_id: userId,
       duration: body.duration,
       completed: true,
-      completed_at: new Date().toISOString(), // Ensure we have an exact timestamp
     }
 
     console.log("[v0] Pomodoro API: Session data to save:", sessionData)
