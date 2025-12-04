@@ -7,10 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { canAccessStatistics } from "@/lib/subscription"
 import { UpgradeModal } from "@/components/upgrade-modal"
+import { useTranslation } from "@/hooks/useTranslation"
 
 type TimeRange = "day" | "week" | "month"
 
 export default function StatsPage() {
+  const { t } = useTranslation()
   const [stats, setStats] = useState({
     totalTasks: 0,
     completedTasks: 0,
@@ -85,114 +87,150 @@ export default function StatsPage() {
       <div>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">
-            <span className="text-primary neon-text">Statistics</span>
+            <span className="text-primary neon-text">{t("yourStatistics")}</span>
           </h1>
 
           <div className="flex gap-2">
             <Button
               variant={timeRange === "day" ? "default" : "outline"}
               onClick={() => setTimeRange("day")}
-              className={timeRange === "day" ? "neon-glow" : ""}
+              className={timeRange === "day" ? "bg-primary/20 border-primary text-primary hover:bg-primary/30" : ""}
             >
-              Day
+              {t("day") || "Day"}
             </Button>
             <Button
               variant={timeRange === "week" ? "default" : "outline"}
               onClick={() => setTimeRange("week")}
-              className={timeRange === "week" ? "neon-glow" : ""}
+              className={timeRange === "week" ? "bg-primary/20 border-primary text-primary hover:bg-primary/30" : ""}
             >
-              Week
+              {t("week") || "Week"}
             </Button>
             <Button
               variant={timeRange === "month" ? "default" : "outline"}
               onClick={() => setTimeRange("month")}
-              className={timeRange === "month" ? "neon-glow" : ""}
+              className={timeRange === "month" ? "bg-primary/20 border-primary text-primary hover:bg-primary/30" : ""}
             >
-              Month
+              {t("month") || "Month"}
             </Button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { title: "Total Tasks", value: stats.totalTasks, color: "text-blue-500" },
-            { title: "Completed", value: stats.completedTasks, color: "text-green-500" },
-            { title: "Pomodoro Sessions", value: stats.totalPomodoro, color: "text-purple-500" },
-            { title: "Focus Time", value: `${stats.totalFocusTime}h`, color: "text-primary" },
+            {
+              title: t("totalTasks") || "Total Tasks",
+              value: stats.totalTasks,
+              gradient: "from-blue-500/20 to-blue-600/20",
+              border: "border-blue-500/30",
+              text: "text-blue-400",
+            },
+            {
+              title: t("tasksCompleted") || "Completed",
+              value: stats.completedTasks,
+              gradient: "from-green-500/20 to-green-600/20",
+              border: "border-green-500/30",
+              text: "text-green-400",
+            },
+            {
+              title: t("totalPomodoros") || "Pomodoro Sessions",
+              value: stats.totalPomodoro,
+              gradient: "from-purple-500/20 to-purple-600/20",
+              border: "border-purple-500/30",
+              text: "text-purple-400",
+            },
+            {
+              title: t("focusTime") || "Focus Time",
+              value: `${stats.totalFocusTime}h`,
+              gradient: "from-primary/20 to-primary/30",
+              border: "border-primary/30",
+              text: "text-primary",
+            },
           ].map((stat, i) => (
             <div key={stat.title}>
-              <Card className="glass-card p-6 neon-glow-hover">
+              <Card
+                className={`glass-card p-6 border-2 ${stat.border} bg-gradient-to-br ${stat.gradient} hover:scale-105 transition-transform duration-300`}
+              >
                 <h3 className="text-sm text-muted-foreground mb-2">{stat.title}</h3>
-                <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className={`text-3xl font-bold ${stat.text}`}>{stat.value}</p>
               </Card>
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="glass-card p-6 neon-glow">
-            <h2 className="text-xl font-bold mb-6">Activity Over Time</h2>
+          <Card className="glass-card p-6 border-2 border-primary/30">
+            <h2 className="text-xl font-bold mb-6">{t("activityOverTime") || "Activity Over Time"}</h2>
             <Tabs defaultValue="tasks">
               <TabsList className="mb-4">
-                <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                <TabsTrigger value="pomodoro">Pomodoro</TabsTrigger>
+                <TabsTrigger value="tasks">{t("tasks")}</TabsTrigger>
+                <TabsTrigger value="pomodoro">{t("pomodoro")}</TabsTrigger>
               </TabsList>
               <TabsContent value="tasks">
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" />
-                    <YAxis stroke="rgba(255,255,255,0.5)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "rgba(0,0,0,0.8)",
-                        border: "1px solid rgba(184,255,78,0.3)",
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--primary) / 0.3)",
                         borderRadius: "8px",
+                        color: "hsl(var(--foreground))",
                       }}
                     />
-                    <Bar dataKey="tasks" fill="#b8ff4e" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </TabsContent>
               <TabsContent value="pomodoro">
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.5)" />
-                    <YAxis stroke="rgba(255,255,255,0.5)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "rgba(0,0,0,0.8)",
-                        border: "1px solid rgba(184,255,78,0.3)",
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--primary) / 0.3)",
                         borderRadius: "8px",
+                        color: "hsl(var(--foreground))",
                       }}
                     />
-                    <Line type="monotone" dataKey="pomodoro" stroke="#b8ff4e" strokeWidth={3} />
+                    <Line
+                      type="monotone"
+                      dataKey="pomodoro"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={3}
+                      dot={{ fill: "hsl(var(--primary))", strokeWidth: 2 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </TabsContent>
             </Tabs>
           </Card>
 
-          <Card className="glass-card p-6 neon-glow">
-            <h2 className="text-xl font-bold mb-6">Productivity Insights</h2>
+          <Card className="glass-card p-6 border-2 border-primary/30">
+            <h2 className="text-xl font-bold mb-6">{t("productivityInsights") || "Productivity Insights"}</h2>
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Task Completion Rate</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("taskCompletionRate") || "Task Completion Rate"}
+                  </span>
                   <span className="text-sm font-semibold text-primary">{completionRate}%</span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div
                     style={{ width: `${completionRate}%` }}
-                    className="h-full bg-primary transition-all duration-1000"
+                    className="h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-1000"
                   />
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                  <span className="text-sm">Average Focus Time</span>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+                  <span className="text-sm">{t("averageFocusTime") || "Average Focus Time"}</span>
                   <span className="font-semibold text-primary">
                     {timeRange === "day"
                       ? `${stats.totalFocusTime}h`
@@ -201,13 +239,13 @@ export default function StatsPage() {
                         : `${Math.round((stats.totalFocusTime / 30) * 10) / 10}h/day`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                  <span className="text-sm">Pomodoro Sessions</span>
-                  <span className="font-semibold text-primary">{stats.totalPomodoro}</span>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20">
+                  <span className="text-sm">{t("totalPomodoros") || "Pomodoro Sessions"}</span>
+                  <span className="font-semibold text-purple-400">{stats.totalPomodoro}</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                  <span className="text-sm">Notes Created</span>
-                  <span className="font-semibold text-primary">{stats.totalNotes}</span>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+                  <span className="text-sm">{t("notesCreated") || "Notes Created"}</span>
+                  <span className="font-semibold text-blue-400">{stats.totalNotes}</span>
                 </div>
               </div>
             </div>
