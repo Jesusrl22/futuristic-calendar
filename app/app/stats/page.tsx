@@ -24,6 +24,7 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true)
   const [userTier, setUserTier] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>("day")
+  const [userTimezone, setUserTimezone] = useState<string>("UTC")
 
   useEffect(() => {
     checkAccess()
@@ -41,6 +42,7 @@ export default function StatsPage() {
       if (response.ok) {
         const data = await response.json()
         setUserTier(data.subscription_tier || "free")
+        setUserTimezone(data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone)
       }
     } catch (error) {
       console.error("Error checking access:", error)
@@ -51,7 +53,7 @@ export default function StatsPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`/api/stats?range=${timeRange}`)
+      const response = await fetch(`/api/stats?range=${timeRange}&timezone=${encodeURIComponent(userTimezone)}`)
       if (response.ok) {
         const data = await response.json()
         setStats({

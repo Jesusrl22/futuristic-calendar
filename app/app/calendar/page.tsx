@@ -16,9 +16,13 @@ import { useLanguage } from "@/contexts/language-context"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
+import { useToast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
 
 export default function CalendarPage() {
+  const { toast } = useToast()
+  const { language } = useLanguage()
+  const { t } = useTranslation(language)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -27,6 +31,7 @@ export default function CalendarPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
+  const [userTimezone, setUserTimezone] = useState<string>("UTC")
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -35,8 +40,6 @@ export default function CalendarPage() {
     time: "",
   })
   const tasksRef = useRef<Task[]>([])
-  const { language } = useLanguage()
-  const { t } = useTranslation(language)
 
   useEffect(() => {
     tasksRef.current = tasks
@@ -268,6 +271,7 @@ export default function CalendarPage() {
       const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (match) {
         const [, year, month, day, hours, minutes] = match
+        // Create date in local timezone without conversion
         const localDate = new Date(
           Number.parseInt(year),
           Number.parseInt(month) - 1,
@@ -684,7 +688,19 @@ export default function CalendarPage() {
                   <Label>{t("dueDateTime")}</Label>
                   <Input
                     type="datetime-local"
-                    value={editingTask.due_date ? editingTask.due_date.slice(0, 16) : ""}
+                    value={
+                      editingTask.due_date
+                        ? (() => {
+                            const date = new Date(editingTask.due_date)
+                            const year = date.getFullYear()
+                            const month = String(date.getMonth() + 1).padStart(2, "0")
+                            const day = String(date.getDate()).padStart(2, "0")
+                            const hours = String(date.getHours()).padStart(2, "0")
+                            const minutes = String(date.getMinutes()).padStart(2, "0")
+                            return `${year}-${month}-${day}T${hours}:${minutes}`
+                          })()
+                        : ""
+                    }
                     onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
                     className="bg-secondary/50"
                   />

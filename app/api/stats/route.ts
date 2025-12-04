@@ -26,6 +26,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const range = searchParams.get("range") || "week"
+    const timezone = searchParams.get("timezone") || "UTC"
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const headers = {
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
       "Content-Type": "application/json",
     }
 
-    const now = new Date()
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: timezone }))
     let startDate: Date
     let endDate: Date
 
@@ -51,8 +52,8 @@ export async function GET(request: Request) {
       endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
     }
 
-    const startISO = new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString()
-    const endISO = new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000).toISOString()
+    const startISO = startDate.toISOString()
+    const endISO = endDate.toISOString()
 
     const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
       fetch(
@@ -90,15 +91,13 @@ export async function GET(request: Request) {
         const hourEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 59, 59, 999)
 
         const tasksForHour = completed.filter((t: any) => {
-          const taskDate = new Date(t.updated_at)
-          const localTaskDate = new Date(taskDate.getTime() + taskDate.getTimezoneOffset() * 60000)
-          return localTaskDate >= hourStart && localTaskDate <= hourEnd
+          const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
+          return taskDate >= hourStart && taskDate <= hourEnd
         }).length
 
         const pomodoroForHour = pomodoro.filter((p: any) => {
-          const sessionDate = new Date(p.created_at)
-          const localSessionDate = new Date(sessionDate.getTime() + sessionDate.getTimezoneOffset() * 60000)
-          return localSessionDate >= hourStart && localSessionDate <= hourEnd
+          const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
+          return sessionDate >= hourStart && sessionDate <= hourEnd
         }).length
 
         chartData.push({ name: hour, tasks: tasksForHour, pomodoro: pomodoroForHour })
@@ -112,15 +111,13 @@ export async function GET(request: Request) {
         const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
 
         const tasksForDay = completed.filter((t: any) => {
-          const taskDate = new Date(t.updated_at)
-          const localTaskDate = new Date(taskDate.getTime() + taskDate.getTimezoneOffset() * 60000)
-          return localTaskDate >= dayStart && localTaskDate <= dayEnd
+          const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
+          return taskDate >= dayStart && taskDate <= dayEnd
         }).length
 
         const pomodoroForDay = pomodoro.filter((p: any) => {
-          const sessionDate = new Date(p.created_at)
-          const localSessionDate = new Date(sessionDate.getTime() + sessionDate.getTimezoneOffset() * 60000)
-          return localSessionDate >= dayStart && localSessionDate <= dayEnd
+          const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
+          return sessionDate >= dayStart && sessionDate <= dayEnd
         }).length
 
         chartData.push({ name: days[i], tasks: tasksForDay, pomodoro: pomodoroForDay })
@@ -137,15 +134,13 @@ export async function GET(request: Request) {
         const weekEndDate = new Date(now.getFullYear(), now.getMonth(), weekEndDay, 23, 59, 59, 999)
 
         const tasksForWeek = completed.filter((t: any) => {
-          const taskDate = new Date(t.updated_at)
-          const localTaskDate = new Date(taskDate.getTime() + taskDate.getTimezoneOffset() * 60000)
-          return localTaskDate >= weekStartDate && localTaskDate <= weekEndDate
+          const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
+          return taskDate >= weekStartDate && taskDate <= weekEndDate
         }).length
 
         const pomodoroForWeek = pomodoro.filter((p: any) => {
-          const sessionDate = new Date(p.created_at)
-          const localSessionDate = new Date(sessionDate.getTime() + sessionDate.getTimezoneOffset() * 60000)
-          return localSessionDate >= weekStartDate && localSessionDate <= weekEndDate
+          const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
+          return sessionDate >= weekStartDate && sessionDate <= weekEndDate
         }).length
 
         chartData.push({
