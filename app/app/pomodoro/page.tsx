@@ -38,6 +38,7 @@ export default function PomodoroPage() {
   const sessionSavedRef = useRef(false)
   const [userTier, setUserTier] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     const fetchUserTier = async () => {
@@ -136,6 +137,12 @@ export default function PomodoroPage() {
     return () => clearInterval(interval)
   }, [isRunning, timeLeft])
 
+  useEffect(() => {
+    // Create audio element for completion sound
+    audioRef.current = new Audio("/notification-sound.mp3")
+    audioRef.current.volume = 0.5 // 50% volume
+  }, [])
+
   const handleComplete = async () => {
     if (sessionSavedRef.current) {
       return
@@ -143,6 +150,15 @@ export default function PomodoroPage() {
     sessionSavedRef.current = true
 
     setIsRunning(false)
+
+    try {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0
+        await audioRef.current.play()
+      }
+    } catch (error) {
+      console.log("[v0] Could not play completion sound:", error)
+    }
 
     if (mode === "work") {
       try {
