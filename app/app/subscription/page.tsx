@@ -7,6 +7,7 @@ import { motion } from "framer-motion"
 import { Check, Zap, Crown, ShoppingCart } from "@/components/icons"
 import dynamic from "next/dynamic"
 import { PayPalSubscriptionButton } from "@/components/paypal-subscription-button"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const CreditPacksModal = dynamic(() => import("@/components/credit-packs-modal").then((mod) => mod.CreditPacksModal), {
   ssr: false,
@@ -22,13 +23,13 @@ const plans = [
     monthlyPlanId: null,
     annualPlanId: null,
     features: [
-      "0 AI credits/month",
-      "Full Calendar access",
-      "Unlimited tasks",
-      "Basic Pomodoro timer",
-      "5 Free themes",
-      "Free tier achievements",
-      "Basic settings",
+      "subscription_feature_ai_credits_free",
+      "subscription_feature_calendar",
+      "subscription_feature_unlimited_tasks",
+      "subscription_feature_basic_pomodoro",
+      "subscription_feature_free_themes",
+      "subscription_feature_free_achievements",
+      "subscription_feature_basic_settings",
     ],
   },
   {
@@ -39,13 +40,13 @@ const plans = [
     monthlyPlanId: "P-29883874AF135140VNDN3GSI",
     annualPlanId: "P-51R760946S251264PNEXLCXA",
     features: [
-      "100 AI credits/month",
-      "Everything in Free",
-      "Advanced Pomodoro (custom durations)",
-      "Notes feature",
-      "Wishlist feature",
-      "10 themes (Free + Premium)",
-      "Premium achievements",
+      "subscription_feature_ai_credits_premium",
+      "subscription_feature_everything_free",
+      "subscription_feature_advanced_pomodoro",
+      "subscription_feature_notes",
+      "subscription_feature_wishlist",
+      "subscription_feature_premium_themes",
+      "subscription_feature_premium_achievements",
     ],
     popular: true,
   },
@@ -57,18 +58,19 @@ const plans = [
     monthlyPlanId: "P-4L790010RN962751KNEW7AZY",
     annualPlanId: "P-3D496349LL1798321NEXLAYY",
     features: [
-      "500 AI credits/month",
-      "Everything in Premium",
-      "Statistics & analytics",
-      "Custom theme creator",
-      "All 15 themes + custom",
-      "Pro achievements",
-      "Priority support",
+      "subscription_feature_ai_credits_pro",
+      "subscription_feature_everything_premium",
+      "subscription_feature_statistics",
+      "subscription_feature_custom_themes",
+      "subscription_feature_all_themes",
+      "subscription_feature_pro_achievements",
+      "subscription_feature_priority_support",
     ],
   },
 ]
 
 export default function SubscriptionPage() {
+  const { t } = useTranslation()
   const [currentPlan, setCurrentPlan] = useState("free")
   const [monthlyCredits, setMonthlyCredits] = useState(0)
   const [purchasedCredits, setPurchasedCredits] = useState(0)
@@ -155,29 +157,35 @@ export default function SubscriptionPage() {
     <div className="p-4 md:p-8">
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading subscription...</p>
+          <p className="text-muted-foreground">{t("loading_subscription")}</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="hidden md:block text-4xl font-bold mb-8">
-            <span className="text-primary neon-text">Subscription</span>
+            <span className="text-primary neon-text">{t("subscription")}</span>
           </h1>
 
           <Card className="glass-card p-4 md:p-6 neon-glow mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl md:text-2xl font-bold mb-2">Current Plan: {currentPlan.toUpperCase()}</h2>
-                <p className="text-sm text-muted-foreground">Manage your subscription and billing</p>
+                <h2 className="text-xl md:text-2xl font-bold mb-2">
+                  {t("current_plan")}: {currentPlan.toUpperCase()}
+                </h2>
+                <p className="text-sm text-muted-foreground">{t("manage_subscription")}</p>
                 {expiresAt && (
-                  <p className="text-xs md:text-sm text-orange-500 mt-2">Plan expires: {formatDate(expiresAt)}</p>
+                  <p className="text-xs md:text-sm text-orange-500 mt-2">
+                    {t("plan_expires")}: {formatDate(expiresAt)}
+                  </p>
                 )}
               </div>
               {totalCredits > 0 && (
                 <div className="text-center">
                   <Zap className="w-10 h-10 md:w-12 md:h-12 text-primary mx-auto mb-2" />
-                  <p className="text-xl md:text-2xl font-bold text-primary">{totalCredits} credits</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">
+                    {totalCredits} {t("credits")}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {monthlyCredits} monthly · {purchasedCredits} purchased
+                    {monthlyCredits} {t("monthly")} · {purchasedCredits} {t("purchased")}
                   </p>
                 </div>
               )}
@@ -188,10 +196,8 @@ export default function SubscriptionPage() {
             <Card className="glass-card p-4 mb-6 border-orange-500/50">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold mb-1">Cancel Subscription</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Downgrade to Free plan. You'll keep purchased credits but lose monthly credits.
-                  </p>
+                  <h3 className="font-semibold mb-1">{t("cancel_subscription")}</h3>
+                  <p className="text-sm text-muted-foreground">{t("cancel_subscription_description")}</p>
                 </div>
                 <Button
                   variant="destructive"
@@ -199,7 +205,7 @@ export default function SubscriptionPage() {
                   disabled={cancelling}
                   className="w-full md:w-auto"
                 >
-                  {cancelling ? "Cancelling..." : "Cancel Plan"}
+                  {cancelling ? t("cancelling") : t("cancel_plan")}
                 </Button>
               </div>
             </Card>
@@ -213,11 +219,9 @@ export default function SubscriptionPage() {
               disabled
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              Buy Extra AI Credits (Coming Soon)
+              {t("buy_extra_credits")}
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">
-              Purchase credits that never expire. Stack with your monthly allowance!
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">{t("buy_extra_credits_description")}</p>
           </div>
 
           <div className="flex justify-center mb-6 md:mb-8">
@@ -228,7 +232,7 @@ export default function SubscriptionPage() {
                 onClick={() => setBillingPeriod("monthly")}
                 className={billingPeriod === "monthly" ? "neon-glow" : ""}
               >
-                Monthly
+                {t("monthly")}
               </Button>
               <Button
                 variant={billingPeriod === "annual" ? "default" : "ghost"}
@@ -236,8 +240,8 @@ export default function SubscriptionPage() {
                 onClick={() => setBillingPeriod("annual")}
                 className={billingPeriod === "annual" ? "neon-glow" : ""}
               >
-                Annual
-                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">Save 20%</span>
+                {t("annual")}
+                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">{t("save_20")}</span>
               </Button>
             </div>
           </div>
@@ -246,7 +250,7 @@ export default function SubscriptionPage() {
             {plans.map((plan, index) => {
               const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice
               const planId = billingPeriod === "monthly" ? plan.monthlyPlanId : plan.annualPlanId
-              const periodLabel = billingPeriod === "monthly" ? "month" : "year"
+              const periodLabel = billingPeriod === "monthly" ? t("month") : t("year")
               const isCurrentPlan = currentPlan.toLowerCase() === plan.name.toLowerCase()
 
               return (
@@ -264,7 +268,7 @@ export default function SubscriptionPage() {
                     {plan.popular && (
                       <div className="flex items-center gap-2 mb-4 text-primary">
                         <Crown className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-xs md:text-sm font-semibold">MOST POPULAR</span>
+                        <span className="text-xs md:text-sm font-semibold">{t("most_popular")}</span>
                       </div>
                     )}
 
@@ -276,21 +280,23 @@ export default function SubscriptionPage() {
 
                     <div className="flex items-center gap-2 mb-4 md:mb-6 text-xs md:text-sm text-primary">
                       <Zap className="w-4 h-4" />
-                      <span>{plan.credits} AI credits/month</span>
+                      <span>
+                        {plan.credits} {t("ai_credits_per_month")}
+                      </span>
                     </div>
 
                     <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6 flex-1">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-xs md:text-sm">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
-                          <span>{feature}</span>
+                          <span>{t(feature)}</span>
                         </li>
                       ))}
                     </ul>
 
                     {isCurrentPlan ? (
                       <Button className="w-full bg-secondary" disabled>
-                        Current Plan
+                        {t("current_plan")}
                       </Button>
                     ) : plan.name === "Free" ? (
                       <Button
@@ -299,19 +305,19 @@ export default function SubscriptionPage() {
                         onClick={handleCancelSubscription}
                         disabled={cancelling || currentPlan === "free"}
                       >
-                        {cancelling ? "Processing..." : "Downgrade to Free"}
+                        {cancelling ? t("processing") : t("downgrade_to_free")}
                       </Button>
                     ) : planId ? (
                       <PayPalSubscriptionButton
                         planId={planId}
-                        planName={`${plan.name} ${billingPeriod === "monthly" ? "Monthly" : "Annual"}`}
+                        planName={`${plan.name} ${billingPeriod === "monthly" ? t("monthly") : t("annual")}`}
                         onSuccess={(subId) => {
                           fetchSubscription()
                         }}
                       />
                     ) : (
                       <Button className="w-full" disabled>
-                        Coming Soon
+                        {t("coming_soon")}
                       </Button>
                     )}
                   </Card>

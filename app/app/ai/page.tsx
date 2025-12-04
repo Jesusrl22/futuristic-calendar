@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Send, Zap } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { canAccessAI } from "@/lib/subscription"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function AIPage() {
+  const { t } = useTranslation()
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -87,7 +89,7 @@ export default function AIPage() {
   if (checkingAccess) {
     return (
       <div className="p-4 md:p-8 flex items-center justify-center">
-        <p>Loading...</p>
+        <p>{t("loading")}</p>
       </div>
     )
   }
@@ -96,9 +98,9 @@ export default function AIPage() {
     return (
       <div className="p-4 md:p-8">
         <UpgradeModal
-          feature="AI Assistant"
+          feature={t("ai_assistant")}
           requiredPlan="premium"
-          customMessage="Upgrade to Premium/Pro or purchase credit packs to access the AI Assistant"
+          customMessage={t("ai_assistant_upgrade_message")}
         />
       </div>
     )
@@ -111,14 +113,16 @@ export default function AIPage() {
       <div className="h-full flex flex-col">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-4">
           <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">AI Assistant</span>
+            <span className="text-primary neon-text">{t("ai_assistant")}</span>
           </h1>
           <div className="flex gap-2 w-full md:w-auto">
             {monthlyCredits > 0 && (
               <Card className="glass-card px-3 py-2 neon-glow flex-1 md:flex-none">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-semibold">{monthlyCredits} monthly</span>
+                  <span className="text-sm font-semibold">
+                    {monthlyCredits} {t("monthly")}
+                  </span>
                 </div>
               </Card>
             )}
@@ -126,7 +130,9 @@ export default function AIPage() {
               <Card className="glass-card px-3 py-2 neon-glow flex-1 md:flex-none">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-semibold">{purchasedCredits} purchased</span>
+                  <span className="text-sm font-semibold">
+                    {purchasedCredits} {t("purchased")}
+                  </span>
                 </div>
               </Card>
             )}
@@ -137,9 +143,11 @@ export default function AIPage() {
           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground py-8 md:py-12">
-                <p className="text-base md:text-lg mb-2">Welcome to your AI Assistant</p>
-                <p className="text-xs md:text-sm">Ask me anything! Each message costs 2 credits.</p>
-                <p className="text-xs text-muted-foreground mt-2">Total available: {totalCredits} credits</p>
+                <p className="text-base md:text-lg mb-2">{t("ai_assistant_welcome")}</p>
+                <p className="text-xs md:text-sm">{t("ai_assistant_cost")}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {t("total_available")}: {totalCredits} {t("credits")}
+                </p>
               </div>
             )}
 
@@ -176,7 +184,7 @@ export default function AIPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                placeholder="Type your message..."
+                placeholder={t("type_your_message")}
                 className="bg-secondary/50 text-sm md:text-base"
                 disabled={loading}
               />
