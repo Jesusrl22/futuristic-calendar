@@ -138,6 +138,7 @@ export default function PomodoroPage() {
 
   const handleComplete = async () => {
     if (sessionSavedRef.current) {
+      console.log("[v0] Session already saved, skipping")
       return
     }
     sessionSavedRef.current = true
@@ -161,7 +162,6 @@ export default function PomodoroPage() {
       oscillator.start(audioContext.currentTime)
       oscillator.stop(audioContext.currentTime + 0.5)
 
-      // Second beep
       setTimeout(() => {
         const oscillator2 = audioContext.createOscillator()
         const gainNode2 = audioContext.createGain()
@@ -183,8 +183,11 @@ export default function PomodoroPage() {
     }
 
     if (mode === "work") {
+      console.log("[v0] Attempting to save pomodoro session...")
       try {
         const durationInMinutes = Math.round(durations.work / 60)
+        console.log("[v0] Duration:", durationInMinutes, "minutes")
+
         const response = await fetch("/api/pomodoro", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -192,13 +195,23 @@ export default function PomodoroPage() {
         })
 
         if (!response.ok) {
+          const errorData = await response.json()
+          console.error("[v0] Failed to save pomodoro session:", response.status, errorData)
+          alert(`Failed to save pomodoro session: ${errorData.error || "Unknown error"}`)
+        } else {
+          const data = await response.json()
+          console.log("[v0] Pomodoro session saved successfully:", data)
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("[v0] Error saving pomodoro session:", error)
+        alert(`Error saving pomodoro session: ${error}`)
+      }
 
       setSessions((prev) => prev + 1)
       setMode(sessions + 1 >= 4 ? "longBreak" : "break")
       setTimeLeft(sessions + 1 >= 4 ? durations.longBreak : durations.break)
     } else {
+      console.log("[v0] Completed break, moving to work")
       setMode("work")
       setTimeLeft(durations.work)
       if (mode === "longBreak") setSessions(0)
@@ -206,6 +219,7 @@ export default function PomodoroPage() {
 
     setTimeout(() => {
       sessionSavedRef.current = false
+      console.log("[v0] Session saved flag reset")
     }, 1000)
   }
 
