@@ -1,11 +1,15 @@
 "use client"
 
+import { DialogTrigger } from "@/components/ui/dialog"
+
+import type React from "react"
+
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit } from "@/components/icons"
+import { Plus, Search, Trash2, Edit, GripVertical } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
@@ -14,17 +18,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTranslation } from "@/lib/translations"
+import { useTranslation } from "@/hooks/useTranslation"
 import { useLanguage } from "@/contexts/language-context"
-import { supabase } from "@/lib/supabase"
-import { AdsterraBanner } from "@/components/adsterra-banner"
-import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
-import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
+import { createClient } from "@/lib/supabase/client"
+
+const supabase = createClient()
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -53,6 +55,9 @@ export default function TasksPage() {
   const [isCreating, setIsCreating] = useState(false)
   const { language } = useLanguage()
   const { t } = useTranslation(language)
+
+  const [draggedTask, setDraggedTask] = useState<string | null>(null)
+  const [dragOverTask, setDragOverTask] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTasks()
@@ -308,8 +313,63 @@ export default function TasksPage() {
     return dateString
   }
 
+  const handleDragStart = (e: React.DragEvent, taskId: string, isCompleted: boolean) => {
+    if (isCompleted) {
+      e.preventDefault()
+      return
+    }
+    setDraggedTask(taskId)
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const handleDragOver = (e: React.DragEvent, taskId: string, isCompleted: boolean) => {
+    e.preventDefault()
+    if (isCompleted || !draggedTask) return
+    setDragOverTask(taskId)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverTask(null)
+  }
+
+  const handleDrop = async (e: React.DragEvent, dropTaskId: string, isCompleted: boolean) => {
+    e.preventDefault()
+    if (!draggedTask || draggedTask === dropTaskId || isCompleted) {
+      setDraggedTask(null)
+      setDragOverTask(null)
+      return
+    }
+
+    // Reorder tasks locally
+    const draggedIndex = filteredTasks.findIndex((t) => t.id === draggedTask)
+    const dropIndex = filteredTasks.findIndex((t) => t.id === dropTaskId)
+
+    const newTasks = [...tasks]
+    const draggedTaskData = newTasks.find((t) => t.id === draggedTask)
+    const dropTaskData = newTasks.find((t) => t.id === dropTaskId)
+
+    if (draggedTaskData && dropTaskData) {
+      const draggedOriginalIndex = newTasks.indexOf(draggedTaskData)
+      const dropOriginalIndex = newTasks.indexOf(dropTaskData)
+
+      newTasks.splice(draggedOriginalIndex, 1)
+      const newDropIndex = newTasks.indexOf(dropTaskData)
+      newTasks.splice(newDropIndex + (draggedIndex > dropIndex ? 0 : 1), 0, draggedTaskData)
+
+      setTasks(newTasks)
+    }
+
+    setDraggedTask(null)
+    setDragOverTask(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedTask(null)
+    setDragOverTask(null)
+  }
+
   return (
-    <div className="p-4 md:p-8">
+    <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
       <div>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
           <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
@@ -417,20 +477,6 @@ export default function TasksPage() {
           </Dialog>
         </div>
 
-        <AdsterraBanner
-          adKey="dd82d93d86b369641ec4dd731423cb09"
-          width={728}
-          height={90}
-          className="mb-6 hidden md:block"
-        />
-
-        <AdsterraMobileBanner
-          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
-          width={320}
-          height={50}
-          className="mb-6 block md:hidden"
-        />
-
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -458,9 +504,23 @@ export default function TasksPage() {
             ) : (
               <>
                 {filteredTasks.map((task: any) => (
-                  <div key={task.id}>
+                  <div
+                    key={task.id}
+                    draggable={!task.completed}
+                    onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
+                    onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, task.id, task.completed)}
+                    onDragEnd={handleDragEnd}
+                    className={`
+                      ${!task.completed ? "cursor-move" : "cursor-default"}
+                      ${draggedTask === task.id ? "opacity-50" : ""}
+                      ${dragOverTask === task.id ? "border-primary border-2" : ""}
+                    `}
+                  >
                     <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
                       <div className="flex items-center gap-4">
+                        {!task.completed && <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
                         <Checkbox
                           checked={task.completed}
                           onCheckedChange={() => toggleTask(task.id, task.completed)}
@@ -519,114 +579,6 @@ export default function TasksPage() {
             )}
           </TabsContent>
         </Tabs>
-
-        <AdsterraNativeBanner
-          containerId="container-105a3c31d27607df87969077c87047d4"
-          scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
-          className="mt-6 hidden md:block"
-        />
-
-        <AdsterraMobileBanner
-          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
-          width={320}
-          height={50}
-          className="mt-6 block md:hidden"
-        />
-
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t("editTask")}</DialogTitle>
-              <DialogDescription>
-                {t("edit")} {t("tasks").toLowerCase()}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-title">{t("title")} *</Label>
-                <Input
-                  id="edit-title"
-                  placeholder={t("title") + "..."}
-                  value={editForm.title}
-                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">{t("description")}</Label>
-                <Textarea
-                  id="edit-description"
-                  placeholder={t("description") + "..."}
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-priority">{t("priority")}</Label>
-                  <Select
-                    value={editForm.priority}
-                    onValueChange={(value) => setEditForm({ ...editForm, priority: value })}
-                  >
-                    <SelectTrigger id="edit-priority">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">{t("low")}</SelectItem>
-                      <SelectItem value="medium">{t("medium")}</SelectItem>
-                      <SelectItem value="high">{t("high")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-category">{t("category")}</Label>
-                  <Select
-                    value={editForm.category}
-                    onValueChange={(value) => setEditForm({ ...editForm, category: value })}
-                  >
-                    <SelectTrigger id="edit-category">
-                      <SelectValue placeholder={t("category")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="personal">{t("personal")}</SelectItem>
-                      <SelectItem value="work">{t("work")}</SelectItem>
-                      <SelectItem value="study">{t("study")}</SelectItem>
-                      <SelectItem value="health">{t("health")}</SelectItem>
-                      <SelectItem value="finance">{t("finance")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-due_date">{t("dueDate")}</Label>
-                  <Input
-                    id="edit-due_date"
-                    type="date"
-                    value={editForm.due_date}
-                    onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-due_time">{t("dueTime")}</Label>
-                  <Input
-                    id="edit-due_time"
-                    type="time"
-                    value={editForm.due_time}
-                    onChange={(e) => setEditForm({ ...editForm, due_time: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating}>
-                {t("cancel")}
-              </Button>
-              <Button onClick={updateTask} disabled={isCreating}>
-                {isCreating ? t("updating") : t("updateTask")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   )
