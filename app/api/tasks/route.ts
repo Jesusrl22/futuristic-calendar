@@ -19,12 +19,15 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?order=created_at.desc`, {
-      headers: {
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        Authorization: `Bearer ${accessToken}`,
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?order=display_order.asc,created_at.desc`,
+      {
+        headers: {
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${accessToken}`,
+        },
       },
-    })
+    )
 
     const tasks = await response.json()
     return NextResponse.json({ tasks })

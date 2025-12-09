@@ -25,6 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTranslation } from "@/hooks/useTranslation"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
+import { toast } from "@/components/ui/use-toast"
 
 const supabase = createClient()
 
@@ -357,6 +358,29 @@ export default function TasksPage() {
       newTasks.splice(newDropIndex + (draggedIndex > dropIndex ? 0 : 1), 0, draggedTaskData)
 
       setTasks(newTasks)
+
+      try {
+        const incompleteTasks = newTasks.filter((t) => !t.completed)
+        const taskOrders = incompleteTasks.map((task, index) => ({
+          id: task.id,
+          order: index,
+        }))
+
+        await fetch("/api/tasks/reorder", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ taskOrders }),
+        })
+      } catch (error) {
+        console.error("Failed to save task order:", error)
+        toast({
+          title: t("error"),
+          description: "Failed to save task order",
+          variant: "destructive",
+        })
+      }
     }
 
     setDraggedTask(null)
