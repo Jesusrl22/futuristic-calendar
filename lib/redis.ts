@@ -1,10 +1,33 @@
 import { Redis } from "@upstash/redis"
 
-// Initialize Redis client with Upstash
-export const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-})
+// Lazy initialize Redis client
+let redisClient: Redis | null = null
+
+function getRedisClient(): Redis | null {
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+    return null
+  }
+
+  if (!redisClient) {
+    try {
+      redisClient = new Redis({
+        url: process.env.KV_REST_API_URL,
+        token: process.env.KV_REST_API_TOKEN,
+      })
+    } catch (error) {
+      console.error("[v0] Failed to initialize Redis:", error)
+      return null
+    }
+  }
+
+  return redisClient
+}
+
+export const redis = {
+  get client() {
+    return getRedisClient()
+  },
+}
 
 // Rate limiting configuration
 export const RATE_LIMITS = {
@@ -50,9 +73,19 @@ export async function rateLimit(
   const { requests, window } = RATE_LIMITS[limitType]
   const key = `ratelimit:${limitType}:${identifier}`
 
+  const client = getRedisClient()
+
+  if (!client) {
+    return {
+      success: true,
+      limit: requests,
+      remaining: requests,
+      reset: Date.now() + window * 1000,
+    }
+  }
+
   try {
-    // Use Redis pipeline for atomic operations
-    const pipeline = redis.pipeline()
+    const pipeline = client.pipeline()
     pipeline.incr(key)
     pipeline.expire(key, window)
 
@@ -70,7 +103,6 @@ export async function rateLimit(
     }
   } catch (error) {
     console.error("[v0] Rate limit error:", error)
-    // Fail open - allow request if Redis is down
     return {
       success: true,
       limit: requests,
@@ -84,8 +116,11 @@ export async function rateLimit(
  * Cache helper for frequently accessed data
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
+  const client = getRedisClient()
+  if (!client) return null
+
   try {
-    const data = await redis.get<T>(key)
+    const data = await client.get<T>(key)
     return data
   } catch (error) {
     console.error("[v0] Cache get error:", error)
@@ -94,16 +129,22 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
 }
 
 export async function cacheSet(key: string, value: any, expirationSeconds = 3600): Promise<void> {
+  const client = getRedisClient()
+  if (!client) return
+
   try {
-    await redis.set(key, value, { ex: expirationSeconds })
+    await client.set(key, value, { ex: expirationSeconds })
   } catch (error) {
     console.error("[v0] Cache set error:", error)
   }
 }
 
 export async function cacheDel(key: string): Promise<void> {
+  const client = getRedisClient()
+  if (!client) return
+
   try {
-    await redis.del(key)
+    await client.del(key)
   } catch (error) {
     console.error("[v0] Cache delete error:", error)
   }
