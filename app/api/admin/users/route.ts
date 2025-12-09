@@ -1,8 +1,39 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { rateLimit } from "@/lib/redis"
 
-export async function GET() {
+async function getUserIdFromRequest(request: Request): Promise<string | null> {
   try {
+    const cookieHeader = request.headers.get("cookie")
+    if (!cookieHeader) return null
+
+    const accessTokenMatch = cookieHeader.match(/sb-access-token=([^;]+)/)
+    if (!accessTokenMatch) return null
+
+    const token = accessTokenMatch[1]
+    const payload = JSON.parse(atob(token.split(".")[1]))
+    return payload.sub || null
+  } catch {
+    return null
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const userId = (await getUserIdFromRequest(request)) || request.headers.get("x-forwarded-for") || "anonymous"
+    const rateLimitResult = await rateLimit(userId, "admin")
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many requests",
+          message: "Please slow down",
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        { status: 429 },
+      )
+    }
+
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
       auth: {
         autoRefreshToken: false,
@@ -76,13 +107,27 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const { userId, updates } = await request.json()
+    const userId = (await getUserIdFromRequest(request)) || request.headers.get("x-forwarded-for") || "anonymous"
+    const rateLimitResult = await rateLimit(userId, "admin")
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many requests",
+          message: "Please slow down",
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        { status: 429 },
+      )
+    }
+
+    const { userId: targetUserId, updates } = await request.json()
 
     console.log("[v0] ===== ADMIN UPDATE START =====")
-    console.log("[v0] Admin API PATCH - userId:", userId)
+    console.log("[v0] Admin API PATCH - userId:", targetUserId)
     console.log("[v0] Admin API PATCH - updates received:", updates)
 
-    if (!userId) {
+    if (!targetUserId) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
@@ -120,7 +165,7 @@ export async function PATCH(request: Request) {
     const { data: beforeUpdate, error: fetchError } = await supabase
       .from("users")
       .select("id, email, subscription_tier, subscription_plan, ai_credits_monthly, ai_credits_purchased")
-      .eq("id", userId)
+      .eq("id", targetUserId)
       .single()
 
     if (fetchError) {
@@ -129,7 +174,7 @@ export async function PATCH(request: Request) {
       console.log("[v0] Admin API PATCH - User BEFORE update:", beforeUpdate)
     }
 
-    const { data, error } = await supabase.from("users").update(updates).eq("id", userId).select()
+    const { data, error } = await supabase.from("users").update(updates).eq("id", targetUserId).select()
 
     if (error) {
       console.error("[v0] Admin API PATCH - Supabase update error:", error)
@@ -148,9 +193,23 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { userId } = await request.json()
+    const userId = (await getUserIdFromRequest(request)) || request.headers.get("x-forwarded-for") || "anonymous"
+    const rateLimitResult = await rateLimit(userId, "admin")
 
-    if (!userId) {
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many requests",
+          message: "Please slow down",
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        { status: 429 },
+      )
+    }
+
+    const { userId: targetUserId } = await request.json()
+
+    if (!targetUserId) {
       return NextResponse.json({ error: "User ID required" }, { status: 400 })
     }
 
@@ -161,7 +220,7 @@ export async function DELETE(request: Request) {
       },
     })
 
-    const { error } = await supabase.from("users").delete().eq("id", userId)
+    const { error } = await supabase.from("users").delete().eq("id", targetUserId)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

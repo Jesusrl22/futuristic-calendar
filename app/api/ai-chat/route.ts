@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 import { cookies } from "next/headers"
+import { rateLimit } from "@/lib/redis"
 
 function getUserIdFromToken(token: string): string | null {
   try {
@@ -25,6 +26,19 @@ export async function POST(req: NextRequest) {
     const userId = getUserIdFromToken(accessToken)
     if (!userId) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
+    const rateLimitResult = await rateLimit(userId, "aiChat")
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many AI requests",
+          message: "You're sending messages too quickly. Please wait a moment.",
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        { status: 429 },
+      )
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL

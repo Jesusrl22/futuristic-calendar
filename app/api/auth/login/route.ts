@@ -1,9 +1,24 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { rateLimit } from "@/lib/redis"
 
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json()
+
+    const identifier = email || request.headers.get("x-forwarded-for") || "anonymous"
+    const rateLimitResult = await rateLimit(identifier, "auth")
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: "Too many login attempts",
+          message: "Please try again later",
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        { status: 429 },
+      )
+    }
 
     console.log("[SERVER][API] Login request for:", email)
 
