@@ -836,15 +836,87 @@ export default function HomePageClient() {
 
       {/* Footer */}
       <footer className="border-t border-border/50 mt-20">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">FT</span>
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <span className="text-primary font-bold text-sm">FT</span>
+                </div>
+                <span className="font-semibold">Future Task</span>
               </div>
-              <span className="font-semibold">Future Task</span>
+              <p className="text-sm text-muted-foreground">
+                Smart task management with AI-powered assistance for enhanced productivity.
+              </p>
             </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Product</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <a href="#features" className="hover:text-foreground transition-colors">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" className="hover:text-foreground transition-colors">
+                    Pricing
+                  </a>
+                </li>
+                <li>
+                  <Link href="/app" className="hover:text-foreground transition-colors">
+                    Dashboard
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Legal</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <Link href="/terms" className="hover:text-foreground transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="hover:text-foreground transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <Link href="/contact" className="hover:text-foreground transition-colors">
+                    Contact Us
+                  </Link>
+                </li>
+                <li>
+                  <a href="mailto:support@future-task.com" className="hover:text-foreground transition-colors">
+                    support@future-task.com
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">© 2025 Future Task. All rights reserved.</p>
+            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+              <Link href="/terms" className="hover:text-foreground transition-colors">
+                Terms
+              </Link>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">
+                Privacy
+              </Link>
+              <Link href="/contact" className="hover:text-foreground transition-colors">
+                Contact
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
