@@ -82,13 +82,13 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    console.log("[SERVER][v0] Sending welcome email to:", email)
-    const emailResult = await sendWelcomeEmail(email, name)
-    if (emailResult.success) {
-      console.log("[SERVER][v0] Welcome email sent successfully")
-    } else {
-      console.warn("[SERVER][v0] Failed to send welcome email:", emailResult.error)
-    }
+    sendWelcomeEmail(email, name).then((result) => {
+      if (result.success) {
+        console.log("[SERVER][v0] Welcome email sent successfully")
+      } else {
+        console.warn("[SERVER][v0] Failed to send welcome email:", result.error)
+      }
+    })
 
     // Auto-login
     console.log("[SERVER][v0] Attempting auto-login...")

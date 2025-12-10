@@ -148,6 +148,12 @@ export default function AdminDashboardPage() {
       alert("User deleted successfully!")
       setDeleteDialogOpen(false)
       setUserToDelete(null)
+
+      const currentUserResponse = await fetch("/api/user/profile")
+      if (!currentUserResponse.ok) {
+        // Current user was deleted, redirect to landing
+        window.location.href = "/"
+      }
     } catch (error) {
       alert("Error deleting user. Please try again.")
     }

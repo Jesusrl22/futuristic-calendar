@@ -220,13 +220,25 @@ export async function DELETE(request: Request) {
       },
     })
 
-    const { error } = await supabase.from("users").delete().eq("id", targetUserId)
+    // Delete user from database
+    const { error: dbError } = await supabase.from("users").delete().eq("id", targetUserId)
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, message: "User deleted successfully" })
+    const { error: authError } = await supabase.auth.admin.deleteUser(targetUserId)
+
+    if (authError) {
+      console.error("[v0] Error deleting user from auth:", authError)
+      // Continue anyway since db deletion succeeded
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "User deleted successfully",
+      deletedUserId: targetUserId,
+    })
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
