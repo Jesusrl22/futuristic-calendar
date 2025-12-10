@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { sendWelcomeEmail } from "@/lib/email"
+import { createClient } from "@supabase/supabase-js"
 
 export async function POST(request: Request) {
   try {
@@ -12,126 +12,76 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 })
     }
 
-    // Step 1: Check if user already exists in auth
-    const checkResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-      },
-    })
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-    let existingUserId: string | null = null
+    // Check if user already exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find((u) => u.email === email)
 
-    if (checkResponse.ok) {
-      const allUsers = await checkResponse.json()
-      const existingUser = allUsers.users?.find((u: any) => u.email === email)
+    if (existingUser) {
+      // Check if profile exists
+      const { data: profiles } = await supabase.from("users").select("*").eq("id", existingUser.id)
 
-      if (existingUser) {
-        existingUserId = existingUser.id
-        console.log("[SERVER][v0] User already exists in auth with ID:", existingUserId)
-
-        const profileCheckResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${existingUserId}`,
-          {
-            headers: {
-              apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-            },
-          },
-        )
-
-        if (profileCheckResponse.ok) {
-          const profiles = await profileCheckResponse.json()
-
-          if (profiles && profiles.length > 0) {
-            // Profile exists, user is fully registered
-            console.log("[SERVER][v0] Profile exists, user is fully registered")
-            return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
-          } else {
-            // Profile missing, we'll create it below
-            console.log("[SERVER][v0] Profile missing, will create it")
-          }
-        }
+      if (profiles && profiles.length > 0) {
+        console.log("[SERVER][v0] User already exists")
+        return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
       }
     }
 
-    let userId = existingUserId
+    let userId = existingUser?.id
 
-    // Step 2: Create user in auth if doesn't exist
+    // Create user in auth if doesn't exist
     if (!userId) {
       console.log("[SERVER][v0] Creating new user in auth...")
-      const signupResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/users`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Auto-confirm for now, Supabase will send welcome email if configured
+        user_metadata: {
+          name: name,
         },
-        body: JSON.stringify({
-          email,
-          password,
-          email_confirm: true,
-          user_metadata: {
-            name: name,
-          },
-        }),
       })
 
-      const signupData = await signupResponse.json()
-
-      if (!signupResponse.ok) {
-        console.error("[SERVER][v0] Signup API failed:", signupData)
-        const errorMsg = signupData.msg || signupData.message || signupData.error || "Failed to create account"
-        return NextResponse.json({ error: errorMsg }, { status: signupResponse.status })
+      if (authError) {
+        console.error("[SERVER][v0] Auth creation failed:", authError)
+        return NextResponse.json({ error: authError.message }, { status: 400 })
       }
 
-      userId = signupData.id
+      userId = authData.user.id
       console.log("[SERVER][v0] User created in auth with ID:", userId)
     }
 
-    // Step 3: Create profile in users table
+    // Create profile in users table
     console.log("[SERVER][v0] Creating user profile for ID:", userId)
-    const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify({
-        id: userId,
-        email: email,
-        name: name,
-        subscription_tier: "free",
-        subscription_plan: "free",
-        plan: "free",
-        ai_credits_monthly: 0, // FREE users start with 0 monthly credits
-        ai_credits_purchased: 0, // No purchased credits initially
-        theme: "dark",
-        theme_preference: "dark",
-        subscription_status: "active",
-        billing_cycle: "monthly",
-        pomodoro_work_duration: 25,
-        pomodoro_break_duration: 5,
-        pomodoro_long_break_duration: 15,
-        pomodoro_sessions_until_long_break: 4,
-        language: "es",
-        is_admin: false,
-      }),
+    const { error: profileError } = await supabase.from("users").insert({
+      id: userId,
+      email: email,
+      name: name,
+      subscription_tier: "free",
+      subscription_plan: "free",
+      plan: "free",
+      ai_credits_monthly: 0,
+      ai_credits_purchased: 0,
+      theme: "dark",
+      theme_preference: "dark",
+      subscription_status: "active",
+      billing_cycle: "monthly",
+      pomodoro_work_duration: 25,
+      pomodoro_break_duration: 5,
+      pomodoro_long_break_duration: 15,
+      pomodoro_sessions_until_long_break: 4,
+      language: "es",
+      is_admin: false,
     })
 
-    if (!profileResponse.ok) {
-      const profileError = await profileResponse.json()
+    if (profileError) {
       console.error("[SERVER][v0] Failed to create profile:", profileError)
       return NextResponse.json({ error: "Failed to create user profile. Please try again." }, { status: 500 })
     }
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    // Step 4: Send welcome email
-    await sendWelcomeEmail(email, name)
-
+    // Auto-login
     console.log("[SERVER][v0] Attempting auto-login...")
     const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: "POST",
