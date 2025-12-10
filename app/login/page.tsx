@@ -10,6 +10,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Globe } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Eye, EyeOff } from "lucide-react"
 
 const translations = {
   en: {
@@ -26,6 +27,7 @@ const translations = {
     activeSession: "You have an active session",
     continueApp: "Continue to App",
     logoutDifferent: "Logout and Sign In with Different Account",
+    forgotPassword: "Forgot password?",
   },
   es: {
     welcome: "Bienvenido de Nuevo",
@@ -41,6 +43,7 @@ const translations = {
     activeSession: "Tienes una sesión activa",
     continueApp: "Continuar a la App",
     logoutDifferent: "Cerrar Sesión para Iniciar con Otra Cuenta",
+    forgotPassword: "¿Olvidaste tu contraseña?",
   },
   fr: {
     welcome: "Bienvenue",
@@ -56,6 +59,7 @@ const translations = {
     activeSession: "Vous avez une session active",
     continueApp: "Continuer vers l'App",
     logoutDifferent: "Déconnexion pour Changer de Compte",
+    forgotPassword: "Mot de passe oublié?",
   },
   de: {
     welcome: "Willkommen Zurück",
@@ -71,6 +75,7 @@ const translations = {
     activeSession: "Sie haben eine aktive Sitzung",
     continueApp: "Zur App",
     logoutDifferent: "Abmelden und mit Anderem Konto Anmelden",
+    forgotPassword: "Passwort vergessen?",
   },
   it: {
     welcome: "Bentornato",
@@ -86,6 +91,7 @@ const translations = {
     activeSession: "Hai una sessione attiva",
     continueApp: "Continua all'App",
     logoutDifferent: "Esci per Accedere con un Altro Account",
+    forgotPassword: "Password dimenticata?",
   },
 }
 
@@ -94,6 +100,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [hasSession, setHasSession] = useState(false)
   const [language, setLanguage] = useState<keyof typeof translations>("en")
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -263,14 +270,28 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <Label htmlFor="password">{t.password}</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                className="bg-secondary/50"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  className="bg-secondary/50 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="text-right">
+                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+                  {t.forgotPassword}
+                </Link>
+              </div>
             </div>
 
             {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</div>}

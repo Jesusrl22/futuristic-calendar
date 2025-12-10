@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { sendWelcomeEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -128,7 +129,9 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    // Step 4: Auto-login the user
+    // Step 4: Send welcome email
+    await sendWelcomeEmail(email, name)
+
     console.log("[SERVER][v0] Attempting auto-login...")
     const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: "POST",
