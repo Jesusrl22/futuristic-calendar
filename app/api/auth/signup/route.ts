@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
+import { sendWelcomeEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: true, // Auto-confirm for now, Supabase will send welcome email if configured
+        email_confirm: true,
         user_metadata: {
           name: name,
         },
@@ -80,6 +81,14 @@ export async function POST(request: Request) {
     }
 
     console.log("[SERVER][v0] Profile created successfully")
+
+    console.log("[SERVER][v0] Sending welcome email to:", email)
+    const emailResult = await sendWelcomeEmail(email, name)
+    if (emailResult.success) {
+      console.log("[SERVER][v0] Welcome email sent successfully")
+    } else {
+      console.warn("[SERVER][v0] Failed to send welcome email:", emailResult.error)
+    }
 
     // Auto-login
     console.log("[SERVER][v0] Attempting auto-login...")

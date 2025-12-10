@@ -40,6 +40,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
+    "@types/nodemailer": "6.4.17",
     "@upstash/redis": "latest",
     "ai": "latest",
     "autoprefixer": "^10.4.20",
