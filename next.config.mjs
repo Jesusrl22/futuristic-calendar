@@ -9,10 +9,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    // Optimize server components
-    serverComponentsExternalPackages: ['@upstash/redis'],
-  },
+  serverExternalPackages: ['@upstash/redis'],
+  
+  output: 'standalone',
+  
   // Optimize bundle size
   webpack: (config, { isServer }) => {
     if (!isServer) {
