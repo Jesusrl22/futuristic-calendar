@@ -23,7 +23,7 @@ export function AdsterraMobileBanner({ adKey, width, height, className = "" }: A
         const response = await fetch("/api/user/profile")
         if (response.ok) {
           const data = await response.json()
-          setUserTier(data.subscription_plan || "free")
+          setUserTier(data.subscription_tier || "free")
         }
       } catch (error) {
         setUserTier("free")
