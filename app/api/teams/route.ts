@@ -14,23 +14,54 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get all teams where user is a member
-    const { data: teams, error } = await supabase
-      .from("teams")
-      .select(`
-        *,
-        team_members!inner(role),
-        owner:users!teams_owner_id_fkey(name, email)
-      `)
-      .eq("team_members.user_id", user.id)
-      .order("created_at", { ascending: false })
+    // Get team IDs where user is a member
+    const { data: memberships, error: memberError } = await supabase
+      .from("team_members")
+      .select("team_id, role")
+      .eq("user_id", user.id)
 
-    if (error) {
-      console.error("[v0] Error fetching teams:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (memberError) {
+      console.error("[v0] Error fetching memberships:", memberError)
+      return NextResponse.json({ error: memberError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ teams: teams || [] })
+    if (!memberships || memberships.length === 0) {
+      return NextResponse.json({ teams: [] })
+    }
+
+    const teamIds = memberships.map((m) => m.team_id)
+
+    // Get teams details
+    const { data: teams, error: teamsError } = await supabase
+      .from("teams")
+      .select("*")
+      .in("id", teamIds)
+      .order("created_at", { ascending: false })
+
+    if (teamsError) {
+      console.error("[v0] Error fetching teams:", teamsError)
+      return NextResponse.json({ error: teamsError.message }, { status: 500 })
+    }
+
+    // Get member counts for each team
+    const teamsWithCounts = await Promise.all(
+      teams.map(async (team) => {
+        const { count } = await supabase
+          .from("team_members")
+          .select("*", { count: "exact", head: true })
+          .eq("team_id", team.id)
+
+        const membership = memberships.find((m) => m.team_id === team.id)
+
+        return {
+          ...team,
+          role: membership?.role || "member",
+          member_count: count || 0,
+        }
+      }),
+    )
+
+    return NextResponse.json({ teams: teamsWithCounts })
   } catch (error: any) {
     console.error("[v0] Error in teams GET:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

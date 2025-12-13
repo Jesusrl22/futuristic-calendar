@@ -16,33 +16,44 @@ export async function GET(request: Request, { params }: { params: { teamId: stri
 
     const { teamId } = params
 
-    // Get team with members
-    const { data: team, error } = await supabase
-      .from("teams")
-      .select(`
-        *,
-        team_members(
-          id,
-          role,
-          joined_at,
-          user:users(id, name, email)
-        ),
-        owner:users!teams_owner_id_fkey(name, email)
-      `)
-      .eq("id", teamId)
-      .single()
+    const { data: team, error: teamError } = await supabase.from("teams").select("*").eq("id", teamId).single()
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 404 })
+    if (teamError) {
+      return NextResponse.json({ error: teamError.message }, { status: 404 })
     }
 
-    // Check if user is a member
-    const isMember = team.team_members.some((m: any) => m.user.id === user.id)
-    if (!isMember) {
+    // Get user's membership
+    const { data: membership, error: memberError } = await supabase
+      .from("team_members")
+      .select("role")
+      .eq("team_id", teamId)
+      .eq("user_id", user.id)
+      .single()
+
+    if (memberError || !membership) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    return NextResponse.json({ team })
+    // Get all team members with user details
+    const { data: members, error: membersError } = await supabase
+      .from("team_members")
+      .select(`
+        id,
+        role,
+        joined_at,
+        users (id, name, email)
+      `)
+      .eq("team_id", teamId)
+
+    if (membersError) {
+      console.error("[v0] Error fetching members:", membersError)
+    }
+
+    return NextResponse.json({
+      ...team,
+      role: membership.role,
+      members: members || [],
+    })
   } catch (error: any) {
     console.error("[v0] Error in team GET:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
