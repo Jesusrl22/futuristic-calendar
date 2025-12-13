@@ -5,9 +5,9 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu } from 'lucide-react'
-import { useState, useEffect } from "react"
-import { usePathname } from 'next/navigation'
+import { Menu } from "lucide-react"
+import { useState } from "react"
+import { usePathname } from "next/navigation"
 
 export default function ClientLayout({
   children,
@@ -18,21 +18,22 @@ export default function ClientLayout({
   const pathname = usePathname()
 
   const getPageTitle = () => {
-    const path = pathname.split('/').pop() || 'dashboard'
+    const path = pathname.split("/").pop() || "dashboard"
     const titleMap: { [key: string]: string } = {
-      'app': 'Dashboard',
-      'calendar': 'Calendar',
-      'tasks': 'Tasks',
-      'notes': 'Notes',
-      'pomodoro': 'Pomodoro',
-      'ai': 'AI Assistant',
-      'stats': 'Statistics',
-      'achievements': 'Achievements',
-      'settings': 'Settings',
-      'subscription': 'Subscription',
-      'wishlist': 'Wishlist'
+      app: "Dashboard",
+      calendar: "Calendar",
+      tasks: "Tasks",
+      notes: "Notes",
+      pomodoro: "Pomodoro",
+      ai: "AI Assistant",
+      teams: "Teams", // Added Teams title
+      stats: "Statistics",
+      achievements: "Achievements",
+      settings: "Settings",
+      subscription: "Subscription",
+      wishlist: "Wishlist",
     }
-    return titleMap[path] || 'Dashboard'
+    return titleMap[path] || "Dashboard"
   }
 
   return (
@@ -48,9 +49,7 @@ export default function ClientLayout({
             <AppSidebar onNavigate={() => setMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
-        <span className="text-lg font-semibold text-primary neon-text">
-          {getPageTitle()}
-        </span>
+        <span className="text-lg font-semibold text-primary neon-text">{getPageTitle()}</span>
       </div>
 
       {/* Desktop layout with resizable sidebar */}

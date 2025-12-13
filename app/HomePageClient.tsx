@@ -48,6 +48,7 @@ const translations = {
     freePomodoro: "Basic Pomodoro timer",
     freeThemes: "5 Free themes",
     freeAchievements: "Free achievements",
+    freeNoTeams: "No team collaboration",
     aiCredits: "50 AI credits/month",
     basicTasks: "Basic task management",
     basicNotes: "Notes & wishlist",
@@ -59,6 +60,8 @@ const translations = {
     proCustomTheme: "Custom theme creator",
     proAllThemes: "All 15 themes + custom",
     proAchievements: "All achievements",
+    proUnlimitedTeams: "Unlimited team collaboration",
+    proTeamStats: "Team analytics",
     premium: "Premium",
     premiumDesc: "For productivity enthusiasts",
     premiumAiCredits: "100 AI credits/month",
@@ -66,6 +69,8 @@ const translations = {
     premiumNotes: "Notes & Wishlist",
     premiumThemes: "10 themes (Free + Premium)",
     premiumAchievements: "Premium achievements",
+    premiumTeams: "Team collaboration",
+    premiumSharedTasks: "Shared tasks",
     teamFeatures: "Team collaboration",
     prioritySupport: "Priority support",
     customIntegrations: "Custom integrations",
@@ -178,6 +183,7 @@ const translations = {
     freePomodoro: "Temporizador Pomodoro básico",
     freeThemes: "5 temas gratuitos",
     freeAchievements: "Logros gratuitos",
+    freeNoTeams: "Sin colaboración en equipo",
     aiCredits: "50 créditos IA/mes",
     basicTasks: "Gestión básica de tareas",
     basicNotes: "Notas y lista de deseos",
@@ -189,6 +195,8 @@ const translations = {
     proCustomTheme: "Creador de temas personalizados",
     proAllThemes: "Todos los 15 temas + personalizados",
     proAchievements: "Todos los logros",
+    proUnlimitedTeams: "Colaboración ilimitada en equipo",
+    proTeamStats: "Estadísticas de equipo",
     premium: "Premium",
     premiumDesc: "Para entusiastas de la productividad",
     premiumAiCredits: "100 créditos IA/mes",
@@ -196,6 +204,8 @@ const translations = {
     premiumNotes: "Notas y lista de deseos",
     premiumThemes: "10 temas (Gratuitos + Premium)",
     premiumAchievements: "Logros Premium",
+    premiumTeams: "Colaboración en equipo",
+    premiumSharedTasks: "Tareas compartidas",
     teamFeatures: "Colaboración en equipo",
     prioritySupport: "Soporte prioritario",
     customIntegrations: "Integraciones personalizadas",
@@ -309,6 +319,7 @@ const translations = {
     freePomodoro: "Minuteur Pomodoro basique",
     freeThemes: "5 thèmes gratuits",
     freeAchievements: "Logros gratuits",
+    freeNoTeams: "Pas de collaboration d'équipe",
     aiCredits: "50 crédits IA/mois",
     basicTasks: "Gestion de tâches basique",
     basicNotes: "Notes et liste de souhaits",
@@ -320,6 +331,8 @@ const translations = {
     proCustomTheme: "Créateur de thèmes personnalisés",
     proAllThemes: "Tous les 15 thèmes + personnalisés",
     proAchievements: "Tous les logros",
+    proUnlimitedTeams: "Collaboration d'équipe illimitée",
+    proTeamStats: "Statistiques d'équipe",
     premium: "Premium",
     premiumDesc: "Pour les entusiastes de la productivité",
     premiumAiCredits: "100 crédits IA/mois",
@@ -327,6 +340,8 @@ const translations = {
     premiumNotes: "Notes et liste de souhaits",
     premiumThemes: "10 thèmes (Gratuits + Premium)",
     premiumAchievements: "Logros Premium",
+    premiumTeams: "Collaboration d'équipe",
+    premiumSharedTasks: "Tâches partagées",
     teamFeatures: "Collaboration d'équipe",
     prioritySupport: "Support prioritaire",
     customIntegrations: "Intégrations personnalisées",
@@ -440,6 +455,7 @@ const translations = {
     freePomodoro: "Grundlegender Pomodoro-Timer",
     freeThemes: "5 kostenlose Themen",
     freeAchievements: "Kostenlose Erfolge",
+    freeNoTeams: "Keine Teamzusammenarbeit",
     aiCredits: "50 KI-Credits/Monat",
     basicTasks: "Basis-Aufgabenverwaltung",
     basicNotes: "Notizen & Wunschliste",
@@ -451,6 +467,8 @@ const translations = {
     proCustomTheme: "Benutzerdefinierte Themen-Creator",
     proAllThemes: "Alle 15 Themen + benutzerdefiniert",
     proAchievements: "Alle Erfolge",
+    proUnlimitedTeams: "Unbegrenzte Teamzusammenarbeit",
+    proTeamStats: "Team-Statistiken",
     premium: "Premium",
     premiumDesc: "Für Produktivitätsbegeisterte",
     premiumAiCredits: "100 KI-Credits/Monat",
@@ -458,6 +476,8 @@ const translations = {
     premiumNotes: "Notizen & Wunschliste",
     premiumThemes: "10 Themen (Kostenlos + Premium)",
     premiumAchievements: "Premium-Erfolge",
+    premiumTeams: "Teamzusammenarbeit",
+    premiumSharedTasks: "Gemeinsame Aufgaben",
     teamFeatures: "Team-Zusammenarbeit",
     prioritySupport: "Prioritäts-Support",
     customIntegrations: "Benutzerdefinierte Integrationen",
@@ -572,6 +592,7 @@ const translations = {
     freePomodoro: "Timer Pomodoro di base",
     freeThemes: "5 temi gratuiti",
     freeAchievements: "Erogazioni gratuite",
+    freeNoTeams: "Nessuna collaborazione di team",
     aiCredits: "50 crediti IA/mese",
     basicTasks: "Gestione attività base",
     basicNotes: "Note e lista desideri",
@@ -583,6 +604,8 @@ const translations = {
     proCustomTheme: "Creatore di temi personalizzato",
     proAllThemes: "Tutti i 15 temi + personalizzato",
     proAchievements: "Tutte le erogazioni",
+    proUnlimitedTeams: "Collaborazione illimitata di team",
+    proTeamStats: "Statistiche di team",
     premium: "Premium",
     premiumDesc: "Per entusiasti della produttività",
     premiumAiCredits: "100 crediti IA/mese",
@@ -590,6 +613,8 @@ const translations = {
     premiumNotes: "Note e lista desideri",
     premiumThemes: "10 temi ( gratuiti + Premium)",
     premiumAchievements: "Erogazioni Premium",
+    premiumTeams: "Collaborazione di team",
+    premiumSharedTasks: "Attività condivise",
     teamFeatures: "Collaborazione di team",
     prioritySupport: "Supporto prioritario",
     customIntegrations: "Integrazioni personalizzate",
@@ -939,6 +964,10 @@ export default function HomePageClient() {
                   <span className="text-primary mt-1">✓</span>
                   <span className="text-sm">{t.freeAchievements}</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-1">✗</span>
+                  <span className="text-sm text-muted-foreground">{t.freeNoTeams}</span>
+                </li>
               </ul>
               <Link href="/signup">
                 <Button className="w-full mt-6 bg-transparent" variant="outline">
@@ -981,6 +1010,14 @@ export default function HomePageClient() {
                   <span className="text-primary mt-1">✓</span>
                   <span className="text-sm">{t.premiumAchievements}</span>
                 </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.premiumTeams}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.premiumSharedTasks}</span>
+                </li>
               </ul>
               <Link href="/signup">
                 <Button className="w-full mt-6 neon-glow-hover">{t.choosePremiumPlan}</Button>
@@ -1017,6 +1054,14 @@ export default function HomePageClient() {
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
                   <span className="text-sm">{t.proAchievements}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.proUnlimitedTeams}</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-1">✓</span>
+                  <span className="text-sm">{t.proTeamStats}</span>
                 </li>
               </ul>
               <Link href="/signup">
