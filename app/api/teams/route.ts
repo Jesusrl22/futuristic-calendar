@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient, createServiceRoleClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
@@ -14,8 +14,10 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const supabaseAdmin = createServiceRoleClient()
+
     // Get team IDs where user is a member
-    const { data: memberships, error: memberError } = await supabase
+    const { data: memberships, error: memberError } = await supabaseAdmin
       .from("team_members")
       .select("team_id, role")
       .eq("user_id", user.id)
@@ -32,7 +34,7 @@ export async function GET() {
     const teamIds = memberships.map((m) => m.team_id)
 
     // Get teams details
-    const { data: teams, error: teamsError } = await supabase
+    const { data: teams, error: teamsError } = await supabaseAdmin
       .from("teams")
       .select("*")
       .in("id", teamIds)
@@ -46,7 +48,7 @@ export async function GET() {
     // Get member counts for each team
     const teamsWithCounts = await Promise.all(
       teams.map(async (team) => {
-        const { count } = await supabase
+        const { count } = await supabaseAdmin
           .from("team_members")
           .select("*", { count: "exact", head: true })
           .eq("team_id", team.id)
@@ -81,8 +83,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const supabaseAdmin = createServiceRoleClient()
+
     // Check user's subscription plan for team limits
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await supabaseAdmin
       .from("users")
       .select("subscription_tier")
       .eq("id", user.id)
@@ -93,7 +97,7 @@ export async function POST(request: Request) {
     }
 
     // Check current team count
-    const { data: existingTeams, error: countError } = await supabase
+    const { data: existingTeams, error: countError } = await supabaseAdmin
       .from("team_members")
       .select("team_id")
       .eq("user_id", user.id)
@@ -121,7 +125,7 @@ export async function POST(request: Request) {
     }
 
     // Create team
-    const { data: team, error: createError } = await supabase
+    const { data: team, error: createError } = await supabaseAdmin
       .from("teams")
       .insert({
         name: name.trim(),
@@ -137,7 +141,7 @@ export async function POST(request: Request) {
     }
 
     // Add creator as owner in team_members
-    const { error: memberError } = await supabase.from("team_members").insert({
+    const { error: memberError } = await supabaseAdmin.from("team_members").insert({
       team_id: team.id,
       user_id: user.id,
       role: "owner",
@@ -146,7 +150,7 @@ export async function POST(request: Request) {
     if (memberError) {
       console.error("[v0] Error adding team member:", memberError)
       // Rollback - delete the team
-      await supabase.from("teams").delete().eq("id", team.id)
+      await supabaseAdmin.from("teams").delete().eq("id", team.id)
       return NextResponse.json({ error: memberError.message }, { status: 500 })
     }
 
