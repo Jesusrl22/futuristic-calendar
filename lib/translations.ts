@@ -188,6 +188,138 @@ export const translations = {
     ai_assistant_cost: "Ask me anything! Each message costs 2 credits.",
     total_available: "Total available",
     type_your_message: "Type your message...",
+
+    // Landing Page - How It Works
+    howItWorksTitle: "How It Works",
+    howItWorksDesc: "Get started with Future Task in 4 simple steps and transform your productivity",
+    step1Title: "Create Account",
+    step1Desc: "Sign up for free in seconds. No credit card required to start.",
+    step2Title: "Set Up Tasks",
+    step2Desc: "Add your tasks, set priorities, and organize your calendar efficiently.",
+    step3Title: "Use Pomodoro",
+    step3Desc: "Focus with proven time management techniques and track your progress.",
+    step4Title: "Track Progress",
+    step4Desc: "View detailed statistics and insights to optimize your productivity.",
+
+    // Productivity Tips
+    productivityTipsTitle: "Proven Productivity Strategies",
+    productivityTipsDesc: "Expert tips to maximize your efficiency and achieve your goals faster",
+    tip1Title: "Prioritize with the Eisenhower Matrix",
+    tip1Desc:
+      "Categorize tasks by urgency and importance. Focus on important-urgent tasks first, schedule important-not urgent ones, delegate urgent-not important tasks, and eliminate neither urgent nor important activities. This method helps you focus on what truly matters for your long-term goals.",
+    tip2Title: "Master the Pomodoro Technique",
+    tip2Desc:
+      "Work in focused 25-minute intervals followed by 5-minute breaks. After four pomodoros, take a longer 15-30 minute break. This technique prevents burnout, maintains high concentration levels, and makes large projects feel more manageable by breaking them into smaller chunks.",
+    tip3Title: "Track and Analyze Your Time",
+    tip3Desc:
+      "Use statistics to identify patterns in your productivity. Discover your peak performance hours, identify time-wasting activities, and optimize your schedule accordingly. Data-driven insights help you make informed decisions about how to structure your workday for maximum efficiency.",
+    tip4Title: "Leverage AI for Smart Planning",
+    tip4Desc:
+      "Use AI assistance to break down complex projects, generate action plans, and get personalized productivity recommendations. AI can help you identify potential obstacles, suggest optimal task ordering, and provide motivation when you need it most.",
+
+    // Testimonials
+    testimonialsTitle: "What Our Users Say",
+    testimonialsDesc: "Join thousands of satisfied users who have transformed their productivity",
+    testimonial1Role: "Project Manager",
+    testimonial1Text:
+      "Future Task has completely changed how I manage my projects. The Pomodoro timer and AI assistant have boosted my productivity by 40%. I can't imagine working without it now!",
+    testimonial2Role: "University Student",
+    testimonial2Text:
+      "As a student juggling multiple courses, Future Task helps me stay organized. The calendar notifications ensure I never miss a deadline, and the statistics feature motivates me to study more efficiently.",
+    testimonial3Role: "Freelance Developer",
+    testimonial3Text:
+      "The clean interface and powerful features make Future Task perfect for managing client projects. The AI assistant helps me prioritize tasks, and the custom themes let me personalize my workspace exactly how I want.",
+
+    // FAQ
+    faqTitle: "Frequently Asked Questions",
+    faqDesc: "Everything you need to know about Future Task",
+    faq1Question: "Is Future Task really free to use?",
+    faq1Answer:
+      "Yes! Our Free plan includes full calendar access, unlimited tasks, Pomodoro timer, 5 themes, and basic features forever. Upgrade to Premium or Pro only when you need AI credits, advanced features, or additional themes.",
+    faq2Question: "How does the Pomodoro technique improve productivity?",
+    faq2Answer:
+      "The Pomodoro technique uses timed intervals (typically 25 minutes) to maintain focus and prevent burnout. Regular breaks refresh your mind, improve concentration, and help you sustain productivity throughout the day. Studies show this method can increase efficiency by 25-40%.",
+    faq3Question: "What can I do with AI credits?",
+    faq3Answer:
+      "AI credits let you chat with our intelligent assistant for task planning, project breakdowns, productivity advice, and more. Each message costs 2 credits. Premium users get 100 credits/month, Pro users get 500 credits/month, or you can purchase credit packs that never expire.",
+    faq4Question: "Can I use Future Task on multiple devices?",
+    faq4Answer:
+      "Future Task is a web application that syncs across all your devices. Access your tasks, calendar, and notes from your computer, tablet, or phone - your data is always up to date wherever you are.",
+    faq5Question: "How secure is my data?",
+    faq5Answer:
+      "We take security seriously. All data is encrypted in transit and at rest, stored securely with Supabase. We never share your personal information with third parties. You can export or delete your data anytime from your account settings.",
+
+    // Teams Navigation
+    teams: "Teams",
+    myTeams: "My Teams",
+
+    // Teams Management
+    createTeam: "Create Team",
+    editTeam: "Edit Team",
+    deleteTeam: "Delete Team",
+    teamName: "Team Name",
+    teamDescription: "Team Description",
+    teamMembers: "Team Members",
+    inviteMembers: "Invite Members",
+    leaveTeam: "Leave Team",
+    noTeamsFound: "No teams found",
+    createYourFirstTeam: "Create your first team to collaborate",
+
+    // Team Roles
+    owner: "Owner",
+    admin: "Admin",
+    member: "Member",
+    viewer: "Viewer",
+    role: "Role",
+
+    // Team Context
+    personalContext: "Personal",
+    teamContext: "Team",
+    switchContext: "Switch Context",
+    viewingPersonal: "Viewing Personal",
+    viewingTeam: "Viewing Team",
+
+    // Team Tasks
+    teamTasks: "Team Tasks",
+    assignedTo: "Assigned to",
+    assignTask: "Assign Task",
+    unassigned: "Unassigned",
+    assignedToMe: "Assigned to Me",
+    myAssignments: "My Assignments",
+
+    // Team Invitations
+    inviteToTeam: "Invite to Team",
+    inviteEmail: "Email address",
+    sendInvitation: "Send Invitation",
+    invitationSent: "Invitation sent",
+    pendingInvitations: "Pending Invitations",
+    acceptInvitation: "Accept Invitation",
+    declineInvitation: "Decline Invitation",
+    invitationExpired: "Invitation expired",
+
+    // Team Stats
+    teamStats: "Team Statistics",
+    teamProgress: "Team Progress",
+    memberActivity: "Member Activity",
+    totalTeamTasks: "Total Team Tasks",
+    completedTeamTasks: "Completed Tasks",
+    activeMembers: "Active Members",
+
+    // Team Comments
+    addComment: "Add Comment",
+    comments: "Comments",
+    noComments: "No comments yet",
+    writeComment: "Write a comment...",
+    postComment: "Post Comment",
+
+    // Team Limits
+    teamLimitReached: "Team limit reached",
+    memberLimitReached: "Member limit reached",
+    upgradeToPremium: "Upgrade to Premium",
+    upgradeToProForUnlimited: "Upgrade to Pro for unlimited",
+    freePlanTeamLimit: "Free plan: Limited to 1 team with 3 members",
+    premiumPlanTeamLimit: "Premium plan: Up to 3 teams with 10 members each",
+    proPlanTeamLimit: "Pro plan: Unlimited teams and members",
   },
   es: {
     // Navigation
@@ -376,6 +508,138 @@ export const translations = {
     ai_assistant_cost: "¡Pregúntame lo que quieras! Cada mensaje cuesta 2 créditos.",
     total_available: "Total disponible",
     type_your_message: "Escribe tu mensaje...",
+
+    // Landing Page - How It Works
+    howItWorksTitle: "Cómo Funciona",
+    howItWorksDesc: "Comienza con Future Task en 4 simples pasos y transforma tu productividad",
+    step1Title: "Crea una Cuenta",
+    step1Desc: "Regístrate gratis en segundos. No se requiere tarjeta de crédito para comenzar.",
+    step2Title: "Configura Tareas",
+    step2Desc: "Agrega tus tareas, establece prioridades y organiza tu calendario eficientemente.",
+    step3Title: "Usa Pomodoro",
+    step3Desc: "Enfócate con técnicas de gestión del tiempo probadas y rastrea tu progreso.",
+    step4Title: "Sigue tu Progreso",
+    step4Desc: "Ve estadísticas detalladas e insights para optimizar tu productividad.",
+
+    // Productivity Tips
+    productivityTipsTitle: "Estrategias de Productividad Probadas",
+    productivityTipsDesc: "Consejos expertos para maximizar tu eficiencia y alcanzar tus metas más rápido",
+    tip1Title: "Prioriza con la Matriz de Eisenhower",
+    tip1Desc:
+      "Categoriza tareas por urgencia e importancia. Enfócate primero en tareas importantes-urgentes, programa las importantes-no urgentes, delega las urgentes-no importantes y elimina las que no son ni urgentes ni importantes. Este método te ayuda a enfocarte en lo que realmente importa.",
+    tip2Title: "Domina la Técnica Pomodoro",
+    tip2Desc:
+      "Trabaja en intervalos enfocados de 25 minutos seguidos de descansos de 5 minutos. Después de cuatro pomodoros, toma un descanso más largo de 15-30 minutos. Esta técnica previene el agotamiento, mantiene altos niveles de concentración y hace que los proyectos grandes sean más manejables.",
+    tip3Title: "Rastrea y Analiza tu Tiempo",
+    tip3Desc:
+      "Usa estadísticas para identificar patrones en tu productividad. Descubre tus horas de máximo rendimiento, identifica actividades que pierden tiempo y optimiza tu horario en consecuencia. Los insights basados en datos te ayudan a tomar decisiones informadas.",
+    tip4Title: "Aprovecha la IA para Planificación Inteligente",
+    tip4Desc:
+      "Usa asistencia de IA para desglosar proyectos complejos, generar planes de acción y obtener recomendaciones de productividad personalizadas. La IA puede ayudarte a identificar obstáculos potenciales y sugerir el ordenamiento óptimo de tareas.",
+
+    // Testimonials
+    testimonialsTitle: "Lo Que Dicen Nuestros Usuarios",
+    testimonialsDesc: "Únete a miles de usuarios satisfechos que han transformado su productividad",
+    testimonial1Role: "Gerente de Proyectos",
+    testimonial1Text:
+      "Future Task ha cambiado completamente cómo gestiono mis proyectos. El temporizador Pomodoro y el asistente IA han aumentado mi productividad en un 40%. ¡No puedo imaginar trabajar sin él ahora!",
+    testimonial2Role: "Estudiante Universitario",
+    testimonial2Text:
+      "Como estudiante manejando múltiples cursos, Future Task me ayuda a mantenerme organizado. Las notificaciones del calendario aseguran que nunca pierda una fecha límite, y las estadísticas me motivan a estudiar más eficientemente.",
+    testimonial3Role: "Desarrollador Freelance",
+    testimonial3Text:
+      "La interfaz limpia y las funciones potentes hacen que Future Task sea perfecto para gestionar proyectos de clientes. El asistente IA me ayuda a priorizar tareas, y los temas personalizados me permiten personalizar mi espacio de trabajo exactamente como quiero.",
+
+    // FAQ
+    faqTitle: "Preguntas Frecuentes",
+    faqDesc: "Todo lo que necesitas saber sobre Future Task",
+    faq1Question: "¿Future Task es realmente gratis?",
+    faq1Answer:
+      "¡Sí! Nuestro plan Gratuito incluye acceso completo al calendario, tareas ilimitadas, temporizador Pomodoro, 5 temas y funciones básicas para siempre. Actualiza a Premium o Pro solo cuando necesites créditos IA, funciones avanzadas o temas adicionales.",
+    faq2Question: "¿Cómo mejora la técnica Pomodoro la productividad?",
+    faq2Answer:
+      "La técnica Pomodoro usa intervalos cronometrados (típicamente 25 minutos) para mantener el enfoque y prevenir el agotamiento. Los descansos regulares refrescan tu mente, mejoran la concentración y te ayudan a mantener la productividad durante todo el día. Los estudios muestran que este método puede aumentar la eficiencia en un 25-40%.",
+    faq3Question: "¿Qué puedo hacer con los créditos IA?",
+    faq3Answer:
+      "Los créditos IA te permiten chatear con nuestro asistente inteligente para planificación de tareas, desglose de proyectos, consejos de productividad y más. Cada mensaje cuesta 2 créditos. Los usuarios Premium obtienen 100 créditos/mes, los usuarios Pro obtienen 500 créditos/mes.",
+    faq4Question: "¿Puedo usar Future Task en múltiples dispositivos?",
+    faq4Answer:
+      "¡Absolutamente! Future Task es una aplicación web que se sincroniza en todos tus dispositivos. Accede a tus tareas, calendario y notas desde tu computadora, tablet o teléfono - tus datos siempre están actualizados donde sea que estés.",
+    faq5Question: "¿Qué tan seguros están mis datos?",
+    faq5Answer:
+      "Tomamos la seguridad en serio. Todos los datos están encriptados en tránsito y en reposo, almacenados de forma segura con Supabase. Nunca compartimos tu información personal con terceros. Puedes exportar o eliminar tus datos en cualquier momento desde la configuración de tu cuenta.",
+
+    // Navegación de Equipos
+    teams: "Equipos",
+    myTeams: "Mis Equipos",
+
+    // Gestión de Equipos
+    createTeam: "Crear Equipo",
+    editTeam: "Editar Equipo",
+    deleteTeam: "Eliminar Equipo",
+    teamName: "Nombre del Equipo",
+    teamDescription: "Descripción del Equipo",
+    teamMembers: "Miembros del Equipo",
+    inviteMembers: "Invitar Miembros",
+    leaveTeam: "Salir del Equipo",
+    noTeamsFound: "No se encontraron equipos",
+    createYourFirstTeam: "Crea tu primer equipo para colaborar",
+
+    // Roles del Equipo
+    owner: "Propietario",
+    admin: "Administrador",
+    member: "Miembro",
+    viewer: "Observador",
+    role: "Rol",
+
+    // Contexto del Equipo
+    personalContext: "Personal",
+    teamContext: "Equipo",
+    switchContext: "Cambiar Contexto",
+    viewingPersonal: "Viendo Personal",
+    viewingTeam: "Viendo Equipo",
+
+    // Tareas del Equipo
+    teamTasks: "Tareas del Equipo",
+    assignedTo: "Asignado a",
+    assignTask: "Asignar Tarea",
+    unassigned: "Sin asignar",
+    assignedToMe: "Asignadas a mí",
+    myAssignments: "Mis Asignaciones",
+
+    // Invitaciones del Equipo
+    inviteToTeam: "Invitar al Equipo",
+    inviteEmail: "Dirección de correo",
+    sendInvitation: "Enviar Invitación",
+    invitationSent: "Invitación enviada",
+    pendingInvitations: "Invitaciones Pendientes",
+    acceptInvitation: "Aceptar Invitación",
+    declineInvitation: "Rechazar Invitación",
+    invitationExpired: "Invitación expirada",
+
+    // Estadísticas del Equipo
+    teamStats: "Estadísticas del Equipo",
+    teamProgress: "Progreso del Equipo",
+    memberActivity: "Actividad de Miembros",
+    totalTeamTasks: "Tareas Totales del Equipo",
+    completedTeamTasks: "Tareas Completadas",
+    activeMembers: "Miembros Activos",
+
+    // Comentarios del Equipo
+    addComment: "Añadir Comentario",
+    comments: "Comentarios",
+    noComments: "Sin comentarios aún",
+    writeComment: "Escribe un comentario...",
+    postComment: "Publicar Comentario",
+
+    // Límites de Equipo
+    teamLimitReached: "Límite de equipos alcanzado",
+    memberLimitReached: "Límite de miembros alcanzado",
+    upgradeToPremium: "Actualizar a Premium",
+    upgradeToProForUnlimited: "Actualizar a Pro para ilimitado",
+    freePlanTeamLimit: "Plan gratuito: Limitado a 1 equipo con 3 miembros",
+    premiumPlanTeamLimit: "Plan Premium: Hasta 3 equipos con 10 miembros cada uno",
+    proPlanTeamLimit: "Plan Pro: Equipos y miembros ilimitados",
   },
   fr: {
     // Navigation
@@ -566,6 +830,138 @@ export const translations = {
     ai_assistant_cost: "Posez-moi une question ! Chaque message coûte 2 crédits.",
     total_available: "Total disponible",
     type_your_message: "Tapez votre message...",
+
+    // Landing Page - How It Works
+    howItWorksTitle: "Comment Ça Marche",
+    howItWorksDesc: "Commencez avec Future Task en 4 étapes simples et transformez votre productivité",
+    step1Title: "Créez un Compte",
+    step1Desc: "Inscrivez-vous gratuitement en quelques secondes. Aucune carte de crédit requise pour commencer.",
+    step2Title: "Configurez vos Tâches",
+    step2Desc: "Ajoutez vos tâches, définissez des priorités et organisez votre calendrier efficacement.",
+    step3Title: "Utilisez Pomodoro",
+    step3Desc: "Concentrez-vous avec des techniques de gestion du temps éprouvées et suivez votre progression.",
+    step4Title: "Suivez votre Progrès",
+    step4Desc: "Consultez des statistiques détaillées et des insights pour optimiser votre productivité.",
+
+    // Productivity Tips
+    productivityTipsTitle: "Stratégies de Productivité éprouvées",
+    productivityTipsDesc: "Conseils experts pour maximiser votre efficacité et atteindre vos objectifs plus rapidement",
+    tip1Title: "Priorisez avec la Matrice d'Eisenhower",
+    tip1Desc:
+      "Catégorisez les tâches par urgence et importance. Concentrez-vous d'abord sur les tâches importantes-urgentes, programmez les importantes-non urgentes, déléguez les urgentes-non importantes et éliminez les activités ni importantes ni urgentes. Cette méthode vous aide à vous concentrer sur ce qui compte vraiment pour vos objectifs à long terme.",
+    tip2Title: "Maîtrisez la Technique Pomodoro",
+    tip2Desc:
+      "Travaillez dans des intervalles concentrés de 25 minutes suivis de pauses de 5 minutes. Après quatre pomodoros, prenez une pause plus longue de 15-30 minutes. Cette technique prévient l'épuisement et maintient des niveaux élevés de concentration, rendant les grands projets plus gérables en les divisant en morceaux plus petits.",
+    tip3Title: "Suivez et Analysez votre Temps",
+    tip3Desc:
+      "Utilisez des statistiques pour identifier des modèles dans votre productivité. Découvrez vos heures de meilleure performance, identifiez les activités gaspillant du temps et optimisez votre calendrier en conséquence. Les insights basés sur des données vous aident à prendre des décisions éclairées sur la façon de structurer votre journée de travail pour une efficacité maximale.",
+    tip4Title: "Utilisez l'IA pour une Planification Intelligente",
+    tip4Desc:
+      "Utilisez l'assistance de l'IA pour décomposer des projets complexes, générer des plans d'action et obtenir des recommandations de productivité personnalisées. L'IA peut vous aider à identifier des obstacles potentiels, à suggérer un ordre optimal des tâches et à vous motiver lorsque vous en avez le plus besoin.",
+
+    // Testimonials
+    testimonialsTitle: "Ce Que Nos Utilisateurs Disent",
+    testimonialsDesc: "Rejoignez des milliers d'utilisateurs satisfaits qui ont transformé leur productivité",
+    testimonial1Role: "Gestionnaire de Projets",
+    testimonial1Text:
+      "Future Task a complètement changé la façon dont je gère mes projets. Le minuteur Pomodoro et l'assistant IA ont augmenté ma productivité de 40%. Je ne peux même pas imaginer travailler sans lui maintenant !",
+    testimonial2Role: "Étudiant Universitaire",
+    testimonial2Text:
+      "En tant qu'étudiant jonglant avec plusieurs cours, Future Task m'aide à rester organisé. Les notifications du calendrier assurent que je ne manque jamais une échéance, et la fonction statistiques me motivent à étudier plus efficacement.",
+    testimonial3Role: "Développeur Freelance",
+    testimonial3Text:
+      "L'interface propre et les fonctionnalités puissantes rendent Future Task parfait pour gérer les projets de clients. L'assistant IA m'aide à prioriser les tâches, et les thèmes personnalisés me permettent de personnaliser mon espace de travail exactement comme je le souhaite.",
+
+    // FAQ
+    faqTitle: "Questions Fréquemment Posées",
+    faqDesc: "Tout ce dont vous avez besoin de savoir sur Future Task",
+    faq1Question: "Future Task est-il vraiment gratuit à utiliser ?",
+    faq1Answer:
+      "Oui ! Notre plan Gratuit comprend un accès complet au calendrier, des tâches illimitées, un minuteur Pomodoro, 5 thèmes et des fonctionnalités de base pour toujours. Passez à Premium ou Pro seulement lorsque vous aurez besoin de crédits IA, de fonctionnalités avancées ou de thèmes supplémentaires.",
+    faq2Question: "Comment la Technique Pomodoro améliore-t-elle la productivité ?",
+    faq2Answer:
+      "La Technique Pomodoro utilise des intervalles chronométrés (généralement 25 minutes) pour maintenir la concentration et prévenir l'épuisement. Les pauses régulières rafraîchissent votre esprit, améliorent la concentration et vous aident à maintenir la productivité tout au long de la journée. Les études montrent que cette méthode peut augmenter l'efficacité de 25 à 40 %.",
+    faq3Question: "Que puis-je faire avec les crédits IA ?",
+    faq3Answer:
+      "Les crédits IA vous permettent de discuter avec notre assistant intelligent pour la planification des tâches, le décompte des projets, les conseils de productivité et plus encore. Chaque message coûte 2 crédits. Les utilisateurs Premium obtiennent 100 crédits/mois, les utilisateurs Pro obtiennent 500 crédits/mois.",
+    faq4Question: "Puis-je utiliser Future Task sur plusieurs appareils ?",
+    faq4Answer:
+      "Oui, absolument ! Future Task est une application web qui se synchronise sur tous vos appareils. Accédez à vos tâches, calendrier et notes depuis votre ordinateur, tablette ou téléphone - vos données sont toujours à jour où que vous soyez.",
+    faq5Question: "Comment sécurisent mes données ?",
+    faq5Answer:
+      "Nous prenons la sécurité au sérieux. Toutes les données sont chiffrées en transit et au repos, stockées de manière sécurisée avec Supabase. Nous ne partageons jamais vos informations personnelles avec des tiers. Vous pouvez exporter ou supprimer vos données à tout moment depuis les paramètres de votre compte.",
+
+    // Navigation des Équipes
+    teams: "Équipes",
+    myTeams: "Mes Équipes",
+
+    // Gestion des Équipes
+    createTeam: "Créer une Équipe",
+    editTeam: "Modifier l'Équipe",
+    deleteTeam: "Supprimer l'Équipe",
+    teamName: "Nom de l'Équipe",
+    teamDescription: "Description de l'Équipe",
+    teamMembers: "Membres de l'Équipe",
+    inviteMembers: "Inviter des Membres",
+    leaveTeam: "Quitter l'Équipe",
+    noTeamsFound: "Aucune équipe trouvée",
+    createYourFirstTeam: "Créez votre première équipe pour collaborer",
+
+    // Rôles de l'Équipe
+    owner: "Propriétaire",
+    admin: "Administrateur",
+    member: "Membre",
+    viewer: "Observateur",
+    role: "Rôle",
+
+    // Contexte de l'Équipe
+    personalContext: "Personnel",
+    teamContext: "Équipe",
+    switchContext: "Changer de Contexte",
+    viewingPersonal: "Affichage Personnel",
+    viewingTeam: "Affichage Équipe",
+
+    // Tâches de l'Équipe
+    teamTasks: "Tâches de l'Équipe",
+    assignedTo: "Assigné à",
+    assignTask: "Assigner une Tâche",
+    unassigned: "Non assigné",
+    assignedToMe: "Assignées à moi",
+    myAssignments: "Mes Affectations",
+
+    // Invitations de l'Équipe
+    inviteToTeam: "Inviter à l'Équipe",
+    inviteEmail: "Adresse e-mail",
+    sendInvitation: "Envoyer une Invitation",
+    invitationSent: "Invitation envoyée",
+    pendingInvitations: "Invitations en Attente",
+    acceptInvitation: "Accepter l'Invitation",
+    declineInvitation: "Refuser l'Invitation",
+    invitationExpired: "Invitation expirée",
+
+    // Statistiques de l'Équipe
+    teamStats: "Statistiques de l'Équipe",
+    teamProgress: "Progrès de l'Équipe",
+    memberActivity: "Activité des Membres",
+    totalTeamTasks: "Total des Tâches de l'Équipe",
+    completedTeamTasks: "Tâches Terminées",
+    activeMembers: "Membres Actifs",
+
+    // Commentaires de l'Équipe
+    addComment: "Ajouter un Commentaire",
+    comments: "Commentaires",
+    noComments: "Pas encore de commentaires",
+    writeComment: "Écrire un commentaire...",
+    postComment: "Publier le Commentaire",
+
+    // Limites de l'Équipe
+    teamLimitReached: "Limite d'équipes atteinte",
+    memberLimitReached: "Limite de membres atteinte",
+    upgradeToPremium: "Passer à Premium",
+    upgradeToProForUnlimited: "Passer à Pro pour illimité",
+    freePlanTeamLimit: "Plan gratuit : Limité à 1 équipe avec 3 membres",
+    premiumPlanTeamLimit: "Plan Premium : Jusqu'à 3 équipes avec 10 membres chacune",
+    proPlanTeamLimit: "Plan Pro : Équipes et membres illimités",
   },
   de: {
     // Navigation
@@ -756,6 +1152,139 @@ export const translations = {
     ai_assistant_cost: "Fragen Sie mich alles! Jede Nachricht kostet 2 Credits.",
     total_available: "Insgesamt verfügbar",
     type_your_message: "Geben Sie Ihre Nachricht ein...",
+
+    // Landing Page - How It Works
+    howItWorksTitle: "Wie Es Funktioniert",
+    howItWorksDesc: "Beginnen Sie mit Future Task in 4 einfachen Schritten und verbessern Sie Ihre Produktivität",
+    step1Title: "Konto Erstellen",
+    step1Desc: "Registrieren Sie sich kostenlos in Sekunden. Keine Kreditkarte erforderlich, um zu beginnen.",
+    step2Title: "Aufgaben Einrichten",
+    step2Desc:
+      "Fügen Sie Ihre Aufgaben hinzu, legen Sie Prioritäten fest und organisieren Sie Ihren Kalender effizient.",
+    step3Title: "Pomodoro Verwenden",
+    step3Desc: "Konzentrieren Sie sich mit bewährten Zeitmanagementtechniken und verfolgen Sie Ihren Fortschritt.",
+    step4Title: "Fortschritt Verfolgen",
+    step4Desc: "Sehen Sie detaillierte Statistiken und Einblicke, um Ihre Produktivität zu optimieren.",
+
+    // Productivity Tips
+    productivityTipsTitle: "Bewährte Produktivitätstrategien",
+    productivityTipsDesc: "ExpertenTipps, um Ihre Effizienz zu maximieren und Ihre Ziele schneller zu erreichen",
+    tip1Title: "Priorisieren Sie mit der Eisenhower-Matrix",
+    tip1Desc:
+      "Kategorisieren Sie Aufgaben nach Dringlichkeit und Bedeutung. Konzentrieren Sie sich zunächst auf wichtige-dringende Aufgaben, planen Sie wichtige-nicht-dringende Aufgaben, delegieren Sie dringende-nicht-wichtige Aufgaben und eliminieren Sie weder dringende noch wichtige Aktivitäten. Diese Methode hilft Ihnen, sich auf das Wichtigste für Ihre langfristigen Ziele zu konzentrieren.",
+    tip2Title: "Meistern Sie die Pomodoro-Methode",
+    tip2Desc:
+      "Arbeiten Sie in konzentrierten 25-Minuten-Intervallen, gefolgt von 5-Minuten-Pausen. Nach vier Pomodoros nehmen Sie eine längere Pause von 15-30 Minuten. Diese Methode verhindert den Übermüdungszustand, behält hohe Konzentrationsniveaus bei und macht große Projekte durch die Aufteilung in kleinere Teile verwaltbarer.",
+    tip3Title: "Verfolgen und Analysieren Sie Ihre Zeit",
+    tip3Desc:
+      "Verwenden Sie Statistiken, um Muster in Ihrer Produktivität zu erkennen. Entdecken Sie Ihre Spitzenleistungshour, identifizieren Sie Zeitverschwendung und optimieren Sie Ihren Zeitplan entsprechend. Datengetriebene Einblicke helfen Ihnen, fundierte Entscheidungen über die Struktur Ihrer Arbeitszeit zu treffen.",
+    tip4Title: "Nutzen Sie die KI für kluges Planen",
+    tip4Desc:
+      "Nutzen Sie die KI-Assistenz, um komplexe Projekte zu zerlegen, Aktionspläne zu erstellen und personalisierte Produktivitätsempfehlungen zu erhalten. Die KI kann Ihnen helfen, potenzielle Hindernisse zu identifizieren, optimale Aufgabenreihenfolgen zu vorschlagen und Sie bei Bedarf zu motivieren.",
+
+    // Testimonials
+    testimonialsTitle: "Was Unsere Benutzer Sagen",
+    testimonialsDesc: "Treten Sie den Tausenden zufriedenen Benutzern bei, die ihre Produktivität transformiert haben",
+    testimonial1Role: "Projektmanager",
+    testimonial1Text:
+      "Future Task hat meine Projektmanagementweise völlig verändert. Der Pomodoro-Timer und der KI-Assistent haben meine Produktivität um 40% erhöht. Ich kann mich einfach nicht vorstellen, ohne ihn zu arbeiten!",
+    testimonial2Role: "Universitätsstudent",
+    testimonial2Text:
+      "Als Student, der mehrere Kurse verwalten muss, hilft Future Task mir dabei, organisiert zu bleiben. Die Kalendernachrichten sorgen dafür, dass ich keine Fristen verpasse, und die Statistikfunktion motiviert mich, effizienter zu studieren.",
+    testimonial3Role: "Freelance-Entwickler",
+    testimonial3Text:
+      "Die klare Benutzeroberfläche und die leistungsstarken Funktionen machen Future Task perfekt für die Verwaltung von Kundenprojekten. Der KI-Assistent hilft mir dabei, Aufgaben zu priorisieren und die benutzerdefinierten Themen ermöglichen es mir, meinen Arbeitsplatz genau nach meinen Wünschen zu gestalten.",
+
+    // FAQ
+    faqTitle: "Häufig Gestellte Fragen",
+    faqDesc: "Alles, was Sie über Future Task wissen müssen",
+    faq1Question: "Ist Future Task wirklich kostenlos zu verwenden?",
+    faq1Answer:
+      "Ja! Unser kostenloses Plan umfasst Vollzugriff auf den Kalender, unbegrenzte Aufgaben, Pomodoro-Timer, 5 Themen und grundlegende Funktionen für immer. Upgrade auf Premium oder Pro nur dann, wenn Sie KI-Credits, erweiterte Funktionen oder zusätzliche Themen benötigen.",
+    faq2Question: "Wie verbessert die Pomodoro-Methode die Produktivität?",
+    faq2Answer:
+      "Die Pomodoro-Methode verwendet zeitgesteuerte Intervalle (normalerweise 25 Minuten), um die Konzentration aufrechtzuerhalten und den Übermüdungszustand zu verhindern. Regelmäßige Pausen erfrischen Ihr Denken, verbessern die Konzentration und helfen Ihnen, die Produktivität während des ganzen Tages aufrechtzuerhalten. Studien zeigen, dass diese Methode die Effizienz um 25-40% erhöht.",
+    faq3Question: "Was kann ich mit KI-Credits tun?",
+    faq3Answer:
+      "KI-Credits ermöglichen es Ihnen, mit unserem intelligenten Assistenten für die Aufgabenplanung, die Zerlegung von Projekten, Produktivitätsberatungen und mehr zu chatten. Jede Nachricht kostet 2 Credits. Premium-Benutzer erhalten 100 Credits/Monat, Pro-Benutzer erhalten 500 Credits/Monat oder Sie können Packs mit unendlichen Credits kaufen.",
+    faq4Question: "Kann ich Future Task auf mehreren Geräten verwenden?",
+    faq4Answer:
+      "Ja, natürlich! Future Task ist eine Webanwendung, die auf allen Ihren Geräten synchronisiert wird. Greifen Sie auf Ihre Aufgaben, Kalender und Notizen von Ihrem Computer, Tablet oder Telefon zu - Ihre Daten sind immer auf dem neuesten Stand, wo auch immer Sie sind.",
+    faq5Question: "Wie sicher sind meine Daten?",
+    faq5Answer:
+      "Wir legen die Sicherheit sehr ernst. Alle Daten werden im Transit und im Ruhezustand verschlüsselt und sicher mit Supabase gespeichert. Wir geben Ihre persönlichen Informationen niemals an Dritte weiter. Sie können Ihre Daten jederzeit aus Ihren Kontoeinstellungen exportieren oder löschen.",
+
+    // Teams-Navigation
+    teams: "Teams",
+    myTeams: "Meine Teams",
+
+    // Teams-Verwaltung
+    createTeam: "Team Erstellen",
+    editTeam: "Team Bearbeiten",
+    deleteTeam: "Team Löschen",
+    teamName: "Teamname",
+    teamDescription: "Teambeschreibung",
+    teamMembers: "Teammitglieder",
+    inviteMembers: "Mitglieder Einladen",
+    leaveTeam: "Team Verlassen",
+    noTeamsFound: "Keine Teams gefunden",
+    createYourFirstTeam: "Erstellen Sie Ihr erstes Team zur Zusammenarbeit",
+
+    // Team-Rollen
+    owner: "Eigentümer",
+    admin: "Administrator",
+    member: "Mitglied",
+    viewer: "Betrachter",
+    role: "Rolle",
+
+    // Team-Kontext
+    personalContext: "Persönlich",
+    teamContext: "Team",
+    switchContext: "Kontext Wechseln",
+    viewingPersonal: "Persönliche Ansicht",
+    viewingTeam: "Team-Ansicht",
+
+    // Team-Aufgaben
+    teamTasks: "Team-Aufgaben",
+    assignedTo: "Zugewiesen an",
+    assignTask: "Aufgabe Zuweisen",
+    unassigned: "Nicht zugewiesen",
+    assignedToMe: "Mir zugewiesen",
+    myAssignments: "Meine Zuweisungen",
+
+    // Team-Einladungen
+    inviteToTeam: "Zum Team Einladen",
+    inviteEmail: "E-Mail-Adresse",
+    sendInvitation: "Einladung Senden",
+    invitationSent: "Einladung gesendet",
+    pendingInvitations: "Ausstehende Einladungen",
+    acceptInvitation: "Einladung Annehmen",
+    declineInvitation: "Einladung Ablehnen",
+    invitationExpired: "Einladung abgelaufen",
+
+    // Team-Statistiken
+    teamStats: "Team-Statistiken",
+    teamProgress: "Team-Fortschritt",
+    memberActivity: "Mitgliederaktivität",
+    totalTeamTasks: "Gesamt Team-Aufgaben",
+    completedTeamTasks: "Erledigte Aufgaben",
+    activeMembers: "Aktive Mitglieder",
+
+    // Team-Kommentare
+    addComment: "Kommentar Hinzufügen",
+    comments: "Kommentare",
+    noComments: "Noch keine Kommentare",
+    writeComment: "Einen Kommentar schreiben...",
+    postComment: "Kommentar Posten",
+
+    // Team-Limits
+    teamLimitReached: "Team-Limit erreicht",
+    memberLimitReached: "Mitglieder-Limit erreicht",
+    upgradeToPremium: "Auf Premium Upgraden",
+    upgradeToProForUnlimited: "Auf Pro für Unbegrenzt Upgraden",
+    freePlanTeamLimit: "Kostenloser Plan: Begrenzt auf 1 Team mit 3 Mitgliedern",
+    premiumPlanTeamLimit: "Premium-Plan: Bis zu 3 Teams mit je 10 Mitgliedern",
+    proPlanTeamLimit: "Pro-Plan: Unbegrenzte Teams und Mitglieder",
   },
   it: {
     // Navigation
@@ -944,8 +1473,141 @@ export const translations = {
     ai_assistant_cost: "Chiedimi qualsiasi cosa! Ogni messaggio costa 2 crediti.",
     total_available: "Totale disponibile",
     type_your_message: "Scrivi il tuo messaggio...",
+
+    // Landing Page - How It Works
+    howItWorksTitle: "Come Funziona",
+    howItWorksDesc: "Inizia con Future Task in 4 semplici passaggi e trasforma la tua produttività",
+    step1Title: "Crea un Account",
+    step1Desc: "Registrati gratuitamente in pochi secondi. Non è necessaria una carta di credito per iniziare.",
+    step2Title: "Configura le Tâche",
+    step2Desc: "Aggiungi le tue attività, imposta le priorità e organizza il tuo calendario in modo efficiente.",
+    step3Title: "Usa Pomodoro",
+    step3Desc: "Concentrati con tecniche di gestione del tempo provate e traccia il tuo progresso.",
+    step4Title: "Traccia il Progresso",
+    step4Desc: "Visualizza statistiche dettagliate e ispezioni per ottimizzare la tua produttività.",
+
+    // Productivity Tips
+    productivityTipsTitle: "Strategie di Produttività Provate",
+    productivityTipsDesc:
+      "Consigli esperti per massimizzare la tua efficienza e raggiungere le tue meta più velocemente",
+    tip1Title: "Priorizza con la Matrice di Eisenhower",
+    tip1Desc:
+      "Classifica le attività per urgenza e importanza. Concentrati prima sulle attività importanti-e urgenti, pianifica le importanti-non urgenti, delega le urgenti-non importanti e elimina le attività né urgenti né importanti. Questo metodo ti aiuta a concentrarti sulle cose che davvero contano per i tuoi obiettivi a lungo termine.",
+    tip2Title: "Mestri della Tecnica Pomodoro",
+    tip2Desc:
+      "Lavora in intervalli concentrati di 25 minuti seguiti da pause di 5 minuti. Dopo quattro pomodoros, prendi una lunga pausa di 15-30 minuti. Questa tecnica impedisce l'affaticamento, mantiene livelli elevati di concentrazione e rende i grandi progetti più gestibili suddividendoli in parti più piccole.",
+    tip3Title: "Traccia e Analizza il Tuo Tempo",
+    tip3Desc:
+      "Usa le statistiche per identificare modelli nella tua produttività. Scopri le tue ore di massima prestazione, identifica le attività che perdono tempo e ottimizza il tuo programma di conseguenza. Le ispezioni basate sui dati ti aiutano a prendere decisioni informate su come strutturare la tua giornata di lavoro per massimizzare l'efficienza.",
+    tip4Title: "Sfrutta l'IA per un Pianificazione intelligente",
+    tip4Desc:
+      "Usa l'assistenza dell'IA per suddividere progetti complessi, generare piani di azione e ottenere raccomandazioni di produttività personalizzate. L'IA può aiutarti a identificare ostacoli potenziali e suggerire l'ordinamento ottimale delle attività.",
+
+    // Testimonials
+    testimonialsTitle: "Cosa Dicono i Nostri Utenti",
+    testimonialsDesc: "Unisciti a migliaia di utenti soddisfatti che hanno trasformato la loro produttività",
+    testimonial1Role: "Responsabile dei Progetti",
+    testimonial1Text:
+      "Future Task ha completamente cambiato il modo in cui gestisco i miei progetti. Il timer Pomodoro e l'assistente IA hanno aumentato la mia produttività del 40%. Non posso immaginare di lavorare senza di essi ora!",
+    testimonial2Role: "Studente Universitario",
+    testimonial2Text:
+      "Come studente che gestisce più corsi, Future Task mi aiuta a rimanere organizzato. Le notifiche del calendario assicurano che non manchi mai un termine, e la funzione statistiche mi motivano a studiare più efficientemente.",
+    testimonial3Role: "Sviluppatore Freelance",
+    testimonial3Text:
+      "L'interfaccia pulita e le funzionalità potenti rendono Future Task perfetto per gestire i progetti dei clienti. L'assistente IA mi aiuta a priorizzare le attività e i temi personalizzati mi permettono di personalizzare lo spazio di lavoro esattamente come voglio.",
+
+    // FAQ
+    faqTitle: "Domande Frequenti",
+    faqDesc: "Tutto ciò di cui hai bisogno di sapere su Future Task",
+    faq1Question: "Future Task è davvero gratuito da usare?",
+    faq1Answer:
+      "Sì! Il nostro piano Gratuito include l'accesso completo al calendario, attività illimitate, timer Pomodoro, 5 temi e funzionalità di base per sempre. Passa a Premium o Pro solo quando hai bisogno di crediti IA, funzionalità avanzate o temi aggiuntivi.",
+    faq2Question: "Come migliora la tecnica Pomodoro la produttività?",
+    faq2Answer:
+      "La tecnica Pomodoro utilizza intervalli temporizzati (di solito 25 minuti) per mantenere la concentrazione e prevenire l'affaticamento. Pause regolari rinfrescano il tuo cervello, migliorano la concentrazione e ti aiutano a mantenere la produttività tutto il giorno. Studi mostrano che questo metodo può aumentare l'efficienza del 25 al 40%.",
+    faq3Question: "Che posso fare con i crediti IA?",
+    faq3Answer:
+      "I crediti IA ti permettono di chattare con il nostro assistente intelligente per la pianificazione delle attività, il decomposto dei progetti, consigli sulla produttività e altro ancora. Ogni messaggio costa 2 crediti. Gli utenti Premium ottengono 100 crediti/mese, gli utenti Pro ottengono 500 crediti/mese.",
+    faq4Question: "Posso utilizzare Future Task su più dispositivi?",
+    faq4Answer:
+      "Sì, assolutamente! Future Task è un'applicazione web che si sincronizza su tutti i tuoi dispositivi. Accedi alle tue attività, calendario e note dal computer, tablet o telefono - i tuoi dati sono sempre aggiornati dove tu sei.",
+    faq5Question: "Quanto sono sicuri i miei dati?",
+    faq5Answer:
+      "Prendiamo la sicurezza molto sul serio. Tutti i dati sono crittografati in transito e in riposo, memorizzati sicuramente con Supabase. Non condividiamo mai le tue informazioni personali con terze parti. Puoi esportare o eliminare i tuoi dati in qualsiasi momento dalle impostazioni del tuo account.",
+
+    // Navigazione Team
+    teams: "Team",
+    myTeams: "I Miei Team",
+
+    // Gestione Team
+    createTeam: "Crea Team",
+    editTeam: "Modifica Team",
+    deleteTeam: "Elimina Team",
+    teamName: "Nome del Team",
+    teamDescription: "Descrizione del Team",
+    teamMembers: "Membri del Team",
+    inviteMembers: "Invita Membri",
+    leaveTeam: "Lascia il Team",
+    noTeamsFound: "Nessun team trovato",
+    createYourFirstTeam: "Crea il tuo primo team per collaborare",
+
+    // Ruoli del Team
+    owner: "Proprietario",
+    admin: "Amministratore",
+    member: "Membro",
+    viewer: "Osservatore",
+    role: "Ruolo",
+
+    // Contesto del Team
+    personalContext: "Personale",
+    teamContext: "Team",
+    switchContext: "Cambia Contesto",
+    viewingPersonal: "Visualizzazione Personale",
+    viewingTeam: "Visualizzazione Team",
+
+    // Compiti del Team
+    teamTasks: "Compiti del Team",
+    assignedTo: "Assegnato a",
+    assignTask: "Assegna Compito",
+    unassigned: "Non assegnato",
+    assignedToMe: "Assegnati a me",
+    myAssignments: "Le Mie Assegnazioni",
+
+    // Inviti del Team
+    inviteToTeam: "Invita al Team",
+    inviteEmail: "Indirizzo email",
+    sendInvitation: "Invia Invito",
+    invitationSent: "Invito inviato",
+    pendingInvitations: "Inviti in Sospeso",
+    acceptInvitation: "Accetta Invito",
+    declineInvitation: "Rifiuta Invito",
+    invitationExpired: "Invito scaduto",
+
+    // Statistiche del Team
+    teamStats: "Statistiche del Team",
+    teamProgress: "Progresso del Team",
+    memberActivity: "Attività dei Membri",
+    totalTeamTasks: "Totale Compiti del Team",
+    completedTeamTasks: "Compiti Completati",
+    activeMembers: "Membri Attivi",
+
+    // Commenti del Team
+    addComment: "Aggiungi Commento",
+    comments: "Commenti",
+    noComments: "Nessun commento ancora",
+    writeComment: "Scrivi un commento...",
+    postComment: "Pubblica Commento",
+
+    // Limiti del Team
+    teamLimitReached: "Limite team raggiunto",
+    memberLimitReached: "Limite membri raggiunto",
+    upgradeToPremium: "Aggiorna a Premium",
+    upgradeToProForUnlimited: "Aggiorna a Pro per illimitato",
+    freePlanTeamLimit: "Piano gratuito: Limitato a 1 team con 3 membri",
+    premiumPlanTeamLimit: "Piano Premium: Fino a 3 team con 10 membri ciascuno",
+    proPlanTeamLimit: "Piano Pro: Team e membri illimitati",
   },
-} as const
+}
 
 export type Language = "en" | "es" | "fr" | "de" | "it"
 

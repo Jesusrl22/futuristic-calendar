@@ -88,6 +88,54 @@ const translations = {
     blogPost3Desc:
       "Explore how AI tools can help you automate tasks, generate ideas, and streamline your workflow to achieve more in less time.",
     blogPost3ReadTime: "6 min read",
+    howItWorksTitle: "How It Works",
+    howItWorksDesc: "Get started in minutes with our simple and intuitive platform.",
+    step1Title: "Sign Up",
+    step1Desc: "Create your free account in seconds.",
+    step2Title: "Organize",
+    step2Desc: "Add your tasks and projects.",
+    step3Title: "Collaborate",
+    step3Desc: "Invite your team to work together.",
+    step4Title: "Achieve",
+    step4Desc: "Boost your productivity and reach your goals.",
+    productivityTipsTitle: "Boost Your Productivity",
+    productivityTipsDesc: "Discover actionable tips and strategies to get more done.",
+    tip1Title: "Set Clear Goals",
+    tip1Desc: "Define what you want to achieve to stay focused and motivated.",
+    tip2Title: "Use the Pomodoro Technique",
+    tip2Desc: "Work in focused intervals with short breaks to maintain concentration.",
+    tip3Title: "Track Your Progress",
+    tip3Desc: "Monitor your achievements and identify areas for improvement.",
+    tip4Title: "Leverage AI Assistance",
+    tip4Desc: "Let AI help you automate tasks and optimize your workflow.",
+    testimonialsTitle: "What Our Users Say",
+    testimonialsDesc: "See how Future Task is helping people achieve their goals.",
+    testimonial1Role: "CEO at Tech Solutions",
+    testimonial1Text:
+      "Future Task has revolutionized our team's workflow. The collaboration features are seamless, and the AI assistance has boosted our efficiency significantly.",
+    testimonial2Role: "Student at University X",
+    testimonial2Text:
+      "As a student, staying organized is crucial. Future Task helps me manage my studies, assignments, and personal projects all in one place. The Pomodoro timer is a game-changer!",
+    testimonial3Role: "Freelance Developer",
+    testimonial3Text:
+      "I love how intuitive and powerful Future Task is. It helps me manage multiple client projects and deadlines with ease. The insights it provides are invaluable.",
+    faqTitle: "Frequently Asked Questions",
+    faqDesc: "Find answers to common questions about Future Task.",
+    faq1Question: "What is Future Task?",
+    faq1Answer:
+      "Future Task is a smart productivity platform designed to help individuals and teams manage tasks, collaborate, and achieve their goals more efficiently with AI-powered assistance.",
+    faq2Question: "Is there a free plan?",
+    faq2Answer:
+      "Yes, we offer a free plan with essential features perfect for getting started. You can upgrade to our Pro or Premium plans for more advanced capabilities.",
+    faq3Question: "How does the AI assistance work?",
+    faq3Answer:
+      "Our AI assistant can help you with task automation, idea generation, content summarization, and workflow optimization. The capabilities vary based on your plan.",
+    faq4Question: "Can I collaborate with my team?",
+    faq4Answer:
+      "Absolutely! Future Task is built for seamless team collaboration, allowing you to share projects, assign tasks, and communicate effectively.",
+    faq5Question: "What are the billing options?",
+    faq5Answer:
+      "We offer both monthly and annual billing options. Annual billing provides a significant discount compared to monthly billing.",
   },
   es: {
     features: "Características",
@@ -170,6 +218,54 @@ const translations = {
     blogPost3Desc:
       "Explora cómo las herramientas de IA pueden ayudarte a automatizar tareas, generar ideas y optimizar tu flujo de trabajo para lograr más en menos tiempo.",
     blogPost3ReadTime: "6 min read",
+    howItWorksTitle: "Cómo Funciona",
+    howItWorksDesc: "Empieza en minutos con nuestra plataforma sencilla e intuitiva.",
+    step1Title: "Regístrate",
+    step1Desc: "Crea tu cuenta gratuita en segundos.",
+    step2Title: "Organiza",
+    step2Desc: "Añade tus tareas y proyectos.",
+    step3Title: "Colabora",
+    step3Desc: "Invita a tu equipo a trabajar juntos.",
+    step4Title: "Logra",
+    step4Desc: "Aumenta tu productividad y alcanza tus objetivos.",
+    productivityTipsTitle: "Mejora Tu Productividad",
+    productivityTipsDesc: "Descubre consejos y estrategias prácticas para hacer más.",
+    tip1Title: "Establece Metas Claras",
+    tip1Desc: "Define lo que quieres lograr para mantenerte enfocado y motivado.",
+    tip2Title: "Usa la Técnica Pomodoro",
+    tip2Desc: "Trabaja en intervalos enfocados con descansos cortos para mantener la concentración.",
+    tip3Title: "Sigue Tu Progreso",
+    tip3Desc: "Monitorea tus logros e identifica áreas de mejora.",
+    tip4Title: "Aprovecha la Asistencia IA",
+    tip4Desc: "Deja que la IA te ayude a automatizar tareas y optimizar tu flujo de trabajo.",
+    testimonialsTitle: "Lo Que Dicen Nuestros Usuarios",
+    testimonialsDesc: "Mira cómo Future Task está ayudando a las personas a alcanzar sus objetivos.",
+    testimonial1Role: "CEO en Tech Solutions",
+    testimonial1Text:
+      "Future Task ha revolucionado el flujo de trabajo de nuestro equipo. Las funciones de colaboración son perfectas y la asistencia IA ha aumentado significativamente nuestra eficiencia.",
+    testimonial2Role: "Estudiante en University X",
+    testimonial2Text:
+      "Como estudiante, mantenerme organizado es crucial. Future Task me ayuda a gestionar mis estudios, tareas y proyectos personales en un solo lugar. ¡El temporizador Pomodoro es un punto de inflexión!",
+    testimonial3Role: "Desarrollador Freelance",
+    testimonial3Text:
+      "Me encanta lo intuitivo y potente que es Future Task. Me ayuda a gestionar múltiples proyectos de clientes y plazos con facilidad. Los insights que proporciona son invaluables.",
+    faqTitle: "Preguntas Frecuentes",
+    faqDesc: "Encuentra respuestas a preguntas comunes sobre Future Task.",
+    faq1Question: "¿Qué es Future Task?",
+    faq1Answer:
+      "Future Task es una plataforma de productividad inteligente diseñada para ayudar a individuos y equipos a gestionar tareas, colaborar y alcanzar sus objetivos de manera más eficiente con asistencia impulsada por IA.",
+    faq2Question: "¿Hay un plan gratuito?",
+    faq2Answer:
+      "Sí, ofrecemos un plan gratuito con funciones esenciales perfectas para empezar. Puedes actualizar a nuestros planes Pro o Premium para capacidades más avanzadas.",
+    faq3Question: "¿Cómo funciona la asistencia IA?",
+    faq3Answer:
+      "Nuestro asistente de IA puede ayudarte con la automatización de tareas, generación de ideas, resumen de contenido y optimización del flujo de trabajo. Las capacidades varían según tu plan.",
+    faq4Question: "¿Puedo colaborar con mi equipo?",
+    faq4Answer:
+      "¡Absolutamente! Future Task está diseñado para una colaboración en equipo fluida, permitiéndote compartir proyectos, asignar tareas y comunicarte de manera efectiva.",
+    faq5Question: "¿Cuáles son las opciones de facturación?",
+    faq5Answer:
+      "Ofrecemos opciones de facturación mensual y anual. La facturación anual proporciona un descuento significativo en comparación con la facturación mensual.",
   },
   fr: {
     features: "Fonctionnalités",
@@ -253,6 +349,54 @@ const translations = {
     blogPost3Desc:
       "Explorez comment les outils d'IA peuvent vous aider à automatiser les tâches, générer des idées et rationaliser votre flux de travail pour accomplir plus en moins de temps.",
     blogPost3ReadTime: "6 min read",
+    howItWorksTitle: "Comment ça marche",
+    howItWorksDesc: "Commencez en quelques minutes avec notre plateforme simple et intuitive.",
+    step1Title: "Inscription",
+    step1Desc: "Créez votre compte gratuit en quelques secondes.",
+    step2Title: "Organiser",
+    step2Desc: "Ajoutez vos tâches et projets.",
+    step3Title: "Collaborer",
+    step3Desc: "Invitez votre équipe à travailler ensemble.",
+    step4Title: "Réaliser",
+    step4Desc: "Augmentez votre productivité et atteignez vos objectifs.",
+    productivityTipsTitle: "Améliorez Votre Productivité",
+    productivityTipsDesc: "Découvrez des astuces et stratégies concrètes pour en faire plus.",
+    tip1Title: "Fixez des Objectifs Clairs",
+    tip1Desc: "Définissez ce que vous voulez accomplir pour rester concentré et motivé.",
+    tip2Title: "Utilisez la Technique Pomodoro",
+    tip2Desc: "Travaillez par intervalles concentrés avec de courtes pauses pour maintenir votre concentration.",
+    tip3Title: "Suivez Vos Progrès",
+    tip3Desc: "Surveillez vos réalisations et identifiez les domaines à améliorer.",
+    tip4Title: "Tirez Parti de l'Assistance IA",
+    tip4Desc: "Laissez l'IA vous aider à automatiser les tâches et à optimiser votre flux de travail.",
+    testimonialsTitle: "Ce Que Disent Nos Utilisateurs",
+    testimonialsDesc: "Découvrez comment Future Task aide les gens à atteindre leurs objectifs.",
+    testimonial1Role: "PDG chez Tech Solutions",
+    testimonial1Text:
+      "Future Task a révolutionné le flux de travail de notre équipe. Les fonctionnalités de collaboration sont fluides et l'assistance IA a considérablement augmenté notre efficacité.",
+    testimonial2Role: "Étudiant à l'Université X",
+    testimonial2Text:
+      "En tant qu'étudiant, rester organisé est crucial. Future Task m'aide à gérer mes études, mes devoirs et mes projets personnels en un seul endroit. Le minuteur Pomodoro change la donne !",
+    testimonial3Role: "Développeur Freelance",
+    testimonial3Text:
+      "J'adore la simplicité et la puissance de Future Task. Il m'aide à gérer plusieurs projets clients et échéances avec facilité. Les informations qu'il fournit sont inestimables.",
+    faqTitle: "Questions Fréquemment Posées",
+    faqDesc: "Trouvez des réponses aux questions courantes sur Future Task.",
+    faq1Question: "Qu'est-ce que Future Task ?",
+    faq1Answer:
+      "Future Task est une plateforme de productivité intelligente conçue pour aider les individus et les équipes à gérer leurs tâches, à collaborer et à atteindre leurs objectifs plus efficacement grâce à une assistance IA.",
+    faq2Question: "Existe-t-il un plan gratuit ?",
+    faq2Answer:
+      "Oui, nous proposons un plan gratuit avec des fonctionnalités essentielles, parfaites pour commencer. Vous pouvez passer à nos plans Pro ou Premium pour des capacités plus avancées.",
+    faq3Question: "Comment fonctionne l'assistance IA ?",
+    faq3Answer:
+      "Notre assistant IA peut vous aider à automatiser les tâches, générer des idées, résumer du contenu et optimiser votre flux de travail. Les capacités varient en fonction de votre plan.",
+    faq4Question: "Puis-je collaborer avec mon équipe ?",
+    faq4Answer:
+      "Absolument ! Future Task est conçu pour une collaboration d'équipe fluide, vous permettant de partager des projets, d'attribuer des tâches et de communiquer efficacement.",
+    faq5Question: "Quelles sont les options de facturation ?",
+    faq5Answer:
+      "Nous proposons des options de facturation mensuelle et annuelle. La facturation annuelle offre une réduction significative par rapport à la facturation mensuelle.",
   },
   de: {
     features: "Funktionen",
@@ -336,6 +480,55 @@ const translations = {
     blogPost3Desc:
       "Erkunden Sie, wie KI-Tools Ihnen helfen können, Aufgaben zu automatisieren, Ideen zu generieren und Ihren Arbeitsablauf zu optimieren, um in kürzerer Zeit mehr zu erreichen.",
     blogPost3ReadTime: "6 min read",
+    howItWorksTitle: "So funktioniert's",
+    howItWorksDesc: "Beginnen Sie in wenigen Minuten mit unserer einfachen und intuitiven Plattform.",
+    step1Title: "Anmelden",
+    step1Desc: "Erstellen Sie Ihr kostenloses Konto in Sekunden.",
+    step2Title: "Organisieren",
+    step2Desc: "Fügen Sie Ihre Aufgaben und Projekte hinzu.",
+    step3Title: "Zusammenarbeiten",
+    step3Desc: "Laden Sie Ihr Team zur Zusammenarbeit ein.",
+    step4Title: "Erreichen",
+    step4Desc: "Steigern Sie Ihre Produktivität und erreichen Sie Ihre Ziele.",
+    productivityTipsTitle: "Steigern Sie Ihre Produktivität",
+    productivityTipsDesc: "Entdecken Sie umsetzbare Tipps und Strategien, um mehr zu erledigen.",
+    tip1Title: "Setzen Sie klare Ziele",
+    tip1Desc: "Definieren Sie, was Sie erreichen möchten, um fokussiert und motiviert zu bleiben.",
+    tip2Title: "Nutzen Sie die Pomodoro-Technik",
+    tip2Desc: "Arbeiten Sie in fokussierten Intervallen mit kurzen Pausen, um die Konzentration aufrechtzuerhalten.",
+    tip3Title: "Verfolgen Sie Ihren Fortschritt",
+    tip3Desc: "Überwachen Sie Ihre Erfolge und identifizieren Sie Verbesserungsmöglichkeiten.",
+    tip4Title: "Nutzen Sie KI-Unterstützung",
+    tip4Desc:
+      "Lassen Sie sich von KI bei der Automatisierung von Aufgaben und der Optimierung Ihres Arbeitsablaufs helfen.",
+    testimonialsTitle: "Was unsere Benutzer sagen",
+    testimonialsDesc: "Sehen Sie, wie Future Task Menschen hilft, ihre Ziele zu erreichen.",
+    testimonial1Role: "CEO bei Tech Solutions",
+    testimonial1Text:
+      "Future Task hat den Workflow unseres Teams revolutioniert. Die Kollaborationsfunktionen sind nahtlos und die KI-Unterstützung hat unsere Effizienz erheblich gesteigert.",
+    testimonial2Role: "Student an der Universität X",
+    testimonial2Text:
+      "Als Student ist es entscheidend, organisiert zu bleiben. Future Task hilft mir, mein Studium, meine Aufgaben und meine persönlichen Projekte an einem Ort zu verwalten. Der Pomodoro-Timer ist ein Game-Changer!",
+    testimonial3Role: "Freiberuflicher Entwickler",
+    testimonial3Text:
+      "Ich liebe, wie intuitiv und leistungsstark Future Task ist. Es hilft mir, mehrere Kundenprojekte und Fristen mühelos zu verwalten. Die Einblicke, die es liefert, sind unbezahlbar.",
+    faqTitle: "Häufig gestellte Fragen",
+    faqDesc: "Finden Sie Antworten auf häufige Fragen zu Future Task.",
+    faq1Question: "Was ist Future Task?",
+    faq1Answer:
+      "Future Task ist eine intelligente Produktivitätsplattform, die Einzelpersonen und Teams hilft, Aufgaben zu verwalten, zusammenzuarbeiten und ihre Ziele mit KI-gestützter Unterstützung effizienter zu erreichen.",
+    faq2Question: "Gibt es einen kostenlosen Plan?",
+    faq2Answer:
+      "Ja, wir bieten einen kostenlosen Plan mit wesentlichen Funktionen, der sich perfekt für den Einstieg eignet. Sie können auf unsere Pro- oder Premium-Pläne für erweiterte Funktionen upgraden.",
+    faq3Question: "Wie funktioniert die KI-Unterstützung?",
+    faq3Answer:
+      "Unser KI-Assistent kann Ihnen bei der Automatisierung von Aufgaben, der Ideenfindung, der Zusammenfassung von Inhalten und der Optimierung des Arbeitsablaufs helfen. Die Fähigkeiten variieren je nach Plan.",
+    faq4Question: "Kann ich mit meinem Team zusammenarbeiten?",
+    faq4Answer:
+      "Absolut! Future Task ist für nahtlose Teamzusammenarbeit konzipiert, sodass Sie Projekte teilen, Aufgaben zuweisen und effektiv kommunizieren können.",
+    faq5Question: "Welche Abrechnungsoptionen gibt es?",
+    faq5Answer:
+      "Wir bieten sowohl monatliche als auch jährliche Abrechnungsoptionen. Die jährliche Abrechnung bietet im Vergleich zur monatlichen Abrechnung einen erheblichen Rabatt.",
   },
   it: {
     features: "Funzionalità",
@@ -419,6 +612,54 @@ const translations = {
     blogPost3Desc:
       "Esplora come gli strumenti di IA possono aiutarti ad automatizzare le attività, generare idee e ottimizzare il tuo flusso di lavoro per ottenere di più in meno tempo.",
     blogPost3ReadTime: "6 min read",
+    howItWorksTitle: "Come Funziona",
+    howItWorksDesc: "Inizia in pochi minuti con la nostra piattaforma semplice e intuitiva.",
+    step1Title: "Registrati",
+    step1Desc: "Crea il tuo account gratuito in pochi secondi.",
+    step2Title: "Organizza",
+    step2Desc: "Aggiungi le tue attività e progetti.",
+    step3Title: "Collabora",
+    step3Desc: "Invita il tuo team a lavorare insieme.",
+    step4Title: "Realizza",
+    step4Desc: "Aumenta la tua produttività e raggiungi i tuoi obiettivi.",
+    productivityTipsTitle: "Aumenta la Tua Produttività",
+    productivityTipsDesc: "Scopri consigli e strategie attuabili per fare di più.",
+    tip1Title: "Stabilisci Obiettivi Chiari",
+    tip1Desc: "Definisci cosa vuoi realizzare per rimanere concentrato e motivato.",
+    tip2Title: "Usa la Tecnica Pomodoro",
+    tip2Desc: "Lavora in intervalli concentrati con brevi pause per mantenere la concentrazione.",
+    tip3Title: "Tieni Traccia dei Tuoi Progressi",
+    tip3Desc: "Monitora i tuoi successi e identifica le aree di miglioramento.",
+    tip4Title: "Sfrutta l'Assistenza IA",
+    tip4Desc: "Lascia che l'IA ti aiuti ad automatizzare le attività e a ottimizzare il tuo flusso di lavoro.",
+    testimonialsTitle: "Cosa Dicono i Nostri Utenti",
+    testimonialsDesc: "Scopri come Future Task sta aiutando le persone a raggiungere i propri obiettivi.",
+    testimonial1Role: "CEO presso Tech Solutions",
+    testimonial1Text:
+      "Future Task ha rivoluzionato il flusso di lavoro del nostro team. Le funzionalità di collaborazione sono impeccabili e l'assistenza IA ha notevolmente aumentato la nostra efficienza.",
+    testimonial2Role: "Studente presso University X",
+    testimonial2Text:
+      "Come studente, rimanere organizzato è fondamentale. Future Task mi aiuta a gestire i miei studi, i compiti e i progetti personali in un unico posto. Il timer Pomodoro è un punto di svolta!",
+    testimonial3Role: "Sviluppatore Freelance",
+    testimonial3Text:
+      "Adoro quanto sia intuitivo e potente Future Task. Mi aiuta a gestire facilmente più progetti cliente e scadenze. Le informazioni che fornisce sono inestimabili.",
+    faqTitle: "Domande Frequenti",
+    faqDesc: "Trova risposte alle domande comuni su Future Task.",
+    faq1Question: "Cos'è Future Task?",
+    faq1Answer:
+      "Future Task è una piattaforma di produttività intelligente progettata per aiutare individui e team a gestire attività, collaborare e raggiungere i propri obiettivi in modo più efficiente con assistenza basata sull'IA.",
+    faq2Question: "Esiste un piano gratuito?",
+    faq2Answer:
+      "Sì, offriamo un piano gratuito con funzionalità essenziali perfette per iniziare. Puoi passare ai nostri piani Pro o Premium per capacità più avanzate.",
+    faq3Question: "Come funziona l'assistenza IA?",
+    faq3Answer:
+      "Il nostro assistente IA può aiutarti con l'automazione delle attività, la generazione di idee, il riassunto di contenuti e l'ottimizzazione del flusso di lavoro. Le capacità variano in base al tuo piano.",
+    faq4Question: "Posso collaborare con il mio team?",
+    faq4Answer:
+      "Assolutamente! Future Task è costruito per una collaborazione di team fluida, permettendoti di condividere progetti, assegnare attività e comunicare in modo efficace.",
+    faq5Question: "Quali sono le opzioni di fatturazione?",
+    faq5Answer:
+      "Offriamo opzioni di fatturazione mensile e annuale. La fatturazione annuale offre uno sconto significativo rispetto alla fatturazione mensile.",
   },
 }
 
@@ -594,6 +835,48 @@ export default function HomePageClient() {
         </Card>
       </section>
 
+      {/* How It Works Section - Adding educational content for AdSense */}
+      <section id="how-it-works" className="container mx-auto px-4 py-20 bg-secondary/10">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-4">{t.howItWorksTitle}</h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">{t.howItWorksDesc}</p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          <Card className="glass-card p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">1️⃣</span>
+            </div>
+            <h3 className="text-lg font-bold mb-3">{t.step1Title}</h3>
+            <p className="text-sm text-muted-foreground">{t.step1Desc}</p>
+          </Card>
+
+          <Card className="glass-card p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">2️⃣</span>
+            </div>
+            <h3 className="text-lg font-bold mb-3">{t.step2Title}</h3>
+            <p className="text-sm text-muted-foreground">{t.step2Desc}</p>
+          </Card>
+
+          <Card className="glass-card p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">3️⃣</span>
+            </div>
+            <h3 className="text-lg font-bold mb-3">{t.step3Title}</h3>
+            <p className="text-sm text-muted-foreground">{t.step3Desc}</p>
+          </Card>
+
+          <Card className="glass-card p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">4️⃣</span>
+            </div>
+            <h3 className="text-lg font-bold mb-3">{t.step4Title}</h3>
+            <p className="text-sm text-muted-foreground">{t.step4Desc}</p>
+          </Card>
+        </div>
+      </section>
+
       <section id="pricing" className="container mx-auto px-4 py-20">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">{t.pricingTitle}</h2>
@@ -743,6 +1026,153 @@ export default function HomePageClient() {
               </Link>
             </div>
           </Card>
+        </div>
+      </section>
+
+      {/* Productivity Tips Section - Adding educational content */}
+      <section id="tips" className="container mx-auto px-4 py-20">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl font-bold mb-6 text-center">{t.productivityTipsTitle}</h2>
+          <p className="text-muted-foreground text-center mb-12 text-lg">{t.productivityTipsDesc}</p>
+
+          <div className="space-y-6">
+            <Card className="glass-card p-6">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-primary">🎯</span>
+                {t.tip1Title}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">{t.tip1Desc}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-primary">🍅</span>
+                {t.tip2Title}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">{t.tip2Desc}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-primary">📊</span>
+                {t.tip3Title}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">{t.tip3Desc}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                <span className="text-primary">🤖</span>
+                {t.tip4Title}
+              </h3>
+              <p className="text-muted-foreground leading-relaxed">{t.tip4Desc}</p>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section - Adding social proof content */}
+      <section id="testimonials" className="container mx-auto px-4 py-20 bg-secondary/10">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold mb-4">{t.testimonialsTitle}</h2>
+          <p className="text-muted-foreground">{t.testimonialsDesc}</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          <Card className="glass-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xl">👨‍💼</span>
+              </div>
+              <div>
+                <div className="font-semibold">Sarah M.</div>
+                <div className="text-sm text-muted-foreground">{t.testimonial1Role}</div>
+              </div>
+            </div>
+            <div className="flex gap-1 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="text-primary">
+                  ⭐
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground italic">"{t.testimonial1Text}"</p>
+          </Card>
+
+          <Card className="glass-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xl">👩‍🎓</span>
+              </div>
+              <div>
+                <div className="font-semibold">Miguel R.</div>
+                <div className="text-sm text-muted-foreground">{t.testimonial2Role}</div>
+              </div>
+            </div>
+            <div className="flex gap-1 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="text-primary">
+                  ⭐
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground italic">"{t.testimonial2Text}"</p>
+          </Card>
+
+          <Card className="glass-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xl">👨‍💻</span>
+              </div>
+              <div>
+                <div className="font-semibold">Emma K.</div>
+                <div className="text-sm text-muted-foreground">{t.testimonial3Role}</div>
+              </div>
+            </div>
+            <div className="flex gap-1 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <span key={i} className="text-primary">
+                  ⭐
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground italic">"{t.testimonial3Text}"</p>
+          </Card>
+        </div>
+      </section>
+
+      {/* FAQ Section - Adding FAQ content for SEO */}
+      <section id="faq" className="container mx-auto px-4 py-20">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-4xl font-bold mb-4 text-center">{t.faqTitle}</h2>
+          <p className="text-muted-foreground text-center mb-12">{t.faqDesc}</p>
+
+          <div className="space-y-4">
+            <Card className="glass-card p-6">
+              <h3 className="text-lg font-bold mb-2">{t.faq1Question}</h3>
+              <p className="text-muted-foreground">{t.faq1Answer}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-lg font-bold mb-2">{t.faq2Question}</h3>
+              <p className="text-muted-foreground">{t.faq2Answer}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-lg font-bold mb-2">{t.faq3Question}</h3>
+              <p className="text-muted-foreground">{t.faq3Answer}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-lg font-bold mb-2">{t.faq4Question}</h3>
+              <p className="text-muted-foreground">{t.faq4Answer}</p>
+            </Card>
+
+            <Card className="glass-card p-6">
+              <h3 className="text-lg font-bold mb-2">{t.faq5Question}</h3>
+              <p className="text-muted-foreground">{t.faq5Answer}</p>
+            </Card>
+          </div>
         </div>
       </section>
 
