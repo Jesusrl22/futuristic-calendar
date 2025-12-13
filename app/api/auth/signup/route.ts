@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createClient } from "@supabase/supabase-js"
-import { sendWelcomeEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -82,13 +81,13 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    sendWelcomeEmail(email, name).then((result) => {
-      if (result.success) {
-        console.log("[SERVER][v0] Welcome email sent successfully")
-      } else {
-        console.warn("[SERVER][v0] Failed to send welcome email:", result.error)
-      }
-    })
+    // sendWelcomeEmail(email, name).then((result) => {
+    //   if (result.success) {
+    //     console.log("[SERVER][v0] Welcome email sent successfully")
+    //   } else {
+    //     console.warn("[SERVER][v0] Failed to send welcome email:", result.error)
+    //   }
+    // })
 
     // Auto-login
     console.log("[SERVER][v0] Attempting auto-login...")
