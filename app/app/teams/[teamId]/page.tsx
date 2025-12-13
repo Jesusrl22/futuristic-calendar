@@ -294,6 +294,26 @@ export default function TeamDetailPage() {
     }
   }
 
+  const handleDeleteTeam = async () => {
+    if (!confirm(`${t("confirmDeleteTeam")} "${team.name}"?`)) return
+
+    try {
+      const response = await fetch(`/api/teams/${teamId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        router.push("/app/teams")
+      } else {
+        const data = await response.json()
+        alert(data.error || "Failed to delete team")
+      }
+    } catch (error) {
+      console.error("Error deleting team:", error)
+      alert("An error occurred")
+    }
+  }
+
   const getRoleIcon = (role: string) => {
     if (role === "owner") return <Crown className="w-4 h-4 text-yellow-500" />
     if (role === "admin") return <Shield className="w-4 h-4 text-blue-500" />
@@ -378,6 +398,12 @@ export default function TeamDetailPage() {
                 </div>
               </DialogContent>
             </Dialog>
+          )}
+          {canManageMembers && team.role === "owner" && (
+            <Button variant="destructive" size="sm" onClick={handleDeleteTeam}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              {t("deleteTeam")}
+            </Button>
           )}
         </div>
         <p className="text-muted-foreground">{team.description}</p>

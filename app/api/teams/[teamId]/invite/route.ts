@@ -67,17 +67,38 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       return NextResponse.json({ error: "Member limit reached for premium plan" }, { status: 403 })
     }
 
-    // Check if user is already a member
-    const { data: existingMember } = await supabaseAdmin
-      .from("team_members")
+    // Check if email is already a member by looking up user by email
+    const { data: invitedUser, error: userLookupError } = await supabaseAdmin
+      .from("users")
       .select("id")
-      .eq("team_id", teamId)
-      .eq("user_id", user.id)
+      .eq("email", email.toLowerCase())
       .single()
 
-    if (existingMember) {
-      return NextResponse.json({ error: "User is already a team member" }, { status: 400 })
+    if (!userLookupError && invitedUser) {
+      // User exists, check if already a member
+      const { data: existingMember } = await supabaseAdmin
+        .from("team_members")
+        .select("id")
+        .eq("team_id", teamId)
+        .eq("user_id", invitedUser.id)
+        .single()
+
+      if (existingMember) {
+        return NextResponse.json({ error: "User is already a team member" }, { status: 400 })
+      }
     }
+
+    // Check if user is already a member
+    // const { data: existingMember } = await supabaseAdmin
+    //   .from("team_members")
+    //   .select("id")
+    //   .eq("team_id", teamId)
+    //   .eq("user_id", user.id)
+    //   .single()
+
+    // if (existingMember) {
+    //   return NextResponse.json({ error: "User is already a team member" }, { status: 400 })
+    // }
 
     // Check for pending invitation
     const { data: existingInvite } = await supabaseAdmin
