@@ -93,6 +93,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
 
     // Generate invitation token
     const token = randomBytes(32).toString("hex")
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
     // Create invitation
     const { data: invitation, error: inviteError } = await supabase
@@ -103,6 +104,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
         invited_by: user.id,
         token,
         role,
+        expires_at: expiresAt.toISOString(),
       })
       .select()
       .single()
@@ -111,8 +113,20 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       return NextResponse.json({ error: inviteError.message }, { status: 500 })
     }
 
-    // TODO: Send invitation email
-    // await sendTeamInvitationEmail(email, token, teamName)
+    const { data: teamInfo } = await supabase.from("teams").select("name").eq("id", teamId).single()
+
+    const { data: inviterInfo } = await supabase.from("users").select("name, email").eq("id", user.id).single()
+
+    const teamName = teamInfo?.name || "a team"
+    const inviterName = inviterInfo?.name || inviterInfo?.email || "Someone"
+
+    try {
+      const { sendTeamInvitationEmail } = await import("@/lib/email")
+      await sendTeamInvitationEmail(email, token, teamName, inviterName)
+    } catch (emailError) {
+      console.error("[v0] Error sending invitation email:", emailError)
+      // Don't fail the request if email fails
+    }
 
     return NextResponse.json({ invitation }, { status: 201 })
   } catch (error: any) {
