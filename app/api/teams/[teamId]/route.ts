@@ -51,7 +51,7 @@ export async function GET(request: Request, { params }: { params: { teamId: stri
     const membersWithDetails = []
     if (members) {
       for (const member of members) {
-        const { data: userData } = await supabase
+        const { data: userData } = await supabaseAdmin
           .from("users")
           .select("id, name, email")
           .eq("id", member.user_id)
@@ -129,6 +129,7 @@ export async function PATCH(request: Request, { params }: { params: { teamId: st
 export async function DELETE(request: Request, { params }: { params: { teamId: string } }) {
   try {
     const supabase = await createServerClient()
+    const supabaseAdmin = createServiceRoleClient()
 
     const {
       data: { user },
@@ -141,13 +142,17 @@ export async function DELETE(request: Request, { params }: { params: { teamId: s
 
     const { teamId } = params
 
-    const { data: team, error: teamError } = await supabase.from("teams").select("owner_id").eq("id", teamId).single()
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from("teams")
+      .select("owner_id")
+      .eq("id", teamId)
+      .single()
 
     if (teamError || !team || team.owner_id !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { error: deleteError } = await supabase.from("teams").delete().eq("id", teamId)
+    const { error: deleteError } = await supabaseAdmin.from("teams").delete().eq("id", teamId)
 
     if (deleteError) {
       return NextResponse.json({ error: deleteError.message }, { status: 500 })

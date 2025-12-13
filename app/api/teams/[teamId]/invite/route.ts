@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createServerClient, createServiceRoleClient } from "@/lib/supabase/server"
 import { randomBytes } from "crypto"
 
 export async function POST(request: Request, { params }: { params: { teamId: string } }) {
   try {
     const supabase = await createServerClient()
+    const supabaseAdmin = createServiceRoleClient()
 
     const {
       data: { user },
@@ -24,7 +25,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     }
 
     // Check if user is owner or admin
-    const { data: membership, error: memberError } = await supabase
+    const { data: membership, error: memberError } = await supabaseAdmin
       .from("team_members")
       .select("role")
       .eq("team_id", teamId)
@@ -36,7 +37,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     }
 
     // Check team member limits based on subscription
-    const { data: teamData, error: teamError } = await supabase
+    const { data: teamData, error: teamError } = await supabaseAdmin
       .from("teams")
       .select("owner_id, team_members(count)")
       .eq("id", teamId)
@@ -46,7 +47,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       return NextResponse.json({ error: teamError.message }, { status: 500 })
     }
 
-    const { data: ownerData, error: ownerError } = await supabase
+    const { data: ownerData, error: ownerError } = await supabaseAdmin
       .from("users")
       .select("subscription_tier")
       .eq("id", teamData.owner_id)
@@ -67,7 +68,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     }
 
     // Check if user is already a member
-    const { data: existingMember } = await supabase
+    const { data: existingMember } = await supabaseAdmin
       .from("team_members")
       .select("id")
       .eq("team_id", teamId)
@@ -79,7 +80,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     }
 
     // Check for pending invitation
-    const { data: existingInvite } = await supabase
+    const { data: existingInvite } = await supabaseAdmin
       .from("team_invitations")
       .select("id")
       .eq("team_id", teamId)
@@ -96,7 +97,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
     // Create invitation
-    const { data: invitation, error: inviteError } = await supabase
+    const { data: invitation, error: inviteError } = await supabaseAdmin
       .from("team_invitations")
       .insert({
         team_id: teamId,
@@ -113,9 +114,9 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       return NextResponse.json({ error: inviteError.message }, { status: 500 })
     }
 
-    const { data: teamInfo } = await supabase.from("teams").select("name").eq("id", teamId).single()
+    const { data: teamInfo } = await supabaseAdmin.from("teams").select("name").eq("id", teamId).single()
 
-    const { data: inviterInfo } = await supabase.from("users").select("name, email").eq("id", user.id).single()
+    const { data: inviterInfo } = await supabaseAdmin.from("users").select("name, email").eq("id", user.id).single()
 
     const teamName = teamInfo?.name || "a team"
     const inviterName = inviterInfo?.name || inviterInfo?.email || "Someone"
