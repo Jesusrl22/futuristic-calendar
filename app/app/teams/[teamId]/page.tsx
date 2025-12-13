@@ -2,17 +2,24 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DialogTitle as DialogTitleComponent } from "@/components/ui/dialog"
-import { DialogHeader as DialogHeaderComponent } from "@/components/ui/dialog"
-import { DialogContent as DialogContentComponent } from "@/components/ui/dialog"
-import { DialogTrigger as DialogTriggerComponent } from "@/components/ui/dialog"
-import { Dialog } from "@/components/ui/dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Users, CheckSquare, BarChart3, UserPlus, Trash2, Crown, Shield, Plus } from "@/components/icons"
+import {
+  ArrowLeft,
+  Users,
+  CheckSquare,
+  BarChart3,
+  UserPlus,
+  Trash2,
+  Crown,
+  Shield,
+  Plus,
+  Edit,
+} from "@/components/icons"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
@@ -29,6 +36,13 @@ export default function TeamDetailPage() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviting, setInviting] = useState(false)
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+  })
+  const [updating, setUpdating] = useState(false)
 
   const [tasks, setTasks] = useState<any[]>([])
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
@@ -61,6 +75,10 @@ export default function TeamDetailPage() {
       if (response.ok) {
         const data = await response.json()
         setTeam(data)
+        setEditForm({
+          name: data.name,
+          description: data.description || "",
+        })
       } else {
         router.push("/app/teams")
       }
@@ -95,7 +113,6 @@ export default function TeamDetailPage() {
         const completedTasks = allTasks.filter((t: any) => t.completed).length
         const activeTasks = totalTasks - completedTasks
 
-        // Member stats
         const memberMap = new Map()
         allTasks.forEach((task: any) => {
           const assignedTo = task.assigned_to || "unassigned"
@@ -245,6 +262,38 @@ export default function TeamDetailPage() {
     }
   }
 
+  const handleEditTeam = async () => {
+    if (!editForm.name.trim()) {
+      alert(t("enterTeamName"))
+      return
+    }
+
+    setUpdating(true)
+    try {
+      const response = await fetch(`/api/teams/${teamId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name.trim(),
+          description: editForm.description.trim(),
+        }),
+      })
+
+      if (response.ok) {
+        setEditDialogOpen(false)
+        fetchTeamDetails()
+      } else {
+        const data = await response.json()
+        alert(data.error || "Failed to update team")
+      }
+    } catch (error) {
+      console.error("Error updating team:", error)
+      alert("An error occurred")
+    } finally {
+      setUpdating(false)
+    }
+  }
+
   const getRoleIcon = (role: string) => {
     if (role === "owner") return <Crown className="w-4 h-4 text-yellow-500" />
     if (role === "admin") return <Shield className="w-4 h-4 text-blue-500" />
@@ -265,6 +314,7 @@ export default function TeamDetailPage() {
   }
 
   const canManageMembers = team?.role === "owner" || team?.role === "admin"
+  const canEditTeam = team?.role === "owner" || team?.role === "admin"
 
   if (loading) {
     return (
@@ -288,9 +338,48 @@ export default function TeamDetailPage() {
       </Button>
 
       <div className="mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2">
-          <span className="text-primary neon-text">{team.name}</span>
-        </h1>
+        <div className="flex items-start justify-between mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold">
+            <span className="text-primary neon-text">{team.name}</span>
+          </h1>
+          {canEditTeam && (
+            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Edit className="w-4 h-4 mr-2" />
+                  {t("editTeam")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t("editTeam")}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>{t("teamName")} *</Label>
+                    <Input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      placeholder={t("teamName")}
+                    />
+                  </div>
+                  <div>
+                    <Label>{t("teamDescription")}</Label>
+                    <Textarea
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      placeholder={t("teamDescription")}
+                      rows={3}
+                    />
+                  </div>
+                  <Button onClick={handleEditTeam} disabled={updating || !editForm.name.trim()} className="w-full">
+                    {updating ? t("updating") : t("saveChanges")}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
         <p className="text-muted-foreground">{team.description}</p>
       </div>
 
@@ -313,16 +402,16 @@ export default function TeamDetailPage() {
         <TabsContent value="tasks" className="mt-6 space-y-4">
           <Card className="glass-card p-4">
             <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-              <DialogTriggerComponent asChild>
+              <DialogTrigger asChild>
                 <Button className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   {t("newTask")}
                 </Button>
-              </DialogTriggerComponent>
-              <DialogContentComponent>
-                <DialogHeaderComponent>
-                  <DialogTitleComponent>{t("createNewTask")}</DialogTitleComponent>
-                </DialogHeaderComponent>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{t("createNewTask")}</DialogTitle>
+                </DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <Label>{t("title")} *</Label>
@@ -389,7 +478,7 @@ export default function TeamDetailPage() {
                     {t("createTask")}
                   </Button>
                 </div>
-              </DialogContentComponent>
+              </DialogContent>
             </Dialog>
           </Card>
 
@@ -437,16 +526,16 @@ export default function TeamDetailPage() {
           {canManageMembers && (
             <Card className="glass-card p-4">
               <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                <DialogTriggerComponent asChild>
+                <DialogTrigger asChild>
                   <Button className="w-full sm:w-auto">
                     <UserPlus className="w-4 h-4 mr-2" />
                     {t("inviteMember")}
                   </Button>
-                </DialogTriggerComponent>
-                <DialogContentComponent>
-                  <DialogHeaderComponent>
-                    <DialogTitleComponent>{t("inviteMember")}</DialogTitleComponent>
-                  </DialogHeaderComponent>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t("inviteMember")}</DialogTitle>
+                  </DialogHeader>
                   <div className="space-y-4">
                     <div>
                       <Label>{t("emailAddress")}</Label>
@@ -461,7 +550,7 @@ export default function TeamDetailPage() {
                       {inviting ? t("sending") : t("sendInvitation")}
                     </Button>
                   </div>
-                </DialogContentComponent>
+                </DialogContent>
               </Dialog>
             </Card>
           )}
