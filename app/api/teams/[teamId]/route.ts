@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET(request: Request, { params }: { params: { teamId: string } }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const {
       data: { user },
@@ -62,7 +62,7 @@ export async function GET(request: Request, { params }: { params: { teamId: stri
 
 export async function PATCH(request: Request, { params }: { params: { teamId: string } }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const {
       data: { user },
@@ -114,7 +114,7 @@ export async function PATCH(request: Request, { params }: { params: { teamId: st
 
 export async function DELETE(request: Request, { params }: { params: { teamId: string } }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const {
       data: { user },

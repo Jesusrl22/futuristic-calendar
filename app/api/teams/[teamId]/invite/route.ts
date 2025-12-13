@@ -4,7 +4,7 @@ import { randomBytes } from "crypto"
 
 export async function POST(request: Request, { params }: { params: { teamId: string } }) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const {
       data: { user },
