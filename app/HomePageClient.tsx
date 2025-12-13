@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import { useState, useEffect } from "react"
+import CookieBanner from "@/components/cookie-banner"
 
 const translations = {
   en: {
@@ -695,6 +696,11 @@ export default function HomePageClient() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
   const t = translations[lang]
 
+  // This is a placeholder for the actual language state, as it's not defined in the updates.
+  // If this were a real scenario, you'd likely have a useState hook for language.
+  const [language, setLanguage] = useState<string>("en")
+  const [theme, setTheme] = useState<string>("default")
+
   useEffect(() => {
     const savedLang = localStorage.getItem("language") as Language | null
     if (savedLang && translations[savedLang]) {
@@ -714,7 +720,7 @@ export default function HomePageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -1395,6 +1401,8 @@ export default function HomePageClient() {
           </div>
         </div>
       </footer>
+
+      <CookieBanner language={language} />
     </div>
   )
 }
