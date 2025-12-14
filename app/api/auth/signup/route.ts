@@ -81,13 +81,14 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    // sendWelcomeEmail(email, name).then((result) => {
-    //   if (result.success) {
-    //     console.log("[SERVER][v0] Welcome email sent successfully")
-    //   } else {
-    //     console.warn("[SERVER][v0] Failed to send welcome email:", result.error)
-    //   }
-    // })
+    try {
+      const { sendWelcomeEmail } = await import("@/lib/email")
+      await sendWelcomeEmail(email, name)
+      console.log("[SERVER][v0] Welcome email sent successfully")
+    } catch (emailError: any) {
+      console.warn("[SERVER][v0] Failed to send welcome email:", emailError.message)
+      // Don't fail the signup if email fails - user account is created
+    }
 
     // Auto-login
     console.log("[SERVER][v0] Attempting auto-login...")

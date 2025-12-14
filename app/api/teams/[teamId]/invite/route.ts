@@ -88,18 +88,6 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       }
     }
 
-    // Check if user is already a member
-    // const { data: existingMember } = await supabaseAdmin
-    //   .from("team_members")
-    //   .select("id")
-    //   .eq("team_id", teamId)
-    //   .eq("user_id", user.id)
-    //   .single()
-
-    // if (existingMember) {
-    //   return NextResponse.json({ error: "User is already a team member" }, { status: 400 })
-    // }
-
     // Check for pending invitation
     const { data: existingInvite } = await supabaseAdmin
       .from("team_invitations")
@@ -142,15 +130,28 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     const teamName = teamInfo?.name || "a team"
     const inviterName = inviterInfo?.name || inviterInfo?.email || "Someone"
 
+    let emailSent = false
     try {
       const { sendTeamInvitationEmail } = await import("@/lib/email")
       await sendTeamInvitationEmail(email, token, teamName, inviterName)
-    } catch (emailError) {
-      console.error("[v0] Error sending invitation email:", emailError)
-      // Don't fail the request if email fails
+      emailSent = true
+      console.log("[v0] Team invitation email sent successfully to:", email)
+    } catch (emailError: any) {
+      console.error("[v0] Error sending invitation email:", emailError.message)
+      console.error("[v0] Email details - Host:", process.env.SMTP_HOST, "Port:", process.env.SMTP_PORT)
+      // Don't fail the request if email fails - invitation is created
     }
 
-    return NextResponse.json({ invitation }, { status: 201 })
+    return NextResponse.json(
+      {
+        invitation,
+        emailSent,
+        message: emailSent
+          ? "Invitation sent successfully"
+          : "Invitation created but email could not be sent. Ensure SMTP is configured correctly.",
+      },
+      { status: 201 },
+    )
   } catch (error: any) {
     console.error("[v0] Error in team invite POST:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
