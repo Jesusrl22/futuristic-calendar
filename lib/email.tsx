@@ -1,17 +1,29 @@
-import nodemailer from "nodemailer"
-
-const transporter = nodemailer.createTransporter({
-  host: process.env.SMTP_HOST,
-  port: Number.parseInt(process.env.SMTP_PORT || "587"),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-})
-
 export async function sendWelcomeEmail(to: string, name?: string) {
   try {
+    if (
+      !process.env.SMTP_HOST ||
+      !process.env.SMTP_PORT ||
+      !process.env.SMTP_USER ||
+      !process.env.SMTP_PASSWORD ||
+      !process.env.SMTP_FROM
+    ) {
+      console.error(
+        "[v0] Missing SMTP configuration. Please configure: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM",
+      )
+      throw new Error("SMTP not configured")
+    }
+
+    const nodemailer = require("nodemailer")
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number.parseInt(process.env.SMTP_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
 
     const htmlContent = `
@@ -86,6 +98,30 @@ Need help? Contact us at ${process.env.SMTP_FROM}
 
 export async function sendPasswordResetEmail(to: string, token: string) {
   try {
+    if (
+      !process.env.SMTP_HOST ||
+      !process.env.SMTP_PORT ||
+      !process.env.SMTP_USER ||
+      !process.env.SMTP_PASSWORD ||
+      !process.env.SMTP_FROM
+    ) {
+      console.error(
+        "[v0] Missing SMTP configuration. Please configure: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM",
+      )
+      throw new Error("SMTP not configured")
+    }
+
+    const nodemailer = require("nodemailer")
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number.parseInt(process.env.SMTP_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
     const resetUrl = `${appUrl}/reset-password?token=${token}`
 
@@ -150,6 +186,30 @@ This link will expire in 1 hour. If you didn't request this, please ignore this 
 
 export async function sendTeamInvitationEmail(to: string, token: string, teamName: string, inviterName: string) {
   try {
+    if (
+      !process.env.SMTP_HOST ||
+      !process.env.SMTP_PORT ||
+      !process.env.SMTP_USER ||
+      !process.env.SMTP_PASSWORD ||
+      !process.env.SMTP_FROM
+    ) {
+      console.error(
+        "[v0] Missing SMTP configuration. Please configure: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM",
+      )
+      throw new Error("SMTP not configured")
+    }
+
+    const nodemailer = require("nodemailer")
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number.parseInt(process.env.SMTP_PORT || "587"),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
     const inviteUrl = `${appUrl}/invite/${token}`
 
