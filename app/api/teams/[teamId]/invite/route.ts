@@ -24,13 +24,12 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       return NextResponse.json({ error: "Valid email is required" }, { status: 400 })
     }
 
-    // Check if user is owner or admin
     const { data: membership, error: memberError } = await supabaseAdmin
       .from("team_members")
       .select("role")
       .eq("team_id", teamId)
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
 
     if (memberError || !membership || !["owner", "admin"].includes(membership.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
@@ -72,7 +71,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       .from("users")
       .select("id")
       .eq("email", email.toLowerCase())
-      .single()
+      .maybeSingle()
 
     if (!userLookupError && invitedUser) {
       // User exists, check if already a member
@@ -81,7 +80,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
         .select("id")
         .eq("team_id", teamId)
         .eq("user_id", invitedUser.id)
-        .single()
+        .maybeSingle()
 
       if (existingMember) {
         return NextResponse.json({ error: "User is already a team member" }, { status: 400 })
@@ -95,7 +94,7 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       .eq("team_id", teamId)
       .eq("email", email.toLowerCase())
       .eq("status", "pending")
-      .single()
+      .maybeSingle()
 
     if (existingInvite) {
       return NextResponse.json({ error: "Invitation already sent to this email" }, { status: 400 })
@@ -132,13 +131,29 @@ export async function POST(request: Request, { params }: { params: { teamId: str
 
     let emailSent = false
     try {
+      const smtpHost = process.env.SMTP_HOST
+      const smtpPort = process.env.SMTP_PORT
+      const smtpUser = process.env.SMTP_USER
+      const smtpPassword = process.env.SMTP_PASSWORD
+      const smtpFrom = process.env.SMTP_FROM
+
+      console.log("[v0] SMTP Configuration check:")
+      console.log("[v0] SMTP_HOST:", smtpHost ? "✓ Set" : "✗ Missing")
+      console.log("[v0] SMTP_PORT:", smtpPort ? "✓ Set" : "✗ Missing")
+      console.log("[v0] SMTP_USER:", smtpUser ? "✓ Set" : "✗ Missing")
+      console.log("[v0] SMTP_PASSWORD:", smtpPassword ? "✓ Set" : "✗ Missing")
+      console.log("[v0] SMTP_FROM:", smtpFrom ? "✓ Set" : "✗ Missing")
+
+      if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword || !smtpFrom) {
+        throw new Error("SMTP configuration incomplete. Please configure all SMTP variables in Vars section.")
+      }
+
       const { sendTeamInvitationEmail } = await import("@/lib/email")
       await sendTeamInvitationEmail(email, token, teamName, inviterName)
       emailSent = true
       console.log("[v0] Team invitation email sent successfully to:", email)
     } catch (emailError: any) {
       console.error("[v0] Error sending invitation email:", emailError.message)
-      console.error("[v0] Email details - Host:", process.env.SMTP_HOST, "Port:", process.env.SMTP_PORT)
       // Don't fail the request if email fails - invitation is created
     }
 
