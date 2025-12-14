@@ -129,41 +129,15 @@ export async function POST(request: Request, { params }: { params: { teamId: str
     const teamName = teamInfo?.name || "a team"
     const inviterName = inviterInfo?.name || inviterInfo?.email || "Someone"
 
-    let emailSent = false
-    try {
-      const smtpHost = process.env.SMTP_HOST
-      const smtpPort = process.env.SMTP_PORT
-      const smtpUser = process.env.SMTP_USER
-      const smtpPassword = process.env.SMTP_PASSWORD
-      const smtpFrom = process.env.SMTP_FROM
+    const invitationLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"}/invite/${token}`
 
-      console.log("[v0] SMTP Configuration check:")
-      console.log("[v0] SMTP_HOST:", smtpHost ? "✓ Set" : "✗ Missing")
-      console.log("[v0] SMTP_PORT:", smtpPort ? "✓ Set" : "✗ Missing")
-      console.log("[v0] SMTP_USER:", smtpUser ? "✓ Set" : "✗ Missing")
-      console.log("[v0] SMTP_PASSWORD:", smtpPassword ? "✓ Set" : "✗ Missing")
-      console.log("[v0] SMTP_FROM:", smtpFrom ? "✓ Set" : "✗ Missing")
-
-      if (!smtpHost || !smtpPort || !smtpUser || !smtpPassword || !smtpFrom) {
-        throw new Error("SMTP configuration incomplete. Please configure all SMTP variables in Vars section.")
-      }
-
-      const { sendTeamInvitationEmail } = await import("@/lib/email")
-      await sendTeamInvitationEmail(email, token, teamName, inviterName)
-      emailSent = true
-      console.log("[v0] Team invitation email sent successfully to:", email)
-    } catch (emailError: any) {
-      console.error("[v0] Error sending invitation email:", emailError.message)
-      // Don't fail the request if email fails - invitation is created
-    }
+    console.log("[v0] Invitation link generated:", invitationLink)
 
     return NextResponse.json(
       {
         invitation,
-        emailSent,
-        message: emailSent
-          ? "Invitation sent successfully"
-          : "Invitation created but email could not be sent. Ensure SMTP is configured correctly.",
+        invitationLink,
+        message: "Invitation link generated. Share this link with the user to invite them to the team.",
       },
       { status: 201 },
     )

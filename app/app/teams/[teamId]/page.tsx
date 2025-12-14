@@ -36,6 +36,8 @@ export default function TeamDetailPage() {
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviting, setInviting] = useState(false)
+  const [inviteLink, setInviteLink] = useState<string>("")
+  const [showInviteLink, setShowInviteLink] = useState(false)
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -156,13 +158,15 @@ export default function TeamDetailPage() {
       })
 
       if (response.ok) {
-        setInviteDialogOpen(false)
+        const data = await response.json()
         setInviteEmail("")
-        alert(t("invitationSent"))
+        setInviteLink(data.invitationLink)
+        setShowInviteLink(true)
+        setInviteDialogOpen(false)
         fetchTeamDetails()
       } else {
-        const data = await response.json()
-        alert(data.error || "Failed to send invitation")
+        const error = await response.json()
+        alert(error.error || "Failed to create invitation")
       }
     } catch (error) {
       console.error("Error inviting member:", error)
@@ -314,6 +318,11 @@ export default function TeamDetailPage() {
     }
   }
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    alert(t("copiedToClipboard") || "Copied to clipboard!")
+  }
+
   const getRoleIcon = (role: string) => {
     if (role === "owner") return <Crown className="w-4 h-4 text-yellow-500" />
     if (role === "admin") return <Shield className="w-4 h-4 text-blue-500" />
@@ -356,6 +365,26 @@ export default function TeamDetailPage() {
         <ArrowLeft className="w-4 h-4 mr-2" />
         {t("back")}
       </Button>
+
+      <Dialog open={showInviteLink} onOpenChange={setShowInviteLink}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("invitationLink")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("shareInvitationLink")}</p>
+            <div className="flex gap-2">
+              <Input type="text" value={inviteLink} readOnly className="flex-1" />
+              <Button onClick={() => copyToClipboard(inviteLink)} className="shrink-0">
+                Copy
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("inviteEmail")}: {inviteEmail}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="mb-6">
         <div className="flex items-start justify-between mb-2">
