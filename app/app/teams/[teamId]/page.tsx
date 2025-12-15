@@ -2,7 +2,14 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -590,17 +597,16 @@ export default function TeamDetailPage() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>{t("inviteMember")}</DialogTitle>
+                    <DialogDescription>{t("enterEmailToInvite")}</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div>
-                      <Label>{t("emailAddress")}</Label>
-                      <Input
-                        type="email"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="colleague@example.com"
-                      />
-                    </div>
+                    <Input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder={t("emailAddress")}
+                      onKeyPress={(e) => e.key === "Enter" && handleInviteMember()}
+                    />
                     <Button onClick={handleInviteMember} disabled={inviting || !inviteEmail.trim()} className="w-full">
                       {inviting ? t("sending") : t("sendInvitation")}
                     </Button>

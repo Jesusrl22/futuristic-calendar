@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { achievementsList } from "@/lib/achievements"
 
 function getUserIdFromToken(token: string): string | null {
   try {
@@ -9,13 +10,6 @@ function getUserIdFromToken(token: string): string | null {
     return null
   }
 }
-
-const ACHIEVEMENTS = [
-  { id: "first_task", title: "First Steps", description: "Complete your first task", checkFn: (stats: any) => stats.tasks >= 1 },
-  { id: "task_master", title: "Task Master", description: "Complete 50 tasks", checkFn: (stats: any) => stats.tasks >= 50 },
-  { id: "note_taker", title: "Note Taker", description: "Create 10 notes", checkFn: (stats: any) => stats.notes >= 10 },
-  { id: "focus_warrior", title: "Focus Warrior", description: "Complete 25 Pomodoro sessions", checkFn: (stats: any) => stats.pomodoro >= 25 },
-]
 
 export async function GET() {
   try {
@@ -82,31 +76,48 @@ export async function GET() {
     const unlockedIds = new Set(existingAchievements.map((a: any) => a.achievement_type))
     const newAchievements = []
 
-    for (const achievement of ACHIEVEMENTS) {
-      if (!unlockedIds.has(achievement.id) && achievement.checkFn(stats)) {
-        const newAchievement = {
-          user_id: userId,
-          achievement_type: achievement.id,
-          title: achievement.title,
-          description: achievement.description,
-          icon: "🏆",
-          unlocked_at: new Date().toISOString(),
+    for (const achievement of achievementsList) {
+      if (!unlockedIds.has(achievement.id)) {
+        let shouldUnlock = false
+
+        // Determine which stat to check based on achievement ID
+        if (
+          achievement.id.startsWith("task_") ||
+          achievement.id === "first_task" ||
+          achievement.id === "productivity_god"
+        ) {
+          shouldUnlock = stats.tasks >= achievement.requirement
+        } else if (achievement.id.startsWith("note_")) {
+          shouldUnlock = stats.notes >= achievement.requirement
+        } else if (achievement.id.startsWith("focus_")) {
+          shouldUnlock = stats.pomodoro >= achievement.requirement
         }
 
-        const insertResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/achievements`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-            "Content-Type": "application/json",
-            Prefer: "return=representation",
-          },
-          body: JSON.stringify(newAchievement),
-        })
+        if (shouldUnlock) {
+          const newAchievement = {
+            user_id: userId,
+            achievement_type: achievement.id,
+            title: achievement.title,
+            description: achievement.description,
+            icon: achievement.icon,
+            unlocked_at: new Date().toISOString(),
+          }
 
-        if (insertResponse.ok) {
-          const inserted = await insertResponse.json()
-          newAchievements.push(inserted[0])
+          const insertResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/achievements`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
+            },
+            body: JSON.stringify(newAchievement),
+          })
+
+          if (insertResponse.ok) {
+            const inserted = await insertResponse.json()
+            newAchievements.push(inserted[0])
+          }
         }
       }
     }

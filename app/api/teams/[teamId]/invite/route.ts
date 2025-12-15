@@ -87,19 +87,6 @@ export async function POST(request: Request, { params }: { params: { teamId: str
       }
     }
 
-    // Check for pending invitation
-    const { data: existingInvite } = await supabaseAdmin
-      .from("team_invitations")
-      .select("id")
-      .eq("team_id", teamId)
-      .eq("email", email.toLowerCase())
-      .eq("status", "pending")
-      .maybeSingle()
-
-    if (existingInvite) {
-      return NextResponse.json({ error: "Invitation already sent to this email" }, { status: 400 })
-    }
-
     // Generate invitation token
     const token = randomBytes(32).toString("hex")
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
