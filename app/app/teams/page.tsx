@@ -95,9 +95,7 @@ export default function TeamsPage() {
   }
 
   const getTeamLimit = () => {
-    if (userPlan === "pro") return Number.POSITIVE_INFINITY
-    if (userPlan === "premium") return 3
-    return 1
+    return Number.POSITIVE_INFINITY
   }
 
   const canCreateTeam = teams.length < getTeamLimit()
@@ -149,7 +147,7 @@ export default function TeamsPage() {
         </Dialog>
       </div>
 
-      {!canCreateTeam && (
+      {false && !canCreateTeam && (
         <Card className="glass-card p-4 mb-6 border-primary/50">
           <div className="flex items-start gap-3">
             <Crown className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />

@@ -6,14 +6,14 @@ This document explains how to configure PayPal Business for the credit packs and
 
 Add these environment variables to your Vercel project or `.env.local` file:
 
-\`\`\`env
+```env
 # PayPal Configuration
 PAYPAL_CLIENT_ID=your_paypal_client_id
 PAYPAL_CLIENT_SECRET=your_paypal_client_secret
 PAYPAL_ENVIRONMENT=sandbox # or 'production' for live
 PAYPAL_PREMIUM_PLAN_ID=your_premium_plan_id
 PAYPAL_PRO_PLAN_ID=your_pro_plan_id
-\`\`\`
+```
 
 ## Setup Steps
 
@@ -40,9 +40,9 @@ Save the Plan IDs from PayPal and add them to your environment variables.
 ### 3. Database Migration
 Run the SQL script to add PayPal-specific columns:
 
-\`\`\`bash
+```bash
 # Execute the script: scripts/add-paypal-credit-system.sql
-\`\`\`
+```
 
 This adds:
 - `ai_credits_monthly` - Credits that reset each month

@@ -15,7 +15,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
       `)
       .eq("token", token)
       .eq("status", "pending")
-      .single()
+      .maybeSingle()
 
     if (error || !invitation) {
       return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 })

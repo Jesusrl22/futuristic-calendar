@@ -15,15 +15,15 @@ This application uses Web Push API to send notifications to users on all their d
 
 VAPID keys are required for Web Push authentication. Generate them using the web-push library:
 
-\`\`\`bash
+```bash
 npx web-push generate-vapid-keys
-\`\`\`
+```
 
 This will output:
-\`\`\`
+```
 Public Key: BNxN8fVYYYqF3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_Hq
 Private Key: cqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYq
-\`\`\`
+```
 
 ### 2. Add Environment Variables
 
@@ -33,10 +33,10 @@ Add the generated keys to your Vercel project environment variables:
 - Go to your project → Settings → Environment Variables
 - Add these variables:
 
-\`\`\`
+```
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_public_key_here
 VAPID_PRIVATE_KEY=your_private_key_here
-\`\`\`
+```
 
 **Important:** 
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` must have the `NEXT_PUBLIC_` prefix (it's used in the browser)
@@ -46,9 +46,9 @@ VAPID_PRIVATE_KEY=your_private_key_here
 
 Execute the SQL script to create the push_subscriptions table:
 
-\`\`\`bash
+```bash
 # The script is located at: scripts/008_create_push_subscriptions.sql
-\`\`\`
+```
 
 Or run it directly in your Supabase SQL editor.
 
@@ -110,7 +110,7 @@ Deploy your application to Vercel. The cron job will automatically run every 2 m
 
 ## Database Schema
 
-\`\`\`sql
+```sql
 push_subscriptions:
 - id: UUID (primary key)
 - user_id: UUID (foreign key to auth.users)
@@ -120,7 +120,7 @@ push_subscriptions:
 - user_agent: TEXT (device info)
 - created_at: TIMESTAMP
 - last_used_at: TIMESTAMP
-\`\`\`
+```
 
 ## API Endpoints
 
