@@ -54,7 +54,7 @@ export async function POST(request: Request, { params }: { params: { token: stri
       .select("*")
       .eq("token", token)
       .eq("status", "pending")
-      .single()
+      .maybeSingle()
 
     if (inviteError || !invitation) {
       return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 })
@@ -63,13 +63,6 @@ export async function POST(request: Request, { params }: { params: { token: stri
     // Check if expired
     if (new Date(invitation.expires_at) < new Date()) {
       return NextResponse.json({ error: "Invitation has expired" }, { status: 410 })
-    }
-
-    // Check if user email matches invitation email
-    const { data: userData } = await supabase.from("users").select("email").eq("id", user.id).single()
-
-    if (userData?.email?.toLowerCase() !== invitation.email.toLowerCase()) {
-      return NextResponse.json({ error: "This invitation is for a different email address" }, { status: 403 })
     }
 
     const { data: member, error: memberError } = await serviceSupabase
@@ -83,6 +76,7 @@ export async function POST(request: Request, { params }: { params: { token: stri
       .single()
 
     if (memberError) {
+      console.error("[v0] Error adding team member:", memberError)
       return NextResponse.json({ error: memberError.message }, { status: 500 })
     }
 

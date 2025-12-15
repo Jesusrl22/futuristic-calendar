@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Globe } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Eye, EyeOff } from "lucide-react"
@@ -114,6 +114,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteToken = searchParams.get("invite")
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language") as keyof typeof translations
@@ -194,10 +196,16 @@ export default function SignupPage() {
       if (data.requiresConfirmation) {
         setSuccess("Account created! Please check your email to confirm your account.")
       } else {
-        setSuccess("Account created successfully! Redirecting to app...")
-        setTimeout(() => {
-          router.push("/app")
-        }, 1500)
+        setSuccess("Account created successfully! Redirecting...")
+        if (inviteToken) {
+          setTimeout(() => {
+            router.push(`/invite/${inviteToken}`)
+          }, 1500)
+        } else {
+          setTimeout(() => {
+            router.push("/app")
+          }, 1500)
+        }
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred")
