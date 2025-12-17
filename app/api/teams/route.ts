@@ -90,9 +90,10 @@ export async function POST(request: Request) {
       .from("users")
       .select("subscription_tier")
       .eq("id", user.id)
-      .single()
+      .maybeSingle()
 
     if (userError) {
+      console.error("[v0] Error fetching user:", userError)
       return NextResponse.json({ error: userError.message }, { status: 500 })
     }
 
@@ -103,11 +104,12 @@ export async function POST(request: Request) {
       .eq("user_id", user.id)
 
     if (countError) {
+      console.error("[v0] Error counting teams:", countError)
       return NextResponse.json({ error: countError.message }, { status: 500 })
     }
 
     const teamCount = existingTeams?.length || 0
-    const plan = userData.subscription_tier || "free"
+    const plan = userData?.subscription_tier || "free"
 
     // Enforce team limits based on plan
     if (plan === "free" && teamCount >= 1) {
