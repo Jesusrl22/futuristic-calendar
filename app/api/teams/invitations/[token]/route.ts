@@ -3,7 +3,7 @@ import { createServerClient, createServiceRoleClient } from "@/lib/supabase/serv
 
 export async function GET(request: Request, { params }: { params: { token: string } }) {
   try {
-    const supabase = await createServiceRoleClient()
+    const supabase = createServiceRoleClient()
     const { token } = params
 
     const { data: invitation, error } = await supabase
@@ -18,6 +18,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
       .maybeSingle()
 
     if (error || !invitation) {
+      console.log("[v0] Invitation GET error:", error)
       return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 })
     }
 
@@ -36,7 +37,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
 export async function POST(request: Request, { params }: { params: { token: string } }) {
   try {
     const supabase = await createServerClient()
-    const serviceSupabase = await createServiceRoleClient()
+    const serviceSupabase = createServiceRoleClient()
 
     const {
       data: { user },
