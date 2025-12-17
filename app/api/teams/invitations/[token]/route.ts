@@ -3,7 +3,7 @@ import { createServerClient, createServiceRoleClient } from "@/lib/supabase/serv
 
 export async function GET(request: Request, { params }: { params: { token: string } }) {
   try {
-    const supabase = createServiceRoleClient()
+    const supabase = await createServiceRoleClient()
     const { token } = params
 
     const { data: invitation, error } = await supabase
@@ -37,7 +37,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
 export async function POST(request: Request, { params }: { params: { token: string } }) {
   try {
     const supabase = await createServerClient()
-    const serviceSupabase = createServiceRoleClient()
+    const serviceSupabase = await createServiceRoleClient()
 
     const {
       data: { user },
