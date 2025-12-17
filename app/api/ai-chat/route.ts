@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 import { cookies } from "next/headers"
 import { rateLimit } from "@/lib/redis"
+import { createServiceRoleClient } from "@/lib/supabase/server"
 
 function getUserIdFromToken(token: string): string | null {
   try {
@@ -41,30 +42,25 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const headers = {
-      apikey: process.env.SUPABASE_ANON_KEY!,
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    }
+    const supabaseAdmin = createServiceRoleClient()
 
-    const profileRes = await fetch(
-      `${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=ai_credits,ai_credits_monthly,ai_credits_purchased,subscription_tier`,
-      { headers },
-    )
+    const { data: profiles, error: profileError } = await supabaseAdmin
+      .from("users")
+      .select("ai_credits,ai_credits_monthly,ai_credits_purchased,subscription_tier")
+      .eq("id", userId)
+      .maybeSingle()
 
-    if (!profileRes.ok) {
+    if (profileError || !profiles) {
+      console.error("[v0] Failed to fetch profile:", profileError)
       return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
     }
 
-    const profiles = await profileRes.json()
-    const profile = profiles[0]
-
+    const profile = profiles
     const monthlyCredits = profile.ai_credits_monthly || 0
     const purchasedCredits = profile.ai_credits_purchased || 0
     const totalCredits = monthlyCredits + purchasedCredits
 
-    if (!profile || totalCredits < 2) {
+    if (totalCredits < 2) {
       return NextResponse.json({ error: "Insufficient credits" }, { status: 402 })
     }
 
@@ -83,18 +79,22 @@ export async function POST(req: NextRequest) {
 
     const newTotalCredits = newMonthlyCredits + newPurchasedCredits
 
-    await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${userId}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({
+    const { error: updateError } = await supabaseAdmin
+      .from("users")
+      .update({
         ai_credits_monthly: newMonthlyCredits,
         ai_credits_purchased: newPurchasedCredits,
         ai_credits: newTotalCredits,
-      }),
-    })
+      })
+      .eq("id", userId)
+
+    if (updateError) {
+      console.error("[v0] Failed to update credits:", updateError)
+      return NextResponse.json({ error: "Failed to update credits" }, { status: 500 })
+    }
 
     const { text } = await generateText({
-      model: "openai/gpt-4o-mini", // Using openai/gpt-4o-mini via Vercel AI Gateway instead of requiring OPENAI_API_KEY
+      model: "openai/gpt-4o-mini",
       prompt: message,
     })
 
