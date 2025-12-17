@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     })
 
     const { text } = await generateText({
-      model: "openai/gpt-4o",
+      model: "openai/gpt-4o-mini", // Using openai/gpt-4o-mini via Vercel AI Gateway instead of requiring OPENAI_API_KEY
       prompt: message,
     })
 
