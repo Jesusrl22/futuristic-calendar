@@ -114,7 +114,7 @@ export async function POST(request: Request, { params }: { params: { token: stri
     }
 
     console.log("[v0] Successfully accepted invitation")
-    return NextResponse.json({ teamId: invitation.team_id })
+    return NextResponse.json({ success: true, teamId: invitation.team_id })
   } catch (error: any) {
     console.error("[v0] Error accepting invitation:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })

@@ -61,7 +61,7 @@ export default function TeamInvitationPage() {
 
       if (response.ok) {
         const data = await response.json()
-        router.push(`/app/teams/${data.teamId}`)
+        router.push(`/app/teams`)
       } else {
         const errorData = await response.json()
         setError(errorData.error || "Failed to accept invitation")
