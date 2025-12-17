@@ -91,22 +91,18 @@ export async function POST(request: Request, { params }: { params: { token: stri
       role: invitation.role || "member",
     })
 
-    const { data: member, error: memberError } = await serviceSupabase
-      .from("team_members")
-      .insert({
-        team_id: invitation.team_id,
-        user_id: user.id,
-        role: invitation.role || "member",
-      })
-      .select()
-      .maybeSingle()
+    const insertResult = await serviceSupabase.from("team_members").insert({
+      team_id: invitation.team_id,
+      user_id: user.id,
+      role: invitation.role || "member",
+    })
 
-    if (memberError) {
-      console.error("[v0] Error adding team member:", memberError)
-      return NextResponse.json({ error: `Failed to add member: ${memberError.message}` }, { status: 500 })
+    if (insertResult.error) {
+      console.error("[v0] Error adding team member (insert error):", insertResult.error)
+      return NextResponse.json({ error: `Failed to add member: ${insertResult.error.message}` }, { status: 500 })
     }
 
-    console.log("[v0] Successfully added team member:", member)
+    console.log("[v0] Successfully inserted team member")
 
     const { error: updateError } = await serviceSupabase
       .from("team_invitations")
@@ -118,7 +114,7 @@ export async function POST(request: Request, { params }: { params: { token: stri
     }
 
     console.log("[v0] Successfully accepted invitation")
-    return NextResponse.json({ member, teamId: invitation.team_id })
+    return NextResponse.json({ teamId: invitation.team_id })
   } catch (error: any) {
     console.error("[v0] Error accepting invitation:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
