@@ -14,7 +14,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const supabaseAdmin = createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     // Get team IDs where user is a member
     const { data: memberships, error: memberError } = await supabaseAdmin
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const supabaseAdmin = createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     // Check user's subscription plan for team limits
     const { data: userData, error: userError } = await supabaseAdmin
