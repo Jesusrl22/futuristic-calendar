@@ -4,7 +4,7 @@ import { createServerClient, createServiceRoleClient } from "@/lib/supabase/serv
 export async function GET(request: Request, { params }: { params: { teamId: string } }) {
   try {
     const supabase = await createServerClient()
-    const supabaseAdmin = createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     const {
       data: { user },
@@ -78,7 +78,7 @@ export async function GET(request: Request, { params }: { params: { teamId: stri
 export async function PATCH(request: Request, { params }: { params: { teamId: string } }) {
   try {
     const supabase = await createServerClient()
-    const supabaseAdmin = createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     const {
       data: { user },
@@ -129,7 +129,7 @@ export async function PATCH(request: Request, { params }: { params: { teamId: st
 export async function DELETE(request: Request, { params }: { params: { teamId: string } }) {
   try {
     const supabase = await createServerClient()
-    const supabaseAdmin = createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     const {
       data: { user },
