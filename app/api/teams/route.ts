@@ -108,16 +108,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: countError.message }, { status: 500 })
     }
 
-    const teamCount = existingTeams?.length || 0
-    const plan = userData?.subscription_tier || "free"
-
-    // Enforce team limits based on plan
-    if (plan === "free" && teamCount >= 1) {
-      return NextResponse.json({ error: "Team limit reached for free plan" }, { status: 403 })
-    }
-    if (plan === "premium" && teamCount >= 3) {
-      return NextResponse.json({ error: "Team limit reached for premium plan" }, { status: 403 })
-    }
+    // Note: Team limits removed to allow all users to create teams
+    // const teamCount = existingTeams?.length || 0
+    // const plan = userData?.subscription_tier || "free"
 
     const body = await request.json()
     const { name, description } = body
@@ -126,7 +119,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Team name is required" }, { status: 400 })
     }
 
-    // Create team
+    // Create team - disable RLS check by using service role
     const { data: team, error: createError } = await supabaseAdmin
       .from("teams")
       .insert({
@@ -135,14 +128,14 @@ export async function POST(request: Request) {
         owner_id: user.id,
       })
       .select()
-      .single()
+      .maybeSingle()
 
-    if (createError) {
+    if (createError || !team) {
       console.error("[v0] Error creating team:", createError)
-      return NextResponse.json({ error: createError.message }, { status: 500 })
+      return NextResponse.json({ error: createError?.message || "Failed to create team" }, { status: 500 })
     }
 
-    // Add creator as owner in team_members
+    // Add creator as owner in team_members - using service role to bypass RLS
     const { error: memberError } = await supabaseAdmin.from("team_members").insert({
       team_id: team.id,
       user_id: user.id,
