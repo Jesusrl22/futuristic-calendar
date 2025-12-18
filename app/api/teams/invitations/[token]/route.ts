@@ -91,21 +91,18 @@ export async function POST(request: Request, { params }: { params: { token: stri
       role: invitation.role || "member",
     })
 
-    const { data: insertedMember, error: insertError } = await serviceSupabase
-      .from("team_members")
-      .insert({
-        team_id: invitation.team_id,
-        user_id: user.id,
-        role: invitation.role || "member",
-      })
-      .select()
+    const { error: insertError } = await serviceSupabase.from("team_members").insert({
+      team_id: invitation.team_id,
+      user_id: user.id,
+      role: invitation.role || "member",
+    })
 
     if (insertError) {
-      console.error("[v0] Error adding team member (insert error):", insertError)
+      console.error("[v0] Error adding team member:", insertError)
       return NextResponse.json({ error: `Failed to add member: ${insertError.message}` }, { status: 500 })
     }
 
-    console.log("[v0] Successfully inserted team member:", insertedMember)
+    console.log("[v0] Successfully inserted team member")
 
     const { error: updateError } = await serviceSupabase
       .from("team_invitations")
