@@ -91,15 +91,17 @@ export async function POST(request: Request, { params }: { params: { token: stri
       role: invitation.role || "member",
     })
 
-    const { error: insertError } = await serviceSupabase.from("team_members").insert({
+    const insertResult = await serviceSupabase.from("team_members").insert({
       team_id: invitation.team_id,
       user_id: user.id,
       role: invitation.role || "member",
     })
 
-    if (insertError) {
-      console.error("[v0] Error adding team member:", insertError)
-      return NextResponse.json({ error: `Failed to add member: ${insertError.message}` }, { status: 500 })
+    console.log("[v0] Insert result:", insertResult)
+
+    if (insertResult.error) {
+      console.error("[v0] Error adding team member:", insertResult.error)
+      return NextResponse.json({ error: `Failed to add member: ${insertResult.error.message}` }, { status: 500 })
     }
 
     console.log("[v0] Successfully inserted team member")
