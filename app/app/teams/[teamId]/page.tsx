@@ -296,9 +296,12 @@ export default function TeamDetailPage() {
   }
 
   const getTeamInviteLink = () => {
-    if (!team?.invite_token) return ""
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL
-    return `${baseUrl}/invite/${team.invite_token}`
+    if (!teamId) return ""
+    const baseUrl =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
+    return `${baseUrl}/invite/${teamId}`
   }
 
   const getRoleIcon = (role: string) => {

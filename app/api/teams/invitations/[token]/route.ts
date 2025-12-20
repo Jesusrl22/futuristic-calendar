@@ -3,31 +3,31 @@ import { createServerClient, createServiceRoleClient } from "@/lib/supabase/serv
 
 export async function GET(request: Request, { params }: { params: { token: string } }) {
   try {
-    const supabase = await createServiceRoleClient()
-    const { token } = params
+    const supabaseAdmin = await createServiceRoleClient()
+    const teamId = params.token
 
-    const { data: invitation, error } = await supabase
-      .from("team_invitations")
-      .select(`
-        *,
-        teams(name, description),
-        users:invited_by(name, email)
-      `)
-      .eq("token", token)
-      .eq("status", "pending")
+    const { data: team, error } = await supabaseAdmin
+      .from("teams")
+      .select("*, members:team_members(count)")
+      .eq("id", teamId)
       .maybeSingle()
 
-    if (error || !invitation) {
-      console.log("[v0] Invitation GET error:", error)
-      return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 })
+    if (error || !team) {
+      console.log("[v0] Team not found:", error)
+      return NextResponse.json({ error: "Invalid team link" }, { status: 404 })
     }
 
-    // Check if expired
-    if (new Date(invitation.expires_at) < new Date()) {
-      return NextResponse.json({ error: "Invitation has expired" }, { status: 410 })
-    }
-
-    return NextResponse.json({ invitation })
+    return NextResponse.json({
+      invitation: {
+        id: teamId,
+        team_id: teamId,
+        teams: {
+          name: team.name,
+          description: team.description,
+        },
+        role: "member",
+      },
+    })
   } catch (error: any) {
     console.error("[v0] Error in invitation GET:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -37,7 +37,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
 export async function POST(request: Request, { params }: { params: { token: string } }) {
   try {
     const supabase = await createServerClient()
-    const serviceSupabase = await createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     const {
       data: { user },
@@ -48,77 +48,39 @@ export async function POST(request: Request, { params }: { params: { token: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    console.log("[v0] User accepting invitation:", user.id, user.email)
+    console.log("[v0] User accepting team invite:", user.id)
 
-    const { token } = params
-
-    const { data: invitation, error: inviteError } = await serviceSupabase
-      .from("team_invitations")
-      .select("*")
-      .eq("token", token)
-      .eq("status", "pending")
-      .maybeSingle()
-
-    if (inviteError || !invitation) {
-      console.log("[v0] Invitation not found or error:", inviteError)
-      return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 })
-    }
-
-    console.log("[v0] Found invitation:", invitation.id, "team:", invitation.team_id)
-
-    // Check if expired
-    if (new Date(invitation.expires_at) < new Date()) {
-      console.log("[v0] Invitation expired")
-      return NextResponse.json({ error: "Invitation has expired" }, { status: 410 })
-    }
+    const teamId = params.token
 
     // Check if already a member
-    const { data: existingMember } = await serviceSupabase
+    const { data: existingMember } = await supabaseAdmin
       .from("team_members")
       .select("id")
-      .eq("team_id", invitation.team_id)
+      .eq("team_id", teamId)
       .eq("user_id", user.id)
       .maybeSingle()
 
     if (existingMember) {
-      console.log("[v0] User is already a member of this team")
-      return NextResponse.json({ error: "You are already a member of this team", teamId: invitation.team_id })
+      console.log("[v0] User already member of team:", teamId)
+      return NextResponse.json({ error: "You are already a member of this team", teamId })
     }
 
-    console.log("[v0] Inserting team member:", {
-      team_id: invitation.team_id,
+    // Add user to team
+    const { error: insertError } = await supabaseAdmin.from("team_members").insert({
+      team_id: teamId,
       user_id: user.id,
-      role: invitation.role || "member",
+      role: "member",
     })
 
-    const insertResult = await serviceSupabase.from("team_members").insert({
-      team_id: invitation.team_id,
-      user_id: user.id,
-      role: invitation.role || "member",
-    })
-
-    console.log("[v0] Insert result:", insertResult)
-
-    if (insertResult.error) {
-      console.error("[v0] Error adding team member:", insertResult.error)
-      return NextResponse.json({ error: `Failed to add member: ${insertResult.error.message}` }, { status: 500 })
+    if (insertError) {
+      console.error("[v0] Error adding team member:", insertError)
+      return NextResponse.json({ error: `Failed to add member: ${insertError.message}` }, { status: 500 })
     }
 
-    console.log("[v0] Successfully inserted team member")
-
-    const { error: updateError } = await serviceSupabase
-      .from("team_invitations")
-      .update({ status: "accepted" })
-      .eq("id", invitation.id)
-
-    if (updateError) {
-      console.error("[v0] Error updating invitation status:", updateError)
-    }
-
-    console.log("[v0] Successfully accepted invitation")
-    return NextResponse.json({ success: true, teamId: invitation.team_id })
+    console.log("[v0] Successfully added user to team:", teamId)
+    return NextResponse.json({ success: true, teamId })
   } catch (error: any) {
-    console.error("[v0] Error accepting invitation:", error)
+    console.error("[v0] Error accepting team invite:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
