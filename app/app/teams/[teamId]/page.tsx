@@ -2,14 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
@@ -41,9 +34,8 @@ export default function TeamDetailPage() {
   const [loading, setLoading] = useState(true)
   const [team, setTeam] = useState<any>(null)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
-  const [inviteEmail, setInviteEmail] = useState("")
+  const [teamInviteLink, setTeamInviteLink] = useState<string>("")
   const [inviting, setInviting] = useState(false)
-  const [inviteLink, setInviteLink] = useState<string>("")
   const [showInviteLink, setShowInviteLink] = useState(false)
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -70,6 +62,8 @@ export default function TeamDetailPage() {
     memberStats: [] as any[],
   })
 
+  const isOwner = team?.role === "owner"
+
   useEffect(() => {
     if (teamId) {
       fetchTeamDetails()
@@ -88,6 +82,7 @@ export default function TeamDetailPage() {
           name: data.name,
           description: data.description || "",
         })
+        setTeamInviteLink(getTeamInviteLink())
       } else {
         router.push("/app/teams")
       }
@@ -150,36 +145,6 @@ export default function TeamDetailPage() {
       }
     } catch (error) {
       console.error("Error fetching team stats:", error)
-    }
-  }
-
-  const handleInviteMember = async () => {
-    if (!inviteEmail.trim()) return
-
-    setInviting(true)
-    try {
-      const response = await fetch(`/api/teams/${teamId}/invite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: inviteEmail }),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setInviteEmail("")
-        setInviteLink(data.invitationLink)
-        setShowInviteLink(true)
-        setInviteDialogOpen(false)
-        fetchTeamDetails()
-      } else {
-        const error = await response.json()
-        alert(error.error || "Failed to create invitation")
-      }
-    } catch (error) {
-      console.error("Error inviting member:", error)
-      alert("An error occurred")
-    } finally {
-      setInviting(false)
     }
   }
 
@@ -330,6 +295,12 @@ export default function TeamDetailPage() {
     alert(t("copiedToClipboard") || "Copied to clipboard!")
   }
 
+  const getTeamInviteLink = () => {
+    if (!team?.invite_token) return ""
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL
+    return `${baseUrl}/invite/${team.invite_token}`
+  }
+
   const getRoleIcon = (role: string) => {
     if (role === "owner") return <Crown className="w-4 h-4 text-yellow-500" />
     if (role === "admin") return <Shield className="w-4 h-4 text-blue-500" />
@@ -367,7 +338,7 @@ export default function TeamDetailPage() {
   }
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-8">
       <Button variant="ghost" onClick={() => router.push("/app/teams")} className="mb-4">
         <ArrowLeft className="w-4 h-4 mr-2" />
         {t("back")}
@@ -381,14 +352,11 @@ export default function TeamDetailPage() {
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">{t("shareInvitationLink")}</p>
             <div className="flex gap-2">
-              <Input type="text" value={inviteLink} readOnly className="flex-1" />
-              <Button onClick={() => copyToClipboard(inviteLink)} className="shrink-0">
+              <Input type="text" value={teamInviteLink} readOnly className="flex-1" />
+              <Button onClick={() => copyToClipboard(teamInviteLink)} className="shrink-0">
                 Copy
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t("inviteEmail")}: {inviteEmail}
-            </p>
           </div>
         </DialogContent>
       </Dialog>
@@ -444,6 +412,32 @@ export default function TeamDetailPage() {
         </div>
         <p className="text-muted-foreground">{team.description}</p>
       </div>
+
+      {isOwner && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <UserPlus className="w-5 h-5" />
+            {t("inviteMember")}
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">{t("shareInvitationLink")}</p>
+              <div className="flex gap-2">
+                <Input type="text" value={teamInviteLink} readOnly className="flex-1 font-mono text-sm" />
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(teamInviteLink)
+                  }}
+                  className="shrink-0"
+                >
+                  {t("copy")}
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">{t("anyoneWithThisLinkCanJoinTeam")}</p>
+          </div>
+        </Card>
+      )}
 
       <Tabs defaultValue="tasks" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -585,36 +579,7 @@ export default function TeamDetailPage() {
         </TabsContent>
 
         <TabsContent value="members" className="mt-6 space-y-4">
-          {canManageMembers && (
-            <Card className="glass-card p-4">
-              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto">
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    {t("inviteMember")}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("inviteMember")}</DialogTitle>
-                    <DialogDescription>{t("enterEmailToInvite")}</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder={t("emailAddress")}
-                      onKeyPress={(e) => e.key === "Enter" && handleInviteMember()}
-                    />
-                    <Button onClick={handleInviteMember} disabled={inviting || !inviteEmail.trim()} className="w-full">
-                      {inviting ? t("sending") : t("sendInvitation")}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </Card>
-          )}
+          {canManageMembers && <Card className="glass-card p-4">{/* Invite dialog removed */}</Card>}
 
           <div className="grid gap-4">
             {team.members?.map((member: any) => (
