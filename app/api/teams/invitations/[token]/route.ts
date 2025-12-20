@@ -45,12 +45,25 @@ export async function POST(request: Request, { params }: { params: { token: stri
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      console.log("[v0] Auth error:", authError)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     console.log("[v0] User accepting team invite:", user.id)
 
     const teamId = params.token
+
+    // Verify team exists
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from("teams")
+      .select("id")
+      .eq("id", teamId)
+      .maybeSingle()
+
+    if (teamError || !team) {
+      console.log("[v0] Team not found:", teamError)
+      return NextResponse.json({ error: "Team not found" }, { status: 404 })
+    }
 
     // Check if already a member
     const { data: existingMember } = await supabaseAdmin
@@ -62,22 +75,26 @@ export async function POST(request: Request, { params }: { params: { token: stri
 
     if (existingMember) {
       console.log("[v0] User already member of team:", teamId)
-      return NextResponse.json({ error: "You are already a member of this team", teamId })
+      return NextResponse.json({ success: true, teamId })
     }
 
-    // Add user to team
-    const { error: insertError } = await supabaseAdmin.from("team_members").insert({
-      team_id: teamId,
-      user_id: user.id,
-      role: "member",
-    })
+    console.log("[v0] Attempting to insert team member:", { team_id: teamId, user_id: user.id })
+
+    const { data: insertedMember, error: insertError } = await supabaseAdmin
+      .from("team_members")
+      .insert({
+        team_id: teamId,
+        user_id: user.id,
+        role: "member",
+      })
+      .select()
 
     if (insertError) {
       console.error("[v0] Error adding team member:", insertError)
       return NextResponse.json({ error: `Failed to add member: ${insertError.message}` }, { status: 500 })
     }
 
-    console.log("[v0] Successfully added user to team:", teamId)
+    console.log("[v0] Successfully added user to team:", { teamId, member: insertedMember })
     return NextResponse.json({ success: true, teamId })
   } catch (error: any) {
     console.error("[v0] Error accepting team invite:", error)
