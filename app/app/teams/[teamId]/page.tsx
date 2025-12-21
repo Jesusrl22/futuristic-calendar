@@ -365,59 +365,61 @@ export default function TeamDetailPage() {
       </Dialog>
 
       <div className="mb-6">
-        <div className="flex items-start justify-between mb-2">
-          <h1 className="text-3xl md:text-4xl font-bold">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
             <span className="text-primary neon-text">{team.name}</span>
           </h1>
-          {canEditTeam && (
-            <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Edit className="w-4 h-4 mr-2" />
-                  {t("editTeam")}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{t("editTeam")}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>{t("teamName")} *</Label>
-                    <Input
-                      value={editForm.name}
-                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      placeholder={t("teamName")}
-                    />
-                  </div>
-                  <div>
-                    <Label>{t("teamDescription")}</Label>
-                    <Textarea
-                      value={editForm.description}
-                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                      placeholder={t("teamDescription")}
-                      rows={3}
-                    />
-                  </div>
-                  <Button onClick={handleEditTeam} disabled={updating || !editForm.name.trim()} className="w-full">
-                    {updating ? t("updating") : t("saveChanges")}
+          <div className="flex flex-col sm:flex-row gap-2">
+            {canEditTeam && (
+              <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Edit className="w-4 h-4 mr-2" />
+                    {t("editTeam")}
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
-          {canManageMembers && team.role === "owner" && (
-            <Button variant="destructive" size="sm" onClick={handleDeleteTeam}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              {t("deleteTeam")}
-            </Button>
-          )}
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t("editTeam")}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>{t("teamName")} *</Label>
+                      <Input
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        placeholder={t("teamName")}
+                      />
+                    </div>
+                    <div>
+                      <Label>{t("teamDescription")}</Label>
+                      <Textarea
+                        value={editForm.description}
+                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        placeholder={t("teamDescription")}
+                        rows={3}
+                      />
+                    </div>
+                    <Button onClick={handleEditTeam} disabled={updating || !editForm.name.trim()} className="w-full">
+                      {updating ? t("updating") : t("saveChanges")}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            {canManageMembers && team.role === "owner" && (
+              <Button variant="destructive" size="sm" onClick={handleDeleteTeam}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                {t("deleteTeam")}
+              </Button>
+            )}
+          </div>
         </div>
         <p className="text-muted-foreground">{team.description}</p>
       </div>
 
       {isOwner && (
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
             {t("inviteMember")}
@@ -425,14 +427,14 @@ export default function TeamDetailPage() {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-2">{t("shareInvitationLink")}</p>
-              <div className="flex gap-2">
-                <Input type="text" value={teamInviteLink} readOnly className="flex-1 font-mono text-sm" />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input type="text" value={teamInviteLink} readOnly className="flex-1 font-mono text-xs sm:text-sm" />
                 <Button
                   onClick={() => {
                     navigator.clipboard.writeText(teamInviteLink)
                     alert(t("copiedToClipboard") || "Copied!")
                   }}
-                  className="shrink-0"
+                  className="w-full sm:w-auto shrink-0"
                 >
                   {t("copy")}
                 </Button>
@@ -444,18 +446,21 @@ export default function TeamDetailPage() {
       )}
 
       <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="tasks">
-            <CheckSquare className="w-4 h-4 mr-2" />
-            {t("teamTasks")}
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm">
+            <CheckSquare className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{t("teamTasks")}</span>
+            <span className="sm:hidden">Tasks</span>
           </TabsTrigger>
-          <TabsTrigger value="members">
-            <Users className="w-4 h-4 mr-2" />
-            {t("teamMembers")}
+          <TabsTrigger value="members" className="text-xs sm:text-sm">
+            <Users className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{t("teamMembers")}</span>
+            <span className="sm:hidden">Members</span>
           </TabsTrigger>
-          <TabsTrigger value="stats">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            {t("teamStats")}
+          <TabsTrigger value="stats" className="text-xs sm:text-sm">
+            <BarChart3 className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">{t("teamStats")}</span>
+            <span className="sm:hidden">Stats</span>
           </TabsTrigger>
         </TabsList>
 
