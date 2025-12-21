@@ -8,7 +8,7 @@ export async function GET(request: Request, { params }: { params: { token: strin
 
     const { data: team, error } = await supabaseAdmin
       .from("teams")
-      .select("*, members:team_members(count)")
+      .select("id, name, description")
       .eq("id", teamId)
       .maybeSingle()
 
@@ -24,6 +24,10 @@ export async function GET(request: Request, { params }: { params: { token: strin
         teams: {
           name: team.name,
           description: team.description,
+        },
+        users: {
+          name: "Team Admin",
+          email: "admin@team.com",
         },
         role: "member",
       },
