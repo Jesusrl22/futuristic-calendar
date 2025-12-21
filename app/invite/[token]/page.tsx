@@ -24,29 +24,23 @@ export default function TeamInvitationPage() {
 
   const checkAuthAndFetchInvitation = async () => {
     try {
-      const authResponse = await fetch("/api/auth/check-session")
-      const authData = await authResponse.json()
-      console.log("[v0] Auth check result:", authData.authenticated)
-      setIsAuthenticated(authData.authenticated)
-
-      // Fetch invitation details
+      // First get invitation details
       const inviteResponse = await fetch(`/api/teams/invitations/${token}`)
       if (inviteResponse.ok) {
         const data = await inviteResponse.json()
         setInvitation(data.invitation)
+        console.log("[v0] Invitation data loaded:", data.invitation)
 
-        if (authData.authenticated) {
-          console.log("[v0] User is authenticated, auto-accepting invitation")
-          setTimeout(() => {
-            acceptInvitationDirectly(token)
-          }, 500)
-        }
+        // Try to auto-accept if already authenticated
+        setTimeout(() => {
+          acceptInvitationDirectly(token)
+        }, 300)
       } else {
         const errorData = await inviteResponse.json()
         setError(errorData.error || "Invalid invitation")
       }
     } catch (err) {
-      console.error("Error fetching invitation:", err)
+      console.error("[v0] Error fetching invitation:", err)
       setError("An error occurred")
     } finally {
       setLoading(false)
@@ -55,26 +49,29 @@ export default function TeamInvitationPage() {
 
   const acceptInvitationDirectly = async (inviteToken: string) => {
     try {
-      console.log("[v0] Auto-accepting invitation with token:", inviteToken)
+      console.log("[v0] Attempting to accept invitation with token:", inviteToken)
 
       const response = await fetch(`/api/teams/invitations/${inviteToken}`, {
         method: "POST",
       })
 
-      console.log("[v0] Auto-accept response status:", response.status)
+      console.log("[v0] Accept response status:", response.status)
       const data = await response.json()
-      console.log("[v0] Auto-accept response:", data)
+      console.log("[v0] Accept response:", data)
 
-      if (response.ok) {
-        console.log("[v0] Successfully auto-accepted invitation, redirecting to teams")
+      if (response.status === 401) {
+        // Not authenticated, show button
+        console.log("[v0] User not authenticated, showing signup/login")
+        setIsAuthenticated(false)
+      } else if (response.ok) {
+        console.log("[v0] Successfully accepted, redirecting to teams")
         router.push(`/app/teams`)
       } else {
-        console.log("[v0] Auto-accept failed:", data.error)
+        console.log("[v0] Accept failed:", data.error)
         setError(data.error || "Failed to accept invitation")
       }
     } catch (err) {
-      console.error("[v0] Error auto-accepting invitation:", err)
-      setError("An error occurred while accepting invitation")
+      console.error("[v0] Error accepting invitation:", err)
     }
   }
 
