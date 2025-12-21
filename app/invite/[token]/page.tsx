@@ -24,9 +24,9 @@ export default function TeamInvitationPage() {
 
   const checkAuthAndFetchInvitation = async () => {
     try {
-      // Check if user is authenticated
       const authResponse = await fetch("/api/auth/check-session")
       const authData = await authResponse.json()
+      console.log("[v0] Auth check result:", authData.authenticated)
       setIsAuthenticated(authData.authenticated)
 
       // Fetch invitation details
@@ -34,6 +34,13 @@ export default function TeamInvitationPage() {
       if (inviteResponse.ok) {
         const data = await inviteResponse.json()
         setInvitation(data.invitation)
+
+        if (authData.authenticated) {
+          console.log("[v0] User is authenticated, auto-accepting invitation")
+          setTimeout(() => {
+            acceptInvitationDirectly(token)
+          }, 500)
+        }
       } else {
         const errorData = await inviteResponse.json()
         setError(errorData.error || "Invalid invitation")
@@ -43,6 +50,31 @@ export default function TeamInvitationPage() {
       setError("An error occurred")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const acceptInvitationDirectly = async (inviteToken: string) => {
+    try {
+      console.log("[v0] Auto-accepting invitation with token:", inviteToken)
+
+      const response = await fetch(`/api/teams/invitations/${inviteToken}`, {
+        method: "POST",
+      })
+
+      console.log("[v0] Auto-accept response status:", response.status)
+      const data = await response.json()
+      console.log("[v0] Auto-accept response:", data)
+
+      if (response.ok) {
+        console.log("[v0] Successfully auto-accepted invitation, redirecting to teams")
+        router.push(`/app/teams`)
+      } else {
+        console.log("[v0] Auto-accept failed:", data.error)
+        setError(data.error || "Failed to accept invitation")
+      }
+    } catch (err) {
+      console.error("[v0] Error auto-accepting invitation:", err)
+      setError("An error occurred while accepting invitation")
     }
   }
 
