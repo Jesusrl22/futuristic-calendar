@@ -82,14 +82,11 @@ export async function POST(request: Request, { params }: { params: { token: stri
 
     console.log("[v0] Attempting to insert team member:", { team_id: teamId, user_id: user.id })
 
-    const { data: insertResult, error: insertError } = await supabaseAdmin
-      .from("team_members")
-      .insert({
-        team_id: teamId,
-        user_id: user.id,
-        role: "member",
-      })
-      .select()
+    const { data: insertResult, error: insertError } = await supabaseAdmin.from("team_members").insert({
+      team_id: teamId,
+      user_id: user.id,
+      role: "member",
+    })
 
     console.log("[v0] Insert result:", insertResult)
     console.log("[v0] Insert error:", insertError)
