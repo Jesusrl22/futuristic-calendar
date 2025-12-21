@@ -80,21 +80,18 @@ export async function POST(request: Request, { params }: { params: { token: stri
 
     console.log("[v0] Attempting to insert team member:", { team_id: teamId, user_id: user.id })
 
-    const { data: insertedMember, error: insertError } = await supabaseAdmin
-      .from("team_members")
-      .insert({
-        team_id: teamId,
-        user_id: user.id,
-        role: "member",
-      })
-      .select()
+    const { error: insertError } = await supabaseAdmin.from("team_members").insert({
+      team_id: teamId,
+      user_id: user.id,
+      role: "member",
+    })
 
     if (insertError) {
-      console.error("[v0] Error adding team member:", insertError)
+      console.error("[v0] Error adding team member:", insertError.message)
       return NextResponse.json({ error: `Failed to add member: ${insertError.message}` }, { status: 500 })
     }
 
-    console.log("[v0] Successfully added user to team:", { teamId, member: insertedMember })
+    console.log("[v0] Successfully added user to team:", teamId)
     return NextResponse.json({ success: true, teamId })
   } catch (error: any) {
     console.error("[v0] Error accepting team invite:", error)
