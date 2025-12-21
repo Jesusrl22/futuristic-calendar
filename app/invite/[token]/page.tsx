@@ -55,19 +55,26 @@ export default function TeamInvitationPage() {
 
     setAccepting(true)
     try {
+      console.log("[v0] Starting to accept invitation for token:", token)
+
       const response = await fetch(`/api/teams/invitations/${token}`, {
         method: "POST",
       })
 
+      console.log("[v0] Invitation response status:", response.status)
+
+      const data = await response.json()
+      console.log("[v0] Invitation response data:", data)
+
       if (response.ok) {
-        const data = await response.json()
+        console.log("[v0] Successfully accepted invitation, redirecting to teams")
         router.push(`/app/teams`)
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || "Failed to accept invitation")
+        console.log("[v0] Invitation failed with error:", data.error)
+        setError(data.error || "Failed to accept invitation")
       }
     } catch (err) {
-      console.error("Error accepting invitation:", err)
+      console.error("[v0] Error accepting invitation:", err)
       setError("An error occurred")
     } finally {
       setAccepting(false)

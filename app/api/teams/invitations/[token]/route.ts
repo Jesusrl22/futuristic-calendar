@@ -49,14 +49,14 @@ export async function POST(request: Request, { params }: { params: { token: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    console.log("[v0] User accepting team invite:", user.id)
+    console.log("[v0] User accepting team invite:", user.id, user.email)
 
     const teamId = params.token
 
     // Verify team exists
     const { data: team, error: teamError } = await supabaseAdmin
       .from("teams")
-      .select("id")
+      .select("id, name, description")
       .eq("id", teamId)
       .maybeSingle()
 
@@ -64,6 +64,8 @@ export async function POST(request: Request, { params }: { params: { token: stri
       console.log("[v0] Team not found:", teamError)
       return NextResponse.json({ error: "Team not found" }, { status: 404 })
     }
+
+    console.log("[v0] Team found:", team.name)
 
     // Check if already a member
     const { data: existingMember } = await supabaseAdmin
@@ -80,14 +82,25 @@ export async function POST(request: Request, { params }: { params: { token: stri
 
     console.log("[v0] Attempting to insert team member:", { team_id: teamId, user_id: user.id })
 
-    const { error: insertError } = await supabaseAdmin.from("team_members").insert({
-      team_id: teamId,
-      user_id: user.id,
-      role: "member",
-    })
+    const { data: insertResult, error: insertError } = await supabaseAdmin
+      .from("team_members")
+      .insert({
+        team_id: teamId,
+        user_id: user.id,
+        role: "member",
+      })
+      .select()
+
+    console.log("[v0] Insert result:", insertResult)
+    console.log("[v0] Insert error:", insertError)
 
     if (insertError) {
-      console.error("[v0] Error adding team member:", insertError.message)
+      console.error("[v0] Error adding team member:", {
+        message: insertError.message,
+        code: insertError.code,
+        details: insertError.details,
+        hint: insertError.hint,
+      })
       return NextResponse.json({ error: `Failed to add member: ${insertError.message}` }, { status: 500 })
     }
 
