@@ -72,6 +72,16 @@ export default function TeamDetailPage() {
     }
   }, [teamId])
 
+  useEffect(() => {
+    if (teamId) {
+      const baseUrl =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
+      setTeamInviteLink(`${baseUrl}/invite/${teamId}`)
+    }
+  }, [teamId])
+
   const fetchTeamDetails = async () => {
     try {
       const response = await fetch(`/api/teams/${teamId}`)
@@ -82,7 +92,6 @@ export default function TeamDetailPage() {
           name: data.name,
           description: data.description || "",
         })
-        setTeamInviteLink(getTeamInviteLink())
       } else {
         router.push("/app/teams")
       }
@@ -295,15 +304,6 @@ export default function TeamDetailPage() {
     alert(t("copiedToClipboard") || "Copied to clipboard!")
   }
 
-  const getTeamInviteLink = () => {
-    if (!teamId) return ""
-    const baseUrl =
-      typeof window !== "undefined"
-        ? window.location.origin
-        : process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
-    return `${baseUrl}/invite/${teamId}`
-  }
-
   const getRoleIcon = (role: string) => {
     if (role === "owner") return <Crown className="w-4 h-4 text-yellow-500" />
     if (role === "admin") return <Shield className="w-4 h-4 text-blue-500" />
@@ -430,6 +430,7 @@ export default function TeamDetailPage() {
                 <Button
                   onClick={() => {
                     navigator.clipboard.writeText(teamInviteLink)
+                    alert(t("copiedToClipboard") || "Copied!")
                   }}
                   className="shrink-0"
                 >
