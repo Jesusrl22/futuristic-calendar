@@ -365,42 +365,48 @@ export default function TeamDetailPage() {
       </Dialog>
 
       <div className="mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold break-words">
             <span className="text-primary neon-text">{team.name}</span>
           </h1>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
             {canEditTeam && (
               <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    {t("editTeam")}
+                  <Button variant="outline" size="sm" className="w-full xs:w-auto bg-transparent">
+                    <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <span className="text-xs sm:text-sm">{t("editTeam")}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="w-[90vw] max-w-md">
                   <DialogHeader>
-                    <DialogTitle>{t("editTeam")}</DialogTitle>
+                    <DialogTitle className="text-base sm:text-lg">{t("editTeam")}</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <Label>{t("teamName")} *</Label>
+                      <Label className="text-xs sm:text-sm">{t("teamName")} *</Label>
                       <Input
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                         placeholder={t("teamName")}
+                        className="text-xs sm:text-sm"
                       />
                     </div>
                     <div>
-                      <Label>{t("teamDescription")}</Label>
+                      <Label className="text-xs sm:text-sm">{t("teamDescription")}</Label>
                       <Textarea
                         value={editForm.description}
                         onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                         placeholder={t("teamDescription")}
                         rows={3}
+                        className="text-xs sm:text-sm"
                       />
                     </div>
-                    <Button onClick={handleEditTeam} disabled={updating || !editForm.name.trim()} className="w-full">
+                    <Button
+                      onClick={handleEditTeam}
+                      disabled={updating || !editForm.name.trim()}
+                      className="w-full text-xs sm:text-sm"
+                    >
                       {updating ? t("updating") : t("saveChanges")}
                     </Button>
                   </div>
@@ -408,33 +414,34 @@ export default function TeamDetailPage() {
               </Dialog>
             )}
             {canManageMembers && team.role === "owner" && (
-              <Button variant="destructive" size="sm" onClick={handleDeleteTeam}>
-                <Trash2 className="w-4 h-4 mr-2" />
-                {t("deleteTeam")}
+              <Button variant="destructive" size="sm" onClick={handleDeleteTeam} className="w-full xs:w-auto">
+                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">{t("deleteTeam")}</span>
               </Button>
             )}
           </div>
         </div>
-        <p className="text-muted-foreground">{team.description}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground break-words">{team.description}</p>
       </div>
 
       {isOwner && (
-        <Card className="p-4 sm:p-6 mb-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <UserPlus className="w-5 h-5" />
-            {t("inviteMember")}
+        <Card className="p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+            <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="truncate">{t("inviteMember")}</span>
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-2">{t("shareInvitationLink")}</p>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Input type="text" value={teamInviteLink} readOnly className="flex-1 font-mono text-xs sm:text-sm" />
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2">{t("shareInvitationLink")}</p>
+              <div className="flex flex-col xs:flex-row gap-2">
+                <Input type="text" value={teamInviteLink} readOnly className="flex-1 font-mono text-xs break-all" />
                 <Button
                   onClick={() => {
                     navigator.clipboard.writeText(teamInviteLink)
                     alert(t("copiedToClipboard") || "Copied!")
                   }}
-                  className="w-full sm:w-auto shrink-0"
+                  className="w-full xs:w-auto shrink-0 text-xs sm:text-sm"
+                  size="sm"
                 >
                   {t("copy")}
                 </Button>
@@ -446,62 +453,64 @@ export default function TeamDetailPage() {
       )}
 
       <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
-          <TabsTrigger value="tasks" className="text-xs sm:text-sm">
-            <CheckSquare className="w-4 h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">{t("teamTasks")}</span>
-            <span className="sm:hidden">Tasks</span>
+        <TabsList className="grid w-full grid-cols-3 mb-3 sm:mb-4 p-1">
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
+            <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
+            <span className="hidden xs:inline">{t("teamTasks")}</span>
+            <span className="xs:hidden">Tasks</span>
           </TabsTrigger>
-          <TabsTrigger value="members" className="text-xs sm:text-sm">
-            <Users className="w-4 h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">{t("teamMembers")}</span>
-            <span className="sm:hidden">Members</span>
+          <TabsTrigger value="members" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
+            <span className="hidden xs:inline">{t("teamMembers")}</span>
+            <span className="xs:hidden">Members</span>
           </TabsTrigger>
-          <TabsTrigger value="stats" className="text-xs sm:text-sm">
-            <BarChart3 className="w-4 h-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">{t("teamStats")}</span>
-            <span className="sm:hidden">Stats</span>
+          <TabsTrigger value="stats" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
+            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
+            <span className="hidden xs:inline">{t("teamStats")}</span>
+            <span className="xs:hidden">Stats</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="tasks" className="mt-6 space-y-4">
-          <Card className="glass-card p-4">
+        <TabsContent value="tasks" className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+          <Card className="glass-card p-3 sm:p-4">
             <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button className="w-full text-xs sm:text-sm" size="sm">
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   {t("newTask")}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[90vw] max-w-md">
                 <DialogHeader>
-                  <DialogTitle>{t("createNewTask")}</DialogTitle>
+                  <DialogTitle className="text-base sm:text-lg">{t("createNewTask")}</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <Label>{t("title")} *</Label>
+                    <Label className="text-xs sm:text-sm">{t("title")} *</Label>
                     <Input
                       value={newTask.title}
                       onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                       placeholder={t("title")}
+                      className="text-xs sm:text-sm"
                     />
                   </div>
                   <div>
-                    <Label>{t("description")}</Label>
+                    <Label className="text-xs sm:text-sm">{t("description")}</Label>
                     <Textarea
                       value={newTask.description}
                       onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
                       placeholder={t("description")}
+                      className="text-xs sm:text-sm"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4">
                     <div>
-                      <Label>{t("priority")}</Label>
+                      <Label className="text-xs sm:text-sm">{t("priority")}</Label>
                       <Select
                         value={newTask.priority}
                         onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-xs sm:text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -512,18 +521,18 @@ export default function TeamDetailPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label>{t("assignTo")}</Label>
+                      <Label className="text-xs sm:text-sm">{t("assignTo")}</Label>
                       <Select
                         value={newTask.assigned_to}
                         onValueChange={(value) => setNewTask({ ...newTask, assigned_to: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="text-xs sm:text-sm">
                           <SelectValue placeholder={t("unassigned")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="unassigned">{t("unassigned")}</SelectItem>
                           {team.members?.map((member: any) => (
-                            <SelectItem key={member.user_id} value={member.user_id}>
+                            <SelectItem key={member.user_id} value={member.user_id} className="text-xs sm:text-sm">
                               {member.users?.name || member.users?.email}
                             </SelectItem>
                           ))}
@@ -532,14 +541,15 @@ export default function TeamDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <Label>{t("dueDate")}</Label>
+                    <Label className="text-xs sm:text-sm">{t("dueDate")}</Label>
                     <Input
                       type="date"
                       value={newTask.due_date}
                       onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                      className="text-xs sm:text-sm"
                     />
                   </div>
-                  <Button onClick={handleCreateTask} className="w-full">
+                  <Button onClick={handleCreateTask} className="w-full text-xs sm:text-sm">
                     {t("createTask")}
                   </Button>
                 </div>
@@ -547,28 +557,38 @@ export default function TeamDetailPage() {
             </Dialog>
           </Card>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {tasks.length === 0 ? (
-              <Card className="glass-card p-12 text-center">
-                <CheckSquare className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">{t("noTasksFound")}</p>
+              <Card className="glass-card p-8 sm:p-12 text-center">
+                <CheckSquare className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-muted-foreground" />
+                <p className="text-xs sm:text-sm text-muted-foreground">{t("noTasksFound")}</p>
               </Card>
             ) : (
               tasks.map((task) => (
-                <Card key={task.id} className="glass-card p-4">
-                  <div className="flex items-start gap-4">
-                    <Checkbox checked={task.completed} onCheckedChange={() => toggleTask(task.id, task.completed)} />
+                <Card key={task.id} className="glass-card p-3 sm:p-4">
+                  <div className="flex items-start gap-2 sm:gap-4">
+                    <Checkbox
+                      checked={task.completed}
+                      onCheckedChange={() => toggleTask(task.id, task.completed)}
+                      className="mt-1"
+                    />
                     <div className="flex-1 min-w-0">
-                      <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                      <h3
+                        className={`text-xs sm:text-sm font-semibold break-words ${task.completed ? "line-through text-muted-foreground" : ""}`}
+                      >
                         {task.title}
                       </h3>
-                      {task.description && <p className="text-sm text-muted-foreground mt-1">{task.description}</p>}
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                      {task.description && (
+                        <p className="text-xs text-muted-foreground mt-1 break-words">{task.description}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-2">
+                        <Badge variant="outline" className={`text-xs ${getPriorityColor(task.priority)}`}>
                           {t(task.priority)}
                         </Badge>
                         {task.assigned_user && (
-                          <Badge variant="outline">{task.assigned_user.name || task.assigned_user.email}</Badge>
+                          <Badge variant="outline" className="text-xs truncate">
+                            {task.assigned_user.name || task.assigned_user.email}
+                          </Badge>
                         )}
                         {task.due_date && (
                           <span className="text-xs text-muted-foreground">
@@ -577,8 +597,13 @@ export default function TeamDetailPage() {
                         )}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteTask(task.id)}
+                      className="h-8 w-8 sm:h-10 sm:w-10 shrink-0"
+                    >
+                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
                     </Button>
                   </div>
                 </Card>
@@ -587,7 +612,7 @@ export default function TeamDetailPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="members" className="mt-6 space-y-4">
+        <TabsContent value="members" className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
           {canManageMembers && <Card className="glass-card p-4">{/* Invite dialog removed */}</Card>}
 
           <div className="grid gap-4">
