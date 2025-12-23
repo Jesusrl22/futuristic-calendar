@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createServerClient, createServiceRoleClient } from "@/lib/supabase/server"
+import crypto from "crypto"
 
 export async function GET() {
   try {
@@ -119,6 +120,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Team name is required" }, { status: 400 })
     }
 
+    const inviteToken = crypto.randomUUID().replace(/-/g, "").substring(0, 24)
+
     // Create team - disable RLS check by using service role
     const { data: team, error: createError } = await supabaseAdmin
       .from("teams")
@@ -126,6 +129,7 @@ export async function POST(request: Request) {
         name: name.trim(),
         description: description?.trim() || null,
         owner_id: user.id,
+        invite_token: inviteToken,
       })
       .select()
       .maybeSingle()
