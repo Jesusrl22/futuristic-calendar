@@ -55,6 +55,16 @@ export default function TeamDetailPage() {
     due_date: "",
   })
 
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [editingTask, setEditingTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    assigned_to: "",
+    due_date: "",
+  })
+  const [isEditTaskDialogOpen, setIsEditTaskDialogOpen] = useState(false)
+
   const [stats, setStats] = useState({
     totalTasks: 0,
     completedTasks: 0,
@@ -215,6 +225,49 @@ export default function TeamDetailPage() {
       console.error("Error creating task:", error)
       alert("Failed to create task")
     }
+  }
+
+  const handleEditTask = async (taskId: string) => {
+    if (!editingTask.title.trim()) {
+      alert(t("enterTaskTitle"))
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/team-tasks?teamId=${teamId}&id=${taskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...editingTask,
+          assigned_to: editingTask.assigned_to || null,
+        }),
+      })
+
+      if (response.ok) {
+        setIsEditTaskDialogOpen(false)
+        setEditingTaskId(null)
+        fetchTeamTasks()
+        fetchTeamStats()
+      } else {
+        const data = await response.json()
+        alert(data.error || "Failed to update task")
+      }
+    } catch (error) {
+      console.error("Error updating task:", error)
+      alert("Failed to update task")
+    }
+  }
+
+  const openEditTaskDialog = (task: any) => {
+    setEditingTaskId(task.id)
+    setEditingTask({
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      assigned_to: task.assigned_to || "",
+      due_date: task.due_date || "",
+    })
+    setIsEditTaskDialogOpen(true)
   }
 
   const toggleTask = async (taskId: string, completed: boolean) => {
@@ -472,6 +525,83 @@ export default function TeamDetailPage() {
         </TabsList>
 
         <TabsContent value="tasks" className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
+          <Dialog open={isEditTaskDialogOpen} onOpenChange={setIsEditTaskDialogOpen}>
+            <DialogContent className="w-[90vw] max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-base sm:text-lg">{t("editTask")}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 sm:space-y-4">
+                <div>
+                  <Label className="text-xs sm:text-sm">{t("title")} *</Label>
+                  <Input
+                    value={editingTask.title}
+                    onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
+                    placeholder={t("title")}
+                    className="text-xs sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs sm:text-sm">{t("description")}</Label>
+                  <Textarea
+                    value={editingTask.description}
+                    onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+                    placeholder={t("description")}
+                    className="text-xs sm:text-sm"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  <div>
+                    <Label className="text-xs sm:text-sm">{t("priority")}</Label>
+                    <Select
+                      value={editingTask.priority}
+                      onValueChange={(value) => setEditingTask({ ...editingTask, priority: value })}
+                    >
+                      <SelectTrigger className="text-xs sm:text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">{t("low")}</SelectItem>
+                        <SelectItem value="medium">{t("medium")}</SelectItem>
+                        <SelectItem value="high">{t("high")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs sm:text-sm">{t("assignTo")}</Label>
+                    <Select
+                      value={editingTask.assigned_to}
+                      onValueChange={(value) => setEditingTask({ ...editingTask, assigned_to: value })}
+                    >
+                      <SelectTrigger className="text-xs sm:text-sm">
+                        <SelectValue placeholder={t("unassigned")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">{t("unassigned")}</SelectItem>
+                        {team.members?.map((member: any) => (
+                          <SelectItem key={member.user_id} value={member.user_id} className="text-xs sm:text-sm">
+                            {member.users?.name || member.users?.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs sm:text-sm">{t("dueDate")}</Label>
+                  <Input
+                    type="date"
+                    value={editingTask.due_date}
+                    onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
+                    className="text-xs sm:text-sm"
+                  />
+                </div>
+                <Button onClick={() => handleEditTask(editingTaskId!)} className="w-full text-xs sm:text-sm">
+                  {t("saveChanges")}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Card className="glass-card p-3 sm:p-4">
             <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
               <DialogTrigger asChild>
@@ -597,14 +727,24 @@ export default function TeamDetailPage() {
                         )}
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteTask(task.id)}
-                      className="h-8 w-8 sm:h-10 sm:w-10 shrink-0"
-                    >
-                      <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
-                    </Button>
+                    <div className="flex gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEditTaskDialog(task)}
+                        className="h-8 w-8 sm:h-10 sm:w-10"
+                      >
+                        <Edit className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => deleteTask(task.id)}
+                        className="h-8 w-8 sm:h-10 sm:w-10"
+                      >
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-destructive" />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))

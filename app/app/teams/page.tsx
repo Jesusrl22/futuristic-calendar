@@ -68,6 +68,7 @@ export default function TeamsPage() {
 
     setCreating(true)
     try {
+      console.log("[v0] Creating team with name:", newTeamName)
       const response = await fetch("/api/teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,17 +78,20 @@ export default function TeamsPage() {
         }),
       })
 
+      console.log("[v0] Team creation response status:", response.status)
+      const data = await response.json()
+      console.log("[v0] Team creation response:", data)
+
       if (response.ok) {
         setCreateDialogOpen(false)
         setNewTeamName("")
         setNewTeamDescription("")
-        fetchTeams()
+        await fetchTeams()
       } else {
-        const data = await response.json()
         alert(data.error || "Failed to create team")
       }
     } catch (error) {
-      console.error("Error creating team:", error)
+      console.error("[v0] Error creating team:", error)
       alert("An error occurred while creating the team")
     } finally {
       setCreating(false)
