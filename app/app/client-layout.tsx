@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
+import { useTranslation } from "@/hooks/useTranslation" // Added useTranslation hook
 
 export default function ClientLayout({
   children,
@@ -16,24 +17,25 @@ export default function ClientLayout({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { t } = useTranslation() // Added useTranslation hook
 
   const getPageTitle = () => {
-    const path = pathname.split("/").pop() || "dashboard"
+    const path = pathname.split("/").pop() || "app"
     const titleMap: { [key: string]: string } = {
-      app: "Dashboard",
-      calendar: "Calendar",
-      tasks: "Tasks",
-      notes: "Notes",
-      pomodoro: "Pomodoro",
-      ai: "AI Assistant",
-      teams: "Teams", // Added Teams title
-      stats: "Statistics",
-      achievements: "Achievements",
-      settings: "Settings",
-      subscription: "Subscription",
-      wishlist: "Wishlist",
+      app: t("dashboard"),
+      calendar: t("calendar"),
+      tasks: t("tasks"),
+      notes: t("notes"),
+      pomodoro: t("pomodoro"),
+      ai: t("ai"),
+      teams: t("teams"),
+      stats: t("stats"),
+      achievements: t("achievements"),
+      settings: t("settings"),
+      subscription: t("subscription"),
+      wishlist: t("wishlist"),
     }
-    return titleMap[path] || "Dashboard"
+    return titleMap[path] || t("dashboard")
   }
 
   return (

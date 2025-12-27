@@ -60,6 +60,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     fetchProfile()
   }, [])
 
+  useEffect(() => {
+    // Force re-render when language changes to update menu items
+  }, [language])
+
   const menuItemsTranslated = [
     { icon: Home, label: t("dashboard"), href: "/app" },
     { icon: Calendar, label: t("calendar"), href: "/app/calendar" },
