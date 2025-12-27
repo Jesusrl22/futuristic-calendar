@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast"
 import { getAvailableAchievements, type AchievementTier } from "@/lib/achievements"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
+import { useTranslation } from "react-i18next"
 
 export default function AchievementsPage() {
+  const { t } = useTranslation("achievements")
   const [achievements, setAchievements] = useState<any[]>([])
   const [stats, setStats] = useState({ tasks: 0, notes: 0, pomodoro: 0 })
   const [userTier, setUserTier] = useState<AchievementTier>("free")
@@ -46,15 +48,15 @@ export default function AchievementsPage() {
 
       if (data.newUnlocks > 0) {
         toast({
-          title: "Achievement Unlocked!",
-          description: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? "s" : ""}!`,
+          title: t("achievementUnlocked"),
+          description: `${t("youUnlocked")} ${data.newUnlocks} ${data.newUnlocks > 1 ? t("achievementsPlural") : t("achievementSingular")}!`,
           duration: 5000,
         })
 
         if ("Notification" in window && Notification.permission === "granted") {
           try {
-            new Notification("Achievement Unlocked!", {
-              body: `You unlocked ${data.newUnlocks} new achievement${data.newUnlocks > 1 ? "s" : ""}!`,
+            new Notification(t("achievementUnlocked"), {
+              body: `${t("youUnlocked")} ${data.newUnlocks} ${data.newUnlocks > 1 ? t("achievementsPlural") : t("achievementSingular")}!`,
               icon: "/favicon.ico",
               tag: "achievement-unlock",
             })
@@ -102,17 +104,19 @@ export default function AchievementsPage() {
     <div className="p-4 md:p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="hidden md:block text-2xl md:text-4xl font-bold mb-6 md:mb-8">
-          <span className="text-primary neon-text">Achievements</span>
+          <span className="text-primary neon-text">{t("achievements")}</span>
         </h1>
 
         <Card className="glass-card p-4 md:p-6 neon-glow mb-6 md:mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold mb-2">Your Progress</h2>
+              <h2 className="text-xl md:text-2xl font-bold mb-2">{t("yourProgress")}</h2>
               <p className="text-sm md:text-base text-muted-foreground">
-                {unlockedCount} of {availableAchievements.length} unlocked
+                {unlockedCount} {t("of")} {availableAchievements.length} {t("unlocked")}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Plan: {userTier.toUpperCase()}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("plan")}: {userTier.toUpperCase()}
+              </p>
             </div>
             <div className="text-center">
               <Trophy className="w-12 h-12 md:w-16 md:h-16 text-primary mx-auto mb-2" />
@@ -124,7 +128,7 @@ export default function AchievementsPage() {
 
         {freeAchievements.length > 0 && (
           <div className="mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-green-500">Free Achievements</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-green-500">{t("freeAchievements")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {freeAchievements.map((achievement, index) => {
                 const unlocked = isUnlocked(achievement.id)
@@ -153,7 +157,7 @@ export default function AchievementsPage() {
                       {!unlocked && (
                         <div>
                           <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground mb-2">
-                            <span>Progress</span>
+                            <span>{t("progress")}</span>
                             <span>{Math.round(progress)}%</span>
                           </div>
                           <Progress value={progress} />
@@ -169,7 +173,7 @@ export default function AchievementsPage() {
 
         {premiumAchievements.length > 0 && (
           <div className="mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-purple-500">Premium Achievements</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-purple-500">{t("premiumAchievements")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {premiumAchievements.map((achievement, index) => {
                 const unlocked = isUnlocked(achievement.id)
@@ -196,11 +200,11 @@ export default function AchievementsPage() {
                       </div>
                       <h3 className="font-semibold text-base md:text-lg mb-2">{achievement.title}</h3>
                       <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{achievement.description}</p>
-                      {isLocked && <p className="text-xs md:text-sm text-purple-500">Upgrade to Premium to unlock</p>}
+                      {isLocked && <p className="text-xs md:text-sm text-purple-500">{t("upgradeToPremium")}</p>}
                       {!isLocked && !unlocked && (
                         <div>
                           <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground mb-2">
-                            <span>Progress</span>
+                            <span>{t("progress")}</span>
                             <span>{Math.round(progress)}%</span>
                           </div>
                           <Progress value={progress} />
@@ -216,7 +220,7 @@ export default function AchievementsPage() {
 
         {proAchievements.length > 0 && (
           <div className="mb-6 md:mb-8">
-            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-blue-500">Pro Achievements</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-blue-500">{t("proAchievements")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {proAchievements.map((achievement, index) => {
                 const unlocked = isUnlocked(achievement.id)
@@ -243,11 +247,11 @@ export default function AchievementsPage() {
                       </div>
                       <h3 className="font-semibold text-base md:text-lg mb-2">{achievement.title}</h3>
                       <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{achievement.description}</p>
-                      {isLocked && <p className="text-xs md:text-sm text-blue-500">Upgrade to Pro to unlock</p>}
+                      {isLocked && <p className="text-xs md:text-sm text-blue-500">{t("upgradeToPro")}</p>}
                       {!isLocked && !unlocked && (
                         <div>
                           <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground mb-2">
-                            <span>Progress</span>
+                            <span>{t("progress")}</span>
                             <span>{Math.round(progress)}%</span>
                           </div>
                           <Progress value={progress} />
