@@ -265,46 +265,52 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="p-8">
+    <div className="p-3 sm:p-6 md:p-8">
       <div>
-        <h1 className="text-4xl font-bold mb-8 hidden md:block">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 hidden md:block">
           <span className="text-primary neon-text">{t("settings")}</span>
         </h1>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-full md:w-auto">
+            <TabsTrigger value="profile" className="text-xs sm:text-sm">
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="preferences" className="text-xs sm:text-sm">
+              Preferences
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm">
+              Notifications
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
-            <Card className="glass-card p-6 neon-glow">
-              <h2 className="text-xl font-bold mb-6">Profile Settings</h2>
+            <Card className="glass-card p-4 sm:p-6 neon-glow">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Profile Settings</h2>
               <div className="space-y-4">
                 <div>
-                  <Label>Email</Label>
-                  <Input value={profile.email} disabled className="bg-secondary/50" />
+                  <Label className="text-sm">{t("email")}</Label>
+                  <Input value={profile.email} disabled className="bg-secondary/50 text-sm" />
                   <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
                 </div>
 
                 <div>
-                  <Label>{t("theme")}</Label>
+                  <Label className="text-sm">{t("theme")}</Label>
                   <Select value={profile.theme} onValueChange={handleThemeChange}>
-                    <SelectTrigger className="bg-secondary/50">
+                    <SelectTrigger className="bg-secondary/50 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {availableThemes.map((theme) => (
                         <SelectItem key={theme.id} value={theme.id}>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-sm">
                             <div className="flex gap-1">
                               <div
-                                className="w-4 h-4 rounded border border-white/20"
+                                className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20"
                                 style={{ background: `hsl(${theme.primary})` }}
                               />
                               <div
-                                className="w-4 h-4 rounded border border-white/20"
+                                className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20"
                                 style={{ background: `hsl(${theme.secondary})` }}
                               />
                             </div>
@@ -317,9 +323,9 @@ export default function SettingsPage() {
                       ))}
                       {showCustom && (
                         <SelectItem value="custom">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-sm">
                             <div className="flex gap-1">
-                              <div className="w-4 h-4 rounded border border-white/20 bg-gradient-to-r from-purple-500 to-pink-500" />
+                              <div className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20 bg-gradient-to-r from-purple-500 to-pink-500" />
                             </div>
                             Custom Theme
                             <Badge variant="outline" className="text-xs bg-primary/20">
@@ -338,13 +344,15 @@ export default function SettingsPage() {
                 </div>
 
                 {profile.theme === "custom" && showCustom && (
-                  <div className="space-y-4 mt-4 p-4 border rounded-lg">
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-4 mt-4 p-3 sm:p-4 border rounded-lg">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {t.settingsPage?.customThemeDescription || "Create your own theme by selecting two colors"}
                     </p>
-                    <div className="grid gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="customPrimary">{t.settingsPage?.primaryColor || "Primary Color"}</Label>
+                        <Label htmlFor="customPrimary" className="text-sm">
+                          {t.settingsPage?.primaryColor || "Primary Color"}
+                        </Label>
                         <Input
                           id="customPrimary"
                           type="color"
@@ -354,7 +362,9 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="customSecondary">{t.settingsPage?.secondaryColor || "Secondary Color"}</Label>
+                        <Label htmlFor="customSecondary" className="text-sm">
+                          {t.settingsPage?.secondaryColor || "Secondary Color"}
+                        </Label>
                         <Input
                           id="customSecondary"
                           type="color"
@@ -368,14 +378,14 @@ export default function SettingsPage() {
                 )}
 
                 <div>
-                  <Label>{t("language")}</Label>
+                  <Label className="text-sm">{t("language")}</Label>
                   <Select
                     value={profile.language}
                     onValueChange={(value: Language) => {
                       setProfile({ ...profile, language: value })
                     }}
                   >
-                    <SelectTrigger className="bg-secondary/50">
+                    <SelectTrigger className="bg-secondary/50 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -389,14 +399,14 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <Label>Timezone / Region</Label>
-                  <Input value={`${profile.timezone} (Auto-detected)`} disabled className="bg-secondary/50" />
+                  <Label className="text-sm">Timezone / Region</Label>
+                  <Input value={`${profile.timezone} (Auto-detected)`} disabled className="bg-secondary/50 text-sm" />
                   <p className="text-xs text-muted-foreground mt-1">
                     Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
                 </div>
 
-                <Button onClick={handleSave} disabled={loading} className="neon-glow-hover">
+                <Button onClick={handleSave} disabled={loading} className="neon-glow-hover w-full sm:w-auto text-sm">
                   {loading ? "Saving..." : t("save")}
                 </Button>
               </div>
@@ -404,16 +414,16 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="preferences">
-            <Card className="glass-card p-6 neon-glow">
-              <h2 className="text-xl font-bold mb-6">Preferences</h2>
+            <Card className="glass-card p-4 sm:p-6 neon-glow">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Preferences</h2>
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Pomodoro Duration</Label>
-                    <p className="text-sm text-muted-foreground">Default work session length</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Pomodoro Duration</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Default work session length</p>
                   </div>
                   <Select defaultValue={profile.pomodoroWorkDuration.toString()}>
-                    <SelectTrigger className="w-32 bg-secondary/50">
+                    <SelectTrigger className="w-full sm:w-32 bg-secondary/50 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -424,18 +434,18 @@ export default function SettingsPage() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Auto-start breaks</Label>
-                    <p className="text-sm text-muted-foreground">Automatically start break timer</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Auto-start breaks</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Automatically start break timer</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Sound notifications</Label>
-                    <p className="text-sm text-muted-foreground">Play sound when timer completes</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Sound notifications</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Play sound when timer completes</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
@@ -444,13 +454,13 @@ export default function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="notifications">
-            <Card className="glass-card p-6 neon-glow">
-              <h2 className="text-xl font-bold mb-6">Notification Settings</h2>
+            <Card className="glass-card p-4 sm:p-6 neon-glow">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Notification Settings</h2>
               <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Email notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Email notifications</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Receive updates via email</p>
                   </div>
                   <Switch
                     checked={profile.notifications}
@@ -458,23 +468,23 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Task reminders</Label>
-                    <p className="text-sm text-muted-foreground">Get reminded about upcoming tasks</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Task reminders</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Get reminded about upcoming tasks</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Achievement alerts</Label>
-                    <p className="text-sm text-muted-foreground">Notify when you unlock achievements</p>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Achievement alerts</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Notify when you unlock achievements</p>
                   </div>
                   <Switch defaultChecked />
                 </div>
 
-                <Button onClick={handleSave} disabled={loading} className="neon-glow-hover">
+                <Button onClick={handleSave} disabled={loading} className="neon-glow-hover w-full sm:w-auto text-sm">
                   {loading ? "Saving..." : t("save")}
                 </Button>
               </div>
