@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTranslation } from "@/lib/translations"
+import { useTranslation } from "@/hooks/useTranslation" // Fixed import - useTranslation is in hooks/useTranslation, not lib/translations
 import { useLanguage } from "@/contexts/language-context"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"

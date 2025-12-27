@@ -139,7 +139,7 @@ export default function TeamsPage() {
                 <Textarea
                   value={newTeamDescription}
                   onChange={(e) => setNewTeamDescription(e.target.value)}
-                  placeholder="What is this team about?"
+                  placeholder={t("whatIsThisTeamAbout")}
                   rows={3}
                 />
               </div>
@@ -203,7 +203,7 @@ export default function TeamsPage() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {team.description || "No description"}
+                  {team.description || t("noDescription")}
                 </p>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1 text-muted-foreground">

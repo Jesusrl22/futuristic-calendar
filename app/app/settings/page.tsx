@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useTranslation, type Language } from "@/lib/translations"
+import { useTranslation } from "@/hooks/useTranslation"
 import { useToast } from "@/hooks/use-toast"
 import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/lib/themes"
 import { Badge } from "@/components/ui/badge"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useLanguage } from "@/contexts/language-context"
+import type { Language } from "@/types/language" // Import Language type
 
 type ProfileType = {
   email: string
@@ -53,7 +54,7 @@ export default function SettingsPage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [availableThemes, setAvailableThemes] = useState<Theme[]>([])
   const [showCustom, setShowCustom] = useState(false)
-  const { t } = useTranslation(profile.language)
+  const { t } = useTranslation()
 
   useEffect(() => {
     fetchProfile()
@@ -188,12 +189,12 @@ export default function SettingsPage() {
         }
 
         toast({
-          title: t("success"),
+          title: "success",
           description: "Settings saved successfully",
         })
       } else {
         toast({
-          title: t("error"),
+          title: "error",
           description: result.error || "Failed to save settings",
           variant: "destructive",
         })
@@ -201,7 +202,7 @@ export default function SettingsPage() {
     } catch (error) {
       console.error("Error saving settings:", error)
       toast({
-        title: t("error"),
+        title: "error",
         description: "Failed to save settings",
         variant: "destructive",
       })
