@@ -1,7 +1,11 @@
 // For Italian section - add these translations
+export type Language = "en" | "es" | "fr" | "de" | "it"
+
 export const translations = {
   en: {},
   es: {},
+  fr: {},
+  de: {},
   it: {
     noDescription: "Nessuna descrizione",
     myAwesomeTeam: "Il mio fantastico team",

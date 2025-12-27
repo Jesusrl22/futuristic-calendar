@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useLanguage } from "@/contexts/language-context"
-import type { Language } from "@/types/language" // Import Language type
+import type { Language } from "@/lib/translations"
 
 type ProfileType = {
   email: string
