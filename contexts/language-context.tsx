@@ -15,9 +15,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("language") as Language
+    const savedLang = localStorage.getItem("language") as Language | null
     const browserLang = navigator.language.split("-")[0] as Language
-    const initialLang = savedLang || browserLang || "en"
+    const validLanguages: Language[] = ["en", "es", "fr", "de", "it"]
+    const initialLang =
+      savedLang && validLanguages.includes(savedLang)
+        ? savedLang
+        : validLanguages.includes(browserLang)
+          ? browserLang
+          : "en"
     setLanguageState(initialLang)
     setMounted(true)
   }, [])
@@ -28,11 +34,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event("languagechange"))
   }
 
-  if (!mounted) {
-    return null
-  }
-
-  return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>
+  return (
+    <LanguageContext.Provider value={{ language: mounted ? language : "en", setLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  )
 }
 
 export function useLanguage() {
