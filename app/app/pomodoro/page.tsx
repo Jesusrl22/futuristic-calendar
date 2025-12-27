@@ -20,10 +20,10 @@ import { canAccessAdvancedPomodoro } from "@/lib/subscription"
 import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
-import { useTranslation } from "react-i18next"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function PomodoroPage() {
-  const { t } = useTranslation("pomodoro")
+  const { t } = useTranslation()
   const [durations, setDurations] = useState({
     work: 25 * 60,
     break: 5 * 60,

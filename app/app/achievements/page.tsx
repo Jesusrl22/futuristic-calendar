@@ -9,10 +9,10 @@ import { useToast } from "@/hooks/use-toast"
 import { getAvailableAchievements, type AchievementTier } from "@/lib/achievements"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
-import { useTranslation } from "react-i18next"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function AchievementsPage() {
-  const { t } = useTranslation("achievements")
+  const { t } = useTranslation()
   const [achievements, setAchievements] = useState<any[]>([])
   const [stats, setStats] = useState({ tasks: 0, notes: 0, pomodoro: 0 })
   const [userTier, setUserTier] = useState<AchievementTier>("free")
