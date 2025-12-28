@@ -444,8 +444,8 @@ export default function PomodoroPage() {
                 placeholder="25"
               />
               <p className="text-xs text-muted-foreground">
-                {t("break")}: {Math.floor(Number.parseInt(customMinutes || "25") / 5)} min | {t("longBreak")}:{" "}
-                {Math.floor(Number.parseInt(customMinutes || "25") / 2)} min
+                {t("break")}: {Math.floor(Number.parseInt(customMinutes || "25") / 5)} {t("minutes")} | {t("longBreak")}
+                : {Math.floor(Number.parseInt(customMinutes || "25") / 2)} {t("minutes")}
               </p>
             </div>
             <Button onClick={handleCustomDuration} className="w-full">
