@@ -694,23 +694,25 @@ type Language = "en" | "es" | "fr" | "de" | "it"
 export default function HomePageClient() {
   const [lang, setLang] = useState<Language>("en")
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
-  const t = translations[lang]
 
-  // This is a placeholder for the actual language state, as it's not defined in the updates.
-  // If this were a real scenario, you'd likely have a useState hook for language.
-  const [language, setLanguage] = useState<string>("en")
-  const [theme, setTheme] = useState<string>("default")
+  const [language, setLanguage] = useState<"en" | "es" | "fr" | "de" | "it">("en")
 
   useEffect(() => {
-    const savedLang = localStorage.getItem("language") as Language | null
-    if (savedLang && translations[savedLang]) {
-      setLang(savedLang)
+    // Load language from localStorage or user profile
+    const savedLanguage = localStorage.getItem("userLanguage") as "en" | "es" | "fr" | "de" | "it" | null
+    if (savedLanguage) {
+      setLanguage(savedLanguage)
+    } else {
+      // Try to detect from browser language
+      const browserLang = navigator.language.split("-")[0] as "en" | "es" | "fr" | "de" | "it"
+      if (["en", "es", "fr", "de", "it"].includes(browserLang)) {
+        setLanguage(browserLang)
+      }
     }
   }, [])
 
-  const handleLanguageChange = (newLang: Language) => {
-    setLang(newLang)
-    localStorage.setItem("language", newLang)
+  const t = (key: keyof typeof translations.en): string => {
+    return translations[language]?.[key] || translations.en[key] || key
   }
 
   const prices = {
@@ -732,23 +734,30 @@ export default function HomePageClient() {
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm hover:text-primary transition-colors">
-              {t.features}
+              {t("features")}
             </a>
             <a href="#dashboard" className="text-sm hover:text-primary transition-colors">
-              {t.dashboard}
+              {t("dashboard")}
             </a>
             <a href="#pricing" className="text-sm hover:text-primary transition-colors">
-              {t.pricing}
+              {t("pricing")}
             </a>
             <a href="#about" className="text-sm hover:text-primary transition-colors">
-              {t.about}
+              {t("about")}
             </a>
             <Link href="/blog" className="text-sm hover:text-primary transition-colors">
-              {t.blogTitle}
+              {t("blogTitle")}
             </Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Select value={lang} onValueChange={(v) => handleLanguageChange(v as Language)}>
+            <Select
+              value={language}
+              onValueChange={(v) => {
+                const newLang = v as Language
+                setLanguage(newLang)
+                localStorage.setItem("userLanguage", newLang)
+              }}
+            >
               <SelectTrigger className="w-[70px] h-9">
                 <SelectValue />
               </SelectTrigger>
@@ -762,12 +771,12 @@ export default function HomePageClient() {
             </Select>
             <Link href="/login">
               <Button variant="ghost" size="sm">
-                {t.login}
+                {t("login")}
               </Button>
             </Link>
             <Link href="/signup">
               <Button size="sm" className="neon-glow-hover">
-                {t.signup}
+                {t("signup")}
               </Button>
             </Link>
           </div>
@@ -785,11 +794,11 @@ export default function HomePageClient() {
             <br />
             Seamlessly, Succeed Efficiently
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t.heroDesc}</p>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t("heroDesc")}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/signup">
               <Button size="lg" className="neon-glow-hover group">
-                {t.startNow}
+                {t("startNow")}
                 <svg
                   className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
                   fill="none"
@@ -802,7 +811,7 @@ export default function HomePageClient() {
             </Link>
             <Link href="#features">
               <Button size="lg" variant="outline" className="neon-glow-hover bg-transparent">
-                {t.learnMore}
+                {t("learnMore")}
               </Button>
             </Link>
           </div>
@@ -816,12 +825,12 @@ export default function HomePageClient() {
       <section id="features" className="container mx-auto px-4 py-20">
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { icon: "🛡️", title: t.secure, desc: t.secureDesc },
-            { icon: "📈", title: t.growth, desc: t.growthDesc },
-            { icon: "👥", title: t.team, desc: t.teamDesc },
-            { icon: "🌍", title: t.global, desc: t.globalDesc },
-            { icon: "✨", title: t.ai, desc: t.aiDesc },
-            { icon: "⚡", title: t.fast, desc: t.fastDesc },
+            { icon: "🛡️", title: t("secure"), desc: t("secureDesc") },
+            { icon: "📈", title: t("growth"), desc: t("growthDesc") },
+            { icon: "👥", title: t("team"), desc: t("teamDesc") },
+            { icon: "🌍", title: t("global"), desc: t("globalDesc") },
+            { icon: "✨", title: t("ai"), desc: t("aiDesc") },
+            { icon: "⚡", title: t("fast"), desc: t("fastDesc") },
           ].map((feature, i) => (
             <Card
               key={i}
@@ -840,13 +849,13 @@ export default function HomePageClient() {
         <Card className="glass-card p-8 neon-glow">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold">{t.powerfulDashboard}</h2>
-              <p className="text-muted-foreground">{t.dashboardDesc}</p>
+              <h2 className="text-3xl font-bold">{t("powerfulDashboard")}</h2>
+              <p className="text-muted-foreground">{t("dashboardDesc")}</p>
               <div className="space-y-3 pt-4">
                 {[
-                  { label: t.tasksCompleted, value: "156", change: "+12.5%" },
-                  { label: t.productivity, value: "94%", change: "+8.3%" },
-                  { label: t.timeSaved, value: "24h", change: "+15.2%" },
+                  { label: t("tasksCompleted"), value: "156", change: "+12.5%" },
+                  { label: t("productivity"), value: "94%", change: "+8.3%" },
+                  { label: t("timeSaved"), value: "24h", change: "+15.2%" },
                 ].map((stat, i) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
                     <span className="text-sm text-muted-foreground">{stat.label}</span>
@@ -869,8 +878,8 @@ export default function HomePageClient() {
       {/* How It Works Section - Adding educational content for AdSense */}
       <section id="how-it-works" className="container mx-auto px-4 py-20 bg-secondary/10">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">{t.howItWorksTitle}</h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">{t.howItWorksDesc}</p>
+          <h2 className="text-4xl font-bold mb-4">{t("howItWorksTitle")}</h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">{t("howItWorksDesc")}</p>
         </div>
 
         <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
@@ -878,40 +887,40 @@ export default function HomePageClient() {
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">1️⃣</span>
             </div>
-            <h3 className="text-lg font-bold mb-3">{t.step1Title}</h3>
-            <p className="text-sm text-muted-foreground">{t.step1Desc}</p>
+            <h3 className="text-lg font-bold mb-3">{t("step1Title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("step1Desc")}</p>
           </Card>
 
           <Card className="glass-card p-6 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">2️⃣</span>
             </div>
-            <h3 className="text-lg font-bold mb-3">{t.step2Title}</h3>
-            <p className="text-sm text-muted-foreground">{t.step2Desc}</p>
+            <h3 className="text-lg font-bold mb-3">{t("step2Title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("step2Desc")}</p>
           </Card>
 
           <Card className="glass-card p-6 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">3️⃣</span>
             </div>
-            <h3 className="text-lg font-bold mb-3">{t.step3Title}</h3>
-            <p className="text-sm text-muted-foreground">{t.step3Desc}</p>
+            <h3 className="text-lg font-bold mb-3">{t("step3Title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("step3Desc")}</p>
           </Card>
 
           <Card className="glass-card p-6 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">4️⃣</span>
             </div>
-            <h3 className="text-lg font-bold mb-3">{t.step4Title}</h3>
-            <p className="text-sm text-muted-foreground">{t.step4Desc}</p>
+            <h3 className="text-lg font-bold mb-3">{t("step4Title")}</h3>
+            <p className="text-sm text-muted-foreground">{t("step4Desc")}</p>
           </Card>
         </div>
       </section>
 
       <section id="pricing" className="container mx-auto px-4 py-20">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">{t.pricingTitle}</h2>
-          <p className="text-muted-foreground mb-6">{t.pricingDesc}</p>
+          <h2 className="text-4xl font-bold mb-4">{t("pricingTitle")}</h2>
+          <p className="text-muted-foreground mb-6">{t("pricingDesc")}</p>
 
           {/* Billing Period Toggle */}
           <div className="inline-flex items-center gap-3 p-1 rounded-lg bg-secondary/50 border border-border/50">
@@ -923,7 +932,7 @@ export default function HomePageClient() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t.monthly}
+              {t("monthly")}
             </button>
             <button
               onClick={() => setBillingPeriod("annually")}
@@ -933,10 +942,10 @@ export default function HomePageClient() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t.annually}
+              {t("annually")}
             </button>
           </div>
-          {billingPeriod === "annually" && <p className="text-sm text-primary mt-3 font-medium">{t.saveAnnually}</p>}
+          {billingPeriod === "annually" && <p className="text-sm text-primary mt-3 font-medium">{t("saveAnnually")}</p>}
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
@@ -944,40 +953,42 @@ export default function HomePageClient() {
           <Card className="glass-card p-6 neon-glow-hover transition-all duration-300">
             <div className="space-y-4">
               <div>
-                <h3 className="text-2xl font-bold mb-2">{t.free}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t.freeDesc}</p>
+                <h3 className="text-2xl font-bold mb-2">{t("free")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("freeDesc")}</p>
                 <div className="text-4xl font-bold mb-1">€{prices.free[billingPeriod]}</div>
-                <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
+                <div className="text-sm text-muted-foreground">
+                  {billingPeriod === "monthly" ? t("month") : t("year")}
+                </div>
               </div>
               <ul className="space-y-3 pt-4">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.freeCalendar}</span>
+                  <span className="text-sm">{t("freeCalendar")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.freeTasks}</span>
+                  <span className="text-sm">{t("freeTasks")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.freePomodoro}</span>
+                  <span className="text-sm">{t("freePomodoro")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.freeThemes}</span>
+                  <span className="text-sm">{t("freeThemes")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.freeAchievements}</span>
+                  <span className="text-sm">{t("freeAchievements")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-1">✗</span>
-                  <span className="text-sm text-muted-foreground">{t.freeNoTeams}</span>
+                  <span className="text-sm text-muted-foreground">{t("freeNoTeams")}</span>
                 </li>
               </ul>
               <Link href="/signup">
                 <Button className="w-full mt-6 bg-transparent" variant="outline">
-                  {t.chooseFreePlan}
+                  {t("chooseFreePlan")}
                 </Button>
               </Link>
             </div>
@@ -990,43 +1001,45 @@ export default function HomePageClient() {
             </div>
             <div className="space-y-4">
               <div>
-                <h3 className="text-2xl font-bold mb-2">{t.premium}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t.premiumDesc}</p>
+                <h3 className="text-2xl font-bold mb-2">{t("premium")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("premiumDesc")}</p>
                 <div className="text-4xl font-bold mb-1">€{prices.premium[billingPeriod]}</div>
-                <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
+                <div className="text-sm text-muted-foreground">
+                  {billingPeriod === "monthly" ? t("month") : t("year")}
+                </div>
               </div>
               <ul className="space-y-3 pt-4">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumAiCredits}</span>
+                  <span className="text-sm">{t("premiumAiCredits")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumPomodoro}</span>
+                  <span className="text-sm">{t("premiumPomodoro")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumNotes}</span>
+                  <span className="text-sm">{t("premiumNotes")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumThemes}</span>
+                  <span className="text-sm">{t("premiumThemes")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumAchievements}</span>
+                  <span className="text-sm">{t("premiumAchievements")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumTeams}</span>
+                  <span className="text-sm">{t("premiumTeams")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.premiumSharedTasks}</span>
+                  <span className="text-sm">{t("premiumSharedTasks")}</span>
                 </li>
               </ul>
               <Link href="/signup">
-                <Button className="w-full mt-6 neon-glow-hover">{t.choosePremiumPlan}</Button>
+                <Button className="w-full mt-6 neon-glow-hover">{t("choosePremiumPlan")}</Button>
               </Link>
             </div>
           </Card>
@@ -1035,44 +1048,46 @@ export default function HomePageClient() {
           <Card className="glass-card p-6 neon-glow-hover transition-all duration-300">
             <div className="space-y-4">
               <div>
-                <h3 className="text-2xl font-bold mb-2">{t.pro}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{t.proDesc}</p>
+                <h3 className="text-2xl font-bold mb-2">{t("pro")}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{t("proDesc")}</p>
                 <div className="text-4xl font-bold mb-1">€{prices.pro[billingPeriod]}</div>
-                <div className="text-sm text-muted-foreground">{billingPeriod === "monthly" ? t.month : t.year}</div>
+                <div className="text-sm text-muted-foreground">
+                  {billingPeriod === "monthly" ? t("month") : t("year")}
+                </div>
               </div>
               <ul className="space-y-3 pt-4">
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proAiCredits}</span>
+                  <span className="text-sm">{t("proAiCredits")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proStatistics}</span>
+                  <span className="text-sm">{t("proStatistics")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proCustomTheme}</span>
+                  <span className="text-sm">{t("proCustomTheme")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proAllThemes}</span>
+                  <span className="text-sm">{t("proAllThemes")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proAchievements}</span>
+                  <span className="text-sm">{t("proAchievements")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proUnlimitedTeams}</span>
+                  <span className="text-sm">{t("proUnlimitedTeams")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary mt-1">✓</span>
-                  <span className="text-sm">{t.proTeamStats}</span>
+                  <span className="text-sm">{t("proTeamStats")}</span>
                 </li>
               </ul>
               <Link href="/signup">
                 <Button className="w-full mt-6 bg-transparent" variant="outline">
-                  {t.chooseProPlan}
+                  {t("chooseProPlan")}
                 </Button>
               </Link>
             </div>
@@ -1083,40 +1098,40 @@ export default function HomePageClient() {
       {/* Productivity Tips Section - Adding educational content */}
       <section id="tips" className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-bold mb-6 text-center">{t.productivityTipsTitle}</h2>
-          <p className="text-muted-foreground text-center mb-12 text-lg">{t.productivityTipsDesc}</p>
+          <h2 className="text-4xl font-bold mb-6 text-center">{t("productivityTipsTitle")}</h2>
+          <p className="text-muted-foreground text-center mb-12 text-lg">{t("productivityTipsDesc")}</p>
 
           <div className="space-y-6">
             <Card className="glass-card p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
                 <span className="text-primary">🎯</span>
-                {t.tip1Title}
+                {t("tip1Title")}
               </h3>
-              <p className="text-muted-foreground leading-relaxed">{t.tip1Desc}</p>
+              <p className="text-muted-foreground leading-relaxed">{t("tip1Desc")}</p>
             </Card>
 
             <Card className="glass-card p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
                 <span className="text-primary">🍅</span>
-                {t.tip2Title}
+                {t("tip2Title")}
               </h3>
-              <p className="text-muted-foreground leading-relaxed">{t.tip2Desc}</p>
+              <p className="text-muted-foreground leading-relaxed">{t("tip2Desc")}</p>
             </Card>
 
             <Card className="glass-card p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
                 <span className="text-primary">📊</span>
-                {t.tip3Title}
+                {t("tip3Title")}
               </h3>
-              <p className="text-muted-foreground leading-relaxed">{t.tip3Desc}</p>
+              <p className="text-muted-foreground leading-relaxed">{t("tip3Desc")}</p>
             </Card>
 
             <Card className="glass-card p-6">
               <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
                 <span className="text-primary">🤖</span>
-                {t.tip4Title}
+                {t("tip4Title")}
               </h3>
-              <p className="text-muted-foreground leading-relaxed">{t.tip4Desc}</p>
+              <p className="text-muted-foreground leading-relaxed">{t("tip4Desc")}</p>
             </Card>
           </div>
         </div>
@@ -1125,8 +1140,8 @@ export default function HomePageClient() {
       {/* Testimonials Section - Adding social proof content */}
       <section id="testimonials" className="container mx-auto px-4 py-20 bg-secondary/10">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">{t.testimonialsTitle}</h2>
-          <p className="text-muted-foreground">{t.testimonialsDesc}</p>
+          <h2 className="text-4xl font-bold mb-4">{t("testimonialsTitle")}</h2>
+          <p className="text-muted-foreground">{t("testimonialsDesc")}</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -1137,7 +1152,7 @@ export default function HomePageClient() {
               </div>
               <div>
                 <div className="font-semibold">Sarah M.</div>
-                <div className="text-sm text-muted-foreground">{t.testimonial1Role}</div>
+                <div className="text-sm text-muted-foreground">{t("testimonial1Role")}</div>
               </div>
             </div>
             <div className="flex gap-1 mb-3">
@@ -1147,7 +1162,7 @@ export default function HomePageClient() {
                 </span>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground italic">"{t.testimonial1Text}"</p>
+            <p className="text-sm text-muted-foreground italic">"{t("testimonial1Text")}"</p>
           </Card>
 
           <Card className="glass-card p-6">
@@ -1157,7 +1172,7 @@ export default function HomePageClient() {
               </div>
               <div>
                 <div className="font-semibold">Miguel R.</div>
-                <div className="text-sm text-muted-foreground">{t.testimonial2Role}</div>
+                <div className="text-sm text-muted-foreground">{t("testimonial2Role")}</div>
               </div>
             </div>
             <div className="flex gap-1 mb-3">
@@ -1167,7 +1182,7 @@ export default function HomePageClient() {
                 </span>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground italic">"{t.testimonial2Text}"</p>
+            <p className="text-sm text-muted-foreground italic">"{t("testimonial2Text")}"</p>
           </Card>
 
           <Card className="glass-card p-6">
@@ -1177,7 +1192,7 @@ export default function HomePageClient() {
               </div>
               <div>
                 <div className="font-semibold">Emma K.</div>
-                <div className="text-sm text-muted-foreground">{t.testimonial3Role}</div>
+                <div className="text-sm text-muted-foreground">{t("testimonial3Role")}</div>
               </div>
             </div>
             <div className="flex gap-1 mb-3">
@@ -1187,7 +1202,7 @@ export default function HomePageClient() {
                 </span>
               ))}
             </div>
-            <p className="text-sm text-muted-foreground italic">"{t.testimonial3Text}"</p>
+            <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
           </Card>
         </div>
       </section>
@@ -1195,33 +1210,33 @@ export default function HomePageClient() {
       {/* FAQ Section - Adding FAQ content for SEO */}
       <section id="faq" className="container mx-auto px-4 py-20">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl font-bold mb-4 text-center">{t.faqTitle}</h2>
-          <p className="text-muted-foreground text-center mb-12">{t.faqDesc}</p>
+          <h2 className="text-4xl font-bold mb-4 text-center">{t("faqTitle")}</h2>
+          <p className="text-muted-foreground text-center mb-12">{t("faqDesc")}</p>
 
           <div className="space-y-4">
             <Card className="glass-card p-6">
-              <h3 className="text-lg font-bold mb-2">{t.faq1Question}</h3>
-              <p className="text-muted-foreground">{t.faq1Answer}</p>
+              <h3 className="text-lg font-bold mb-2">{t("faq1Question")}</h3>
+              <p className="text-muted-foreground">{t("faq1Answer")}</p>
             </Card>
 
             <Card className="glass-card p-6">
-              <h3 className="text-lg font-bold mb-2">{t.faq2Question}</h3>
-              <p className="text-muted-foreground">{t.faq2Answer}</p>
+              <h3 className="text-lg font-bold mb-2">{t("faq2Question")}</h3>
+              <p className="text-muted-foreground">{t("faq2Answer")}</p>
             </Card>
 
             <Card className="glass-card p-6">
-              <h3 className="text-lg font-bold mb-2">{t.faq3Question}</h3>
-              <p className="text-muted-foreground">{t.faq3Answer}</p>
+              <h3 className="text-lg font-bold mb-2">{t("faq3Question")}</h3>
+              <p className="text-muted-foreground">{t("faq3Answer")}</p>
             </Card>
 
             <Card className="glass-card p-6">
-              <h3 className="text-lg font-bold mb-2">{t.faq4Question}</h3>
-              <p className="text-muted-foreground">{t.faq4Answer}</p>
+              <h3 className="text-lg font-bold mb-2">{t("faq4Question")}</h3>
+              <p className="text-muted-foreground">{t("faq4Answer")}</p>
             </Card>
 
             <Card className="glass-card p-6">
-              <h3 className="text-lg font-bold mb-2">{t.faq5Question}</h3>
-              <p className="text-muted-foreground">{t.faq5Answer}</p>
+              <h3 className="text-lg font-bold mb-2">{t("faq5Question")}</h3>
+              <p className="text-muted-foreground">{t("faq5Answer")}</p>
             </Card>
           </div>
         </div>
@@ -1230,8 +1245,8 @@ export default function HomePageClient() {
       {/* Blog Section */}
       <section id="blog" className="container mx-auto px-4 py-20 bg-secondary/20">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">{t.blogTitle}</h2>
-          <p className="text-muted-foreground">{t.blogDesc}</p>
+          <h2 className="text-4xl font-bold mb-4">{t("blogTitle")}</h2>
+          <p className="text-muted-foreground">{t("blogDesc")}</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
@@ -1249,10 +1264,10 @@ export default function HomePageClient() {
                   {lang === "de" && "Produktivität"}
                   {lang === "it" && "Produttività"}
                 </div>
-                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{t.blogPost1Title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">{t.blogPost1Desc}</p>
+                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{t("blogPost1Title")}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">{t("blogPost1Desc")}</p>
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-muted-foreground">{t.blogPost1ReadTime}</span>
+                  <span className="text-xs text-muted-foreground">{t("blogPost1ReadTime")}</span>
                   <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">
                     →
                   </span>
@@ -1275,10 +1290,10 @@ export default function HomePageClient() {
                   {lang === "de" && "Lerntipps"}
                   {lang === "it" && "Consigli di Studio"}
                 </div>
-                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{t.blogPost2Title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">{t.blogPost2Desc}</p>
+                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{t("blogPost2Title")}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">{t("blogPost2Desc")}</p>
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-muted-foreground">{t.blogPost2ReadTime}</span>
+                  <span className="text-xs text-muted-foreground">{t("blogPost2ReadTime")}</span>
                   <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">
                     →
                   </span>
@@ -1301,10 +1316,10 @@ export default function HomePageClient() {
                   {lang === "de" && "KI & Automatisierung"}
                   {lang === "it" && "IA e Automazione"}
                 </div>
-                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{t.blogPost3Title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">{t.blogPost3Desc}</p>
+                <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{t("blogPost3Title")}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">{t("blogPost3Desc")}</p>
                 <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-muted-foreground">{t.blogPost3ReadTime}</span>
+                  <span className="text-xs text-muted-foreground">{t("blogPost3ReadTime")}</span>
                   <span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform inline-block">
                     →
                   </span>
