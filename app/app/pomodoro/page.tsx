@@ -21,6 +21,7 @@ import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useTranslation } from "@/hooks/useTranslation"
+import { toast } from "@/components/ui/use-toast"
 
 export default function PomodoroPage() {
   const { t } = useTranslation()
@@ -197,14 +198,22 @@ export default function PomodoroPage() {
         if (!response.ok) {
           const errorData = await response.json()
           console.error("[v0] Failed to save pomodoro session:", response.status, errorData)
-          alert(`Failed to save pomodoro session: ${errorData.error || "Unknown error"}`)
+          toast({
+            title: t("error"),
+            description: `${errorData.error || t("unknownError")}`,
+            variant: "destructive",
+          })
         } else {
           const data = await response.json()
           console.log("[v0] Pomodoro session saved successfully:", data)
         }
       } catch (error) {
         console.error("[v0] Error saving pomodoro session:", error)
-        alert(`Error saving pomodoro session: ${error}`)
+        toast({
+          title: t("error"),
+          description: `${error}`,
+          variant: "destructive",
+        })
       }
 
       setSessions((prev) => prev + 1)
