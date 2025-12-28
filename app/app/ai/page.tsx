@@ -49,7 +49,7 @@ export default function AIPage() {
 
     const totalCredits = monthlyCredits + purchasedCredits
     if (totalCredits < 2) {
-      alert("Not enough AI credits. You need at least 2 credits per message.")
+      alert(`${t("not_enough_credits")}. ${t("need_at_least_two_credits")}`)
       return
     }
 
@@ -77,10 +77,7 @@ export default function AIPage() {
       setPurchasedCredits(data.remainingPurchasedCredits)
     } catch (error) {
       console.error("AI chat error:", error)
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error. Please try again." },
-      ])
+      setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
     } finally {
       setLoading(false)
     }

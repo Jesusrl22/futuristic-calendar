@@ -75,7 +75,7 @@ export default function StatsPage() {
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t("loading")}</div>
       </div>
     )
   }
@@ -89,7 +89,7 @@ export default function StatsPage() {
       <div>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-4xl font-bold">
-            <span className="text-primary neon-text">{t("yourStatistics")}</span>
+            <span className="text-primary neon-text">{t("your_statistics")}</span>
           </h1>
 
           <div className="flex gap-2">
@@ -98,21 +98,21 @@ export default function StatsPage() {
               onClick={() => setTimeRange("day")}
               className={timeRange === "day" ? "bg-primary/20 border-primary text-primary hover:bg-primary/30" : ""}
             >
-              {t("day") || "Day"}
+              {t("day")}
             </Button>
             <Button
               variant={timeRange === "week" ? "default" : "outline"}
               onClick={() => setTimeRange("week")}
               className={timeRange === "week" ? "bg-primary/20 border-primary text-primary hover:bg-primary/30" : ""}
             >
-              {t("week") || "Week"}
+              {t("week")}
             </Button>
             <Button
               variant={timeRange === "month" ? "default" : "outline"}
               onClick={() => setTimeRange("month")}
               className={timeRange === "month" ? "bg-primary/20 border-primary text-primary hover:bg-primary/30" : ""}
             >
-              {t("month") || "Month"}
+              {t("month")}
             </Button>
           </div>
         </div>
@@ -120,28 +120,28 @@ export default function StatsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
             {
-              title: t("totalTasks") || "Total Tasks",
+              title: t("total_tasks"),
               value: stats.totalTasks,
               gradient: "from-blue-500/20 to-blue-600/20",
               border: "border-blue-500/30",
               text: "text-blue-400",
             },
             {
-              title: t("tasksCompleted") || "Completed",
+              title: t("tasks_completed"),
               value: stats.completedTasks,
               gradient: "from-green-500/20 to-green-600/20",
               border: "border-green-500/30",
               text: "text-green-400",
             },
             {
-              title: t("totalPomodoros") || "Pomodoro Sessions",
+              title: t("total_pomodoros"),
               value: stats.totalPomodoro,
               gradient: "from-purple-500/20 to-purple-600/20",
               border: "border-purple-500/30",
               text: "text-purple-400",
             },
             {
-              title: t("focusTime") || "Focus Time",
+              title: t("focus_time"),
               value: `${stats.totalFocusTime}h`,
               gradient: "from-primary/20 to-primary/30",
               border: "border-primary/30",
@@ -161,7 +161,7 @@ export default function StatsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card className="glass-card p-6 border-2 border-primary/30">
-            <h2 className="text-xl font-bold mb-6">{t("activityOverTime") || "Activity Over Time"}</h2>
+            <h2 className="text-xl font-bold mb-6">{t("activity_over_time")}</h2>
             <Tabs defaultValue="tasks">
               <TabsList className="mb-4">
                 <TabsTrigger value="tasks">{t("tasks")}</TabsTrigger>
@@ -213,13 +213,11 @@ export default function StatsPage() {
           </Card>
 
           <Card className="glass-card p-6 border-2 border-primary/30">
-            <h2 className="text-xl font-bold mb-6">{t("productivityInsights") || "Productivity Insights"}</h2>
+            <h2 className="text-xl font-bold mb-6">{t("productivity_insights")}</h2>
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">
-                    {t("taskCompletionRate") || "Task Completion Rate"}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{t("task_completion_rate")}</span>
                   <span className="text-sm font-semibold text-primary">{completionRate}%</span>
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
@@ -232,7 +230,7 @@ export default function StatsPage() {
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                  <span className="text-sm">{t("averageFocusTime") || "Average Focus Time"}</span>
+                  <span className="text-sm">{t("average_focus_time")}</span>
                   <span className="font-semibold text-primary">
                     {timeRange === "day"
                       ? `${stats.totalFocusTime}h`
@@ -242,11 +240,11 @@ export default function StatsPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20">
-                  <span className="text-sm">{t("totalPomodoros") || "Pomodoro Sessions"}</span>
+                  <span className="text-sm">{t("total_pomodoros")}</span>
                   <span className="font-semibold text-purple-400">{stats.totalPomodoro}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20">
-                  <span className="text-sm">{t("notesCreated") || "Notes Created"}</span>
+                  <span className="text-sm">{t("notes_created")}</span>
                   <span className="font-semibold text-blue-400">{stats.totalNotes}</span>
                 </div>
               </div>
