@@ -120,7 +120,11 @@ export default function TasksPage() {
 
   const createTask = async () => {
     if (!newTask.title.trim()) {
-      alert(t("enterTaskTitle"))
+      toast({
+        title: t("error"),
+        description: t("enterTaskTitle"),
+        variant: "destructive",
+      })
       return
     }
 
@@ -170,7 +174,11 @@ export default function TasksPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || "Failed to create task")
+        toast({
+          title: t("error"),
+          description: data.error || t("failed_create_task"),
+          variant: "destructive",
+        })
       } else {
         setIsDialogOpen(false)
         setNewTask({
@@ -184,7 +192,11 @@ export default function TasksPage() {
         fetchTasks()
       }
     } catch (error) {
-      alert("Failed to create task. Please try again.")
+      toast({
+        title: t("error"),
+        description: t("failed_create_task") + ". " + t("please_try_again"),
+        variant: "destructive",
+      })
     } finally {
       setIsCreating(false)
     }
@@ -214,7 +226,11 @@ export default function TasksPage() {
 
   const updateTask = async () => {
     if (!editForm.title.trim()) {
-      alert(t("enterTaskTitle"))
+      toast({
+        title: t("error"),
+        description: t("enterTaskTitle"),
+        variant: "destructive",
+      })
       return
     }
 
@@ -263,14 +279,22 @@ export default function TasksPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || "Failed to update task")
+        toast({
+          title: t("error"),
+          description: data.error || t("failed_update_task"),
+          variant: "destructive",
+        })
       } else {
         setIsEditDialogOpen(false)
         setEditingTask(null)
         fetchTasks()
       }
     } catch (error) {
-      alert("Failed to update task. Please try again.")
+      toast({
+        title: t("error"),
+        description: t("failed_update_task") + ". " + t("please_try_again"),
+        variant: "destructive",
+      })
     } finally {
       setIsCreating(false)
     }

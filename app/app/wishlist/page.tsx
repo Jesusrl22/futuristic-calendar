@@ -292,11 +292,11 @@ export default function WishlistPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card className="glass-card p-6 neon-glow-hover">
-          <h3 className="text-sm text-muted-foreground mb-2">{t("allTasks")}</h3>
+          <h3 className="text-sm text-muted-foreground mb-2">{t("all_tasks")}</h3>
           <p className="text-3xl font-bold">{items.length}</p>
         </Card>
         <Card className="glass-card p-6 neon-glow-hover">
-          <h3 className="text-sm text-muted-foreground mb-2">{t("totalValue")}</h3>
+          <h3 className="text-sm text-muted-foreground mb-2">{t("total_value")}</h3>
           <p className="text-3xl font-bold">${totalValue.toFixed(2)}</p>
         </Card>
         <Card className="glass-card p-6 neon-glow-hover">
@@ -309,7 +309,7 @@ export default function WishlistPage() {
 
       <Tabs value={filter} onValueChange={setFilter}>
         <TabsList className="mb-6">
-          <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
+          <TabsTrigger value="all">{t("all_tasks")}</TabsTrigger>
           <TabsTrigger value="high">
             {t("high")} {t("priority")}
           </TabsTrigger>
@@ -364,7 +364,7 @@ export default function WishlistPage() {
 
       {filteredItems.length === 0 && (
         <Card className="glass-card p-12 text-center">
-          <p className="text-muted-foreground">{t("noTasksFound")}</p>
+          <p className="text-muted-foreground">{t("no_tasks_found")}</p>
         </Card>
       )}
     </div>

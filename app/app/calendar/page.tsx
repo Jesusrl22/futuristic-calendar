@@ -160,7 +160,11 @@ export default function CalendarPage() {
 
   const handleCreateTask = async () => {
     if (!selectedDate || !newTask.title.trim()) {
-      alert(t("enterTaskTitle"))
+      toast({
+        title: t("error"),
+        description: t("enterTaskTitle"),
+        variant: "destructive",
+      })
       return
     }
 
@@ -205,7 +209,11 @@ export default function CalendarPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        alert(data.error || "Failed to create task")
+        toast({
+          title: t("error"),
+          description: data.error || t("failed_create_task"),
+          variant: "destructive",
+        })
       } else {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
@@ -213,7 +221,11 @@ export default function CalendarPage() {
         setTimeout(() => checkNotifications(tasksRef.current), 500)
       }
     } catch (error) {
-      alert("Failed to create task. Please try again.")
+      toast({
+        title: t("error"),
+        description: t("failed_create_task") + ". " + t("please_try_again"),
+        variant: "destructive",
+      })
     }
   }
 
@@ -244,7 +256,11 @@ export default function CalendarPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        alert(data.error || "Failed to delete task")
+        toast({
+          title: t("error"),
+          description: data.error || t("failed_delete_task"),
+          variant: "destructive",
+        })
       } else {
         setIsViewDialogOpen(false)
         setIsEditDialogOpen(false)
@@ -252,13 +268,21 @@ export default function CalendarPage() {
       }
     } catch (error) {
       console.error("Error deleting task:", error)
-      alert("Failed to delete task. Please try again.")
+      toast({
+        title: t("error"),
+        description: t("failed_delete_task") + ". " + t("please_try_again"),
+        variant: "destructive",
+      })
     }
   }
 
   const handleUpdateTask = async () => {
     if (!editingTask || !editingTask.title.trim()) {
-      alert(t("enterTaskTitle"))
+      toast({
+        title: t("error"),
+        description: t("enterTaskTitle"),
+        variant: "destructive",
+      })
       return
     }
 
@@ -308,26 +332,36 @@ export default function CalendarPage() {
         fetchTasks()
         setIsEditDialogOpen(false)
         setEditingTask(null)
+      } else {
+        toast({
+          title: t("error"),
+          description: t("failed_update_task"),
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      alert("Failed to update task")
+      toast({
+        title: t("error"),
+        description: t("failed_update_task") + ". " + t("please_try_again"),
+        variant: "destructive",
+      })
     }
   }
 
   const days = getDaysInMonth(currentDate)
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    t("january"),
+    t("february"),
+    t("march"),
+    t("april"),
+    t("may"),
+    t("june"),
+    t("july"),
+    t("august"),
+    t("september"),
+    t("october"),
+    t("november"),
+    t("december"),
   ]
 
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : []
@@ -422,7 +456,9 @@ export default function CalendarPage() {
                 className="text-center font-semibold text-xs md:text-sm text-muted-foreground p-1 md:p-2"
               >
                 <span className="md:hidden">{day}</span>
-                <span className="hidden md:inline">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][index]}</span>
+                <span className="hidden md:inline">
+                  {[t("sun"), t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat")][index]}
+                </span>
               </div>
             ))}
             {days.map((day, index) => {
