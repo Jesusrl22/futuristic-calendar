@@ -319,7 +319,7 @@ const translations = {
     freeTasks: "Tâches illimitées",
     freePomodoro: "Minuteur Pomodoro basique",
     freeThemes: "5 thèmes gratuits",
-    freeAchievements: "Logros gratuits",
+    freeAchievements: "Logros gratuitos",
     freeNoTeams: "Pas de collaboration d'équipe",
     aiCredits: "50 crédits IA/mois",
     basicTasks: "Gestion de tâches basique",
@@ -674,7 +674,7 @@ const translations = {
     faq1Question: "Cos'è Future Task?",
     faq1Answer:
       "Future Task è una piattaforma di produttività intelligente progettata per aiutare individui e team a gestire attività, collaborare e raggiungere i propri obiettivi in modo più efficiente con assistenza basata sull'IA.",
-    faq2Question: "Esiste un piano gratuito?",
+    faq2Question: "Esiste un plan gratuito?",
     faq2Answer:
       "Sì, offriamo un piano gratuito con funzionalità essenziali perfette per iniziare. Puoi passare ai nostri piani Pro o Premium per capacità più avanzate.",
     faq3Question: "Come funziona l'assistenza IA?",
@@ -687,6 +687,7 @@ const translations = {
     faq5Answer:
       "Offriamo opzioni di fatturazione mensile e annuale. La fatturazione annuale offre uno sconto significativo rispetto alla fatturazione mensile.",
   },
+  nextGenerationPlatform: "Next Generation Platform",
 }
 
 type Language = "en" | "es" | "fr" | "de" | "it"
@@ -711,8 +712,10 @@ export default function HomePageClient() {
     }
   }, [])
 
-  const t = (key: keyof typeof translations.en): string => {
-    return translations[language]?.[key] || translations.en[key] || key
+  const t = (key: keyof typeof translations.en | "nextGenerationPlatform"): string => {
+    // Cast key to be compatible with translations[language] and translations.en
+    const typedKey = key as keyof typeof translations.en
+    return translations[language]?.[typedKey] || translations.en[typedKey] || key
   }
 
   const prices = {
@@ -733,19 +736,19 @@ export default function HomePageClient() {
             <span className="text-xl font-bold">Future Task</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm hover:text-primary transition-colors">
+            <a href="#features" className="text-sm hover:text-foreground transition-colors">
               {t("features")}
             </a>
-            <a href="#dashboard" className="text-sm hover:text-primary transition-colors">
+            <a href="#dashboard" className="text-sm hover:text-foreground transition-colors">
               {t("dashboard")}
             </a>
-            <a href="#pricing" className="text-sm hover:text-primary transition-colors">
+            <a href="#pricing" className="text-sm hover:text-foreground transition-colors">
               {t("pricing")}
             </a>
-            <a href="#about" className="text-sm hover:text-primary transition-colors">
+            <a href="#about" className="text-sm hover:text-foreground transition-colors">
               {t("about")}
             </a>
-            <Link href="/blog" className="text-sm hover:text-primary transition-colors">
+            <Link href="/blog" className="text-sm hover:text-foreground transition-colors">
               {t("blogTitle")}
             </Link>
           </nav>
@@ -787,27 +790,29 @@ export default function HomePageClient() {
       <section className="container mx-auto px-4 py-20 md:py-32 relative">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="inline-block px-4 py-2 rounded-full border border-primary/30 bg-primary/5 text-sm mb-4">
-            <span className="text-primary">✨ Next Generation Platform</span>
+            <span className="text-primary">✨ {t("nextGenerationPlatform")}</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            {t("hero")
-              .split(", ")
-              .map((part, idx) => (
-                <span key={idx}>
-                  {idx === 1 ? (
-                    <>
-                      <span className="text-primary neon-text">{part.split(" ")[0]}</span>
-                      <br />
-                      {part.split(" ").slice(1).join(" ")}
-                    </>
-                  ) : (
-                    part
-                  )}
-                  {idx < 2 && ", "}
-                </span>
-              ))}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
+            <span className="text-balance block">
+              {t("hero")
+                .split(" ")
+                .map((word, idx) => {
+                  // Make "Collaborate" appear in primary color with neon effect
+                  const heroWords = t("hero").split(" ")
+                  const collaborateWordIndex = heroWords.findIndex(
+                    (w) => w.toLowerCase().includes("collabor") || w.toLowerCase().includes("colabor"),
+                  )
+
+                  return (
+                    <span key={idx}>
+                      {idx === collaborateWordIndex ? <span className="text-primary neon-text">{word}</span> : word}
+                      {idx < t("hero").split(" ").length - 1 ? " " : ""}
+                    </span>
+                  )
+                })}
+            </span>
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t("heroDesc")}</p>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">{t("heroDesc")}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/signup">
               <Button size="lg" className="neon-glow-hover group">
