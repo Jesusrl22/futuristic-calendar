@@ -790,9 +790,22 @@ export default function HomePageClient() {
             <span className="text-primary">✨ Next Generation Platform</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            Smart Systems, <span className="text-primary neon-text">Collaborate</span>
-            <br />
-            Seamlessly, Succeed Efficiently
+            {t("hero")
+              .split(", ")
+              .map((part, idx) => (
+                <span key={idx}>
+                  {idx === 1 ? (
+                    <>
+                      <span className="text-primary neon-text">{part.split(" ")[0]}</span>
+                      <br />
+                      {part.split(" ").slice(1).join(" ")}
+                    </>
+                  ) : (
+                    part
+                  )}
+                  {idx < 2 && ", "}
+                </span>
+              ))}
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t("heroDesc")}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">

@@ -285,7 +285,7 @@ export default function SubscriptionPage() {
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-xs md:text-sm">
                           <Check className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
-                          <span>{feature}</span>
+                          <span>{t(feature)}</span>
                         </li>
                       ))}
                     </ul>
