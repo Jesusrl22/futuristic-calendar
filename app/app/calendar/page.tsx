@@ -30,8 +30,8 @@ export default function CalendarPage() {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
-  const [userTimezone, setUserTimezone] = useState<string>("UTC")
+  const [notificationEnabled, setNotificationEnabled] = useState<boolean>(false)
+  const tasksRef = useRef<Task[]>([])
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -39,48 +39,11 @@ export default function CalendarPage() {
     category: "personal",
     time: "",
   })
-  const tasksRef = useRef<Task[]>([])
-
-  useEffect(() => {
-    tasksRef.current = tasks
-  }, [tasks])
 
   useEffect(() => {
     fetchTasks()
-
-    if ("Notification" in window) {
-      setNotificationPermission(Notification.permission)
-    }
-
-    const cleanupOldNotifications = () => {
-      const oneHourAgo = Date.now() - 60 * 60 * 1000
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("notified-")) {
-          const timestamp = localStorage.getItem(key + "-time")
-          if (timestamp && Number.parseInt(timestamp) < oneHourAgo) {
-            localStorage.removeItem(key)
-            localStorage.removeItem(key + "-time")
-          }
-        }
-      })
-    }
-    cleanupOldNotifications()
-
-    const notificationInterval = setInterval(() => {
-      checkNotifications(tasksRef.current)
-    }, 10000)
-
-    return () => {
-      clearInterval(notificationInterval)
-    }
+    setNotificationEnabled(Notification.permission === "granted")
   }, [])
-
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      const permission = await Notification.requestPermission()
-      setNotificationPermission(permission)
-    }
-  }
 
   const fetchTasks = async () => {
     try {
@@ -90,6 +53,7 @@ export default function CalendarPage() {
       const data = await response.json()
       if (data.tasks) {
         setTasks(data.tasks)
+        tasksRef.current = data.tasks
       }
     } catch (error) {
       console.error("Error fetching tasks:", error)
@@ -127,7 +91,7 @@ export default function CalendarPage() {
   }
 
   const checkNotifications = (currentTasks: Task[]) => {
-    if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") {
+    if (typeof window === "undefined" || !notificationEnabled) {
       return
     }
 
@@ -137,14 +101,18 @@ export default function CalendarPage() {
     tasksToCheck.forEach((task) => {
       const taskDate = new Date(task.due_date)
       const timeDiff = taskDate.getTime() - now.getTime()
-      const minutesDiff = Math.floor(timeDiff / 1000 / 60)
       const alreadyNotified = localStorage.getItem(`notified-${task.id}`)
 
-      if (minutesDiff <= 0 && minutesDiff > -5 && !alreadyNotified) {
-        new Notification("Task Due!", {
-          body: `"${task.title}" is due now!`,
-          icon: "/icon-192.png",
-        })
+      if (timeDiff > 0 && timeDiff <= 5000 && !alreadyNotified) {
+        fetch("/api/notifications/send-now", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: "Task Due!",
+            body: `"${task.title}" is due now!`,
+            type: "reminder",
+          }),
+        }).catch((err) => console.error("[v0] Failed to send notification:", err))
 
         localStorage.setItem(`notified-${task.id}`, "true")
         localStorage.setItem(`notified-${task.id}-time`, task.due_date)
@@ -175,7 +143,6 @@ export default function CalendarPage() {
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
-      // Create date in local timezone
       const localDate = new Date(
         year,
         selectedDate.getMonth(),
@@ -186,7 +153,6 @@ export default function CalendarPage() {
       )
       dueDate = localDate.toISOString()
     } else {
-      // Default to end of day in local timezone
       const localDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
       dueDate = localDate.toISOString()
     }
@@ -295,7 +261,6 @@ export default function CalendarPage() {
       const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (match) {
         const [, year, month, day, hours, minutes] = match
-        // Create date in local timezone without conversion
         const localDate = new Date(
           Number.parseInt(year),
           Number.parseInt(month) - 1,
@@ -399,31 +364,22 @@ export default function CalendarPage() {
           className="mb-6 block md:hidden"
         />
 
-        {notificationPermission === "default" && (
+        {!notificationEnabled && (
           <Card className="glass-card p-4 mb-6 border-yellow-500/50">
             <div className="flex items-center justify-between">
               <p className="text-sm">{t("enableNotifications")}</p>
-              <Button size="sm" onClick={requestNotificationPermission}>
+              <Button size="sm" onClick={() => setNotificationEnabled(true)}>
                 {t("enable")}
               </Button>
             </div>
           </Card>
         )}
 
-        {notificationPermission === "granted" && (
+        {notificationEnabled && (
           <Card className="glass-card p-4 mb-6 border-green-500/50">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <p className="text-sm text-green-500">{t("notificationsEnabled")}</p>
-            </div>
-          </Card>
-        )}
-
-        {notificationPermission === "denied" && (
-          <Card className="glass-card p-4 mb-6 border-red-500/50">
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-red-500">{t("notificationsBlocked")}</p>
-              <p className="text-xs text-muted-foreground">{t("notificationsInstructions")}</p>
             </div>
           </Card>
         )}
