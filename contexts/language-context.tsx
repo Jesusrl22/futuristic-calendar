@@ -26,6 +26,21 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
           : "en"
     setLanguageState(initialLang)
     setMounted(true)
+
+    const handleLanguageChange = () => {
+      const newLang = localStorage.getItem("language") as Language | null
+      if (newLang && validLanguages.includes(newLang)) {
+        setLanguageState(newLang)
+      }
+    }
+
+    window.addEventListener("languagechange", handleLanguageChange)
+    window.addEventListener("storage", handleLanguageChange)
+
+    return () => {
+      window.removeEventListener("languagechange", handleLanguageChange)
+      window.removeEventListener("storage", handleLanguageChange)
+    }
   }, [])
 
   const setLanguage = (lang: Language) => {
