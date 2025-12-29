@@ -378,25 +378,30 @@ export default function SettingsPage() {
                   </div>
                 )}
 
-                <div>
-                  <Label className="text-sm">{t("language")}</Label>
-                  <Select
-                    value={profile.language}
-                    onValueChange={(value: Language) => {
-                      setProfile({ ...profile, language: value })
-                    }}
-                  >
-                    <SelectTrigger className="bg-secondary/50 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                      <SelectItem value="it">Italiano</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm">{t("language")}</Label>
+                    <Select
+                      value={profile.language}
+                      onValueChange={(value: Language) => {
+                        setProfile({ ...profile, language: value })
+                        // Immediately update global language context
+                        setGlobalLanguage(value)
+                        localStorage.setItem("language", value)
+                      }}
+                    >
+                      <SelectTrigger className="bg-secondary/50 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Español</SelectItem>
+                        <SelectItem value="fr">Français</SelectItem>
+                        <SelectItem value="de">Deutsch</SelectItem>
+                        <SelectItem value="it">Italiano</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div>
