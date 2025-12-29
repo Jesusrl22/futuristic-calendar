@@ -32,6 +32,9 @@ export default function CalendarPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [notificationEnabled, setNotificationEnabled] = useState<boolean>(false)
   const tasksRef = useRef<Task[]>([])
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const notifiedTasksRef = useRef<Set<string>>(new Set())
+
   const [newTask, setNewTask] = useState({
     title: "",
     description: "",
@@ -101,27 +104,27 @@ export default function CalendarPage() {
     tasksToCheck.forEach((task) => {
       const taskDate = new Date(task.due_date)
       const timeDiff = taskDate.getTime() - now.getTime()
-      const alreadyNotified = localStorage.getItem(`notified-${task.id}`)
+      const taskNotificationKey = `${task.id}`
+      const alreadyNotified = notifiedTasksRef.current.has(taskNotificationKey)
 
-      if (timeDiff > 0 && timeDiff <= 5000 && !alreadyNotified) {
+      // Notifica cuando está dentro de 30 segundos ANTES de la hora exacta
+      // pero solo una vez por tarea
+      if (timeDiff > -30000 && timeDiff <= 0 && !alreadyNotified) {
+        // Si ya pasó la hora (timeDiff negativo pero dentro de 30 segundos), notifica
         fetch("/api/notifications/send-now", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: "Task Due!",
-            body: `"${task.title}" is due now!`,
+            title: t("taskDue"),
+            body: `"${task.title}" ${t("isDueNow")}`,
             type: "reminder",
           }),
         }).catch((err) => console.error("[v0] Failed to send notification:", err))
 
-        localStorage.setItem(`notified-${task.id}`, "true")
-        localStorage.setItem(`notified-${task.id}-time`, task.due_date)
-      } else if (alreadyNotified) {
-        const notifiedTime = localStorage.getItem(`notified-${task.id}-time`)
-        if (notifiedTime !== task.due_date) {
-          localStorage.removeItem(`notified-${task.id}`)
-          localStorage.removeItem(`notified-${task.id}-time`)
-        }
+        notifiedTasksRef.current.add(taskNotificationKey)
+      } else if (timeDiff < -86400000) {
+        // Si pasó más de 24 horas, limpia la notificación
+        notifiedTasksRef.current.delete(taskNotificationKey)
       }
     })
   }
@@ -330,6 +333,20 @@ export default function CalendarPage() {
   ]
 
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : []
+
+  useEffect(() => {
+    if (notificationEnabled) {
+      checkIntervalRef.current = setInterval(() => {
+        checkNotifications(tasksRef.current)
+      }, 10000) // Revisar cada 10 segundos
+
+      return () => {
+        if (checkIntervalRef.current) {
+          clearInterval(checkIntervalRef.current)
+        }
+      }
+    }
+  }, [notificationEnabled, t])
 
   return (
     <div className="p-4 md:p-8">
