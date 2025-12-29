@@ -18,7 +18,7 @@ import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useToast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
-import { formatTimeForInput, formatDateTimeForInput, createLocalDate } from "@/lib/timezone-utils"
+import { formatTimeForInput, formatDateTimeForInput } from "@/lib/timezone-utils"
 
 export default function CalendarPage() {
   const { toast } = useToast()
@@ -96,21 +96,25 @@ export default function CalendarPage() {
 
   const checkNotifications = () => {
     const now = new Date()
+    const currentHours = now.getHours()
+    const currentMinutes = now.getMinutes()
+    const currentSeconds = now.getSeconds()
 
     tasks.forEach((task) => {
       const taskId = task.id
       if (notifiedTasksRef.current.has(taskId)) return
 
       const taskTime = new Date(task.due_date)
-      const timeDiff = taskTime.getTime() - now.getTime()
+      const taskHours = taskTime.getHours()
+      const taskMinutes = taskTime.getMinutes()
 
-      // Notificar cuando la hora sea exacta (dentro de 30 segundos)
-      if (timeDiff >= -10000 && timeDiff <= 30000 && timeDiff > -40000) {
+      // Notificar cuando la hora y minuto sean exactos (dentro de 60 segundos)
+      if (currentHours === taskHours && currentMinutes === taskMinutes && currentSeconds < 60) {
         notifiedTasksRef.current.add(taskId)
 
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(t("taskReminder"), {
-            body: `${task.title} ${t("startsIn")} ${Math.max(0, Math.ceil(timeDiff / 1000))}s`,
+            body: `${task.title} ${t("startsNow")}`,
             icon: "/favicon.ico",
             tag: `task-${taskId}`,
             requireInteraction: true,
@@ -125,7 +129,7 @@ export default function CalendarPage() {
             title: t("taskReminder"),
             body: `${task.title} ${t("startsNow")}`,
           }),
-        }).catch((err) => console.error("[v0] Push notification error:", err))
+        }).catch((err) => console.error("Push notification error:", err))
       }
     })
   }
@@ -147,18 +151,15 @@ export default function CalendarPage() {
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
-      const localDate = createLocalDate(
+      dueDate = new Date(
         year,
         selectedDate.getMonth(),
         selectedDate.getDate(),
         Number.parseInt(hours),
         Number.parseInt(minutes),
-        0,
-      )
-      dueDate = localDate.toISOString()
+      ).toISOString()
     } else {
-      const localDate = createLocalDate(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
-      dueDate = localDate.toISOString()
+      dueDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59).toISOString()
     }
 
     try {
@@ -256,31 +257,6 @@ export default function CalendarPage() {
       return
     }
 
-    const taskId = editingTask.id
-    localStorage.removeItem(`notified-${taskId}`)
-    localStorage.removeItem(`notified-${taskId}-time`)
-
-    let dueDate: string
-    if (editingTask.due_date.includes("T")) {
-      const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
-      if (match) {
-        const [, year, month, day, hours, minutes] = match
-        const localDate = createLocalDate(
-          Number.parseInt(year),
-          Number.parseInt(month) - 1,
-          Number.parseInt(day),
-          Number.parseInt(hours),
-          Number.parseInt(minutes),
-          0,
-        )
-        dueDate = localDate.toISOString()
-      } else {
-        dueDate = editingTask.due_date
-      }
-    } else {
-      dueDate = editingTask.due_date
-    }
-
     try {
       const response = await fetch("/api/tasks", {
         method: "PUT",
@@ -293,7 +269,7 @@ export default function CalendarPage() {
           description: editingTask.description,
           priority: editingTask.priority,
           category: editingTask.category,
-          due_date: dueDate,
+          due_date: editingTask.due_date,
           completed: editingTask.completed,
         }),
       })
