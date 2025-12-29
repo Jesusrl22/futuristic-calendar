@@ -18,6 +18,7 @@ import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useToast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
+import { formatTimeForInput, formatDateTimeForInput, createLocalDate } from "@/lib/timezone-utils"
 
 export default function CalendarPage() {
   const { toast } = useToast()
@@ -93,38 +94,38 @@ export default function CalendarPage() {
     })
   }
 
-  const checkNotifications = (currentTasks: Task[]) => {
-    if (typeof window === "undefined" || !notificationEnabled) {
-      return
-    }
-
+  const checkNotifications = () => {
     const now = new Date()
-    const tasksToCheck = currentTasks.filter((task) => !task.completed && task.due_date)
 
-    tasksToCheck.forEach((task) => {
-      const taskDate = new Date(task.due_date)
-      const timeDiff = taskDate.getTime() - now.getTime()
-      const taskNotificationKey = `${task.id}`
-      const alreadyNotified = notifiedTasksRef.current.has(taskNotificationKey)
+    tasks.forEach((task) => {
+      const taskId = task.id
+      if (notifiedTasksRef.current.has(taskId)) return
 
-      // Notifica cuando está dentro de 30 segundos ANTES de la hora exacta
-      // pero solo una vez por tarea
-      if (timeDiff > -30000 && timeDiff <= 0 && !alreadyNotified) {
-        // Si ya pasó la hora (timeDiff negativo pero dentro de 30 segundos), notifica
+      const taskTime = new Date(task.due_date)
+      const timeDiff = taskTime.getTime() - now.getTime()
+
+      // Notificar cuando la hora sea exacta (dentro de 30 segundos)
+      if (timeDiff >= -10000 && timeDiff <= 30000 && timeDiff > -40000) {
+        notifiedTasksRef.current.add(taskId)
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification(t("taskReminder"), {
+            body: `${task.title} ${t("startsIn")} ${Math.max(0, Math.ceil(timeDiff / 1000))}s`,
+            icon: "/favicon.ico",
+            tag: `task-${taskId}`,
+            requireInteraction: true,
+          })
+        }
+
+        // Enviar push notification
         fetch("/api/notifications/send-now", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: t("taskDue"),
-            body: `"${task.title}" ${t("isDueNow")}`,
-            type: "reminder",
+            title: t("taskReminder"),
+            body: `${task.title} ${t("startsNow")}`,
           }),
-        }).catch((err) => console.error("[v0] Failed to send notification:", err))
-
-        notifiedTasksRef.current.add(taskNotificationKey)
-      } else if (timeDiff < -86400000) {
-        // Si pasó más de 24 horas, limpia la notificación
-        notifiedTasksRef.current.delete(taskNotificationKey)
+        }).catch((err) => console.error("[v0] Push notification error:", err))
       }
     })
   }
@@ -146,7 +147,7 @@ export default function CalendarPage() {
     let dueDate: string
     if (newTask.time) {
       const [hours, minutes] = newTask.time.split(":")
-      const localDate = new Date(
+      const localDate = createLocalDate(
         year,
         selectedDate.getMonth(),
         selectedDate.getDate(),
@@ -156,7 +157,7 @@ export default function CalendarPage() {
       )
       dueDate = localDate.toISOString()
     } else {
-      const localDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
+      const localDate = createLocalDate(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59, 59)
       dueDate = localDate.toISOString()
     }
 
@@ -187,7 +188,7 @@ export default function CalendarPage() {
         setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
         await fetchTasks()
-        setTimeout(() => checkNotifications(tasksRef.current), 500)
+        setTimeout(() => checkNotifications(), 500)
       }
     } catch (error) {
       toast({
@@ -264,7 +265,7 @@ export default function CalendarPage() {
       const match = editingTask.due_date.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
       if (match) {
         const [, year, month, day, hours, minutes] = match
-        const localDate = new Date(
+        const localDate = createLocalDate(
           Number.parseInt(year),
           Number.parseInt(month) - 1,
           Number.parseInt(day),
@@ -316,6 +317,11 @@ export default function CalendarPage() {
     }
   }
 
+  const handleEditTask = (task: Task) => {
+    const timeValue = formatTimeForInput(new Date(task.due_date))
+    setEditingTask({ ...task, time: timeValue })
+  }
+
   const days = getDaysInMonth(currentDate)
   const monthNames = [
     t("january"),
@@ -337,7 +343,7 @@ export default function CalendarPage() {
   useEffect(() => {
     if (notificationEnabled) {
       checkIntervalRef.current = setInterval(() => {
-        checkNotifications(tasksRef.current)
+        checkNotifications()
       }, 10000) // Revisar cada 10 segundos
 
       return () => {
@@ -644,7 +650,7 @@ export default function CalendarPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => {
-                            setEditingTask(task)
+                            handleEditTask(task)
                             setIsViewDialogOpen(false)
                             setIsEditDialogOpen(true)
                           }}
@@ -697,19 +703,7 @@ export default function CalendarPage() {
                   <Label>{t("dueDateTime")}</Label>
                   <Input
                     type="datetime-local"
-                    value={
-                      editingTask.due_date
-                        ? (() => {
-                            const date = new Date(editingTask.due_date)
-                            const year = date.getFullYear()
-                            const month = String(date.getMonth() + 1).padStart(2, "0")
-                            const day = String(date.getDate()).padStart(2, "0")
-                            const hours = String(date.getHours()).padStart(2, "0")
-                            const minutes = String(date.getMinutes()).padStart(2, "0")
-                            return `${year}-${month}-${day}T${hours}:${minutes}`
-                          })()
-                        : ""
-                    }
+                    value={editingTask.due_date ? formatDateTimeForInput(new Date(editingTask.due_date)) : ""}
                     onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
                     className="bg-secondary/50"
                   />
