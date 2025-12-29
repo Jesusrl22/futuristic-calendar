@@ -25,6 +25,29 @@ export const metadata: Metadata = {
       "google-adsense-account": ["ca-pub-3746054566396266"],
     },
   },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+    viewportFit: "cover",
+  },
+}
+
+function ServiceWorkerInit() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+              .then(reg => console.log('[v0] SW registered:', reg))
+              .catch(err => console.log('[v0] SW registration failed:', err));
+          }
+        `,
+      }}
+    />
+  )
 }
 
 export default function RootLayout({
@@ -34,6 +57,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Future Task" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body className="font-sans antialiased">
         <ThemeLoader />
         <Script
@@ -43,6 +74,7 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
         <LanguageProvider>{children}</LanguageProvider>
+        <ServiceWorkerInit />
       </body>
     </html>
   )

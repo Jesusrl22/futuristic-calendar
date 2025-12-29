@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -16,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useLanguage } from "@/contexts/language-context"
+import { usePushNotifications } from "@/hooks/usePushNotifications"
 import type { Language } from "@/lib/translations"
 
 type ProfileType = {
@@ -36,6 +36,13 @@ export default function SettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage()
+  const {
+    isSupported: notificationsSupported,
+    isSubscribed,
+    isLoading: notificationsLoading,
+    enableNotifications,
+    disableNotifications,
+  } = usePushNotifications()
 
   const [profile, setProfile] = useState<ProfileType>({
     email: "",
@@ -247,6 +254,14 @@ export default function SettingsPage() {
     }, 0)
   }
 
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (enabled) {
+      await enableNotifications()
+    } else {
+      await disableNotifications()
+    }
+  }
+
   const timezones = [
     { value: "UTC", label: "UTC (Coordinated Universal Time)" },
     { value: "Europe/Madrid", label: "Europe/Madrid (Spain - UTC+1/+2)" },
@@ -266,28 +281,23 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="p-3 sm:p-6 md:p-8">
+    <div className="p-3 sm:p-6 md:p-8 space-y-8">
       <div>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 hidden md:block">
           <span className="text-primary neon-text">{t("settings")}</span>
         </h1>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid grid-cols-3 w-full md:w-auto">
-            <TabsTrigger value="profile" className="text-xs sm:text-sm">
-              Profile
-            </TabsTrigger>
-            <TabsTrigger value="preferences" className="text-xs sm:text-sm">
-              Preferences
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs sm:text-sm">
-              Notifications
-            </TabsTrigger>
+        <Tabs defaultValue="general" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="general">{t("general")}</TabsTrigger>
+            <TabsTrigger value="pomodoro">{t("pomodoro")}</TabsTrigger>
+            <TabsTrigger value="theme">{t("theme")}</TabsTrigger>
+            <TabsTrigger value="notifications">{t("notifications")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile">
+          <TabsContent value="general">
             <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Profile Settings</h2>
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">General Settings</h2>
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm">{t("email")}</Label>
@@ -295,6 +305,69 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
                 </div>
 
+                <div>
+                  <Label className="text-sm">{t("language")}</Label>
+                  <Select
+                    value={profile.language}
+                    onValueChange={(value: Language) => {
+                      setProfile({ ...profile, language: value })
+                      // Immediately update global language context
+                      setGlobalLanguage(value)
+                      localStorage.setItem("language", value)
+                    }}
+                  >
+                    <SelectTrigger className="bg-secondary/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="de">Deutsch</SelectItem>
+                      <SelectItem value="it">Italiano</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label className="text-sm">Timezone / Region</Label>
+                  <Input value={`${profile.timezone} (Auto-detected)`} disabled className="bg-secondary/50 text-sm" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="pomodoro">
+            <Card className="glass-card p-4 sm:p-6 neon-glow">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Pomodoro Settings</h2>
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <Label className="text-sm">Pomodoro Duration</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Default work session length</p>
+                  </div>
+                  <Select defaultValue={profile.pomodoroWorkDuration.toString()}>
+                    <SelectTrigger className="w-full sm:w-32 bg-secondary/50 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 min</SelectItem>
+                      <SelectItem value="25">25 min</SelectItem>
+                      <SelectItem value="45">45 min</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="theme">
+            <Card className="glass-card p-4 sm:p-6 neon-glow">
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Theme Settings</h2>
+              <div className="space-y-4">
                 <div>
                   <Label className="text-sm">{t("theme")}</Label>
                   <Select value={profile.theme} onValueChange={handleThemeChange}>
@@ -377,122 +450,55 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </Card>
+          </TabsContent>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm">{t("language")}</Label>
-                    <Select
-                      value={profile.language}
-                      onValueChange={(value: Language) => {
-                        setProfile({ ...profile, language: value })
-                        // Immediately update global language context
-                        setGlobalLanguage(value)
-                        localStorage.setItem("language", value)
-                      }}
-                    >
-                      <SelectTrigger className="bg-secondary/50 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Español</SelectItem>
-                        <SelectItem value="fr">Français</SelectItem>
-                        <SelectItem value="de">Deutsch</SelectItem>
-                        <SelectItem value="it">Italiano</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <div className="p-6 space-y-6">
                 <div>
-                  <Label className="text-sm">Timezone / Region</Label>
-                  <Input value={`${profile.timezone} (Auto-detected)`} disabled className="bg-secondary/50 text-sm" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
-                  </p>
+                  <h3 className="text-lg font-semibold mb-2">{t("pushNotifications")}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">{t("pushNotificationsDescription")}</p>
+
+                  {!notificationsSupported ? (
+                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                      <p className="text-sm text-destructive">{t("notificationsNotSupported")}</p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <Label className="text-base cursor-pointer">{t("enableNotifications")}</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {isSubscribed ? t("notificationsEnabled") : t("notificationsDisabled")}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={isSubscribed}
+                        onCheckedChange={handleNotificationToggle}
+                        disabled={notificationsLoading}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <Button onClick={handleSave} disabled={loading} className="neon-glow-hover w-full sm:w-auto text-sm">
-                  {loading ? "Saving..." : t("save")}
-                </Button>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="preferences">
-            <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Preferences</h2>
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">Pomodoro Duration</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Default work session length</p>
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold mb-4">{t("notificationTypes")}</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>{t("taskReminders")}</Label>
+                      <Switch defaultChecked disabled={!isSubscribed} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>{t("achievementNotifications")}</Label>
+                      <Switch defaultChecked disabled={!isSubscribed} />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>{t("eventReminders")}</Label>
+                      <Switch defaultChecked disabled={!isSubscribed} />
+                    </div>
                   </div>
-                  <Select defaultValue={profile.pomodoroWorkDuration.toString()}>
-                    <SelectTrigger className="w-full sm:w-32 bg-secondary/50 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 min</SelectItem>
-                      <SelectItem value="25">25 min</SelectItem>
-                      <SelectItem value="45">45 min</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">Auto-start breaks</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Automatically start break timer</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">Sound notifications</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Play sound when timer completes</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Notification Settings</h2>
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">Email notifications</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Receive updates via email</p>
-                  </div>
-                  <Switch
-                    checked={profile.notifications}
-                    onCheckedChange={(checked) => setProfile({ ...profile, notifications: checked })}
-                  />
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">Task reminders</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Get reminded about upcoming tasks</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">Achievement alerts</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Notify when you unlock achievements</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <Button onClick={handleSave} disabled={loading} className="neon-glow-hover w-full sm:w-auto text-sm">
-                  {loading ? "Saving..." : t("save")}
-                </Button>
               </div>
             </Card>
           </TabsContent>
