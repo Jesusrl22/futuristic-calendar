@@ -93,6 +93,11 @@ export default function AchievementsPage() {
     }
   }
 
+  const getAchievementTranslation = (achievementId: string, type: "title" | "desc") => {
+    const key = `${achievementId}_${type === "title" ? "title" : "desc"}`
+    return t(key)
+  }
+
   const availableAchievements = getAvailableAchievements(userTier)
   const unlockedCount = availableAchievements.filter((a) => isUnlocked(a.id)).length
 
@@ -152,8 +157,12 @@ export default function AchievementsPage() {
                         </div>
                         {unlocked && <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
                       </div>
-                      <h3 className="font-semibold text-base md:text-lg mb-2">{achievement.title}</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{achievement.description}</p>
+                      <h3 className="font-semibold text-base md:text-lg mb-2">
+                        {getAchievementTranslation(achievement.id, "title")}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
+                        {getAchievementTranslation(achievement.id, "desc")}
+                      </p>
                       {!unlocked && (
                         <div>
                           <div className="flex items-center justify-between text-xs md:text-sm text-muted-foreground mb-2">
@@ -198,8 +207,12 @@ export default function AchievementsPage() {
                         </div>
                         {!isLocked && unlocked && <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
                       </div>
-                      <h3 className="font-semibold text-base md:text-lg mb-2">{achievement.title}</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{achievement.description}</p>
+                      <h3 className="font-semibold text-base md:text-lg mb-2">
+                        {getAchievementTranslation(achievement.id, "title")}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
+                        {getAchievementTranslation(achievement.id, "desc")}
+                      </p>
                       {isLocked && <p className="text-xs md:text-sm text-purple-500">{t("upgradeToPremium")}</p>}
                       {!isLocked && !unlocked && (
                         <div>
@@ -245,8 +258,12 @@ export default function AchievementsPage() {
                         </div>
                         {!isLocked && unlocked && <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary" />}
                       </div>
-                      <h3 className="font-semibold text-base md:text-lg mb-2">{achievement.title}</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">{achievement.description}</p>
+                      <h3 className="font-semibold text-base md:text-lg mb-2">
+                        {getAchievementTranslation(achievement.id, "title")}
+                      </h3>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
+                        {getAchievementTranslation(achievement.id, "desc")}
+                      </p>
                       {isLocked && <p className="text-xs md:text-sm text-blue-500">{t("upgradeToPro")}</p>}
                       {!isLocked && !unlocked && (
                         <div>
