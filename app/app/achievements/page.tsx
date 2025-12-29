@@ -12,7 +12,7 @@ import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useTranslation } from "@/hooks/useTranslation"
 
 export default function AchievementsPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const [achievements, setAchievements] = useState<any[]>([])
   const [stats, setStats] = useState({ tasks: 0, notes: 0, pomodoro: 0 })
   const [userTier, setUserTier] = useState<AchievementTier>("free")
@@ -24,7 +24,7 @@ export default function AchievementsPage() {
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission()
     }
-  }, [])
+  }, [language])
 
   const fetchUserTier = async () => {
     try {

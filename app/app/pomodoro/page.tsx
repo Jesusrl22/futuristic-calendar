@@ -24,7 +24,7 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { toast } from "@/components/ui/use-toast"
 
 export default function PomodoroPage() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const [durations, setDurations] = useState({
     work: 25 * 60,
     break: 5 * 60,
@@ -81,7 +81,7 @@ export default function PomodoroPage() {
 
     fetchUserTier()
     loadSettings()
-  }, [])
+  }, [language])
 
   useEffect(() => {
     const saveStateOnExit = () => {
