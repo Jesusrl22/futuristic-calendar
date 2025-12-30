@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
   try {
-    const { title, body, type = "reminder" } = await request.json()
+    const { title, body, taskId, type = "reminder" } = await request.json()
 
     const cookieStore = await cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
     if (userError || !user) {
       // Si no hay usuario autenticado en servidor, es una llamada desde cliente
       // En este caso solo enviamos notificación del navegador
+      console.log("[v0] No authenticated user, notification will be sent from browser")
       return Response.json({
         success: true,
         message: "Notification will be sent from browser",
@@ -42,29 +43,29 @@ export async function POST(request: Request) {
       console.error("[v0] Error fetching subscriptions:", error)
     }
 
-    // Enviar push notification si tiene suscripciones
     if (subscriptions && subscriptions.length > 0) {
-      await sendPushNotificationToUser(subscriptions, {
-        title,
-        body,
-        type,
-        url: "/app/calendar",
-      })
-    }
-
-    // También mostrar notificación del navegador como fallback
-    if (typeof window !== "undefined" && Notification.permission === "granted") {
-      new Notification(title, {
-        body: body,
-        icon: "/icon-192x192.png",
-        tag: "task-reminder",
-        requireInteraction: true,
-      })
+      console.log(`[v0] Sending push notification to ${subscriptions.length} device(s)`)
+      try {
+        await sendPushNotificationToUser(subscriptions, {
+          title,
+          body,
+          type,
+          taskId,
+          url: "/app/calendar",
+          timestamp: new Date().toISOString(),
+        })
+      } catch (pushError) {
+        console.error("[v0] Error sending push notification:", pushError)
+        // Continuar incluso si falla push, no fallar la respuesta
+      }
+    } else {
+      console.log("[v0] No push subscriptions found for user")
     }
 
     return Response.json({
       success: true,
       message: "Notification sent successfully",
+      subscriptionCount: subscriptions?.length || 0,
     })
   } catch (error) {
     console.error("[v0] Error sending notification:", error)

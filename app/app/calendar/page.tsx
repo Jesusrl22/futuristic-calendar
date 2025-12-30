@@ -95,6 +95,8 @@ export default function CalendarPage() {
   }
 
   const checkNotifications = () => {
+    if (!notificationEnabled) return
+
     const now = new Date()
     const currentHours = now.getHours()
     const currentMinutes = now.getMinutes()
@@ -112,24 +114,28 @@ export default function CalendarPage() {
       if (currentHours === taskHours && currentMinutes === taskMinutes && currentSeconds < 60) {
         notifiedTasksRef.current.add(taskId)
 
+        // Browser notification (for desktop)
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(t("taskReminder"), {
             body: `${task.title} ${t("startsNow")}`,
             icon: "/favicon.ico",
+            badge: "/favicon.ico",
             tag: `task-${taskId}`,
             requireInteraction: true,
+            vibrate: [200, 100, 200],
           })
         }
 
-        // Enviar push notification
+        // Push notification (for mobile background)
         fetch("/api/notifications/send-now", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             title: t("taskReminder"),
             body: `${task.title} ${t("startsNow")}`,
+            taskId: taskId,
           }),
-        }).catch((err) => console.error("Push notification error:", err))
+        }).catch((err) => console.error("[v0] Push notification error:", err))
       }
     })
   }
