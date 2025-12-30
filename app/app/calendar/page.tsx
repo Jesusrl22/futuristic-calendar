@@ -264,6 +264,15 @@ export default function CalendarPage() {
     }
 
     try {
+      let dueDate = editingTask.due_date
+
+      if (editingTask.time) {
+        const dueDateTime = new Date(editingTask.due_date)
+        const [hours, minutes] = editingTask.time.split(":")
+        dueDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
+        dueDate = dueDateTime.toISOString()
+      }
+
       const response = await fetch("/api/tasks", {
         method: "PUT",
         headers: {
@@ -275,7 +284,7 @@ export default function CalendarPage() {
           description: editingTask.description,
           priority: editingTask.priority,
           category: editingTask.category,
-          due_date: editingTask.due_date,
+          due_date: dueDate,
           completed: editingTask.completed,
         }),
       })
@@ -283,6 +292,7 @@ export default function CalendarPage() {
         fetchTasks()
         setIsEditDialogOpen(false)
         setEditingTask(null)
+        setTimeout(() => checkNotifications(), 500)
       } else {
         toast({
           title: t("error"),
