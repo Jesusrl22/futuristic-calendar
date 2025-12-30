@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const supabaseAdmin = createServiceRoleClient()
+    const supabaseAdmin = await createServiceRoleClient()
 
     const { data: profiles, error: profileError } = await supabaseAdmin
       .from("users")

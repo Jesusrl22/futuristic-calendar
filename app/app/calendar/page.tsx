@@ -229,6 +229,7 @@ export default function CalendarPage() {
         setIsViewDialogOpen(false)
         setIsEditDialogOpen(false)
         fetchTasks()
+        // Keep the selected date and the view stays on the day's tasks
       }
     } catch (error) {
       console.error("Error deleting task:", error)
