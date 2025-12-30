@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Zap, Plus, Trash2, MessageSquare } from "@/components/icons"
+import { Send, Zap, Plus, Trash2, MessageSquare, Menu, X } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { canAccessAI } from "@/lib/subscription"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -31,6 +31,7 @@ export default function AIPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [loadingConversations, setLoadingConversations] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(false)
 
   useEffect(() => {
     checkSubscriptionAndFetchCredits()
@@ -65,7 +66,7 @@ export default function AIPage() {
         setConversations(JSON.parse(stored))
       }
     } catch (error) {
-      console.error("[v0] Error loading conversations from storage:", error)
+      console.error("Error loading conversations from storage:", error)
     } finally {
       setLoadingConversations(false)
     }
@@ -75,86 +76,62 @@ export default function AIPage() {
     try {
       localStorage.setItem("ai_conversations", JSON.stringify(convs))
     } catch (error) {
-      console.error("[v0] Error saving conversations to storage:", error)
+      console.error("Error saving conversations to storage:", error)
     }
   }
 
   const createNewConversation = () => {
-    try {
-      const newConversation: Conversation = {
-        id: Date.now().toString(),
-        title: "New Conversation",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        messages: [],
-      }
-      const updated = [newConversation, ...conversations]
-      setConversations(updated)
-      saveConversationsToStorage(updated)
-      setCurrentConversationId(newConversation.id)
-      setMessages([])
-      console.log("[v0] New conversation created:", newConversation.id)
-    } catch (error) {
-      console.error("[v0] Error creating conversation:", error)
+    const newConversation: Conversation = {
+      id: Date.now().toString(),
+      title: "New Conversation",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      messages: [],
     }
+    const updated = [newConversation, ...conversations]
+    setConversations(updated)
+    saveConversationsToStorage(updated)
+    setCurrentConversationId(newConversation.id)
+    setMessages([])
+    setShowSidebar(false)
   }
 
   const loadConversation = (conversationId: string) => {
-    try {
-      const conv = conversations.find((c) => c.id === conversationId)
-      if (conv) {
-        setCurrentConversationId(conversationId)
-        setMessages(conv.messages || [])
-      }
-    } catch (error) {
-      console.error("[v0] Error loading conversation:", error)
+    const conv = conversations.find((c) => c.id === conversationId)
+    if (conv) {
+      setCurrentConversationId(conversationId)
+      setMessages(conv.messages || [])
+      setShowSidebar(false)
     }
   }
 
   const deleteConversation = (conversationId: string) => {
     if (!confirm(t("confirm_delete"))) return
 
-    try {
-      const updated = conversations.filter((c) => c.id !== conversationId)
-      setConversations(updated)
-      saveConversationsToStorage(updated)
-      if (currentConversationId === conversationId) {
-        setCurrentConversationId(null)
-        setMessages([])
-      }
-    } catch (error) {
-      console.error("[v0] Error deleting conversation:", error)
+    const updated = conversations.filter((c) => c.id !== conversationId)
+    setConversations(updated)
+    saveConversationsToStorage(updated)
+    if (currentConversationId === conversationId) {
+      setCurrentConversationId(null)
+      setMessages([])
     }
   }
 
   const saveConversation = (conversationId: string, newMessages: any[]) => {
-    try {
-      console.log("[v0] Saving conversation:", conversationId, "with", newMessages.length, "messages")
-      const updated = conversations.map((c) => {
-        if (c.id === conversationId) {
-          const updatedConv = {
-            ...c,
-            messages: newMessages,
-            title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "New Conversation",
-            updated_at: new Date().toISOString(),
-          }
-          console.log("[v0] Updated conversation:", updatedConv)
-          return updatedConv
+    const updated = conversations.map((c) => {
+      if (c.id === conversationId) {
+        return {
+          ...c,
+          messages: newMessages,
+          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "New Conversation",
+          updated_at: new Date().toISOString(),
         }
-        return c
-      })
-
-      if (updated.length === 0) {
-        console.error("[v0] Conversation not found:", conversationId)
-        return
       }
+      return c
+    })
 
-      setConversations(updated)
-      saveConversationsToStorage(updated)
-      console.log("[v0] Conversation saved successfully")
-    } catch (error) {
-      console.error("[v0] Error saving conversation:", error)
-    }
+    setConversations(updated)
+    saveConversationsToStorage(updated)
   }
 
   const handleSend = async () => {
@@ -167,7 +144,6 @@ export default function AIPage() {
     }
 
     let conversationId = currentConversationId
-
     if (!conversationId) {
       const newConversation: Conversation = {
         id: Date.now().toString(),
@@ -181,7 +157,6 @@ export default function AIPage() {
       saveConversationsToStorage(updated)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
-      console.log("[v0] New conversation created:", conversationId)
     }
 
     const userMessage = { role: "user", content: input }
@@ -190,9 +165,7 @@ export default function AIPage() {
     setInput("")
     setLoading(true)
 
-    if (conversationId) {
-      saveConversation(conversationId, newMessages)
-    }
+    saveConversation(conversationId, newMessages)
 
     try {
       const response = await fetch("/api/ai-chat", {
@@ -204,21 +177,17 @@ export default function AIPage() {
       const data = await response.json()
 
       if (data.error) {
-        console.error("[v0] AI error:", data.error)
         throw new Error(data.error)
       }
 
       const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
       setMessages(updatedMessages)
-
-      if (conversationId) {
-        saveConversation(conversationId, updatedMessages)
-      }
+      saveConversation(conversationId, updatedMessages)
 
       setMonthlyCredits(data.remainingMonthlyCredits)
       setPurchasedCredits(data.remainingPurchasedCredits)
     } catch (error) {
-      console.error("[v0] AI chat error:", error)
+      console.error("AI chat error:", error)
       setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
     } finally {
       setLoading(false)
@@ -249,10 +218,26 @@ export default function AIPage() {
 
   return (
     <div className="p-4 md:p-8 h-[calc(100vh-4rem)] flex gap-4">
-      <div className="hidden lg:flex w-64 flex-col gap-4">
+      {showSidebar && (
+        <div className="fixed inset-0 bg-black/50 lg:hidden z-40" onClick={() => setShowSidebar(false)} />
+      )}
+
+      <div
+        className={`${
+          showSidebar ? "absolute" : "hidden"
+        } lg:flex w-64 flex-col gap-4 bg-background p-4 rounded-lg z-50 lg:z-0 lg:relative lg:bg-transparent`}
+      >
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">{t("conversations")}</h3>
+          <button onClick={() => setShowSidebar(false)} className="lg:hidden">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         <Button
           onClick={() => {
             createNewConversation()
+            setShowSidebar(false)
           }}
           className="w-full neon-glow-hover"
         >
@@ -261,7 +246,6 @@ export default function AIPage() {
         </Button>
 
         <div className="flex-1 overflow-y-auto space-y-2">
-          <p className="text-sm font-semibold text-muted-foreground px-2">{t("recent_conversations")}</p>
           {conversations.map((conv) => (
             <div
               key={conv.id}
@@ -293,9 +277,14 @@ export default function AIPage() {
       {/* Main chat area */}
       <div className="flex-1 h-full flex flex-col">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-4">
-          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">{t("ai_assistant")}</span>
-          </h1>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <button onClick={() => setShowSidebar(!showSidebar)} className="lg:hidden">
+              <Menu className="w-5 h-5" />
+            </button>
+            <h1 className="text-2xl md:text-4xl font-bold">
+              <span className="text-primary neon-text">{t("ai_assistant")}</span>
+            </h1>
+          </div>
           <div className="flex gap-2 w-full md:w-auto">
             {monthlyCredits > 0 && (
               <Card className="glass-card px-3 py-2 neon-glow flex-1 md:flex-none">
