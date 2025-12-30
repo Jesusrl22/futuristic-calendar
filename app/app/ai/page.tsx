@@ -178,6 +178,10 @@ export default function AIPage() {
     setInput("")
     setLoading(true)
 
+    if (conversationId) {
+      saveConversation(conversationId, newMessages)
+    }
+
     try {
       const response = await fetch("/api/ai-chat", {
         method: "POST",
