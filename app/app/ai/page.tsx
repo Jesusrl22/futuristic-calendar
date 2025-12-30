@@ -93,6 +93,7 @@ export default function AIPage() {
       saveConversationsToStorage(updated)
       setCurrentConversationId(newConversation.id)
       setMessages([])
+      console.log("[v0] New conversation created:", newConversation.id)
     } catch (error) {
       console.error("[v0] Error creating conversation:", error)
     }
@@ -128,19 +129,29 @@ export default function AIPage() {
 
   const saveConversation = (conversationId: string, newMessages: any[]) => {
     try {
+      console.log("[v0] Saving conversation:", conversationId, "with", newMessages.length, "messages")
       const updated = conversations.map((c) => {
         if (c.id === conversationId) {
-          return {
+          const updatedConv = {
             ...c,
             messages: newMessages,
             title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "New Conversation",
             updated_at: new Date().toISOString(),
           }
+          console.log("[v0] Updated conversation:", updatedConv)
+          return updatedConv
         }
         return c
       })
+
+      if (updated.length === 0) {
+        console.error("[v0] Conversation not found:", conversationId)
+        return
+      }
+
       setConversations(updated)
       saveConversationsToStorage(updated)
+      console.log("[v0] Conversation saved successfully")
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
     }
@@ -170,6 +181,7 @@ export default function AIPage() {
       saveConversationsToStorage(updated)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
+      console.log("[v0] New conversation created:", conversationId)
     }
 
     const userMessage = { role: "user", content: input }
