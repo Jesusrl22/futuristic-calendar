@@ -54,12 +54,12 @@ export async function POST(request: Request) {
           url: "/app/calendar",
           timestamp: new Date().toISOString(),
         })
+        console.log("[v0] Push notification sent successfully")
       } catch (pushError) {
         console.error("[v0] Error sending push notification:", pushError)
-        // Continuar incluso si falla push, no fallar la respuesta
       }
     } else {
-      console.log("[v0] No push subscriptions found for user")
+      console.log("[v0] No push subscriptions found for user - user may not have enabled notifications")
     }
 
     return Response.json({

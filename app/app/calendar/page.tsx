@@ -18,7 +18,7 @@ import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useToast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
-import { formatTimeForInput, formatDateTimeForInput } from "@/lib/timezone-utils"
+import { formatDateTimeForInput } from "@/lib/timezone-utils"
 
 export default function CalendarPage() {
   const { toast } = useToast()
@@ -100,7 +100,6 @@ export default function CalendarPage() {
     const now = new Date()
     const currentHours = now.getHours()
     const currentMinutes = now.getMinutes()
-    const currentSeconds = now.getSeconds()
 
     tasks.forEach((task) => {
       const taskId = task.id
@@ -110,11 +109,11 @@ export default function CalendarPage() {
       const taskHours = taskTime.getHours()
       const taskMinutes = taskTime.getMinutes()
 
-      // Notificar cuando la hora y minuto sean exactos (dentro de 60 segundos)
-      if (currentHours === taskHours && currentMinutes === taskMinutes && currentSeconds < 60) {
+      // Notificar cuando la hora y minuto sean exactos
+      if (currentHours === taskHours && currentMinutes === taskMinutes) {
         notifiedTasksRef.current.add(taskId)
 
-        // Browser notification (for desktop)
+        // Browser notification - works on desktop and mobile
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(t("taskReminder"), {
             body: `${task.title} ${t("startsNow")}`,
@@ -125,17 +124,6 @@ export default function CalendarPage() {
             vibrate: [200, 100, 200],
           })
         }
-
-        // Push notification (for mobile background)
-        fetch("/api/notifications/send-now", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: t("taskReminder"),
-            body: `${task.title} ${t("startsNow")}`,
-            taskId: taskId,
-          }),
-        }).catch((err) => console.error("[v0] Push notification error:", err))
       }
     })
   }
@@ -264,13 +252,14 @@ export default function CalendarPage() {
     }
 
     try {
-      let dueDate = editingTask.due_date
-
+      let dueDate: string
       if (editingTask.time) {
         const dueDateTime = new Date(editingTask.due_date)
         const [hours, minutes] = editingTask.time.split(":")
         dueDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
         dueDate = dueDateTime.toISOString()
+      } else {
+        dueDate = editingTask.due_date
       }
 
       const response = await fetch("/api/tasks", {
@@ -292,6 +281,7 @@ export default function CalendarPage() {
         fetchTasks()
         setIsEditDialogOpen(false)
         setEditingTask(null)
+        notifiedTasksRef.current.delete(editingTask.id)
         setTimeout(() => checkNotifications(), 500)
       } else {
         toast({
@@ -310,7 +300,10 @@ export default function CalendarPage() {
   }
 
   const handleEditTask = (task: Task) => {
-    const timeValue = formatTimeForInput(new Date(task.due_date))
+    const taskDate = new Date(task.due_date)
+    const hours = String(taskDate.getHours()).padStart(2, "0")
+    const minutes = String(taskDate.getMinutes()).padStart(2, "0")
+    const timeValue = `${hours}:${minutes}`
     setEditingTask({ ...task, time: timeValue })
   }
 
@@ -336,7 +329,7 @@ export default function CalendarPage() {
     if (notificationEnabled) {
       checkIntervalRef.current = setInterval(() => {
         checkNotifications()
-      }, 10000) // Revisar cada 10 segundos
+      }, 5000)
 
       return () => {
         if (checkIntervalRef.current) {
@@ -344,7 +337,7 @@ export default function CalendarPage() {
         }
       }
     }
-  }, [notificationEnabled, t])
+  }, [notificationEnabled, tasks, t])
 
   return (
     <div className="p-4 md:p-8">
