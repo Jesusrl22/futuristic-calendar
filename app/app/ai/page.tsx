@@ -30,28 +30,15 @@ export default function AIPage() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [loadingConversations, setLoadingConversations] = useState(false)
-  const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
     checkSubscriptionAndFetchCredits()
-    getAuthToken()
+    loadConversations()
   }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
-
-  const getAuthToken = async () => {
-    try {
-      const response = await fetch("/api/user/profile")
-      const data = await response.json()
-      if (data.token) {
-        setToken(data.token)
-      }
-    } catch (error) {
-      console.error("Error getting auth token:", error)
-    }
-  }
 
   const checkSubscriptionAndFetchCredits = async () => {
     try {
@@ -70,31 +57,47 @@ export default function AIPage() {
   }
 
   const loadConversations = async () => {
-    if (!token) return
     try {
       setLoadingConversations(true)
+      const sessionResponse = await fetch("/api/auth/session")
+      const sessionData = await sessionResponse.json()
+
+      if (!sessionData.session?.access_token) {
+        console.log("[v0] No session token available")
+        return
+      }
+
       const response = await fetch("/api/ai-conversations", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
       })
       if (response.ok) {
         const data = await response.json()
-        setConversations(data.conversations)
+        setConversations(data.conversations || [])
+      } else {
+        console.error("[v0] Error loading conversations:", response.status)
       }
     } catch (error) {
-      console.error("Error loading conversations:", error)
+      console.error("[v0] Error loading conversations:", error)
     } finally {
       setLoadingConversations(false)
     }
   }
 
   const createNewConversation = async () => {
-    if (!token) return
     try {
+      const sessionResponse = await fetch("/api/auth/session")
+      const sessionData = await sessionResponse.json()
+
+      if (!sessionData.session?.access_token) {
+        console.error("[v0] No session token available")
+        return
+      }
+
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
         body: JSON.stringify({ title: "New Conversation" }),
       })
@@ -103,36 +106,54 @@ export default function AIPage() {
         setCurrentConversationId(data.conversation.id)
         setMessages([])
         await loadConversations()
+      } else {
+        console.error("[v0] Error creating conversation:", response.status)
       }
     } catch (error) {
-      console.error("Error creating conversation:", error)
+      console.error("[v0] Error creating conversation:", error)
     }
   }
 
   const loadConversation = async (conversationId: string) => {
-    if (!token) return
     try {
+      const sessionResponse = await fetch("/api/auth/session")
+      const sessionData = await sessionResponse.json()
+
+      if (!sessionData.session?.access_token) {
+        console.error("[v0] No session token available")
+        return
+      }
+
       const response = await fetch(`/api/ai-conversations/${conversationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
       })
       if (response.ok) {
         const data = await response.json()
         setCurrentConversationId(conversationId)
         setMessages(data.conversation.messages || [])
+      } else {
+        console.error("[v0] Error loading conversation:", response.status)
       }
     } catch (error) {
-      console.error("Error loading conversation:", error)
+      console.error("[v0] Error loading conversation:", error)
     }
   }
 
   const deleteConversation = async (conversationId: string) => {
-    if (!token) return
     if (!confirm(t("confirm_delete"))) return
 
     try {
+      const sessionResponse = await fetch("/api/auth/session")
+      const sessionData = await sessionResponse.json()
+
+      if (!sessionData.session?.access_token) {
+        console.error("[v0] No session token available")
+        return
+      }
+
       const response = await fetch(`/api/ai-conversations/${conversationId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
       })
       if (response.ok) {
         if (currentConversationId === conversationId) {
@@ -140,30 +161,41 @@ export default function AIPage() {
           setMessages([])
         }
         await loadConversations()
+      } else {
+        console.error("[v0] Error deleting conversation:", response.status)
       }
     } catch (error) {
-      console.error("Error deleting conversation:", error)
+      console.error("[v0] Error deleting conversation:", error)
     }
   }
 
   const saveConversation = async (conversationId: string, newMessages: any[]) => {
-    if (!token) return
     try {
+      const sessionResponse = await fetch("/api/auth/session")
+      const sessionData = await sessionResponse.json()
+
+      if (!sessionData.session?.access_token) {
+        console.error("[v0] No session token available")
+        return
+      }
+
       const title = newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "New Conversation"
 
       const response = await fetch(`/api/ai-conversations/${conversationId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${sessionData.session.access_token}`,
         },
         body: JSON.stringify({ title, messages: newMessages }),
       })
       if (response.ok) {
         await loadConversations()
+      } else {
+        console.error("[v0] Error saving conversation:", response.status)
       }
     } catch (error) {
-      console.error("Error saving conversation:", error)
+      console.error("[v0] Error saving conversation:", error)
     }
   }
 
@@ -177,22 +209,30 @@ export default function AIPage() {
     }
 
     let conversationId = currentConversationId
-    if (!conversationId && token) {
-      // Create new conversation if none exists
-      const response = await fetch("/api/ai-conversations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title: input.substring(0, 50) + "..." }),
-      })
-      if (response.ok) {
-        const data = await response.json()
-        conversationId = data.conversation.id
-        setCurrentConversationId(conversationId)
-        await loadConversations()
+
+    try {
+      const sessionResponse = await fetch("/api/auth/session")
+      const sessionData = await sessionResponse.json()
+
+      if (!conversationId && sessionData.session?.access_token) {
+        // Create new conversation if none exists
+        const response = await fetch("/api/ai-conversations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+          body: JSON.stringify({ title: input.substring(0, 50) + "..." }),
+        })
+        if (response.ok) {
+          const data = await response.json()
+          conversationId = data.conversation.id
+          setCurrentConversationId(conversationId)
+          await loadConversations()
+        }
       }
+    } catch (error) {
+      console.error("[v0] Error creating conversation:", error)
     }
 
     const userMessage = { role: "user", content: input }
@@ -211,7 +251,7 @@ export default function AIPage() {
       const data = await response.json()
 
       if (data.error) {
-        console.error("AI error:", data.error)
+        console.error("[v0] AI error:", data.error)
         throw new Error(data.error)
       }
 
@@ -219,14 +259,14 @@ export default function AIPage() {
       setMessages(updatedMessages)
 
       // Save to conversation
-      if (conversationId && token) {
+      if (conversationId) {
         await saveConversation(conversationId, updatedMessages)
       }
 
       setMonthlyCredits(data.remainingMonthlyCredits)
       setPurchasedCredits(data.remainingPurchasedCredits)
     } catch (error) {
-      console.error("AI chat error:", error)
+      console.error("[v0] AI chat error:", error)
       setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
     } finally {
       setLoading(false)
