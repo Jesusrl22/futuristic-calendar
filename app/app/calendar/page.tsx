@@ -18,7 +18,6 @@ import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useToast } from "@/components/ui/use-toast"
 import type { Task } from "@/types/task"
-import { formatDateTimeForInput } from "@/lib/timezone-utils"
 
 export default function CalendarPage() {
   const { toast } = useToast()
@@ -685,13 +684,23 @@ export default function CalendarPage() {
                   />
                 </div>
                 <div>
-                  <Label>{t("dueDateTime")}</Label>
+                  <Label>{t("time")}</Label>
                   <Input
-                    type="datetime-local"
-                    value={editingTask.due_date ? formatDateTimeForInput(new Date(editingTask.due_date)) : ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
+                    type="time"
+                    value={editingTask.time || ""}
+                    onChange={(e) => setEditingTask({ ...editingTask, time: e.target.value })}
                     className="bg-secondary/50"
                   />
+                </div>
+                <div>
+                  <Label>{t("preview")}</Label>
+                  <div className="text-sm text-muted-foreground bg-secondary/50 p-2 rounded">
+                    {editingTask.time ||
+                      new Date(editingTask.due_date).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -733,9 +742,8 @@ export default function CalendarPage() {
                   <Button onClick={handleUpdateTask} className="flex-1 neon-glow-hover">
                     {t("updateTask")}
                   </Button>
-                  <Button variant="destructive" onClick={() => handleDeleteTask(editingTask.id)} className="flex-1">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    {t("delete")}
+                  <Button onClick={() => handleDeleteTask(editingTask.id)} variant="destructive" className="flex-1">
+                    {t("deleteTask")}
                   </Button>
                 </div>
               </div>
