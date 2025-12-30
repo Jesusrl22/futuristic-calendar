@@ -4,10 +4,17 @@ import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Zap } from "@/components/icons"
+import { Send, Zap, Plus, Trash2, MessageSquare } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { canAccessAI } from "@/lib/subscription"
 import { useTranslation } from "@/hooks/useTranslation"
+
+interface Conversation {
+  id: string
+  title: string
+  created_at: string
+  updated_at: string
+}
 
 export default function AIPage() {
   const { t } = useTranslation()
@@ -20,13 +27,31 @@ export default function AIPage() {
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null)
   const [checkingAccess, setCheckingAccess] = useState(true)
 
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+  const [loadingConversations, setLoadingConversations] = useState(false)
+  const [token, setToken] = useState<string | null>(null)
+
   useEffect(() => {
     checkSubscriptionAndFetchCredits()
+    getAuthToken()
   }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
+
+  const getAuthToken = async () => {
+    try {
+      const response = await fetch("/api/user/profile")
+      const data = await response.json()
+      if (data.token) {
+        setToken(data.token)
+      }
+    } catch (error) {
+      console.error("Error getting auth token:", error)
+    }
+  }
 
   const checkSubscriptionAndFetchCredits = async () => {
     try {
@@ -44,6 +69,104 @@ export default function AIPage() {
     }
   }
 
+  const loadConversations = async () => {
+    if (!token) return
+    try {
+      setLoadingConversations(true)
+      const response = await fetch("/api/ai-conversations", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setConversations(data.conversations)
+      }
+    } catch (error) {
+      console.error("Error loading conversations:", error)
+    } finally {
+      setLoadingConversations(false)
+    }
+  }
+
+  const createNewConversation = async () => {
+    if (!token) return
+    try {
+      const response = await fetch("/api/ai-conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: "New Conversation" }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentConversationId(data.conversation.id)
+        setMessages([])
+        await loadConversations()
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error)
+    }
+  }
+
+  const loadConversation = async (conversationId: string) => {
+    if (!token) return
+    try {
+      const response = await fetch(`/api/ai-conversations/${conversationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setCurrentConversationId(conversationId)
+        setMessages(data.conversation.messages || [])
+      }
+    } catch (error) {
+      console.error("Error loading conversation:", error)
+    }
+  }
+
+  const deleteConversation = async (conversationId: string) => {
+    if (!token) return
+    if (!confirm(t("confirm_delete"))) return
+
+    try {
+      const response = await fetch(`/api/ai-conversations/${conversationId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        if (currentConversationId === conversationId) {
+          setCurrentConversationId(null)
+          setMessages([])
+        }
+        await loadConversations()
+      }
+    } catch (error) {
+      console.error("Error deleting conversation:", error)
+    }
+  }
+
+  const saveConversation = async (conversationId: string, newMessages: any[]) => {
+    if (!token) return
+    try {
+      const title = newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "New Conversation"
+
+      const response = await fetch(`/api/ai-conversations/${conversationId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, messages: newMessages }),
+      })
+      if (response.ok) {
+        await loadConversations()
+      }
+    } catch (error) {
+      console.error("Error saving conversation:", error)
+    }
+  }
+
   const handleSend = async () => {
     if (!input.trim() || loading) return
 
@@ -53,8 +176,28 @@ export default function AIPage() {
       return
     }
 
+    let conversationId = currentConversationId
+    if (!conversationId && token) {
+      // Create new conversation if none exists
+      const response = await fetch("/api/ai-conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title: input.substring(0, 50) + "..." }),
+      })
+      if (response.ok) {
+        const data = await response.json()
+        conversationId = data.conversation.id
+        setCurrentConversationId(conversationId)
+        await loadConversations()
+      }
+    }
+
     const userMessage = { role: "user", content: input }
-    setMessages((prev) => [...prev, userMessage])
+    const newMessages = [...messages, userMessage]
+    setMessages(newMessages)
     setInput("")
     setLoading(true)
 
@@ -72,7 +215,14 @@ export default function AIPage() {
         throw new Error(data.error)
       }
 
-      setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
+      const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
+      setMessages(updatedMessages)
+
+      // Save to conversation
+      if (conversationId && token) {
+        await saveConversation(conversationId, updatedMessages)
+      }
+
       setMonthlyCredits(data.remainingMonthlyCredits)
       setPurchasedCredits(data.remainingPurchasedCredits)
     } catch (error) {
@@ -106,8 +256,51 @@ export default function AIPage() {
   const totalCredits = monthlyCredits + purchasedCredits
 
   return (
-    <div className="p-4 md:p-8 h-[calc(100vh-4rem)]">
-      <div className="h-full flex flex-col">
+    <div className="p-4 md:p-8 h-[calc(100vh-4rem)] flex gap-4">
+      <div className="hidden lg:flex w-64 flex-col gap-4">
+        <Button
+          onClick={() => {
+            createNewConversation()
+            loadConversations()
+          }}
+          className="w-full neon-glow-hover"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          {t("new_conversation")}
+        </Button>
+
+        <div className="flex-1 overflow-y-auto space-y-2">
+          <p className="text-sm font-semibold text-muted-foreground px-2">{t("recent_conversations")}</p>
+          {conversations.map((conv) => (
+            <div
+              key={conv.id}
+              className={`p-3 rounded-lg cursor-pointer transition-colors flex items-center justify-between group ${
+                currentConversationId === conv.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary/50 hover:bg-secondary"
+              }`}
+              onClick={() => loadConversation(conv.id)}
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <MessageSquare className="w-4 h-4 shrink-0" />
+                <span className="text-sm truncate">{conv.title}</span>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  deleteConversation(conv.id)
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main chat area */}
+      <div className="flex-1 h-full flex flex-col">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-4">
           <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
             <span className="text-primary neon-text">{t("ai_assistant")}</span>
