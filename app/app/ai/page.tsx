@@ -1,10 +1,12 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Zap, Plus, Trash2, MessageSquare, Menu, X } from "@/components/icons"
+import { Send, Zap, Plus, Trash2, MessageSquare, ChevronDown } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { canAccessAI } from "@/lib/subscription"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -37,8 +39,7 @@ export default function AIPage() {
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
-  const [loadingConversations, setLoadingConversations] = useState(false)
-  const [showSidebar, setShowSidebar] = useState(true)
+  const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
     checkSubscriptionAndFetchCredits()
@@ -67,15 +68,12 @@ export default function AIPage() {
 
   const loadConversationsFromStorage = () => {
     try {
-      setLoadingConversations(true)
       const stored = localStorage.getItem("ai_conversations")
       if (stored) {
         setConversations(JSON.parse(stored))
       }
     } catch (error) {
       console.error("Error loading conversations from storage:", error)
-    } finally {
-      setLoadingConversations(false)
     }
   }
 
@@ -90,7 +88,7 @@ export default function AIPage() {
   const createNewConversation = () => {
     const newConversation: Conversation = {
       id: Date.now().toString(),
-      title: "New Conversation",
+      title: "Nueva conversación",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       messages: [],
@@ -100,6 +98,8 @@ export default function AIPage() {
     saveConversationsToStorage(updated)
     setCurrentConversationId(newConversation.id)
     setMessages([])
+    setInput("")
+    setShowDropdown(false)
   }
 
   const loadConversation = (conversationId: string) => {
@@ -107,10 +107,13 @@ export default function AIPage() {
     if (conv) {
       setCurrentConversationId(conversationId)
       setMessages(conv.messages || [])
+      setInput("")
+      setShowDropdown(false)
     }
   }
 
-  const deleteConversation = (conversationId: string) => {
+  const deleteConversation = (conversationId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     if (!confirm(t("confirm_delete"))) return
 
     const updated = conversations.filter((c) => c.id !== conversationId)
@@ -128,7 +131,7 @@ export default function AIPage() {
         return {
           ...c,
           messages: newMessages,
-          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "New Conversation",
+          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : "Nueva conversación",
           updated_at: new Date().toISOString(),
         }
       }
@@ -221,151 +224,170 @@ export default function AIPage() {
   }
 
   const totalCredits = monthlyCredits + purchasedCredits
+  const currentConv = conversations.find((c) => c.id === currentConversationId)
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-background">
-      {showSidebar && (
-        <div className="fixed inset-0 bg-black/50 lg:hidden z-40" onClick={() => setShowSidebar(false)} />
-      )}
-
-      <div
-        className={`${
-          showSidebar ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 fixed lg:relative w-64 h-full flex flex-col gap-4 bg-background border-r border-border/50 p-4 rounded-none lg:rounded-lg transition-transform z-50 lg:z-0`}
-      >
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-sm">{t("conversations")}</h3>
-          <button onClick={() => setShowSidebar(false)} className="lg:hidden">
-            <X className="w-4 h-4" />
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background p-4 md:p-6">
+      {/* Header with dropdown */}
+      <div className="flex items-center justify-between gap-4 mb-6 relative">
+        <div className="flex-1 relative">
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-sm"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="truncate">{currentConv ? currentConv.title : t("new_conversation")}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showDropdown ? "rotate-180" : ""}`} />
           </button>
+
+          {/* Dropdown menu */}
+          {showDropdown && (
+            <div className="absolute top-full left-0 mt-2 w-72 max-h-96 bg-secondary/90 backdrop-blur border border-border/50 rounded-lg shadow-lg z-50 overflow-y-auto">
+              <div className="p-3 space-y-2 border-b border-border/50">
+                <Button onClick={createNewConversation} className="w-full neon-glow-hover text-sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nueva conversación
+                </Button>
+              </div>
+
+              <div className="p-2 space-y-1">
+                {conversations.length === 0 ? (
+                  <p className="text-xs text-muted-foreground p-2 text-center">Sin conversaciones guardadas</p>
+                ) : (
+                  conversations.map((conv) => (
+                    <button
+                      key={conv.id}
+                      onClick={() => loadConversation(conv.id)}
+                      className={`w-full p-2 rounded-lg text-left transition-colors text-sm flex items-center justify-between group ${
+                        currentConversationId === conv.id
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-secondary/50"
+                      }`}
+                    >
+                      <span className="truncate flex-1 text-xs">{conv.title}</span>
+                      <button
+                        onClick={(e) => deleteConversation(conv.id, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        <Button onClick={createNewConversation} className="w-full neon-glow-hover text-sm">
-          <Plus className="w-4 h-4 mr-2" />
-          {t("new_conversation")}
-        </Button>
-
-        <div className="flex-1 overflow-y-auto space-y-2">
-          {conversations.map((conv) => (
-            <div
-              key={conv.id}
-              className={`p-2 rounded-lg cursor-pointer transition-colors flex items-center justify-between group text-sm ${
-                currentConversationId === conv.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary/50 hover:bg-secondary"
-              }`}
-              onClick={() => loadConversation(conv.id)}
-            >
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <MessageSquare className="w-3 h-3 shrink-0" />
-                <span className="truncate text-xs">{conv.title}</span>
+        {/* Credits display */}
+        <div className="flex gap-2 shrink-0">
+          {monthlyCredits > 0 && (
+            <Card className="glass-card px-2 py-1 md:px-3 md:py-2 neon-glow">
+              <div className="flex items-center gap-1">
+                <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+                <span className="text-xs md:text-sm font-semibold">{monthlyCredits}</span>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  deleteConversation(conv.id)
-                }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
+            </Card>
+          )}
+          {purchasedCredits > 0 && (
+            <Card className="glass-card px-2 py-1 md:px-3 md:py-2 neon-glow">
+              <div className="flex items-center gap-1">
+                <Zap className="w-3 h-3 md:w-4 md:h-4 text-yellow-500" />
+                <span className="text-xs md:text-sm font-semibold">{purchasedCredits}</span>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col h-full p-4 lg:p-6 gap-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowSidebar(!showSidebar)} className="lg:hidden">
-              <Menu className="w-5 h-5" />
-            </button>
-            <h1 className="text-2xl lg:text-3xl font-bold">
-              <span className="text-primary neon-text">{t("ai_assistant")}</span>
-            </h1>
-          </div>
-          <div className="flex gap-2">
-            {monthlyCredits > 0 && (
-              <Card className="glass-card px-2 py-1 lg:px-3 lg:py-2 neon-glow">
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 lg:w-4 lg:h-4 text-primary" />
-                  <span className="text-xs lg:text-sm font-semibold">{monthlyCredits}</span>
-                </div>
-              </Card>
-            )}
-            {purchasedCredits > 0 && (
-              <Card className="glass-card px-2 py-1 lg:px-3 lg:py-2 neon-glow">
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 lg:w-4 lg:h-4 text-yellow-500" />
-                  <span className="text-xs lg:text-sm font-semibold">{purchasedCredits}</span>
-                </div>
-              </Card>
-            )}
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col min-h-0">
+        {messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center space-y-8 px-4">
+            <div className="text-center space-y-4">
+              <h1 className="text-4xl md:text-5xl font-bold">¿En qué puedo ayudar?</h1>
+              <p className="text-sm text-muted-foreground max-w-2xl">{t("ai_assistant_cost")}</p>
+            </div>
 
-        <Card className="glass-card flex-1 flex flex-col neon-glow overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 flex flex-col justify-center">
-            {messages.length === 0 ? (
-              <div className="text-center space-y-6 py-8">
-                <div>
-                  <h2 className="text-xl lg:text-2xl font-semibold mb-2">{t("how_can_i_help")}</h2>
-                  <p className="text-sm text-muted-foreground">{t("ai_assistant_cost")}</p>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-2xl mx-auto">
+            {/* Input at bottom for initial screen */}
+            <div className="w-full max-w-2xl space-y-4">
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                  placeholder="Pregunta lo que quieras"
+                  className="bg-secondary/50 text-sm"
+                  disabled={loading}
+                  autoFocus
+                />
+                <Button
+                  onClick={() => handleSend()}
+                  disabled={loading || !input.trim()}
+                  className="neon-glow-hover shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Suggested prompts */}
+              {input.trim() === "" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {SUGGESTED_PROMPTS.map((prompt, index) => (
                     <button
                       key={index}
                       onClick={() => handleSend(prompt)}
-                      className="p-4 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-sm text-left hover:shadow-lg"
+                      className="p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
                     >
                       {prompt}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {t("total_available")}: {totalCredits} {t("credits")}
-                </p>
-              </div>
-            ) : (
-              <>
-                {messages.map((message, index) => (
-                  <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={`max-w-[85%] lg:max-w-[70%] p-3 lg:p-4 rounded-lg text-sm ${
-                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                    </div>
-                  </div>
-                ))}
+              )}
 
-                {loading && (
-                  <div className="flex justify-start">
-                    <div className="bg-secondary/50 p-3 lg:p-4 rounded-lg">
-                      <div className="flex gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </>
-            )}
+              <p className="text-xs text-muted-foreground text-center">
+                {t("total_available")}: {totalCredits} {t("credits")}
+              </p>
+            </div>
           </div>
+        ) : (
+          // Chat messages view
+          <>
+            <div className="flex-1 overflow-y-auto mb-4 space-y-4 px-4">
+              {messages.map((message, index) => (
+                <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[85%] md:max-w-[70%] p-3 md:p-4 rounded-lg text-sm ${
+                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                  </div>
+                </div>
+              ))}
 
-          <div className="p-4 lg:p-6 border-t border-border/50">
-            <div className="flex gap-2">
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-secondary/50 p-3 md:p-4 rounded-lg">
+                    <div className="flex gap-2">
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
+                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input at bottom for chat */}
+            <div className="flex gap-2 px-4">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                placeholder={t("type_your_message")}
+                placeholder="Pregunta lo que quieras"
                 className="bg-secondary/50 text-sm"
                 disabled={loading}
               />
@@ -377,8 +399,8 @@ export default function AIPage() {
                 <Send className="w-4 h-4" />
               </Button>
             </div>
-          </div>
-        </Card>
+          </>
+        )}
       </div>
     </div>
   )
