@@ -156,6 +156,7 @@ export default function AIPage() {
       const updated = [newConversation, ...conversations]
       setConversations(updated)
       saveConversationsToStorage(updated)
+      console.log("[v0] New conversation created:", newConversation.id)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
     }
@@ -163,10 +164,11 @@ export default function AIPage() {
     const userMessage = { role: "user", content: textToSend }
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
-    setInput("") // Clear input for both suggested prompts and manual input
+    setInput("")
     setLoading(true)
 
     saveConversation(conversationId, newMessages)
+    console.log("[v0] Conversation saved with user message:", conversationId)
 
     try {
       const response = await fetch("/api/ai-chat", {
@@ -184,6 +186,7 @@ export default function AIPage() {
       const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
       setMessages(updatedMessages)
       saveConversation(conversationId, updatedMessages)
+      console.log("[v0] Conversation saved with assistant response:", conversationId)
 
       setMonthlyCredits(data.remainingMonthlyCredits)
       setPurchasedCredits(data.remainingPurchasedCredits)
