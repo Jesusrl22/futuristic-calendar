@@ -19,7 +19,7 @@ interface Conversation {
   messages: { role: string; content: string }[]
 }
 
-const SUGGESTED_PROMPTS = ["¿Cómo puedo ser más productivo?", "¿Qué técnicas de tiempo mejoran el rendimiento?"]
+const SUGGESTED_PROMPTS = ["¿En qué puedo ayudarte mejor?", "¿Cómo optimizar tu día?"]
 
 export default function AIPage() {
   const { t } = useTranslation()
@@ -285,7 +285,7 @@ export default function AIPage() {
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center space-y-8 px-4">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-bold">¿Quieres mejorar tu productividad?</h2>
+              <h2 className="text-4xl md:text-5xl font-bold">¿En qué puedo ayudarte hoy?</h2>
             </div>
 
             {/* Input and prompts */}
