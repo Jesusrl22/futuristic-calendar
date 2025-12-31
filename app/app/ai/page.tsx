@@ -163,7 +163,7 @@ export default function AIPage() {
     const userMessage = { role: "user", content: textToSend }
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
-    setInput("")
+    setInput("") // Clear input for both suggested prompts and manual input
     setLoading(true)
 
     saveConversation(conversationId, newMessages)
