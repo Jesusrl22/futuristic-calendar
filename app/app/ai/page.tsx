@@ -19,7 +19,7 @@ interface Conversation {
   messages: { role: string; content: string }[]
 }
 
-const SUGGESTED_PROMPTS = ["¿Cuál es la mejor manera de estudiar?", "¿Qué es la inteligencia artificial?"]
+const SUGGESTED_PROMPTS = ["¿Cómo puedo ser más productivo?", "¿Qué técnicas de tiempo mejoran el rendimiento?"]
 
 export default function AIPage() {
   const { t } = useTranslation()
@@ -130,8 +130,10 @@ export default function AIPage() {
       return c
     })
 
+    // Ensure we update state before saving to storage
     setConversations(updated)
     saveConversationsToStorage(updated)
+    console.log("[v0] Conversation saved to storage:", conversationId, "Total conversations:", updated.length)
   }
 
   const handleSend = async (messageToSend?: string) => {
@@ -156,7 +158,7 @@ export default function AIPage() {
       const updated = [newConversation, ...conversations]
       setConversations(updated)
       saveConversationsToStorage(updated)
-      console.log("[v0] New conversation created:", newConversation.id)
+      console.log("[v0] New conversation created and added to state:", newConversation.id)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
     }
@@ -168,7 +170,7 @@ export default function AIPage() {
     setLoading(true)
 
     saveConversation(conversationId, newMessages)
-    console.log("[v0] Conversation saved with user message:", conversationId)
+    console.log("[v0] User message saved to conversation:", conversationId)
 
     try {
       const response = await fetch("/api/ai-chat", {
@@ -186,7 +188,7 @@ export default function AIPage() {
       const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
       setMessages(updatedMessages)
       saveConversation(conversationId, updatedMessages)
-      console.log("[v0] Conversation saved with assistant response:", conversationId)
+      console.log("[v0] Assistant response saved to conversation:", conversationId)
 
       setMonthlyCredits(data.remainingMonthlyCredits)
       setPurchasedCredits(data.remainingPurchasedCredits)
@@ -283,7 +285,7 @@ export default function AIPage() {
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center space-y-8 px-4">
             <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-bold">¿En qué puedo ayudar?</h2>
+              <h2 className="text-4xl md:text-5xl font-bold">¿Quieres mejorar tu productividad?</h2>
             </div>
 
             {/* Input and prompts */}
