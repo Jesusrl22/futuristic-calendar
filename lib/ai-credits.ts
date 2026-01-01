@@ -21,9 +21,15 @@ export async function shouldResetMonthlyCredits(userId: string) {
   const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : new Date(0)
   const now = new Date()
 
-  // Check if 30 days have passed since last reset
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
-  const shouldReset = lastReset < thirtyDaysAgo
+  const lastResetMonth = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate())
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+
+  // If current month day is smaller than last reset day, go to previous month
+  if (now.getDate() < lastReset.getDate()) {
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() + 1)
+  }
+
+  const shouldReset = lastResetMonth < oneMonthAgo
 
   return {
     shouldReset,
@@ -48,9 +54,15 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : new Date(0)
   const now = new Date()
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
 
-  if (lastReset >= thirtyDaysAgo) {
+  const lastResetMonth = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate())
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+
+  if (now.getDate() < lastReset.getDate()) {
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() + 1)
+  }
+
+  if (lastResetMonth >= oneMonthAgo) {
     // No reset needed, return current credits
     const { data: currentUser } = await supabase
       .from("users")
@@ -65,11 +77,10 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     }
   }
 
-  // Get the monthly credits for the subscription tier
   const tierCredits: Record<string, number> = {
     free: 0,
-    premium: 20,
-    pro: 100,
+    premium: 100,
+    pro: 500,
   }
 
   const monthlyCredits = tierCredits[user.subscription_tier?.toLowerCase() || "free"] || 0
