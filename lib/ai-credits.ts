@@ -1,0 +1,96 @@
+import { createServerClient } from "@/lib/supabase/server"
+
+export async function shouldResetMonthlyCredits(userId: string) {
+  const supabase = await createServerClient()
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("last_credit_reset, ai_credits, subscription_tier")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    console.error("Error fetching user for credit reset check:", error)
+    return { shouldReset: false, remainingMonthlyCredits: 0, remainingPurchasedCredits: 0 }
+  }
+
+  if (!user) {
+    return { shouldReset: false, remainingMonthlyCredits: 0, remainingPurchasedCredits: 0 }
+  }
+
+  const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : new Date(0)
+  const now = new Date()
+
+  // Check if 30 days have passed since last reset
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const shouldReset = lastReset < thirtyDaysAgo
+
+  return {
+    shouldReset,
+    currentMonthlyCredits: user.ai_credits || 0,
+    subscriptionTier: user.subscription_tier,
+  }
+}
+
+export async function resetMonthlyCreditsIfNeeded(userId: string) {
+  const supabase = await createServerClient()
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("last_credit_reset, subscription_tier, ai_credits_purchased")
+    .eq("id", userId)
+    .single()
+
+  if (error || !user) {
+    console.error("Error fetching user for reset:", error)
+    return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
+  }
+
+  const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : new Date(0)
+  const now = new Date()
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+  if (lastReset >= thirtyDaysAgo) {
+    // No reset needed, return current credits
+    const { data: currentUser } = await supabase
+      .from("users")
+      .select("ai_credits, ai_credits_purchased")
+      .eq("id", userId)
+      .single()
+
+    return {
+      monthlyCredits: currentUser?.ai_credits || 0,
+      purchasedCredits: currentUser?.ai_credits_purchased || 0,
+      resetPerformed: false,
+    }
+  }
+
+  // Get the monthly credits for the subscription tier
+  const tierCredits: Record<string, number> = {
+    free: 0,
+    premium: 20,
+    pro: 100,
+  }
+
+  const monthlyCredits = tierCredits[user.subscription_tier?.toLowerCase() || "free"] || 0
+
+  // Reset the monthly credits and update last_credit_reset
+  const { error: updateError } = await supabase
+    .from("users")
+    .update({
+      ai_credits: monthlyCredits,
+      last_credit_reset: now.toISOString(),
+    })
+    .eq("id", userId)
+
+  if (updateError) {
+    console.error("Error resetting credits:", updateError)
+    return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
+  }
+
+  return {
+    monthlyCredits,
+    purchasedCredits: user.ai_credits_purchased || 0,
+    resetPerformed: true,
+  }
+}

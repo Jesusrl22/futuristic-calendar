@@ -38,6 +38,7 @@ export default function AIPage() {
   useEffect(() => {
     checkSubscriptionAndFetchCredits()
     loadConversationsFromStorage()
+    resetMonthlyCredits()
   }, [])
 
   useEffect(() => {
@@ -197,6 +198,21 @@ export default function AIPage() {
       setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const resetMonthlyCredits = async () => {
+    try {
+      const response = await fetch("/api/ai/reset-credits", {
+        method: "POST",
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setMonthlyCredits(data.monthlyCredits || 0)
+        setPurchasedCredits(data.purchasedCredits || 0)
+      }
+    } catch (error) {
+      console.error("Error resetting monthly credits:", error)
     }
   }
 
