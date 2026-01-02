@@ -52,17 +52,15 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
   }
 
-  const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : new Date(0)
   const now = new Date()
+  const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : null
 
-  const lastResetMonth = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate())
-  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+  const shouldReset =
+    !lastReset ||
+    now.getFullYear() > lastReset.getFullYear() ||
+    (now.getFullYear() === lastReset.getFullYear() && now.getMonth() > lastReset.getMonth())
 
-  if (now.getDate() < lastReset.getDate()) {
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() + 1)
-  }
-
-  if (lastResetMonth >= oneMonthAgo) {
+  if (!shouldReset) {
     // No reset needed, return current credits
     const { data: currentUser } = await supabase
       .from("users")
@@ -85,7 +83,6 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   const monthlyCredits = tierCredits[user.subscription_tier?.toLowerCase() || "free"] || 0
 
-  // Reset the monthly credits and update last_credit_reset
   const { error: updateError } = await supabase
     .from("users")
     .update({
@@ -98,6 +95,10 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     console.error("Error resetting credits:", updateError)
     return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
   }
+
+  console.log(
+    `[v0] Credits reset for user ${userId}: ${monthlyCredits} monthly, ${user.ai_credits_purchased} purchased`,
+  )
 
   return {
     monthlyCredits,
