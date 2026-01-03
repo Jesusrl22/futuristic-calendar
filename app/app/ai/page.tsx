@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,6 +13,7 @@ import { createBrowserClient } from "@supabase/ssr"
 
 interface Conversation {
   id: string
+  user_id: string
   title: string
   created_at: string
   updated_at: string
@@ -33,6 +33,7 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
@@ -43,6 +44,13 @@ const AIPage = () => {
   useEffect(() => {
     const initializeCredits = async () => {
       console.log("[v0] Starting credit initialization on day:", new Date().getDate())
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+      }
 
       try {
         const resetResponse = await fetch("/api/ai/reset-credits", {
@@ -62,11 +70,6 @@ const AIPage = () => {
         const profileResponse = await fetch("/api/user/profile")
         if (profileResponse.ok) {
           const profileData = await profileResponse.json()
-          console.log("[v0] Profile after reset:", {
-            ai_credits: profileData.ai_credits,
-            ai_credits_purchased: profileData.ai_credits_purchased,
-            subscription_tier: profileData.subscription_tier,
-          })
           setSubscriptionTier(profileData.subscription_tier || "free")
           setMonthlyCredits(profileData.ai_credits || 0)
           setPurchasedCredits(profileData.ai_credits_purchased || 0)
@@ -79,38 +82,41 @@ const AIPage = () => {
     }
 
     initializeCredits()
-    loadConversationsFromSupabase()
   }, [])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    if (userId) {
+      loadConversationsFromSupabase()
+    }
+  }, [userId])
 
   const loadConversationsFromSupabase = async () => {
     try {
       const { data, error } = await supabase
         .from("ai_conversations")
         .select("*")
+        .eq("user_id", userId)
         .order("updated_at", { ascending: false })
 
       if (error) throw error
       setConversations((data || []) as Conversation[])
-      console.log("[v0] Loaded conversations from Supabase:", data?.length)
+      console.log("[v0] Loaded conversations:", data?.length)
     } catch (error) {
-      console.error("[v0] Error loading conversations from Supabase:", error)
+      console.error("[v0] Error loading conversations:", error)
     }
   }
 
   const saveConversationToSupabase = async (conversation: Conversation) => {
+    if (!userId) return
     try {
       const { data: existingConv } = await supabase
         .from("ai_conversations")
         .select("id")
         .eq("id", conversation.id)
+        .eq("user_id", userId)
         .single()
 
       if (existingConv) {
-        // Update existing
         const { error } = await supabase
           .from("ai_conversations")
           .update({
@@ -119,12 +125,13 @@ const AIPage = () => {
             updated_at: new Date().toISOString(),
           })
           .eq("id", conversation.id)
+          .eq("user_id", userId)
 
         if (error) throw error
       } else {
-        // Create new
         const { error } = await supabase.from("ai_conversations").insert({
           id: conversation.id,
+          user_id: userId,
           title: conversation.title,
           messages: conversation.messages,
           created_at: conversation.created_at,
@@ -133,26 +140,27 @@ const AIPage = () => {
 
         if (error) throw error
       }
-      console.log("[v0] Conversation saved to Supabase:", conversation.id)
+      console.log("[v0] Conversation saved:", conversation.id)
     } catch (error) {
-      console.error("[v0] Error saving conversation to Supabase:", error)
+      console.error("[v0] Error saving:", error)
     }
   }
 
   const deleteConversationFromSupabase = async (conversationId: string) => {
     try {
-      const { error } = await supabase.from("ai_conversations").delete().eq("id", conversationId)
+      const { error } = await supabase.from("ai_conversations").delete().eq("id", conversationId).eq("user_id", userId)
 
       if (error) throw error
-      console.log("[v0] Conversation deleted from Supabase:", conversationId)
+      console.log("[v0] Conversation deleted:", conversationId)
     } catch (error) {
-      console.error("[v0] Error deleting conversation from Supabase:", error)
+      console.error("[v0] Error deleting:", error)
     }
   }
 
   const createNewConversation = async () => {
     const newConversation: Conversation = {
       id: Date.now().toString(),
+      user_id: userId || "",
       title: t("new_conversation"),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -209,7 +217,7 @@ const AIPage = () => {
 
     setConversations(updated)
     await saveConversationToSupabase(updated.find((c) => c.id === conversationId)!)
-    console.log("[v0] Conversation saved to Supabase:", conversationId)
+    console.log("[v0] Conversation saved:", conversationId)
   }
 
   const handleSend = async (messageToSend?: string) => {
@@ -228,6 +236,7 @@ const AIPage = () => {
     if (!conversationId) {
       const newConversation: Conversation = {
         id: Date.now().toString(),
+        user_id: userId || "",
         title: textToSend.substring(0, 50) + "...",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -472,7 +481,7 @@ const AIPage = () => {
       </div>
 
       {showRightSidebar && (
-        <div className="fixed md:hidden right-0 top-16 bottom-0 w-64 bg-secondary/20 border-l border-border/50 p-4 gap-4 flex flex-col z-50 overflow-hidden">
+        <div className="fixed md:hidden right-0 top-16 bottom-0 w-64 bg-background border-l border-border/50 p-4 flex flex-col z-50 shadow-lg overflow-hidden">
           <Button onClick={createNewConversation} className="w-full neon-glow-hover">
             <Plus className="w-4 h-4 mr-2" />
             {t("new_conversation")}
