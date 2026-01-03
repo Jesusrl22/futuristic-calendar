@@ -19,9 +19,7 @@ interface Conversation {
   messages: { role: string; content: string }[]
 }
 
-const SUGGESTED_PROMPTS = ["¿En qué puedo ayudarte mejor?", "¿Cómo optimizar tu día?"]
-
-export default function AIPage() {
+const AIPage = () => {
   const { t } = useTranslation()
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
   const [input, setInput] = useState("")
@@ -34,6 +32,8 @@ export default function AIPage() {
 
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
+
+  const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
   useEffect(() => {
     const initializeCredits = async () => {
@@ -448,3 +448,5 @@ export default function AIPage() {
     </div>
   )
 }
+
+export default AIPage
