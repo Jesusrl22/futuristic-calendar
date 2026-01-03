@@ -51,7 +51,7 @@ export default function AIPage() {
       if (response.ok) {
         const data = await response.json()
         setSubscriptionTier(data.subscription_tier || "free")
-        setMonthlyCredits(data?.ai_credits_monthly || 0)
+        setMonthlyCredits(data?.ai_credits || 0)
         setPurchasedCredits(data?.ai_credits_purchased || 0)
       }
     } catch (error) {
