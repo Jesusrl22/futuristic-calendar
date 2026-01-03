@@ -36,9 +36,12 @@ export default function AIPage() {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
 
   useEffect(() => {
-    checkSubscriptionAndFetchCredits()
+    const initializeCredits = async () => {
+      await resetMonthlyCredits()
+      checkSubscriptionAndFetchCredits()
+    }
+    initializeCredits()
     loadConversationsFromStorage()
-    resetMonthlyCredits()
   }, [])
 
   useEffect(() => {
@@ -210,6 +213,7 @@ export default function AIPage() {
         const data = await response.json()
         setMonthlyCredits(data.monthlyCredits || 0)
         setPurchasedCredits(data.purchasedCredits || 0)
+        console.log("[v0] Monthly credits reset:", data.monthlyCredits, "Purchased:", data.purchasedCredits)
       }
     } catch (error) {
       console.error("Error resetting monthly credits:", error)
