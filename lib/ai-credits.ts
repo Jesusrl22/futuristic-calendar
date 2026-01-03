@@ -52,17 +52,21 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
   }
 
-  const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : new Date(0)
   const now = new Date()
+  const lastReset = user.last_credit_reset ? new Date(user.last_credit_reset) : null
 
-  const lastResetMonth = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate())
-  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate())
+  let shouldReset = false
 
-  if (now.getDate() < lastReset.getDate()) {
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() + 1)
+  if (!lastReset) {
+    // Never reset before, so reset now
+    shouldReset = true
+  } else {
+    // Check if a full month has passed since last reset
+    const monthsDiff = (now.getFullYear() - lastReset.getFullYear()) * 12 + (now.getMonth() - lastReset.getMonth())
+    shouldReset = monthsDiff >= 1
   }
 
-  if (lastResetMonth >= oneMonthAgo) {
+  if (!shouldReset) {
     // No reset needed, return current credits
     const { data: currentUser } = await supabase
       .from("users")
@@ -98,6 +102,8 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     console.error("Error resetting credits:", updateError)
     return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
   }
+
+  console.log("[v0] Credits reset for user:", userId, "New monthly credits:", monthlyCredits)
 
   return {
     monthlyCredits,
