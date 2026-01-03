@@ -57,15 +57,18 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   let shouldReset = false
 
-  if (!lastReset) {
-    shouldReset = true
-  } else {
-    // Si han pasado 30+ días Y el mes cambió, resetear
-    const daysDiff = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24))
-    const monthsDiff = (now.getFullYear() - lastReset.getFullYear()) * 12 + (now.getMonth() - lastReset.getMonth())
-
-    // Resetear si ha pasado un mes completo O si cambió de mes calendario
-    shouldReset = monthsDiff >= 1 || (daysDiff >= 28 && daysDiff <= 35 && now.getMonth() !== lastReset.getMonth())
+  // If today is day 1 of the month
+  if (now.getDate() === 1) {
+    // Check if we haven't reset this month yet
+    if (!lastReset) {
+      shouldReset = true
+    } else {
+      const lastResetDate = new Date(lastReset)
+      // If last reset was in a different month/year, reset now
+      if (lastResetDate.getMonth() !== now.getMonth() || lastResetDate.getFullYear() !== now.getFullYear()) {
+        shouldReset = true
+      }
+    }
   }
 
   if (!shouldReset) {
@@ -105,7 +108,7 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
   }
 
-  console.log("[v0] Credits reset for user:", userId, "New monthly credits:", monthlyCredits)
+  console.log("[v0] Credits reset for user:", userId, "New monthly credits:", monthlyCredits, "on day 1 of month")
 
   return {
     monthlyCredits,
