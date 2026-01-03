@@ -67,14 +67,14 @@ export default function AppPage() {
         console.log("[v0] Full user profile:", data)
         console.log("[v0] Subscription tier:", data.subscription_tier)
         console.log("[v0] Credits breakdown:", {
-          monthly: data.ai_credits_monthly,
+          monthly: data.ai_credits,
           purchased: data.ai_credits_purchased,
-          total: (data.ai_credits_monthly || 0) + (data.ai_credits_purchased || 0),
+          total: (data.ai_credits || 0) + (data.ai_credits_purchased || 0),
         })
         setUser(data)
         setStats((prev) => ({
           ...prev,
-          monthlyCredits: data.ai_credits_monthly || 0,
+          monthlyCredits: data.ai_credits || 0,
           purchasedCredits: data.ai_credits_purchased || 0,
         }))
       }
