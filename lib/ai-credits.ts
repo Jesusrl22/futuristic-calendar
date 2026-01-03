@@ -57,16 +57,12 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   let shouldReset = false
 
-  if (now.getDate() >= 1) {
-    // Check if we haven't reset this month yet
-    if (!lastReset) {
+  if (!lastReset) {
+    shouldReset = true
+  } else {
+    const lastResetDate = new Date(lastReset)
+    if (lastResetDate.getMonth() !== now.getMonth() || lastResetDate.getFullYear() !== now.getFullYear()) {
       shouldReset = true
-    } else {
-      const lastResetDate = new Date(lastReset)
-      // If last reset was in a different month/year, reset now
-      if (lastResetDate.getMonth() !== now.getMonth() || lastResetDate.getFullYear() !== now.getFullYear()) {
-        shouldReset = true
-      }
     }
   }
 
@@ -93,25 +89,26 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   const monthlyCredits = tierCredits[user.subscription_tier?.toLowerCase() || "free"] || 0
 
-  // Reset the monthly credits and update last_credit_reset
-  const { error: updateError } = await supabase
+  const { data: updatedUser, error: updateError } = await supabase
     .from("users")
     .update({
       ai_credits: monthlyCredits,
       last_credit_reset: now.toISOString(),
     })
     .eq("id", userId)
+    .select("ai_credits, ai_credits_purchased")
+    .single()
 
   if (updateError) {
-    console.error("Error resetting credits:", updateError)
-    return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
+    console.error("[v0] Error resetting credits:", updateError)
+    return { monthlyCredits: 0, purchasedCredits: user.ai_credits_purchased || 0, resetPerformed: false }
   }
 
-  console.log("[v0] Credits reset for user:", userId, "New monthly credits:", monthlyCredits, "on date:", now.getDate())
+  console.log("[v0] Credits reset performed:", { userId, monthlyCredits, date: now.getDate() })
 
   return {
-    monthlyCredits,
-    purchasedCredits: user.ai_credits_purchased || 0,
+    monthlyCredits: updatedUser?.ai_credits || monthlyCredits,
+    purchasedCredits: updatedUser?.ai_credits_purchased || 0,
     resetPerformed: true,
   }
 }

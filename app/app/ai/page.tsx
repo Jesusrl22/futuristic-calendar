@@ -37,15 +37,45 @@ export default function AIPage() {
 
   useEffect(() => {
     const initializeCredits = async () => {
-      console.log("[v0] Starting credit initialization")
-      const resetResult = await resetMonthlyCredits()
-      console.log("[v0] Reset result:", resetResult)
+      console.log("[v0] Starting credit initialization on day:", new Date().getDate())
 
-      // Wait a moment for the BD to update
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      // First, reset credits if needed
+      try {
+        const resetResponse = await fetch("/api/ai/reset-credits", {
+          method: "POST",
+        })
+        if (resetResponse.ok) {
+          const resetData = await resetResponse.json()
+          console.log("[v0] Reset response:", resetData)
+        }
+      } catch (error) {
+        console.error("[v0] Error calling reset endpoint:", error)
+      }
 
-      await checkSubscriptionAndFetchCredits()
+      // Wait for DB to sync
+      await new Promise((resolve) => setTimeout(resolve, 800))
+
+      // Then fetch the updated profile
+      try {
+        const profileResponse = await fetch("/api/user/profile")
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json()
+          console.log("[v0] Profile after reset:", {
+            ai_credits: profileData.ai_credits,
+            ai_credits_purchased: profileData.ai_credits_purchased,
+            subscription_tier: profileData.subscription_tier,
+          })
+          setSubscriptionTier(profileData.subscription_tier || "free")
+          setMonthlyCredits(profileData.ai_credits || 0)
+          setPurchasedCredits(profileData.ai_credits_purchased || 0)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching profile:", error)
+      }
+
+      setCheckingAccess(false)
     }
+
     initializeCredits()
     loadConversationsFromStorage()
   }, [])
