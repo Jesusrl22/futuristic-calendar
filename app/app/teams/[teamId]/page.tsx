@@ -785,19 +785,19 @@ export default function TeamDetailPage() {
 
         <TabsContent value="stats" className="mt-6 space-y-4">
           <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-3">
-            <Card className="glass-card p-2 sm:p-3 md:p-6">
+            <Card className="glass-card p-2 sm:p-3 md:p-6 overflow-hidden">
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{t("totalTasks")}</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">{stats.totalTasks}</p>
               </div>
             </Card>
-            <Card className="glass-card p-2 sm:p-3 md:p-6">
+            <Card className="glass-card p-2 sm:p-3 md:p-6 overflow-hidden">
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{t("completedTasks")}</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-500">{stats.completedTasks}</p>
               </div>
             </Card>
-            <Card className="glass-card p-2 sm:p-3 md:p-6">
+            <Card className="glass-card p-2 sm:p-3 md:p-6 overflow-hidden">
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{t("activeTasks")}</p>
                 <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-500">{stats.activeTasks}</p>
@@ -805,21 +805,21 @@ export default function TeamDetailPage() {
             </Card>
           </div>
 
-          <Card className="glass-card p-2 sm:p-3 md:p-6">
+          <Card className="glass-card p-2 sm:p-3 md:p-6 overflow-hidden">
             <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">{t("memberPerformance")}</h3>
             <div className="space-y-2 sm:space-y-4">
               {stats.memberStats.map((member) => (
                 <div
                   key={member.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-secondary/50 rounded-lg gap-2"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-secondary/50 rounded-lg gap-2 overflow-hidden"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium text-sm sm:text-base">{member.name}</p>
-                    <div className="flex items-center gap-2 sm:gap-4 mt-1">
-                      <span className="text-xs sm:text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm sm:text-base truncate">{member.name}</p>
+                    <div className="flex items-center gap-2 sm:gap-4 mt-1 overflow-x-auto">
+                      <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
                         {member.completed}/{member.total} {t("completed")}
                       </span>
-                      <div className="flex-1 max-w-xs">
+                      <div className="flex-1 min-w-0">
                         <div className="w-full bg-secondary rounded-full h-1.5 sm:h-2">
                           <div
                             className="bg-primary h-1.5 sm:h-2 rounded-full transition-all"
@@ -829,7 +829,7 @@ export default function TeamDetailPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <p className="text-xl sm:text-2xl font-bold text-primary">
                       {member.total > 0 ? Math.round((member.completed / member.total) * 100) : 0}%
                     </p>
