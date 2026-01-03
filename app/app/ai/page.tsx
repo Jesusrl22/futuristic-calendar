@@ -38,7 +38,12 @@ export default function AIPage() {
   useEffect(() => {
     const initializeCredits = async () => {
       console.log("[v0] Starting credit initialization")
-      await resetMonthlyCredits()
+      const resetResult = await resetMonthlyCredits()
+      console.log("[v0] Reset result:", resetResult)
+
+      // Wait a moment for the BD to update
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
       await checkSubscriptionAndFetchCredits()
     }
     initializeCredits()
@@ -54,10 +59,11 @@ export default function AIPage() {
       const response = await fetch("/api/user/profile")
       if (response.ok) {
         const data = await response.json()
+        console.log("[v0] Profile data received:", data)
         setSubscriptionTier(data.subscription_tier || "free")
         setMonthlyCredits(data?.ai_credits || 0)
         setPurchasedCredits(data?.ai_credits_purchased || 0)
-        console.log("[v0] Profile credits - Monthly:", data?.ai_credits, "Purchased:", data?.ai_credits_purchased)
+        console.log("[v0] Set credits - Monthly:", data?.ai_credits, "Purchased:", data?.ai_credits_purchased)
       }
     } catch (error) {
       console.error("Error fetching profile:", error)
@@ -221,6 +227,7 @@ export default function AIPage() {
         if (data.purchasedCredits !== undefined) {
           setPurchasedCredits(data.purchasedCredits)
         }
+        return data
       } else {
         console.error("[v0] Reset endpoint returned:", response.status)
       }
