@@ -260,29 +260,29 @@ export default function AIPage() {
   const currentConv = conversations.find((c) => c.id === currentConversationId)
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-background gap-4 p-4 md:p-6">
-      <div className="w-48 hidden md:flex flex-col border border-border/50 rounded-lg bg-secondary/20 p-3 gap-3">
-        <Button onClick={createNewConversation} className="w-full neon-glow-hover text-sm">
-          <Plus className="w-4 h-4 mr-2" />
+    <div className="flex h-[calc(100vh-4rem)] bg-background gap-2 md:gap-4 p-2 md:p-6">
+      <div className="w-40 md:w-48 hidden md:flex flex-col border border-border/50 rounded-lg bg-secondary/20 p-2 md:p-3 gap-2 md:gap-3">
+        <Button onClick={createNewConversation} className="w-full neon-glow-hover text-xs md:text-sm">
+          <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
           Nueva conversación
         </Button>
 
-        <div className="flex-1 overflow-y-auto space-y-1 border-t border-border/50 pt-3">
+        <div className="flex-1 overflow-y-auto space-y-0.5 md:space-y-1 border-t border-border/50 pt-2 md:pt-3">
           {conversations.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-4">Sin conversaciones</p>
+            <p className="text-xs text-muted-foreground text-center py-2 md:py-4">{t("no_conversations")}</p>
           ) : (
             conversations.map((conv) => (
               <button
                 key={conv.id}
                 onClick={() => loadConversation(conv.id)}
-                className={`w-full p-2 rounded-lg text-left transition-colors text-xs flex items-center justify-between group ${
+                className={`w-full p-1.5 md:p-2 rounded-lg text-left transition-colors text-xs flex items-center justify-between group ${
                   currentConversationId === conv.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary/50"
                 }`}
               >
                 <span className="truncate flex-1">{conv.title}</span>
                 <button
                   onClick={(e) => deleteConversation(conv.id, e)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 md:p-1"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -294,13 +294,13 @@ export default function AIPage() {
 
       <div className="flex-1 flex flex-col min-h-0">
         {/* Header with title and credits */}
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">{t("ai_assistant") || "IA"}</h1>
+        <div className="flex items-center justify-between gap-2 md:gap-4 mb-4 md:mb-6">
+          <h1 className="text-xl md:text-3xl font-bold truncate">{t("ai_assistant") || "IA"}</h1>
 
           {/* Credits display */}
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-1 md:gap-2 shrink-0">
             {monthlyCredits > 0 && (
-              <Card className="glass-card px-2 py-1 md:px-3 md:py-2 neon-glow">
+              <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" />
                   <span className="text-xs md:text-sm font-semibold">{monthlyCredits}</span>
@@ -308,7 +308,7 @@ export default function AIPage() {
               </Card>
             )}
             {purchasedCredits > 0 && (
-              <Card className="glass-card px-2 py-1 md:px-3 md:py-2 neon-glow">
+              <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 md:w-4 md:h-4 text-yellow-500" />
                   <span className="text-xs md:text-sm font-semibold">{purchasedCredits}</span>
@@ -319,20 +319,20 @@ export default function AIPage() {
         </div>
 
         {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-8 px-4">
-            <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-bold">¿En qué puedo ayudarte hoy?</h2>
+          <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-8 px-2 md:px-4">
+            <div className="text-center space-y-2 md:space-y-4">
+              <h2 className="text-2xl md:text-5xl font-bold">¿En qué puedo ayudarte hoy?</h2>
             </div>
 
             {/* Input and prompts */}
-            <div className="w-full max-w-2xl space-y-4">
-              <div className="flex gap-2">
+            <div className="w-full max-w-2xl space-y-2 md:space-y-4">
+              <div className="flex gap-1 md:gap-2">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Pregunta lo que quieras"
-                  className="bg-secondary/50 text-sm"
+                  className="bg-secondary/50 text-xs md:text-sm"
                   disabled={loading}
                   autoFocus
                 />
@@ -341,17 +341,17 @@ export default function AIPage() {
                   disabled={loading || !input.trim()}
                   className="neon-glow-hover shrink-0"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
               </div>
 
               {input.trim() === "" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
                   {SUGGESTED_PROMPTS.map((prompt, index) => (
                     <button
                       key={index}
                       onClick={() => handleSend(prompt)}
-                      className="p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
+                      className="p-2 md:p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
                     >
                       {prompt}
                     </button>
@@ -366,11 +366,11 @@ export default function AIPage() {
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto mb-4 space-y-4 px-4">
+            <div className="flex-1 overflow-y-auto mb-2 md:mb-4 space-y-2 md:space-y-4 px-2 md:px-4">
               {messages.map((message, index) => (
                 <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[85%] md:max-w-[70%] p-3 md:p-4 rounded-lg text-sm ${
+                    className={`max-w-[90%] md:max-w-[70%] p-2 md:p-4 rounded-lg text-xs md:text-sm ${
                       message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
                     }`}
                   >
@@ -381,8 +381,8 @@ export default function AIPage() {
 
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-secondary/50 p-3 md:p-4 rounded-lg">
-                    <div className="flex gap-2">
+                  <div className="bg-secondary/50 p-2 md:p-4 rounded-lg">
+                    <div className="flex gap-1 md:gap-2">
                       <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
                       <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
                       <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
@@ -394,13 +394,13 @@ export default function AIPage() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="flex gap-2 px-4">
+            <div className="flex gap-1 md:gap-2 px-2 md:px-4">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Pregunta lo que quieras"
-                className="bg-secondary/50 text-sm"
+                className="bg-secondary/50 text-xs md:text-sm"
                 disabled={loading}
               />
               <Button
@@ -408,7 +408,7 @@ export default function AIPage() {
                 disabled={loading || !input.trim()}
                 className="neon-glow-hover shrink-0"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3 h-3 md:w-4 md:h-4" />
               </Button>
             </div>
           </>
