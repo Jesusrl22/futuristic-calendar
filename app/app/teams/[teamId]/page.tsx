@@ -506,21 +506,21 @@ export default function TeamDetailPage() {
       )}
 
       <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-3 sm:mb-4 p-1">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="tasks" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
             <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
             <span className="hidden xs:inline">{t("teamTasks")}</span>
-            <span className="xs:hidden">Tasks</span>
+            <span className="xs:hidden">{t("tasks")}</span>
           </TabsTrigger>
           <TabsTrigger value="members" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
             <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
             <span className="hidden xs:inline">{t("teamMembers")}</span>
-            <span className="xs:hidden">Members</span>
+            <span className="xs:hidden">{t("members")}</span>
           </TabsTrigger>
           <TabsTrigger value="stats" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
             <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
-            <span className="hidden xs:inline">{t("teamStats")}</span>
-            <span className="xs:hidden">Stats</span>
+            <span className="hidden xs:inline">{t("statistics")}</span>
+            <span className="xs:hidden">{t("stats")}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -784,42 +784,45 @@ export default function TeamDetailPage() {
         </TabsContent>
 
         <TabsContent value="stats" className="mt-6 space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card className="glass-card p-6">
+          <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-3">
+            <Card className="glass-card p-2 sm:p-3 md:p-6">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">{t("totalTasks")}</p>
-                <p className="text-4xl font-bold text-primary">{stats.totalTasks}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{t("totalTasks")}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">{stats.totalTasks}</p>
               </div>
             </Card>
-            <Card className="glass-card p-6">
+            <Card className="glass-card p-2 sm:p-3 md:p-6">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">{t("completedTasks")}</p>
-                <p className="text-4xl font-bold text-green-500">{stats.completedTasks}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{t("completedTasks")}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-500">{stats.completedTasks}</p>
               </div>
             </Card>
-            <Card className="glass-card p-6">
+            <Card className="glass-card p-2 sm:p-3 md:p-6">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">{t("activeTasks")}</p>
-                <p className="text-4xl font-bold text-yellow-500">{stats.activeTasks}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{t("activeTasks")}</p>
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-yellow-500">{stats.activeTasks}</p>
               </div>
             </Card>
           </div>
 
-          <Card className="glass-card p-6">
-            <h3 className="text-lg font-semibold mb-4">{t("memberPerformance")}</h3>
-            <div className="space-y-4">
+          <Card className="glass-card p-2 sm:p-3 md:p-6">
+            <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">{t("memberPerformance")}</h3>
+            <div className="space-y-2 sm:space-y-4">
               {stats.memberStats.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                <div
+                  key={member.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 sm:p-3 bg-secondary/50 rounded-lg gap-2"
+                >
                   <div className="flex-1">
-                    <p className="font-medium">{member.name}</p>
-                    <div className="flex items-center gap-4 mt-1">
-                      <span className="text-sm text-muted-foreground">
+                    <p className="font-medium text-sm sm:text-base">{member.name}</p>
+                    <div className="flex items-center gap-2 sm:gap-4 mt-1">
+                      <span className="text-xs sm:text-sm text-muted-foreground">
                         {member.completed}/{member.total} {t("completed")}
                       </span>
                       <div className="flex-1 max-w-xs">
-                        <div className="w-full bg-secondary rounded-full h-2">
+                        <div className="w-full bg-secondary rounded-full h-1.5 sm:h-2">
                           <div
-                            className="bg-primary h-2 rounded-full transition-all"
+                            className="bg-primary h-1.5 sm:h-2 rounded-full transition-all"
                             style={{ width: `${member.total > 0 ? (member.completed / member.total) * 100 : 0}%` }}
                           />
                         </div>
@@ -827,14 +830,14 @@ export default function TeamDetailPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-xl sm:text-2xl font-bold text-primary">
                       {member.total > 0 ? Math.round((member.completed / member.total) * 100) : 0}%
                     </p>
                   </div>
                 </div>
               ))}
               {stats.memberStats.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">{t("noTasksYet")}</p>
+                <p className="text-center text-xs sm:text-sm text-muted-foreground py-4 sm:py-8">{t("noTasksYet")}</p>
               )}
             </div>
           </Card>
