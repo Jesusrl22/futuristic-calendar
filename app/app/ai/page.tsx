@@ -84,6 +84,14 @@ const AIPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  // Add a useEffect to watch for changes and ensure they persist
+  useEffect(() => {
+    if (conversations.length > 0) {
+      saveConversationsToStorage(conversations)
+      console.log("[v0] Conversations synced to storage:", conversations.length)
+    }
+  }, [conversations])
+
   const checkSubscriptionAndFetchCredits = async () => {
     try {
       const response = await fetch("/api/user/profile")
