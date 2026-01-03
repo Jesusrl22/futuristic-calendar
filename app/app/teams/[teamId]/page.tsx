@@ -506,21 +506,21 @@ export default function TeamDetailPage() {
       )}
 
       <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="tasks" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
-            <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
-            <span className="hidden xs:inline">{t("teamTasks")}</span>
-            <span className="xs:hidden">{t("tasks")}</span>
+        <TabsList className="grid w-full grid-cols-3 gap-1 p-1 overflow-hidden rounded-lg">
+          <TabsTrigger value="tasks" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 truncate">
+            <CheckSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1 shrink-0" />
+            <span className="hidden xs:inline truncate">{t("teamTasks")}</span>
+            <span className="xs:hidden truncate">{t("tasks")}</span>
           </TabsTrigger>
-          <TabsTrigger value="members" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
-            <span className="hidden xs:inline">{t("teamMembers")}</span>
-            <span className="xs:hidden">{t("members")}</span>
+          <TabsTrigger value="members" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 truncate">
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1 shrink-0" />
+            <span className="hidden xs:inline truncate">{t("teamMembers")}</span>
+            <span className="xs:hidden truncate">{t("members")}</span>
           </TabsTrigger>
-          <TabsTrigger value="stats" className="text-xs sm:text-sm px-1 sm:px-2 py-1 sm:py-2">
-            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1" />
-            <span className="hidden xs:inline">{t("statistics")}</span>
-            <span className="xs:hidden">{t("stats")}</span>
+          <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 truncate">
+            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-0 sm:mr-1 shrink-0" />
+            <span className="hidden xs:inline truncate">{t("statistics")}</span>
+            <span className="xs:hidden truncate">{t("stats")}</span>
           </TabsTrigger>
         </TabsList>
 
