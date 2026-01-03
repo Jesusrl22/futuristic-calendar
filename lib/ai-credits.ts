@@ -43,7 +43,7 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   const { data: user, error } = await supabase
     .from("users")
-    .select("last_credit_reset, subscription_tier, ai_credits_purchased")
+    .select("last_credit_reset, subscription_tier, ai_credits_purchased, ai_credits")
     .eq("id", userId)
     .single()
 
@@ -59,24 +59,30 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   if (!lastReset) {
     shouldReset = true
+    console.log("[v0] No previous reset found, resetting credits")
   } else {
     const lastResetDate = new Date(lastReset)
-    if (lastResetDate.getMonth() !== now.getMonth() || lastResetDate.getFullYear() !== now.getFullYear()) {
+    const lastResetMonth = lastResetDate.getMonth()
+    const lastResetYear = lastResetDate.getFullYear()
+    const nowMonth = now.getMonth()
+    const nowYear = now.getFullYear()
+
+    // Reset if we're in a different month/year than the last reset
+    if (lastResetMonth !== nowMonth || lastResetYear !== nowYear) {
       shouldReset = true
+      console.log(
+        `[v0] Month changed: last reset was ${lastResetMonth}/${lastResetYear}, now is ${nowMonth}/${nowYear}`,
+      )
+    } else {
+      console.log(`[v0] Already reset this month (${nowMonth}/${nowYear})`)
     }
   }
 
   if (!shouldReset) {
     // No reset needed, return current credits
-    const { data: currentUser } = await supabase
-      .from("users")
-      .select("ai_credits, ai_credits_purchased")
-      .eq("id", userId)
-      .single()
-
     return {
-      monthlyCredits: currentUser?.ai_credits || 0,
-      purchasedCredits: currentUser?.ai_credits_purchased || 0,
+      monthlyCredits: user.ai_credits || 0,
+      purchasedCredits: user.ai_credits_purchased || 0,
       resetPerformed: false,
     }
   }
@@ -104,7 +110,12 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     return { monthlyCredits: 0, purchasedCredits: user.ai_credits_purchased || 0, resetPerformed: false }
   }
 
-  console.log("[v0] Credits reset performed:", { userId, monthlyCredits, date: now.getDate() })
+  console.log("[v0] Credits reset performed successfully:", {
+    userId,
+    monthlyCredits,
+    purchasedCredits: updatedUser?.ai_credits_purchased,
+    date: now.toISOString(),
+  })
 
   return {
     monthlyCredits: updatedUser?.ai_credits || monthlyCredits,
