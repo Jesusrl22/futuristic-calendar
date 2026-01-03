@@ -190,6 +190,8 @@ const AIPage = () => {
     }
 
     let conversationId = currentConversationId
+    let currentConversations = conversations
+
     if (!conversationId) {
       const newConversation: Conversation = {
         id: Date.now().toString(),
@@ -198,9 +200,9 @@ const AIPage = () => {
         updated_at: new Date().toISOString(),
         messages: [],
       }
-      const updated = [newConversation, ...conversations]
-      setConversations(updated)
-      saveConversationsToStorage(updated)
+      currentConversations = [newConversation, ...conversations]
+      setConversations(currentConversations)
+      saveConversationsToStorage(currentConversations)
       console.log("[v0] New conversation created from message send:", newConversation.id)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
@@ -212,8 +214,20 @@ const AIPage = () => {
     setInput("")
     setLoading(true)
 
-    saveConversation(conversationId, newMessages)
-    console.log("[v0] User message saved, conversations total:", conversations.length)
+    const updated = currentConversations.map((c) => {
+      if (c.id === conversationId) {
+        return {
+          ...c,
+          messages: newMessages,
+          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : t("new_conversation"),
+          updated_at: new Date().toISOString(),
+        }
+      }
+      return c
+    })
+    setConversations(updated)
+    saveConversationsToStorage(updated)
+    console.log("[v0] User message saved to conversation:", conversationId, "Total conversations:", updated.length)
 
     try {
       const response = await fetch("/api/ai-chat", {
