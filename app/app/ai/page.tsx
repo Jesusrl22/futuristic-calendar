@@ -37,8 +37,9 @@ export default function AIPage() {
 
   useEffect(() => {
     const initializeCredits = async () => {
+      console.log("[v0] Starting credit initialization")
       await resetMonthlyCredits()
-      checkSubscriptionAndFetchCredits()
+      await checkSubscriptionAndFetchCredits()
     }
     initializeCredits()
     loadConversationsFromStorage()
@@ -56,6 +57,7 @@ export default function AIPage() {
         setSubscriptionTier(data.subscription_tier || "free")
         setMonthlyCredits(data?.ai_credits || 0)
         setPurchasedCredits(data?.ai_credits_purchased || 0)
+        console.log("[v0] Profile credits - Monthly:", data?.ai_credits, "Purchased:", data?.ai_credits_purchased)
       }
     } catch (error) {
       console.error("Error fetching profile:", error)
@@ -206,17 +208,24 @@ export default function AIPage() {
 
   const resetMonthlyCredits = async () => {
     try {
+      console.log("[v0] Calling reset-credits endpoint")
       const response = await fetch("/api/ai/reset-credits", {
         method: "POST",
       })
       if (response.ok) {
         const data = await response.json()
-        setMonthlyCredits(data.monthlyCredits || 0)
-        setPurchasedCredits(data.purchasedCredits || 0)
-        console.log("[v0] Monthly credits reset:", data.monthlyCredits, "Purchased:", data.purchasedCredits)
+        console.log("[v0] Reset endpoint response:", data)
+        if (data.monthlyCredits !== undefined) {
+          setMonthlyCredits(data.monthlyCredits)
+        }
+        if (data.purchasedCredits !== undefined) {
+          setPurchasedCredits(data.purchasedCredits)
+        }
+      } else {
+        console.error("[v0] Reset endpoint returned:", response.status)
       }
     } catch (error) {
-      console.error("Error resetting monthly credits:", error)
+      console.error("[v0] Error resetting monthly credits:", error)
     }
   }
 

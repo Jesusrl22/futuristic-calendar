@@ -57,8 +57,7 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
 
   let shouldReset = false
 
-  // If today is day 1 of the month
-  if (now.getDate() === 1) {
+  if (now.getDate() >= 1) {
     // Check if we haven't reset this month yet
     if (!lastReset) {
       shouldReset = true
@@ -108,7 +107,7 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     return { monthlyCredits: 0, purchasedCredits: 0, resetPerformed: false }
   }
 
-  console.log("[v0] Credits reset for user:", userId, "New monthly credits:", monthlyCredits, "on day 1 of month")
+  console.log("[v0] Credits reset for user:", userId, "New monthly credits:", monthlyCredits, "on date:", now.getDate())
 
   return {
     monthlyCredits,
