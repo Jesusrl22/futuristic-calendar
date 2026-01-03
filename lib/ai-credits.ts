@@ -58,12 +58,14 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
   let shouldReset = false
 
   if (!lastReset) {
-    // Never reset before, so reset now
     shouldReset = true
   } else {
-    // Check if a full month has passed since last reset
+    // Si han pasado 30+ días Y el mes cambió, resetear
+    const daysDiff = Math.floor((now.getTime() - lastReset.getTime()) / (1000 * 60 * 60 * 24))
     const monthsDiff = (now.getFullYear() - lastReset.getFullYear()) * 12 + (now.getMonth() - lastReset.getMonth())
-    shouldReset = monthsDiff >= 1
+
+    // Resetear si ha pasado un mes completo O si cambió de mes calendario
+    shouldReset = monthsDiff >= 1 || (daysDiff >= 28 && daysDiff <= 35 && now.getMonth() !== lastReset.getMonth())
   }
 
   if (!shouldReset) {
