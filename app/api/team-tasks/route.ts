@@ -93,6 +93,39 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
+    if (taskData.assigned_to) {
+      const { data: assignedUser } = await serviceSupabase
+        .from("users")
+        .select("email, name")
+        .eq("id", taskData.assigned_to)
+        .single()
+
+      if (assignedUser) {
+        const { data: creator } = await serviceSupabase.from("users").select("name").eq("id", user.id).single()
+
+        // Send notification to assigned user
+        await fetch("/api/notifications/send-now", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: `Nueva tarea asignada`,
+            body: `${creator?.name || "Un miembro"} te asignó: ${taskData.title}`,
+            type: "task_assigned",
+            taskId: task.id,
+          }),
+        }).catch((err) => console.error("[v0] Failed to send notification:", err))
+
+        // Store notification in database
+        await serviceSupabase.from("notifications").insert({
+          user_id: taskData.assigned_to,
+          title: `Nueva tarea asignada`,
+          message: `${creator?.name || "Un miembro"} te asignó: ${taskData.title}`,
+          type: "task_assigned",
+          task_id: task.id,
+        })
+      }
+    }
+
     return NextResponse.json({ task })
   } catch (error: any) {
     console.error("[SERVER] Team task creation error:", error)
@@ -129,6 +162,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
+    // Get previous task data to check if assignment changed
+    const { data: previousTask } = await serviceSupabase
+      .from("team_tasks")
+      .select("assigned_to, title")
+      .eq("id", id)
+      .single()
+
     const { data: task, error } = await serviceSupabase
       .from("team_tasks")
       .update(updates)
@@ -138,6 +178,39 @@ export async function PATCH(request: Request) {
       .single()
 
     if (error) throw error
+
+    if (updates.assigned_to && updates.assigned_to !== previousTask?.assigned_to) {
+      const { data: assignedUser } = await serviceSupabase
+        .from("users")
+        .select("email, name")
+        .eq("id", updates.assigned_to)
+        .single()
+
+      if (assignedUser) {
+        const { data: creator } = await serviceSupabase.from("users").select("name").eq("id", user.id).single()
+
+        // Send notification to newly assigned user
+        await fetch("/api/notifications/send-now", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: `Tarea reasignada`,
+            body: `${creator?.name || "Un miembro"} te asignó: ${previousTask?.title || "Tarea"}`,
+            type: "task_assigned",
+            taskId: task.id,
+          }),
+        }).catch((err) => console.error("[v0] Failed to send notification:", err))
+
+        // Store notification in database
+        await serviceSupabase.from("notifications").insert({
+          user_id: updates.assigned_to,
+          title: `Tarea reasignada`,
+          message: `${creator?.name || "Un miembro"} te asignó: ${previousTask?.title || "Tarea"}`,
+          type: "task_assigned",
+          task_id: id,
+        })
+      }
+    }
 
     return NextResponse.json({ task })
   } catch (error: any) {
