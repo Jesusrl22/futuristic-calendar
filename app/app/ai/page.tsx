@@ -313,73 +313,182 @@ const AIPage = () => {
   const currentConv = conversations.find((c) => c.id === currentConversationId)
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-background gap-2 md:gap-4 p-2 md:p-6">
-      <div className="w-40 md:w-48 hidden md:flex flex-col border border-border/50 rounded-lg bg-secondary/20 p-2 md:p-3 gap-2 md:gap-3">
-        <Button onClick={createNewConversation} className="w-full neon-glow-hover text-xs md:text-sm">
-          <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background gap-2 md:gap-4 p-2 md:p-6">
+      {/* Mobile conversations dropdown */}
+      <div className="md:hidden flex gap-2 mb-2">
+        <Button onClick={createNewConversation} className="w-full neon-glow-hover text-xs">
+          <Plus className="w-3 h-3 mr-1" />
           {t("new_conversation")}
         </Button>
-
-        <div className="flex-1 overflow-y-auto space-y-0.5 md:space-y-1 border-t border-border/50 pt-2 md:pt-3">
-          {conversations.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-2 md:py-4">{t("no_conversations")}</p>
-          ) : (
-            conversations.map((conv) => (
-              <button
-                key={conv.id}
-                onClick={() => loadConversation(conv.id)}
-                className={`w-full p-1.5 md:p-2 rounded-lg text-left transition-colors text-xs flex items-center justify-between group ${
-                  currentConversationId === conv.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary/50"
-                }`}
-              >
-                <span className="truncate flex-1">{conv.title}</span>
+        <details className="flex-1">
+          <summary className="p-2 rounded-lg bg-secondary/50 text-xs font-semibold cursor-pointer hover:bg-secondary/70 transition-colors">
+            {currentConv ? currentConv.title.substring(0, 20) + "..." : t("conversations")}
+          </summary>
+          <div className="absolute left-2 right-2 mt-1 bg-secondary/90 border border-border/50 rounded-lg p-2 space-y-1 max-h-48 overflow-y-auto z-50">
+            {conversations.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-2">{t("no_conversations")}</p>
+            ) : (
+              conversations.map((conv) => (
                 <button
-                  onClick={(e) => deleteConversation(conv.id, e)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 md:p-1"
+                  key={conv.id}
+                  onClick={() => {
+                    loadConversation(conv.id)
+                    // Close details
+                    ;(document.activeElement as HTMLElement)?.blur()
+                  }}
+                  className={`w-full p-2 rounded-lg text-left transition-colors text-xs flex items-center justify-between group ${
+                    currentConversationId === conv.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary/50"
+                  }`}
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <span className="truncate flex-1">{conv.title}</span>
+                  <button
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </button>
-              </button>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        </details>
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0">
-        {/* Header with title and credits */}
-        <div className="flex items-center justify-between gap-2 md:gap-4 mb-4 md:mb-6">
-          <h1 className="text-xl md:text-3xl font-bold truncate">{t("ai_assistant") || "IA"}</h1>
+      <div className="flex gap-2 md:gap-4 flex-1 min-h-0">
+        <div className="w-40 md:w-48 hidden md:flex flex-col border border-border/50 rounded-lg bg-secondary/20 p-2 md:p-3 gap-2 md:gap-3">
+          <Button onClick={createNewConversation} className="w-full neon-glow-hover text-xs md:text-sm">
+            <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+            {t("new_conversation")}
+          </Button>
 
-          {/* Credits display */}
-          <div className="flex gap-1 md:gap-2 shrink-0">
-            {monthlyCredits > 0 && (
-              <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-                  <span className="text-xs md:text-sm font-semibold">{monthlyCredits}</span>
-                </div>
-              </Card>
-            )}
-            {purchasedCredits > 0 && (
-              <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 md:w-4 md:h-4 text-yellow-500" />
-                  <span className="text-xs md:text-sm font-semibold">{purchasedCredits}</span>
-                </div>
-              </Card>
+          <div className="flex-1 overflow-y-auto space-y-0.5 md:space-y-1 border-t border-border/50 pt-2 md:pt-3">
+            {conversations.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-2 md:py-4">{t("no_conversations")}</p>
+            ) : (
+              conversations.map((conv) => (
+                <button
+                  key={conv.id}
+                  onClick={() => loadConversation(conv.id)}
+                  className={`w-full p-1.5 md:p-2 rounded-lg text-left transition-colors text-xs flex items-center justify-between group ${
+                    currentConversationId === conv.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary/50"
+                  }`}
+                >
+                  <span className="truncate flex-1">{conv.title}</span>
+                  <button
+                    onClick={(e) => deleteConversation(conv.id, e)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 md:p-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </button>
+              ))
             )}
           </div>
         </div>
 
-        {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-8 px-2 md:px-4">
-            <div className="text-center space-y-2 md:space-y-4">
-              <h2 className="text-2xl md:text-5xl font-bold">{t("welcome_message")}</h2>
-            </div>
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Header with title and credits */}
+          <div className="flex items-center justify-between gap-2 md:gap-4 mb-4 md:mb-6">
+            <h1 className="text-xl md:text-3xl font-bold truncate">{t("ai_assistant") || "IA"}</h1>
 
-            {/* Input and prompts */}
-            <div className="w-full max-w-2xl space-y-2 md:space-y-4">
-              <div className="flex gap-1 md:gap-2">
+            {/* Credits display */}
+            <div className="flex gap-1 md:gap-2 shrink-0">
+              {monthlyCredits > 0 && (
+                <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
+                  <div className="flex items-center gap-1">
+                    <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+                    <span className="text-xs md:text-sm font-semibold">{monthlyCredits}</span>
+                  </div>
+                </Card>
+              )}
+              {purchasedCredits > 0 && (
+                <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
+                  <div className="flex items-center gap-1">
+                    <Zap className="w-3 h-3 md:w-4 md:h-4 text-yellow-500" />
+                    <span className="text-xs md:text-sm font-semibold">{purchasedCredits}</span>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-8 px-2 md:px-4">
+              <div className="text-center space-y-2 md:space-y-4">
+                <h2 className="text-2xl md:text-5xl font-bold">{t("welcome_message")}</h2>
+              </div>
+
+              {/* Input and prompts */}
+              <div className="w-full max-w-2xl space-y-2 md:space-y-4">
+                <div className="flex gap-1 md:gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                    placeholder={t("input_placeholder")}
+                    className="bg-secondary/50 text-xs md:text-sm"
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <Button
+                    onClick={() => handleSend()}
+                    disabled={loading || !input.trim()}
+                    className="neon-glow-hover shrink-0"
+                  >
+                    <Send className="w-3 h-3 md:w-4 md:h-4" />
+                  </Button>
+                </div>
+
+                {input.trim() === "" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
+                    {SUGGESTED_PROMPTS.map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSend(prompt)}
+                        className="p-2 md:p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground text-center">
+                  {t("total_available")}: {totalCredits} {t("credits")}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto mb-2 md:mb-4 space-y-2 md:space-y-4 px-2 md:px-4">
+                {messages.map((message, index) => (
+                  <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`max-w-[90%] md:max-w-[70%] p-2 md:p-4 rounded-lg text-xs md:text-sm ${
+                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">{message.content}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="bg-secondary/50 p-2 md:p-4 rounded-lg">
+                      <div className="flex gap-1 md:gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="flex gap-1 md:gap-2 px-2 md:px-4">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -387,7 +496,6 @@ const AIPage = () => {
                   placeholder={t("input_placeholder")}
                   className="bg-secondary/50 text-xs md:text-sm"
                   disabled={loading}
-                  autoFocus
                 />
                 <Button
                   onClick={() => handleSend()}
@@ -397,75 +505,9 @@ const AIPage = () => {
                   <Send className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
               </div>
-
-              {input.trim() === "" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
-                  {SUGGESTED_PROMPTS.map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSend(prompt)}
-                      className="p-2 md:p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <p className="text-xs text-muted-foreground text-center">
-                {t("total_available")}: {totalCredits} {t("credits")}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="flex-1 overflow-y-auto mb-2 md:mb-4 space-y-2 md:space-y-4 px-2 md:px-4">
-              {messages.map((message, index) => (
-                <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[90%] md:max-w-[70%] p-2 md:p-4 rounded-lg text-xs md:text-sm ${
-                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                  </div>
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-secondary/50 p-2 md:p-4 rounded-lg">
-                    <div className="flex gap-1 md:gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="flex gap-1 md:gap-2 px-2 md:px-4">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                placeholder={t("input_placeholder")}
-                className="bg-secondary/50 text-xs md:text-sm"
-                disabled={loading}
-              />
-              <Button
-                onClick={() => handleSend()}
-                disabled={loading || !input.trim()}
-                className="neon-glow-hover shrink-0"
-              >
-                <Send className="w-3 h-3 md:w-4 md:h-4" />
-              </Button>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
