@@ -9,13 +9,15 @@ import { useTranslation } from "@/hooks/useTranslation"
 interface UpgradeModalProps {
   feature: string
   requiredPlan: "premium" | "pro" | "free"
+  isExclusivePro?: boolean
   customMessage?: string
 }
 
-export function UpgradeModal({ feature, requiredPlan, customMessage }: UpgradeModalProps) {
+export function UpgradeModal({ feature, requiredPlan, isExclusivePro = false, customMessage }: UpgradeModalProps) {
   const { t } = useTranslation()
 
-  const displayPlan = requiredPlan === "free" ? "premium" : requiredPlan
+  const showBothPlans = !isExclusivePro && requiredPlan !== "pro"
+  const displayPlan = isExclusivePro ? "pro" : requiredPlan === "free" ? "premium" : requiredPlan
   const planName = displayPlan === "pro" ? "Pro" : "Premium"
   const planPrice = displayPlan === "pro" ? "€6.49" : "€2.49"
 
@@ -29,11 +31,11 @@ export function UpgradeModal({ feature, requiredPlan, customMessage }: UpgradeMo
           <span className="text-primary neon-text">{t("plan_required")}</span>
         </h2>
         <p className="text-sm md:text-base text-muted-foreground mb-2">
-          {customMessage || `${feature} ${t("requires_plan")} ${planName}.`}
+          {customMessage || `${feature} ${t("requires_plan")} ${showBothPlans ? "Premium or Pro" : planName}.`}
         </p>
         <p className="text-base md:text-lg mb-6 md:mb-8">
-          {t("upgrade_to")} {planName} {t("for_just")} <span className="text-primary font-bold">{planPrice}/month</span>{" "}
-          {t("to_unlock")}.
+          {t("upgrade_to")} {showBothPlans ? "Premium" : planName} {t("for_just")}{" "}
+          <span className="text-primary font-bold">{showBothPlans ? "€2.49" : planPrice}/month</span> {t("to_unlock")}.
         </p>
 
         {feature === t("ai_assistant") && (
@@ -51,9 +53,16 @@ export function UpgradeModal({ feature, requiredPlan, customMessage }: UpgradeMo
         <div className="flex flex-col md:flex-row gap-4 justify-center">
           <Link href="/app/subscription" className="w-full md:w-auto">
             <Button size="lg" className="neon-glow-hover w-full">
-              {t("upgrade_to")} {planName}
+              {t("upgrade_to")} {showBothPlans ? "Premium" : planName}
             </Button>
           </Link>
+          {showBothPlans && (
+            <Link href="/app/subscription" className="w-full md:w-auto">
+              <Button size="lg" className="neon-glow-hover w-full bg-pro">
+                {t("upgrade_to")} Pro
+              </Button>
+            </Link>
+          )}
           <Link href="/app" className="w-full md:w-auto">
             <Button size="lg" variant="outline" className="w-full bg-transparent">
               {t("go_to_dashboard")}
