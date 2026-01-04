@@ -31,7 +31,7 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
-  const [isLoadingTier, setIsLoadingTier] = useState<boolean | null>(null)
+  const [isLoadingTier, setIsLoadingTier] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [profileData, setProfileData] = useState({
@@ -69,7 +69,6 @@ const AIPage = () => {
         } else {
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
         }
-        setIsLoadingTier(true)
 
         // Load conversations
         const response = await fetch("/api/ai-conversations", {
@@ -86,7 +85,8 @@ const AIPage = () => {
       } catch (error) {
         console.error("[v0] Error in checkAccessAndLoadConversations:", error)
         setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
-        setIsLoadingTier(true)
+      } finally {
+        setIsLoadingTier(false)
       }
     }
 
@@ -252,9 +252,9 @@ const AIPage = () => {
     }
   }, [showRightSidebar])
 
-  if (isLoadingTier === null || isLoadingTier === false) {
+  if (isLoadingTier) {
     return (
-      <div className="p-4 md:p-8 flex items-center justify-center">
+      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen">
         <p>{t("loading")}</p>
       </div>
     )
