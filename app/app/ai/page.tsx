@@ -43,103 +43,52 @@ const AIPage = () => {
   useEffect(() => {
     const loadConversationsFromSupabase = async () => {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (!user) return
-
-        const { data, error } = await supabase
-          .from("ai_conversations")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-
-        if (error) throw error
-
-        const conversationList = (data || []).map((conv: any) => ({
-          id: conv.id,
-          title: conv.title,
-          created_at: conv.created_at,
-          updated_at: conv.updated_at,
-          messages: conv.messages || [],
-        }))
-
-        setConversations(conversationList)
-        console.log("[v0] Loaded conversations from Supabase:", conversationList.length)
+        const response = await fetch("/api/ai-conversations")
+        if (response.ok) {
+          const data = await response.json()
+          setConversations(data)
+          console.log("[v0] Loaded conversations from API:", data.length)
+        }
       } catch (error) {
-        console.error("[v0] Error loading from Supabase:", error)
+        console.error("[v0] Error loading conversations from API:", error)
       }
     }
 
     loadConversationsFromSupabase()
   }, [])
 
-  useEffect(() => {
-    const saveToSupabase = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (!user || conversations.length === 0) return
-
-        for (const conv of conversations) {
-          const { error } = await supabase.from("ai_conversations").upsert({
-            id: conv.id,
-            user_id: user.id,
-            title: conv.title,
-            messages: conv.messages,
-            created_at: conv.created_at,
-            updated_at: new Date().toISOString(),
-          })
-
-          if (error) console.error("[v0] Error saving conversation:", error)
+  const saveConversation = async (conversationId: string, newMessages: any[]) => {
+    const updated = conversations.map((c) => {
+      if (c.id === conversationId) {
+        return {
+          ...c,
+          messages: newMessages,
+          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : t("new_conversation"),
+          updated_at: new Date().toISOString(),
         }
-        console.log("[v0] Conversations synced to Supabase")
-      } catch (error) {
-        console.error("[v0] Error syncing to Supabase:", error)
       }
-    }
+      return c
+    })
 
-    // Debounce to avoid too many saves
-    const timer = setTimeout(saveToSupabase, 1000)
-    return () => clearTimeout(timer)
-  }, [conversations])
+    setConversations(updated)
 
-  useEffect(() => {
-    const initializeCredits = async () => {
-      console.log("[v0] Starting credit initialization on day:", new Date().getDate())
-
+    const conversationToSave = updated.find((c) => c.id === conversationId)
+    if (conversationToSave) {
       try {
-        const resetResponse = await fetch("/api/ai/reset-credits", {
+        const response = await fetch("/api/ai-conversations", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(conversationToSave),
         })
-        if (resetResponse.ok) {
-          const resetData = await resetResponse.json()
-          console.log("[v0] Reset response:", resetData)
+
+        if (!response.ok) {
+          console.error("[v0] Error saving conversation:", response.statusText)
         }
       } catch (error) {
-        console.error("[v0] Error calling reset endpoint:", error)
+        console.error("[v0] Error saving conversation to API:", error)
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      try {
-        const profileResponse = await fetch("/api/user/profile")
-        if (profileResponse.ok) {
-          const profileData = await profileResponse.json()
-          setSubscriptionTier(profileData.subscription_tier || "free")
-          setMonthlyCredits(profileData.ai_credits || 0)
-          setPurchasedCredits(profileData.ai_credits_purchased || 0)
-        }
-      } catch (error) {
-        console.error("[v0] Error fetching profile:", error)
-      }
-
-      setCheckingAccess(false)
     }
-
-    initializeCredits()
-  }, [])
+  }
 
   const createNewConversation = async () => {
     const newConversation: Conversation = {
@@ -178,23 +127,6 @@ const AIPage = () => {
       setCurrentConversationId(null)
       setMessages([])
     }
-  }
-
-  const saveConversation = async (conversationId: string, newMessages: any[]) => {
-    const updated = conversations.map((c) => {
-      if (c.id === conversationId) {
-        return {
-          ...c,
-          messages: newMessages,
-          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : t("new_conversation"),
-          updated_at: new Date().toISOString(),
-        }
-      }
-      return c
-    })
-
-    setConversations(updated)
-    console.log("[v0] Conversation saved:", conversationId, "Messages:", newMessages.length)
   }
 
   const handleSend = async (messageToSend?: string) => {
