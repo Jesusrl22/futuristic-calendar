@@ -53,6 +53,16 @@ const AIPage = () => {
           return
         }
 
+        const profileResponse = await fetch("/api/user/profile")
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json()
+          setSubscriptionTier(profile.subscription_tier)
+          setMonthlyCredits(profile.ai_credits || 0)
+          setPurchasedCredits(profile.ai_credits_purchased || 0)
+          console.log("[v0] Profile loaded:", { tier: profile.subscription_tier, credits: profile.ai_credits })
+        }
+
+        // Load conversations
         const response = await fetch("/api/ai-conversations", {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
