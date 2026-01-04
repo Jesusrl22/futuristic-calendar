@@ -258,6 +258,10 @@ const AIPage = () => {
     )
   }
 
+  console.log("[v0] profileData:", profileData)
+  console.log("[v0] canAccessAI result:", canAccessAI(profileData.tier as any, profileData.purchasedCredits))
+  console.log("[v0] purchasedCredits:", profileData.purchasedCredits)
+
   const hasAccess = canAccessAI(profileData.tier as any, profileData.purchasedCredits)
   const monthlyCredits = profileData.monthlyCredits
   const purchasedCredits = profileData.purchasedCredits
