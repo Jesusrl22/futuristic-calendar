@@ -9,11 +9,9 @@ import { Send, Zap, Plus, Trash2, Menu, X } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { canAccessAI } from "@/lib/subscription"
 import { useTranslation } from "@/hooks/useTranslation"
-import { createBrowserClient } from "@supabase/ssr"
 
 interface Conversation {
   id: string
-  user_id: string
   title: string
   created_at: string
   updated_at: string
@@ -33,24 +31,38 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-  )
 
   const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
   useEffect(() => {
+    const loadConversationsFromStorage = () => {
+      try {
+        const stored = localStorage.getItem("ai_conversations")
+        if (stored) {
+          const convs = JSON.parse(stored)
+          setConversations(convs)
+          console.log("[v0] Loaded conversations from localStorage:", convs.length)
+        }
+      } catch (error) {
+        console.error("[v0] Error loading conversations:", error)
+      }
+    }
+
+    loadConversationsFromStorage()
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("ai_conversations", JSON.stringify(conversations))
+      console.log("[v0] Saved conversations to localStorage:", conversations.length)
+    } catch (error) {
+      console.error("[v0] Error saving conversations:", error)
+    }
+  }, [conversations])
+
+  useEffect(() => {
     const initializeCredits = async () => {
       console.log("[v0] Starting credit initialization on day:", new Date().getDate())
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        setUserId(user.id)
-      }
 
       try {
         const resetResponse = await fetch("/api/ai/reset-credits", {
@@ -84,83 +96,9 @@ const AIPage = () => {
     initializeCredits()
   }, [])
 
-  useEffect(() => {
-    if (userId) {
-      loadConversationsFromSupabase()
-    }
-  }, [userId])
-
-  const loadConversationsFromSupabase = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("ai_conversations")
-        .select("*")
-        .eq("user_id", userId)
-        .order("updated_at", { ascending: false })
-
-      if (error) throw error
-      setConversations((data || []) as Conversation[])
-      console.log("[v0] Loaded conversations:", data?.length)
-    } catch (error) {
-      console.error("[v0] Error loading conversations:", error)
-    }
-  }
-
-  const saveConversationToSupabase = async (conversation: Conversation) => {
-    if (!userId) return
-    try {
-      const { data: existingConv } = await supabase
-        .from("ai_conversations")
-        .select("id")
-        .eq("id", conversation.id)
-        .eq("user_id", userId)
-        .single()
-
-      if (existingConv) {
-        const { error } = await supabase
-          .from("ai_conversations")
-          .update({
-            title: conversation.title,
-            messages: conversation.messages,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", conversation.id)
-          .eq("user_id", userId)
-
-        if (error) throw error
-      } else {
-        const { error } = await supabase.from("ai_conversations").insert({
-          id: conversation.id,
-          user_id: userId,
-          title: conversation.title,
-          messages: conversation.messages,
-          created_at: conversation.created_at,
-          updated_at: conversation.updated_at,
-        })
-
-        if (error) throw error
-      }
-      console.log("[v0] Conversation saved:", conversation.id)
-    } catch (error) {
-      console.error("[v0] Error saving:", error)
-    }
-  }
-
-  const deleteConversationFromSupabase = async (conversationId: string) => {
-    try {
-      const { error } = await supabase.from("ai_conversations").delete().eq("id", conversationId).eq("user_id", userId)
-
-      if (error) throw error
-      console.log("[v0] Conversation deleted:", conversationId)
-    } catch (error) {
-      console.error("[v0] Error deleting:", error)
-    }
-  }
-
   const createNewConversation = async () => {
     const newConversation: Conversation = {
       id: Date.now().toString(),
-      user_id: userId || "",
       title: t("new_conversation"),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -168,7 +106,6 @@ const AIPage = () => {
     }
     const updated = [newConversation, ...conversations]
     setConversations(updated)
-    await saveConversationToSupabase(newConversation)
     console.log("[v0] New empty conversation created:", newConversation.id)
     setCurrentConversationId(newConversation.id)
     setMessages([])
@@ -192,7 +129,6 @@ const AIPage = () => {
 
     const updated = conversations.filter((c) => c.id !== conversationId)
     setConversations(updated)
-    await deleteConversationFromSupabase(conversationId)
     if (currentConversationId === conversationId) {
       setCurrentConversationId(null)
       setMessages([])
@@ -200,9 +136,6 @@ const AIPage = () => {
   }
 
   const saveConversation = async (conversationId: string, newMessages: any[]) => {
-    const conv = conversations.find((c) => c.id === conversationId)
-    if (!conv) return
-
     const updated = conversations.map((c) => {
       if (c.id === conversationId) {
         return {
@@ -216,8 +149,7 @@ const AIPage = () => {
     })
 
     setConversations(updated)
-    await saveConversationToSupabase(updated.find((c) => c.id === conversationId)!)
-    console.log("[v0] Conversation saved:", conversationId)
+    console.log("[v0] Conversation saved:", conversationId, "Messages:", newMessages.length)
   }
 
   const handleSend = async (messageToSend?: string) => {
@@ -236,7 +168,6 @@ const AIPage = () => {
     if (!conversationId) {
       const newConversation: Conversation = {
         id: Date.now().toString(),
-        user_id: userId || "",
         title: textToSend.substring(0, 50) + "...",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -244,7 +175,6 @@ const AIPage = () => {
       }
       currentConversations = [newConversation, ...conversations]
       setConversations(currentConversations)
-      await saveConversationToSupabase(newConversation)
       console.log("[v0] New conversation created from message send:", newConversation.id)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
@@ -256,20 +186,7 @@ const AIPage = () => {
     setInput("")
     setLoading(true)
 
-    const updated = currentConversations.map((c) => {
-      if (c.id === conversationId) {
-        return {
-          ...c,
-          messages: newMessages,
-          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : t("new_conversation"),
-          updated_at: new Date().toISOString(),
-        }
-      }
-      return c
-    })
-    setConversations(updated)
     await saveConversation(conversationId, newMessages)
-    console.log("[v0] User message saved to conversation:", conversationId)
 
     try {
       const response = await fetch("/api/ai-chat", {
@@ -287,7 +204,7 @@ const AIPage = () => {
       const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
       setMessages(updatedMessages)
       await saveConversation(conversationId, updatedMessages)
-      console.log("[v0] Assistant response saved, final message count:", updatedMessages.length)
+      console.log("[v0] Assistant response saved")
 
       setMonthlyCredits(data.remainingMonthlyCredits)
       setPurchasedCredits(data.remainingPurchasedCredits)
@@ -320,11 +237,11 @@ const AIPage = () => {
   }
 
   const totalCredits = monthlyCredits + purchasedCredits
-  const currentConv = conversations.find((c) => c.id === currentConversationId)
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-background">
-      <div className="hidden md:flex w-64 bg-secondary/20 border-r border-border/50 flex-col p-4 gap-4">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex w-64 bg-secondary/20 border-r border-border/50 flex-col p-4 gap-4 overflow-hidden">
         <Button onClick={createNewConversation} className="w-full neon-glow-hover">
           <Plus className="w-4 h-4 mr-2" />
           {t("new_conversation")}
@@ -338,14 +255,14 @@ const AIPage = () => {
               <button
                 key={conv.id}
                 onClick={() => loadConversation(conv.id)}
-                className={`w-full p-3 rounded-lg text-left transition-colors text-sm flex items-center justify-between group ${
+                className={`w-full p-3 rounded-lg text-left transition-colors text-sm flex items-center justify-between group overflow-hidden ${
                   currentConversationId === conv.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary/50"
                 }`}
               >
                 <span className="truncate flex-1">{conv.title}</span>
                 <button
                   onClick={(e) => deleteConversation(conv.id, e)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 shrink-0"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -355,6 +272,7 @@ const AIPage = () => {
         </div>
       </div>
 
+      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-h-0 gap-2 md:gap-4 p-2 md:p-6">
         {/* Header with title and credits */}
         <div className="flex items-center justify-between gap-2 md:gap-4 mb-4 md:mb-6">
@@ -480,6 +398,7 @@ const AIPage = () => {
         )}
       </div>
 
+      {/* Mobile Right Sidebar */}
       {showRightSidebar && (
         <div className="fixed md:hidden right-0 top-16 bottom-0 w-64 bg-background border-l border-border/50 p-4 flex flex-col z-50 shadow-lg overflow-hidden">
           <Button onClick={createNewConversation} className="w-full neon-glow-hover">
@@ -498,14 +417,14 @@ const AIPage = () => {
                     loadConversation(conv.id)
                     setShowRightSidebar(false)
                   }}
-                  className={`w-full p-3 rounded-lg text-left transition-colors text-sm flex items-center justify-between group ${
+                  className={`w-full p-3 rounded-lg text-left transition-colors text-sm flex items-center justify-between group overflow-hidden ${
                     currentConversationId === conv.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary/50"
                   }`}
                 >
                   <span className="truncate flex-1">{conv.title}</span>
                   <button
                     onClick={(e) => deleteConversation(conv.id, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
