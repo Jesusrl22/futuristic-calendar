@@ -9,6 +9,12 @@ import { Send, Zap, Plus, Trash2, Menu, X } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { canAccessAI } from "@/lib/subscription"
 import { useTranslation } from "@/hooks/useTranslation"
+import { createBrowserClient } from "@supabase/ssr"
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+)
 
 interface Conversation {
   id: string
@@ -35,29 +41,68 @@ const AIPage = () => {
   const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
   useEffect(() => {
-    const loadConversationsFromStorage = () => {
+    const loadConversationsFromSupabase = async () => {
       try {
-        const stored = localStorage.getItem("ai_conversations")
-        if (stored) {
-          const convs = JSON.parse(stored)
-          setConversations(convs)
-          console.log("[v0] Loaded conversations from localStorage:", convs.length)
-        }
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data, error } = await supabase
+          .from("ai_conversations")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+
+        if (error) throw error
+
+        const conversationList = (data || []).map((conv: any) => ({
+          id: conv.id,
+          title: conv.title,
+          created_at: conv.created_at,
+          updated_at: conv.updated_at,
+          messages: conv.messages || [],
+        }))
+
+        setConversations(conversationList)
+        console.log("[v0] Loaded conversations from Supabase:", conversationList.length)
       } catch (error) {
-        console.error("[v0] Error loading conversations:", error)
+        console.error("[v0] Error loading from Supabase:", error)
       }
     }
 
-    loadConversationsFromStorage()
+    loadConversationsFromSupabase()
   }, [])
 
   useEffect(() => {
-    try {
-      localStorage.setItem("ai_conversations", JSON.stringify(conversations))
-      console.log("[v0] Saved conversations to localStorage:", conversations.length)
-    } catch (error) {
-      console.error("[v0] Error saving conversations:", error)
+    const saveToSupabase = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user || conversations.length === 0) return
+
+        for (const conv of conversations) {
+          const { error } = await supabase.from("ai_conversations").upsert({
+            id: conv.id,
+            user_id: user.id,
+            title: conv.title,
+            messages: conv.messages,
+            created_at: conv.created_at,
+            updated_at: new Date().toISOString(),
+          })
+
+          if (error) console.error("[v0] Error saving conversation:", error)
+        }
+        console.log("[v0] Conversations synced to Supabase")
+      } catch (error) {
+        console.error("[v0] Error syncing to Supabase:", error)
+      }
     }
+
+    // Debounce to avoid too many saves
+    const timer = setTimeout(saveToSupabase, 1000)
+    return () => clearTimeout(timer)
   }, [conversations])
 
   useEffect(() => {
