@@ -37,6 +37,7 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
+  const [isLoadingTier, setIsLoadingTier] = useState(true)
 
   const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
@@ -49,18 +50,22 @@ const AIPage = () => {
         } = await supabase.auth.getSession()
 
         if (!session?.user) {
-          setCheckingAccess(false)
+          setIsLoadingTier(false)
           return
         }
 
         const profileResponse = await fetch("/api/user/profile")
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
-          setSubscriptionTier(profile.subscription_tier)
+          console.log("[v0] Profile loaded - tier:", profile.subscription_tier)
+          setSubscriptionTier(profile.subscription_tier || "free")
           setMonthlyCredits(profile.ai_credits || 0)
           setPurchasedCredits(profile.ai_credits_purchased || 0)
-          console.log("[v0] Profile loaded:", { tier: profile.subscription_tier, credits: profile.ai_credits })
+        } else {
+          console.log("[v0] Profile fetch failed, defaulting to free")
+          setSubscriptionTier("free")
         }
+        setIsLoadingTier(false)
 
         // Load conversations
         const response = await fetch("/api/ai-conversations", {
@@ -71,17 +76,13 @@ const AIPage = () => {
 
         if (response.ok) {
           const data = await response.json()
-          // Handle both array and object response formats
           const convs = Array.isArray(data) ? data : data.conversations || []
           setConversations(convs)
           console.log("[v0] Loaded conversations:", convs.length)
-        } else {
-          console.error("[v0] Failed to load conversations:", response.statusText)
         }
       } catch (error) {
         console.error("[v0] Error in checkAccessAndLoadConversations:", error)
-      } finally {
-        setCheckingAccess(false)
+        setIsLoadingTier(false)
       }
     }
 
@@ -248,7 +249,7 @@ const AIPage = () => {
     }
   }, [showRightSidebar])
 
-  if (checkingAccess) {
+  if (isLoadingTier) {
     return (
       <div className="p-4 md:p-8 flex items-center justify-center">
         <p>{t("loading")}</p>
