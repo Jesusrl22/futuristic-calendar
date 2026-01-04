@@ -252,7 +252,7 @@ const AIPage = () => {
     }
   }, [showRightSidebar])
 
-  if (isLoadingTier === null || profileData.tier === null) {
+  if (isLoadingTier === null || isLoadingTier === false) {
     return (
       <div className="p-4 md:p-8 flex items-center justify-center">
         <p>{t("loading")}</p>
@@ -262,7 +262,7 @@ const AIPage = () => {
 
   const hasAccessToAI = profileData.tier === "pro" || profileData.tier === "premium" || profileData.purchasedCredits > 0
 
-  console.log("[v0] Tier:", profileData.tier, "Purchased:", profileData.purchasedCredits, "Has Access:", hasAccessToAI)
+  console.log("[v0] Final check - Tier:", profileData.tier, "Has Access:", hasAccessToAI)
 
   if (!hasAccessToAI) {
     return (

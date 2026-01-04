@@ -58,7 +58,7 @@ export function UpgradeModal({ feature, requiredPlan, isExclusivePro = false, cu
           </Link>
           {showBothPlans && (
             <Link href="/app/subscription" className="w-full md:w-auto">
-              <Button size="lg" className="neon-glow-hover w-full bg-pro">
+              <Button size="lg" className="neon-glow-hover w-full bg-violet-600 hover:bg-violet-700 text-white">
                 {t("upgrade_to")} Pro
               </Button>
             </Link>
