@@ -216,6 +216,30 @@ const AIPage = () => {
     }
   }
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const sidebar = document.getElementById("mobile-right-sidebar")
+      const menuButton = document.getElementById("menu-button")
+      if (
+        showRightSidebar &&
+        sidebar &&
+        !sidebar.contains(event.target as Node) &&
+        !menuButton?.contains(event.target as Node)
+      ) {
+        setShowRightSidebar(false)
+      }
+    }
+
+    if (showRightSidebar) {
+      document.addEventListener("click", handleClickOutside)
+      return () => document.removeEventListener("click", handleClickOutside)
+    }
+  }, [showRightSidebar])
+
   if (checkingAccess) {
     return (
       <div className="p-4 md:p-8 flex items-center justify-center">
@@ -295,7 +319,12 @@ const AIPage = () => {
                 </div>
               </Card>
             )}
-            <Button onClick={() => setShowRightSidebar(!showRightSidebar)} className="md:hidden shrink-0" size="sm">
+            <Button
+              id="menu-button"
+              onClick={() => setShowRightSidebar(!showRightSidebar)}
+              className="md:hidden shrink-0"
+              size="sm"
+            >
               {showRightSidebar ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </Button>
           </div>
@@ -400,7 +429,10 @@ const AIPage = () => {
 
       {/* Mobile Right Sidebar */}
       {showRightSidebar && (
-        <div className="fixed md:hidden right-0 top-16 bottom-0 w-64 bg-background border-l border-border/50 p-4 flex flex-col z-50 shadow-lg overflow-hidden">
+        <div
+          id="mobile-right-sidebar"
+          className="fixed md:hidden right-0 top-16 bottom-0 w-64 bg-background border-l border-border/50 p-4 flex flex-col z-50 shadow-lg overflow-hidden"
+        >
           <Button onClick={createNewConversation} className="w-full neon-glow-hover">
             <Plus className="w-4 h-4 mr-2" />
             {t("new_conversation")}
