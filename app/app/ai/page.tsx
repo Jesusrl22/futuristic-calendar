@@ -31,7 +31,7 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
-  const [isLoadingTier, setIsLoadingTier] = useState(true)
+  const [isLoadingTier, setIsLoadingTier] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [profileData, setProfileData] = useState({
@@ -52,7 +52,6 @@ const AIPage = () => {
 
         if (!session?.user) {
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
-          setIsLoadingTier(false)
           return
         }
 
@@ -60,7 +59,6 @@ const AIPage = () => {
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
           const tier = (profile.subscription_tier || "free").toLowerCase()
-          console.log("[v0] Loaded tier from API:", tier)
           setProfileData({
             tier: tier,
             monthlyCredits: profile.ai_credits || 0,
@@ -83,10 +81,8 @@ const AIPage = () => {
           setConversations(convs)
         }
       } catch (error) {
-        console.error("[v0] Error in checkAccessAndLoadConversations:", error)
+        console.error("[v0] Error loading profile:", error)
         setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
-      } finally {
-        setIsLoadingTier(false)
       }
     }
 
@@ -251,14 +247,6 @@ const AIPage = () => {
       return () => document.removeEventListener("click", handleClickOutside)
     }
   }, [showRightSidebar])
-
-  if (isLoadingTier) {
-    return (
-      <div className="p-4 md:p-8 flex items-center justify-center min-h-screen">
-        <p>{t("loading")}</p>
-      </div>
-    )
-  }
 
   const hasAccessToAI = profileData.tier === "pro" || profileData.tier === "premium" || profileData.purchasedCredits > 0
 
