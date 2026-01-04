@@ -35,7 +35,7 @@ export async function POST() {
       body: JSON.stringify({
         subscription_tier: "free",
         subscription_status: "cancelled",
-        ai_credits_monthly: 0,
+        ai_credits: 0, // Changed from ai_credits_monthly to ai_credits for consistency with DB
         subscription_expires_at: null,
         paypal_subscription_id: null,
         updated_at: new Date().toISOString(),

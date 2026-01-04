@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     const { data: users, error } = await supabase
       .from("users")
       .select(
-        "id, email, name, subscription_tier, subscription_expires_at, created_at, ai_credits_monthly, ai_credits_purchased",
+        "id, email, name, subscription_tier, subscription_expires_at, created_at, ai_credits, ai_credits_purchased",
       )
       .order("created_at", { ascending: false })
 
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
           pro: 500,
         }
         const planCredits = initialCredits[(user.subscription_tier || "free") as keyof typeof initialCredits] || 0
-        const monthlyCredits = user.ai_credits_monthly || 0
+        const monthlyCredits = user.ai_credits || 0
         const purchasedCredits = user.ai_credits_purchased || 0
         const totalCredits = monthlyCredits + purchasedCredits
         const creditsUsed = planCredits > 0 ? planCredits - monthlyCredits : 0
@@ -143,7 +143,7 @@ export async function PATCH(request: Request) {
       updates.subscription_plan = planName
       updates.subscription_tier = planName
       updates.plan = planName
-      updates.ai_credits_monthly = creditsMap[planName as keyof typeof creditsMap] || 0
+      updates.ai_credits = creditsMap[planName as keyof typeof creditsMap] || 0
       updates.last_credit_reset = new Date().toISOString()
 
       if (!updates.subscription_expires_at) {
@@ -151,7 +151,7 @@ export async function PATCH(request: Request) {
       }
 
       console.log("[v0] Admin API PATCH - plan being set to:", planName)
-      console.log("[v0] Admin API PATCH - monthly credits being set to:", updates.ai_credits_monthly)
+      console.log("[v0] Admin API PATCH - monthly credits being set to:", updates.ai_credits)
       console.log("[v0] Admin API PATCH - final updates object:", updates)
     }
 
@@ -164,7 +164,7 @@ export async function PATCH(request: Request) {
 
     const { data: beforeUpdate, error: fetchError } = await supabase
       .from("users")
-      .select("id, email, subscription_tier, subscription_plan, ai_credits_monthly, ai_credits_purchased")
+      .select("id, email, subscription_tier, subscription_plan, ai_credits, ai_credits_purchased")
       .eq("id", targetUserId)
       .single()
 

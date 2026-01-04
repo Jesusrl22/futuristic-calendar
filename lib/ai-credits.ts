@@ -123,3 +123,53 @@ export async function resetMonthlyCreditsIfNeeded(userId: string) {
     resetPerformed: true,
   }
 }
+
+export async function resetCreditsForPlanChange(userId: string) {
+  const supabase = await createServerClient()
+
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("subscription_tier, ai_credits_purchased")
+    .eq("id", userId)
+    .single()
+
+  if (error || !user) {
+    console.error("Error fetching user for plan change reset:", error)
+    return { monthlyCredits: 0, purchasedCredits: 0 }
+  }
+
+  const tierCredits: Record<string, number> = {
+    free: 0,
+    premium: 100,
+    pro: 500,
+  }
+
+  const monthlyCredits = tierCredits[user.subscription_tier?.toLowerCase() || "free"] || 0
+
+  const { data: updatedUser, error: updateError } = await supabase
+    .from("users")
+    .update({
+      ai_credits: monthlyCredits,
+      last_credit_reset: new Date().toISOString(),
+    })
+    .eq("id", userId)
+    .select("ai_credits, ai_credits_purchased")
+    .single()
+
+  if (updateError) {
+    console.error("[v0] Error resetting credits on plan change:", updateError)
+    return { monthlyCredits: 0, purchasedCredits: user.ai_credits_purchased || 0 }
+  }
+
+  console.log("[v0] Credits reset on plan change:", {
+    userId,
+    newTier: user.subscription_tier,
+    monthlyCredits,
+    purchasedCredits: updatedUser?.ai_credits_purchased,
+  })
+
+  return {
+    monthlyCredits: updatedUser?.ai_credits || monthlyCredits,
+    purchasedCredits: updatedUser?.ai_credits_purchased || 0,
+  }
+}

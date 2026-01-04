@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const { data: profiles, error: profileError } = await supabaseAdmin
       .from("users")
-      .select("ai_credits,ai_credits_monthly,ai_credits_purchased,subscription_tier")
+      .select("ai_credits,ai_credits_purchased,subscription_tier")
       .eq("id", userId)
       .maybeSingle()
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const profile = profiles
-    const monthlyCredits = profile.ai_credits_monthly || 0
+    const monthlyCredits = profile.ai_credits || 0
     const purchasedCredits = profile.ai_credits_purchased || 0
     const totalCredits = monthlyCredits + purchasedCredits
 
@@ -82,9 +82,8 @@ export async function POST(req: NextRequest) {
     const { error: updateError } = await supabaseAdmin
       .from("users")
       .update({
-        ai_credits_monthly: newMonthlyCredits,
+        ai_credits: newMonthlyCredits,
         ai_credits_purchased: newPurchasedCredits,
-        ai_credits: newTotalCredits,
       })
       .eq("id", userId)
 
