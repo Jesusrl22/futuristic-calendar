@@ -60,22 +60,12 @@ const AIPage = () => {
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
           const tier = (profile.subscription_tier || "free").toLowerCase()
-          console.log(
-            "[v0] Profile loaded - tier:",
-            tier,
-            "monthly:",
-            profile.ai_credits,
-            "purchased:",
-            profile.ai_credits_purchased,
-          )
-
           setProfileData({
             tier: tier,
             monthlyCredits: profile.ai_credits || 0,
             purchasedCredits: profile.ai_credits_purchased || 0,
           })
         } else {
-          console.log("[v0] Profile fetch failed, defaulting to free")
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
         }
         setIsLoadingTier(false)
@@ -91,7 +81,6 @@ const AIPage = () => {
           const data = await response.json()
           const convs = Array.isArray(data) ? data : data.conversations || []
           setConversations(convs)
-          console.log("[v0] Loaded conversations:", convs.length)
         }
       } catch (error) {
         console.error("[v0] Error in checkAccessAndLoadConversations:", error)
@@ -145,7 +134,6 @@ const AIPage = () => {
     }
     const updated = [newConversation, ...conversations]
     setConversations(updated)
-    console.log("[v0] New empty conversation created:", newConversation.id)
     setCurrentConversationId(newConversation.id)
     setMessages([])
     setInput("")
@@ -197,7 +185,6 @@ const AIPage = () => {
       }
       currentConversations = [newConversation, ...conversations]
       setConversations(currentConversations)
-      console.log("[v0] New conversation created from message send:", newConversation.id)
       conversationId = newConversation.id
       setCurrentConversationId(conversationId)
     }
@@ -226,7 +213,6 @@ const AIPage = () => {
       const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
       setMessages(updatedMessages)
       await saveConversation(conversationId, updatedMessages)
-      console.log("[v0] Assistant response saved")
 
       setProfileData((prev) => ({
         ...prev,
@@ -234,7 +220,6 @@ const AIPage = () => {
         purchasedCredits: data.remainingPurchasedCredits,
       }))
     } catch (error) {
-      console.error("AI chat error:", error)
       setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
     } finally {
       setLoading(false)
@@ -277,24 +262,13 @@ const AIPage = () => {
   const monthlyCredits = profileData.monthlyCredits
   const purchasedCredits = profileData.purchasedCredits
 
-  console.log(
-    "[v0] Final access check - tier:",
-    profileData.tier,
-    "monthly:",
-    monthlyCredits,
-    "purchased:",
-    purchasedCredits,
-    "has access:",
-    hasAccess,
-  )
-
   if (!hasAccess) {
     return (
       <div className="p-4 md:p-8">
         <UpgradeModal
           feature={t("ai_assistant")}
           requiredPlan={purchasedCredits > 0 ? "free" : "premium"}
-          customMessage={purchasedCredits > 0 ? t("buy_more_credits_ai") : t("ai_assistant_upgrade_message")}
+          customMessage={purchasedCredits > 0 ? t("buy_more_credits_ai") : undefined}
         />
       </div>
     )

@@ -4,16 +4,20 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { Lock, ShoppingCart } from "@/components/icons"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface UpgradeModalProps {
   feature: string
-  requiredPlan: "premium" | "pro"
+  requiredPlan: "premium" | "pro" | "free"
   customMessage?: string
 }
 
 export function UpgradeModal({ feature, requiredPlan, customMessage }: UpgradeModalProps) {
-  const planName = requiredPlan === "pro" ? "Pro" : "Premium"
-  const planPrice = requiredPlan === "pro" ? "€6.49" : "€2.49"
+  const { t } = useTranslation()
+
+  const displayPlan = requiredPlan === "free" ? "premium" : requiredPlan
+  const planName = displayPlan === "pro" ? "Pro" : "Premium"
+  const planPrice = displayPlan === "pro" ? "€6.49" : "€2.49"
 
   return (
     <div className="p-4 md:p-8">
@@ -22,25 +26,23 @@ export function UpgradeModal({ feature, requiredPlan, customMessage }: UpgradeMo
           <Lock className="w-6 h-6 md:w-8 md:h-8 text-primary" />
         </div>
         <h2 className="text-2xl md:text-3xl font-bold mb-4">
-          <span className="text-primary neon-text">Upgrade Required</span>
+          <span className="text-primary neon-text">{t("plan_required")}</span>
         </h2>
         <p className="text-sm md:text-base text-muted-foreground mb-2">
-          {customMessage || `${feature} is a ${planName} feature.`}
+          {customMessage || `${feature} ${t("requires_plan")} ${planName}.`}
         </p>
         <p className="text-base md:text-lg mb-6 md:mb-8">
-          Upgrade to {planName} for just <span className="text-primary font-bold">{planPrice}/month</span> to unlock
-          this feature.
+          {t("upgrade_to")} {planName} {t("for_just")} <span className="text-primary font-bold">{planPrice}/month</span>{" "}
+          {t("to_unlock")}.
         </p>
 
-        {feature === "AI Assistant" && (
+        {feature === t("ai_assistant") && (
           <div className="mb-6 md:mb-8 p-4 bg-secondary/20 rounded-lg border border-border/50">
-            <p className="text-sm md:text-base mb-4">
-              Or purchase credit packs to access the AI Assistant without a subscription
-            </p>
+            <p className="text-sm md:text-base mb-4">{t("or_purchase_credits")}</p>
             <Link href="/app/subscription">
               <Button size="lg" variant="secondary" className="neon-glow-hover w-full md:w-auto">
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                View Credit Packs
+                {t("view_credit_packs")}
               </Button>
             </Link>
           </div>
@@ -49,12 +51,12 @@ export function UpgradeModal({ feature, requiredPlan, customMessage }: UpgradeMo
         <div className="flex flex-col md:flex-row gap-4 justify-center">
           <Link href="/app/subscription" className="w-full md:w-auto">
             <Button size="lg" className="neon-glow-hover w-full">
-              Upgrade to {planName}
+              {t("upgrade_to")} {planName}
             </Button>
           </Link>
           <Link href="/app" className="w-full md:w-auto">
             <Button size="lg" variant="outline" className="w-full bg-transparent">
-              Go to Dashboard
+              {t("go_to_dashboard")}
             </Button>
           </Link>
         </div>
