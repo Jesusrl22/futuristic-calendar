@@ -30,7 +30,6 @@ const plans = [
       "subscription_feature_free_themes",
       "subscription_feature_free_achievements",
       "subscription_feature_basic_settings",
-      "subscription_feature_team_collaboration_free", // Added team collaboration limit
     ],
   },
   {
@@ -48,9 +47,10 @@ const plans = [
       "subscription_feature_wishlist",
       "subscription_feature_premium_themes",
       "subscription_feature_premium_achievements",
-      "subscription_feature_team_collaboration_premium", // Added team features
+      "subscription_feature_premium_teams",
       "subscription_feature_shared_tasks",
       "subscription_feature_task_assignment",
+      "subscription_feature_team_members_view",
     ],
     popular: true,
   },
@@ -69,10 +69,11 @@ const plans = [
       "subscription_feature_all_themes",
       "subscription_feature_pro_achievements",
       "subscription_feature_priority_support",
-      "subscription_feature_team_collaboration_pro", // Added unlimited teams
+      "subscription_feature_pro_teams",
       "subscription_feature_team_calendar",
       "subscription_feature_team_comments",
       "subscription_feature_team_stats",
+      "subscription_feature_team_members_view",
     ],
   },
 ]
