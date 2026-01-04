@@ -29,15 +29,17 @@ const AIPage = () => {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
-  const [monthlyCredits, setMonthlyCredits] = useState(0)
-  const [purchasedCredits, setPurchasedCredits] = useState(0)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null)
-  const [checkingAccess, setCheckingAccess] = useState(true)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
   const [isLoadingTier, setIsLoadingTier] = useState(true)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const [profileData, setProfileData] = useState({
+    tier: "free" as string,
+    monthlyCredits: 0,
+    purchasedCredits: 0,
+  })
 
   const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
@@ -57,13 +59,24 @@ const AIPage = () => {
         const profileResponse = await fetch("/api/user/profile")
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
-          console.log("[v0] Profile loaded - tier:", profile.subscription_tier)
-          setSubscriptionTier(profile.subscription_tier || "free")
-          setMonthlyCredits(profile.ai_credits || 0)
-          setPurchasedCredits(profile.ai_credits_purchased || 0)
+          const tier = (profile.subscription_tier || "free").toLowerCase()
+          console.log(
+            "[v0] Profile loaded - tier:",
+            tier,
+            "monthly:",
+            profile.ai_credits,
+            "purchased:",
+            profile.ai_credits_purchased,
+          )
+
+          setProfileData({
+            tier: tier,
+            monthlyCredits: profile.ai_credits || 0,
+            purchasedCredits: profile.ai_credits_purchased || 0,
+          })
         } else {
           console.log("[v0] Profile fetch failed, defaulting to free")
-          setSubscriptionTier("free")
+          setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
         }
         setIsLoadingTier(false)
 
@@ -165,7 +178,7 @@ const AIPage = () => {
     const textToSend = messageToSend || input
     if (!textToSend.trim() || loading) return
 
-    const totalCredits = monthlyCredits + purchasedCredits
+    const totalCredits = profileData.monthlyCredits + profileData.purchasedCredits
     if (totalCredits < 2) {
       alert(`${t("not_enough_credits")}. ${t("need_at_least_two_credits")}`)
       return
@@ -215,8 +228,11 @@ const AIPage = () => {
       await saveConversation(conversationId, updatedMessages)
       console.log("[v0] Assistant response saved")
 
-      setMonthlyCredits(data.remainingMonthlyCredits)
-      setPurchasedCredits(data.remainingPurchasedCredits)
+      setProfileData((prev) => ({
+        ...prev,
+        monthlyCredits: data.remainingMonthlyCredits,
+        purchasedCredits: data.remainingPurchasedCredits,
+      }))
     } catch (error) {
       console.error("AI chat error:", error)
       setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
@@ -257,10 +273,20 @@ const AIPage = () => {
     )
   }
 
-  const normalizedTier = subscriptionTier?.toLowerCase() || "free"
-  const hasAccess = canAccessAI(normalizedTier as any, purchasedCredits)
+  const hasAccess = canAccessAI(profileData.tier as any, profileData.purchasedCredits)
+  const monthlyCredits = profileData.monthlyCredits
+  const purchasedCredits = profileData.purchasedCredits
 
-  console.log("[v0] Tier check - normalized:", normalizedTier, "has access:", hasAccess, "purchased:", purchasedCredits)
+  console.log(
+    "[v0] Final access check - tier:",
+    profileData.tier,
+    "monthly:",
+    monthlyCredits,
+    "purchased:",
+    purchasedCredits,
+    "has access:",
+    hasAccess,
+  )
 
   if (!hasAccess) {
     return (
