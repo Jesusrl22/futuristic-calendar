@@ -16,7 +16,7 @@ interface UpgradeModalProps {
 export function UpgradeModal({ feature, requiredPlan, isExclusivePro = false, customMessage }: UpgradeModalProps) {
   const { t } = useTranslation()
 
-  const showBothPlans = !isExclusivePro && requiredPlan !== "pro"
+  const showBothPlans = !isExclusivePro && requiredPlan !== "free"
   const displayPlan = isExclusivePro ? "pro" : requiredPlan === "free" ? "premium" : requiredPlan
   const planName = displayPlan === "pro" ? "Pro" : "Premium"
   const planPrice = displayPlan === "pro" ? "€6.49" : "€2.49"
@@ -35,7 +35,8 @@ export function UpgradeModal({ feature, requiredPlan, isExclusivePro = false, cu
         </p>
         <p className="text-base md:text-lg mb-6 md:mb-8">
           {t("upgrade_to")} {showBothPlans ? "Premium" : planName} {t("for_just")}{" "}
-          <span className="text-primary font-bold">{showBothPlans ? "€2.49" : planPrice}/month</span> {t("to_unlock")}.
+          <span className="text-primary font-bold">{showBothPlans ? "€2.49 or €6.49" : planPrice}</span>
+          /month {t("to_unlock")}.
         </p>
 
         {feature === t("ai_assistant") && (

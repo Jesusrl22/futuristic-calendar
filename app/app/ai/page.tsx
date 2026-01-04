@@ -60,7 +60,7 @@ const AIPage = () => {
           const profile = await profileResponse.json()
           const tier = (profile.subscription_tier || "free").toLowerCase()
           setProfileData({
-            tier: tier,
+            tier: tier || "free",
             monthlyCredits: profile.ai_credits || 0,
             purchasedCredits: profile.ai_credits_purchased || 0,
           })
@@ -248,7 +248,7 @@ const AIPage = () => {
     }
   }, [showRightSidebar])
 
-  const hasAccessToAI = profileData.tier === "pro" || profileData.tier === "premium" || profileData.purchasedCredits > 0
+  const hasAccessToAI = (profileData.tier && profileData.tier !== "free") || profileData.purchasedCredits > 0
 
   console.log("[v0] Final check - Tier:", profileData.tier, "Has Access:", hasAccessToAI)
 
