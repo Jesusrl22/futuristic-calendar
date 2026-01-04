@@ -32,11 +32,11 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
-  const [isLoadingTier, setIsLoadingTier] = useState(true)
+  const [isLoadingTier, setIsLoadingTier] = useState<boolean | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [profileData, setProfileData] = useState({
-    tier: "free" as string,
+    tier: null as string | null,
     monthlyCredits: 0,
     purchasedCredits: 0,
   })
@@ -52,6 +52,7 @@ const AIPage = () => {
         } = await supabase.auth.getSession()
 
         if (!session?.user) {
+          setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
           setIsLoadingTier(false)
           return
         }
@@ -60,6 +61,7 @@ const AIPage = () => {
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
           const tier = (profile.subscription_tier || "free").toLowerCase()
+          console.log("[v0] Loaded tier from API:", tier)
           setProfileData({
             tier: tier,
             monthlyCredits: profile.ai_credits || 0,
@@ -68,7 +70,7 @@ const AIPage = () => {
         } else {
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
         }
-        setIsLoadingTier(false)
+        setIsLoadingTier(true)
 
         // Load conversations
         const response = await fetch("/api/ai-conversations", {
@@ -84,7 +86,8 @@ const AIPage = () => {
         }
       } catch (error) {
         console.error("[v0] Error in checkAccessAndLoadConversations:", error)
-        setIsLoadingTier(false)
+        setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
+        setIsLoadingTier(true)
       }
     }
 
@@ -250,7 +253,7 @@ const AIPage = () => {
     }
   }, [showRightSidebar])
 
-  if (isLoadingTier) {
+  if (isLoadingTier === null || profileData.tier === null) {
     return (
       <div className="p-4 md:p-8 flex items-center justify-center">
         <p>{t("loading")}</p>
@@ -258,9 +261,8 @@ const AIPage = () => {
     )
   }
 
-  console.log("[v0] profileData:", profileData)
-  console.log("[v0] canAccessAI result:", canAccessAI(profileData.tier as any, profileData.purchasedCredits))
-  console.log("[v0] purchasedCredits:", profileData.purchasedCredits)
+  console.log("[v0] [FINAL] profileData:", profileData)
+  console.log("[v0] [FINAL] canAccessAI result:", canAccessAI(profileData.tier as any, profileData.purchasedCredits))
 
   const hasAccess = canAccessAI(profileData.tier as any, profileData.purchasedCredits)
   const monthlyCredits = profileData.monthlyCredits
