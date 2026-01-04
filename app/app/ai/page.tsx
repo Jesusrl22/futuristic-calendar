@@ -41,20 +41,41 @@ const AIPage = () => {
   const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
   useEffect(() => {
-    const loadConversationsFromSupabase = async () => {
+    const checkAccessAndLoadConversations = async () => {
       try {
-        const response = await fetch("/api/ai-conversations")
+        // Get user and token from supabase auth
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session?.user) {
+          setCheckingAccess(false)
+          return
+        }
+
+        const response = await fetch("/api/ai-conversations", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        })
+
         if (response.ok) {
           const data = await response.json()
-          setConversations(data)
-          console.log("[v0] Loaded conversations from API:", data.length)
+          // Handle both array and object response formats
+          const convs = Array.isArray(data) ? data : data.conversations || []
+          setConversations(convs)
+          console.log("[v0] Loaded conversations:", convs.length)
+        } else {
+          console.error("[v0] Failed to load conversations:", response.statusText)
         }
       } catch (error) {
-        console.error("[v0] Error loading conversations from API:", error)
+        console.error("[v0] Error in checkAccessAndLoadConversations:", error)
+      } finally {
+        setCheckingAccess(false)
       }
     }
 
-    loadConversationsFromSupabase()
+    checkAccessAndLoadConversations()
   }, [])
 
   const saveConversation = async (conversationId: string, newMessages: any[]) => {
