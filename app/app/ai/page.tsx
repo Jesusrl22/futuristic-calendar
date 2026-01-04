@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Zap, Plus, Trash2, Menu, X } from "@/components/icons"
 import { UpgradeModal } from "@/components/upgrade-modal"
-import { canAccessAI } from "@/lib/subscription"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createBrowserClient } from "@supabase/ssr"
 
@@ -261,26 +260,24 @@ const AIPage = () => {
     )
   }
 
-  console.log("[v0] [FINAL] profileData:", profileData)
-  console.log("[v0] [FINAL] canAccessAI result:", canAccessAI(profileData.tier as any, profileData.purchasedCredits))
+  const hasAccessToAI = profileData.tier === "pro" || profileData.tier === "premium" || profileData.purchasedCredits > 0
 
-  const hasAccess = canAccessAI(profileData.tier as any, profileData.purchasedCredits)
-  const monthlyCredits = profileData.monthlyCredits
-  const purchasedCredits = profileData.purchasedCredits
+  console.log("[v0] Tier:", profileData.tier, "Purchased:", profileData.purchasedCredits, "Has Access:", hasAccessToAI)
 
-  if (!hasAccess) {
+  if (!hasAccessToAI) {
     return (
       <div className="p-4 md:p-8">
         <UpgradeModal
           feature={t("ai_assistant")}
-          requiredPlan={purchasedCredits > 0 ? "free" : "premium"}
-          customMessage={purchasedCredits > 0 ? t("buy_more_credits_ai") : undefined}
+          requiredPlan={profileData.purchasedCredits > 0 ? "free" : "premium"}
+          customMessage={profileData.purchasedCredits > 0 ? t("buy_more_credits_ai") : undefined}
         />
       </div>
     )
   }
 
-  const totalCredits = monthlyCredits + purchasedCredits
+  const monthlyCredits = profileData.monthlyCredits
+  const purchasedCredits = profileData.purchasedCredits
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-background">
@@ -392,7 +389,7 @@ const AIPage = () => {
               )}
 
               <p className="text-xs text-muted-foreground text-center">
-                {t("total_available")}: {totalCredits} {t("credits")}
+                {t("total_available")}: {monthlyCredits + purchasedCredits} {t("credits")}
               </p>
             </div>
           </div>
