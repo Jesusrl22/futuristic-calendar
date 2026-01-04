@@ -248,9 +248,21 @@ const AIPage = () => {
     }
   }, [showRightSidebar])
 
-  const hasAccessToAI = (profileData.tier && profileData.tier !== "free") || profileData.purchasedCredits > 0
+  const hasAccessToAI =
+    (profileData.tier && profileData.tier !== "free") ||
+    profileData.monthlyCredits > 0 ||
+    profileData.purchasedCredits > 0
 
-  console.log("[v0] Final check - Tier:", profileData.tier, "Has Access:", hasAccessToAI)
+  console.log(
+    "[v0] Final check - Tier:",
+    profileData.tier,
+    "Monthly Credits:",
+    profileData.monthlyCredits,
+    "Purchased Credits:",
+    profileData.purchasedCredits,
+    "Has Access:",
+    hasAccessToAI,
+  )
 
   if (!hasAccessToAI) {
     return (
