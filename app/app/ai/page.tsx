@@ -257,13 +257,18 @@ const AIPage = () => {
     )
   }
 
-  if (!canAccessAI(subscriptionTier as any, purchasedCredits)) {
+  const normalizedTier = subscriptionTier?.toLowerCase() || "free"
+  const hasAccess = canAccessAI(normalizedTier as any, purchasedCredits)
+
+  console.log("[v0] Tier check - normalized:", normalizedTier, "has access:", hasAccess, "purchased:", purchasedCredits)
+
+  if (!hasAccess) {
     return (
       <div className="p-4 md:p-8">
         <UpgradeModal
           feature={t("ai_assistant")}
-          requiredPlan="premium"
-          customMessage={t("ai_assistant_upgrade_message")}
+          requiredPlan={purchasedCredits > 0 ? "free" : "premium"}
+          customMessage={purchasedCredits > 0 ? t("buy_more_credits_ai") : t("ai_assistant_upgrade_message")}
         />
       </div>
     )
