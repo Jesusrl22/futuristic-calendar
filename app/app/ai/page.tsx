@@ -32,6 +32,7 @@ const AIPage = () => {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
   const [isLoadingTier, setIsLoadingTier] = useState(false)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [profileData, setProfileData] = useState({
@@ -44,14 +45,15 @@ const AIPage = () => {
 
   useEffect(() => {
     const checkAccessAndLoadConversations = async () => {
+      setIsLoadingProfile(true)
       try {
-        // Get user and token from supabase auth
         const {
           data: { session },
         } = await supabase.auth.getSession()
 
         if (!session?.user) {
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
+          setIsLoadingProfile(false)
           return
         }
 
@@ -68,7 +70,6 @@ const AIPage = () => {
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
         }
 
-        // Load conversations
         const response = await fetch("/api/ai-conversations", {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -83,6 +84,8 @@ const AIPage = () => {
       } catch (error) {
         console.error("[v0] Error loading profile:", error)
         setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
+      } finally {
+        setIsLoadingProfile(false)
       }
     }
 
@@ -253,16 +256,17 @@ const AIPage = () => {
     profileData.monthlyCredits > 0 ||
     profileData.purchasedCredits > 0
 
-  console.log(
-    "[v0] Final check - Tier:",
-    profileData.tier,
-    "Monthly Credits:",
-    profileData.monthlyCredits,
-    "Purchased Credits:",
-    profileData.purchasedCredits,
-    "Has Access:",
-    hasAccessToAI,
-  )
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex gap-2">
+          <div className="w-3 h-3 bg-primary rounded-full animate-bounce" />
+          <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-100" />
+          <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-200" />
+        </div>
+      </div>
+    )
+  }
 
   if (!hasAccessToAI) {
     return (
