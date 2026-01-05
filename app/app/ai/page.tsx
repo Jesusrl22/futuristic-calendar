@@ -36,7 +36,7 @@ const AIPage = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [profileData, setProfileData] = useState({
-    tier: null as string | null,
+    tier: "free" as string, // Change from null to "free"
     monthlyCredits: 0,
     purchasedCredits: 0,
   })
@@ -252,7 +252,7 @@ const AIPage = () => {
   }, [showRightSidebar])
 
   const hasAccessToAI =
-    (profileData.tier && profileData.tier !== "free") ||
+    profileData.tier !== "free" || // Simplify access check - if tier is not "free", has access
     profileData.monthlyCredits > 0 ||
     profileData.purchasedCredits > 0
 
