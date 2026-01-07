@@ -73,7 +73,6 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     { icon: Timer, label: t("pomodoro"), href: "/app/pomodoro" },
     { icon: BarChart3, label: t("stats"), href: "/app/stats" },
     { icon: Bot, label: t("ai"), href: "/app/ai" },
-    { icon: Bot, label: t("study_ai") || "Study AI", href: "/app/ai-study" }, // Added Study AI menu item after the main AI item
     { icon: Users, label: t("teams"), href: "/app/teams" },
     { icon: Trophy, label: t("achievements"), href: "/app/achievements" },
     { icon: CreditCard, label: t("subscription"), href: "/app/subscription" },
