@@ -151,56 +151,84 @@ const AIStudyPage = () => {
     }
   }
 
+  const processPDFFile = async (file: File) => {
+    try {
+      const reader = new FileReader()
+
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target?.result as ArrayBuffer
+        const uint8Array = new Uint8Array(arrayBuffer)
+
+        // For production, you'd use pdf-parse or pdfjs-dist
+        const pdfText = extractTextFromPDF(uint8Array)
+
+        if (!pdfText.trim()) {
+          setError("Could not extract text from PDF. Please try another file.")
+          return
+        }
+
+        const userMessage = { role: "user", content: `📄 Analyzing: ${file.name}` }
+        setMessages((prev) => [...prev, userMessage])
+        setLoading(true)
+
+        try {
+          const response = await fetch("/api/study/process-pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              pdfText,
+              fileName: file.name,
+            }),
+          })
+
+          const data = await response.json()
+
+          if (!response.ok) {
+            throw new Error(data.message || "Failed to process PDF")
+          }
+
+          const assistantMessage = {
+            role: "assistant",
+            content: data.analysis || "PDF processed successfully. How can I help you study?",
+          }
+          setMessages((prev) => [...prev, assistantMessage])
+        } catch (error) {
+          console.error("[v0] Error processing PDF:", error)
+          setError(error instanceof Error ? error.message : "Error processing PDF")
+          setMessages((prev) => prev.slice(0, -1))
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      reader.readAsArrayBuffer(file)
+    } catch (error) {
+      console.error("[v0] Error reading file:", error)
+      setError("Error reading file")
+    }
+  }
+
+  const extractTextFromPDF = (uint8Array: Uint8Array): string => {
+    const text = new TextDecoder().decode(uint8Array)
+    const lines = text.split(/[\r\n]+/)
+    const filtered = lines.filter((line) => line.trim().length > 0).slice(0, 100)
+    return filtered.join("\n")
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
     if (file.type !== "application/pdf") {
-      setError("Please upload a PDF file")
+      setError(t("please_upload_pdf") || "Please upload a PDF file")
       return
     }
 
     setError("")
-    setLoading(true)
+    await processPDFFile(file)
 
-    try {
-      // For now, send a message to analyze the PDF
-      const fileName = file.name
-      const prompt = `I've uploaded a PDF file: "${fileName}". Can you help me understand its content? (Note: Full PDF processing will be available soon)`
-
-      setInput("")
-      const userMessage = { role: "user", content: `📄 Analyzing PDF: ${fileName}` }
-      setMessages((prev) => [...prev, userMessage])
-
-      const response = await fetch("/api/ai-chat-study", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: prompt,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to process PDF")
-      }
-
-      const assistantMessage = {
-        role: "assistant",
-        content: data.response || data.message,
-      }
-      setMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
-      console.error("[v0] Error processing PDF:", error)
-      setError(error instanceof Error ? error.message : "Error processing PDF")
-    } finally {
-      setLoading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
