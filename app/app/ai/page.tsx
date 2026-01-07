@@ -9,23 +9,29 @@ import { Send, Zap, Plus, Trash2, Menu, X, Upload } from "@/components/icons"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createBrowserClient } from "@supabase/ssr"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "react-toastify"
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || "",
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
 )
 
+interface Message {
+  role: string
+  content: string
+}
+
 interface Conversation {
   id: string
   title: string
   created_at: string
   updated_at: string
-  messages: { role: string; content: string }[]
+  messages: Message[]
 }
 
 const AIPage = () => {
   const { t } = useTranslation()
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -40,6 +46,7 @@ const AIPage = () => {
   const [saveType, setSaveType] = useState<"calendar" | "task" | null>(null)
   const [saveTitle, setSaveTitle] = useState("")
   const [saveDescription, setSaveDescription] = useState("")
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
 
   const [profileData, setProfileData] = useState({
     tier: "free" as string,
@@ -102,7 +109,7 @@ const AIPage = () => {
     }
   }
 
-  const saveConversation = async (conversationId: string, messages: any[]) => {
+  const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
       const session = await fetch("/api/auth/check-session")
       const sessionData = await session.json()
@@ -170,107 +177,103 @@ const AIPage = () => {
 
   const getAiSystemPrompt = () => {
     const prompts = {
-      chat: "You are a helpful AI assistant. Provide clear, concise answers.",
+      chat: t("chat_system_prompt") || "You are a helpful AI assistant. Provide clear, concise answers.",
       study:
+        t("study_system_prompt") ||
         "You are an expert study guide and tutor. Help users learn effectively with explanations, summaries, and practice questions. Create study plans, explain complex concepts, and generate learning materials.",
       analyze:
+        t("analyze_system_prompt") ||
         "You are a document analysis expert. Analyze documents thoroughly and provide summaries, key points, and insights. Help extract information and create visual representations.",
     }
     return prompts[aiMode]
   }
 
-  const handleSend = async (messageToSend?: string) => {
-    const textToSend = messageToSend || input
-    if (!textToSend.trim() || loading) return
+  const handleSend = async (promptOverride?: string) => {
+    const messageText = promptOverride || input.trim()
+    if (!messageText && !uploadedFile) return
 
-    const totalCredits = profileData.monthlyCredits + profileData.purchasedCredits
-    if (totalCredits < 2) {
-      alert(`${t("not_enough_credits")}. ${t("need_at_least_two_credits")}`)
-      return
-    }
-
-    let conversationId = currentConversationId
-    let currentConversations = conversations
-
-    if (!conversationId) {
-      const newConversation: Conversation = {
-        id: Date.now().toString(),
-        title: textToSend.substring(0, 50) + "...",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        messages: [],
-      }
-      currentConversations = [newConversation, ...conversations]
-      setConversations(currentConversations)
-      conversationId = newConversation.id
-      setCurrentConversationId(conversationId)
-    }
-
-    const userMessage = { role: "user", content: textToSend }
-    const newMessages = [...messages, userMessage]
-    setMessages(newMessages)
-    setInput("")
     setLoading(true)
+    setInput("")
 
-    await saveConversation(conversationId, newMessages)
+    const newMessage: Message = { role: "user", content: messageText }
+    if (uploadedFile) {
+      newMessage.content = `📎 ${uploadedFile.name}\n${messageText}`
+    }
+
+    const updatedMessages = [...messages, newMessage]
+    setMessages(updatedMessages)
+    setUploadedFile(null)
 
     try {
-      const systemPrompt = getAiSystemPrompt()
-      const response = await fetch("/api/ai-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `${systemPrompt}\n\nUser: ${textToSend}`,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        throw new Error(data.error)
+      const formData = new FormData()
+      formData.append("message", messageText)
+      if (uploadedFile) {
+        formData.append("file", uploadedFile)
       }
 
-      const updatedMessages = [...newMessages, { role: "assistant", content: data.response }]
-      setMessages(updatedMessages)
-      await saveConversation(conversationId, updatedMessages)
+      let systemMessage = ""
+      if (aiMode === "study") {
+        systemMessage =
+          "You are an expert tutor. Help the student learn effectively by explaining concepts clearly, providing study tips, and creating practice questions when asked."
+      } else if (aiMode === "analyze") {
+        systemMessage =
+          "You are an expert document analyzer. Analyze documents thoroughly and provide clear summaries, key points, and insights. Be thorough but concise."
+      } else {
+        systemMessage = "You are a helpful AI assistant. Provide clear, accurate, and helpful responses."
+      }
+
+      const response = await fetch("/api/ai-chat-with-file", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        if (response.status === 402) {
+          showUpgradeModal()
+        } else {
+          toast.error(error.error || t("error_sending") || "Error sending message")
+        }
+        setMessages(updatedMessages.slice(0, -1))
+        setLoading(false)
+        return
+      }
+
+      const data = await response.json()
+      const assistantMessage: Message = { role: "assistant", content: data.response }
+      const finalMessages = [...updatedMessages, assistantMessage]
+      setMessages(finalMessages)
+
+      await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
 
       setProfileData((prev) => ({
         ...prev,
-        monthlyCredits: data.remainingMonthlyCredits,
-        purchasedCredits: data.remainingPurchasedCredits,
+        monthlyCredits: data.creditsRemaining?.split("/")[0] || prev.monthlyCredits,
       }))
     } catch (error) {
-      setMessages((prev) => [...prev, { role: "assistant", content: t("error_encountered") }])
+      console.error("[v0] Error:", error)
+      toast.error(t("error_sending") || "Failed to send message")
+      setMessages(updatedMessages.slice(0, -1))
     } finally {
       setLoading(false)
     }
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
     if (!file) return
 
+    const fileSize = file.size / 1024 / 1024 // MB
+    if (fileSize > 20) {
+      toast.error(t("file_too_large") || "File too large (max 20MB)")
+      return
+    }
+
     setLoading(true)
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-
-      const response = await fetch("/api/study/process-document", {
-        method: "POST",
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (data.analysis) {
-        const analysisMessage = `Document Analysis of "${file.name}":\n\n${data.analysis}`
-        handleSend(analysisMessage)
-      }
-    } catch (error) {
-      alert("Error processing document. Please try again.")
-    } finally {
-      setLoading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
+    setUploadedFile(file)
+    // Reset input to allow re-uploading same file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
     }
   }
 
@@ -345,6 +348,10 @@ const AIPage = () => {
     } catch (error) {
       alert("Error saving to calendar")
     }
+  }
+
+  const showUpgradeModal = () => {
+    alert("Upgrade your plan to send files!")
   }
 
   const hasAccessToAI =
@@ -450,15 +457,15 @@ const AIPage = () => {
         <Tabs value={aiMode} onValueChange={(v) => setAiMode(v as "chat" | "study" | "analyze")} className="mb-4">
           <TabsList className="grid w-full grid-cols-3 bg-secondary/30">
             <TabsTrigger value="chat" className="text-xs md:text-sm">
-              <span className="hidden sm:inline">Chat</span>
+              <span className="hidden sm:inline">{t("chat_mode") || "Chat"}</span>
               <span className="sm:hidden">💬</span>
             </TabsTrigger>
             <TabsTrigger value="study" className="text-xs md:text-sm">
-              <span className="hidden sm:inline">Study</span>
+              <span className="hidden sm:inline">{t("study_mode") || "Study"}</span>
               <span className="sm:hidden">📚</span>
             </TabsTrigger>
             <TabsTrigger value="analyze" className="text-xs md:text-sm">
-              <span className="hidden sm:inline">Analyze</span>
+              <span className="hidden sm:inline">{t("analyze_mode") || "Analyze"}</span>
               <span className="sm:hidden">📄</span>
             </TabsTrigger>
           </TabsList>
@@ -475,9 +482,9 @@ const AIPage = () => {
               </div>
               <h2 className="text-2xl md:text-5xl font-bold">{t("welcome_message")}</h2>
               <p className="text-sm md:text-base text-muted-foreground">
-                {aiMode === "chat" && "Ask me anything"}
-                {aiMode === "study" && "Create study plans and learn effectively"}
-                {aiMode === "analyze" && "Upload and analyze documents"}
+                {(aiMode === "chat" && t("chat_description")) || "Ask me anything"}
+                {(aiMode === "study" && t("study_description")) || "Create study plans and learn effectively"}
+                {(aiMode === "analyze" && t("analyze_description")) || "Upload and analyze documents"}
               </p>
             </div>
 
@@ -495,21 +502,39 @@ const AIPage = () => {
                 />
                 <Button
                   onClick={() => handleSend()}
-                  disabled={loading || !input.trim()}
+                  disabled={loading || (!input.trim() && !uploadedFile)}
                   className="neon-glow-hover shrink-0"
                 >
                   <Send className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
                 {aiMode === "analyze" && (
                   <>
-                    <Button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={loading}
-                      variant="outline"
-                      className="shrink-0"
-                    >
-                      <Upload className="w-3 h-3 md:w-4 md:h-4" />
-                    </Button>
+                    <div className="space-y-2">
+                      <div className="flex gap-1 md:gap-2">
+                        <Input
+                          placeholder={t("upload_message_placeholder") || "Ask something about the file..."}
+                          className="bg-secondary/50 text-xs md:text-sm flex-1"
+                          disabled={loading || !uploadedFile}
+                        />
+                        <Button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={loading}
+                          variant="outline"
+                          className="shrink-0"
+                          title={t("upload_file") || "Upload file"}
+                        >
+                          <Upload className="w-3 h-3 md:w-4 md:h-4" />
+                        </Button>
+                      </div>
+                      {uploadedFile && (
+                        <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
+                          <span>📎 {uploadedFile.name}</span>
+                          <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
+                            ✕
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -608,21 +633,39 @@ const AIPage = () => {
               />
               <Button
                 onClick={() => handleSend()}
-                disabled={loading || !input.trim()}
+                disabled={loading || (!input.trim() && !uploadedFile)}
                 className="neon-glow-hover shrink-0"
               >
                 <Send className="w-3 h-3 md:w-4 md:h-4" />
               </Button>
               {aiMode === "analyze" && (
                 <>
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                    variant="outline"
-                    className="shrink-0"
-                  >
-                    <Upload className="w-3 h-3 md:w-4 md:h-4" />
-                  </Button>
+                  <div className="space-y-2">
+                    <div className="flex gap-1 md:gap-2">
+                      <Input
+                        placeholder={t("upload_message_placeholder") || "Ask something about the file..."}
+                        className="bg-secondary/50 text-xs md:text-sm flex-1"
+                        disabled={loading || !uploadedFile}
+                      />
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={loading}
+                        variant="outline"
+                        className="shrink-0"
+                        title={t("upload_file") || "Upload file"}
+                      >
+                        <Upload className="w-3 h-3 md:w-4 md:h-4" />
+                      </Button>
+                    </div>
+                    {uploadedFile && (
+                      <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
+                        <span>📎 {uploadedFile.name}</span>
+                        <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -681,14 +724,16 @@ const AIPage = () => {
       {showSaveDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="glass-card max-w-md w-full space-y-4 p-6">
-            <h3 className="text-lg font-bold">Save to {saveType === "task" ? "Task" : "Calendar"}</h3>
+            <h3 className="text-lg font-bold">
+              {t("save_to") || "Save to"} {saveType === "task" ? t("task") || "Task" : t("calendar") || "Calendar"}
+            </h3>
 
             <div>
-              <label className="text-sm font-medium">Title</label>
+              <label className="text-sm font-medium">{t("title") || "Title"}</label>
               <Input
                 value={saveTitle}
                 onChange={(e) => setSaveTitle(e.target.value)}
-                placeholder="Enter title"
+                placeholder={t("enter_title") || "Enter title"}
                 className="bg-secondary/50 mt-1"
               />
             </div>
@@ -701,7 +746,7 @@ const AIPage = () => {
                 }}
                 className="flex-1"
               >
-                Save
+                {t("save") || "Save"}
               </Button>
               <Button
                 onClick={() => {
@@ -713,7 +758,7 @@ const AIPage = () => {
                 variant="outline"
                 className="flex-1"
               >
-                Cancel
+                {t("cancel") || "Cancel"}
               </Button>
             </div>
           </Card>
