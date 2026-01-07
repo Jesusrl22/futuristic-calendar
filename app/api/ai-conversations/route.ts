@@ -28,10 +28,10 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ conversations })
+    return NextResponse.json(conversations || [])
   } catch (error) {
     console.error("[AI Conversations] Error fetching conversations:", error)
-    return NextResponse.json({ error: "Failed to fetch conversations" }, { status: 500 })
+    return NextResponse.json([], { status: 500 })
   }
 }
 
@@ -64,20 +64,24 @@ export async function POST(req: NextRequest) {
       .from("ai_conversations")
       .upsert(
         {
-          id,
+          id: String(id), // Ensure ID is string
           user_id: user.id,
           title: title || "New Conversation",
           messages: messages || [],
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "id" },
+        { onConflict: "id,user_id" }, // Check both columns to avoid conflicts
       )
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error("[AI Conversations] Upsert error:", error)
+      throw error
+    }
 
-    return NextResponse.json({ conversation })
+    console.log("[AI Conversations] Saved conversation:", conversation?.id)
+    return NextResponse.json(conversation)
   } catch (error) {
     console.error("[AI Conversations] Error saving conversation:", error)
     return NextResponse.json({ error: "Failed to save conversation" }, { status: 500 })

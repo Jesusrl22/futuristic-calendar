@@ -79,6 +79,7 @@ const AIPage = () => {
         if (convResponse.ok) {
           const convData = await convResponse.json()
           const convs = Array.isArray(convData) ? convData : convData.conversations || []
+          console.log("[v0] Loaded conversations:", convs.length)
           setConversations(convs)
         }
       }
@@ -111,17 +112,25 @@ const AIPage = () => {
           data: { session },
         } = await supabase.auth.getSession()
 
+        if (!session?.access_token) {
+          console.error("[v0] No session token available")
+          return
+        }
+
         const response = await fetch("/api/ai-conversations", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token || ""}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(conversationToSave),
         })
 
         if (!response.ok) {
-          console.error("[v0] Error saving conversation:", response.statusText)
+          const errorData = await response.json()
+          console.error("[v0] Error saving conversation:", errorData)
+        } else {
+          console.log("[v0] Conversation saved successfully:", conversationId)
         }
       } catch (error) {
         console.error("[v0] Error saving conversation to API:", error)
