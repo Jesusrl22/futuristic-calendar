@@ -49,8 +49,16 @@ const AIPage = () => {
 
   const SUGGESTED_PROMPTS = {
     chat: [t("study_tips") || "Ask me anything", t("productivity_tips") || "Get productivity advice"],
-    study: ["Create a study plan", "Explain this concept", "Generate practice questions"],
-    analyze: ["Summarize this document", "Extract key points", "Create a visual diagram"],
+    study: [
+      t("study_create_plan") || "Create a study plan",
+      t("study_explain_concept") || "Explain this concept",
+      t("study_practice_questions") || "Generate practice questions",
+    ],
+    analyze: [
+      t("analyze_summarize") || "Summarize this document",
+      t("analyze_key_points") || "Extract key points",
+      t("analyze_diagram") || "Create a visual diagram",
+    ],
   }
 
   const checkAccessAndLoadConversations = async () => {
