@@ -90,51 +90,39 @@ const AIPage = () => {
     }
   }
 
-  const saveConversation = async (conversationId: string, newMessages: any[]) => {
-    const updated = conversations.map((c) => {
-      if (c.id === conversationId) {
-        return {
-          ...c,
-          messages: newMessages,
-          title: newMessages.length > 0 ? newMessages[0].content.substring(0, 50) + "..." : t("new_conversation"),
-          updated_at: new Date().toISOString(),
-        }
+  const saveConversation = async (conversationId: string, messages: any[]) => {
+    try {
+      console.log("[v0] Saving conversation:", conversationId, "Messages:", messages.length)
+
+      const session = await fetch("/api/auth/check-session")
+      const sessionData = await session.json()
+
+      if (!sessionData.token) {
+        console.log("[v0] No session token found")
+        return
       }
-      return c
-    })
 
-    setConversations(updated)
+      const response = await fetch("/api/ai-conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionData.token}`,
+        },
+        body: JSON.stringify({
+          id: conversationId,
+          title: messages[0]?.content?.substring(0, 50) || "New Conversation",
+          messages: messages,
+        }),
+      })
 
-    const conversationToSave = updated.find((c) => c.id === conversationId)
-    if (conversationToSave) {
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+      const result = await response.json()
+      console.log("[v0] Save response:", result)
 
-        if (!session?.access_token) {
-          console.error("[v0] No session token available")
-          return
-        }
-
-        const response = await fetch("/api/ai-conversations", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(conversationToSave),
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          console.error("[v0] Error saving conversation:", errorData)
-        } else {
-          console.log("[v0] Conversation saved successfully:", conversationId)
-        }
-      } catch (error) {
-        console.error("[v0] Error saving conversation to API:", error)
+      if (!response.ok) {
+        console.log("[v0] Save failed:", result.error)
       }
+    } catch (error) {
+      console.log("[v0] Error saving conversation:", error)
     }
   }
 
