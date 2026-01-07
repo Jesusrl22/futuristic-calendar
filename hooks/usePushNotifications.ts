@@ -51,13 +51,16 @@ export function usePushNotifications() {
 
     setIsLoading(true)
     try {
+      console.log("[v0] Starting push notification setup...")
+
       // Request permission
       const permission = await requestNotificationPermission()
+      console.log("[v0] Notification permission:", permission)
 
       if (permission !== "granted") {
         toast({
           title: "Error",
-          description: "You denied notification permissions",
+          description: "You denied notification permissions. Please enable notifications in your browser settings.",
           variant: "destructive",
         })
         setIsLoading(false)
@@ -66,10 +69,20 @@ export function usePushNotifications() {
 
       // Register service worker
       const registration = await registerServiceWorker()
+      console.log("[v0] Service Worker registration:", registration)
+
       if (!registration) throw new Error("Service Worker registration failed")
 
       // Subscribe to push notifications
-      const subscription = await subscribeToPushNotifications(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
+      const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      console.log("[v0] VAPID Public Key configured:", !!publicKey)
+
+      if (!publicKey) {
+        throw new Error("VAPID public key is not configured")
+      }
+
+      const subscription = await subscribeToPushNotifications(publicKey)
+      console.log("[v0] Push subscription created:", !!subscription)
 
       if (!subscription) throw new Error("Failed to create subscription")
 
@@ -80,7 +93,12 @@ export function usePushNotifications() {
         body: JSON.stringify(subscription),
       })
 
-      if (!response.ok) throw new Error("Failed to save subscription")
+      console.log("[v0] Server response:", response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to save subscription")
+      }
 
       setIsSubscribed(true)
       toast({
@@ -91,7 +109,8 @@ export function usePushNotifications() {
       console.error("[v0] Enable notifications error:", error)
       toast({
         title: "Error",
-        description: "Failed to enable notifications",
+        description:
+          error instanceof Error ? error.message : "Failed to enable notifications. Check console for details.",
         variant: "destructive",
       })
     } finally {
