@@ -1,8 +1,10 @@
 "use client"
 import { useState, useRef, useEffect } from "react"
+import type React from "react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Plus, Trash2, Menu, X } from "@/components/icons"
+import { Send, Plus, Trash2, Menu, X, Upload } from "@/components/icons"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createBrowserClient } from "@supabase/ssr"
 
@@ -27,7 +29,9 @@ const AIStudyPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
+  const [error, setError] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const SUGGESTED_PROMPTS = [
     t("explain_concept") || "Explain this concept",
@@ -58,7 +62,7 @@ const AIStudyPage = () => {
           setConversations(convs)
         }
       } catch (error) {
-        console.error("Error loading conversations:", error)
+        console.error("[v0] Error loading conversations:", error)
       }
     }
 
@@ -72,9 +76,10 @@ const AIStudyPage = () => {
   const handleSendMessage = async () => {
     if (!input.trim()) return
 
+    setError("")
     const userMessage = { role: "user", content: input }
     setMessages((prev) => [...prev, userMessage])
-    const inputText = input // Save input before clearing
+    const inputText = input
     setInput("")
     setLoading(true)
 
@@ -92,42 +97,42 @@ const AIStudyPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: inputText, // Use saved input text
+          message: inputText,
         }),
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        const assistantMessage = { role: "assistant", content: data.response || data.message }
-        setMessages((prev) => [...prev, assistantMessage])
+      const data = await response.json()
 
-        if (!conversations.find((c) => c.id === conversationId)) {
-          const newConversation: Conversation = {
-            id: conversationId,
-            title: inputText.substring(0, 50), // Use saved input text
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            messages: [userMessage, assistantMessage],
-          }
-          setConversations((prev) => [newConversation, ...prev])
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to generate response")
+      }
+
+      const assistantMessage = {
+        role: "assistant",
+        content: data.response || data.message || "Unable to generate response",
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+
+      if (!conversations.find((c) => c.id === conversationId)) {
+        const newConversation: Conversation = {
+          id: conversationId,
+          title: inputText.substring(0, 50),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          messages: [userMessage, assistantMessage],
         }
-      } else {
-        const errorData = await response.json()
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: errorData.message || t("error_sending_message") || "Error sending message",
-          },
-        ])
+        setConversations((prev) => [newConversation, ...prev])
       }
     } catch (error) {
       console.error("[v0] Error sending message:", error)
+      const errorMessage =
+        error instanceof Error ? error.message : t("error_sending_message") || "Error sending message"
+      setError(errorMessage)
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: t("error_sending_message") || "Error sending message",
+          content: errorMessage,
         },
       ])
     } finally {
@@ -135,10 +140,64 @@ const AIStudyPage = () => {
     }
   }
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.type !== "application/pdf") {
+      setError("Please upload a PDF file")
+      return
+    }
+
+    setError("")
+    setLoading(true)
+
+    try {
+      // For now, send a message to analyze the PDF
+      const fileName = file.name
+      const prompt = `I've uploaded a PDF file: "${fileName}". Can you help me understand its content? (Note: Full PDF processing will be available soon)`
+
+      setInput("")
+      const userMessage = { role: "user", content: `📄 Analyzing PDF: ${fileName}` }
+      setMessages((prev) => [...prev, userMessage])
+
+      const response = await fetch("/api/ai-chat-study", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: prompt,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to process PDF")
+      }
+
+      const assistantMessage = {
+        role: "assistant",
+        content: data.response || data.message,
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("[v0] Error processing PDF:", error)
+      setError(error instanceof Error ? error.message : "Error processing PDF")
+    } finally {
+      setLoading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
+
   const handleNewConversation = () => {
     setMessages([])
     setCurrentConversationId(null)
     setInput("")
+    setError("")
   }
 
   const handleDeleteConversation = async (id: string) => {
@@ -151,6 +210,7 @@ const AIStudyPage = () => {
   const loadConversation = (conversation: Conversation) => {
     setMessages(conversation.messages)
     setCurrentConversationId(conversation.id)
+    setError("")
   }
 
   return (
@@ -262,21 +322,39 @@ const AIStudyPage = () => {
           </div>
         )}
 
+        {/* Error Message */}
+        {error && (
+          <div className="mx-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Input Area */}
         <div className="border-t border-border/50 p-4 space-y-2">
           <div className="flex gap-2">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyPress={(e) => e.key === "Enter" && !loading && handleSendMessage()}
               placeholder={t("ask_something") || "Ask something..."}
               disabled={loading}
               className="flex-1 bg-background/50"
             />
+            <Button onClick={() => fileInputRef.current?.click()} disabled={loading} size="icon" variant="outline">
+              <Upload className="w-4 h-4" />
+            </Button>
             <Button onClick={handleSendMessage} disabled={loading} size="icon">
               <Send className="w-4 h-4" />
             </Button>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={loading}
+          />
           <p className="text-xs text-muted-foreground text-center">
             {t("free_study_ai_note") || "This is a free study assistant. For advanced features, upgrade your plan."}
           </p>
