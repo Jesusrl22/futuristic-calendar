@@ -52,21 +52,38 @@ const AIPage = () => {
         } = await supabase.auth.getSession()
 
         if (!session?.user) {
+          console.log("[v0] No session found")
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
           setIsLoadingProfile(false)
           return
         }
 
         const profileResponse = await fetch("/api/user/profile")
+        console.log("[v0] Profile response status:", profileResponse.status)
+
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
+          console.log("[v0] Full profile data:", profile)
+          console.log("[v0] subscription_tier:", profile.subscription_tier)
+          console.log("[v0] ai_credits:", profile.ai_credits)
+          console.log("[v0] ai_credits_purchased:", profile.ai_credits_purchased)
+
           const tier = (profile.subscription_tier || "free").toLowerCase()
+          console.log("[v0] Processed tier:", tier)
+
           setProfileData({
             tier: tier || "free",
             monthlyCredits: profile.ai_credits || 0,
             purchasedCredits: profile.ai_credits_purchased || 0,
           })
+
+          console.log("[v0] Updated profileData with:", {
+            tier: tier || "free",
+            monthlyCredits: profile.ai_credits || 0,
+            purchasedCredits: profile.ai_credits_purchased || 0,
+          })
         } else {
+          console.log("[v0] Profile response not OK")
           setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
         }
 
@@ -255,6 +272,14 @@ const AIPage = () => {
     profileData.tier !== "free" || // Simplify access check - if tier is not "free", has access
     profileData.monthlyCredits > 0 ||
     profileData.purchasedCredits > 0
+
+  console.log("[v0] Final access check:", {
+    tier: profileData.tier,
+    monthlyCredits: profileData.monthlyCredits,
+    purchasedCredits: profileData.purchasedCredits,
+    hasAccessToAI,
+    tierNotFree: profileData.tier !== "free",
+  })
 
   if (isLoadingProfile) {
     return (
