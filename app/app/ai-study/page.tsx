@@ -151,63 +151,6 @@ const AIStudyPage = () => {
     }
   }
 
-  const processPDFFile = async (file: File) => {
-    try {
-      const reader = new FileReader()
-
-      reader.onload = async (e) => {
-        const arrayBuffer = e.target?.result as ArrayBuffer
-        const uint8Array = new Uint8Array(arrayBuffer)
-
-        // For production, you'd use pdf-parse or pdfjs-dist
-        const pdfText = extractTextFromPDF(uint8Array)
-
-        if (!pdfText.trim()) {
-          setError("Could not extract text from PDF. Please try another file.")
-          return
-        }
-
-        const userMessage = { role: "user", content: `📄 Analyzing: ${file.name}` }
-        setMessages((prev) => [...prev, userMessage])
-        setLoading(true)
-
-        try {
-          const response = await fetch("/api/study/process-pdf", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              pdfText,
-              fileName: file.name,
-            }),
-          })
-
-          const data = await response.json()
-
-          if (!response.ok) {
-            throw new Error(data.message || "Failed to process PDF")
-          }
-
-          const assistantMessage = {
-            role: "assistant",
-            content: data.analysis || "PDF processed successfully. How can I help you study?",
-          }
-          setMessages((prev) => [...prev, assistantMessage])
-        } catch (error) {
-          console.error("[v0] Error processing PDF:", error)
-          setError(error instanceof Error ? error.message : "Error processing PDF")
-          setMessages((prev) => prev.slice(0, -1))
-        } finally {
-          setLoading(false)
-        }
-      }
-
-      reader.readAsArrayBuffer(file)
-    } catch (error) {
-      console.error("[v0] Error reading file:", error)
-      setError("Error reading file")
-    }
-  }
-
   const extractTextFromPDF = (uint8Array: Uint8Array): string => {
     const text = new TextDecoder().decode(uint8Array)
     const lines = text.split(/[\r\n]+/)
@@ -215,17 +158,110 @@ const AIStudyPage = () => {
     return filtered.join("\n")
   }
 
+  const readTextFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const text = e.target?.result as string
+        resolve(text)
+      }
+      reader.onerror = reject
+      reader.readAsText(file)
+    })
+  }
+
+  const readImageFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string
+        // For images, we can use the base64 directly or send a preview
+        // For now, we'll extract metadata from the image
+        resolve(`[Image file: ${file.name}, Size: ${file.size} bytes]`)
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const processDocument = async (file: File, fileContent: string, fileType: "pdf" | "text" | "image") => {
+    const userMessage = { role: "user", content: `📎 Processing: ${file.name}` }
+    setMessages((prev) => [...prev, userMessage])
+    setLoading(true)
+
+    try {
+      const response = await fetch("/api/study/process-document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileContent,
+          fileName: file.name,
+          fileType,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to process document")
+      }
+
+      const assistantMessage = {
+        role: "assistant",
+        content: data.analysis || "Document processed successfully. How can I help you study?",
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+    } catch (error) {
+      console.error("[v0] Error processing document:", error)
+      setError(error instanceof Error ? error.message : "Error processing document")
+      setMessages((prev) => prev.slice(0, -1))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.type !== "application/pdf") {
-      setError(t("please_upload_pdf") || "Please upload a PDF file")
-      return
-    }
-
     setError("")
-    await processPDFFile(file)
+
+    const extension = file.name.split(".").pop()?.toLowerCase()
+
+    if (file.type === "application/pdf" || extension === "pdf") {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target?.result as ArrayBuffer
+        const uint8Array = new Uint8Array(arrayBuffer)
+        const pdfText = extractTextFromPDF(uint8Array)
+
+        if (!pdfText.trim()) {
+          setError("Could not extract text from PDF. Please try another file.")
+          return
+        }
+
+        await processDocument(file, pdfText, "pdf")
+      }
+      reader.readAsArrayBuffer(file)
+    } else if (file.type.startsWith("text/") || extension === "txt" || extension === "doc" || extension === "docx") {
+      try {
+        const textContent = await readTextFile(file)
+        await processDocument(file, textContent, "text")
+      } catch (error) {
+        setError("Error reading text file")
+        console.error("[v0] Error reading text file:", error)
+      }
+    } else if (file.type.startsWith("image/") || ["jpg", "jpeg", "png", "gif"].includes(extension || "")) {
+      try {
+        const imageContent = await readImageFile(file)
+        await processDocument(file, imageContent, "image")
+      } catch (error) {
+        setError("Error reading image file")
+        console.error("[v0] Error reading image file:", error)
+      }
+    } else {
+      setError(t("unsupported_file_type") || "Unsupported file type. Please upload PDF, text, or image files.")
+    }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
@@ -389,7 +425,7 @@ const AIStudyPage = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf"
+            accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif"
             onChange={handleFileChange}
             className="hidden"
             disabled={loading}
