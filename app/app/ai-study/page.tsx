@@ -85,21 +85,19 @@ const AIStudyPage = () => {
         setCurrentConversationId(conversationId)
       }
 
-      const response = await fetch("/api/ai-chat", {
+      const response = await fetch("/api/ai-chat-study", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           message: input,
-          conversationId,
-          isStudyMode: true,
         }),
       })
 
       if (response.ok) {
         const data = await response.json()
-        const assistantMessage = { role: "assistant", content: data.message }
+        const assistantMessage = { role: "assistant", content: data.response || data.message }
         setMessages((prev) => [...prev, assistantMessage])
 
         if (!conversations.find((c) => c.id === conversationId)) {
