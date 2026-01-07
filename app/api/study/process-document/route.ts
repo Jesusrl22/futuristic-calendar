@@ -19,14 +19,14 @@ export async function POST(req: NextRequest) {
 
     const groq = new Groq({ apiKey })
 
-    console.log("[v0] Processing document:", fileName, "Type:", fileType)
+    console.log("[v0] Processing document:", fileName, "Type:", fileType, "Content length:", fileContent.length)
 
     let systemPrompt =
       "You are an expert study assistant. Analyze the provided document and create a comprehensive study guide."
 
     if (fileType === "image") {
       systemPrompt +=
-        " This appears to be an image (possibly a photo of notes or a whiteboard). Extract the text and concepts you can identify."
+        " This appears to be an image (photo of notes, whiteboard, or textbook). Describe what you see and extract the text and concepts."
     } else if (fileType === "text") {
       systemPrompt += " This is a text document with study notes."
     } else if (fileType === "pdf") {
@@ -35,6 +35,11 @@ export async function POST(req: NextRequest) {
 
     systemPrompt +=
       " Include: 1) Main concepts summary, 2) Key points list, 3) Important definitions, 4) Study questions. Format your response clearly with sections."
+
+    const messageContent =
+      fileType === "image"
+        ? `Please analyze this image and create a study guide. The image is: ${fileContent}`
+        : `Please analyze this ${fileType} document and create a study guide:\n\n${fileContent.substring(0, 4000)}`
 
     const response = await groq.chat.completions.create({
       model: "mixtral-8x7b-32768",
@@ -46,7 +51,7 @@ export async function POST(req: NextRequest) {
         },
         {
           role: "user",
-          content: `Please analyze this ${fileType} document and create a study guide:\n\n${fileContent.substring(0, 4000)}`,
+          content: messageContent,
         },
       ],
       temperature: 0.5,
@@ -54,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     const analysis = response.choices[0]?.message?.content || "Unable to analyze document"
 
-    console.log("[v0] Document analysis completed")
+    console.log("[v0] Document analysis completed successfully")
 
     return NextResponse.json({
       analysis,
@@ -63,11 +68,12 @@ export async function POST(req: NextRequest) {
       success: true,
     })
   } catch (error) {
-    console.error("[v0] Document Processing Error:", error instanceof Error ? error.message : error)
+    console.error("[v0] Document Processing Error:", error instanceof Error ? error.message : String(error))
     return NextResponse.json(
       {
         error: "Failed to process document",
         message: "Unable to analyze the file. Please try again.",
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 },
     )

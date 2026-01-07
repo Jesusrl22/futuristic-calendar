@@ -175,11 +175,13 @@ const AIStudyPage = () => {
       const reader = new FileReader()
       reader.onload = (e) => {
         const base64 = e.target?.result as string
-        // For images, we can use the base64 directly or send a preview
-        // For now, we'll extract metadata from the image
-        resolve(`[Image file: ${file.name}, Size: ${file.size} bytes]`)
+        console.log("[v0] Image loaded, base64 length:", base64.length)
+        resolve(base64) // Send the full base64 encoded image
       }
-      reader.onerror = reject
+      reader.onerror = (error) => {
+        console.error("[v0] Error reading image:", error)
+        reject(error)
+      }
       reader.readAsDataURL(file)
     })
   }
