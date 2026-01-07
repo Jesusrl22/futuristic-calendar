@@ -55,16 +55,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { title, messages } = await req.json()
+    const { id, title, messages } = await req.json()
 
-    // Create new conversation
+    if (!id) {
+      return NextResponse.json({ error: "Conversation ID required" }, { status: 400 })
+    }
+
     const { data: conversation, error } = await supabase
       .from("ai_conversations")
-      .insert({
-        user_id: user.id,
-        title: title || "New Conversation",
-        messages: messages || [],
-      })
+      .upsert(
+        {
+          id,
+          user_id: user.id,
+          title: title || "New Conversation",
+          messages: messages || [],
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      )
       .select()
       .single()
 
@@ -72,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ conversation })
   } catch (error) {
-    console.error("[AI Conversations] Error creating conversation:", error)
-    return NextResponse.json({ error: "Failed to create conversation" }, { status: 500 })
+    console.error("[AI Conversations] Error saving conversation:", error)
+    return NextResponse.json({ error: "Failed to save conversation" }, { status: 500 })
   }
 }

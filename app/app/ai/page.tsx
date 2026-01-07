@@ -107,9 +107,16 @@ const AIPage = () => {
     const conversationToSave = updated.find((c) => c.id === conversationId)
     if (conversationToSave) {
       try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
         const response = await fetch("/api/ai-conversations", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.access_token || ""}`,
+          },
           body: JSON.stringify(conversationToSave),
         })
 
