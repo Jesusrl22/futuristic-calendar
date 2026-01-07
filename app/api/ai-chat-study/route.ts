@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
+import Groq from "groq-sdk"
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,12 +9,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
     }
 
-    const { text } = await generateText({
-      model: "groq/mixtral-8x7b-32768",
-      prompt: message,
-      system:
-        "You are a helpful study assistant. Provide clear, educational explanations. Keep responses concise but informative.",
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
     })
+
+    const response = await groq.messages.create({
+      model: "mixtral-8x7b-32768",
+      max_tokens: 1024,
+      messages: [
+        {
+          role: "user",
+          content: message,
+        },
+      ],
+      system:
+        "You are a helpful study assistant. Provide clear, educational explanations. Help users understand concepts, create study plans, quiz them on topics, and give learning advice. Keep responses concise but informative.",
+    })
+
+    const text = response.content[0].type === "text" ? response.content[0].text : "Unable to generate response"
 
     return NextResponse.json({
       response: text,

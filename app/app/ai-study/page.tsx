@@ -74,6 +74,7 @@ const AIStudyPage = () => {
 
     const userMessage = { role: "user", content: input }
     setMessages((prev) => [...prev, userMessage])
+    const inputText = input // Save input before clearing
     setInput("")
     setLoading(true)
 
@@ -91,7 +92,7 @@ const AIStudyPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: input,
+          message: inputText, // Use saved input text
         }),
       })
 
@@ -103,7 +104,7 @@ const AIStudyPage = () => {
         if (!conversations.find((c) => c.id === conversationId)) {
           const newConversation: Conversation = {
             id: conversationId,
-            title: input.substring(0, 50),
+            title: inputText.substring(0, 50), // Use saved input text
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             messages: [userMessage, assistantMessage],
@@ -111,16 +112,17 @@ const AIStudyPage = () => {
           setConversations((prev) => [newConversation, ...prev])
         }
       } else {
+        const errorData = await response.json()
         setMessages((prev) => [
           ...prev,
           {
             role: "assistant",
-            content: t("error_sending_message") || "Error sending message",
+            content: errorData.message || t("error_sending_message") || "Error sending message",
           },
         ])
       }
     } catch (error) {
-      console.error("Error:", error)
+      console.error("[v0] Error sending message:", error)
       setMessages((prev) => [
         ...prev,
         {
