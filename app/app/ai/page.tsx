@@ -251,7 +251,7 @@ const AIPage = () => {
   }, [showRightSidebar])
 
   const hasAccessToAI =
-    (profileData.tier && profileData.tier !== "free") ||
+    (profileData.tier !== "free" && profileData.tier !== null && profileData.tier !== "") ||
     profileData.monthlyCredits > 0 ||
     profileData.purchasedCredits > 0
 
@@ -268,6 +268,14 @@ const AIPage = () => {
   }
 
   if (!hasAccessToAI) {
+    console.log(
+      "[v0] Access denied - Tier:",
+      profileData.tier,
+      "Monthly:",
+      profileData.monthlyCredits,
+      "Purchased:",
+      profileData.purchasedCredits,
+    )
     return (
       <div className="p-4 md:p-8">
         <UpgradeModal
