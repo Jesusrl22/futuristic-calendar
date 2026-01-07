@@ -91,6 +91,8 @@ const AIStudyPage = () => {
         setCurrentConversationId(conversationId)
       }
 
+      console.log("[v0] Sending message to Study AI:", inputText.substring(0, 50) + "...")
+
       const response = await fetch("/api/ai-chat-study", {
         method: "POST",
         headers: {
@@ -101,40 +103,49 @@ const AIStudyPage = () => {
         }),
       })
 
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] Study AI error response:", errorData)
+        setError(errorData.message || t("error_sending_message"))
+        setMessages((prev) => prev.slice(0, -1))
+        return
+      }
+
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to generate response")
-      }
+      console.log("[v0] Study AI response received:", data)
 
-      const assistantMessage = {
-        role: "assistant",
-        content: data.response || data.message || "Unable to generate response",
-      }
-      setMessages((prev) => [...prev, assistantMessage])
+      const assistantMessage = data.response || data.message || "Unable to generate response"
 
-      if (!conversations.find((c) => c.id === conversationId)) {
-        const newConversation: Conversation = {
-          id: conversationId,
-          title: inputText.substring(0, 50),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          messages: [userMessage, assistantMessage],
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantMessage }])
+
+      // Save conversation to database
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          await fetch("/api/ai-conversations", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              conversationId,
+              title: inputText.substring(0, 50),
+              messages: [...messages, userMessage, { role: "assistant", content: assistantMessage }],
+            }),
+          })
         }
-        setConversations((prev) => [newConversation, ...prev])
+      } catch (saveError) {
+        console.error("[v0] Error saving conversation:", saveError)
       }
     } catch (error) {
-      console.error("[v0] Error sending message:", error)
-      const errorMessage =
-        error instanceof Error ? error.message : t("error_sending_message") || "Error sending message"
-      setError(errorMessage)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: errorMessage,
-        },
-      ])
+      console.error("[v0] Error in handleSendMessage:", error)
+      setError(t("error_sending_message"))
+      setMessages((prev) => prev.slice(0, -1))
     } finally {
       setLoading(false)
     }

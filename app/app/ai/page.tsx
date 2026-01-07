@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Zap, Plus, Trash2, Menu, X } from "@/components/icons"
-import { UpgradeModal } from "@/components/upgrade-modal"
 import { useTranslation } from "@/hooks/useTranslation"
 import { createBrowserClient } from "@supabase/ssr"
 
@@ -43,53 +42,52 @@ const AIPage = () => {
 
   const SUGGESTED_PROMPTS = [t("study_tips"), t("productivity_tips")]
 
-  useEffect(() => {
-    const checkAccessAndLoadConversations = async () => {
-      setIsLoadingProfile(true)
-      try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
+  const checkAccessAndLoadConversations = async () => {
+    setIsLoadingProfile(true)
+    try {
+      const response = await fetch("/api/user/profile")
+      if (!response.ok) throw new Error("Failed to fetch profile")
 
-        if (!session?.user) {
-          setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
-          setIsLoadingProfile(false)
-          return
-        }
+      const profile = await response.json()
 
-        const profileResponse = await fetch("/api/user/profile")
+      console.log("[v0] Profile loaded in AI page:", {
+        tier: profile.subscription_tier,
+        monthlyCredits: profile.ai_credits,
+        purchasedCredits: profile.ai_credits_purchased,
+      })
 
-        if (profileResponse.ok) {
-          const profile = await profileResponse.json()
-          setProfileData({
-            tier: (profile.subscription_tier || "free").toLowerCase(),
-            monthlyCredits: profile.ai_credits || 0,
-            purchasedCredits: profile.ai_credits_purchased || 0,
-          })
-        } else {
-          setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
-        }
+      const normalizedTier = (profile.subscription_tier || "free").toLowerCase()
 
-        const response = await fetch("/api/ai-conversations", {
+      setProfileData({
+        tier: normalizedTier,
+        monthlyCredits: profile.ai_credits || 0,
+        purchasedCredits: profile.ai_credits_purchased || 0,
+      })
+
+      // Load conversations
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.user) {
+        const convResponse = await fetch("/api/ai-conversations", {
           headers: {
             Authorization: `Bearer ${session.access_token}`,
           },
         })
 
-        if (response.ok) {
-          const data = await response.json()
-          const convs = Array.isArray(data) ? data : data.conversations || []
+        if (convResponse.ok) {
+          const convData = await convResponse.json()
+          const convs = Array.isArray(convData) ? convData : convData.conversations || []
           setConversations(convs)
         }
-      } catch (error) {
-        setProfileData({ tier: "free", monthlyCredits: 0, purchasedCredits: 0 })
-      } finally {
-        setIsLoadingProfile(false)
       }
+    } catch (error) {
+      console.error("[v0] Error loading profile:", error)
+    } finally {
+      setIsLoadingProfile(false)
     }
-
-    checkAccessAndLoadConversations()
-  }, [])
+  }
 
   const saveConversation = async (conversationId: string, newMessages: any[]) => {
     const updated = conversations.map((c) => {
@@ -226,66 +224,38 @@ const AIPage = () => {
     }
   }
 
+  const handleClickOutside = (event: MouseEvent) => {
+    const sidebar = document.getElementById("mobile-right-sidebar")
+    const menuButton = document.getElementById("menu-button")
+    if (
+      showRightSidebar &&
+      sidebar &&
+      !sidebar.contains(event.target as Node) &&
+      !menuButton?.contains(event.target as Node)
+    ) {
+      setShowRightSidebar(false)
+    }
+  }
+
+  const hasAccessToAI =
+    profileData.tier !== "free" || profileData.monthlyCredits > 0 || profileData.purchasedCredits > 0
+
+  console.log("[v0] Final tier check - Tier:", profileData.tier, "Has Access:", hasAccessToAI)
+
+  useEffect(() => {
+    checkAccessAndLoadConversations()
+  }, [])
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const sidebar = document.getElementById("mobile-right-sidebar")
-      const menuButton = document.getElementById("menu-button")
-      if (
-        showRightSidebar &&
-        sidebar &&
-        !sidebar.contains(event.target as Node) &&
-        !menuButton?.contains(event.target as Node)
-      ) {
-        setShowRightSidebar(false)
-      }
-    }
-
     if (showRightSidebar) {
       document.addEventListener("click", handleClickOutside)
       return () => document.removeEventListener("click", handleClickOutside)
     }
   }, [showRightSidebar])
-
-  const hasAccessToAI =
-    (profileData.tier !== "free" && profileData.tier !== null && profileData.tier !== "") ||
-    profileData.monthlyCredits > 0 ||
-    profileData.purchasedCredits > 0
-
-  if (isLoadingProfile) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="flex gap-2">
-          <div className="w-3 h-3 bg-primary rounded-full animate-bounce" />
-          <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-100" />
-          <div className="w-3 h-3 bg-primary rounded-full animate-bounce delay-200" />
-        </div>
-      </div>
-    )
-  }
-
-  if (!hasAccessToAI) {
-    console.log(
-      "[v0] Access denied - Tier:",
-      profileData.tier,
-      "Monthly:",
-      profileData.monthlyCredits,
-      "Purchased:",
-      profileData.purchasedCredits,
-    )
-    return (
-      <div className="p-4 md:p-8">
-        <UpgradeModal
-          feature={t("ai_assistant")}
-          requiredPlan={profileData.purchasedCredits > 0 ? "free" : "premium"}
-          customMessage={profileData.purchasedCredits > 0 ? t("buy_more_credits_ai") : undefined}
-        />
-      </div>
-    )
-  }
 
   const monthlyCredits = profileData.monthlyCredits
   const purchasedCredits = profileData.purchasedCredits

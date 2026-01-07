@@ -18,7 +18,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const groq = new Groq({ apiKey })
+    const groq = new Groq({
+      apiKey: apiKey,
+    })
+
+    console.log("[v0] Calling Groq API with message:", message.substring(0, 50) + "...")
 
     const response = await groq.chat.completions.create({
       model: "mixtral-8x7b-32768",
@@ -39,12 +43,14 @@ export async function POST(req: NextRequest) {
 
     const text = response.choices[0]?.message?.content || "Unable to generate response"
 
+    console.log("[v0] Groq response received, length:", text.length)
+
     return NextResponse.json({
       response: text,
       message: text,
     })
   } catch (error) {
-    console.error("[v0] Study AI Error:", error)
+    console.error("[v0] Study AI Error:", error instanceof Error ? error.message : error)
     const errorMessage = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
       {
