@@ -308,7 +308,7 @@ const AIPage = () => {
       })
 
       if (response.ok) {
-        alert("Task saved successfully!")
+        toast.success(t("task_saved_successfully"))
         setShowSaveDialog(false)
         setSaveTitle("")
         setSaveDescription("")
@@ -316,7 +316,7 @@ const AIPage = () => {
         setSaveType(null)
       }
     } catch (error) {
-      alert("Error saving task")
+      toast.error(t("error_saving_task"))
     }
   }
 
@@ -338,7 +338,7 @@ const AIPage = () => {
       })
 
       if (response.ok) {
-        alert("Event saved to calendar!")
+        toast.success(t("event_saved_calendar"))
         setShowSaveDialog(false)
         setSaveTitle("")
         setSaveDescription("")
@@ -346,12 +346,12 @@ const AIPage = () => {
         setSaveType(null)
       }
     } catch (error) {
-      alert("Error saving to calendar")
+      toast.error(t("error_saving_calendar"))
     }
   }
 
   const showUpgradeModal = () => {
-    alert("Upgrade your plan to send files!")
+    toast.warning(t("upgrade_to_send_files"))
   }
 
   const hasAccessToAI =
