@@ -20,10 +20,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get all conversations for this user
     const { data: conversations, error } = await supabase
       .from("ai_conversations")
-      .select("id, title, created_at, updated_at")
+      .select("id, title, created_at, updated_at, messages")
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false })
 
