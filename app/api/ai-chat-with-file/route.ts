@@ -15,15 +15,52 @@ function getUserIdFromToken(token: string): string | null {
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // Simple PDF text extraction - reads text content
-    const text = buffer.toString("latin1")
+    // Try multiple extraction methods for better PDF support
+    let text = buffer.toString("latin1")
+
+    // Method 1: Extract text between BT/ET operators
     const matches = text.match(/BT\s+(.*?)\s+ET/gs) || []
-    return matches
-      .map((m) => m.replace(/BT|ET|Tj|TJ|$$|$$|<|>|\/F\d+|[\d.]+\s+/g, " "))
+    const extractedText = matches
+      .map((m) => m.replace(/BT|ET|Tj|TJ|Td|T\*|[[\]<>()]/g, " ").trim())
+      .filter((t) => t.length > 0)
       .join(" ")
-      .substring(0, 4000)
-  } catch {
-    return buffer.toString("utf8").substring(0, 4000)
+
+    if (extractedText.length > 100) {
+      return extractedText.substring(0, 8000)
+    }
+
+    // Method 2: Fallback to raw UTF-8 conversion
+    text = buffer.toString("utf8")
+    return text
+      .replace(/[^\w\s.,!?-]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
+      .slice(0, 2000)
+      .join(" ")
+      .substring(0, 8000)
+  } catch (error) {
+    console.error("[v0] PDF extraction error:", error)
+    return buffer.toString("utf8").substring(0, 8000)
+  }
+}
+
+async function extractTextFromDocx(buffer: Buffer): Promise<string> {
+  try {
+    // DOCX is a ZIP file containing XML - extract text from document.xml
+    const text = buffer.toString("utf8")
+
+    // Extract text content from XML tags
+    const matches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
+    const extractedText = matches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ")
+
+    if (extractedText.length > 100) {
+      return extractedText.substring(0, 8000)
+    }
+
+    return buffer.toString("utf8").substring(0, 8000)
+  } catch (error) {
+    console.error("[v0] DOCX extraction error:", error)
+    return buffer.toString("utf8").substring(0, 8000)
   }
 }
 
@@ -32,17 +69,19 @@ async function processFileContent(file: File, fileType: string): Promise<string>
 
   if (fileType === "application/pdf") {
     return await extractTextFromPDF(buffer)
-  } else if (fileType.startsWith("image/")) {
-    // Convert image to base64 for vision
-    return `[Image: ${file.name} - ${buffer.length} bytes]\n${buffer.toString("base64").substring(0, 100)}...`
   } else if (
-    fileType.startsWith("text/") ||
-    fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    fileType === "application/msword"
   ) {
-    return buffer.toString("utf8").substring(0, 4000)
+    return await extractTextFromDocx(buffer)
+  } else if (fileType.startsWith("image/")) {
+    // For images, we'll describe what type of image it is
+    return `[Image file: ${file.name} - Please analyze and describe the content of this image]`
+  } else if (fileType.startsWith("text/")) {
+    return buffer.toString("utf8").substring(0, 8000)
   }
 
-  return `[File: ${file.name}]`
+  return buffer.toString("utf8").substring(0, 8000)
 }
 
 export async function POST(req: NextRequest) {

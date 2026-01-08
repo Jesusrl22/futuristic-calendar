@@ -19,6 +19,7 @@ const supabase = createBrowserClient(
 interface Message {
   role: string
   content: string
+  fileInfo?: { name: string; type: string }
 }
 
 interface Conversation {
@@ -47,6 +48,10 @@ const AIPage = () => {
   const [saveTitle, setSaveTitle] = useState("")
   const [saveDescription, setSaveDescription] = useState("")
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [filePreviewData, setFilePreviewData] = useState<{
+    file: File
+    extractedPreview: string
+  } | null>(null)
 
   const [profileData, setProfileData] = useState({
     tier: "free" as string,
@@ -194,7 +199,8 @@ const AIPage = () => {
     setLoading(true)
     const userMessage: Message = {
       role: "user",
-      content: input || (uploadedFile ? `[${t("file_uploaded")}: ${uploadedFile.name}]` : ""),
+      content: input || (uploadedFile ? `${t("analyze_this_file")}` : ""),
+      fileInfo: uploadedFile ? { name: uploadedFile.name, type: uploadedFile.type } : undefined,
     }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
@@ -233,6 +239,7 @@ const AIPage = () => {
           monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
         }))
         setUploadedFile(null)
+        setFilePreviewData(null)
       } else {
         const session = await supabase.auth.getSession()
         const response = await fetch(endpoint, {
@@ -273,8 +280,31 @@ const AIPage = () => {
       return
     }
 
-    setLoading(true)
     setUploadedFile(file)
+
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        let preview = ""
+        if (file.type === "application/pdf") {
+          preview = `[PDF: ${file.name}] - Content will be analyzed...`
+        } else if (file.type.startsWith("image/")) {
+          preview = `[Image: ${file.name}] - Image will be analyzed...`
+        } else if (file.type.startsWith("text/") || file.type.includes("document")) {
+          preview = (e.target?.result as string)?.substring(0, 500) || "[Document content]"
+        }
+        setFilePreviewData({ file, extractedPreview: preview })
+      } catch (error) {
+        console.error("[v0] Error processing file preview:", error)
+        setFilePreviewData({ file, extractedPreview: `[File: ${file.name}]` })
+      }
+    }
+    if (file.type.startsWith("text/")) {
+      reader.readAsText(file)
+    } else {
+      reader.readAsDataURL(file)
+    }
+
     // Reset input to allow re-uploading same file
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
@@ -391,7 +421,7 @@ const AIPage = () => {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-background">
+    <div className="flex h-screen flex-col bg-background">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex w-64 bg-secondary/20 border-r border-border/50 flex-col p-4 gap-4 overflow-hidden">
         <Button onClick={createNewConversation} className="w-full neon-glow-hover">
@@ -476,25 +506,182 @@ const AIPage = () => {
         </Tabs>
 
         {/* Messages Area */}
-        {messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-8 px-2 md:px-4">
-            <div className="text-center space-y-2 md:space-y-4">
-              <div className="text-4xl md:text-6xl mb-4">
-                {aiMode === "chat" && "💬"}
-                {aiMode === "study" && "📚"}
-                {aiMode === "analyze" && "📄"}
+        <div className="flex-1 overflow-y-auto">
+          {/* Show file preview if one is selected */}
+          {filePreviewData && (
+            <div className="m-4 rounded-lg border border-accent/20 bg-card p-4">
+              <div className="flex items-center gap-3 pb-3">
+                <div className="text-xl">
+                  {filePreviewData.file.type.startsWith("image/")
+                    ? "🖼️"
+                    : filePreviewData.file.type === "application/pdf"
+                      ? "📄"
+                      : "📝"}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground">{filePreviewData.file.name}</h3>
+                  <p className="text-sm text-muted-foreground">{(filePreviewData.file.size / 1024).toFixed(2)} KB</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setUploadedFile(null)
+                    setFilePreviewData(null)
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ✕
+                </button>
               </div>
-              <h2 className="text-2xl md:text-5xl font-bold">{t("welcome_message")}</h2>
-              <p className="text-sm md:text-base text-muted-foreground">
-                {(aiMode === "chat" && t("chat_description")) || "Ask me anything"}
-                {(aiMode === "study" && t("study_description")) || "Create study plans and learn effectively"}
-                {(aiMode === "analyze" && t("analyze_description")) || "Upload and analyze documents"}
-              </p>
+              {filePreviewData.file.type.startsWith("text/") && (
+                <div className="mt-3 max-h-40 overflow-y-auto rounded bg-background p-3 text-sm text-muted-foreground">
+                  {filePreviewData.extractedPreview}
+                </div>
+              )}
             </div>
+          )}
 
-            {/* Input and File Upload */}
-            <div className="w-full max-w-2xl space-y-2 md:space-y-4">
-              <div className="flex gap-1 md:gap-2">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4 md:space-y-8 px-2 md:px-4">
+              <div className="text-center space-y-2 md:space-y-4">
+                <div className="text-4xl md:text-6xl mb-4">
+                  {aiMode === "chat" && "💬"}
+                  {aiMode === "study" && "📚"}
+                  {aiMode === "analyze" && "📄"}
+                </div>
+                <h2 className="text-2xl md:text-5xl font-bold">{t("welcome_message")}</h2>
+                <p className="text-sm md:text-base text-muted-foreground">
+                  {(aiMode === "chat" && t("chat_description")) || "Ask me anything"}
+                  {(aiMode === "study" && t("study_description")) || "Create study plans and learn effectively"}
+                  {(aiMode === "analyze" && t("analyze_description")) || "Upload and analyze documents"}
+                </p>
+              </div>
+
+              {/* Input and File Upload */}
+              <div className="w-full max-w-2xl space-y-2 md:space-y-4">
+                <div className="flex gap-1 md:gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                    placeholder={t("input_placeholder")}
+                    className="bg-secondary/50 text-xs md:text-sm"
+                    disabled={loading}
+                    autoFocus
+                  />
+                  <Button
+                    onClick={() => handleSend()}
+                    disabled={loading || (!input.trim() && !uploadedFile)}
+                    className="neon-glow-hover shrink-0"
+                  >
+                    <Send className="w-3 h-3 md:w-4 md:h-4" />
+                  </Button>
+                  {aiMode === "analyze" && (
+                    <>
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={loading}
+                        variant="outline"
+                        className="shrink-0"
+                        title={t("upload_file") || "Upload file"}
+                      >
+                        <Upload className="w-3 h-3 md:w-4 md:h-4" />
+                      </Button>
+                      {uploadedFile && (
+                        <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
+                          <span>📎 {uploadedFile.name}</span>
+                          <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
+                            ✕
+                          </button>
+                        </div>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </>
+                  )}
+                </div>
+
+                {input.trim() === "" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
+                    {(SUGGESTED_PROMPTS[aiMode] || []).map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSend(prompt)}
+                        className="p-2 md:p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground text-center">
+                  {t("total_available")}: {monthlyCredits + purchasedCredits} {t("credits")}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto mb-2 md:mb-4 space-y-2 md:space-y-4 px-2 md:px-4">
+                {messages.map((message, index) => (
+                  <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div
+                      className={`max-w-[90%] md:max-w-[70%] p-2 md:p-4 rounded-lg text-xs md:text-sm group relative ${
+                        message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words">{message.content}</p>
+
+                      {message.role === "assistant" && (
+                        <div className="hidden group-hover:flex gap-2 mt-2 pt-2 border-t border-border/50">
+                          <button
+                            onClick={() => {
+                              setSelectedMessageToSave(message.content)
+                              setSaveType("task")
+                              setShowSaveDialog(true)
+                            }}
+                            className="text-xs px-2 py-1 rounded bg-primary/20 hover:bg-primary/30 transition"
+                            title={t("save_as_task")}
+                          >
+                            📝 Task
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedMessageToSave(message.content)
+                              setSaveType("calendar")
+                              setShowSaveDialog(true)
+                            }}
+                            className="text-xs px-2 py-1 rounded bg-primary/20 hover:bg-primary/30 transition"
+                            title={t("save_to_calendar")}
+                          >
+                            📅 Calendar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="bg-secondary/50 p-2 md:p-4 rounded-lg">
+                      <div className="flex gap-1 md:gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+
+              <div className="flex gap-1 md:gap-2 px-2 md:px-4">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -502,7 +689,6 @@ const AIPage = () => {
                   placeholder={t("input_placeholder")}
                   className="bg-secondary/50 text-xs md:text-sm"
                   disabled={loading}
-                  autoFocus
                 />
                 <Button
                   onClick={() => handleSend()}
@@ -540,130 +726,9 @@ const AIPage = () => {
                   </>
                 )}
               </div>
-
-              {input.trim() === "" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2">
-                  {(SUGGESTED_PROMPTS[aiMode] || []).map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSend(prompt)}
-                      className="p-2 md:p-3 rounded-lg border border-border/50 hover:border-primary bg-secondary/20 hover:bg-secondary/40 transition-all text-xs text-left hover:shadow-lg"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <p className="text-xs text-muted-foreground text-center">
-                {t("total_available")}: {monthlyCredits + purchasedCredits} {t("credits")}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="flex-1 overflow-y-auto mb-2 md:mb-4 space-y-2 md:space-y-4 px-2 md:px-4">
-              {messages.map((message, index) => (
-                <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[90%] md:max-w-[70%] p-2 md:p-4 rounded-lg text-xs md:text-sm group relative ${
-                      message.role === "user" ? "bg-primary text-primary-foreground" : "bg-secondary/50"
-                    }`}
-                  >
-                    <p className="whitespace-pre-wrap break-words">{message.content}</p>
-
-                    {message.role === "assistant" && (
-                      <div className="hidden group-hover:flex gap-2 mt-2 pt-2 border-t border-border/50">
-                        <button
-                          onClick={() => {
-                            setSelectedMessageToSave(message.content)
-                            setSaveType("task")
-                            setShowSaveDialog(true)
-                          }}
-                          className="text-xs px-2 py-1 rounded bg-primary/20 hover:bg-primary/30 transition"
-                          title={t("save_as_task")}
-                        >
-                          📝 Task
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedMessageToSave(message.content)
-                            setSaveType("calendar")
-                            setShowSaveDialog(true)
-                          }}
-                          className="text-xs px-2 py-1 rounded bg-primary/20 hover:bg-primary/30 transition"
-                          title={t("save_to_calendar")}
-                        >
-                          📅 Calendar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-secondary/50 p-2 md:p-4 rounded-lg">
-                    <div className="flex gap-1 md:gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-100" />
-                      <div className="w-2 h-2 bg-primary rounded-full animate-bounce delay-200" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="flex gap-1 md:gap-2 px-2 md:px-4">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                placeholder={t("input_placeholder")}
-                className="bg-secondary/50 text-xs md:text-sm"
-                disabled={loading}
-              />
-              <Button
-                onClick={() => handleSend()}
-                disabled={loading || (!input.trim() && !uploadedFile)}
-                className="neon-glow-hover shrink-0"
-              >
-                <Send className="w-3 h-3 md:w-4 md:h-4" />
-              </Button>
-              {aiMode === "analyze" && (
-                <>
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={loading}
-                    variant="outline"
-                    className="shrink-0"
-                    title={t("upload_file") || "Upload file"}
-                  >
-                    <Upload className="w-3 h-3 md:w-4 md:h-4" />
-                  </Button>
-                  {uploadedFile && (
-                    <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
-                      <span>📎 {uploadedFile.name}</span>
-                      <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.txt,.doc,.docx,.jpg,.jpeg,.png,.gif"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </>
-              )}
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Mobile Right Sidebar */}
