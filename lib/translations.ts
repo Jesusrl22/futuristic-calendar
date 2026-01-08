@@ -111,6 +111,13 @@ export const translations = {
     custom_theme_description: "Create your own theme by selecting two colors",
     primary_color: "Primary Color",
     secondary_color: "Secondary Color",
+
+    // Help Chatbot
+    help_chatbot_title: "Help & Support",
+    help_chatbot_welcome: "Welcome! How can we help?",
+    help_chatbot_faq: "We'll answer your questions using FAQs or AI.",
+    help_chatbot_input: "Ask a question...",
+    help_chatbot_error: "Unable to process your request. Please try again.",
   },
 
   es: {
@@ -225,6 +232,13 @@ export const translations = {
     custom_theme_description: "Crea tu propio tema seleccionando dos colores",
     primary_color: "Color Primario",
     secondary_color: "Color Secundario",
+
+    // Ayuda Chatbot
+    help_chatbot_title: "Ayuda & Soporte",
+    help_chatbot_welcome: "¡Bienvenido! ¿En qué puedo ayudarte?",
+    help_chatbot_faq: "Respondemos a tus preguntas usando FAQs o IA.",
+    help_chatbot_input: "Haz una pregunta...",
+    help_chatbot_error: "No se puede procesar tu solicitud. Por favor, inténtalo de nuevo.",
   },
 
   fr: {
@@ -339,6 +353,13 @@ export const translations = {
     custom_theme_description: "Créez votre propre thème en sélectionnant deux couleurs",
     primary_color: "Couleur Primaire",
     secondary_color: "Couleur Secondaire",
+
+    // Aide Chatbot
+    help_chatbot_title: "Aide & Support",
+    help_chatbot_welcome: "Bienvenue ! Comment puis-je vous aider ?",
+    help_chatbot_faq: "Nous répondrons à vos questions en utilisant des FAQs ou l'IA.",
+    help_chatbot_input: "Posez une question...",
+    help_chatbot_error: "Impossible de traiter votre requête. Veuillez réessayer.",
   },
 
   de: {
@@ -453,6 +474,13 @@ export const translations = {
     custom_theme_description: "Erstellen Sie ein eigenes Design, indem Sie zwei Farben auswählen",
     primary_color: "Primärfarbe",
     secondary_color: "Sekundärfarbe",
+
+    // Hilfe Chatbot
+    help_chatbot_title: "Hilfe & Support",
+    help_chatbot_welcome: "Willkommen! Wie kann ich Ihnen helfen?",
+    help_chatbot_faq: "Wir werden Ihre Fragen mit Hilfe von FAQs oder KI beantworten.",
+    help_chatbot_input: "Stellen Sie eine Frage...",
+    help_chatbot_error: "Ihre Anfrage konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut.",
   },
 
   it: {
@@ -567,5 +595,12 @@ export const translations = {
     custom_theme_description: "Crea il tuo tema selezionando due colori",
     primary_color: "Colore Primario",
     secondary_color: "Colore Secondario",
+
+    // Aiuto Chatbot
+    help_chatbot_title: "Aiuto & Supporto",
+    help_chatbot_welcome: "Benvenuto! Come posso aiutarti?",
+    help_chatbot_faq: "Risponderemo alle tue domande usando FAQ o IA.",
+    help_chatbot_input: "Fai una domanda...",
+    help_chatbot_error: "Impossibile elaborare la tua richiesta. Per favore, riprova.",
   },
 }

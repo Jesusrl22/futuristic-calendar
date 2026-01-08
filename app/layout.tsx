@@ -4,6 +4,7 @@ import Script from "next/script"
 import "./globals.css"
 import { ThemeLoader } from "@/components/theme-loader"
 import { LanguageProvider } from "@/contexts/language-context"
+import { HelpChatbot } from "@/components/help-chatbot"
 
 export const metadata: Metadata = {
   title: "Future Task - Smart Task Management",
@@ -73,7 +74,10 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="beforeInteractive"
         />
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          {children}
+          <HelpChatbot />
+        </LanguageProvider>
         <ServiceWorkerInit />
       </body>
     </html>
