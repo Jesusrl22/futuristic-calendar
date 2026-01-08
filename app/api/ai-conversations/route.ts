@@ -64,13 +64,13 @@ export async function POST(req: NextRequest) {
       .from("ai_conversations")
       .upsert(
         {
-          id: String(id), // Ensure ID is string
+          id: String(id),
           user_id: user.id,
           title: title || "New Conversation",
           messages: messages || [],
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "id,user_id" }, // Check both columns to avoid conflicts
+        { onConflict: "id" }, // Only use id for conflict detection
       )
       .select()
       .single()
