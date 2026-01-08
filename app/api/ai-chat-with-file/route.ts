@@ -95,23 +95,28 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   }
 }
 
-async function processFileContent(file: File, fileType: string): Promise<string> {
+async function imageBufferToBase64(buffer: Buffer, mimeType: string): Promise<string> {
+  return `data:${mimeType};base64,${buffer.toString("base64")}`
+}
+
+async function processFileContent(file: File, fileType: string): Promise<{ type: "text" | "image"; content: string }> {
   const buffer = Buffer.from(await file.arrayBuffer())
 
   if (fileType === "application/pdf") {
-    return await extractTextFromPDF(buffer)
+    return { type: "text", content: await extractTextFromPDF(buffer) }
   } else if (
     fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
     fileType === "application/msword"
   ) {
-    return await extractTextFromDocx(buffer)
+    return { type: "text", content: await extractTextFromDocx(buffer) }
   } else if (fileType.startsWith("image/")) {
-    return `[Image: ${file.name}] Please analyze and describe the visual content of this image in detail, including any text, diagrams, or important visual elements.`
+    const base64DataUrl = await imageBufferToBase64(buffer, fileType)
+    return { type: "image", content: base64DataUrl }
   } else if (fileType.startsWith("text/")) {
-    return buffer.toString("utf8").substring(0, 10000)
+    return { type: "text", content: buffer.toString("utf8").substring(0, 10000) }
   }
 
-  return buffer.toString("utf8").substring(0, 10000)
+  return { type: "text", content: buffer.toString("utf8").substring(0, 10000) }
 }
 
 export async function POST(req: NextRequest) {
@@ -195,19 +200,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update credits" }, { status: 500 })
     }
 
-    let fileContent = ""
+    let fileContent = { type: "text" as const, content: "" }
     if (file) {
       fileContent = await processFileContent(file, file.type)
     }
 
     const languageInstruction = language !== "en" ? `\n\nRespond exclusively in ${getLanguageName(language)}.` : ""
-    const fullPrompt = fileContent
-      ? `File: ${file?.name || "document"}\n\nContent:\n${fileContent}\n\nUser request: ${message}${languageInstruction}`
-      : `${message}${languageInstruction}`
+
+    let fullPrompt: string | { type: "image" | "text"; text?: string; image?: string }[] = ""
+
+    if (fileContent.type === "image") {
+      // For images, use the content array format for Vision API
+      fullPrompt = [
+        {
+          type: "image" as const,
+          image: fileContent.content,
+        },
+        {
+          type: "text" as const,
+          text: `${message}\n\nPlease analyze and describe the visual content of this image in detail, including any text, diagrams, charts, or important visual elements.${languageInstruction}`,
+        },
+      ]
+    } else {
+      // For text documents
+      fullPrompt =
+        fileContent.content && fileContent.content.length > 0
+          ? `File: ${file?.name || "document"}\n\nContent:\n${fileContent.content}\n\nUser request: ${message}${languageInstruction}`
+          : `${message}${languageInstruction}`
+    }
 
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
-      prompt: fullPrompt,
+      prompt: typeof fullPrompt === "string" ? fullPrompt : undefined,
+      // @ts-ignore - Vision API format
+      messages: typeof fullPrompt !== "string" ? [{ role: "user" as const, content: fullPrompt }] : undefined,
     })
 
     return NextResponse.json({
