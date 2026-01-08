@@ -297,12 +297,12 @@ export default function SettingsPage() {
 
           <TabsContent value="general">
             <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">General Settings</h2>
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">{t("general_settings")}</h2>
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm">{t("email")}</Label>
                   <Input value={profile.email} disabled className="bg-secondary/50 text-sm" />
-                  <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("email_cannot_be_changed")}</p>
                 </div>
 
                 <div>
@@ -311,7 +311,6 @@ export default function SettingsPage() {
                     value={profile.language}
                     onValueChange={(value: Language) => {
                       setProfile({ ...profile, language: value })
-                      // Immediately update global language context
                       setGlobalLanguage(value)
                       localStorage.setItem("language", value)
                     }}
@@ -320,20 +319,20 @@ export default function SettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                      <SelectItem value="it">Italiano</SelectItem>
+                      <SelectItem value="en">{t("language_english")}</SelectItem>
+                      <SelectItem value="es">{t("language_spanish")}</SelectItem>
+                      <SelectItem value="fr">{t("language_french")}</SelectItem>
+                      <SelectItem value="de">{t("language_german")}</SelectItem>
+                      <SelectItem value="it">{t("language_italian")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label className="text-sm">Timezone / Region</Label>
+                  <Label className="text-sm">{t("timezone_region")}</Label>
                   <Input value={`${profile.timezone} (Auto-detected)`} disabled className="bg-secondary/50 text-sm" />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Current time: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
+                    {t("current_time")}: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
                 </div>
               </div>
@@ -342,12 +341,12 @@ export default function SettingsPage() {
 
           <TabsContent value="pomodoro">
             <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Pomodoro Settings</h2>
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">{t("pomodoro_settings")}</h2>
               <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex-1">
-                    <Label className="text-sm">Pomodoro Duration</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">Default work session length</p>
+                    <Label className="text-sm">{t("pomodoro_duration")}</Label>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("pomodoro_work_session_length")}</p>
                   </div>
                   <Select defaultValue={profile.pomodoroWorkDuration.toString()}>
                     <SelectTrigger className="w-full sm:w-32 bg-secondary/50 text-sm">
@@ -366,7 +365,7 @@ export default function SettingsPage() {
 
           <TabsContent value="theme">
             <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Theme Settings</h2>
+              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">{t("theme_settings")}</h2>
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm">{t("theme")}</Label>
@@ -401,7 +400,7 @@ export default function SettingsPage() {
                             <div className="flex gap-1">
                               <div className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20 bg-gradient-to-r from-purple-500 to-pink-500" />
                             </div>
-                            Custom Theme
+                            {t("custom_theme")}
                             <Badge variant="outline" className="text-xs bg-primary/20">
                               PRO
                             </Badge>
@@ -411,21 +410,19 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {profile.plan === "free" && "Upgrade to Premium or Pro for more themes"}
-                    {profile.plan === "premium" && "Upgrade to Pro for custom themes"}
-                    {profile.plan === "pro" && "You have access to all themes + custom"}
+                    {profile.plan === "free" && t("upgrade_for_more_themes")}
+                    {profile.plan === "premium" && t("upgrade_for_custom_themes")}
+                    {profile.plan === "pro" && t("all_themes_available")}
                   </p>
                 </div>
 
                 {profile.theme === "custom" && showCustom && (
                   <div className="space-y-4 mt-4 p-3 sm:p-4 border rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {t.settingsPage?.customThemeDescription || "Create your own theme by selecting two colors"}
-                    </p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{t("custom_theme_description")}</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="customPrimary" className="text-sm">
-                          {t.settingsPage?.primaryColor || "Primary Color"}
+                          {t("primary_color")}
                         </Label>
                         <Input
                           id="customPrimary"
@@ -437,7 +434,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="customSecondary" className="text-sm">
-                          {t.settingsPage?.secondaryColor || "Secondary Color"}
+                          {t("secondary_color")}
                         </Label>
                         <Input
                           id="customSecondary"

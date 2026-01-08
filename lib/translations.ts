@@ -70,6 +70,32 @@ export const translations = {
     event_saved_calendar: "Event saved to calendar!",
     error_saving_calendar: "Error saving to calendar",
     upgrade_to_send_files: "Upgrade your plan to send files!",
+
+    // Settings page - General
+    general_settings: "General Settings",
+    email_cannot_be_changed: "Email cannot be changed",
+    language_english: "English",
+    language_spanish: "Español",
+    language_french: "Français",
+    language_german: "Deutsch",
+    language_italian: "Italiano",
+    timezone_region: "Timezone / Region",
+    current_time: "Current time",
+
+    // Settings page - Pomodoro
+    pomodoro_settings: "Pomodoro Settings",
+    pomodoro_duration: "Pomodoro Duration",
+    pomodoro_work_session_length: "Default work session length",
+
+    // Settings page - Theme
+    theme_settings: "Theme Settings",
+    custom_theme: "Custom Theme",
+    upgrade_for_more_themes: "Upgrade to Premium or Pro for more themes",
+    upgrade_for_custom_themes: "Upgrade to Pro for custom themes",
+    all_themes_available: "You have access to all themes + custom",
+    custom_theme_description: "Create your own theme by selecting two colors",
+    primary_color: "Primary Color",
+    secondary_color: "Secondary Color",
   },
 
   es: {
@@ -143,6 +169,32 @@ export const translations = {
     event_saved_calendar: "¡Evento guardado en el calendario!",
     error_saving_calendar: "Error al guardar en el calendario",
     upgrade_to_send_files: "¡Actualiza tu plan para enviar archivos!",
+
+    // Página de configuración - General
+    general_settings: "Configuración General",
+    email_cannot_be_changed: "El email no puede ser cambiado",
+    language_english: "English",
+    language_spanish: "Español",
+    language_french: "Français",
+    language_german: "Deutsch",
+    language_italian: "Italiano",
+    timezone_region: "Zona horaria / Región",
+    current_time: "Hora actual",
+
+    // Página de configuración - Pomodoro
+    pomodoro_settings: "Configuración de Pomodoro",
+    pomodoro_duration: "Duración de Pomodoro",
+    pomodoro_work_session_length: "Duración predeterminada de la sesión de trabajo",
+
+    // Página de configuración - Tema
+    theme_settings: "Configuración de Tema",
+    custom_theme: "Tema Personalizado",
+    upgrade_for_more_themes: "Actualiza a Premium o Pro para más temas",
+    upgrade_for_custom_themes: "Actualiza a Pro para temas personalizados",
+    all_themes_available: "Tienes acceso a todos los temas + personalizado",
+    custom_theme_description: "Crea tu propio tema seleccionando dos colores",
+    primary_color: "Color Primario",
+    secondary_color: "Color Secundario",
   },
 
   fr: {
@@ -216,6 +268,32 @@ export const translations = {
     event_saved_calendar: "Événement enregistré dans le calendrier!",
     error_saving_calendar: "Erreur lors de l'enregistrement dans le calendrier",
     upgrade_to_send_files: "Mettez à niveau votre plan pour envoyer des fichiers!",
+
+    // Page paramètres - Général
+    general_settings: "Paramètres Généraux",
+    email_cannot_be_changed: "L'email ne peut pas être modifié",
+    language_english: "English",
+    language_spanish: "Español",
+    language_french: "Français",
+    language_german: "Deutsch",
+    language_italian: "Italiano",
+    timezone_region: "Fuseau horaire / Région",
+    current_time: "Heure actuelle",
+
+    // Page paramètres - Pomodoro
+    pomodoro_settings: "Paramètres Pomodoro",
+    pomodoro_duration: "Durée de Pomodoro",
+    pomodoro_work_session_length: "Durée par défaut de la session de travail",
+
+    // Page paramètres - Thème
+    theme_settings: "Paramètres de Thème",
+    custom_theme: "Thème Personnalisé",
+    upgrade_for_more_themes: "Passez à Premium ou Pro pour plus de thèmes",
+    upgrade_for_custom_themes: "Passez à Pro pour les thèmes personnalisés",
+    all_themes_available: "Vous avez accès à tous les thèmes + personnalisé",
+    custom_theme_description: "Créez votre propre thème en sélectionnant deux couleurs",
+    primary_color: "Couleur Primaire",
+    secondary_color: "Couleur Secondaire",
   },
 
   de: {
@@ -289,6 +367,32 @@ export const translations = {
     event_saved_calendar: "Ereignis im Kalender gespeichert!",
     error_saving_calendar: "Fehler beim Speichern im Kalender",
     upgrade_to_send_files: "Upgraden Sie Ihren Plan, um Dateien zu senden!",
+
+    // Einstellungsseite - Allgemein
+    general_settings: "Allgemeine Einstellungen",
+    email_cannot_be_changed: "E-Mail kann nicht geändert werden",
+    language_english: "English",
+    language_spanish: "Español",
+    language_french: "Français",
+    language_german: "Deutsch",
+    language_italian: "Italiano",
+    timezone_region: "Zeitzone / Region",
+    current_time: "Aktuelle Zeit",
+
+    // Einstellungsseite - Pomodoro
+    pomodoro_settings: "Pomodoro-Einstellungen",
+    pomodoro_duration: "Pomodoro-Dauer",
+    pomodoro_work_session_length: "Standardlänge der Arbeitssitzung",
+
+    // Einstellungsseite - Design
+    theme_settings: "Design-Einstellungen",
+    custom_theme: "Benutzerdefiniertes Design",
+    upgrade_for_more_themes: "Aktualisieren Sie auf Premium oder Pro für weitere Designs",
+    upgrade_for_custom_themes: "Aktualisieren Sie auf Pro für benutzerdefinierte Designs",
+    all_themes_available: "Sie haben Zugriff auf alle Designs + benutzerdefiniert",
+    custom_theme_description: "Erstellen Sie ein eigenes Design, indem Sie zwei Farben auswählen",
+    primary_color: "Primärfarbe",
+    secondary_color: "Sekundärfarbe",
   },
 
   it: {
@@ -362,5 +466,31 @@ export const translations = {
     event_saved_calendar: "Evento salvato nel calendario!",
     error_saving_calendar: "Errore nel salvataggio nel calendario",
     upgrade_to_send_files: "Aggiorna il tuo piano per inviare file!",
+
+    // Pagina impostazioni - Generale
+    general_settings: "Impostazioni Generali",
+    email_cannot_be_changed: "L'email non può essere modificato",
+    language_english: "English",
+    language_spanish: "Español",
+    language_french: "Français",
+    language_german: "Deutsch",
+    language_italian: "Italiano",
+    timezone_region: "Fuso orario / Regione",
+    current_time: "Ora attuale",
+
+    // Pagina impostazioni - Pomodoro
+    pomodoro_settings: "Impostazioni Pomodoro",
+    pomodoro_duration: "Durata Pomodoro",
+    pomodoro_work_session_length: "Durata predefinita della sessione di lavoro",
+
+    // Pagina impostazioni - Tema
+    theme_settings: "Impostazioni Tema",
+    custom_theme: "Tema Personalizzato",
+    upgrade_for_more_themes: "Passa a Premium o Pro per più temi",
+    upgrade_for_custom_themes: "Passa a Pro per temi personalizzati",
+    all_themes_available: "Hai accesso a tutti i temi + personalizzato",
+    custom_theme_description: "Crea il tuo tema selezionando due colori",
+    primary_color: "Colore Primario",
+    secondary_color: "Colore Secondario",
   },
 }
