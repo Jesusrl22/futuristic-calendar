@@ -150,9 +150,14 @@ const AIPage = () => {
   const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
       const session = await supabase.auth.getSession()
-      if (!session.data.session?.access_token) return
+      if (!session.data.session?.access_token) {
+        console.log("[v0] No session, conversation not saved")
+        return
+      }
 
       const existingConv = conversations.find((c) => c.id === conversationId)
+
+      console.log("[v0] Saving conversation:", { conversationId, messagesCount: messages.length })
 
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
@@ -166,6 +171,8 @@ const AIPage = () => {
           messages: messages,
         }),
       })
+
+      console.log("[v0] Save response status:", response.status)
 
       if (response.ok) {
         // Update local conversations list
@@ -185,6 +192,8 @@ const AIPage = () => {
 
         setConversations(updated)
         setCurrentConversationId(conversationId)
+      } else {
+        console.error("[v0] Save failed:", response.status, response.statusText)
       }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
@@ -472,6 +481,14 @@ const AIPage = () => {
   const monthlyCredits = profileData.monthlyCredits
   const purchasedCredits = profileData.purchasedCredits
 
+  const handleModeChange = (mode: "chat" | "study" | "analyze") => {
+    setAiMode(mode)
+    setMessages([])
+    setInput("")
+    setUploadedFile(null)
+    setFilePreviewData(null)
+  }
+
   if (isLoadingProfile) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -551,7 +568,7 @@ const AIPage = () => {
           </div>
         </div>
 
-        <Tabs value={aiMode} onValueChange={(v) => setAiMode(v as "chat" | "study" | "analyze")} className="mb-4">
+        <Tabs value={aiMode} onValueChange={handleModeChange} className="mb-4">
           <TabsList className="grid w-full grid-cols-3 bg-secondary/30">
             <TabsTrigger value="chat" className="text-xs md:text-sm">
               <span className="hidden sm:inline">{t("chat_mode") || "Chat"}</span>
