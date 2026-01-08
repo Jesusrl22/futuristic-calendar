@@ -175,7 +175,7 @@ const AIPage = () => {
     }
   }
 
-  const getAiSystemPrompt = () => {
+  const getSystemPrompt = () => {
     const prompts = {
       chat: t("chat_system_prompt") || "You are a helpful AI assistant. Provide clear, concise answers.",
       study:
@@ -188,68 +188,72 @@ const AIPage = () => {
     return prompts[aiMode]
   }
 
-  const handleSend = async (promptOverride?: string) => {
-    const messageText = promptOverride || input.trim()
-    if (!messageText && !uploadedFile) return
+  const handleSend = async () => {
+    if (!input.trim() && !uploadedFile) return
 
     setLoading(true)
+    const userMessage: Message = {
+      role: "user",
+      content: input || (uploadedFile ? `[File uploaded: ${uploadedFile.name}]` : ""),
+    }
+    const updatedMessages = [...messages, userMessage]
+    setMessages(updatedMessages)
     setInput("")
 
-    const newMessage: Message = { role: "user", content: messageText }
-    if (uploadedFile) {
-      newMessage.content = `📎 ${uploadedFile.name}\n${messageText}`
-    }
-
-    const updatedMessages = [...messages, newMessage]
-    setMessages(updatedMessages)
-    setUploadedFile(null)
-
     try {
-      const formData = new FormData()
-      formData.append("message", messageText)
-      if (uploadedFile) {
+      let endpoint = "/api/ai-chat"
+      const body: any = {
+        messages: updatedMessages,
+        mode: aiMode,
+        systemPrompt: getSystemPrompt(),
+      }
+
+      if (uploadedFile && aiMode === "analyze") {
+        endpoint = "/api/ai-chat-with-file"
+        const formData = new FormData()
         formData.append("file", uploadedFile)
-      }
+        formData.append("prompt", input || "Analyze this file")
+        formData.append("messages", JSON.stringify(updatedMessages))
+        formData.append("mode", aiMode)
 
-      let systemMessage = ""
-      if (aiMode === "study") {
-        systemMessage =
-          "You are an expert tutor. Help the student learn effectively by explaining concepts clearly, providing study tips, and creating practice questions when asked."
-      } else if (aiMode === "analyze") {
-        systemMessage =
-          "You are an expert document analyzer. Analyze documents thoroughly and provide clear summaries, key points, and insights. Be thorough but concise."
+        const session = await supabase.auth.getSession()
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.data.session?.access_token}` },
+          body: formData,
+        })
+        if (!response.ok) throw new Error("Failed to process file")
+        const data = await response.json()
+        const assistantMessage: Message = { role: "assistant", content: data.response }
+        const finalMessages = [...updatedMessages, assistantMessage]
+        setMessages(finalMessages)
+        await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
+        setProfileData((prev) => ({
+          ...prev,
+          monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
+        }))
+        setUploadedFile(null)
       } else {
-        systemMessage = "You are a helpful AI assistant. Provide clear, accurate, and helpful responses."
+        const session = await supabase.auth.getSession()
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.data.session?.access_token}`,
+          },
+          body: JSON.stringify(body),
+        })
+        if (!response.ok) throw new Error("Failed to send message")
+        const data = await response.json()
+        const assistantMessage: Message = { role: "assistant", content: data.response }
+        const finalMessages = [...updatedMessages, assistantMessage]
+        setMessages(finalMessages)
+        await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
+        setProfileData((prev) => ({
+          ...prev,
+          monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
+        }))
       }
-
-      const response = await fetch("/api/ai-chat-with-file", {
-        method: "POST",
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        if (response.status === 402) {
-          showUpgradeModal()
-        } else {
-          toast.error(error.error || t("error_sending") || "Error sending message")
-        }
-        setMessages(updatedMessages.slice(0, -1))
-        setLoading(false)
-        return
-      }
-
-      const data = await response.json()
-      const assistantMessage: Message = { role: "assistant", content: data.response }
-      const finalMessages = [...updatedMessages, assistantMessage]
-      setMessages(finalMessages)
-
-      await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
-
-      setProfileData((prev) => ({
-        ...prev,
-        monthlyCredits: data.creditsRemaining?.split("/")[0] || prev.monthlyCredits,
-      }))
     } catch (error) {
       console.error("[v0] Error:", error)
       toast.error(t("error_sending") || "Failed to send message")
