@@ -11,7 +11,7 @@ const faqDatabase = {
     {
       keywords: ["free credits", "free plan credits", "how many credits free", "creditos gratis", "créditos plan free"],
       answer:
-        "The Free plan includes 10 credits per month for the AI Assistant. Each question costs 2 credits, and file analysis costs 3 credits. Upgrade to Premium for unlimited credits!",
+        "The Free plan includes 0 credits per month. You can purchase credits to use the AI Assistant. Premium includes 100 monthly credits and Pro includes 500. Each question costs 2 credits, and file analysis costs 3 credits.",
     },
     {
       keywords: ["create task", "add task", "new task", "make task"],
@@ -82,7 +82,7 @@ const faqDatabase = {
     {
       keywords: ["créditos gratis", "créditos plan free", "cuántos créditos gratis"],
       answer:
-        "El plan Gratis incluye 10 créditos por mes para el Asistente de IA. Cada pregunta cuesta 2 créditos y el análisis de archivos cuesta 3. ¡Actualiza a Premium para créditos ilimitados!",
+        "El plan Gratis incluye 0 créditos. Puedes comprar créditos para usar el Asistente de IA. Premium incluye 100 créditos mensuales y Pro incluye 500. Cada pregunta cuesta 2 créditos y el análisis de archivos cuesta 3.",
     },
     {
       keywords: ["crear tarea", "agregar tarea", "nueva tarea", "hacer tarea"],
@@ -141,7 +141,7 @@ const faqDatabase = {
     {
       keywords: ["equipo", "colaborar", "compartir", "invitar"],
       answer:
-        "En Premium, pu puedes crear teams e invitare collaborators. Share projects, assign tasks and communicate all'interno dell'app. Each team member needs a separate account.",
+        "En Premium, puedes crear equipos e invitar colaboradores. Comparte proyectos, asigna tareas y comunica dentro de la aplicación. Cada miembro del equipo necesita una cuenta separada.",
     },
   ],
   fr: [
@@ -153,7 +153,7 @@ const faqDatabase = {
     {
       keywords: ["crédits gratuits", "plan gratuit", "combien de crédits gratuits"],
       answer:
-        "Le plan Gratuit inclut 10 crédits par mois pour l'Assistant IA. Chaque question coûte 2 crédits et l'analyse de fichiers coûte 3. Passez à Premium pour des crédits illimités!",
+        "Le plan Gratuit inclut 0 crédits par mois. Vous pouvez acheter des crédits pour utiliser l'Assistant IA. Premium inclut 100 crédits mensuels et Pro inclut 500. Chaque question coûte 2 crédits et l'analyse de fichiers coûte 3.",
     },
     {
       keywords: ["créer tâche", "ajouter tâche", "nouvelle tâche"],
@@ -224,7 +224,7 @@ const faqDatabase = {
     {
       keywords: ["kostenlose guthaben", "kostenlos guthaben", "wie viel kostenlos guthaben"],
       answer:
-        "Der kostenlose Plan enthält 10 Guthaben pro Monat für den KI-Assistenten. Jede Frage kostet 2 Guthaben und die Dateianalyse kostet 3. Upgrade zu Premium für unbegrenzte Guthaben!",
+        "Der kostenlose Plan enthält 0 Guthaben pro Monat. Sie können Guthaben kaufen, um den KI-Assistenten zu nutzen. Premium enthält 100 monatliche Guthaben und Pro enthält 500. Jede Frage kostet 2 Guthaben und die Dateianalyse kostet 3.",
     },
     {
       keywords: ["aufgabe erstellen", "aufgabe hinzufügen", "neue aufgabe"],
@@ -294,7 +294,7 @@ const faqDatabase = {
     {
       keywords: ["crediti gratuiti", "piano gratuito", "quanti crediti gratuiti"],
       answer:
-        "Il piano Gratuito include 10 crediti al mese per l'Assistente IA. Ogni domanda costa 2 crediti e l'analisi dei file costa 3. Passa a Premium per crediti illimitati!",
+        "Il piano Gratuito include 0 crediti al mese. Puoi acquistare crediti per utilizzare l'Assistente IA. Premium include 100 crediti mensili e Pro include 500. Ogni domanda costa 2 crediti e l'analisi dei file costa 3.",
     },
     {
       keywords: ["creare attività", "aggiungere attività", "nuova attività"],
