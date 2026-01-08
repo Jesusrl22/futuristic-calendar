@@ -71,6 +71,12 @@ export const translations = {
     error_saving_calendar: "Error saving to calendar",
     upgrade_to_send_files: "Upgrade your plan to send files!",
 
+    // File upload and save translations
+    file_uploaded: "File uploaded",
+    analyze_this_file: "Analyze this file",
+    save_as_task: "Save as task",
+    save_to_calendar: "Save to calendar",
+
     // Settings page - General
     general_settings: "General Settings",
     email_cannot_be_changed: "Email cannot be changed",
@@ -169,6 +175,12 @@ export const translations = {
     event_saved_calendar: "¡Evento guardado en el calendario!",
     error_saving_calendar: "Error al guardar en el calendario",
     upgrade_to_send_files: "¡Actualiza tu plan para enviar archivos!",
+
+    // Traducciones de carga de archivo y guardar
+    file_uploaded: "Archivo subido",
+    analyze_this_file: "Analiza este archivo",
+    save_as_task: "Guardar como tarea",
+    save_to_calendar: "Guardar en calendario",
 
     // Página de configuración - General
     general_settings: "Configuración General",
@@ -269,6 +281,12 @@ export const translations = {
     error_saving_calendar: "Erreur lors de l'enregistrement dans le calendrier",
     upgrade_to_send_files: "Mettez à niveau votre plan pour envoyer des fichiers!",
 
+    // Traductions de chargement de fichier et sauvegarde
+    file_uploaded: "Fichier téléchargé",
+    analyze_this_file: "Analysez ce fichier",
+    save_as_task: "Enregistrer comme tâche",
+    save_to_calendar: "Enregistrer dans le calendrier",
+
     // Page paramètres - Général
     general_settings: "Paramètres Généraux",
     email_cannot_be_changed: "L'email ne peut pas être modifié",
@@ -368,6 +386,12 @@ export const translations = {
     error_saving_calendar: "Fehler beim Speichern im Kalender",
     upgrade_to_send_files: "Upgraden Sie Ihren Plan, um Dateien zu senden!",
 
+    // Dateiupload und -speicherung
+    file_uploaded: "Datei hochgeladen",
+    analyze_this_file: "Diese Datei analysieren",
+    save_as_task: "Als Aufgabe speichern",
+    save_to_calendar: "Im Kalender speichern",
+
     // Einstellungsseite - Allgemein
     general_settings: "Allgemeine Einstellungen",
     email_cannot_be_changed: "E-Mail kann nicht geändert werden",
@@ -466,6 +490,12 @@ export const translations = {
     event_saved_calendar: "Evento salvato nel calendario!",
     error_saving_calendar: "Errore nel salvataggio nel calendario",
     upgrade_to_send_files: "Aggiorna il tuo piano per inviare file!",
+
+    // Traduzioni di caricamento file e salvataggio
+    file_uploaded: "File caricato",
+    analyze_this_file: "Analizza questo file",
+    save_as_task: "Salva come attività",
+    save_to_calendar: "Salva nel calendario",
 
     // Pagina impostazioni - Generale
     general_settings: "Impostazioni Generali",

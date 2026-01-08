@@ -194,7 +194,7 @@ const AIPage = () => {
     setLoading(true)
     const userMessage: Message = {
       role: "user",
-      content: input || (uploadedFile ? `[File uploaded: ${uploadedFile.name}]` : ""),
+      content: input || (uploadedFile ? `[${t("file_uploaded")}: ${uploadedFile.name}]` : ""),
     }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
@@ -212,7 +212,7 @@ const AIPage = () => {
         endpoint = "/api/ai-chat-with-file"
         const formData = new FormData()
         formData.append("file", uploadedFile)
-        formData.append("prompt", input || "Analyze this file")
+        formData.append("prompt", input || t("analyze_this_file"))
         formData.append("messages", JSON.stringify(updatedMessages))
         formData.append("mode", aiMode)
 
@@ -581,7 +581,7 @@ const AIPage = () => {
                             setShowSaveDialog(true)
                           }}
                           className="text-xs px-2 py-1 rounded bg-primary/20 hover:bg-primary/30 transition"
-                          title="Save as task"
+                          title={t("save_as_task")}
                         >
                           📝 Task
                         </button>
@@ -592,7 +592,7 @@ const AIPage = () => {
                             setShowSaveDialog(true)
                           }}
                           className="text-xs px-2 py-1 rounded bg-primary/20 hover:bg-primary/30 transition"
-                          title="Save to calendar"
+                          title={t("save_to_calendar")}
                         >
                           📅 Calendar
                         </button>
@@ -710,9 +710,9 @@ const AIPage = () => {
       {showSaveDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <Card className="glass-card max-w-md w-full space-y-4 p-6">
-            <h3 className="text-lg font-bold">
-              {t("save_to") || "Save to"} {saveType === "task" ? t("task") || "Task" : t("calendar") || "Calendar"}
-            </h3>
+            <h2 className="text-lg font-semibold">
+              {t("save_to")} {saveType === "task" ? t("task") : t("calendar")}
+            </h2>
 
             <div>
               <label className="text-sm font-medium">{t("title") || "Title"}</label>
