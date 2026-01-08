@@ -1,7 +1,7 @@
 import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
+import { groq } from "@ai-sdk/groq"
 
-// FAQ Database with translations
+// FAQ Database with translations - expanded with subscription and pack info
 const faqDatabase = {
   en: [
     {
@@ -30,9 +30,24 @@ const faqDatabase = {
         "Visit Settings to customize your profile, change language, set your timezone, and adjust Pomodoro durations. Your preferences are saved automatically.",
     },
     {
-      keywords: ["premium", "upgrade", "subscription", "pro"],
+      keywords: ["cancel subscription", "cancel plan", "unsubscribe", "stop subscription"],
       answer:
-        "Upgrade to Premium for unlimited AI assistant usage, advanced analytics, team collaboration, and more. Visit the Subscription section to see plans.",
+        "To cancel your subscription, go to Settings > Subscription and click 'Cancel Plan'. Your access will continue until the end of your billing period. No refunds are issued for partial months.",
+    },
+    {
+      keywords: ["buy packs", "purchase credits", "get credits", "buy credits"],
+      answer:
+        "You can buy credit packs from the Subscription section. Choose a pack, complete the payment, and your credits will be added immediately. Unused credits never expire.",
+    },
+    {
+      keywords: ["premium", "upgrade", "subscription", "pro", "pro plan"],
+      answer:
+        "Upgrade to Premium for unlimited AI assistant usage, advanced analytics, team collaboration, and priority support. Visit Subscription to see all available plans and features.",
+    },
+    {
+      keywords: ["refund", "money back", "reembolso"],
+      answer:
+        "We offer a 30-day money-back guarantee on all subscription plans. If you're not satisfied, contact support within 30 days of purchase for a full refund.",
     },
     {
       keywords: ["sync", "cloud", "backup", "data"],
@@ -43,6 +58,11 @@ const faqDatabase = {
       keywords: ["export", "download", "save data", "backup"],
       answer:
         "You can export your tasks and notes as CSV or PDF from the settings menu. This allows you to backup your data or use it elsewhere.",
+    },
+    {
+      keywords: ["team", "collaborate", "share", "invite"],
+      answer:
+        "In Premium, you can create teams and invite collaborators. Share projects, assign tasks, and communicate within the app. Each team member needs a separate account.",
     },
   ],
   es: [
@@ -72,9 +92,24 @@ const faqDatabase = {
         "Visita Configuración para personalizar tu perfil, cambiar el idioma, establecer tu zona horaria y ajustar las duraciones de Pomodoro. Tus preferencias se guardan automáticamente.",
     },
     {
-      keywords: ["premium", "actualizar", "suscripción", "pro"],
+      keywords: ["cancelar suscripción", "cancelar plan", "desuscribirse", "parar suscripción"],
       answer:
-        "Actualiza a Premium para obtener uso ilimitado del asistente de IA, análisis avanzado, colaboración en equipo y más. Visita la sección Suscripción para ver los planes.",
+        "Para cancelar tu suscripción, ve a Configuración > Suscripción y haz clic en 'Cancelar Plan'. Tu acceso continuará hasta el final de tu período de facturación. No se emiten reembolsos por meses parciales.",
+    },
+    {
+      keywords: ["comprar packs", "comprar créditos", "obtener créditos", "paquete créditos"],
+      answer:
+        "Puedes comprar paquetes de créditos en la sección Suscripción. Elige un paquete, completa el pago y tus créditos se agregarán inmediatamente. Los créditos no utilizados nunca vencen.",
+    },
+    {
+      keywords: ["premium", "actualizar", "suscripción", "pro", "plan pro"],
+      answer:
+        "Actualiza a Premium para obtener uso ilimitado del asistente de IA, análisis avanzado, colaboración en equipo y soporte prioritario. Visita Suscripción para ver todos los planes y características disponibles.",
+    },
+    {
+      keywords: ["reembolso", "devolución de dinero", "devolver dinero"],
+      answer:
+        "Ofrecemos una garantía de devolución de dinero de 30 días en todos los planes de suscripción. Si no estás satisfecho, contacta con soporte dentro de 30 días de la compra para obtener un reembolso completo.",
     },
     {
       keywords: ["sincronizar", "nube", "copia de seguridad", "datos"],
@@ -85,6 +120,11 @@ const faqDatabase = {
       keywords: ["exportar", "descargar", "guardar datos", "respaldo"],
       answer:
         "Puedes exportar tus tareas y notas como CSV o PDF desde el menú de configuración. Esto te permite respaldar tus datos o usarlos en otro lugar.",
+    },
+    {
+      keywords: ["equipo", "colaborar", "compartir", "invitar"],
+      answer:
+        "En Premium, puedes crear equipos e invitar colaboradores. Comparte proyectos, asigna tareas y comunícate dentro de la aplicación. Cada miembro del equipo necesita una cuenta separada.",
     },
   ],
   fr: [
@@ -114,9 +154,24 @@ const faqDatabase = {
         "Visitez Paramètres pour personnaliser votre profil, changer de langue, définir votre fuseau horaire et ajuster les durées de Pomodoro. Vos préférences sont enregistrées automatiquement.",
     },
     {
-      keywords: ["premium", "mettre à niveau", "abonnement", "pro"],
+      keywords: ["annuler abonnement", "annuler plan", "se désabonner", "arrêter abonnement"],
       answer:
-        "Passez à Premium pour un usage illimité de l'assistant IA, des analyses avancées, la collaboration en équipe, et plus encore. Visitez la section Abonnement pour voir les plans.",
+        "Pour annuler votre abonnement, allez à Paramètres > Abonnement et cliquez sur 'Annuler Plan'. Votre accès se poursuivra jusqu'à la fin de votre période de facturation. Aucun remboursement n'est émis pour les mois partiels.",
+    },
+    {
+      keywords: ["acheter packs", "acheter crédits", "obtenir crédits", "paquets crédits"],
+      answer:
+        "Vous pouvez acheter des forfaits de crédits à partir de la section Abonnement. Choisissez un forfait, effectuez le paiement et vos crédits seront ajoutés immédiatement. Les crédits inutilisés n'expirent jamais.",
+    },
+    {
+      keywords: ["premium", "mettre à niveau", "abonnement", "pro", "plan pro"],
+      answer:
+        "Passez à Premium pour un usage illimité de l'assistant IA, des analyses avancées, la collaboration en équipe et un support prioritaire. Visitez Abonnement pour voir tous les plans et fonctionnalités disponibles.",
+    },
+    {
+      keywords: ["remboursement", "retour argent", "retour d'argent"],
+      answer:
+        "Nous offrons une garantie de remboursement de 30 jours sur tous les plans d'abonnement. Si vous n'êtes pas satisfait, contactez le support dans les 30 jours suivant votre achat pour un remboursement complet.",
     },
     {
       keywords: ["synchroniser", "cloud", "sauvegarde", "données"],
@@ -127,6 +182,11 @@ const faqDatabase = {
       keywords: ["exporter", "télécharger", "enregistrer données", "sauvegarde"],
       answer:
         "Vous pouvez exporter vos tâches et notes au format CSV ou PDF à partir du menu des paramètres. Cela vous permet de sauvegarder vos données ou de les utiliser ailleurs.",
+    },
+    {
+      keywords: ["équipe", "collaborer", "partager", "inviter"],
+      answer:
+        "En Premium, vous pouvez créer des équipes et inviter des collaborateurs. Partagez des projets, assignez des tâches et communiquez au sein de l'application. Chaque membre de l'équipe a besoin d'un compte séparé.",
     },
   ],
   de: [
@@ -156,9 +216,24 @@ const faqDatabase = {
         "Besuchen Sie Einstellungen, um Ihr Profil anzupassen, die Sprache zu ändern, Ihre Zeitzone festzulegen und Pomodoro-Dauern anzupassen. Ihre Einstellungen werden automatisch gespeichert.",
     },
     {
-      keywords: ["premium", "upgrade", "abonnement", "pro"],
+      keywords: ["abonnement kündigen", "plan kündigen", "abmelden", "abonnement stoppen"],
       answer:
-        "Upgrade auf Premium für unbegrenzte KI-Assistenten-Nutzung, erweiterte Analytik, Teamzusammenarbeit und mehr. Besuchen Sie den Abschnitt Abonnement, um die Pläne anzuzeigen.",
+        "Um Ihr Abonnement zu kündigen, gehen Sie zu Einstellungen > Abonnement und klicken Sie auf 'Plan kündigen'. Ihr Zugriff wird bis zum Ende Ihres Abrechnungszeitraums fortgesetzt. Für Teilmonate werden keine Rückerstattungen ausgestellt.",
+    },
+    {
+      keywords: ["packs kaufen", "guthaben kaufen", "guthaben erhalten", "gutschein packs"],
+      answer:
+        "Sie können Gutschein-Packs im Abschnitt Abonnement kaufen. Wählen Sie ein Pack, führen Sie die Zahlung durch und Ihr Guthaben wird sofort hinzugefügt. Ungenutztes Guthaben verfällt nie.",
+    },
+    {
+      keywords: ["premium", "upgrade", "abonnement", "pro", "pro-plan"],
+      answer:
+        "Upgrade auf Premium für unbegrenzte KI-Assistenten-Nutzung, erweiterte Analytik, Teamzusammenarbeit und vorrangigen Support. Besuchen Sie Abonnement, um alle verfügbaren Pläne und Funktionen anzuzeigen.",
+    },
+    {
+      keywords: ["rückerstattung", "geld zurück", "geld zurückgeben"],
+      answer:
+        "Wir bieten eine 30-Tage-Rückgabegarantie für alle Abonnementpläne. Wenn Sie nicht zufrieden sind, wenden Sie sich innerhalb von 30 Tagen nach dem Kauf an den Support für eine vollständige Rückerstattung.",
     },
     {
       keywords: ["synchronisieren", "cloud", "sicherung", "daten"],
@@ -169,6 +244,11 @@ const faqDatabase = {
       keywords: ["exportieren", "herunterladen", "daten speichern", "sicherung"],
       answer:
         "Sie können Ihre Aufgaben und Notizen als CSV oder PDF aus dem Einstellungsmenü exportieren. Dies ermöglicht es Ihnen, Ihre Daten zu sichern oder anderswo zu verwenden.",
+    },
+    {
+      keywords: ["team", "zusammenarbeiten", "teilen", "einladen"],
+      answer:
+        "In Premium können Sie Teams erstellen und Mitarbeiter einladen. Teilen Sie Projekte, weisen Sie Aufgaben zu und kommunizieren Sie innerhalb der App. Jedes Teamitglied benötigt ein separates Konto.",
     },
   ],
   it: [
@@ -198,9 +278,24 @@ const faqDatabase = {
         "Visita Impostazioni per personalizzare il tuo profilo, cambiare lingua, impostare il tuo fuso orario e regolare le durate di Pomodoro. Le tue preferenze vengono salvate automaticamente.",
     },
     {
-      keywords: ["premium", "aggiorna", "abbonamento", "pro"],
+      keywords: ["annulla abbonamento", "annulla piano", "cancella abbonamento", "ferma abbonamento"],
       answer:
-        "Passa a Premium per un utilizzo illimitato dell'assistente IA, analisi avanzate, collaborazione di team e altro ancora. Visita la sezione Abbonamento per vedere i piani.",
+        "Per annullare il tuo abbonamento, vai a Impostazioni > Abbonamento e fai clic su 'Annulla piano'. Il tuo accesso continuerà fino alla fine del tuo periodo di fatturazione. Non vengono emessi rimborsi per mesi parziali.",
+    },
+    {
+      keywords: ["acquista pack", "acquista crediti", "ottieni crediti", "pacchetti crediti"],
+      answer:
+        "Puoi acquistare pacchetti di crediti dalla sezione Abbonamento. Scegli un pacchetto, completa il pagamento e i tuoi crediti verranno aggiunti immediatamente. I crediti inutilizzati non scadono mai.",
+    },
+    {
+      keywords: ["premium", "aggiorna", "abbonamento", "pro", "piano pro"],
+      answer:
+        "Passa a Premium per un utilizzo illimitato dell'assistente IA, analisi avanzate, collaborazione di team e supporto prioritario. Visita Abbonamento per vedere tutti i piani e le funzioni disponibili.",
+    },
+    {
+      keywords: ["rimborso", "soldi indietro", "restituzione soldi"],
+      answer:
+        "Offriamo una garanzia di rimborso di 30 giorni su tutti i piani di abbonamento. Se non sei soddisfatto, contatta il supporto entro 30 giorni dall'acquisto per un rimborso completo.",
     },
     {
       keywords: ["sincronizza", "cloud", "backup", "dati"],
@@ -211,6 +306,11 @@ const faqDatabase = {
       keywords: ["esporta", "scarica", "salva dati", "backup"],
       answer:
         "Puoi esportare le tue attività e note come CSV o PDF dal menu delle impostazioni. Questo ti consente di eseguire il backup dei dati o utilizzarli altrove.",
+    },
+    {
+      keywords: ["team", "collabora", "condividi", "invita"],
+      answer:
+        "In Premium, puoi creare team e invitare collaboratori. Condividi progetti, assegna attività e comunica all'interno dell'app. Ogni membro del team ha bisogno di un account separato.",
     },
   ],
 }
@@ -240,7 +340,6 @@ export async function POST(request: Request) {
       return Response.json({ answer: faqAnswer, source: "faq" })
     }
 
-    // If no FAQ match, use AI to generate an answer
     const languagePrompt =
       language === "es"
         ? "Responde en español."
@@ -252,13 +351,17 @@ export async function POST(request: Request) {
               ? "Rispondi in italiano."
               : "Respond in English."
 
-    const systemPrompt = `You are a helpful support assistant for Future Task, a smart task management application. 
-You help users with questions about how to use the app, its features, and functionality.
-Keep responses concise, friendly, and helpful. If you don't know something, suggest contacting support.
+    const systemPrompt = `You are a helpful support assistant for Future Task, a smart task management application.
+You help users with questions about how to use the app, its features, subscriptions, credit packs, cancellations, and functionality.
+The app allows users to manage tasks, calendar events, use an AI assistant (Chat, Study, Analyze modes), Pomodoro timer, achievements, and teams.
+Premium subscriptions provide unlimited AI usage, advanced analytics, team collaboration, and priority support.
+Users can buy credit packs for additional AI usage at any time.
+Users can cancel their subscription anytime, and access continues until the end of the billing period.
+Keep responses concise, friendly, and helpful. If you don't know something, suggest contacting support at support@futuretask.com.
 ${languagePrompt}`
 
     const { text: aiAnswer } = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: groq("mixtral-8x7b-32768"),
       system: systemPrompt,
       prompt: question,
       maxTokens: 200,

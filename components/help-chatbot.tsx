@@ -85,24 +85,21 @@ export function HelpChatbot() {
 
   return (
     <>
-      {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-primary hover:bg-primary/80 text-primary-foreground shadow-lg flex items-center justify-center transition-all hover:scale-110 neon-glow"
         aria-label="Open help chatbot"
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 z-40 w-96 h-[500px] flex flex-col shadow-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-          {/* Header */}
-          <div className="bg-blue-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+        <Card className="fixed bottom-24 right-6 z-40 w-96 h-[500px] flex flex-col shadow-xl border border-border bg-card dark:bg-card">
+          <div className="bg-primary text-primary-foreground p-4 rounded-t-lg flex items-center justify-between">
             <h3 className="font-semibold">{t("help_chatbot_title") || "Help & Support"}</h3>
             <button
               onClick={() => setIsOpen(false)}
-              className="hover:bg-blue-700 p-1 rounded"
+              className="hover:opacity-80 p-1 rounded transition-opacity"
               aria-label="Close help chatbot"
             >
               <X size={20} />
@@ -110,9 +107,9 @@ export function HelpChatbot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background">
             {messages.length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400 text-sm mt-8">
+              <div className="text-center text-muted-foreground text-sm mt-8">
                 <p className="mb-4">{t("help_chatbot_welcome") || "Welcome! How can we help?"}</p>
                 <p className="text-xs">{t("help_chatbot_faq") || "We'll answer your questions using FAQs or AI."}</p>
               </div>
@@ -122,8 +119,8 @@ export function HelpChatbot() {
                   <div
                     className={`max-w-xs px-4 py-2 rounded-lg ${
                       message.type === "user"
-                        ? "bg-blue-600 text-white rounded-br-none"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none"
+                        ? "bg-primary text-primary-foreground rounded-br-none"
+                        : "bg-secondary text-secondary-foreground rounded-bl-none"
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
@@ -133,11 +130,11 @@ export function HelpChatbot() {
             )}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg rounded-bl-none">
+                <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg rounded-bl-none">
                   <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-100" />
+                    <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce delay-200" />
                   </div>
                 </div>
               </div>
@@ -145,8 +142,7 @@ export function HelpChatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="border-t border-gray-200 dark:border-gray-800 p-3 flex gap-2">
+          <div className="border-t border-border p-3 flex gap-2 bg-card">
             <Input
               type="text"
               placeholder={t("help_chatbot_input") || "Ask a question..."}
@@ -154,13 +150,13 @@ export function HelpChatbot() {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               disabled={isLoading}
-              className="flex-1"
+              className="flex-1 bg-input border-border"
             />
             <Button
               onClick={handleSendMessage}
               disabled={isLoading || !input.trim()}
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/80 text-primary-foreground"
             >
               <Send size={16} />
             </Button>
