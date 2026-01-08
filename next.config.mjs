@@ -13,6 +13,12 @@ const nextConfig = {
   
   output: 'standalone',
   
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+  
   // Optimize bundle size
   webpack: (config, { isServer }) => {
     if (!isServer) {

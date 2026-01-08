@@ -73,6 +73,39 @@ const AIPage = () => {
     ],
   }
 
+  const compressImage = async (file: File): Promise<string> => {
+    if (!file.type.startsWith("image/")) return ""
+
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          let width = img.width
+          let height = img.height
+
+          // Max 1200px width, maintain aspect ratio
+          if (width > 1200) {
+            height = (height * 1200) / width
+            width = 1200
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext("2d")
+          ctx?.drawImage(img, 0, 0, width, height)
+
+          // Convert to base64 with quality reduction
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7)
+          resolve(dataUrl)
+        }
+        img.src = e.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
   const checkAccessAndLoadConversations = async () => {
     setIsLoadingProfile(true)
     try {
@@ -303,7 +336,15 @@ const AIPage = () => {
       return
     }
 
-    setUploadedFile(file)
+    if (file.type.startsWith("image/")) {
+      const compressed = await compressImage(file)
+      // Create a File object from the compressed data for sending to API
+      const blob = await fetch(compressed).then((r) => r.blob())
+      const compressedFile = new File([blob], file.name, { type: "image/jpeg" })
+      setUploadedFile(compressedFile)
+    } else {
+      setUploadedFile(file)
+    }
 
     const reader = new FileReader()
     reader.onload = (e) => {
