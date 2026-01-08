@@ -42,22 +42,29 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 
 async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   try {
-    const JSZip = await import("jszip")
-    const zip = new JSZip.default(buffer)
+    const { default: JSZip } = await import("jszip")
+    const uint8Array = new Uint8Array(buffer)
+    const zip = new JSZip()
+    await zip.loadAsync(uint8Array)
 
     // Read document.xml which contains the actual text
     const documentXml = zip.file("word/document.xml")
 
     if (documentXml) {
       const xmlString = await documentXml.async("string")
+      console.log("[v0] XML content length:", xmlString.length)
+
       // Extract all text nodes from the XML
       const textMatches = xmlString.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
+      console.log("[v0] Found text matches:", textMatches.length)
+
       const text = textMatches
         .map((match) => match.replace(/<[^>]+>/g, ""))
         .join(" ")
         .replace(/\s+/g, " ")
         .trim()
 
+      console.log("[v0] Extracted text length:", text.length)
       if (text.length > 0) {
         return text.substring(0, 10000)
       }
