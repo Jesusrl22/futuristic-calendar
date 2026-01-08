@@ -270,7 +270,7 @@ const faqDatabase = {
     {
       keywords: ["pomodoro", "timer", "focus", "sessione di lavoro"],
       answer:
-        "Vai a Pomodoro per avviare una sessione di concentrazione. Il timer è impostato su 25 minuti di lavoro seguiti da una pausa. Puoi personalizzare la durata in Impostazioni.",
+        "Vai a Pomodoro per avviare una sessione di concentrazione. Il timer è impostato su 25 minuti di lavoro seguiti da una pausa. Puoi personalizzare la durazione in Impostazioni.",
     },
     {
       keywords: ["impostazioni", "profilo", "preferenze", "lingua"],
@@ -377,6 +377,24 @@ ${languagePrompt}`
     return Response.json({ answer: aiAnswer, source: "ai" })
   } catch (error) {
     console.error("[v0] Help chat error:", error)
-    return Response.json({ error: "Failed to process question", details: String(error) }, { status: 500 })
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
+    if (errorMessage.includes("401") || errorMessage.includes("API key") || errorMessage.includes("GROQ")) {
+      console.log("[v0] Groq API key issue detected, returning fallback message")
+      return Response.json({
+        answer:
+          "Lo siento, el servicio de IA no está disponible en este momento. Por favor, intenta con una pregunta diferente o contacta con soporte.",
+        source: "fallback",
+      })
+    }
+
+    return Response.json(
+      {
+        answer: "Ocurrió un error procesando tu pregunta. Por favor, intenta de nuevo.",
+        source: "error",
+      },
+      { status: 200 },
+    )
   }
 }
