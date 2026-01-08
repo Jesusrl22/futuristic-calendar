@@ -42,38 +42,34 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 
 async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   try {
-    // Try to extract from ZIP-compressed DOCX
-    const { unzipSync } = await import("unzipper")
+    const JSZip = await import("jszip")
+    const zip = new JSZip.default(buffer)
 
-    try {
-      const extracted = await unzipSync(buffer)
+    // Read document.xml which contains the actual text
+    const documentXml = zip.file("word/document.xml")
 
-      // Read document.xml which contains the actual text
-      const documentXml = extracted.files["word/document.xml"]?.buffer
+    if (documentXml) {
+      const xmlString = await documentXml.async("string")
+      // Extract all text nodes from the XML
+      const textMatches = xmlString.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
+      const text = textMatches
+        .map((match) => match.replace(/<[^>]+>/g, ""))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim()
 
-      if (documentXml) {
-        const xmlString = documentXml.toString("utf8")
-        // Extract all text nodes from the XML
-        const textMatches = xmlString.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
-        const text = textMatches
-          .map((match) => match.replace(/<[^>]+>/g, ""))
-          .join(" ")
-          .replace(/\s+/g, " ")
-          .trim()
-
-        if (text.length > 0) {
-          return text.substring(0, 10000)
-        }
+      if (text.length > 0) {
+        return text.substring(0, 10000)
       }
-    } catch {
-      // If unzip fails, try as UTF-8 text
-      const text = buffer.toString("utf8")
-      const textMatches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
-      if (textMatches.length > 0) {
-        const extracted = textMatches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ")
-        if (extracted.length > 0) {
-          return extracted.substring(0, 10000)
-        }
+    }
+
+    // If jszip extraction fails, try as UTF-8 text
+    const text = buffer.toString("utf8")
+    const textMatches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
+    if (textMatches.length > 0) {
+      const extracted = textMatches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ")
+      if (extracted.length > 0) {
+        return extracted.substring(0, 10000)
       }
     }
 
