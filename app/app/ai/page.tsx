@@ -19,7 +19,7 @@ const supabase = createBrowserClient(
 interface Message {
   role: string
   content: string
-  fileInfo?: { name: string; type: string }
+  fileInfo?: { name: string; type: string; base64?: string }
 }
 
 interface Conversation {
@@ -116,29 +116,45 @@ const AIPage = () => {
 
   const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
-      const session = await fetch("/api/auth/check-session")
-      const sessionData = await session.json()
+      const session = await supabase.auth.getSession()
+      if (!session.data.session?.access_token) return
 
-      if (!sessionData.token) return
+      const existingConv = conversations.find((c) => c.id === conversationId)
 
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionData.token}`,
+          Authorization: `Bearer ${session.data.session.access_token}`,
         },
         body: JSON.stringify({
           id: conversationId,
-          title: messages[0]?.content?.substring(0, 50) || "New Conversation",
+          title: messages[0]?.content?.substring(0, 50) || t("new_conversation"),
           messages: messages,
         }),
       })
 
-      if (!response.ok) {
-        console.log("[v0] Save failed")
+      if (response.ok) {
+        // Update local conversations list
+        const updated = conversations.map((c) =>
+          c.id === conversationId ? { ...c, messages, updated_at: new Date().toISOString() } : c,
+        )
+
+        if (!existingConv) {
+          updated.unshift({
+            id: conversationId,
+            title: messages[0]?.content?.substring(0, 50) || t("new_conversation"),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            messages,
+          })
+        }
+
+        setConversations(updated)
+        setCurrentConversationId(conversationId)
       }
     } catch (error) {
-      console.log("[v0] Error saving conversation:", error)
+      console.error("[v0] Error saving conversation:", error)
     }
   }
 
@@ -200,7 +216,13 @@ const AIPage = () => {
     const userMessage: Message = {
       role: "user",
       content: input || (uploadedFile ? `${t("analyze_this_file")}` : ""),
-      fileInfo: uploadedFile ? { name: uploadedFile.name, type: uploadedFile.type } : undefined,
+      fileInfo: uploadedFile
+        ? {
+            name: uploadedFile.name,
+            type: uploadedFile.type,
+            base64: filePreviewData?.file.type.startsWith("image/") ? filePreviewData.extractedPreview : undefined,
+          }
+        : undefined,
     }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
@@ -290,7 +312,7 @@ const AIPage = () => {
         if (file.type === "application/pdf") {
           preview = `[PDF: ${file.name}] - Content will be analyzed...`
         } else if (file.type.startsWith("image/")) {
-          preview = `[Image: ${file.name}] - Image will be analyzed...`
+          preview = e.target?.result as string
         } else if (file.type.startsWith("text/") || file.type.includes("document")) {
           preview = (e.target?.result as string)?.substring(0, 500) || "[Document content]"
         }
@@ -306,7 +328,6 @@ const AIPage = () => {
       reader.readAsDataURL(file)
     }
 
-    // Reset input to allow re-uploading same file
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -422,8 +443,8 @@ const AIPage = () => {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      {/* Desktop Sidebar */}
+    <div className="flex h-screen flex-col bg-background md:flex-row">
+      {/* Desktop Sidebar - Left side */}
       <div className="hidden md:flex w-64 bg-secondary/20 border-r border-border/50 flex-col p-4 gap-4 overflow-hidden">
         <Button onClick={createNewConversation} className="w-full neon-glow-hover">
           <Plus className="w-4 h-4 mr-2" />
