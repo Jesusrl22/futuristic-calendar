@@ -1,5 +1,4 @@
-import { generateText } from "ai"
-import { groq } from "@ai-sdk/groq"
+import type { NextRequest } from "next/server"
 
 // FAQ Database with translations - expanded with subscription and pack info
 const faqDatabase = {
@@ -32,22 +31,21 @@ const faqDatabase = {
     {
       keywords: ["cancel subscription", "cancel plan", "unsubscribe", "stop subscription"],
       answer:
-        "To cancel your subscription, go to Settings > Subscription and click 'Cancel Plan'. Your access will continue until the end of your billing period. No refunds are issued for partial months.",
+        "To cancel your subscription, go to Settings > Subscription and click 'Cancel Plan'. Your access will continue until the end of your billing period.",
     },
     {
       keywords: ["buy packs", "purchase credits", "get credits", "buy credits"],
       answer:
-        "You can buy credit packs from the Subscription section. Choose a pack, complete the payment, and your credits will be added immediately. Unused credits never expire.",
+        "You can buy credit packs from the Subscription section. Choose a pack, complete the payment, and your credits will be added immediately.",
     },
     {
       keywords: ["premium", "upgrade", "subscription", "pro", "pro plan"],
       answer:
-        "Upgrade to Premium for unlimited AI assistant usage, advanced analytics, team collaboration, and priority support. Visit Subscription to see all available plans and features.",
+        "Upgrade to Premium for unlimited AI assistant usage, advanced analytics, team collaboration, and priority support. Visit Subscription to see all plans.",
     },
     {
-      keywords: ["refund", "money back", "reembolso"],
-      answer:
-        "We offer a 30-day money-back guarantee on all subscription plans. If you're not satisfied, contact support within 30 days of purchase for a full refund.",
+      keywords: ["refund", "money back"],
+      answer: "We offer a 30-day money-back guarantee on all subscription plans. Contact support for details.",
     },
     {
       keywords: ["sync", "cloud", "backup", "data"],
@@ -69,117 +67,115 @@ const faqDatabase = {
     {
       keywords: ["crear tarea", "agregar tarea", "nueva tarea", "hacer tarea"],
       answer:
-        "Para crear una tarea, ve a la sección Tareas y haz clic en 'Nueva Tarea'. Ingresa el título, descripción, fecha de vencimiento y prioridad. También puedes establecer recordatorios y etiquetas.",
+        "Para crear una tarea, ve a la sección Tareas y haz clic en 'Nueva Tarea'. Ingresa el título, descripción, fecha de vencimiento y prioridad.",
     },
     {
       keywords: ["calendario", "programar", "evento", "agregar evento"],
       answer:
-        "Visita la sección Calendario para ver tus eventos. Haz clic en cualquier fecha para crear un nuevo evento. Puedes establecer eventos recurrentes, recordatorios e invitar a otros.",
+        "Visita la sección Calendario para ver tus eventos. Haz clic en cualquier fecha para crear un nuevo evento. Puedes establecer eventos recurrentes.",
     },
     {
       keywords: ["asistente ia", "ayuda ia", "preguntar ia", "modo chat"],
       answer:
-        "El Asistente de IA tiene tres modos: Chat (pregunta lo que quieras), Estudio (crea planes de estudio) y Analizar (sube archivos y documentos). ¡Selecciona un modo y comienza a hacer preguntas!",
+        "El Asistente de IA tiene tres modos: Chat (pregunta lo que quieras), Estudio (crea planes de estudio) y Analizar (sube archivos). ¡Selecciona un modo!",
     },
     {
       keywords: ["pomodoro", "temporizador", "enfoque", "sesión de trabajo"],
       answer:
-        "Ve a Pomodoro para iniciar una sesión de enfoque. El temporizador está configurado para 25 minutos de trabajo seguidos de un descanso. Puedes personalizar la duración en Configuración.",
+        "Ve a Pomodoro para iniciar una sesión de enfoque. El temporizador está configurado para 25 minutos de trabajo seguidos de un descanso.",
     },
     {
       keywords: ["configuración", "perfil", "preferencias", "idioma"],
       answer:
-        "Visita Configuración para personalizar tu perfil, cambiar el idioma, establecer tu zona horaria y ajustar las duraciones de Pomodoro. Tus preferencias se guardan automáticamente.",
+        "Visita Configuración para personalizar tu perfil, cambiar el idioma, establecer tu zona horaria y ajustar Pomodoro.",
     },
     {
-      keywords: ["cancelar suscripción", "cancelar plan", "desuscribirse", "parar suscripción"],
+      keywords: ["cancelar suscripción", "cancelar plan", "desuscribirse"],
       answer:
-        "Para cancelar tu suscripción, ve a Configuración > Suscripción y haz clic en 'Cancelar Plan'. Tu acceso continuará hasta el final de tu período de facturación. No se emiten reembolsos por meses parciales.",
+        "Para cancelar tu suscripción, ve a Configuración > Suscripción y haz clic en 'Cancelar Plan'. Tu acceso continuará hasta el final de tu período de facturación.",
     },
     {
-      keywords: ["comprar packs", "comprar créditos", "obtener créditos", "paquete créditos"],
+      keywords: ["comprar packs", "comprar créditos", "obtener créditos"],
       answer:
-        "Puedes comprar paquetes de créditos en la sección Suscripción. Elige un paquete, completa el pago y tus créditos se agregarán inmediatamente. Los créditos no utilizados nunca vencen.",
+        "Puedes comprar paquetes de créditos desde la sección Suscripción. Elige un paquete, completa el pago y tus créditos se agregarán inmediatamente.",
     },
     {
-      keywords: ["premium", "actualizar", "suscripción", "pro", "plan pro"],
+      keywords: ["premium", "actualizar", "suscripción", "plan pro"],
       answer:
-        "Actualiza a Premium para obtener uso ilimitado del asistente de IA, análisis avanzado, colaboración en equipo y soporte prioritario. Visita Suscripción para ver todos los planes y características disponibles.",
+        "Actualiza a Premium para obtener acceso ilimitado al asistente de IA, análisis avanzados y colaboración en equipo.",
     },
     {
-      keywords: ["reembolso", "devolución de dinero", "devolver dinero"],
-      answer:
-        "Ofrecemos una garantía de devolución de dinero de 30 días en todos los planes de suscripción. Si no estás satisfecho, contacta con soporte dentro de 30 días de la compra para obtener un reembolso completo.",
+      keywords: ["reembolso", "dinero de vuelta"],
+      answer: "Ofrecemos garantía de devolución de dinero en 30 días. Contacta al soporte para más detalles.",
     },
     {
       keywords: ["sincronizar", "nube", "copia de seguridad", "datos"],
       answer:
-        "Tus datos se sincronizan automáticamente con la nube y se respaldan diariamente. Puedes acceder a tu cuenta desde cualquier dispositivo iniciando sesión.",
+        "Tus datos se sincronizan automáticamente a la nube y se respaldan diariamente. Accede a tu cuenta desde cualquier dispositivo.",
     },
     {
       keywords: ["exportar", "descargar", "guardar datos", "respaldo"],
       answer:
-        "Puedes exportar tus tareas y notas como CSV o PDF desde el menú de configuración. Esto te permite respaldar tus datos o utilizarlos en otro lugar.",
+        "Puedes exportar tus tareas y notas como CSV o PDF desde el menú de configuración. Esto te permite respaldar tus datos o utilizarlos altrove.",
     },
     {
       keywords: ["equipo", "colaborar", "compartir", "invitar"],
       answer:
-        "En Premium, puedes crear equipos e invitar colaboradores. Comparte proyectos, asigna tareas y comunícate dentro de la aplicación. Cada miembro del equipo necesita una cuenta separada.",
+        "En Premium, pu puedes crear teams e invitare collaborators. Share projects, assign tasks and communicate all'interno dell'app. Each team member needs a separate account.",
     },
   ],
   fr: [
     {
-      keywords: ["créer tâche", "ajouter tâche", "nouvelle tâche", "faire tâche"],
+      keywords: ["créer tâche", "ajouter tâche", "nouvelle tâche"],
       answer:
-        "Pour créer une tâche, allez à la section Tâches et cliquez sur 'Nouvelle Tâche'. Entrez le titre, la description, la date d'échéance et la priorité. Vous pouvez également définir des rappels et des étiquettes.",
+        "Pour créer une tâche, allez à la section Tâches et cliquez sur 'Nouvelle Tâche'. Entrez le titre, la description, la date d'échéance et la priorité.",
     },
     {
       keywords: ["calendrier", "planifier", "événement", "ajouter événement"],
       answer:
-        "Visitez la section Calendrier pour voir vos événements. Cliquez sur n'importe quelle date pour créer un nouvel événement. Vous pouvez définir des événements récurrents, des rappels et inviter d'autres personnes.",
+        "Visitez la section Calendrier pour voir vos événements. Cliquez sur une date pour créer un nouvel événement. Vous pouvez définir des événements récurrents.",
     },
     {
-      keywords: ["assistant ia", "aide ia", "demander ia", "mode chat"],
+      keywords: ["assistant ia", "aide ia", "demander ia"],
       answer:
-        "L'Assistant IA a trois modes : Chat (posez n'importe quelle question), Étude (créez des plans d'étude) et Analyser (téléchargez des fichiers et des documents). Sélectionnez un mode et commencez à poser des questions !",
+        "L'Assistant IA dispose de trois modes : Chat (posez n'importe quelle question), Étude (créez des plans d'étude) et Analyser (téléchargez des fichiers).",
     },
     {
       keywords: ["pomodoro", "minuteur", "focus", "session de travail"],
       answer:
-        "Allez à Pomodoro pour démarrer une session de concentration. Le minuteur est défini sur 25 minutes de travail suivies d'une pause. Vous pouvez personnaliser la durée dans Paramètres.",
+        "Allez à Pomodoro pour démarrer une session de concentration. Le minuteur est réglé sur 25 minutes de travail suivies d'une pause.",
     },
     {
       keywords: ["paramètres", "profil", "préférences", "langue"],
       answer:
-        "Visitez Paramètres pour personnaliser votre profil, changer de langue, définir votre fuseau horaire et ajuster les durées de Pomodoro. Vos préférences sont enregistrées automatiquement.",
+        "Visitez les Paramètres pour personnaliser votre profil, changer de langue, définir votre fuseau horaire et ajuster les durées de Pomodoro.",
     },
     {
-      keywords: ["annuler abonnement", "annuler plan", "se désabonner", "arrêter abonnement"],
+      keywords: ["annuler abonnement", "annuler plan", "résilier"],
       answer:
-        "Pour annuler votre abonnement, allez à Paramètres > Abonnement et cliquez sur 'Annuler Plan'. Votre accès se poursuivra jusqu'à la fin de votre période de facturation. Aucun remboursement n'est émis pour les mois partiels.",
+        "Pour annuler votre abonnement, allez à Paramètres > Abonnement et cliquez sur 'Annuler Plan'. Votre accès continuera jusqu'à la fin de votre période de facturation.",
     },
     {
-      keywords: ["acheter packs", "acheter crédits", "obtenir crédits", "paquets crédits"],
+      keywords: ["acheter packs", "acheter crédits", "obtenir crédits"],
       answer:
-        "Vous pouvez acheter des forfaits de crédits à partir de la section Abonnement. Choisissez un forfait, effectuez le paiement et vos crédits seront ajoutés immédiatement. Les crédits inutilisés n'expirent jamais.",
+        "Vous pouvez acheter des packs de crédits dans la section Abonnement. Choisissez un pack, complétez le paiement et vos crédits seront ajoutés immédiatement.",
     },
     {
-      keywords: ["premium", "mettre à niveau", "abonnement", "pro", "plan pro"],
+      keywords: ["premium", "mettre à niveau", "abonnement"],
       answer:
-        "Passez à Premium pour un usage illimité de l'assistant IA, des analyses avancées, la collaboration en équipe et un support prioritaire. Visitez Abonnement pour voir tous les plans et fonctionnalités disponibles.",
+        "Mettez à niveau vers Premium pour un accès illimité à l'assistant IA, des analyses avancées et une collaboration en équipe.",
     },
     {
-      keywords: ["remboursement", "retour argent", "retour d'argent"],
-      answer:
-        "Nous offrons une garantie de remboursement de 30 jours sur tous les plans d'abonnement. Si vous n'êtes pas satisfait, contactez le support dans les 30 jours suivant votre achat pour un remboursement complet.",
+      keywords: ["remboursement", "retour argent"],
+      answer: "Nous offrons une garantie de remboursement de 30 jours. Contactez le support pour plus de détails.",
     },
     {
       keywords: ["synchroniser", "cloud", "sauvegarde", "données"],
       answer:
-        "Vos données sont automatiquement synchronisées avec le cloud et sauvegardées quotidiennement. Vous pouvez accéder à votre compte depuis n'importe quel appareil en vous connectant.",
+        "Vos données sont automatiquement synchronisées vers le cloud et sauvegardées quotidiennement. Accédez à votre compte depuis n'importe quel appareil.",
     },
     {
-      keywords: ["exporter", "télécharger", "enregistrer données", "sauvegarde"],
+      keywords: ["exporter", "télécharger", "sauvegarder données", "backup"],
       answer:
         "Vous pouvez exporter vos tâches et notes au format CSV ou PDF à partir du menu des paramètres. Cela vous permet de sauvegarder vos données ou de les utiliser ailleurs.",
     },
@@ -191,59 +187,57 @@ const faqDatabase = {
   ],
   de: [
     {
-      keywords: ["aufgabe erstellen", "aufgabe hinzufügen", "neue aufgabe", "aufgabe machen"],
+      keywords: ["aufgabe erstellen", "aufgabe hinzufügen", "neue aufgabe"],
       answer:
-        "Um eine Aufgabe zu erstellen, gehen Sie zum Abschnitt Aufgaben und klicken Sie auf 'Neue Aufgabe'. Geben Sie den Titel, die Beschreibung, das Fälligkeitsdatum und die Priorität ein. Sie können auch Erinnerungen und Tags festlegen.",
+        "Um eine Aufgabe zu erstellen, gehen Sie zum Abschnitt Aufgaben und klicken Sie auf 'Neue Aufgabe'. Geben Sie den Titel, die Beschreibung, das Fälligkeitsdatum und die Priorität ein.",
     },
     {
       keywords: ["kalender", "planen", "ereignis", "ereignis hinzufügen"],
       answer:
-        "Besuchen Sie den Abschnitt Kalender, um Ihre Ereignisse anzuzeigen. Klicken Sie auf ein beliebiges Datum, um ein neues Ereignis zu erstellen. Sie können wiederkehrende Ereignisse, Erinnerungen festlegen und andere einladen.",
+        "Besuchen Sie den Abschnitt Kalender, um Ihre Ereignisse anzuzeigen. Klicken Sie auf ein Datum, um ein neues Ereignis zu erstellen. Sie können wiederkehrende Ereignisse festlegen.",
     },
     {
-      keywords: ["ki-assistent", "ki-hilfe", "ki fragen", "chat-modus"],
+      keywords: ["ki-assistent", "ki-hilfe", "fragen sie die ki"],
       answer:
-        "Der KI-Assistent hat drei Modi: Chat (fragen Sie alles), Lernen (erstellen Sie Lernpläne) und Analysieren (laden Sie Dateien und Dokumente hoch). Wählen Sie einen Modus und stellen Sie Fragen!",
+        "Der KI-Assistent hat drei Modi: Chat (stellen Sie Fragen), Studium (erstellen Sie Lernpläne) und Analysieren (laden Sie Dateien hoch).",
     },
     {
-      keywords: ["pomodoro", "timer", "fokus", "arbeitssitzung"],
+      keywords: ["pomodoro", "timer", "fokus", "arbeitsession"],
       answer:
-        "Gehen Sie zu Pomodoro, um eine Fokussitzung zu starten. Der Timer ist auf 25 Minuten Arbeit gefolgt von einer Pause eingestellt. Sie können die Dauer in den Einstellungen anpassen.",
+        "Gehen Sie zu Pomodoro, um eine Fokussession zu starten. Der Timer ist auf 25 Minuten Arbeit gefolgt von einer Pause eingestellt.",
     },
     {
-      keywords: ["einstellungen", "profil", "präferenzen", "sprache"],
+      keywords: ["einstellungen", "profil", "einstellungen", "sprache"],
       answer:
-        "Besuchen Sie Einstellungen, um Ihr Profil anzupassen, die Sprache zu ändern, Ihre Zeitzone festzulegen und Pomodoro-Dauern anzupassen. Ihre Einstellungen werden automatisch gespeichert.",
+        "Besuchen Sie die Einstellungen, um Ihr Profil anzupassen, die Sprache zu ändern, Ihre Zeitzone festzulegen und die Pomodoro-Dauern anzupassen.",
     },
     {
-      keywords: ["abonnement kündigen", "plan kündigen", "abmelden", "abonnement stoppen"],
+      keywords: ["abonnement kündigen", "plan kündigen", "abbestellen"],
       answer:
-        "Um Ihr Abonnement zu kündigen, gehen Sie zu Einstellungen > Abonnement und klicken Sie auf 'Plan kündigen'. Ihr Zugriff wird bis zum Ende Ihres Abrechnungszeitraums fortgesetzt. Für Teilmonate werden keine Rückerstattungen ausgestellt.",
+        "Um Ihr Abonnement zu kündigen, gehen Sie zu Einstellungen > Abonnement und klicken Sie auf 'Plan kündigen'. Ihr Zugriff dauert bis zum Ende Ihres Abrechnungszeitraums.",
     },
     {
-      keywords: ["packs kaufen", "guthaben kaufen", "guthaben erhalten", "gutschein packs"],
+      keywords: ["packs kaufen", "guthaben kaufen", "guthaben erhalten"],
       answer:
-        "Sie können Gutschein-Packs im Abschnitt Abonnement kaufen. Wählen Sie ein Pack, führen Sie die Zahlung durch und Ihr Guthaben wird sofort hinzugefügt. Ungenutztes Guthaben verfällt nie.",
+        "Sie können Kreditpacks im Abschnitt Abonnement kaufen. Wählen Sie ein Paket, schließen Sie die Zahlung ab und Ihr Guthaben wird sofort hinzugefügt.",
     },
     {
-      keywords: ["premium", "upgrade", "abonnement", "pro", "pro-plan"],
-      answer:
-        "Upgrade auf Premium für unbegrenzte KI-Assistenten-Nutzung, erweiterte Analytik, Teamzusammenarbeit und vorrangigen Support. Besuchen Sie Abonnement, um alle verfügbaren Pläne und Funktionen anzuzeigen.",
+      keywords: ["premium", "upgrade", "abonnement"],
+      answer: "Upgrade auf Premium für unbegrenzten KI-Zugriff, erweiterte Analysen und Teamzusammenarbeit.",
     },
     {
-      keywords: ["rückerstattung", "geld zurück", "geld zurückgeben"],
-      answer:
-        "Wir bieten eine 30-Tage-Rückgabegarantie für alle Abonnementpläne. Wenn Sie nicht zufrieden sind, wenden Sie sich innerhalb von 30 Tagen nach dem Kauf an den Support für eine vollständige Rückerstattung.",
+      keywords: ["rückerstattung", "geldtransfer"],
+      answer: "Wir bieten eine 30-Tage-Geldback-Garantie. Kontaktieren Sie den Support für Details.",
     },
     {
-      keywords: ["synchronisieren", "cloud", "sicherung", "daten"],
+      keywords: ["synchronisieren", "wolke", "sicherung", "daten"],
       answer:
-        "Ihre Daten werden automatisch mit der Cloud synchronisiert und täglich gesichert. Sie können von jedem Gerät aus auf Ihr Konto zugreifen, indem Sie sich anmelden.",
+        "Ihre Daten werden automatisch mit der Cloud synchronisiert und täglich gesichert. Greifen Sie von jedem Gerät auf Ihr Konto zu.",
     },
     {
-      keywords: ["exportieren", "herunterladen", "daten speichern", "sicherung"],
+      keywords: ["exportieren", "herunterladen", "daten speichern", "backup"],
       answer:
-        "Sie können Ihre Aufgaben und Notizen als CSV oder PDF aus dem Einstellungsmenü exportieren. Dies ermöglicht es Ihnen, Ihre Daten zu sichern oder anderswo zu verwenden.",
+        "Sie können Ihre Aufgaben und Notizen als CSV oder PDF aus dem Menü der Einstellungen exportieren. Dies ermöglicht es Ihnen, Ihre Daten zu sichern oder anderswo zu verwenden.",
     },
     {
       keywords: ["team", "zusammenarbeiten", "teilen", "einladen"],
@@ -253,54 +247,53 @@ const faqDatabase = {
   ],
   it: [
     {
-      keywords: ["crea attività", "aggiungi attività", "nuova attività", "fai attività"],
+      keywords: ["creare attività", "aggiungere attività", "nuova attività"],
       answer:
-        "Per creare un'attività, vai alla sezione Attività e fai clic su 'Nuova attività'. Inserisci il titolo, la descrizione, la data di scadenza e la priorità. Puoi anche impostare promemoria e tag.",
+        "Per creare un'attività, vai alla sezione Attività e fai clic su 'Nuova Attività'. Inserisci il titolo, la descrizione, la data di scadenza e la priorità.",
     },
     {
-      keywords: ["calendario", "pianificare", "evento", "aggiungi evento"],
+      keywords: ["calendario", "pianificare", "evento", "aggiungere evento"],
       answer:
-        "Visita la sezione Calendario per visualizzare i tuoi eventi. Fai clic su una data qualsiasi per creare un nuovo evento. Puoi impostare eventi ricorrenti, promemoria e invitare altre persone.",
+        "Visita la sezione Calendario per visualizzare i tuoi eventi. Fai clic su una data per creare un nuovo evento. Puoi impostare eventi ricorrenti.",
     },
     {
-      keywords: ["assistente ia", "aiuto ia", "chiedi ia", "modalità chat"],
+      keywords: ["assistente ia", "aiuto ia", "chiedi all'ia"],
       answer:
-        "L'Assistente IA ha tre modalità: Chat (chiedimi qualsiasi cosa), Studio (crea piani di studio) e Analizza (carica file e documenti). Seleziona una modalità e inizia a fare domande!",
+        "L'Assistente IA ha tre modalità: Chat (fai qualsiasi domanda), Studio (crea piani di studio) e Analizza (carica file).",
     },
     {
       keywords: ["pomodoro", "timer", "focus", "sessione di lavoro"],
       answer:
-        "Vai a Pomodoro per avviare una sessione di concentrazione. Il timer è impostato su 25 minuti di lavoro seguiti da una pausa. Puoi personalizzare la durazione in Impostazioni.",
+        "Vai a Pomodoro per avviare una sessione di concentrazione. Il timer è impostato su 25 minuti di lavoro seguiti da una pausa.",
     },
     {
       keywords: ["impostazioni", "profilo", "preferenze", "lingua"],
       answer:
-        "Visita Impostazioni per personalizzare il tuo profilo, cambiare lingua, impostare il tuo fuso orario e regolare le durate di Pomodoro. Le tue preferenze vengono salvate automaticamente.",
+        "Visita le Impostazioni per personalizzare il tuo profilo, cambiare lingua, impostare il tuo fuso orario e regolare i tempi di Pomodoro.",
     },
     {
-      keywords: ["annulla abbonamento", "annulla piano", "cancella abbonamento", "ferma abbonamento"],
+      keywords: ["annulla abbonamento", "annulla piano", "annulla iscrizione"],
       answer:
-        "Per annullare il tuo abbonamento, vai a Impostazioni > Abbonamento e fai clic su 'Annulla piano'. Il tuo accesso continuerà fino alla fine del tuo periodo di fatturazione. Non vengono emessi rimborsi per mesi parziali.",
+        "Per annullare l'abbonamento, vai a Impostazioni > Abbonamento e fai clic su 'Annulla Piano'. Il tuo accesso continuerà fino alla fine del tuo periodo di fatturazione.",
     },
     {
-      keywords: ["acquista pack", "acquista crediti", "ottieni crediti", "pacchetti crediti"],
+      keywords: ["acquista pacchetti", "acquista crediti", "ottieni crediti"],
       answer:
-        "Puoi acquistare pacchetti di crediti dalla sezione Abbonamento. Scegli un pacchetto, completa il pagamento e i tuoi crediti verranno aggiunti immediatamente. I crediti inutilizzati non scadono mai.",
+        "Puoi acquistare pacchetti di crediti dalla sezione Abbonamento. Scegli un pacchetto, completa il pagamento e i tuoi crediti verranno aggiunti immediatamente.",
     },
     {
-      keywords: ["premium", "aggiorna", "abbonamento", "pro", "piano pro"],
+      keywords: ["premium", "aggiornamento", "abbonamento"],
       answer:
-        "Passa a Premium per un utilizzo illimitato dell'assistente IA, analisi avanzate, collaborazione di team e supporto prioritario. Visita Abbonamento per vedere tutti i piani e le funzioni disponibili.",
+        "Esegui l'upgrade a Premium per accesso illimitato all'assistente IA, analisi avanzate e collaborazione di squadra.",
     },
     {
-      keywords: ["rimborso", "soldi indietro", "restituzione soldi"],
-      answer:
-        "Offriamo una garanzia di rimborso di 30 giorni su tutti i piani di abbonamento. Se non sei soddisfatto, contatta il supporto entro 30 giorni dall'acquisto per un rimborso completo.",
+      keywords: ["rimborso", "restituzione soldi"],
+      answer: "Offriamo una garanzia di rimborso di 30 giorni. Contatta il supporto per i dettagli.",
     },
     {
       keywords: ["sincronizza", "cloud", "backup", "dati"],
       answer:
-        "I tuoi dati vengono sincronizzati automaticamente nel cloud ed è eseguito il backup giornaliero. Puoi accedere al tuo account da qualsiasi dispositivo effettuando l'accesso.",
+        "I tuoi dati vengono sincronizzati automaticamente al cloud e sottoposti a backup giornaliero. Accedi al tuo account da qualsiasi dispositivo.",
     },
     {
       keywords: ["esporta", "scarica", "salva dati", "backup"],
@@ -315,86 +308,52 @@ const faqDatabase = {
   ],
 }
 
-function findFAQMatch(question: string, language: string): string | null {
-  const lowerQuestion = question.toLowerCase()
-  const faqs = faqDatabase[language as keyof typeof faqDatabase] || faqDatabase.en
-
-  for (const faq of faqs) {
-    for (const keyword of faq.keywords) {
-      if (lowerQuestion.includes(keyword)) {
-        return faq.answer
-      }
-    }
-  }
-
-  return null
-}
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { question, language, conversationHistory } = await request.json()
-    console.log("[v0] Help chat question:", question, "Language:", language)
+    const { question, language = "en" } = await request.json()
 
-    // First, try to find a matching FAQ
-    const faqAnswer = findFAQMatch(question, language)
-    if (faqAnswer) {
-      console.log("[v0] FAQ match found")
-      return Response.json({ answer: faqAnswer, source: "faq" })
+    console.log("[v0] Help chat received:", { question, language })
+
+    if (!question || typeof question !== "string") {
+      return Response.json({ answer: "Please ask a valid question." }, { status: 400 })
     }
 
-    console.log("[v0] No FAQ match, calling Groq")
+    const lang = (language in faqDatabase ? language : "en") as keyof typeof faqDatabase
+    const faqs = faqDatabase[lang]
 
-    const languagePrompt =
-      language === "es"
-        ? "Responde en español."
-        : language === "fr"
-          ? "Répondez en français."
-          : language === "de"
-            ? "Antworten Sie auf Deutsch."
-            : language === "it"
-              ? "Rispondi in italiano."
-              : "Respond in English."
+    const questionLower = question.toLowerCase()
+    let foundAnswer = null
 
-    const systemPrompt = `You are a helpful support assistant for Future Task, a smart task management application.
-You help users with questions about how to use the app, its features, subscriptions, credit packs, cancellations, and functionality.
-The app allows users to manage tasks, calendar events, use an AI assistant (Chat, Study, Analyze modes), Pomodoro timer, achievements, and teams.
-Premium subscriptions provide unlimited AI usage, advanced analytics, team collaboration, and priority support.
-Users can buy credit packs for additional AI usage at any time.
-Users can cancel their subscription anytime, and access continues until the end of the billing period.
-Keep responses concise, friendly, and helpful. If you don't know something, suggest contacting support at support@futuretask.com.
-${languagePrompt}`
+    for (const faq of faqs) {
+      for (const keyword of faq.keywords) {
+        if (questionLower.includes(keyword.toLowerCase())) {
+          foundAnswer = faq.answer
+          break
+        }
+      }
+      if (foundAnswer) break
+    }
 
-    console.log("[v0] Calling Groq with prompt")
+    if (foundAnswer) {
+      console.log("[v0] Found FAQ match")
+      return Response.json({ answer: foundAnswer })
+    }
 
-    const { text: aiAnswer } = await generateText({
-      model: groq("mixtral-8x7b-32768"),
-      system: systemPrompt,
-      prompt: question,
-      maxTokens: 200,
+    console.log("[v0] No FAQ match found, returning default response")
+    return Response.json({
+      answer:
+        language === "es"
+          ? "No encontré una respuesta específica a tu pregunta. Por favor, consulta la documentación completa en nuestro sitio web o contacta a nuestro equipo de soporte."
+          : language === "fr"
+            ? "Je n'ai pas trouvé de réponse spécifique à votre question. Veuillez consulter la documentation complète sur notre site Web ou contacter notre équipe d'assistance."
+            : language === "de"
+              ? "Ich habe keine spezifische Antwort auf Ihre Frage gefunden. Bitte konsultieren Sie die vollständige Dokumentation auf unserer Website oder kontaktieren Sie unser Support-Team."
+              : language === "it"
+                ? "Non ho trovato una risposta specifica alla tua domanda. Consulta la documentazione completa sul nostro sito Web o contatta il nostro team di supporto."
+                : "I couldn't find a specific answer to your question. Please check our full documentation or contact our support team.",
     })
-
-    console.log("[v0] Groq response received:", aiAnswer)
-    return Response.json({ answer: aiAnswer, source: "ai" })
   } catch (error) {
     console.error("[v0] Help chat error:", error)
-
-    const errorMessage = error instanceof Error ? error.message : String(error)
-
-    if (errorMessage.includes("401") || errorMessage.includes("API key") || errorMessage.includes("GROQ")) {
-      console.log("[v0] Groq API key issue detected, returning fallback message")
-      return Response.json({
-        answer:
-          "Lo siento, el servicio de IA no está disponible en este momento. Por favor, intenta con una pregunta diferente o contacta con soporte.",
-        source: "fallback",
-      })
-    }
-
-    return Response.json(
-      {
-        answer: "Ocurrió un error procesando tu pregunta. Por favor, intenta de nuevo.",
-        source: "error",
-      },
-      { status: 200 },
-    )
+    return Response.json({ answer: "An error occurred. Please try again later." }, { status: 500 })
   }
 }
