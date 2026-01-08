@@ -70,13 +70,18 @@ export async function POST(req: NextRequest) {
           messages: messages || [],
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "id" }, // Only use id for conflict detection
+        { onConflict: "id" },
       )
       .select()
       .single()
 
     if (error) {
       console.error("[AI Conversations] Upsert error:", error)
+      console.error("[AI Conversations] Error details:", {
+        errorCode: error.code,
+        errorMessage: error.message,
+        errorHint: error.hint,
+      })
       throw error
     }
 
