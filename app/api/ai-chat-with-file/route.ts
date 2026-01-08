@@ -42,18 +42,53 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 
 async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   try {
-    const text = buffer.toString("utf8")
-    const matches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
-    const extractedText = matches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ")
+    // Try to extract from ZIP-compressed DOCX
+    const { unzipSync } = await import("unzipper")
 
-    if (extractedText.length > 100) {
-      return extractedText.substring(0, 10000)
+    try {
+      const extracted = await unzipSync(buffer)
+
+      // Read document.xml which contains the actual text
+      const documentXml = extracted.files["word/document.xml"]?.buffer
+
+      if (documentXml) {
+        const xmlString = documentXml.toString("utf8")
+        // Extract all text nodes from the XML
+        const textMatches = xmlString.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
+        const text = textMatches
+          .map((match) => match.replace(/<[^>]+>/g, ""))
+          .join(" ")
+          .replace(/\s+/g, " ")
+          .trim()
+
+        if (text.length > 0) {
+          return text.substring(0, 10000)
+        }
+      }
+    } catch {
+      // If unzip fails, try as UTF-8 text
+      const text = buffer.toString("utf8")
+      const textMatches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
+      if (textMatches.length > 0) {
+        const extracted = textMatches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ")
+        if (extracted.length > 0) {
+          return extracted.substring(0, 10000)
+        }
+      }
     }
 
-    return buffer.toString("utf8").substring(0, 10000)
+    // Last resort: return raw UTF-8 with cleanup
+    return buffer
+      .toString("utf8")
+      .replace(/[^\w\s.,!?-]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 0)
+      .slice(0, 3000)
+      .join(" ")
+      .substring(0, 10000)
   } catch (error) {
     console.error("[v0] DOCX extraction error:", error)
-    return buffer.toString("utf8").substring(0, 10000)
+    return "Unable to extract document text. Please ensure the file is a valid .docx file."
   }
 }
 
