@@ -15,7 +15,7 @@ function getUserIdFromToken(token: string): string | null {
 
 export async function POST(req: NextRequest) {
   try {
-    const { message } = await req.json()
+    const { message, language = "en", mode = "chat", systemPrompt } = await req.json()
 
     const cookieStore = await cookies()
     const accessToken = cookieStore.get("sb-access-token")?.value
@@ -92,9 +92,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update credits" }, { status: 500 })
     }
 
+    const languageInstruction = language !== "en" ? `\n\nRespond exclusively in ${getLanguageName(language)}.` : ""
+    const finalPrompt = (systemPrompt || message) + languageInstruction
+
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
-      prompt: message,
+      prompt: finalPrompt,
     })
 
     return NextResponse.json({
@@ -107,4 +110,15 @@ export async function POST(req: NextRequest) {
     console.error("[v0] AI Chat Error:", error)
     return NextResponse.json({ error: "Failed to generate response" }, { status: 500 })
   }
+}
+
+function getLanguageName(code: string): string {
+  const languages: Record<string, string> = {
+    es: "Spanish",
+    fr: "French",
+    de: "German",
+    it: "Italian",
+    en: "English",
+  }
+  return languages[code] || "English"
 }

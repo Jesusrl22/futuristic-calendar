@@ -15,10 +15,7 @@ function getUserIdFromToken(token: string): string | null {
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // Try multiple extraction methods for better PDF support
     let text = buffer.toString("latin1")
-
-    // Method 1: Extract text between BT/ET operators
     const matches = text.match(/BT\s+(.*?)\s+ET/gs) || []
     const extractedText = matches
       .map((m) => m.replace(/BT|ET|Tj|TJ|Td|T\*|[[\]<>()]/g, " ").trim())
@@ -26,41 +23,37 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
       .join(" ")
 
     if (extractedText.length > 100) {
-      return extractedText.substring(0, 8000)
+      return extractedText.substring(0, 10000)
     }
 
-    // Method 2: Fallback to raw UTF-8 conversion
     text = buffer.toString("utf8")
     return text
       .replace(/[^\w\s.,!?-]/g, " ")
       .split(/\s+/)
       .filter((w) => w.length > 0)
-      .slice(0, 2000)
+      .slice(0, 3000)
       .join(" ")
-      .substring(0, 8000)
+      .substring(0, 10000)
   } catch (error) {
     console.error("[v0] PDF extraction error:", error)
-    return buffer.toString("utf8").substring(0, 8000)
+    return buffer.toString("utf8").substring(0, 10000)
   }
 }
 
 async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   try {
-    // DOCX is a ZIP file containing XML - extract text from document.xml
     const text = buffer.toString("utf8")
-
-    // Extract text content from XML tags
     const matches = text.match(/<w:t[^>]*>([^<]*)<\/w:t>/g) || []
     const extractedText = matches.map((m) => m.replace(/<[^>]+>/g, "")).join(" ")
 
     if (extractedText.length > 100) {
-      return extractedText.substring(0, 8000)
+      return extractedText.substring(0, 10000)
     }
 
-    return buffer.toString("utf8").substring(0, 8000)
+    return buffer.toString("utf8").substring(0, 10000)
   } catch (error) {
     console.error("[v0] DOCX extraction error:", error)
-    return buffer.toString("utf8").substring(0, 8000)
+    return buffer.toString("utf8").substring(0, 10000)
   }
 }
 
@@ -75,20 +68,20 @@ async function processFileContent(file: File, fileType: string): Promise<string>
   ) {
     return await extractTextFromDocx(buffer)
   } else if (fileType.startsWith("image/")) {
-    // For images, we'll describe what type of image it is
-    return `[Image file: ${file.name} - Please analyze and describe the content of this image]`
+    return `[Image: ${file.name}] Please analyze and describe the visual content of this image in detail, including any text, diagrams, or important visual elements.`
   } else if (fileType.startsWith("text/")) {
-    return buffer.toString("utf8").substring(0, 8000)
+    return buffer.toString("utf8").substring(0, 10000)
   }
 
-  return buffer.toString("utf8").substring(0, 8000)
+  return buffer.toString("utf8").substring(0, 10000)
 }
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
-    const message = formData.get("message") as string
+    const message = formData.get("prompt") as string
     const file = formData.get("file") as File | null
+    const language = (formData.get("language") as string) || "en"
 
     const cookieStore = await cookies()
     const accessToken = cookieStore.get("sb-access-token")?.value
@@ -169,9 +162,10 @@ export async function POST(req: NextRequest) {
       fileContent = await processFileContent(file, file.type)
     }
 
+    const languageInstruction = language !== "en" ? `\n\nRespond exclusively in ${getLanguageName(language)}.` : ""
     const fullPrompt = fileContent
-      ? `File: ${file?.name || "document"}\nContent preview:\n${fileContent}\n\nUser request: ${message}`
-      : message
+      ? `File: ${file?.name || "document"}\n\nContent:\n${fileContent}\n\nUser request: ${message}${languageInstruction}`
+      : `${message}${languageInstruction}`
 
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
@@ -187,4 +181,15 @@ export async function POST(req: NextRequest) {
     console.error("[v0] Error in AI chat with file:", error)
     return NextResponse.json({ error: "Failed to process request" }, { status: 500 })
   }
+}
+
+function getLanguageName(code: string): string {
+  const languages: Record<string, string> = {
+    es: "Spanish",
+    fr: "French",
+    de: "German",
+    it: "Italian",
+    en: "English",
+  }
+  return languages[code] || "English"
 }

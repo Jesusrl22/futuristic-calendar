@@ -208,19 +208,15 @@ const AIPage = () => {
 
     try {
       let endpoint = "/api/ai-chat"
-      const body: any = {
-        messages: updatedMessages,
-        mode: aiMode,
-        systemPrompt: getSystemPrompt(),
-      }
+
+      const userLanguage = typeof window !== "undefined" ? localStorage.getItem("language") || "en" : "en"
 
       if (uploadedFile && aiMode === "analyze") {
         endpoint = "/api/ai-chat-with-file"
         const formData = new FormData()
         formData.append("file", uploadedFile)
         formData.append("prompt", input || t("analyze_this_file"))
-        formData.append("messages", JSON.stringify(updatedMessages))
-        formData.append("mode", aiMode)
+        formData.append("language", userLanguage)
 
         const session = await supabase.auth.getSession()
         const response = await fetch(endpoint, {
@@ -248,7 +244,12 @@ const AIPage = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.data.session?.access_token}`,
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            message: input,
+            language: userLanguage,
+            mode: aiMode,
+            systemPrompt: getSystemPrompt(),
+          }),
         })
         if (!response.ok) throw new Error("Failed to send message")
         const data = await response.json()
