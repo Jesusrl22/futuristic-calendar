@@ -4,6 +4,16 @@ import type { NextRequest } from "next/server"
 const faqDatabase = {
   en: [
     {
+      keywords: ["hello", "hi", "hey", "hola", "salut", "ciao", "hallo"],
+      answer:
+        "Hello! 👋 I'm here to help. Ask me anything about tasks, calendar, AI assistant, Pomodoro, plans, credits, or any other feature!",
+    },
+    {
+      keywords: ["free credits", "free plan credits", "how many credits free", "creditos gratis", "créditos plan free"],
+      answer:
+        "The Free plan includes 10 credits per month for the AI Assistant. Each question costs 2 credits, and file analysis costs 3 credits. Upgrade to Premium for unlimited credits!",
+    },
+    {
       keywords: ["create task", "add task", "new task", "make task"],
       answer:
         "To create a task, go to the Tasks section and click 'New Task'. Enter the title, description, due date, and priority. You can also set reminders and add tags.",
@@ -64,6 +74,16 @@ const faqDatabase = {
     },
   ],
   es: [
+    {
+      keywords: ["hola", "hola", "hey", "ey", "buenos días", "buenas tardes"],
+      answer:
+        "¡Hola! 👋 Estoy aquí para ayudarte. ¡Pregúntame sobre tareas, calendario, asistente de IA, Pomodoro, planes, créditos o cualquier otra función!",
+    },
+    {
+      keywords: ["créditos gratis", "créditos plan free", "cuántos créditos gratis"],
+      answer:
+        "El plan Gratis incluye 10 créditos por mes para el Asistente de IA. Cada pregunta cuesta 2 créditos y el análisis de archivos cuesta 3. ¡Actualiza a Premium para créditos ilimitados!",
+    },
     {
       keywords: ["crear tarea", "agregar tarea", "nueva tarea", "hacer tarea"],
       answer:
@@ -126,6 +146,16 @@ const faqDatabase = {
   ],
   fr: [
     {
+      keywords: ["bonjour", "salut", "coucou", "allo", "hey"],
+      answer:
+        "Bonjour! 👋 Je suis là pour t'aider. Pose-moi des questions sur les tâches, le calendrier, l'assistant IA, Pomodoro, les plans, les crédits ou toute autre fonction!",
+    },
+    {
+      keywords: ["crédits gratuits", "plan gratuit", "combien de crédits gratuits"],
+      answer:
+        "Le plan Gratuit inclut 10 crédits par mois pour l'Assistant IA. Chaque question coûte 2 crédits et l'analyse de fichiers coûte 3. Passez à Premium pour des crédits illimités!",
+    },
+    {
       keywords: ["créer tâche", "ajouter tâche", "nouvelle tâche"],
       answer:
         "Pour créer une tâche, allez à la section Tâches et cliquez sur 'Nouvelle Tâche'. Entrez le titre, la description, la date d'échéance et la priorité.",
@@ -187,6 +217,16 @@ const faqDatabase = {
   ],
   de: [
     {
+      keywords: ["hallo", "hi", "hey", "guten morgen", "guten tag"],
+      answer:
+        "Hallo! 👋 Ich bin hier, um dir zu helfen. Frage mich nach Aufgaben, Kalender, KI-Assistent, Pomodoro, Plänen, Credits oder anderen Funktionen!",
+    },
+    {
+      keywords: ["kostenlose guthaben", "kostenlos guthaben", "wie viel kostenlos guthaben"],
+      answer:
+        "Der kostenlose Plan enthält 10 Guthaben pro Monat für den KI-Assistenten. Jede Frage kostet 2 Guthaben und die Dateianalyse kostet 3. Upgrade zu Premium für unbegrenzte Guthaben!",
+    },
+    {
       keywords: ["aufgabe erstellen", "aufgabe hinzufügen", "neue aufgabe"],
       answer:
         "Um eine Aufgabe zu erstellen, gehen Sie zum Abschnitt Aufgaben und klicken Sie auf 'Neue Aufgabe'. Geben Sie den Titel, die Beschreibung, das Fälligkeitsdatum und die Priorität ein.",
@@ -246,6 +286,16 @@ const faqDatabase = {
     },
   ],
   it: [
+    {
+      keywords: ["ciao", "salve", "hey", "buongiorno", "buonasera"],
+      answer:
+        "Ciao! 👋 Sono qui per aiutarti. Chiedimi di attività, calendario, assistente IA, Pomodoro, piani, crediti o qualsiasi altra funzione!",
+    },
+    {
+      keywords: ["crediti gratuiti", "piano gratuito", "quanti crediti gratuiti"],
+      answer:
+        "Il piano Gratuito include 10 crediti al mese per l'Assistente IA. Ogni domanda costa 2 crediti e l'analisi dei file costa 3. Passa a Premium per crediti illimitati!",
+    },
     {
       keywords: ["creare attività", "aggiungere attività", "nuova attività"],
       answer:
@@ -321,37 +371,45 @@ export async function POST(request: NextRequest) {
     const lang = (language in faqDatabase ? language : "en") as keyof typeof faqDatabase
     const faqs = faqDatabase[lang]
 
-    const questionLower = question.toLowerCase()
+    const questionNormalized = question
+      .toLowerCase()
+      .replace(/[?.,!¿¡]/g, "")
+      .trim()
+
     let foundAnswer = null
+    let matchScore = 0
 
     for (const faq of faqs) {
       for (const keyword of faq.keywords) {
-        if (questionLower.includes(keyword.toLowerCase())) {
+        const keywordLower = keyword.toLowerCase()
+        // Check for exact keyword or if question contains keyword words
+        if (
+          questionNormalized === keywordLower ||
+          questionNormalized.includes(keywordLower) ||
+          keywordLower.split(" ").some((word) => questionNormalized.includes(word))
+        ) {
           foundAnswer = faq.answer
+          matchScore = Math.max(matchScore, keyword.length)
           break
         }
       }
-      if (foundAnswer) break
+      if (foundAnswer && matchScore > 0) break
     }
 
     if (foundAnswer) {
-      console.log("[v0] Found FAQ match")
+      console.log("[v0] Found FAQ match with score:", matchScore)
       return Response.json({ answer: foundAnswer })
     }
 
     console.log("[v0] No FAQ match found, returning default response")
-    return Response.json({
-      answer:
-        language === "es"
-          ? "No encontré una respuesta específica a tu pregunta. Por favor, consulta la documentación completa en nuestro sitio web o contacta a nuestro equipo de soporte."
-          : language === "fr"
-            ? "Je n'ai pas trouvé de réponse spécifique à votre question. Veuillez consulter la documentation complète sur notre site Web ou contacter notre équipe d'assistance."
-            : language === "de"
-              ? "Ich habe keine spezifische Antwort auf Ihre Frage gefunden. Bitte konsultieren Sie die vollständige Dokumentation auf unserer Website oder kontaktieren Sie unser Support-Team."
-              : language === "it"
-                ? "Non ho trovato una risposta specifica alla tua domanda. Consulta la documentazione completa sul nostro sito Web o contatta il nostro team di supporto."
-                : "I couldn't find a specific answer to your question. Please check our full documentation or contact our support team.",
-    })
+    const defaultMessages = {
+      es: "No encontré una respuesta específica a tu pregunta. Por favor, consulta la documentación completa en nuestro sitio web o contacta a nuestro equipo de soporte.",
+      fr: "Je n'ai pas trouvé de réponse spécifique à votre question. Veuillez consulter la documentation complète sur notre site Web ou contacter notre équipe d'assistance.",
+      de: "Ich habe keine spezifische Antwort auf Ihre Frage gefunden. Bitte konsultieren Sie die vollständige Dokumentation auf unserer Website oder kontaktieren Sie unser Support-Team.",
+      it: "Non ho trovato una risposta specifica alla tua domanda. Consulta la documentazione completa sul nostro sito Web o contatta il nostro team di supporto.",
+      en: "I couldn't find a specific answer to your question. Please check our full documentation or contact our support team.",
+    }
+    return Response.json({ answer: defaultMessages[lang] || defaultMessages.en })
   } catch (error) {
     console.error("[v0] Help chat error:", error)
     return Response.json({ answer: "An error occurred. Please try again later." }, { status: 500 })
