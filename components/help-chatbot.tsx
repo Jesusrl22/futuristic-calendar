@@ -49,6 +49,7 @@ export function HelpChatbot() {
     setIsLoading(true)
 
     try {
+      console.log("[v0] Sending message:", input)
       const response = await fetch("/api/help-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -59,12 +60,19 @@ export function HelpChatbot() {
         }),
       })
 
+      console.log("[v0] Response status:", response.status)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
+      console.log("[v0] Response data:", data)
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
-        content: data.answer || t("help_chatbot_error") || "Unable to process your request",
+        content: data.answer || data.error || t("help_chatbot_error") || "Unable to process your request",
         timestamp: new Date(),
       }
 
@@ -74,7 +82,7 @@ export function HelpChatbot() {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
-        content: t("help_chatbot_error") || "An error occurred. Please try again.",
+        content: `${t("help_chatbot_error") || "An error occurred. Please try again."} ${error instanceof Error ? error.message : ""}`,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])

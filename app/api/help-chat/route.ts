@@ -119,7 +119,7 @@ const faqDatabase = {
     {
       keywords: ["exportar", "descargar", "guardar datos", "respaldo"],
       answer:
-        "Puedes exportar tus tareas y notas como CSV o PDF desde el menú de configuración. Esto te permite respaldar tus datos o usarlos en otro lugar.",
+        "Puedes exportar tus tareas y notas como CSV o PDF desde el menú de configuración. Esto te permite respaldar tus datos o utilizarlos en otro lugar.",
     },
     {
       keywords: ["equipo", "colaborar", "compartir", "invitar"],
@@ -333,12 +333,16 @@ function findFAQMatch(question: string, language: string): string | null {
 export async function POST(request: Request) {
   try {
     const { question, language, conversationHistory } = await request.json()
+    console.log("[v0] Help chat question:", question, "Language:", language)
 
     // First, try to find a matching FAQ
     const faqAnswer = findFAQMatch(question, language)
     if (faqAnswer) {
+      console.log("[v0] FAQ match found")
       return Response.json({ answer: faqAnswer, source: "faq" })
     }
+
+    console.log("[v0] No FAQ match, calling Groq")
 
     const languagePrompt =
       language === "es"
@@ -360,6 +364,8 @@ Users can cancel their subscription anytime, and access continues until the end 
 Keep responses concise, friendly, and helpful. If you don't know something, suggest contacting support at support@futuretask.com.
 ${languagePrompt}`
 
+    console.log("[v0] Calling Groq with prompt")
+
     const { text: aiAnswer } = await generateText({
       model: groq("mixtral-8x7b-32768"),
       system: systemPrompt,
@@ -367,9 +373,10 @@ ${languagePrompt}`
       maxTokens: 200,
     })
 
+    console.log("[v0] Groq response received:", aiAnswer)
     return Response.json({ answer: aiAnswer, source: "ai" })
   } catch (error) {
     console.error("[v0] Help chat error:", error)
-    return Response.json({ error: "Failed to process question" }, { status: 500 })
+    return Response.json({ error: "Failed to process question", details: String(error) }, { status: 500 })
   }
 }

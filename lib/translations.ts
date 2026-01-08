@@ -16,6 +16,24 @@ export const translations = {
     achievements: "Achievements",
     subscription: "Subscription",
 
+    // Subscription plan names and billing labels
+    plan_free: "Free",
+    plan_premium: "Premium",
+    plan_pro: "Pro",
+    billing_monthly: "Monthly",
+    billing_annual: "Annual",
+    current_plan: "Current Plan",
+    most_popular: "Most Popular",
+    manage_subscription: "Manage your subscription",
+    plan_expires: "Plan expires",
+    cancel_subscription: "Cancel Subscription",
+    cancel_plan: "Cancel Plan",
+    downgrade_to_free: "Downgrade to Free",
+    processing: "Processing",
+    coming_soon: "Coming Soon",
+    buy_extra_credits: "Buy Extra Credits",
+    purchase_additional_credits: "Purchase additional AI credits",
+
     // AI modes
     chat_mode: "Chat",
     study_mode: "Study",
@@ -79,45 +97,6 @@ export const translations = {
     event_saved_calendar: "Event saved to calendar!",
     error_saving_calendar: "Error saving to calendar",
     upgrade_to_send_files: "Upgrade your plan to send files!",
-
-    // File upload and save translations
-    file_uploaded: "File uploaded",
-    analyze_this_file: "Analyze this file",
-    save_as_task: "Save as task",
-    save_to_calendar: "Save to calendar",
-
-    // Settings page - General
-    general_settings: "General Settings",
-    email_cannot_be_changed: "Email cannot be changed",
-    language_english: "English",
-    language_spanish: "Español",
-    language_french: "Français",
-    language_german: "Deutsch",
-    language_italian: "Italiano",
-    timezone_region: "Timezone / Region",
-    current_time: "Current time",
-
-    // Settings page - Pomodoro
-    pomodoro_settings: "Pomodoro Settings",
-    pomodoro_duration: "Pomodoro Duration",
-    pomodoro_work_session_length: "Default work session length",
-
-    // Settings page - Theme
-    theme_settings: "Theme Settings",
-    custom_theme: "Custom Theme",
-    upgrade_for_more_themes: "Upgrade to Premium or Pro for more themes",
-    upgrade_for_custom_themes: "Upgrade to Pro for custom themes",
-    all_themes_available: "You have access to all themes + custom",
-    custom_theme_description: "Create your own theme by selecting two colors",
-    primary_color: "Primary Color",
-    secondary_color: "Secondary Color",
-
-    // Help Chatbot
-    help_chatbot_title: "Help & Support",
-    help_chatbot_welcome: "Welcome! How can we help?",
-    help_chatbot_faq: "We'll answer your questions using FAQs or AI.",
-    help_chatbot_input: "Ask a question...",
-    help_chatbot_error: "Unable to process your request. Please try again.",
   },
 
   es: {
@@ -136,6 +115,24 @@ export const translations = {
     teams: "Equipos",
     achievements: "Logros",
     subscription: "Suscripción",
+
+    // Subscription plan names and billing labels
+    plan_free: "Gratuito",
+    plan_premium: "Premium",
+    plan_pro: "Pro",
+    billing_monthly: "Mensual",
+    billing_annual: "Anual",
+    current_plan: "Plan Actual",
+    most_popular: "Más Popular",
+    manage_subscription: "Administra tu suscripción",
+    plan_expires: "Plan expira",
+    cancel_subscription: "Cancelar Suscripción",
+    cancel_plan: "Cancelar Plan",
+    downgrade_to_free: "Degradar a Gratuito",
+    processing: "Procesando",
+    coming_soon: "Próximamente",
+    buy_extra_credits: "Comprar Créditos Extra",
+    purchase_additional_credits: "Comprar créditos adicionales de IA",
 
     // Modos IA
     chat_mode: "Chat",
@@ -200,45 +197,6 @@ export const translations = {
     event_saved_calendar: "¡Evento guardado en el calendario!",
     error_saving_calendar: "Error al guardar en el calendario",
     upgrade_to_send_files: "¡Actualiza tu plan para enviar archivos!",
-
-    // Traducciones de carga de archivo y guardar
-    file_uploaded: "Archivo subido",
-    analyze_this_file: "Analiza este archivo",
-    save_as_task: "Guardar como tarea",
-    save_to_calendar: "Guardar en calendario",
-
-    // Página de configuración - General
-    general_settings: "Configuración General",
-    email_cannot_be_changed: "El email no puede ser cambiado",
-    language_english: "English",
-    language_spanish: "Español",
-    language_french: "Français",
-    language_german: "Deutsch",
-    language_italian: "Italiano",
-    timezone_region: "Zona horaria / Región",
-    current_time: "Hora actual",
-
-    // Página de configuración - Pomodoro
-    pomodoro_settings: "Configuración de Pomodoro",
-    pomodoro_duration: "Duración de Pomodoro",
-    pomodoro_work_session_length: "Duración predeterminada de la sesión de trabajo",
-
-    // Página de configuración - Tema
-    theme_settings: "Configuración de Tema",
-    custom_theme: "Tema Personalizado",
-    upgrade_for_more_themes: "Actualiza a Premium o Pro para más temas",
-    upgrade_for_custom_themes: "Actualiza a Pro para temas personalizados",
-    all_themes_available: "Tienes acceso a todos los temas + personalizado",
-    custom_theme_description: "Crea tu propio tema seleccionando dos colores",
-    primary_color: "Color Primario",
-    secondary_color: "Color Secundario",
-
-    // Ayuda Chatbot
-    help_chatbot_title: "Ayuda & Soporte",
-    help_chatbot_welcome: "¡Bienvenido! ¿En qué puedo ayudarte?",
-    help_chatbot_faq: "Respondemos a tus preguntas usando FAQs o IA.",
-    help_chatbot_input: "Haz una pregunta...",
-    help_chatbot_error: "No se puede procesar tu solicitud. Por favor, inténtalo de nuevo.",
   },
 
   fr: {
@@ -257,6 +215,24 @@ export const translations = {
     teams: "Équipes",
     achievements: "Réalisations",
     subscription: "Abonnement",
+
+    // Subscription plan names and billing labels
+    plan_free: "Gratuit",
+    plan_premium: "Premium",
+    plan_pro: "Pro",
+    billing_monthly: "Mensuel",
+    billing_annual: "Annuel",
+    current_plan: "Plan Actuel",
+    most_popular: "Le Plus Populaire",
+    manage_subscription: "Gérer votre abonnement",
+    plan_expires: "Plan expire",
+    cancel_subscription: "Annuler l'Abonnement",
+    cancel_plan: "Annuler le Plan",
+    downgrade_to_free: "Passer à Gratuit",
+    processing: "Traitement",
+    coming_soon: "À venir",
+    buy_extra_credits: "Acheter des Crédits Supplémentaires",
+    purchase_additional_credits: "Acheter des crédits supplémentaires d'IA",
 
     // Modes IA
     chat_mode: "Chat",
@@ -296,70 +272,6 @@ export const translations = {
     error_sending: "Erreur lors de l'envoi du message",
     loading: "Chargement...",
     welcome_message: "Bienvenue dans l'Assistant IA",
-
-    // Barre latérale
-    sidebar_search: "Rechercher des conversations",
-
-    // Crédits
-    total_available: "Total disponible",
-    credits: "Crédits",
-    monthly_credits: "Crédits mensuels",
-    purchased_credits: "Crédits achetés",
-
-    // Enregistrer dans Calendrier/Tâches
-    save_to: "Enregistrer dans",
-    task: "Tâche",
-    calendar: "Calendrier",
-    title: "Titre",
-    enter_title: "Entrez le titre",
-    save: "Enregistrer",
-    cancel: "Annuler",
-
-    // Mises à jour supplémentaires
-    task_saved_successfully: "Tâche enregistrée avec succès!",
-    error_saving_task: "Erreur lors de l'enregistrement de la tâche",
-    event_saved_calendar: "Événement enregistré dans le calendrier!",
-    error_saving_calendar: "Erreur lors de l'enregistrement dans le calendrier",
-    upgrade_to_send_files: "Mettez à niveau votre plan pour envoyer des fichiers!",
-
-    // Traductions de chargement de fichier et sauvegarde
-    file_uploaded: "Fichier téléchargé",
-    analyze_this_file: "Analysez ce fichier",
-    save_as_task: "Enregistrer comme tâche",
-    save_to_calendar: "Enregistrer dans le calendrier",
-
-    // Page paramètres - Général
-    general_settings: "Paramètres Généraux",
-    email_cannot_be_changed: "L'email ne peut pas être modifié",
-    language_english: "English",
-    language_spanish: "Español",
-    language_french: "Français",
-    language_german: "Deutsch",
-    language_italian: "Italiano",
-    timezone_region: "Fuseau horaire / Région",
-    current_time: "Heure actuelle",
-
-    // Page paramètres - Pomodoro
-    pomodoro_settings: "Paramètres Pomodoro",
-    pomodoro_duration: "Durée de Pomodoro",
-    pomodoro_work_session_length: "Durée par défaut de la session de travail",
-
-    // Page paramètres - Thème
-    theme_settings: "Paramètres de Thème",
-    custom_theme: "Thème Personnalisé",
-    upgrade_for_more_themes: "Passez à Premium ou Pro pour plus de thèmes",
-    upgrade_for_custom_themes: "Passez à Pro pour les thèmes personnalisés",
-    all_themes_available: "Vous avez accès à tous les thèmes + personnalisé",
-    custom_theme_description: "Créez votre propre thème en sélectionnant deux couleurs",
-    primary_color: "Couleur Primaire",
-    secondary_color: "Couleur Secondaire",
-
-    // Aide Chatbot
-    help_chatbot_title: "Aide & Support",
-    help_chatbot_welcome: "Bienvenue ! Comment puis-je vous aider ?",
-    help_chatbot_faq: "Nous répondrons à vos questions en utilisant des FAQs ou l'IA.",
-    help_chatbot_input: "Posez une question...",
-    help_chatbot_error: "Impossible de traiter votre requête. Veuillez réessayer.",
   },
 
   de: {
@@ -379,6 +291,24 @@ export const translations = {
     achievements: "Erfolge",
     subscription: "Abonnement",
 
+    // Subscription plan names and billing labels
+    plan_free: "Kostenlos",
+    plan_premium: "Premium",
+    plan_pro: "Pro",
+    billing_monthly: "Monatlich",
+    billing_annual: "Jährlich",
+    current_plan: "Aktueller Plan",
+    most_popular: "Am beliebtesten",
+    manage_subscription: "Verwalte deine Abonnement",
+    plan_expires: "Plan läuft ab",
+    cancel_subscription: "Abonnement kündigen",
+    cancel_plan: "Plan kündigen",
+    downgrade_to_free: "Zur kostenlosen Version herabstufen",
+    processing: "Wird bearbeitet",
+    coming_soon: "Demnächst verfügbar",
+    buy_extra_credits: "Zusätzliche Credits kaufen",
+    purchase_additional_credits: "Zusätzliche KI-Credits kaufen",
+
     // KI-Modi
     chat_mode: "Chat",
     study_mode: "Lernen",
@@ -393,94 +323,6 @@ export const translations = {
       "Sie sind ein erfahrener Tutor und Lernführer. Erstellen Sie Lernpläne, erklären Sie Konzepte klar, erstellen Sie Übungsfragen und helfen Sie Benutzern, effektiv zu lernen.",
     analyze_system_prompt:
       "Sie sind ein erfahrener Dokumentanalytiker. Analysieren Sie hochgeladene Dateien, extrahieren Sie wichtige Erkenntnisse, erstellen Sie Zusammenfassungen und geben Sie detaillierte Erklärungen.",
-
-    // Chat-Schnittstelle
-    input_placeholder: "Schreiben Sie Ihre Nachricht...",
-    upload_file: "Datei hochladen",
-    upload_message_placeholder: "Stelle eine Frage zur Datei...",
-    file_too_large: "Datei zu groß (max 20 MB)",
-
-    // Vorgeschlagene Aufforderungen
-    study_tips: "Lerntipps",
-    productivity_tips: "Produktivitätstipps erhalten",
-    study_create_plan: "Erstellen Sie einen Lernplan",
-    study_explain_concept: "Erklären Sie dieses Konzept",
-    study_practice_questions: "Generieren Sie Übungsfragen",
-    analyze_summarize: "Fassen Sie dieses Dokument zusammen",
-    analyze_key_points: "Extrahieren Sie wichtige Punkte",
-    analyze_diagram: "Erstellen Sie ein visuelles Diagramm",
-
-    // Meldungen und Benachrichtigungen
-    new_conversation: "Neue Konversation",
-    no_conversations: "Noch keine Gespräche",
-    confirm_delete: "Sind Sie sicher, dass Sie diesen Gesprächsverlauf löschen möchten?",
-    error_sending: "Fehler beim Senden der Nachricht",
-    loading: "Lädt...",
-    welcome_message: "Willkommen beim KI-Assistenten",
-
-    // Seitenleiste
-    sidebar_search: "Gespräche durchsuchen",
-
-    // Gutschriften
-    total_available: "Gesamt verfügbar",
-    credits: "Gutschriften",
-    monthly_credits: "Monatliche Gutschriften",
-    purchased_credits: "Gekaufte Gutschriften",
-
-    // In Kalender/Aufgaben speichern
-    save_to: "Speichern unter",
-    task: "Aufgabe",
-    calendar: "Kalender",
-    title: "Titel",
-    enter_title: "Titel eingeben",
-    save: "Speichern",
-    cancel: "Abbrechen",
-
-    // Zusätzliche Aktualisierungen
-    task_saved_successfully: "Aufgabe erfolgreich gespeichert!",
-    error_saving_task: "Fehler beim Speichern der Aufgabe",
-    event_saved_calendar: "Ereignis im Kalender gespeichert!",
-    error_saving_calendar: "Fehler beim Speichern im Kalender",
-    upgrade_to_send_files: "Upgraden Sie Ihren Plan, um Dateien zu senden!",
-
-    // Dateiupload und -speicherung
-    file_uploaded: "Datei hochgeladen",
-    analyze_this_file: "Diese Datei analysieren",
-    save_as_task: "Als Aufgabe speichern",
-    save_to_calendar: "Im Kalender speichern",
-
-    // Einstellungsseite - Allgemein
-    general_settings: "Allgemeine Einstellungen",
-    email_cannot_be_changed: "E-Mail kann nicht geändert werden",
-    language_english: "English",
-    language_spanish: "Español",
-    language_french: "Français",
-    language_german: "Deutsch",
-    language_italian: "Italiano",
-    timezone_region: "Zeitzone / Region",
-    current_time: "Aktuelle Zeit",
-
-    // Einstellungsseite - Pomodoro
-    pomodoro_settings: "Pomodoro-Einstellungen",
-    pomodoro_duration: "Pomodoro-Dauer",
-    pomodoro_work_session_length: "Standardlänge der Arbeitssitzung",
-
-    // Einstellungsseite - Design
-    theme_settings: "Design-Einstellungen",
-    custom_theme: "Benutzerdefiniertes Design",
-    upgrade_for_more_themes: "Aktualisieren Sie auf Premium oder Pro für weitere Designs",
-    upgrade_for_custom_themes: "Aktualisieren Sie auf Pro für benutzerdefinierte Designs",
-    all_themes_available: "Sie haben Zugriff auf alle Designs + benutzerdefiniert",
-    custom_theme_description: "Erstellen Sie ein eigenes Design, indem Sie zwei Farben auswählen",
-    primary_color: "Primärfarbe",
-    secondary_color: "Sekundärfarbe",
-
-    // Hilfe Chatbot
-    help_chatbot_title: "Hilfe & Support",
-    help_chatbot_welcome: "Willkommen! Wie kann ich Ihnen helfen?",
-    help_chatbot_faq: "Wir werden Ihre Fragen mit Hilfe von FAQs oder KI beantworten.",
-    help_chatbot_input: "Stellen Sie eine Frage...",
-    help_chatbot_error: "Ihre Anfrage konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut.",
   },
 
   it: {
@@ -500,6 +342,24 @@ export const translations = {
     achievements: "Risultati",
     subscription: "Abbonamento",
 
+    // Subscription plan names and billing labels
+    plan_free: "Gratuito",
+    plan_premium: "Premium",
+    plan_pro: "Pro",
+    billing_monthly: "Mensile",
+    billing_annual: "Annuale",
+    current_plan: "Piano Attuale",
+    most_popular: "Il Più Popolare",
+    manage_subscription: "Gestisci il tuo abbonamento",
+    plan_expires: "Il piano scade",
+    cancel_subscription: "Annulla l'Abbonamento",
+    cancel_plan: "Annulla il Piano",
+    downgrade_to_free: "Passa a Gratuito",
+    processing: "In elaborazione",
+    coming_soon: "Prossimamente",
+    buy_extra_credits: "Acquista Crediti Extra",
+    purchase_additional_credits: "Acquista crediti aggiuntivi di IA",
+
     // Modalità IA
     chat_mode: "Chat",
     study_mode: "Studio",
@@ -514,93 +374,5 @@ export const translations = {
       "Sei un tutor esperto e una guida allo studio. Crea piani di studio, spiega i concetti chiaramente, genera domande di pratica e aiuta gli utenti a imparare in modo efficace.",
     analyze_system_prompt:
       "Sei un analizzatore di documenti esperto. Analizza i file caricati, estrai informazioni chiave, crea riassunti e fornisci spiegazioni dettagliate.",
-
-    // Interfaccia chat
-    input_placeholder: "Scrivi il tuo messaggio...",
-    upload_file: "Carica file",
-    upload_message_placeholder: "Fai una domanda sul file...",
-    file_too_large: "File troppo grande (max 20 MB)",
-
-    // Prompt suggeriti
-    study_tips: "Consigli di studio",
-    productivity_tips: "Ottieni consigli di produttività",
-    study_create_plan: "Crea un piano di studio",
-    study_explain_concept: "Spiega questo concetto",
-    study_practice_questions: "Genera domande di pratica",
-    analyze_summarize: "Riassumi questo documento",
-    analyze_key_points: "Estrai i punti chiave",
-    analyze_diagram: "Crea un diagramma visivo",
-
-    // Messaggi e notifiche
-    new_conversation: "Nuova conversazione",
-    no_conversations: "Ancora nessuna conversazione",
-    confirm_delete: "Sei sicuro di voler eliminare questa conversazione?",
-    error_sending: "Errore nell'invio del messaggio",
-    loading: "Caricamento...",
-    welcome_message: "Benvenuto nell'Assistente IA",
-
-    // Barra laterale
-    sidebar_search: "Cerca conversazioni",
-
-    // Crediti
-    total_available: "Totale disponibile",
-    credits: "Crediti",
-    monthly_credits: "Crediti mensili",
-    purchased_credits: "Crediti acquistati",
-
-    // Salva in Calendario/Attività
-    save_to: "Salva in",
-    task: "Attività",
-    calendar: "Calendario",
-    title: "Titolo",
-    enter_title: "Inserisci il titolo",
-    save: "Salva",
-    cancel: "Annulla",
-
-    // Aggiornamenti aggiuntivi
-    task_saved_successfully: "Attività salvata con successo!",
-    error_saving_task: "Errore nel salvataggio dell'attività",
-    event_saved_calendar: "Evento salvato nel calendario!",
-    error_saving_calendar: "Errore nel salvataggio nel calendario",
-    upgrade_to_send_files: "Aggiorna il tuo piano per inviare file!",
-
-    // Traduzioni di caricamento file e salvataggio
-    file_uploaded: "File caricato",
-    analyze_this_file: "Analizza questo file",
-    save_as_task: "Salva come attività",
-    save_to_calendar: "Salva nel calendario",
-
-    // Pagina impostazioni - Generale
-    general_settings: "Impostazioni Generali",
-    email_cannot_be_changed: "L'email non può essere modificato",
-    language_english: "English",
-    language_spanish: "Español",
-    language_french: "Français",
-    language_german: "Deutsch",
-    language_italian: "Italiano",
-    timezone_region: "Fuso orario / Regione",
-    current_time: "Ora attuale",
-
-    // Pagina impostazioni - Pomodoro
-    pomodoro_settings: "Impostazioni Pomodoro",
-    pomodoro_duration: "Durata Pomodoro",
-    pomodoro_work_session_length: "Durata predefinita della sessione di lavoro",
-
-    // Pagina impostazioni - Tema
-    theme_settings: "Impostazioni Tema",
-    custom_theme: "Tema Personalizzato",
-    upgrade_for_more_themes: "Passa a Premium o Pro per più temi",
-    upgrade_for_custom_themes: "Passa a Pro per temi personalizzati",
-    all_themes_available: "Hai accesso a tutti i temi + personalizzato",
-    custom_theme_description: "Crea il tuo tema selezionando due colori",
-    primary_color: "Colore Primario",
-    secondary_color: "Colore Secondario",
-
-    // Aiuto Chatbot
-    help_chatbot_title: "Aiuto & Supporto",
-    help_chatbot_welcome: "Benvenuto! Come posso aiutarti?",
-    help_chatbot_faq: "Risponderemo alle tue domande usando FAQ o IA.",
-    help_chatbot_input: "Fai una domanda...",
-    help_chatbot_error: "Impossibile elaborare la tua richiesta. Per favore, riprova.",
   },
 }
