@@ -183,7 +183,7 @@ const AIPage = () => {
         "You are an expert study guide and tutor. Help users learn effectively with explanations, summaries, and practice questions. Create study plans, explain complex concepts, and generate learning materials.",
       analyze:
         t("analyze_system_prompt") ||
-        "You are a document analysis expert. Analyze documents thoroughly and provide summaries, key points, and insights. Help extract information and create visual representations.",
+        "You are a document analysis expert. Analyze documents thoroughly and provide clear summaries, key points, and insights. Help extract information and create visual representations.",
     }
     return prompts[aiMode]
   }
@@ -509,32 +509,23 @@ const AIPage = () => {
                 </Button>
                 {aiMode === "analyze" && (
                   <>
-                    <div className="space-y-2">
-                      <div className="flex gap-1 md:gap-2">
-                        <Input
-                          placeholder={t("upload_message_placeholder") || "Ask something about the file..."}
-                          className="bg-secondary/50 text-xs md:text-sm flex-1"
-                          disabled={loading || !uploadedFile}
-                        />
-                        <Button
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={loading}
-                          variant="outline"
-                          className="shrink-0"
-                          title={t("upload_file") || "Upload file"}
-                        >
-                          <Upload className="w-3 h-3 md:w-4 md:h-4" />
-                        </Button>
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={loading}
+                      variant="outline"
+                      className="shrink-0"
+                      title={t("upload_file") || "Upload file"}
+                    >
+                      <Upload className="w-3 h-3 md:w-4 md:h-4" />
+                    </Button>
+                    {uploadedFile && (
+                      <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
+                        <span>📎 {uploadedFile.name}</span>
+                        <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
+                          ✕
+                        </button>
                       </div>
-                      {uploadedFile && (
-                        <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
-                          <span>📎 {uploadedFile.name}</span>
-                          <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
-                            ✕
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    )}
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -640,32 +631,23 @@ const AIPage = () => {
               </Button>
               {aiMode === "analyze" && (
                 <>
-                  <div className="space-y-2">
-                    <div className="flex gap-1 md:gap-2">
-                      <Input
-                        placeholder={t("upload_message_placeholder") || "Ask something about the file..."}
-                        className="bg-secondary/50 text-xs md:text-sm flex-1"
-                        disabled={loading || !uploadedFile}
-                      />
-                      <Button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={loading}
-                        variant="outline"
-                        className="shrink-0"
-                        title={t("upload_file") || "Upload file"}
-                      >
-                        <Upload className="w-3 h-3 md:w-4 md:h-4" />
-                      </Button>
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                    variant="outline"
+                    className="shrink-0"
+                    title={t("upload_file") || "Upload file"}
+                  >
+                    <Upload className="w-3 h-3 md:w-4 md:h-4" />
+                  </Button>
+                  {uploadedFile && (
+                    <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
+                      <span>📎 {uploadedFile.name}</span>
+                      <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
+                        ✕
+                      </button>
                     </div>
-                    {uploadedFile && (
-                      <div className="text-xs text-primary bg-primary/10 p-2 rounded flex justify-between items-center">
-                        <span>📎 {uploadedFile.name}</span>
-                        <button onClick={() => setUploadedFile(null)} className="hover:text-destructive">
-                          ✕
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  )}
                   <input
                     ref={fileInputRef}
                     type="file"
