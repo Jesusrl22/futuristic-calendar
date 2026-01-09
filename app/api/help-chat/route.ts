@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server"
+import { NextResponse } from "next/server"
 
 // FAQ Database with translations - expanded with subscription and pack info
 const faqDatabase = {
@@ -465,8 +466,73 @@ const faqDatabase = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, language } = await req.json()
-    const normalizedQuestion = question.toLowerCase().trim()
+    const body = await req.json()
+    const message = body?.message
+    const language = body?.language || "en"
+
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ error: "Message is required and must be a string" }, { status: 400 })
+    }
+
+    const normalizedMessage = message.toLowerCase().trim()
+
+    const greetingResponses = {
+      en: "Hello! 👋 I'm your support assistant. How can I help you today? You can ask me about tasks, calendar, AI assistant, Pomodoro, settings, subscription, and more.",
+      es: "¡Hola! 👋 Soy tu asistente de soporte. ¿Cómo puedo ayudarte hoy? Puedes preguntarme sobre tareas, calendario, asistente de IA, Pomodoro, configuración, suscripción y más.",
+      fr: "Bonjour! 👋 Je suis votre assistant d'assistance. Comment puis-je vous aider aujourd'hui? Vous pouvez me poser des questions sur les tâches, le calendrier, l'assistant IA, Pomodoro, les paramètres, l'abonnement, etc.",
+      de: "Hallo! 👋 Ich bin dein Supportassistent. Wie kann ich dir heute helfen? Du kannst mich nach Aufgaben, Kalender, KI-Assistent, Pomodoro, Einstellungen, Abonnement und mehr fragen.",
+      it: "Ciao! 👋 Sono il tuo assistente di supporto. Come posso aiutarti oggi? Puoi chiedermi di attività, calendario, assistente IA, Pomodoro, impostazioni, abbonamento e altro.",
+    }
+
+    const thanksResponses = {
+      en: "You're welcome! 😊 Feel free to ask me anything else about the app.",
+      es: "¡De nada! 😊 Siéntete libre de preguntarme cualquier otra cosa sobre la app.",
+      fr: "De rien! 😊 N'hésitez pas à me poser d'autres questions sur l'application.",
+      de: "Gerne! 😊 Fühle dich frei, mich alles andere über die App zu fragen.",
+      it: "Prego! 😊 Sentiti libero di chiedermi qualsiasi altra cosa sull'app.",
+    }
+
+    // Detectar saludos
+    const greetingKeywords = {
+      en: ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "greetings"],
+      es: ["hola", "buenos días", "buenas tardes", "buenas noches", "saludos", "ey"],
+      fr: ["bonjour", "salut", "bonsoir", "bon matin", "hé"],
+      de: ["hallo", "hi", "guten morgen", "guten tag", "guten abend", "grüße"],
+      it: ["ciao", "salve", "buongiorno", "buonasera", "ciao a tutti"],
+    }
+
+    // Detectar agradecimientos
+    const thanksKeywords = {
+      en: ["thanks", "thank you", "gracias", "thx", "appreciate", "thanks for", "thank you for"],
+      es: ["gracias", "muchas gracias", "gracias por", "agradezco", "thx"],
+      fr: ["merci", "merci beaucoup", "merci pour", "remerci"],
+      de: ["danke", "vielen dank", "dank", "danke für", "danke dir"],
+      it: ["grazie", "grazie mille", "grazie per", "apprezzo"],
+    }
+
+    // Verificar si es un saludo
+    const isGreeting = greetingKeywords[language as keyof typeof greetingKeywords]?.some((keyword) =>
+      normalizedMessage.includes(keyword),
+    )
+
+    if (isGreeting) {
+      return NextResponse.json({
+        answer: greetingResponses[language as keyof typeof greetingResponses] || greetingResponses.en,
+        contact_email: "support@future-task.com",
+      })
+    }
+
+    // Verificar si es agradecimiento
+    const isThanks = thanksKeywords[language as keyof typeof thanksKeywords]?.some((keyword) =>
+      normalizedMessage.includes(keyword),
+    )
+
+    if (isThanks) {
+      return NextResponse.json({
+        answer: thanksResponses[language as keyof typeof thanksResponses] || thanksResponses.en,
+        contact_email: "support@future-task.com",
+      })
+    }
 
     const faqsForLanguage = faqDatabase[language as keyof typeof faqDatabase] || faqDatabase.en
     const contactEmail = "support@future-task.com"
@@ -477,14 +543,14 @@ export async function POST(req: NextRequest) {
         const normalizedKeyword = keyword.toLowerCase()
         // Check for exact keyword or partial word matches
         return (
-          normalizedQuestion.includes(normalizedKeyword) ||
-          normalizedQuestion
+          normalizedMessage.includes(normalizedKeyword) ||
+          normalizedMessage
             .split(/\s+/)
             .some((word) => normalizedKeyword.includes(word) || word.includes(normalizedKeyword.split(/\s+/)[0]))
         )
       })
       if (hasMatch) {
-        return Response.json({
+        return NextResponse.json({
           answer: faq.answer,
           contact_email: contactEmail,
         })
@@ -504,13 +570,13 @@ export async function POST(req: NextRequest) {
       it: "Non ho trovato una risposta esatta alla tua domanda. Ecco alcuni argomenti correlati che potrebbero aiutarti:",
     }
 
-    return Response.json({
+    return NextResponse.json({
       answer: noMatchMessages[language as keyof typeof noMatchMessages] || noMatchMessages.en,
       suggestions,
       contact_email: contactEmail,
     })
   } catch (error) {
     console.error("[v0] Help chat error:", error)
-    return Response.json({ error: "An error occurred processing your question" }, { status: 500 })
+    return NextResponse.json({ error: "An error occurred processing your question" }, { status: 500 })
   }
 }
