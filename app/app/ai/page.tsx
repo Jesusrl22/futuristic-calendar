@@ -111,7 +111,6 @@ const AIPage = () => {
     try {
       const session = await supabase.auth.getSession()
       if (!session.data.session?.access_token) {
-        console.log("[v0] No session, conversation not saved")
         return
       }
 
@@ -119,8 +118,6 @@ const AIPage = () => {
 
       const userMessage = messages.find((m) => m.role === "user")
       const title = userMessage?.content?.substring(0, 50) || t("new_conversation")
-
-      console.log("[v0] Saving conversation:", { conversationId, messagesCount: messages.length, aiMode, title })
 
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
@@ -136,10 +133,6 @@ const AIPage = () => {
         }),
       })
 
-      console.log("[v0] Save response status:", response.status)
-      const saveData = await response.json()
-      console.log("[v0] Save response data:", saveData)
-
       if (response.ok) {
         // Update local conversations list
         const updated = conversations.map((c) =>
@@ -147,10 +140,9 @@ const AIPage = () => {
         )
 
         if (!existingConv) {
-          console.log("[v0] Adding new conversation to list:", conversationId)
-          updated.unshift({
+          updated.push({
             id: conversationId,
-            title: title,
+            title,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             messages,
@@ -159,12 +151,9 @@ const AIPage = () => {
         }
 
         setConversations(updated)
-        setCurrentConversationId(conversationId)
-      } else {
-        console.error("[v0] Save failed:", response.status, response.statusText, saveData)
       }
     } catch (error) {
-      console.error("[v0] Error saving conversation:", error)
+      console.error("Error saving conversation:", error)
     }
   }
 
@@ -439,7 +428,6 @@ const AIPage = () => {
         const session = await supabase.auth.getSession()
         if (!session.data.session?.access_token) return
 
-        console.log("[v0] Loading conversations from database")
         const response = await fetch("/api/ai-conversations", {
           headers: {
             Authorization: `Bearer ${session.data.session.access_token}`,
@@ -448,7 +436,6 @@ const AIPage = () => {
 
         if (response.ok) {
           const data = await response.json()
-          console.log("[v0] Loaded conversations:", data.length)
           setConversations(data)
         }
       } catch (error) {
