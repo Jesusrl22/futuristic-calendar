@@ -93,11 +93,11 @@ export async function POST(req: NextRequest) {
     }
 
     const languageInstruction = language !== "en" ? `\n\nRespond exclusively in ${getLanguageName(language)}.` : ""
-    const finalPrompt = (systemPrompt || message) + languageInstruction
 
     const { text } = await generateText({
       model: "openai/gpt-4o-mini",
-      prompt: finalPrompt,
+      system: systemPrompt ? systemPrompt + languageInstruction : undefined,
+      prompt: message,
     })
 
     return NextResponse.json({
