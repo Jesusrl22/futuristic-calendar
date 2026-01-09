@@ -60,34 +60,53 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Conversation ID required" }, { status: 400 })
     }
 
-    const { data: conversation, error } = await supabase
+    const { data: existing } = await supabase
       .from("ai_conversations")
-      .upsert(
-        {
+      .select("id")
+      .eq("id", String(id))
+      .eq("user_id", user.id)
+      .single()
+
+    let result
+    if (existing) {
+      // UPDATE existing conversation
+      const { data, error } = await supabase
+        .from("ai_conversations")
+        .update({
+          title: title || "New Conversation",
+          messages: messages || [],
+          mode: mode || "chat",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", String(id))
+        .eq("user_id", user.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      result = data
+    } else {
+      // INSERT new conversation
+      const { data, error } = await supabase
+        .from("ai_conversations")
+        .insert({
           id: String(id),
           user_id: user.id,
           title: title || "New Conversation",
           messages: messages || [],
           mode: mode || "chat",
+          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id,user_id" },
-      )
-      .select()
-      .single()
+        })
+        .select()
+        .single()
 
-    if (error) {
-      console.error("[v0] AI Conversations upsert error:", error)
-      console.error("[v0] Error details:", {
-        errorCode: error.code,
-        errorMessage: error.message,
-        errorHint: error.hint,
-      })
-      throw error
+      if (error) throw error
+      result = data
     }
 
-    console.log("[v0] Saved conversation:", conversation?.id)
-    return NextResponse.json(conversation)
+    console.log("[v0] Saved conversation:", result?.id)
+    return NextResponse.json(result)
   } catch (error) {
     console.error("[v0] Error saving conversation:", error)
     return NextResponse.json({ error: "Failed to save conversation" }, { status: 500 })
