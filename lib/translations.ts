@@ -97,6 +97,14 @@ export const translations = {
     event_saved_calendar: "Event saved to calendar!",
     error_saving_calendar: "Error saving to calendar",
     upgrade_to_send_files: "Upgrade your plan to send files!",
+
+    // Help Chatbot
+    help_chatbot_title: "Help & Support",
+    help_chatbot_welcome: "Hi! I'm your assistant. How can I help you today?",
+    help_chatbot_subtitle: "I'm here to answer questions about the app",
+    help_chatbot_input: "Ask me anything...",
+    help_chatbot_faq: "Ask about tasks, calendar, AI, Pomodoro, subscription, and more!",
+    help_chatbot_error: "I couldn't process your request. Try again!",
   },
 
   es: {
@@ -197,6 +205,14 @@ export const translations = {
     event_saved_calendar: "¡Evento guardado en el calendario!",
     error_saving_calendar: "Error al guardar en el calendario",
     upgrade_to_send_files: "¡Actualiza tu plan para enviar archivos!",
+
+    // Help Chatbot
+    help_chatbot_title: "Ayuda y Soporte",
+    help_chatbot_welcome: "¡Hola! Soy tu asistente. ¿Cómo puedo ayudarte hoy?",
+    help_chatbot_subtitle: "Estoy aquí para responder preguntas sobre la aplicación",
+    help_chatbot_input: "Pregúntame cualquier cosa...",
+    help_chatbot_faq: "¡Pregunta sobre tareas, calendario, IA, Pomodoro, suscripción y más!",
+    help_chatbot_error: "No pude procesar tu solicitud. ¡Inténtalo de nuevo!",
   },
 
   fr: {
@@ -245,7 +261,7 @@ export const translations = {
     // Prompts système
     chat_system_prompt: "Vous êtes un assistant IA utile. Fournissez des réponses claires et concises.",
     study_system_prompt:
-      "Vous êtes un tuteur expert et guide d'étude. Créez des plans d'étude, expliquez les concepts clairement, générez des questions de pratique et aidez les utilisateurs à apprendre efficacement.",
+      "Vous êtes un tuteur expert et guide d'étude. Créez des plans d'étude, expiquez les concepts clairement, générez des questions de pratique et aidez les utilisateurs à apprendre efficacement.",
     analyze_system_prompt:
       "Vous êtes un analyseur de documents expert. Analysez les fichiers téléchargés, extrayez les informations clés, créez des résumés et fournissez des explications détaillées.",
 
@@ -272,6 +288,14 @@ export const translations = {
     error_sending: "Erreur lors de l'envoi du message",
     loading: "Chargement...",
     welcome_message: "Bienvenue dans l'Assistant IA",
+
+    // Help Chatbot
+    help_chatbot_title: "Aide et Support",
+    help_chatbot_welcome: "Bonjour! Je suis votre assistant. Comment puis-je vous aider aujourd'hui?",
+    help_chatbot_subtitle: "Je suis là pour répondre aux questions sur l'application",
+    help_chatbot_input: "Posez-moi n'importe quelle question...",
+    help_chatbot_faq: "Posez des questions sur les tâches, le calendrier, l'IA, Pomodoro, l'abonnement et plus!",
+    help_chatbot_error: "Je n'ai pas pu traiter votre demande. Réessayez!",
   },
 
   de: {
@@ -323,6 +347,14 @@ export const translations = {
       "Sie sind ein erfahrener Tutor und Lernführer. Erstellen Sie Lernpläne, erklären Sie Konzepte klar, erstellen Sie Übungsfragen und helfen Sie Benutzern, effektiv zu lernen.",
     analyze_system_prompt:
       "Sie sind ein erfahrener Dokumentanalytiker. Analysieren Sie hochgeladene Dateien, extrahieren Sie wichtige Erkenntnisse, erstellen Sie Zusammenfassungen und geben Sie detaillierte Erklärungen.",
+
+    // Help Chatbot
+    help_chatbot_title: "Hilfe & Support",
+    help_chatbot_welcome: "Hallo! Ich bin dein Assistent. Wie kann ich dir heute helfen?",
+    help_chatbot_subtitle: "Ich bin hier, um Fragen zur App zu beantworten",
+    help_chatbot_input: "Frag mich alles...",
+    help_chatbot_faq: "Stellen Sie Fragen zu Aufgaben, Kalender, KI, Pomodoro, Abonnement und mehr!",
+    help_chatbot_error: "Ich konnte deine Anfrage nicht verarbeiten. Versuchen Sie es erneut!",
   },
 
   it: {
@@ -374,5 +406,13 @@ export const translations = {
       "Sei un tutor esperto e una guida allo studio. Crea piani di studio, spiega i concetti chiaramente, genera domande di pratica e aiuta gli utenti a imparare in modo efficace.",
     analyze_system_prompt:
       "Sei un analizzatore di documenti esperto. Analizza i file caricati, estrai informazioni chiave, crea riassunti e fornisci spiegazioni dettagliate.",
+
+    // Help Chatbot
+    help_chatbot_title: "Aiuto e Supporto",
+    help_chatbot_welcome: "Ciao! Sono il tuo assistente. Come posso aiutarti oggi?",
+    help_chatbot_subtitle: "Sono qui per rispondere alle domande sull'app",
+    help_chatbot_input: "Chiedimi qualsiasi cosa...",
+    help_chatbot_faq: "Fai domande su attività, calendario, IA, Pomodoro, abbonamento e altro!",
+    help_chatbot_error: "Non ho potuto elaborare la tua richiesta. Riprova!",
   },
 }

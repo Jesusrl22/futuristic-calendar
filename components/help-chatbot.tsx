@@ -31,8 +31,17 @@ export function HelpChatbot() {
   }
 
   useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      const welcomeMessage: ChatMessage = {
+        id: "welcome",
+        type: "assistant",
+        content: t("help_chatbot_welcome"),
+        timestamp: new Date(),
+      }
+      setMessages([welcomeMessage])
+    }
     scrollToBottom()
-  }, [messages])
+  }, [isOpen, messages])
 
   const handleSendMessage = async () => {
     if (!input.trim()) return
@@ -116,26 +125,19 @@ export function HelpChatbot() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-background">
-            {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground text-sm mt-8">
-                <p className="mb-4">{t("help_chatbot_welcome") || "Welcome! How can we help?"}</p>
-                <p className="text-xs">{t("help_chatbot_faq") || "We'll answer your questions using FAQs or AI."}</p>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
-                      message.type === "user"
-                        ? "bg-primary text-primary-foreground rounded-br-none"
-                        : "bg-secondary text-secondary-foreground rounded-bl-none"
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                  </div>
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-xs px-4 py-2 rounded-lg ${
+                    message.type === "user"
+                      ? "bg-primary text-primary-foreground rounded-br-none"
+                      : "bg-secondary text-secondary-foreground rounded-bl-none"
+                  }`}
+                >
+                  <p className="text-sm">{message.content}</p>
                 </div>
-              ))
-            )}
+              </div>
+            ))}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg rounded-bl-none">
