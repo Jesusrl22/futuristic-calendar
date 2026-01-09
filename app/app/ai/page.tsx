@@ -28,6 +28,7 @@ interface Conversation {
   created_at: string
   updated_at: string
   messages: Message[]
+  mode: "chat" | "study" | "analyze"
 }
 
 const AIPage = () => {
@@ -157,7 +158,7 @@ const AIPage = () => {
 
       const existingConv = conversations.find((c) => c.id === conversationId)
 
-      console.log("[v0] Saving conversation:", { conversationId, messagesCount: messages.length })
+      console.log("[v0] Saving conversation:", { conversationId, messagesCount: messages.length, aiMode })
 
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
@@ -169,6 +170,7 @@ const AIPage = () => {
           id: conversationId,
           title: messages[0]?.content?.substring(0, 50) || t("new_conversation"),
           messages: messages,
+          mode: aiMode,
         }),
       })
 
@@ -177,7 +179,7 @@ const AIPage = () => {
       if (response.ok) {
         // Update local conversations list
         const updated = conversations.map((c) =>
-          c.id === conversationId ? { ...c, messages, updated_at: new Date().toISOString() } : c,
+          c.id === conversationId ? { ...c, messages, updated_at: new Date().toISOString(), mode: aiMode } : c,
         )
 
         if (!existingConv) {
@@ -187,6 +189,7 @@ const AIPage = () => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             messages,
+            mode: aiMode,
           })
         }
 
@@ -207,6 +210,7 @@ const AIPage = () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       messages: [],
+      mode: aiMode,
     }
     const updated = [newConversation, ...conversations]
     setConversations(updated)
@@ -223,6 +227,7 @@ const AIPage = () => {
       setMessages(conv.messages || [])
       setInput("")
       setShowRightSidebar(false)
+      setAiMode(conv.mode)
     }
   }
 

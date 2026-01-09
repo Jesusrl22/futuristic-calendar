@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     const { data: conversations, error } = await supabase
       .from("ai_conversations")
-      .select("id, title, created_at, updated_at, messages")
+      .select("id, title, created_at, updated_at, messages, mode")
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false })
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { id, title, messages } = await req.json()
+    const { id, title, messages, mode } = await req.json()
 
     if (!id) {
       return NextResponse.json({ error: "Conversation ID required" }, { status: 400 })
@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
           user_id: user.id,
           title: title || "New Conversation",
           messages: messages || [],
+          mode: mode || "chat",
           updated_at: new Date().toISOString(),
         },
         { onConflict: "id,user_id" },
