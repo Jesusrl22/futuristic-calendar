@@ -65,7 +65,7 @@ export function HelpChatbot() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: input,
+          message: input,
           language,
         }),
       })
