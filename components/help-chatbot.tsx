@@ -13,6 +13,8 @@ interface ChatMessage {
   type: "user" | "assistant"
   content: string
   timestamp: Date
+  suggestions?: Array<{ id: string; question: string }>
+  contact_email?: string
 }
 
 export function HelpChatbot() {
@@ -41,7 +43,7 @@ export function HelpChatbot() {
       setMessages([welcomeMessage])
     }
     scrollToBottom()
-  }, [isOpen, messages])
+  }, [isOpen, messages]) // Removed t from dependencies
 
   const handleSendMessage = async () => {
     if (!input.trim()) return
@@ -65,7 +67,6 @@ export function HelpChatbot() {
         body: JSON.stringify({
           question: input,
           language,
-          conversationHistory: messages,
         }),
       })
 
@@ -81,8 +82,10 @@ export function HelpChatbot() {
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
-        content: data.answer || data.error || t("help_chatbot_error") || "Unable to process your request",
+        content: data.answer || t("help_chatbot_error"),
         timestamp: new Date(),
+        suggestions: data.suggestions,
+        contact_email: data.contact_email,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -91,13 +94,17 @@ export function HelpChatbot() {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
-        content: `${t("help_chatbot_error") || "An error occurred. Please try again."} ${error instanceof Error ? error.message : ""}`,
+        content: `${t("help_chatbot_error") || "An error occurred. Please try again."}`,
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSuggestionClick = (suggestion: { id: string; question: string }) => {
+    setInput(suggestion.question)
   }
 
   return (
@@ -135,6 +142,53 @@ export function HelpChatbot() {
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
+
+                  {message.suggestions && message.suggestions.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs opacity-75 font-semibold">
+                        {language === "es"
+                          ? "Preguntas relacionadas:"
+                          : language === "fr"
+                            ? "Questions connexes:"
+                            : language === "de"
+                              ? "Verwandte Fragen:"
+                              : language === "it"
+                                ? "Domande correlate:"
+                                : "Related questions:"}
+                      </p>
+                      {message.suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.id}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full text-left text-xs bg-background/50 hover:bg-background/80 px-2 py-1 rounded border border-border/50 transition-colors"
+                        >
+                          • {suggestion.question}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {message.contact_email && !message.suggestions && (
+                    <div className="mt-3 pt-3 border-t border-secondary/20">
+                      <p className="text-xs opacity-75">
+                        {language === "es"
+                          ? "¿Necesitas más ayuda? Contacta:"
+                          : language === "fr"
+                            ? "Besoin d'aide supplémentaire? Contactez:"
+                            : language === "de"
+                              ? "Brauchst du weitere Hilfe? Kontaktieren Sie:"
+                              : language === "it"
+                                ? "Hai bisogno di altro aiuto? Contatta:"
+                                : "Need more help? Contact:"}
+                      </p>
+                      <a
+                        href={`mailto:${message.contact_email}`}
+                        className="text-xs font-semibold underline hover:opacity-80"
+                      >
+                        {message.contact_email}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

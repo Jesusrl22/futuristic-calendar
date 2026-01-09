@@ -105,6 +105,8 @@ export const translations = {
     help_chatbot_input: "Ask me anything...",
     help_chatbot_faq: "Ask about tasks, calendar, AI, Pomodoro, subscription, and more!",
     help_chatbot_error: "I couldn't process your request. Try again!",
+    help_chatbot_related_questions: "Related questions:",
+    help_chatbot_need_help: "Need more help? Contact:",
   },
 
   es: {
@@ -213,6 +215,8 @@ export const translations = {
     help_chatbot_input: "Pregúntame cualquier cosa...",
     help_chatbot_faq: "¡Pregunta sobre tareas, calendario, IA, Pomodoro, suscripción y más!",
     help_chatbot_error: "No pude procesar tu solicitud. ¡Inténtalo de nuevo!",
+    help_chatbot_related_questions: "Preguntas relacionadas:",
+    help_chatbot_need_help: "¿Necesitas más ayuda? Contacta:",
   },
 
   fr: {
@@ -296,6 +300,8 @@ export const translations = {
     help_chatbot_input: "Posez-moi n'importe quelle question...",
     help_chatbot_faq: "Posez des questions sur les tâches, le calendrier, l'IA, Pomodoro, l'abonnement et plus!",
     help_chatbot_error: "Je n'ai pas pu traiter votre demande. Réessayez!",
+    help_chatbot_related_questions: "Questions liées:",
+    help_chatbot_need_help: "Besoin d'aide supplémentaire? Contactez:",
   },
 
   de: {
@@ -355,6 +361,8 @@ export const translations = {
     help_chatbot_input: "Frag mich alles...",
     help_chatbot_faq: "Stellen Sie Fragen zu Aufgaben, Kalender, KI, Pomodoro, Abonnement und mehr!",
     help_chatbot_error: "Ich konnte deine Anfrage nicht verarbeiten. Versuchen Sie es erneut!",
+    help_chatbot_related_questions: "Verwandte Fragen:",
+    help_chatbot_need_help: "Benötigen Sie weitere Hilfe? Kontaktieren Sie:",
   },
 
   it: {
@@ -414,5 +422,7 @@ export const translations = {
     help_chatbot_input: "Chiedimi qualsiasi cosa...",
     help_chatbot_faq: "Fai domande su attività, calendario, IA, Pomodoro, abbonamento e altro!",
     help_chatbot_error: "Non ho potuto elaborare la tua richiesta. Riprova!",
+    help_chatbot_related_questions: "Domande correlate:",
+    help_chatbot_need_help: "Hai bisogno di ulteriore assistenza? Contatta:",
   },
 }
