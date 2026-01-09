@@ -107,47 +107,6 @@ const AIPage = () => {
     })
   }
 
-  const checkAccessAndLoadConversations = async () => {
-    setIsLoadingProfile(true)
-    try {
-      const response = await fetch("/api/user/profile")
-      if (!response.ok) throw new Error("Failed to fetch profile")
-
-      const profile = await response.json()
-
-      const normalizedTier = (profile.subscription_tier || "free").toLowerCase()
-
-      setProfileData({
-        tier: normalizedTier,
-        monthlyCredits: profile.ai_credits || 0,
-        purchasedCredits: profile.ai_credits_purchased || 0,
-      })
-
-      // Load conversations
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (session?.user) {
-        const convResponse = await fetch("/api/ai-conversations", {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        })
-
-        if (convResponse.ok) {
-          const convData = await convResponse.json()
-          const convs = Array.isArray(convData) ? convData : convData.conversations || []
-          setConversations(convs)
-        }
-      }
-    } catch (error) {
-      console.error("[v0] Error loading profile:", error)
-    } finally {
-      setIsLoadingProfile(false)
-    }
-  }
-
   const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
       const session = await supabase.auth.getSession()
@@ -158,7 +117,10 @@ const AIPage = () => {
 
       const existingConv = conversations.find((c) => c.id === conversationId)
 
-      console.log("[v0] Saving conversation:", { conversationId, messagesCount: messages.length, aiMode })
+      const userMessage = messages.find((m) => m.role === "user")
+      const title = userMessage?.content?.substring(0, 50) || t("new_conversation")
+
+      console.log("[v0] Saving conversation:", { conversationId, messagesCount: messages.length, aiMode, title })
 
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
@@ -168,24 +130,27 @@ const AIPage = () => {
         },
         body: JSON.stringify({
           id: conversationId,
-          title: messages[0]?.content?.substring(0, 50) || t("new_conversation"),
+          title: title,
           messages: messages,
           mode: aiMode,
         }),
       })
 
       console.log("[v0] Save response status:", response.status)
+      const saveData = await response.json()
+      console.log("[v0] Save response data:", saveData)
 
       if (response.ok) {
         // Update local conversations list
         const updated = conversations.map((c) =>
-          c.id === conversationId ? { ...c, messages, updated_at: new Date().toISOString(), mode: aiMode } : c,
+          c.id === conversationId ? { ...c, title, messages, updated_at: new Date().toISOString(), mode: aiMode } : c,
         )
 
         if (!existingConv) {
+          console.log("[v0] Adding new conversation to list:", conversationId)
           updated.unshift({
             id: conversationId,
-            title: messages[0]?.content?.substring(0, 50) || t("new_conversation"),
+            title: title,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             messages,
@@ -196,7 +161,7 @@ const AIPage = () => {
         setConversations(updated)
         setCurrentConversationId(conversationId)
       } else {
-        console.error("[v0] Save failed:", response.status, response.statusText)
+        console.error("[v0] Save failed:", response.status, response.statusText, saveData)
       }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
@@ -469,7 +434,29 @@ const AIPage = () => {
     profileData.tier !== "free" || profileData.monthlyCredits > 0 || profileData.purchasedCredits > 0
 
   useEffect(() => {
-    checkAccessAndLoadConversations()
+    const loadConversations = async () => {
+      try {
+        const session = await supabase.auth.getSession()
+        if (!session.data.session?.access_token) return
+
+        console.log("[v0] Loading conversations from database")
+        const response = await fetch("/api/ai-conversations", {
+          headers: {
+            Authorization: `Bearer ${session.data.session.access_token}`,
+          },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log("[v0] Loaded conversations:", data.length)
+          setConversations(data)
+        }
+      } catch (error) {
+        console.error("[v0] Error loading conversations:", error)
+      }
+    }
+
+    loadConversations()
   }, [])
 
   useEffect(() => {
