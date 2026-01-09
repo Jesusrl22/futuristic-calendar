@@ -70,14 +70,14 @@ export async function POST(req: NextRequest) {
           messages: messages || [],
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "id" },
+        { onConflict: "id,user_id" },
       )
       .select()
       .single()
 
     if (error) {
-      console.error("[AI Conversations] Upsert error:", error)
-      console.error("[AI Conversations] Error details:", {
+      console.error("[v0] AI Conversations upsert error:", error)
+      console.error("[v0] Error details:", {
         errorCode: error.code,
         errorMessage: error.message,
         errorHint: error.hint,
@@ -85,10 +85,10 @@ export async function POST(req: NextRequest) {
       throw error
     }
 
-    console.log("[AI Conversations] Saved conversation:", conversation?.id)
+    console.log("[v0] Saved conversation:", conversation?.id)
     return NextResponse.json(conversation)
   } catch (error) {
-    console.error("[AI Conversations] Error saving conversation:", error)
+    console.error("[v0] Error saving conversation:", error)
     return NextResponse.json({ error: "Failed to save conversation" }, { status: 500 })
   }
 }
