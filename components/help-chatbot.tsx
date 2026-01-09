@@ -168,7 +168,7 @@ export function HelpChatbot() {
                     </div>
                   )}
 
-                  {message.contact_email && !message.suggestions && (
+                  {message.contact_email && (
                     <div className="mt-3 pt-3 border-t border-secondary/20">
                       <p className="text-xs opacity-75">
                         {language === "es"
@@ -183,7 +183,7 @@ export function HelpChatbot() {
                       </p>
                       <a
                         href={`mailto:${message.contact_email}`}
-                        className="text-xs font-semibold underline hover:opacity-80"
+                        className="text-xs font-semibold underline hover:opacity-80 text-primary"
                       >
                         {message.contact_email}
                       </a>
