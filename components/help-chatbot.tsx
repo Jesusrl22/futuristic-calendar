@@ -172,21 +172,18 @@ export function HelpChatbot() {
                     <div className="mt-3 pt-3 border-t border-secondary/20">
                       <p className="text-xs opacity-75">
                         {language === "es"
-                          ? "¿Necesitas más ayuda? Contacta:"
+                          ? "¿Necesitas más ayuda? Escribe a:"
                           : language === "fr"
-                            ? "Besoin d'aide supplémentaire? Contactez:"
+                            ? "Besoin d'aide supplémentaire? Écrivez à:"
                             : language === "de"
-                              ? "Brauchst du weitere Hilfe? Kontaktieren Sie:"
+                              ? "Brauchst du weitere Hilfe? Schreib an:"
                               : language === "it"
-                                ? "Hai bisogno di altro aiuto? Contatta:"
-                                : "Need more help? Contact:"}
+                                ? "Hai bisogno di altro aiuto? Scrivi a:"
+                                : "Need more help? Write to:"}
                       </p>
-                      <a
-                        href={`mailto:${message.contact_email}`}
-                        className="text-xs font-semibold underline hover:opacity-80 text-primary"
-                      >
+                      <p className="text-xs font-semibold select-all cursor-text bg-background/50 px-2 py-1 rounded border border-border/50 mt-2">
                         {message.contact_email}
-                      </a>
+                      </p>
                     </div>
                   )}
                 </div>
