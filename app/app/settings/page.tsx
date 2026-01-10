@@ -288,9 +288,8 @@ export default function SettingsPage() {
         </h1>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="general">{t("general")}</TabsTrigger>
-            <TabsTrigger value="pomodoro">{t("pomodoro")}</TabsTrigger>
             <TabsTrigger value="theme">{t("theme")}</TabsTrigger>
             <TabsTrigger value="notifications">{t("notifications")}</TabsTrigger>
           </TabsList>
@@ -334,30 +333,6 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {t("current_time")}: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
-                </div>
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="pomodoro">
-            <Card className="glass-card p-4 sm:p-6 neon-glow">
-              <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">{t("pomodoro_settings")}</h2>
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex-1">
-                    <Label className="text-sm">{t("pomodoro_duration")}</Label>
-                    <p className="text-xs sm:text-sm text-muted-foreground">{t("pomodoro_work_session_length")}</p>
-                  </div>
-                  <Select defaultValue={profile.pomodoroWorkDuration.toString()}>
-                    <SelectTrigger className="w-full sm:w-32 bg-secondary/50 text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 min</SelectItem>
-                      <SelectItem value="25">25 min</SelectItem>
-                      <SelectItem value="45">45 min</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             </Card>

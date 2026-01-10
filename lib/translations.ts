@@ -107,6 +107,13 @@ export const translations = {
     help_chatbot_error: "I couldn't process your request. Try again!",
     help_chatbot_related_questions: "Related questions:",
     help_chatbot_need_help: "Need more help? Contact:",
+
+    // Push Notifications
+    pushNotifications: "Push Notifications",
+    pushNotificationsDescription: "Receive notifications about your tasks, events, and Pomodoro reminders",
+    notificationsNotSupported: "Notifications are not supported in your browser",
+    notificationsEnabled: "Notifications enabled",
+    notificationsDisabled: "Notifications disabled",
   },
 
   es: {
@@ -250,6 +257,13 @@ export const translations = {
     minutes: "minutos",
     save_settings: "Guardar Configuración",
     settings_saved_successfully: "Configuración guardada exitosamente",
+
+    // Push Notifications
+    pushNotifications: "Notificaciones Push",
+    pushNotificationsDescription: "Recibe notificaciones sobre tus tareas, eventos y recordatorios del Pomodoro",
+    notificationsNotSupported: "Las notificaciones no son soportadas en tu navegador",
+    notificationsEnabled: "Notificaciones habilitadas",
+    notificationsDisabled: "Notificaciones deshabilitadas",
   },
 
   fr: {
@@ -336,38 +350,12 @@ export const translations = {
     help_chatbot_related_questions: "Questions liées:",
     help_chatbot_need_help: "Besoin d'aide supplémentaire? Contactez:",
 
-    // Paramètres Généraux
-    general: "Général",
-    general_settings: "Paramètres Généraux",
-    email: "Email",
-    email_cannot_be_changed: "L'email ne peut pas être modifié",
-    language: "Langue",
-    language_english: "English",
-    language_spanish: "Español",
-    language_french: "Français",
-    language_german: "Deutsch",
-    language_italian: "Italiano",
-    timezone_region: "Fuseau Horaire",
-    current_time: "Heure Actuelle",
-    theme: "Thème",
-    theme_settings: "Paramètres de Thème",
-    choose_theme: "Choisissez un thème",
-    customize_colors: "Personnaliser les Couleurs",
-    primary_color: "Couleur Primaire",
-    secondary_color: "Couleur Secondaire",
-    notifications: "Notifications",
-    notification_settings: "Paramètres de Notification",
-    enable_notifications: "Activer les Notifications",
-    pomodoro_settings: "Paramètres Pomodoro",
-    pomodoro_duration: "Durée de Pomodoro",
-    pomodoro_work_session_length: "Durée de la session de travail",
-    pomodoro_break_duration: "Durée de la Pause",
-    pomodoro_break_session_length: "Durée de la session de pause",
-    pomodoro_long_break: "Pause Longue",
-    pomodoro_long_break_length: "Durée de la pause longue (tous les 4 cycles)",
-    minutes: "minutes",
-    save_settings: "Enregistrer les Paramètres",
-    settings_saved_successfully: "Paramètres enregistrés avec succès",
+    // Push Notifications
+    pushNotifications: "Notifications Push",
+    pushNotificationsDescription: "Recevez des notifications sur vos tâches, événements et rappels Pomodoro",
+    notificationsNotSupported: "Les notifications ne sont pas prises en charge dans votre navigateur",
+    notificationsEnabled: "Notifications activées",
+    notificationsDisabled: "Notifications désactivées",
   },
 
   de: {
@@ -462,6 +450,14 @@ export const translations = {
     minutes: "Minuten",
     save_settings: "Einstellungen speichern",
     settings_saved_successfully: "Einstellungen erfolgreich gespeichert",
+
+    // Push Notifications
+    pushNotifications: "Push-Benachrichtigungen",
+    pushNotificationsDescription:
+      "Erhalten Sie Benachrichtigungen zu Ihren Aufgaben, Ereignissen und Pomodoro-Erinnerungen",
+    notificationsNotSupported: "Benachrichtigungen werden von Ihrem Browser nicht unterstützt",
+    notificationsEnabled: "Benachrichtigungen aktiviert",
+    notificationsDisabled: "Benachrichtigungen deaktiviert",
   },
 
   it: {
@@ -556,6 +552,13 @@ export const translations = {
     minutes: "minuti",
     save_settings: "Salva Impostazioni",
     settings_saved_successfully: "Impostazioni salvate con successo",
+
+    // Push Notifications
+    pushNotifications: "Notifiche Push",
+    pushNotificationsDescription: "Ricevi notifiche sui tuoi compiti, eventi e promemoria del Pomodoro",
+    notificationsNotSupported: "Le notifiche non sono supportate dal tuo browser",
+    notificationsEnabled: "Notifiche abilitate",
+    notificationsDisabled: "Notifiche disabilitate",
   },
 }
 
