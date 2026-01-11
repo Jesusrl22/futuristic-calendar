@@ -60,12 +60,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Conversation ID required" }, { status: 400 })
     }
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("ai_conversations")
       .select("id")
       .eq("id", String(id))
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
+
+    if (existingError) throw existingError
 
     let result
     if (existing) {
