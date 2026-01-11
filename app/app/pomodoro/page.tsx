@@ -303,7 +303,7 @@ export default function PomodoroPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
           <h1 className="hidden md:block text-3xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">{t("timerTitle")}</span>
+            <span className="text-primary neon-text">Pomodoro</span>
           </h1>
 
           {hasAdvancedAccess && (
