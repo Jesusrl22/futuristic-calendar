@@ -39,7 +39,6 @@ const AIPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null)
   const [showRightSidebar, setShowRightSidebar] = useState(false)
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [aiMode, setAiMode] = useState<"chat" | "study" | "analyze">("chat")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -466,17 +465,6 @@ const AIPage = () => {
     setInput("")
     setUploadedFile(null)
     setFilePreviewData(null)
-  }
-
-  if (isLoadingProfile) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">{t("loading")}</p>
-        </div>
-      </div>
-    )
   }
 
   return (
