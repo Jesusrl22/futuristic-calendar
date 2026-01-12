@@ -299,14 +299,18 @@ export default function SubscriptionPage() {
                       ))}
                     </div>
 
-                    {currentPlan === plan.nameKey.replace("plan_", "") ? (
+                    {isCurrentPlan ? (
                       <Button disabled className="w-full">
                         {t("current_plan")}
                       </Button>
+                    ) : plan.monthlyPrice === 0 ? (
+                      <Button disabled className="w-full opacity-50">
+                        {t("free_plan")}
+                      </Button>
                     ) : (
                       <PayPalSubscriptionButton
-                        plan={plan}
-                        billingPeriod={billingPeriod}
+                        planId={planId || ""}
+                        planName={plan.nameKey.replace("plan_", "")}
                         onSuccess={() => {
                           fetchSubscription()
                         }}
