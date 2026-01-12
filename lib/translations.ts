@@ -33,6 +33,13 @@ export const translations = {
     coming_soon: "Coming Soon",
     buy_extra_credits: "Buy Extra Credits",
     purchase_additional_credits: "Purchase additional AI credits",
+    month: "month",
+    year: "year",
+    ai_credits: "AI Credits",
+    popular: "Popular",
+    free_plan: "Free Plan",
+    monthly: "Monthly",
+    save_20_percent: "Save 20%",
 
     // AI modes
     chat_mode: "Chat",
@@ -199,6 +206,13 @@ export const translations = {
     coming_soon: "Próximamente",
     buy_extra_credits: "Comprar Créditos Extra",
     purchase_additional_credits: "Comprar créditos adicionales de IA",
+    month: "mes",
+    year: "año",
+    ai_credits: "Créditos de IA",
+    popular: "Popular",
+    free_plan: "Plan Gratuito",
+    monthly: "Mensual",
+    save_20_percent: "Ahorra 20%",
 
     // Modos IA
     chat_mode: "Chat",
@@ -365,6 +379,13 @@ export const translations = {
     coming_soon: "À venir",
     buy_extra_credits: "Acheter des Crédits Supplémentaires",
     purchase_additional_credits: "Acheter des crédits supplémentaires d'IA",
+    month: "mois",
+    year: "année",
+    ai_credits: "Crédits IA",
+    popular: "Populaire",
+    free_plan: "Plan Gratuit",
+    monthly: "Mensuel",
+    save_20_percent: "Gagner 20%",
 
     // Modes IA
     chat_mode: "Chat",
@@ -506,6 +527,13 @@ export const translations = {
     coming_soon: "Demnächst verfügbar",
     buy_extra_credits: "Zusätzliche Credits kaufen",
     purchase_additional_credits: "Zusätzliche KI-Credits kaufen",
+    month: "Monat",
+    year: "Jahr",
+    ai_credits: "KI-Credits",
+    popular: "Beliebt",
+    free_plan: "Kostenloses Abonnement",
+    monthly: "Monatlich",
+    save_20_percent: "20% sparen",
 
     // KI-Modi
     chat_mode: "Chat",
@@ -633,6 +661,13 @@ export const translations = {
     coming_soon: "Prossimamente",
     buy_extra_credits: "Acquista Crediti Extra",
     purchase_additional_credits: "Acquista crediti aggiuntivi di IA",
+    month: "mese",
+    year: "anno",
+    ai_credits: "Crediti IA",
+    popular: "Popolare",
+    free_plan: "Piano Gratuito",
+    monthly: "Mensile",
+    save_20_percent: "Risparmia il 20%",
 
     // Modalità IA
     chat_mode: "Chat",

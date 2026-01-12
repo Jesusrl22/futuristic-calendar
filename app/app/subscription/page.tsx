@@ -162,12 +162,14 @@ export default function SubscriptionPage() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading subscription...</p>
+          <p className="text-muted-foreground">
+            {t("loading")} {t("subscription")}
+          </p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="hidden md:block text-4xl font-bold mb-8">
-            <span className="text-primary neon-text">Subscription</span>
+            <span className="text-primary neon-text">{t("subscription")}</span>
           </h1>
 
           <Card className="glass-card p-4 md:p-6 neon-glow mb-6 md:mb-8">
@@ -242,7 +244,9 @@ export default function SubscriptionPage() {
                 className={billingPeriod === "annual" ? "neon-glow" : ""}
               >
                 {t("billing_annual")}
-                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">Save 20%</span>
+                <span className="ml-2 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded">
+                  {t("save_20_percent")}
+                </span>
               </Button>
             </div>
           </div>
@@ -278,7 +282,7 @@ export default function SubscriptionPage() {
                           ${billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice}
                         </span>
                         <span className="text-muted-foreground">
-                          /{billingPeriod === "monthly" ? t("month") : t("year")}
+                          /{t(billingPeriod === "monthly" ? "month" : "year")}
                         </span>
                       </div>
 
