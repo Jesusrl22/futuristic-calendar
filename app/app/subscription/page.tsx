@@ -175,7 +175,9 @@ export default function SubscriptionPage() {
           <Card className="glass-card p-4 md:p-6 neon-glow mb-6 md:mb-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl md:text-2xl font-bold mb-2">Current Plan: {t(`plan_${currentPlan}`)}</h2>
+                <h2 className="text-xl md:text-2xl font-bold mb-2">
+                  {t("current_plan")}: {t(`plan_${currentPlan}`)}
+                </h2>
                 <p className="text-sm text-muted-foreground">{t("manage_subscription")}</p>
                 {expiresAt && (
                   <p className="text-xs md:text-sm text-orange-500 mt-2">
