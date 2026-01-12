@@ -194,7 +194,7 @@ export const translations = {
     monthly_ai_credits: "monthly",
 
     // Subscription feature translations
-    subscription_feature_ai_credits_free: "10 AI Credits/month",
+    subscription_feature_ai_credits_free: "0 AI Credits/month",
     subscription_feature_calendar: "Calendar & Events",
     subscription_feature_unlimited_tasks: "Unlimited Tasks",
     subscription_feature_basic_pomodoro: "Basic Pomodoro Timer",
@@ -420,7 +420,7 @@ export const translations = {
     monthly_ai_credits: "mensuales",
 
     // Subscription feature translations
-    subscription_feature_ai_credits_free: "10 Créditos de IA/mes",
+    subscription_feature_ai_credits_free: "0 Créditos de IA/mes",
     subscription_feature_calendar: "Calendario y Eventos",
     subscription_feature_unlimited_tasks: "Tareas Ilimitadas",
     subscription_feature_basic_pomodoro: "Temporizador Pomodoro Básico",
@@ -621,7 +621,7 @@ export const translations = {
     monthly_ai_credits: "mensuel",
 
     // Subscription feature translations
-    subscription_feature_ai_credits_free: "10 Crédits IA/mois",
+    subscription_feature_ai_credits_free: "0 Crédits IA/mois",
     subscription_feature_calendar: "Calendrier et Événements",
     subscription_feature_unlimited_tasks: "Tâches Illimitées",
     subscription_feature_basic_pomodoro: "Minuteur Pomodoro Básico",
@@ -808,7 +808,7 @@ export const translations = {
     monthly_ai_credits: "monatlich",
 
     // Subscription feature translations
-    subscription_feature_ai_credits_free: "10 KI-Credits/Monat",
+    subscription_feature_ai_credits_free: "0 KI-Credits/Monat",
     subscription_feature_calendar: "Kalender und Ereignisse",
     subscription_feature_unlimited_tasks: "Unbegrenzte Aufgaben",
     subscription_feature_basic_pomodoro: "Basis-Pomodoro-Timer",
@@ -995,7 +995,7 @@ export const translations = {
     monthly_ai_credits: "mensili",
 
     // Subscription feature translations
-    subscription_feature_ai_credits_free: "10 Crediti IA/mese",
+    subscription_feature_ai_credits_free: "0 Crediti IA/mese",
     subscription_feature_calendar: "Calendario e Eventi",
     subscription_feature_unlimited_tasks: "Attività Illimitate",
     subscription_feature_basic_pomodoro: "Timer Pomodoro di Base",
