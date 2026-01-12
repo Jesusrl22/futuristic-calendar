@@ -185,6 +185,13 @@ export const translations = {
     task_completion_rate: "Task Completion Rate",
     average_focus_time: "Average Focus Time",
     notes_created: "Notes Created",
+
+    // Subscription translations
+    cancel_subscription_description: "Confirm cancel subscription? You will lose monthly credits.",
+    subscription_cancelled_successfully: "Subscription cancelled successfully. You now have the free plan.",
+    failed_cancel_subscription: "Failed to cancel subscription.",
+    error_occurred: "An error occurred.",
+    monthly_ai_credits: "monthly",
   },
 
   es: {
@@ -373,6 +380,13 @@ export const translations = {
     task_completion_rate: "Tasa de Finalización de Tareas",
     average_focus_time: "Tiempo de Enfoque Promedio",
     notes_created: "Notas Creadas",
+
+    // Subscription translations
+    cancel_subscription_description: "¿Confirmar cancelar suscripción? Perderás los créditos mensuales.",
+    subscription_cancelled_successfully: "Suscripción cancelada exitosamente. Ahora tienes el plan gratuito.",
+    failed_cancel_subscription: "Error al cancelar la suscripción.",
+    error_occurred: "Ocurrió un error.",
+    monthly_ai_credits: "mensuales",
   },
 
   fr: {
@@ -443,7 +457,7 @@ export const translations = {
     productivity_tips: "Obtenez des conseils de productivité",
     study_create_plan: "Créez un plan d'étude",
     study_explain_concept: "Expliquez ce concept",
-    study_practice_questions: "Générez des questions de pratique",
+    study_practice_questions: "Générez des questions de pratica",
     analyze_summarize: "Résumez ce document",
     analyze_key_points: "Extrayez les points clés",
     analyze_diagram: "Créez un diagramme visuel",
@@ -515,11 +529,11 @@ export const translations = {
     productivity_god_desc: "Complétez 1000 tâches",
     note_taker_title: "Preneur de Notes",
     note_taker_desc: "Créez 50 notes",
-    focus_beginner_title: "Débutant Concentré",
+    focus_beginner_title: "Débutant Concentrato",
     focus_beginner_desc: "Complétez 10 sessions Pomodoro",
-    focus_warrior_title: "Guerrier Concentré",
+    focus_warrior_title: "Guerriero Concentrato",
     focus_warrior_desc: "Complétez 100 sessions Pomodoro",
-    focus_master_title: "Maître Concentré",
+    focus_master_title: "Maître Concentrato",
     focus_master_desc: "Complétez 500 sessions Pomodoro",
 
     // New statistics translations
@@ -536,6 +550,13 @@ export const translations = {
     task_completion_rate: "Taux de Réalisation des Tâches",
     average_focus_time: "Temps de Concentration Moyen",
     notes_created: "Notes Créées",
+
+    // Subscription translations
+    cancel_subscription_description: "Confirmer l'annulation de l'abonnement? Vous perdrez les crédits mensuels.",
+    subscription_cancelled_successfully: "Abonnement annulé avec succès. Vous avez maintenant le plan gratuit.",
+    failed_cancel_subscription: "Échec de l'annulation de l'abonnement.",
+    error_occurred: "Une erreur s'est produite.",
+    monthly_ai_credits: "mensuel",
   },
 
   de: {
@@ -685,6 +706,13 @@ export const translations = {
     task_completion_rate: "Aufgabenabschlussquote",
     average_focus_time: "Durchschnittliche Fokuszeit",
     notes_created: "Notizen Erstellt",
+
+    // Subscription translations
+    cancel_subscription_description: "Abonnement kündigen bestätigen? Sie verlieren Ihre monatlichen Credits.",
+    subscription_cancelled_successfully: "Abonnement erfolgreich gekündigt. Du hast jetzt den kostenlosen Plan.",
+    failed_cancel_subscription: "Fehler beim Kündigen des Abonnements.",
+    error_occurred: "Ein Fehler ist aufgetreten.",
+    monthly_ai_credits: "monatlich",
   },
 
   it: {
@@ -834,6 +862,13 @@ export const translations = {
     task_completion_rate: "Tasso di Completamento delle Attività",
     average_focus_time: "Tempo Medio di Concentrazione",
     notes_created: "Note Create",
+
+    // Subscription translations
+    cancel_subscription_description: "Confermare l'annullamento dell'abbonamento? Perderai i crediti mensili.",
+    subscription_cancelled_successfully: "Abbonamento annullato con successo. Ora hai il piano gratuito.",
+    failed_cancel_subscription: "Errore nell'annullamento dell'abbonamento.",
+    error_occurred: "Si è verificato un errore.",
+    monthly_ai_credits: "mensili",
   },
 }
 

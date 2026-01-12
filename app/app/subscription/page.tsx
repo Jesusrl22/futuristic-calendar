@@ -127,7 +127,7 @@ export default function SubscriptionPage() {
   }
 
   const handleCancelSubscription = async () => {
-    if (!confirm(`Confirm cancel subscription? You will lose monthly credits.`)) {
+    if (!confirm(t("cancel_subscription_description"))) {
       return
     }
 
@@ -138,14 +138,14 @@ export default function SubscriptionPage() {
       })
 
       if (response.ok) {
-        alert(`Subscription cancelled successfully. You now have the free plan.`)
+        alert(t("subscription_cancelled_successfully"))
         await fetchSubscription()
       } else {
-        alert("Failed to cancel subscription.")
+        alert(t("failed_cancel_subscription"))
       }
     } catch (error) {
       console.error("Error cancelling subscription:", error)
-      alert("An error occurred.")
+      alert(t("error_occurred"))
     } finally {
       setCancelling(false)
     }
@@ -162,7 +162,7 @@ export default function SubscriptionPage() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">{t("loading")}</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -257,7 +257,7 @@ export default function SubscriptionPage() {
             {plans.map((plan) => {
               const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice
               const planId = billingPeriod === "monthly" ? plan.monthlyPlanId : plan.annualPlanId
-              const periodLabel = t(billingPeriod === "monthly" ? "billing_monthly" : "billing_annual")
+              const periodLabel = billingPeriod === "monthly" ? t("billing_monthly") : t("billing_annual")
               const isCurrentPlan = currentPlan.toLowerCase() === plan.nameKey.replace("plan_", "").toLowerCase()
 
               return (
@@ -284,14 +284,14 @@ export default function SubscriptionPage() {
                           ${billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice}
                         </span>
                         <span className="text-muted-foreground">
-                          /{t(billingPeriod === "monthly" ? "month" : "year")}
+                          /{billingPeriod === "monthly" ? t("month") : t("year")}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                         <Zap className="w-4 h-4" />
                         <span>
-                          {plan.credits} {t("monthly")} {t("ai_credits")}
+                          {plan.credits} {t("monthly_ai_credits")} {t("ai_credits")}
                         </span>
                       </div>
                     </div>
