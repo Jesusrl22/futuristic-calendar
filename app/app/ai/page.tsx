@@ -487,9 +487,11 @@ const AIPage = () => {
           setConversations(convData || [])
         }
 
-        // Load profile for credits display
         const profileResponse = await fetch("/api/user/profile", {
           cache: "no-store",
+          headers: {
+            Authorization: `Bearer ${session.data.session.access_token}`,
+          },
         })
 
         if (profileResponse.ok) {
