@@ -170,6 +170,21 @@ export const translations = {
     focus_warrior_desc: "Complete 100 Pomodoro sessions",
     focus_master_title: "Focus Master",
     focus_master_desc: "Complete 500 Pomodoro sessions",
+
+    // New statistics translations
+    your_statistics: "Your Statistics",
+    day: "Day",
+    week: "Week",
+    month: "Month",
+    total_tasks: "Total Tasks",
+    tasks_completed: "Tasks Completed",
+    total_pomodoros: "Total Pomodoros",
+    focus_time: "Focus Time",
+    activity_over_time: "Activity Over Time",
+    productivity_insights: "Productivity Insights",
+    task_completion_rate: "Task Completion Rate",
+    average_focus_time: "Average Focus Time",
+    notes_created: "Notes Created",
   },
 
   es: {
@@ -343,6 +358,21 @@ export const translations = {
     focus_warrior_desc: "Completa 100 sesiones Pomodoro",
     focus_master_title: "Maestro Enfocado",
     focus_master_desc: "Completa 500 sesiones Pomodoro",
+
+    // New statistics translations
+    your_statistics: "Tus Estadísticas",
+    day: "Día",
+    week: "Semana",
+    month: "Mes",
+    total_tasks: "Total de Tareas",
+    tasks_completed: "Tareas Completadas",
+    total_pomodoros: "Total de Pomodoros",
+    focus_time: "Tiempo de Enfoque",
+    activity_over_time: "Actividad a lo Largo del Tiempo",
+    productivity_insights: "Información de Productividad",
+    task_completion_rate: "Tasa de Finalización de Tareas",
+    average_focus_time: "Tiempo de Enfoque Promedio",
+    notes_created: "Notas Creadas",
   },
 
   fr: {
@@ -491,6 +521,21 @@ export const translations = {
     focus_warrior_desc: "Complétez 100 sessions Pomodoro",
     focus_master_title: "Maître Concentré",
     focus_master_desc: "Complétez 500 sessions Pomodoro",
+
+    // New statistics translations
+    your_statistics: "Vos Statistiques",
+    day: "Jour",
+    week: "Semaine",
+    month: "Mois",
+    total_tasks: "Tâches Totales",
+    tasks_completed: "Tâches Complétées",
+    total_pomodoros: "Total Pomodoros",
+    focus_time: "Temps de Concentration",
+    activity_over_time: "Activité au Fil du Temps",
+    productivity_insights: "Informations de Productivité",
+    task_completion_rate: "Taux de Réalisation des Tâches",
+    average_focus_time: "Temps de Concentration Moyen",
+    notes_created: "Notes Créées",
   },
 
   de: {
@@ -625,6 +670,21 @@ export const translations = {
     focus_warrior_desc: "Beende 100 Pomodoro-Sitzungen",
     focus_master_title: "Fokus-Meister",
     focus_master_desc: "Beende 500 Pomodoro-Sitzungen",
+
+    // New statistics translations
+    your_statistics: "Ihre Statistiken",
+    day: "Tag",
+    week: "Woche",
+    month: "Monat",
+    total_tasks: "Gesamtaufgaben",
+    tasks_completed: "Abgeschlossene Aufgaben",
+    total_pomodoros: "Gesamt Pomodoros",
+    focus_time: "Fokuszeit",
+    activity_over_time: "Aktivität im Laufe der Zeit",
+    productivity_insights: "Produktivitätserkenntnisse",
+    task_completion_rate: "Aufgabenabschlussquote",
+    average_focus_time: "Durchschnittliche Fokuszeit",
+    notes_created: "Notizen Erstellt",
   },
 
   it: {
@@ -759,6 +819,21 @@ export const translations = {
     focus_warrior_desc: "Completa 100 sessioni Pomodoro",
     focus_master_title: "Maestro Concentrato",
     focus_master_desc: "Completa 500 sessioni Pomodoro",
+
+    // New statistics translations
+    your_statistics: "Le Tue Statistiche",
+    day: "Giorno",
+    week: "Settimana",
+    month: "Mese",
+    total_tasks: "Attività Totali",
+    tasks_completed: "Attività Completate",
+    total_pomodoros: "Pomodoro Totali",
+    focus_time: "Tempo di Concentrazione",
+    activity_over_time: "Attività nel Tempo",
+    productivity_insights: "Approfondimenti sulla Produttività",
+    task_completion_rate: "Tasso di Completamento delle Attività",
+    average_focus_time: "Tempo Medio di Concentrazione",
+    notes_created: "Note Create",
   },
 }
 
