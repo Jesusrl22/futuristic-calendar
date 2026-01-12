@@ -162,9 +162,7 @@ export default function SubscriptionPage() {
     <div className="min-h-screen bg-background p-4 md:p-8">
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">
-            {t("loading")} {t("subscription")}
-          </p>
+          <p className="text-muted-foreground">{t("loading")}</p>
         </div>
       ) : (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
