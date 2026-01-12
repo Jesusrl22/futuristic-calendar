@@ -467,6 +467,47 @@ const AIPage = () => {
     setFilePreviewData(null)
   }
 
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const session = await supabase.auth.getSession()
+        if (!session.data.session?.access_token) {
+          return
+        }
+
+        // Load conversations
+        const convResponse = await fetch("/api/ai-conversations", {
+          headers: {
+            Authorization: `Bearer ${session.data.session.access_token}`,
+          },
+        })
+
+        if (convResponse.ok) {
+          const convData = await convResponse.json()
+          setConversations(convData || [])
+        }
+
+        // Load profile for credits display
+        const profileResponse = await fetch("/api/user/profile", {
+          cache: "no-store",
+        })
+
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json()
+          setProfileData({
+            tier: profile.subscription_tier || "free",
+            monthlyCredits: profile.ai_credits_monthly || 0,
+            purchasedCredits: profile.ai_credits_purchased || 0,
+          })
+        }
+      } catch (error) {
+        console.error("Error loading initial data:", error)
+      }
+    }
+
+    loadInitialData()
+  }, [])
+
   return (
     <div className="flex h-screen flex-col bg-background md:flex-row">
       {/* Desktop Sidebar - Left side */}

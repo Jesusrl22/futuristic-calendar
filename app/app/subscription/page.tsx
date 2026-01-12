@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { Check, Zap, Crown, ShoppingCart } from "@/components/icons"
+import { Check, Zap, ShoppingCart } from "@/components/icons"
 import dynamic from "next/dynamic"
 import { PayPalSubscriptionButton } from "@/components/paypal-subscription-button"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -159,7 +159,7 @@ export default function SubscriptionPage() {
   const totalCredits = monthlyCredits + purchasedCredits
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       {loading ? (
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Loading subscription...</p>
@@ -247,8 +247,8 @@ export default function SubscriptionPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            {plans.map((plan, index) => {
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {plans.map((plan) => {
               const price = billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice
               const planId = billingPeriod === "monthly" ? plan.monthlyPlanId : plan.annualPlanId
               const periodLabel = t(billingPeriod === "monthly" ? "billing_monthly" : "billing_annual")
@@ -259,65 +259,58 @@ export default function SubscriptionPage() {
                   key={plan.nameKey}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className={`relative ${plan.popular ? "md:scale-105" : ""}`}
                 >
                   <Card
-                    className={`glass-card p-4 md:p-6 h-full flex flex-col ${
-                      plan.popular ? "neon-glow border-2 border-primary" : ""
-                    }`}
+                    className={`p-8 relative flex flex-col h-full ${plan.popular ? "border-primary ring-2 ring-primary/20" : ""}`}
                   >
                     {plan.popular && (
-                      <div className="flex items-center gap-2 mb-4 text-primary">
-                        <Crown className="w-4 h-4 md:w-5 md:h-5" />
-                        <span className="text-xs md:text-sm font-semibold">{t("most_popular")}</span>
+                      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
+                        {t("popular")}
                       </div>
                     )}
 
-                    <h3 className="text-xl md:text-2xl font-bold mb-2">{t(plan.nameKey)}</h3>
-                    <div className="mb-4 md:mb-6">
-                      <span className="text-2xl md:text-3xl font-bold">€{price.toFixed(2)}</span>
-                      <span className="text-sm text-muted-foreground">/{periodLabel}</span>
+                    <h3 className="text-2xl font-bold mb-2 text-foreground">{t(plan.nameKey)}</h3>
+
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-4xl font-bold text-primary">
+                          ${billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice}
+                        </span>
+                        <span className="text-muted-foreground">
+                          /{billingPeriod === "monthly" ? t("month") : t("year")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                        <Zap className="w-4 h-4" />
+                        <span>
+                          {plan.credits} {t("monthly")} {t("ai_credits")}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-4 md:mb-6 text-xs md:text-sm text-primary">
-                      <Zap className="w-4 h-4 md:w-5 md:h-5" />
-                      <span>{plan.credits} AI Credits per Month</span>
-                    </div>
-
-                    <ul className="space-y-2 md:space-y-3 mb-4 md:mb-6 flex-1">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-start gap-2 text-xs md:text-sm">
-                          <Check className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0 mt-0.5" />
-                          <span>{t(feature)}</span>
-                        </li>
+                    <div className="space-y-3 mb-8 flex-1">
+                      {plan.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          <span className="text-sm text-foreground">{t(feature)}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
 
-                    {isCurrentPlan ? (
-                      <Button className="w-full bg-secondary" disabled>
+                    {currentPlan === plan.nameKey.replace("plan_", "") ? (
+                      <Button disabled className="w-full">
                         {t("current_plan")}
                       </Button>
-                    ) : plan.nameKey === "plan_free" ? (
-                      <Button
-                        className="w-full bg-transparent"
-                        variant="outline"
-                        onClick={handleCancelSubscription}
-                        disabled={cancelling || currentPlan === "free"}
-                      >
-                        {cancelling ? t("processing") : t("downgrade_to_free")}
-                      </Button>
-                    ) : planId ? (
+                    ) : (
                       <PayPalSubscriptionButton
-                        planId={planId}
-                        planName={`${t(plan.nameKey)} ${t(billingPeriod === "monthly" ? "billing_monthly" : "billing_annual")}`}
-                        onSuccess={(subId) => {
+                        plan={plan}
+                        billingPeriod={billingPeriod}
+                        onSuccess={() => {
                           fetchSubscription()
                         }}
                       />
-                    ) : (
-                      <Button className="w-full" disabled>
-                        {t("coming_soon")}
-                      </Button>
                     )}
                   </Card>
                 </motion.div>
