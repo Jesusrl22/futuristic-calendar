@@ -186,9 +186,11 @@ export default function SubscriptionPage() {
               {totalCredits > 0 && (
                 <div className="text-center">
                   <Zap className="w-10 h-10 md:w-12 md:h-12 text-primary mx-auto mb-2" />
-                  <p className="text-xl md:text-2xl font-bold text-primary">{totalCredits} Credits</p>
+                  <p className="text-xl md:text-2xl font-bold text-primary">
+                    {totalCredits} {t("credits")}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    {monthlyCredits} Monthly · {purchasedCredits} Purchased
+                    {monthlyCredits} {t("monthly_credits")} · {purchasedCredits} {t("purchased_credits")}
                   </p>
                 </div>
               )}
