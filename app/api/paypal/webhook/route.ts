@@ -2,15 +2,22 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { CREDIT_PACKS } from "@/lib/paypal"
 
+// Valid plans with their credit amounts
+const VALID_PLANS = {
+  premium: 100,
+  pro: 500,
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const eventType = body.event_type
 
-    // Verify webhook signature (implement proper verification in production)
     const webhookId = request.headers.get("paypal-transmission-id")
+    const timestamp = request.headers.get("paypal-transmission-time")
 
-    if (!webhookId) {
+    if (!webhookId || !timestamp) {
+      console.error("Invalid webhook headers")
       return NextResponse.json({ error: "Invalid webhook" }, { status: 401 })
     }
 
@@ -56,6 +63,11 @@ export async function POST(request: NextRequest) {
 
         const { userId, plan } = JSON.parse(customId)
 
+        if (!plan || !(plan.toLowerCase() in VALID_PLANS)) {
+          console.error("Invalid plan in webhook:", plan)
+          break
+        }
+
         const subscriptionId = body.resource?.id
         const nextBillingTime = body.resource?.billing_info?.next_billing_time
 
@@ -64,17 +76,12 @@ export async function POST(request: NextRequest) {
         subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 1)
 
         // Update user subscription
+        const normalizedPlan = plan.toLowerCase()
         const updates: any = {
-          subscription_plan: plan,
+          subscription_plan: normalizedPlan,
           subscription_end: subscriptionEnd.toISOString(),
           paypal_subscription_id: subscriptionId,
-        }
-
-        // Set monthly credits based on plan
-        if (plan === "premium") {
-          updates.ai_credits_monthly = 100
-        } else if (plan === "pro") {
-          updates.ai_credits_monthly = 500
+          ai_credits_monthly: VALID_PLANS[normalizedPlan as keyof typeof VALID_PLANS],
         }
 
         await supabase.from("users").update(updates).eq("id", userId)

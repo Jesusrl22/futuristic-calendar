@@ -2,9 +2,20 @@ import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
+// Valid plans with their credit amounts
+const VALID_PLANS = {
+  premium: 100,
+  pro: 500,
+}
+
 export async function POST(request: Request) {
   try {
     const { subscriptionId, planName } = await request.json()
+
+    const normalizedPlan = planName?.toLowerCase()
+    if (!normalizedPlan || !(normalizedPlan in VALID_PLANS)) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
+    }
 
     const cookieStore = await cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -30,12 +41,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const normalizedPlan = planName.toLowerCase()
-    const credits = normalizedPlan === "premium" ? 100 : 500
+    const credits = VALID_PLANS[normalizedPlan as keyof typeof VALID_PLANS]
 
     // Calculate expiration date (1 month from now)
     const expiresAt = new Date()
     expiresAt.setMonth(expiresAt.getMonth() + 1)
+
+    if (!subscriptionId) {
+      return NextResponse.json({ error: "Missing subscription ID" }, { status: 400 })
+    }
 
     const { error } = await supabase
       .from("users")
