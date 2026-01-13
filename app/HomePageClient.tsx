@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import CookieBanner from "@/components/cookie-banner"
-import { UserReviews } from "@/components/user-reviews"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 const translations = {
   en: {
@@ -143,6 +143,18 @@ const translations = {
     faq5Question: "What are the billing options?",
     faq5Answer:
       "We offer both monthly and annual billing options. Annual billing provides a significant discount compared to monthly billing.",
+    share_your_review: "Share Your Review",
+    write_review_description: "Help others by sharing your experience with Future Task.",
+    write_review_button: "Write a Review",
+    name: "Name",
+    email: "Email",
+    rating: "Rating",
+    enterName: "Enter your name",
+    enterEmail: "Enter your email",
+    yourReview: "Your Review",
+    enterReview: "Enter your review here...",
+    submitReview: "Submit Review",
+    nextGenerationPlatform: "Next Generation Platform",
   },
   es: {
     features: "Características",
@@ -278,6 +290,18 @@ const translations = {
     faq5Question: "¿Cuáles son las opciones de facturación?",
     faq5Answer:
       "Ofrecemos opciones de facturación mensual y anual. La facturación anual proporciona un descuento significativo en comparación con la facturación mensual.",
+    share_your_review: "Comparte tu reseña",
+    write_review_description: "Ayuda a otros compartiendo tu experiencia con Future Task.",
+    write_review_button: "Escribe una reseña",
+    name: "Nombre",
+    email: "Correo electrónico",
+    rating: "Calificación",
+    enterName: "Introduce tu nombre",
+    enterEmail: "Introduce tu correo electrónico",
+    yourReview: "Tu Reseña",
+    enterReview: "Introduce tu reseña aquí...",
+    submitReview: "Enviar Reseña",
+    nextGenerationPlatform: "Next Generation Platform",
   },
   fr: {
     features: "Fonctionnalités",
@@ -414,6 +438,18 @@ const translations = {
     faq5Question: "Quelles sont les options de facturation ?",
     faq5Answer:
       "Nous proposons des options de facturation mensuelle et annuelle. La facturation annuelle offre une réduction significative par rapport à la facturation mensuelle.",
+    share_your_review: "Partagez votre avis",
+    write_review_description: "Aidez les autres en partageant votre expérience avec Future Task.",
+    write_review_button: "Rédiger un avis",
+    name: "Nom",
+    email: "E-mail",
+    rating: "Évaluation",
+    enterName: "Entrez votre nom",
+    enterEmail: "Entrez votre e-mail",
+    yourReview: "Votre Avis",
+    enterReview: "Entrez votre avis ici...",
+    submitReview: "Soumettre l'Avis",
+    nextGenerationPlatform: "Next Generation Platform",
   },
   de: {
     features: "Funktionen",
@@ -551,6 +587,18 @@ const translations = {
     faq5Question: "Welche Abrechnungsoptionen gibt es?",
     faq5Answer:
       "Wir bieten sowohl monatliche als auch jährliche Abrechnungsoptionen. Die jährliche Abrechnung bietet im Vergleich zur monatlichen Abrechnung einen erheblichen Rabatt.",
+    share_your_review: "Teilen Sie Ihre Bewertung",
+    write_review_description: "Helfen Sie anderen, indem Sie Ihre Erfahrungen mit Future Task teilen.",
+    write_review_button: "Bewertung schreiben",
+    name: "Name",
+    email: "E-Mail",
+    rating: "Bewertung",
+    enterName: "Geben Sie Ihren Namen ein",
+    enterEmail: "Geben Sie Ihre E-Mail ein",
+    yourReview: "Ihre Bewertung",
+    enterReview: "Geben Sie Ihre Bewertung hier ein...",
+    submitReview: "Bewertung senden",
+    nextGenerationPlatform: "Next Generation Platform",
   },
   it: {
     features: "Funzionalità",
@@ -601,7 +649,7 @@ const translations = {
     basicPomodoro: "Timer Pomodoro",
     pro: "Pro",
     proDesc: "Per utenti esperti",
-    proAiCredits: "500 crediti IA/mese",
+    proAiCredits: "500 crediti IA/mes",
     proStatistics: "Statistiche & Analisi",
     proCustomTheme: "Creatore di temi personalizzato",
     proAllThemes: "Tutti i 15 temi + personalizzato",
@@ -687,6 +735,18 @@ const translations = {
     faq5Question: "Quali sono le opzioni di fatturazione?",
     faq5Answer:
       "Offriamo opzioni di fatturazione mensile e annuale. La fatturazione annuale offre uno sconto significativo rispetto alla fatturazione mensile.",
+    share_your_review: "Condividi la tua recensione",
+    write_review_description: "Aiuta gli altri condividendo la tua esperienza con Future Task.",
+    write_review_button: "Scrivi una recensione",
+    name: "Nome",
+    email: "Email",
+    rating: "Valutazione",
+    enterName: "Inserisci il tuo nome",
+    enterEmail: "Inserisci la tua email",
+    yourReview: "La tua recensione",
+    enterReview: "Inserisci la tua recensione qui...",
+    submitReview: "Invia Recensione",
+    nextGenerationPlatform: "Next Generation Platform",
   },
   nextGenerationPlatform: "Next Generation Platform",
 }
@@ -699,6 +759,10 @@ export default function HomePageClient() {
 
   const [language, setLanguage] = useState<"en" | "es" | "fr" | "de" | "it">("en")
   const [theme, setTheme] = useState<"light" | "dark">("light") // Assuming a theme state
+
+  // State for review modal
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [reviewData, setReviewData] = useState({ name: "", email: "", rating: 5, comment: "" })
 
   useEffect(() => {
     // Load language from localStorage or user profile
@@ -714,9 +778,36 @@ export default function HomePageClient() {
     }
   }, [])
 
-  const t = (key: keyof typeof translations.en | "nextGenerationPlatform"): string => {
+  const t = (
+    key:
+      | keyof typeof translations.en
+      | "nextGenerationPlatform"
+      | "share_your_review"
+      | "write_review_description"
+      | "write_review_button"
+      | "name"
+      | "email"
+      | "rating"
+      | "enterName"
+      | "enterEmail"
+      | "yourReview"
+      | "enterReview"
+      | "submitReview",
+  ): string => {
     // Cast key to be compatible with translations[language] and translations.en
-    const typedKey = key as keyof typeof translations.en
+    const typedKey = key as
+      | keyof typeof translations.en
+      | "share_your_review"
+      | "write_review_description"
+      | "write_review_button"
+      | "name"
+      | "email"
+      | "rating"
+      | "enterName"
+      | "enterEmail"
+      | "yourReview"
+      | "enterReview"
+      | "submitReview"
     return translations[language]?.[typedKey] || translations.en[typedKey] || key
   }
 
@@ -889,7 +980,18 @@ export default function HomePageClient() {
             </div>
             <div className="relative h-[300px] rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 flex items-center justify-center">
               <div className="text-8xl opacity-30">📊</div>
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgxODQsMjU1LDc4LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-50" />
+              <div
+                className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMC
+
+
+
+
+
+
+
+
+                    0IEwgMCA0MCAwIDEwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTg0LDI1NSw3OCwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAl"
+              />
             </div>
           </div>
         </Card>
@@ -1165,13 +1267,14 @@ export default function HomePageClient() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {/* Testimonial 1 */}
           <Card className="glass-card p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                 <span className="text-xl">👨‍💼</span>
               </div>
               <div>
-                <div className="font-semibold">Sarah M.</div>
+                <div className="font-semibold">John D.</div>
                 <div className="text-sm text-muted-foreground">{t("testimonial1Role")}</div>
               </div>
             </div>
@@ -1185,13 +1288,14 @@ export default function HomePageClient() {
             <p className="text-sm text-muted-foreground italic">"{t("testimonial1Text")}"</p>
           </Card>
 
+          {/* Testimonial 2 */}
           <Card className="glass-card p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xl">👩‍🎓</span>
+                <span className="text-xl">👩‍💻</span>
               </div>
               <div>
-                <div className="font-semibold">Miguel R.</div>
+                <div className="font-semibold">Sarah M.</div>
                 <div className="text-sm text-muted-foreground">{t("testimonial2Role")}</div>
               </div>
             </div>
@@ -1205,6 +1309,7 @@ export default function HomePageClient() {
             <p className="text-sm text-muted-foreground italic">"{t("testimonial2Text")}"</p>
           </Card>
 
+          {/* Testimonial 3 */}
           <Card className="glass-card p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -1225,9 +1330,87 @@ export default function HomePageClient() {
             <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
           </Card>
         </div>
-      </section>
 
-      <UserReviews isDarkMode={theme === "dark"} />
+        <div className="flex justify-center mt-12">
+          <Card
+            className="glass-card p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors w-full max-w-sm"
+            onClick={() => setIsReviewModalOpen(true)}
+          >
+            <div className="text-5xl mb-4">✍️</div>
+            <h3 className="text-lg font-semibold mb-2 text-center">{t("share_your_review")}</h3>
+            <p className="text-sm text-muted-foreground text-center mb-4">{t("write_review_description")}</p>
+            <Button className="bg-primary hover:bg-primary/90">{t("write_review_button")}</Button>
+          </Card>
+        </div>
+
+        <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t("share_your_review")}</DialogTitle>
+              <DialogDescription>{t("write_review_description")}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">{t("name")}</label>
+                <input
+                  type="text"
+                  placeholder={t("enterName")}
+                  value={reviewData.name}
+                  onChange={(e) => setReviewData({ ...reviewData, name: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">{t("email")}</label>
+                <input
+                  type="email"
+                  placeholder={t("enterEmail")}
+                  value={reviewData.email}
+                  onChange={(e) => setReviewData({ ...reviewData, email: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">{t("rating")} ⭐</label>
+                <div className="flex gap-2 mt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setReviewData({ ...reviewData, rating: star })}
+                      className={`text-2xl ${star <= reviewData.rating ? "opacity-100" : "opacity-30"}`}
+                    >
+                      ⭐
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">{t("yourReview")}</label>
+                <textarea
+                  placeholder={t("enterReview")}
+                  value={reviewData.comment}
+                  onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background h-24 resize-none"
+                />
+              </div>
+              <Button
+                onClick={async () => {
+                  await fetch("/api/reviews", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(reviewData),
+                  })
+                  setIsReviewModalOpen(false)
+                  setReviewData({ name: "", email: "", rating: 5, comment: "" })
+                }}
+                className="w-full bg-primary hover:bg-primary/90"
+              >
+                {t("submitReview")}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </section>
 
       {/* FAQ Section - Adding FAQ content for SEO */}
       <section id="faq" className="container mx-auto px-4 py-20">
