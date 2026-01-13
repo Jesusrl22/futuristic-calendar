@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import CookieBanner from "@/components/cookie-banner"
+import { UserReviews } from "@/components/user-reviews"
 
 const translations = {
   en: {
@@ -697,6 +698,7 @@ export default function HomePageClient() {
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
 
   const [language, setLanguage] = useState<"en" | "es" | "fr" | "de" | "it">("en")
+  const [theme, setTheme] = useState<"light" | "dark">("light") // Assuming a theme state
 
   useEffect(() => {
     // Load language from localStorage or user profile
@@ -725,7 +727,7 @@ export default function HomePageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={theme === "dark" ? "bg-gray-900" : "bg-background text-foreground"}>
       {/* Header */}
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -1224,6 +1226,8 @@ export default function HomePageClient() {
           </Card>
         </div>
       </section>
+
+      <UserReviews isDarkMode={theme === "dark"} />
 
       {/* FAQ Section - Adding FAQ content for SEO */}
       <section id="faq" className="container mx-auto px-4 py-20">
