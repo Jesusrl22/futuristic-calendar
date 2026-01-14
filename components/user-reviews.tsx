@@ -200,28 +200,12 @@ export function UserReviews({ isDarkMode = false }: UserReviewsProps) {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Reviews Grid */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <Card className="glass-card p-6 flex flex-col items-center justify-center gap-4 border border-primary/20 hover:border-primary/40 transition-colors min-h-[300px]">
-              <div className="text-center">
-                <p className="text-lg font-semibold mb-2">{t("share_your_review") || "Share Your Review"}</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {t("user_reviews_description") || "Share your experience with us"}
-                </p>
-              </div>
-              <Button
-                onClick={() => setShowForm(!showForm)}
-                className="bg-primary hover:bg-primary/90 text-white w-full"
-              >
-                {t("write_review") || "Write a Review"}
-              </Button>
-            </Card>
-
-            {/* Existing reviews */}
-            {paginatedReviews.map((review) => (
+          {/* Existing reviews carousel */}
+          <div className="flex gap-6 overflow-x-auto pb-4 max-w-6xl mx-auto">
+            {reviews.slice(currentPage * reviewsPerPage, (currentPage + 1) * reviewsPerPage).map((review) => (
               <Card
                 key={review.id}
-                className="glass-card p-6 flex flex-col border border-primary/10 hover:border-primary/30 transition-colors"
+                className="glass-card p-6 flex flex-col border border-primary/10 hover:border-primary/30 transition-colors flex-shrink-0 w-full md:w-80"
               >
                 <div className="flex items-start gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 font-bold text-primary">
@@ -242,37 +226,29 @@ export function UserReviews({ isDarkMode = false }: UserReviewsProps) {
             ))}
           </div>
 
-          {/* Navigation Arrows */}
-          {totalPages > 1 && reviews.length > 0 && (
+          {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-8">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={!hasPrevPage}
+                disabled={currentPage === 0}
                 className="hover:bg-primary/20"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
 
-              <div className="flex gap-2">
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      i === currentPage ? "bg-primary w-8" : "bg-muted-foreground/30"
-                    }`}
-                    aria-label={`Page ${i + 1}`}
-                  />
-                ))}
+              <div className="text-sm text-muted-foreground">
+                {t("showing") || "Showing"} {currentPage * reviewsPerPage + 1}-
+                {Math.min((currentPage + 1) * reviewsPerPage, reviews.length)} {t("of") || "of"} {reviews.length}{" "}
+                {t("reviews") || "reviews"}
               </div>
 
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                disabled={!hasNextPage}
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages - 1}
                 className="hover:bg-primary/20"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -280,18 +256,22 @@ export function UserReviews({ isDarkMode = false }: UserReviewsProps) {
             </div>
           )}
 
-          {/* Page counter */}
-          {reviews.length > 0 && (
-            <div className="text-center text-sm text-muted-foreground">
-              {paginatedReviews.length > 0 && (
-                <>
-                  {t("showing") || "Showing"} {currentPage * reviewsPerPage + 1}-
-                  {Math.min((currentPage + 1) * reviewsPerPage, reviews.length)} {t("of") || "of"} {reviews.length}{" "}
-                  {t("reviews") || "reviews"}
-                </>
-              )}
-            </div>
-          )}
+          <div className="flex justify-center mt-12">
+            <Card className="glass-card p-6 w-full max-w-md border border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="text-center space-y-4">
+                <p className="text-lg font-semibold">{t("share_your_review") || "Share Your Review"}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("user_reviews_description") || "Share your experience with us"}
+                </p>
+                <Button
+                  onClick={() => setShowForm(!showForm)}
+                  className="bg-primary hover:bg-primary/90 text-white w-full"
+                >
+                  {t("write_review") || "Write a Review"}
+                </Button>
+              </div>
+            </Card>
+          </div>
         </div>
       )}
     </section>
