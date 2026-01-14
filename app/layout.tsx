@@ -5,6 +5,7 @@ import "./globals.css"
 import { ThemeLoader } from "@/components/theme-loader"
 import { LanguageProvider } from "@/contexts/language-context"
 import { HelpChatbot } from "@/components/help-chatbot"
+import { ScrollToTop } from "@/components/scroll-to-top"
 
 export const metadata: Metadata = {
   title: "Future Task - Smart Task Management",
@@ -76,6 +77,7 @@ export default function RootLayout({
         />
         <LanguageProvider>
           {children}
+          <ScrollToTop />
           <HelpChatbot />
         </LanguageProvider>
         <ServiceWorkerInit />
