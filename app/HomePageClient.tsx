@@ -6,12 +6,66 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import CookieBanner from "@/components/cookie-banner"
+import { useRouter } from "next/navigation" // Import useRouter
 
 // Mock userReviews data - replace with actual data fetching if needed
 const userReviews = [
-  { id: 1, name: "Alice Smith", title: "Productivity Guru", rating: 5, comment: "This app changed my life!" },
-  { id: 2, name: "Bob Johnson", title: "Team Lead", rating: 4, comment: "Great for team collaboration." },
-  { id: 3, name: "Charlie Brown", title: "Student", rating: 5, comment: "Helped me stay organized." },
+  {
+    id: 1,
+    name: "Alice Smith",
+    title: "Productivity Guru",
+    rating: 5,
+    comment: "This app changed my life!",
+    created_at: "2024-01-15",
+  },
+  {
+    id: 2,
+    name: "Bob Johnson",
+    title: "Team Lead",
+    rating: 4,
+    comment: "Great for team collaboration.",
+    created_at: "2024-02-10",
+  },
+  {
+    id: 3,
+    name: "Charlie Brown",
+    title: "Student",
+    rating: 5,
+    comment: "Helped me stay organized.",
+    created_at: "2024-03-05",
+  },
+  {
+    id: 4,
+    name: "Diana Prince",
+    title: "Project Manager",
+    rating: 4,
+    comment: "Very useful for tracking project progress.",
+    created_at: "2024-04-20",
+  },
+  {
+    id: 5,
+    name: "Ethan Hunt",
+    title: "Developer",
+    rating: 5,
+    comment: "The AI features are a game-changer!",
+    created_at: "2024-05-12",
+  },
+  {
+    id: 6,
+    name: "Fiona Glenanne",
+    title: "Designer",
+    rating: 3,
+    comment: "Good, but could use more customization options.",
+    created_at: "2024-06-01",
+  },
+  {
+    id: 7,
+    name: "George Costanza",
+    title: "Sales",
+    rating: 5,
+    comment: "Helped me close more deals!",
+    created_at: "2024-07-18",
+  },
 ]
 
 const translations = {
@@ -161,6 +215,26 @@ const translations = {
     enterReview: "Enter your review here...",
     submitReview: "Submit Review",
     nextGenerationPlatform: "Next Generation Platform",
+    user_reviews_title: "User Reviews",
+    reviews_from_community: "Reviews from our amazing community",
+    view_all_reviews: "View All Reviews",
+    write_review: "Write a Review",
+    your_name: "Your Name",
+    review_title: "Review Title",
+    submit_review: "Submit Review",
+    all_reviews: "All Reviews",
+    addReview: "Add Review", // Added for the new button
+    footer_description: "Smart task management with AI-powered assistance for enhanced productivity.",
+    footer_product: "Product",
+    footer_legal: "Legal",
+    footer_terms: "Terms of Service",
+    footer_privacy: "Privacy Policy",
+    footer_support: "Support",
+    footer_contact: "Contact Us",
+    footer_copyright: "© 2025 Future Task. All rights reserved.",
+    footer_terms_short: "Terms",
+    footer_privacy_short: "Privacy",
+    footer_contact_short: "Contact",
   },
   es: {
     features: "Características",
@@ -308,6 +382,26 @@ const translations = {
     enterReview: "Introduce tu reseña aquí...",
     submitReview: "Enviar Reseña",
     nextGenerationPlatform: "Next Generation Platform",
+    user_reviews_title: "Reseñas de Usuarios",
+    reviews_from_community: "Reseñas de nuestra increíble comunidad",
+    view_all_reviews: "Ver Todas las Reseñas",
+    write_review: "Escribe una reseña",
+    your_name: "Tu Nombre",
+    review_title: "Título de la reseña",
+    submit_review: "Enviar reseña",
+    all_reviews: "Todas las reseñas",
+    addReview: "Agregar Reseña", // Added for the new button
+    footer_description: "Gestión inteligente de tareas con asistencia impulsada por IA para una mayor productividad.",
+    footer_product: "Producto",
+    footer_legal: "Legal",
+    footer_terms: "Términos de Servicio",
+    footer_privacy: "Política de Privacidad",
+    footer_support: "Soporte",
+    footer_contact: "Contáctanos",
+    footer_copyright: "© 2025 Future Task. Todos los derechos reservados.",
+    footer_terms_short: "Términos",
+    footer_privacy_short: "Privacidad",
+    footer_contact_short: "Contacto",
   },
   fr: {
     features: "Fonctionnalités",
@@ -456,6 +550,26 @@ const translations = {
     enterReview: "Entrez votre avis ici...",
     submitReview: "Soumettre l'Avis",
     nextGenerationPlatform: "Next Generation Platform",
+    user_reviews_title: "Avis des Utilisateurs",
+    reviews_from_community: "Avis de notre incroyable communauté",
+    view_all_reviews: "Voir tous les avis",
+    write_review: "Rédiger un avis",
+    your_name: "Votre Nom",
+    review_title: "Titre de l'avis",
+    submit_review: "Soumettre l'avis",
+    all_reviews: "Tous les avis",
+    addReview: "Ajouter un Avis", // Added for the new button
+    footer_description: "Gestion intelligente des tâches avec assistance IA pour une productivité accrue.",
+    footer_product: "Produit",
+    footer_legal: "Légal",
+    footer_terms: "Conditions d'Utilisation",
+    footer_privacy: "Politique de Confidentialité",
+    footer_support: "Support",
+    footer_contact: "Contactez-nous",
+    footer_copyright: "© 2025 Future Task. Tous droits réservés.",
+    footer_terms_short: "Termes",
+    footer_privacy_short: "Confidentialité",
+    footer_contact_short: "Contact",
   },
   de: {
     features: "Funktionen",
@@ -605,6 +719,27 @@ const translations = {
     enterReview: "Geben Sie Ihre Bewertung hier ein...",
     submitReview: "Bewertung senden",
     nextGenerationPlatform: "Next Generation Platform",
+    user_reviews_title: "Benutzerbewertungen",
+    reviews_from_community: "Bewertungen aus unserer großartigen Community",
+    view_all_reviews: "Alle Bewertungen anzeigen",
+    write_review: "Bewertung schreiben",
+    your_name: "Ihr Name",
+    review_title: "Titel der Bewertung",
+    submit_review: "Bewertung absenden",
+    all_reviews: "Alle Bewertungen",
+    addReview: "Bewertung Hinzufügen", // Added for the new button
+    footer_description:
+      "Intelligentes Aufgabenmanagement mit KI-gestützter Unterstützung für verbesserte Produktivität.",
+    footer_product: "Produkt",
+    footer_legal: "Rechtliches",
+    footer_terms: "Nutzungsbedingungen",
+    footer_privacy: "Datenschutzrichtlinie",
+    footer_support: "Support",
+    footer_contact: "Kontaktieren Sie uns",
+    footer_copyright: "© 2025 Future Task. Alle Rechte vorbehalten.",
+    footer_terms_short: "Bedingungen",
+    footer_privacy_short: "Datenschutz",
+    footer_contact_short: "Kontakt",
   },
   it: {
     features: "Funzionalità",
@@ -753,6 +888,26 @@ const translations = {
     enterReview: "Inserisci la tua recensione qui...",
     submitReview: "Invia Recensione",
     nextGenerationPlatform: "Next Generation Platform",
+    user_reviews_title: "Recensioni Utenti",
+    reviews_from_community: "Recensioni dalla nostra fantastica community",
+    view_all_reviews: "Visualizza Tutte le Recensioni",
+    write_review: "Scrivi una recensione",
+    your_name: "Il tuo nome",
+    review_title: "Titolo della recensione",
+    submit_review: "Invia recensione",
+    all_reviews: "Tutte le recensioni",
+    addReview: "Aggiungi Recensione", // Added for the new button
+    footer_description: "Gestione attività intelligente con assistenza AI per una maggiore produttività.",
+    footer_product: "Prodotto",
+    footer_legal: "Legale",
+    footer_terms: "Termini di Servizio",
+    footer_privacy: "Informativa sulla Privacy",
+    footer_support: "Supporto",
+    footer_contact: "Contattaci",
+    footer_copyright: "© 2025 Future Task. Tutti i diritti riservati.",
+    footer_terms_short: "Termini",
+    footer_privacy_short: "Privacy",
+    footer_contact_short: "Contatto",
   },
   nextGenerationPlatform: "Next Generation Platform",
 }
@@ -760,6 +915,7 @@ const translations = {
 type Language = "en" | "es" | "fr" | "de" | "it"
 
 export default function HomePageClient() {
+  const router = useRouter() // Initialize useRouter
   const [lang, setLang] = useState<Language>("en")
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
 
@@ -768,7 +924,20 @@ export default function HomePageClient() {
 
   // State for review modal
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
-  const [reviewData, setReviewData] = useState({ name: "", email: "", rating: 5, comment: "" })
+  const [newReview, setNewReview] = useState({ name: "", title: "", rating: 5, comment: "" }) // State for new review input
+  const [isAllReviewsModalOpen, setIsAllReviewsModalOpen] = useState(false) // State for all reviews modal
+  const [isWriteReviewModalOpen, setIsWriteReviewModalOpen] = useState(false) // State for write review modal
+  const [currentReviewPage, setCurrentReviewPage] = useState(0) // State for current review page
+  const [showReviewModal, setShowReviewModal] = useState(false) // New state for review modal visibility
+
+  // Mock function to submit a review
+  const handleSubmitReview = () => {
+    console.log("Submitting review:", newReview)
+    // In a real app, you would send this data to an API
+    setIsReviewModalOpen(false)
+    setNewReview({ name: "", title: "", rating: 5, comment: "" }) // Reset form
+    setShowReviewModal(false) // Close the modal after submission
+  }
 
   useEffect(() => {
     // Load language from localStorage or user profile
@@ -798,7 +967,27 @@ export default function HomePageClient() {
       | "enterEmail"
       | "yourReview"
       | "enterReview"
-      | "submitReview",
+      | "submitReview"
+      | "user_reviews_title"
+      | "reviews_from_community"
+      | "view_all_reviews"
+      | "write_review"
+      | "your_name"
+      | "review_title"
+      | "submit_review"
+      | "all_reviews"
+      | "addReview"
+      | "footer_description" // Added
+      | "footer_product" // Added
+      | "footer_legal" // Added
+      | "footer_terms" // Added
+      | "footer_privacy" // Added
+      | "footer_support" // Added
+      | "footer_contact" // Added
+      | "footer_copyright" // Added
+      | "footer_terms_short" // Added
+      | "footer_privacy_short" // Added
+      | "footer_contact_short", // Added
   ): string => {
     // Cast key to be compatible with translations[language] and translations.en
     const typedKey = key as
@@ -814,6 +1003,26 @@ export default function HomePageClient() {
       | "yourReview"
       | "enterReview"
       | "submitReview"
+      | "user_reviews_title"
+      | "reviews_from_community"
+      | "view_all_reviews"
+      | "write_review"
+      | "your_name"
+      | "review_title"
+      | "submit_review"
+      | "all_reviews"
+      | "addReview"
+      | "footer_description" // Added
+      | "footer_product" // Added
+      | "footer_legal" // Added
+      | "footer_terms" // Added
+      | "footer_privacy" // Added
+      | "footer_support" // Added
+      | "footer_contact" // Added
+      | "footer_copyright" // Added
+      | "footer_terms_short" // Added
+      | "footer_privacy_short" // Added
+      | "footer_contact_short" // Added
     return translations[language]?.[typedKey] || translations.en[typedKey] || key
   }
 
@@ -987,7 +1196,7 @@ export default function HomePageClient() {
             <div className="relative h-[300px] rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 flex items-center justify-center">
               <div className="text-8xl opacity-30">📊</div>
               <div
-                className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiHEhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMC
+                className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiHEhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGg``ZD0iTSAxMC
 
 
 
@@ -1272,25 +1481,14 @@ export default function HomePageClient() {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                const container = document.getElementById("testimonials-carousel")
-                if (container) {
-                  container.scrollBy({ left: -400, behavior: "smooth" })
-                }
-              }}
-              className="flex-shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
-            >
-              ←
-            </button>
-
+          {/* Testimonials Carousel - 3 fake testimonials */}
+          <div className="flex flex-col gap-8">
             <div
               id="testimonials-carousel"
-              className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory flex-1 scroll-smooth scrollbar-hide"
+              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory flex-1 scroll-smooth scrollbar-hide justify-center"
             >
               {/* Testimonial 1 */}
-              <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+              <Card className="glass-card p-6 flex-shrink-0 w-80 snap-center">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                     <span className="text-xl">👨‍💼</span>
@@ -1311,7 +1509,7 @@ export default function HomePageClient() {
               </Card>
 
               {/* Testimonial 2 */}
-              <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+              <Card className="glass-card p-6 flex-shrink-0 w-80 snap-center">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                     <span className="text-xl">👩‍💻</span>
@@ -1332,7 +1530,7 @@ export default function HomePageClient() {
               </Card>
 
               {/* Testimonial 3 */}
-              <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+              <Card className="glass-card p-6 flex-shrink-0 w-80 snap-center">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                     <span className="text-xl">👨‍💻</span>
@@ -1351,53 +1549,16 @@ export default function HomePageClient() {
                 </div>
                 <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
               </Card>
-
-              {userReviews.map((review) => (
-                <Card key={review.id} className="glass-card p-6 flex-shrink-0 w-96 snap-center">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-xl">⭐</span>
-                    </div>
-                    <div>
-                      <div className="font-semibold">{review.name}</div>
-                      <div className="text-sm text-muted-foreground">{review.title}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <span key={i} className="text-primary">
-                        ⭐
-                      </span>
-                    ))}
-                  </div>
-                  <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
-                </Card>
-              ))}
             </div>
 
-            <button
-              onClick={() => {
-                const container = document.getElementById("testimonials-carousel")
-                if (container) {
-                  container.scrollBy({ left: 400, behavior: "smooth" })
-                }
-              }}
-              className="flex-shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
-            >
-              →
-            </button>
-          </div>
-
-          <div className="flex justify-center mt-12">
-            <Card
-              className="glass-card p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors w-full max-w-sm"
-              onClick={() => setIsReviewModalOpen(true)}
-            >
-              <div className="text-5xl mb-4">✍️</div>
-              <h3 className="text-lg font-semibold mb-2 text-center">{t("share_your_review")}</h3>
-              <p className="text-sm text-muted-foreground text-center mb-4">{t("write_review_description")}</p>
-              <Button className="bg-primary hover:bg-primary/90">{t("write_review_button")}</Button>
-            </Card>
+            <div className="flex gap-4 justify-center">
+              <Button variant="outline" onClick={() => router.push("/reviews")} className="neon-glow-hover">
+                {t("viewAllReviews")}
+              </Button>
+              <Button onClick={() => setShowReviewModal(true)} className="neon-glow-hover">
+                {t("addReview")}
+              </Button>
+            </div>
           </div>
         </div>
       </section>
@@ -1536,54 +1697,52 @@ export default function HomePageClient() {
                 </div>
                 <span className="font-semibold">Future Task</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Smart task management with AI-powered assistance for enhanced productivity.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("footer_description")}</p>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Product</h3>
+              <h3 className="font-semibold mb-4">{t("footer_product")}</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <a href="#features" className="hover:text-foreground transition-colors">
-                    Features
+                    {t("features")}
                   </a>
                 </li>
                 <li>
                   <a href="#pricing" className="hover:text-foreground transition-colors">
-                    Pricing
+                    {t("pricing")}
                   </a>
                 </li>
                 <li>
                   <Link href="/app" className="hover:text-foreground transition-colors">
-                    Dashboard
+                    {t("dashboard")}
                   </Link>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
+              <h3 className="font-semibold mb-4">{t("footer_legal")}</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/terms" className="hover:text-foreground transition-colors">
-                    Terms of Service
+                    {t("footer_terms")}
                   </Link>
                 </li>
                 <li>
                   <Link href="/privacy" className="hover:text-foreground transition-colors">
-                    Privacy Policy
+                    {t("footer_privacy")}
                   </Link>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="font-semibold mb-4">Support</h3>
+              <h3 className="font-semibold mb-4">{t("footer_support")}</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/contact" className="hover:text-foreground transition-colors">
-                    Contact Us
+                    {t("footer_contact")}
                   </Link>
                 </li>
                 <li>
@@ -1596,23 +1755,219 @@ export default function HomePageClient() {
           </div>
 
           <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">© 2025 Future Task. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">{t("footer_copyright")}</p>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link href="/terms" className="hover:text-foreground transition-colors">
-                Terms
+                {t("footer_terms_short")}
               </Link>
               <Link href="/privacy" className="hover:text-foreground transition-colors">
-                Privacy
+                {t("footer_privacy_short")}
               </Link>
               <Link href="/contact" className="hover:text-foreground transition-colors">
-                Contact
+                {t("footer_contact_short")}
               </Link>
             </div>
           </div>
         </div>
       </footer>
 
+      {/* Cookie Banner */}
       <CookieBanner language={language} />
+
+      {/* Review Modal */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="glass-card w-full max-w-md p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">{t("write_review")}</h2>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder={t("your_name")}
+              value={newReview.name}
+              onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary"
+            />
+            <input
+              type="text"
+              placeholder={t("review_title")}
+              value={newReview.title}
+              onChange={(e) => setNewReview({ ...newReview, title: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary"
+            />
+            <textarea
+              placeholder={t("your_review")}
+              value={newReview.comment}
+              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary min-h-32"
+            />
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setNewReview({ ...newReview, rating: star })}
+                  className={`text-3xl cursor-pointer ${newReview.rating >= star ? "text-primary" : "text-muted-foreground"}`}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            <Button onClick={handleSubmitReview} className="w-full bg-primary hover:bg-primary/90">
+              {t("submit_review")}
+            </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* Write Review Modal */}
+      {isWriteReviewModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="glass-card w-full max-w-md p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">{t("write_review")}</h2>
+              <button
+                onClick={() => setIsWriteReviewModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder={t("your_name")}
+              value={newReview.name}
+              onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary"
+            />
+            <input
+              type="text"
+              placeholder={t("review_title")}
+              value={newReview.title}
+              onChange={(e) => setNewReview({ ...newReview, title: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary"
+            />
+            <textarea
+              placeholder={t("your_review")}
+              value={newReview.comment}
+              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary min-h-32"
+            />
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setNewReview({ ...newReview, rating: star })}
+                  className={`text-3xl cursor-pointer ${newReview.rating >= star ? "text-primary" : "text-muted-foreground"}`}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            <Button onClick={handleSubmitReview} className="w-full bg-primary hover:bg-primary/90">
+              {t("submit_review")}
+            </Button>
+          </Card>
+        </div>
+      )}
+
+      {/* All Reviews Modal */}
+      {isAllReviewsModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="glass-card w-full max-w-2xl p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center sticky top-0 bg-background/80 pb-4">
+              <h2 className="text-2xl font-bold">
+                {t("all_reviews")} ({userReviews.length})
+              </h2>
+              <button
+                onClick={() => setIsAllReviewsModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {userReviews.map((review) => (
+                <Card key={review.id} className="glass-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-lg">{review.name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm">{review.name}</div>
+                      <div className="text-xs text-muted-foreground">{review.title}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 mb-2">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <span key={i} className="text-primary text-sm">
+                        ⭐
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{review.comment}</p>
+                </Card>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* "Add Review" Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="glass-card w-full max-w-md p-6 space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold">{t("addReview")}</h2>
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="text-muted-foreground hover:text-foreground text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder={t("your_name")}
+              value={newReview.name}
+              onChange={(e) => setNewReview({ ...newReview, name: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary"
+            />
+            <input
+              type="text"
+              placeholder={t("review_title")}
+              value={newReview.title}
+              onChange={(e) => setNewReview({ ...newReview, title: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary"
+            />
+            <textarea
+              placeholder={t("your_review")}
+              value={newReview.comment}
+              onChange={(e) => setNewReview({ ...newReview, comment: e.target.value })}
+              className="w-full px-4 py-2 bg-secondary/20 border border-primary/20 rounded-lg focus:outline-none focus:border-primary min-h-32"
+            />
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setNewReview({ ...newReview, rating: star })}
+                  className={`text-3xl cursor-pointer ${newReview.rating >= star ? "text-primary" : "text-muted-foreground"}`}
+                >
+                  ⭐
+                </button>
+              ))}
+            </div>
+            <Button onClick={handleSubmitReview} className="w-full bg-primary hover:bg-primary/90">
+              {t("submit_review")}
+            </Button>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

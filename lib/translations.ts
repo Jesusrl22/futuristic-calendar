@@ -224,6 +224,7 @@ export const translations = {
     subscription_feature_team_comments: "Team Comments",
     subscription_feature_team_stats: "Team Statistics",
 
+    // User Reviews
     write_review: "Write a Review",
     your_name: "Your Name",
     your_email: "Your Email",
@@ -235,26 +236,44 @@ export const translations = {
     please_rate: "Please select a rating",
     enter_review: "Please write a review",
     stars: "stars",
-
     user_reviews_title: "Share Your Review",
     user_reviews_description: "Help others by sharing your experience with Future Task",
     best_rated: "Best Rated",
     most_helpful: "Most Helpful",
     newest: "Newest",
     share_your_review: "Share Your Review",
-    // your_name: "Your Name *", // Already defined above
-    // your_email: "Your Email *", // Already defined above
-    // rating: "Rating", // Already defined above
-    // stars: "stars", // Already defined above
     review_title_optional: "Review Title (optional)",
     share_your_thoughts: "Share your thoughts about Future Task *",
     please_fill_required_fields: "Please fill in all required fields",
     failed_submit_review: "Failed to submit review",
     submitting: "Submitting...",
-    // submit_review: "Submit Review", // Already defined above
     no_reviews_yet: "No reviews yet. Be the first to share your experience!",
     showing: "Showing",
     reviews: "reviews",
+
+    back: "Back",
+    totalReviews: "Total Reviews",
+    noReviews: "No reviews yet. Be the first to share your experience!",
+    beFirst: "Be the first to review",
+    writeReview: "Write a Review",
+    namePlaceholder: "Enter your name",
+    emailPlaceholder: "Enter your email",
+    reviewTitle: "Review Title",
+    reviewComment: "Share your thoughts...",
+    viewAllReviews: "View All Reviews",
+    addReview: "Add Review",
+
+    footer_description: "Intelligent task management with AI assistance for enhanced productivity.",
+    footer_product: "Product",
+    footer_legal: "Legal",
+    footer_terms: "Terms of Service",
+    footer_privacy: "Privacy Policy",
+    footer_support: "Support",
+    footer_contact: "Contact Us",
+    footer_copyright: "© 2025 Future Task. All rights reserved.",
+    footer_terms_short: "Terms",
+    footer_privacy_short: "Privacy",
+    footer_contact_short: "Contact",
   },
 
   es: {
@@ -487,27 +506,40 @@ export const translations = {
     user_reviews_description: "Ayuda a otros compartiendo tu experiencia con Future Task",
     best_rated: "Mejor Calificado",
     most_helpful: "Más Útil",
-    newest: "Más Reciente",
+    newest: "Más Nuevo",
     share_your_review: "Comparte Tu Reseña",
-    your_name: "Tu Nombre",
-    your_email: "Tu Email",
-    rating: "Calificación",
-    review_title: "Título de la Reseña",
-    review_comment: "Dinos qué piensas...",
-    submit_review: "Enviar Reseña",
-    review_submitted: "Reseña enviada con éxito!",
-    please_rate: "Por favor selecciona una calificación",
-    enter_review: "Por favor escribe una reseña",
-    stars: "estrellas",
-    // review_title_optional: "Título de la Reseña (opcional)", // Overwritten by review_title
-    // share_your_thoughts: "Comparte tus opiniones sobre Future Task *", // This seems to be missing in the updates, keeping original
+    review_title_optional: "Título de la Reseña (opcional)",
+    share_your_thoughts: "Comparte tus pensamientos sobre Future Task *",
     please_fill_required_fields: "Por favor completa todos los campos requeridos",
     failed_submit_review: "Error al enviar la reseña",
     submitting: "Enviando...",
-    // submit_review: "Enviar Reseña", // Already defined above
     no_reviews_yet: "Sin reseñas aún. ¡Sé el primero en compartir tu experiencia!",
     showing: "Mostrando",
     reviews: "reseñas",
+
+    back: "Atrás",
+    totalReviews: "Total de Reseñas",
+    noReviews: "Sin reseñas aún. ¡Sé el primero en compartir tu experiencia!",
+    beFirst: "Sé el primero en reseñar",
+    writeReview: "Escribe una Reseña",
+    namePlaceholder: "Ingresa tu nombre",
+    emailPlaceholder: "Ingresa tu correo",
+    reviewTitle: "Título de la Reseña",
+    reviewComment: "Comparte tus pensamientos...",
+    viewAllReviews: "Ver Todas las Reseñas",
+    addReview: "Agregar Reseña",
+
+    footer_description: "Gestión inteligente de tareas con asistencia IA para una mayor productividad.",
+    footer_product: "Producto",
+    footer_legal: "Legal",
+    footer_terms: "Términos de Servicio",
+    footer_privacy: "Política de Privacidad",
+    footer_support: "Soporte",
+    footer_contact: "Contáctanos",
+    footer_copyright: "© 2025 Future Task. Todos los derechos reservados.",
+    footer_terms_short: "Términos",
+    footer_privacy_short: "Privacidad",
+    footer_contact_short: "Contacto",
   },
 
   fr: {
@@ -747,25 +779,32 @@ export const translations = {
     please_rate: "Veuillez sélectionner une évaluation",
     enter_review: "Veuillez écrire un avis",
     stars: "étoiles",
-    // user_reviews_title: "Partagez Votre Avis", // Already defined above
-    // user_reviews_description: "Aidez les autres en partageant votre expérience avec Future Task", // Already defined above
+    user_reviews_title: "Partagez Votre Avis",
+    user_reviews_description: "Aidez les autres en partageant votre expérience avec Future Task",
     best_rated: "Meilleur Classé",
     most_helpful: "Le Plus Utile",
     newest: "Le Plus Récent",
     share_your_review: "Partagez Votre Avis",
-    // your_name: "Votre Nom *", // Already defined above
-    // your_email: "Votre Email *", // Already defined above
-    // rating: "Évaluation", // Already defined above
-    // stars: "étoiles", // Already defined above
     review_title_optional: "Titre de l'Avis (optionnel)",
     share_your_thoughts: "Partagez vos opinions sur Future Task *",
     please_fill_required_fields: "Veuillez remplir tous les champs requis",
     failed_submit_review: "Échec de l'envoi de l'avis",
     submitting: "Envoi en cours...",
-    // submit_review: "Envoyer l'Avis", // Already defined above
     no_reviews_yet: "Aucune évaluation pour le moment. Soyez le premier à partager votre expérience!",
     showing: "Affichage",
     reviews: "évaluations",
+
+    footer_description: "Gestion intelligente des tâches avec assistance IA pour une productivité accrue.",
+    footer_product: "Produit",
+    footer_legal: "Légal",
+    footer_terms: "Conditions d'Utilisation",
+    footer_privacy: "Politique de Confidentialité",
+    footer_support: "Support",
+    footer_contact: "Contactez-nous",
+    footer_copyright: "© 2025 Future Task. Tous droits réservés.",
+    footer_terms_short: "Termes",
+    footer_privacy_short: "Confidentialité",
+    footer_contact_short: "Contact",
   },
 
   de: {
@@ -966,25 +1005,33 @@ export const translations = {
     please_rate: "Bitte wählen Sie eine Bewertung",
     enter_review: "Bitte schreiben Sie eine Bewertung",
     stars: "Sterne",
-    // user_reviews_title: "Teile Deine Bewertung", // Already defined above
-    // user_reviews_description: "Hilf anderen, indem du deine Erfahrung mit Future Task teilst", // Already defined above
+    user_reviews_title: "Teile Deine Bewertung",
+    user_reviews_description: "Hilf anderen, indem du deine Erfahrung mit Future Task teilst",
     best_rated: "Beste Bewertet",
     most_helpful: "Hilfreichste",
     newest: "Neueste",
     share_your_review: "Teile Deine Bewertung",
-    // your_name: "Dein Name *", // Already defined above
-    // your_email: "Deine E-Mail *", // Already defined above
-    // rating: "Bewertung", // Already defined above
-    // stars: "Sterne", // Already defined above
     review_title_optional: "Bewertungstitel (optional)",
     share_your_thoughts: "Teile deine Gedanken über Future Task *",
     please_fill_required_fields: "Bitte fülle alle erforderlichen Felder aus",
     failed_submit_review: "Fehler beim Senden der Bewertung",
     submitting: "Wird gesendet...",
-    // submit_review: "Bewertung Senden", // Already defined above
     no_reviews_yet: "Noch keine Bewertungen. Seien Sie der Erste, der Ihre Erfahrung teilt!",
     showing: "Zeigt",
     reviews: "Bewertungen",
+
+    footer_description:
+      "Intelligentes Aufgabenmanagement mit KI-gestützter Unterstützung für verbesserte Produktivität.",
+    footer_product: "Produkt",
+    footer_legal: "Rechtliches",
+    footer_terms: "Nutzungsbedingungen",
+    footer_privacy: "Datenschutzrichtlinie",
+    footer_support: "Support",
+    footer_contact: "Kontaktieren Sie uns",
+    footer_copyright: "© 2025 Future Task. Alle Rechte vorbehalten.",
+    footer_terms_short: "Bedingungen",
+    footer_privacy_short: "Datenschutz",
+    footer_contact_short: "Kontakt",
   },
 
   it: {
@@ -1185,25 +1232,32 @@ export const translations = {
     please_rate: "Seleziona una valutazione",
     enter_review: "Scrivi una recensione",
     stars: "stelle",
-    // user_reviews_title: "Condividi la Tua Recensione", // Already defined above
-    // user_reviews_description: "Aiuta gli altri condividendo la tua esperienza con Future Task", // Already defined above
+    user_reviews_title: "Condividi la Tua Recensione",
+    user_reviews_description: "Aiuta gli altri condividendo la tua esperienza con Future Task",
     best_rated: "Meglio Valutato",
     most_helpful: "Più Utile",
     newest: "Più Recente",
     share_your_review: "Condividi la Tua Recensione",
-    // your_name: "Il Tuo Nome *", // Already defined above
-    // your_email: "La Tua Email *", // Already defined above
-    // rating: "Valutazione", // Already defined above
-    // stars: "stelle", // Already defined above
     review_title_optional: "Titolo della Recensione (opzionale)",
     share_your_thoughts: "Condividi i tuoi pensieri su Future Task *",
     please_fill_required_fields: "Compila tutti i campi obbligatori",
     failed_submit_review: "Errore nell'invio della recensione",
     submitting: "Invio in corso...",
-    // submit_review: "Invia Recensione", // Already defined above
     no_reviews_yet: "Nessuna recensione ancora. Sii il primo a condividere la tua esperienza!",
     showing: "Mostrando",
     reviews: "recensioni",
+
+    footer_description: "Gestione attività intelligente con assistenza AI per una maggiore produttività.",
+    footer_product: "Prodotto",
+    footer_legal: "Legale",
+    footer_terms: "Termini di Servizio",
+    footer_privacy: "Informativa sulla Privacy",
+    footer_support: "Supporto",
+    footer_contact: "Contattaci",
+    footer_copyright: "© 2025 Future Task. Tutti i diritti riservati.",
+    footer_terms_short: "Termini",
+    footer_privacy_short: "Privacy",
+    footer_contact_short: "Contatto",
   },
 }
 
