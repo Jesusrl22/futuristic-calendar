@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import CookieBanner from "@/components/cookie-banner"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { UserReviews } from "@/components/user-reviews" // Changed to named import
 
 const translations = {
@@ -982,7 +981,11 @@ export default function HomePageClient() {
             <div className="relative h-[300px] rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 flex items-center justify-center">
               <div className="text-8xl opacity-30">📊</div>
               <div
-                className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMC
+                className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiHEhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMC
+
+
+
+
 
 
 
@@ -1268,152 +1271,86 @@ export default function HomePageClient() {
           <p className="text-muted-foreground">{t("testimonialsDesc")}</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-16">
-          {/* Testimonial 1 */}
-          <Card className="glass-card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xl">👨‍💼</span>
-              </div>
-              <div>
-                <div className="font-semibold">John D.</div>
-                <div className="text-sm text-muted-foreground">{t("testimonial1Role")}</div>
-              </div>
-            </div>
-            <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-primary">
-                  ⭐
-                </span>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground italic">"{t("testimonial1Text")}"</p>
-          </Card>
-
-          {/* Testimonial 2 */}
-          <Card className="glass-card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xl">👩‍💻</span>
-              </div>
-              <div>
-                <div className="font-semibold">Sarah M.</div>
-                <div className="text-sm text-muted-foreground">{t("testimonial2Role")}</div>
-              </div>
-            </div>
-            <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-primary">
-                  ⭐
-                </span>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground italic">"{t("testimonial2Text")}"</p>
-          </Card>
-
-          {/* Testimonial 3 */}
-          <Card className="glass-card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xl">👨‍💻</span>
-              </div>
-              <div>
-                <div className="font-semibold">Emma K.</div>
-                <div className="text-sm text-muted-foreground">{t("testimonial3Role")}</div>
-              </div>
-            </div>
-            <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, i) => (
-                <span key={i} className="text-primary">
-                  ⭐
-                </span>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
-          </Card>
-        </div>
-
-        <UserReviews isDarkMode={theme === "dark"} />
-
-        <div className="flex justify-center mt-12">
-          <Card
-            className="glass-card p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors w-full max-w-sm"
-            onClick={() => setIsReviewModalOpen(true)}
-          >
-            <div className="text-5xl mb-4">✍️</div>
-            <h3 className="text-lg font-semibold mb-2 text-center">{t("share_your_review")}</h3>
-            <p className="text-sm text-muted-foreground text-center mb-4">{t("write_review_description")}</p>
-            <Button className="bg-primary hover:bg-primary/90">{t("write_review_button")}</Button>
-          </Card>
-        </div>
-
-        <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t("share_your_review")}</DialogTitle>
-              <DialogDescription>{t("write_review_description")}</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">{t("name")}</label>
-                <input
-                  type="text"
-                  placeholder={t("enterName")}
-                  value={reviewData.name}
-                  onChange={(e) => setReviewData({ ...reviewData, name: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("email")}</label>
-                <input
-                  type="email"
-                  placeholder={t("enterEmail")}
-                  value={reviewData.email}
-                  onChange={(e) => setReviewData({ ...reviewData, email: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">{t("rating")} ⭐</label>
-                <div className="flex gap-2 mt-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setReviewData({ ...reviewData, rating: star })}
-                      className={`text-2xl ${star <= reviewData.rating ? "opacity-100" : "opacity-30"}`}
-                    >
-                      ⭐
-                    </button>
-                  ))}
+        <div className="max-w-6xl mx-auto">
+          <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
+            {/* Testimonial 1 */}
+            <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-xl">👨‍💼</span>
+                </div>
+                <div>
+                  <div className="font-semibold">John D.</div>
+                  <div className="text-sm text-muted-foreground">{t("testimonial1Role")}</div>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">{t("yourReview")}</label>
-                <textarea
-                  placeholder={t("enterReview")}
-                  value={reviewData.comment}
-                  onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background h-24 resize-none"
-                />
+              <div className="flex gap-1 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-primary">
+                    ⭐
+                  </span>
+                ))}
               </div>
-              <Button
-                onClick={async () => {
-                  await fetch("/api/reviews", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(reviewData),
-                  })
-                  setIsReviewModalOpen(false)
-                  setReviewData({ name: "", email: "", rating: 5, comment: "" })
-                }}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
-                {t("submitReview")}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+              <p className="text-sm text-muted-foreground italic">"{t("testimonial1Text")}"</p>
+            </Card>
+
+            {/* Testimonial 2 */}
+            <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-xl">👩‍💻</span>
+                </div>
+                <div>
+                  <div className="font-semibold">Sarah M.</div>
+                  <div className="text-sm text-muted-foreground">{t("testimonial2Role")}</div>
+                </div>
+              </div>
+              <div className="flex gap-1 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-primary">
+                    ⭐
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground italic">"{t("testimonial2Text")}"</p>
+            </Card>
+
+            {/* Testimonial 3 */}
+            <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <span className="text-xl">👨‍💻</span>
+                </div>
+                <div>
+                  <div className="font-semibold">Emma K.</div>
+                  <div className="text-sm text-muted-foreground">{t("testimonial3Role")}</div>
+                </div>
+              </div>
+              <div className="flex gap-1 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-primary">
+                    ⭐
+                  </span>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
+            </Card>
+
+            <UserReviews isDarkMode={theme === "dark"} isCarouselMode={true} />
+          </div>
+
+          <div className="flex justify-center mt-12">
+            <Card
+              className="glass-card p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors w-full max-w-sm"
+              onClick={() => setIsReviewModalOpen(true)}
+            >
+              <div className="text-5xl mb-4">✍️</div>
+              <h3 className="text-lg font-semibold mb-2 text-center">{t("share_your_review")}</h3>
+              <p className="text-sm text-muted-foreground text-center mb-4">{t("write_review_description")}</p>
+              <Button className="bg-primary hover:bg-primary/90">{t("write_review_button")}</Button>
+            </Card>
+          </div>
+        </div>
       </section>
 
       {/* FAQ Section - Adding FAQ content for SEO */}
