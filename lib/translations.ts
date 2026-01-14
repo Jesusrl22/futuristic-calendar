@@ -224,22 +224,34 @@ export const translations = {
     subscription_feature_team_comments: "Team Comments",
     subscription_feature_team_stats: "Team Statistics",
 
+    write_review: "Write a Review",
+    your_name: "Your Name",
+    your_email: "Your Email",
+    rating: "Rating",
+    review_title: "Review Title",
+    review_comment: "Tell us what you think...",
+    submit_review: "Submit Review",
+    review_submitted: "Review submitted successfully!",
+    please_rate: "Please select a rating",
+    enter_review: "Please write a review",
+    stars: "stars",
+
     user_reviews_title: "Share Your Review",
     user_reviews_description: "Help others by sharing your experience with Future Task",
     best_rated: "Best Rated",
     most_helpful: "Most Helpful",
     newest: "Newest",
     share_your_review: "Share Your Review",
-    your_name: "Your Name *",
-    your_email: "Your Email *",
-    rating: "Rating",
-    stars: "stars",
+    // your_name: "Your Name *", // Already defined above
+    // your_email: "Your Email *", // Already defined above
+    // rating: "Rating", // Already defined above
+    // stars: "stars", // Already defined above
     review_title_optional: "Review Title (optional)",
     share_your_thoughts: "Share your thoughts about Future Task *",
     please_fill_required_fields: "Please fill in all required fields",
     failed_submit_review: "Failed to submit review",
     submitting: "Submitting...",
-    submit_review: "Submit Review",
+    // submit_review: "Submit Review", // Already defined above
     no_reviews_yet: "No reviews yet. Be the first to share your experience!",
     showing: "Showing",
     reviews: "reviews",
@@ -470,22 +482,29 @@ export const translations = {
     subscription_feature_team_comments: "Comentarios del Equipo",
     subscription_feature_team_stats: "Estadísticas del Equipo",
 
+    // User Reviews
     user_reviews_title: "Comparte Tu Reseña",
     user_reviews_description: "Ayuda a otros compartiendo tu experiencia con Future Task",
     best_rated: "Mejor Calificado",
     most_helpful: "Más Útil",
     newest: "Más Reciente",
     share_your_review: "Comparte Tu Reseña",
-    your_name: "Tu Nombre *",
-    your_email: "Tu Email *",
+    your_name: "Tu Nombre",
+    your_email: "Tu Email",
     rating: "Calificación",
+    review_title: "Título de la Reseña",
+    review_comment: "Dinos qué piensas...",
+    submit_review: "Enviar Reseña",
+    review_submitted: "Reseña enviada con éxito!",
+    please_rate: "Por favor selecciona una calificación",
+    enter_review: "Por favor escribe una reseña",
     stars: "estrellas",
-    review_title_optional: "Título de la Reseña (opcional)",
-    share_your_thoughts: "Comparte tus opiniones sobre Future Task *",
+    // review_title_optional: "Título de la Reseña (opcional)", // Overwritten by review_title
+    // share_your_thoughts: "Comparte tus opiniones sobre Future Task *", // This seems to be missing in the updates, keeping original
     please_fill_required_fields: "Por favor completa todos los campos requeridos",
     failed_submit_review: "Error al enviar la reseña",
     submitting: "Enviando...",
-    submit_review: "Enviar Reseña",
+    // submit_review: "Enviar Reseña", // Already defined above
     no_reviews_yet: "Sin reseñas aún. ¡Sé el primero en compartir tu experiencia!",
     showing: "Mostrando",
     reviews: "reseñas",
@@ -716,22 +735,34 @@ export const translations = {
     subscription_feature_team_comments: "Commentaires d'Équipe",
     subscription_feature_team_stats: "Statistiques d'Équipe",
 
-    user_reviews_title: "Partagez Votre Avis",
-    user_reviews_description: "Aidez les autres en partageant votre expérience avec Future Task",
+    // User Reviews
+    write_review: "Écrire un Avis",
+    your_name: "Votre Nom",
+    your_email: "Votre Email",
+    rating: "Évaluation",
+    review_title: "Titre de l'Avis",
+    review_comment: "Dites-nous ce que vous en pensez...",
+    submit_review: "Envoyer l'Avis",
+    review_submitted: "Avis soumis avec succès!",
+    please_rate: "Veuillez sélectionner une évaluation",
+    enter_review: "Veuillez écrire un avis",
+    stars: "étoiles",
+    // user_reviews_title: "Partagez Votre Avis", // Already defined above
+    // user_reviews_description: "Aidez les autres en partageant votre expérience avec Future Task", // Already defined above
     best_rated: "Meilleur Classé",
     most_helpful: "Le Plus Utile",
     newest: "Le Plus Récent",
     share_your_review: "Partagez Votre Avis",
-    your_name: "Votre Nom *",
-    your_email: "Votre Email *",
-    rating: "Évaluation",
-    stars: "étoiles",
+    // your_name: "Votre Nom *", // Already defined above
+    // your_email: "Votre Email *", // Already defined above
+    // rating: "Évaluation", // Already defined above
+    // stars: "étoiles", // Already defined above
     review_title_optional: "Titre de l'Avis (optionnel)",
     share_your_thoughts: "Partagez vos opinions sur Future Task *",
     please_fill_required_fields: "Veuillez remplir tous les champs requis",
     failed_submit_review: "Échec de l'envoi de l'avis",
     submitting: "Envoi en cours...",
-    submit_review: "Envoyer l'Avis",
+    // submit_review: "Envoyer l'Avis", // Already defined above
     no_reviews_yet: "Aucune évaluation pour le moment. Soyez le premier à partager votre expérience!",
     showing: "Affichage",
     reviews: "évaluations",
@@ -923,22 +954,34 @@ export const translations = {
     subscription_feature_team_comments: "Team-Kommentare",
     subscription_feature_team_stats: "Team-Statistiken",
 
-    user_reviews_title: "Teile Deine Bewertung",
-    user_reviews_description: "Hilf anderen, indem du deine Erfahrung mit Future Task teilst",
+    // User Reviews
+    write_review: "Bewertung schreiben",
+    your_name: "Ihr Name",
+    your_email: "Ihre E-Mail",
+    rating: "Bewertung",
+    review_title: "Bewertungstitel",
+    review_comment: "Sagen Sie uns, was Sie denken...",
+    submit_review: "Bewertung Senden",
+    review_submitted: "Bewertung erfolgreich gesendet!",
+    please_rate: "Bitte wählen Sie eine Bewertung",
+    enter_review: "Bitte schreiben Sie eine Bewertung",
+    stars: "Sterne",
+    // user_reviews_title: "Teile Deine Bewertung", // Already defined above
+    // user_reviews_description: "Hilf anderen, indem du deine Erfahrung mit Future Task teilst", // Already defined above
     best_rated: "Beste Bewertet",
     most_helpful: "Hilfreichste",
     newest: "Neueste",
     share_your_review: "Teile Deine Bewertung",
-    your_name: "Dein Name *",
-    your_email: "Deine E-Mail *",
-    rating: "Bewertung",
-    stars: "Sterne",
+    // your_name: "Dein Name *", // Already defined above
+    // your_email: "Deine E-Mail *", // Already defined above
+    // rating: "Bewertung", // Already defined above
+    // stars: "Sterne", // Already defined above
     review_title_optional: "Bewertungstitel (optional)",
     share_your_thoughts: "Teile deine Gedanken über Future Task *",
     please_fill_required_fields: "Bitte fülle alle erforderlichen Felder aus",
     failed_submit_review: "Fehler beim Senden der Bewertung",
     submitting: "Wird gesendet...",
-    submit_review: "Bewertung Senden",
+    // submit_review: "Bewertung Senden", // Already defined above
     no_reviews_yet: "Noch keine Bewertungen. Seien Sie der Erste, der Ihre Erfahrung teilt!",
     showing: "Zeigt",
     reviews: "Bewertungen",
@@ -1130,22 +1173,34 @@ export const translations = {
     subscription_feature_team_comments: "Commenti del Team",
     subscription_feature_team_stats: "Statistiche del Team",
 
-    user_reviews_title: "Condividi la Tua Recensione",
-    user_reviews_description: "Aiuta gli altri condividendo la tua esperienza con Future Task",
+    // User Reviews
+    write_review: "Scrivi una Recensione",
+    your_name: "Il Tuo Nome",
+    your_email: "La Tua Email",
+    rating: "Valutazione",
+    review_title: "Titolo della Recensione",
+    review_comment: "Dicci cosa ne pensi...",
+    submit_review: "Invia Recensione",
+    review_submitted: "Recensione inviata con successo!",
+    please_rate: "Seleziona una valutazione",
+    enter_review: "Scrivi una recensione",
+    stars: "stelle",
+    // user_reviews_title: "Condividi la Tua Recensione", // Already defined above
+    // user_reviews_description: "Aiuta gli altri condividendo la tua esperienza con Future Task", // Already defined above
     best_rated: "Meglio Valutato",
     most_helpful: "Più Utile",
     newest: "Più Recente",
     share_your_review: "Condividi la Tua Recensione",
-    your_name: "Il Tuo Nome *",
-    your_email: "La Tua Email *",
-    rating: "Valutazione",
-    stars: "stelle",
+    // your_name: "Il Tuo Nome *", // Already defined above
+    // your_email: "La Tua Email *", // Already defined above
+    // rating: "Valutazione", // Already defined above
+    // stars: "stelle", // Already defined above
     review_title_optional: "Titolo della Recensione (opzionale)",
     share_your_thoughts: "Condividi i tuoi pensieri su Future Task *",
     please_fill_required_fields: "Compila tutti i campi obbligatori",
     failed_submit_review: "Errore nell'invio della recensione",
     submitting: "Invio in corso...",
-    submit_review: "Invia Recensione",
+    // submit_review: "Invia Recensione", // Already defined above
     no_reviews_yet: "Nessuna recensione ancora. Sii il primo a condividere la tua esperienza!",
     showing: "Mostrando",
     reviews: "recensioni",
