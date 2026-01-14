@@ -6,7 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import CookieBanner from "@/components/cookie-banner"
-import { UserReviews } from "@/components/user-reviews" // Changed to named import
+
+// Mock userReviews data - replace with actual data fetching if needed
+const userReviews = [
+  { id: 1, name: "Alice Smith", title: "Productivity Guru", rating: 5, comment: "This app changed my life!" },
+  { id: 2, name: "Bob Johnson", title: "Team Lead", rating: 4, comment: "Great for team collaboration." },
+  { id: 3, name: "Charlie Brown", title: "Student", rating: 5, comment: "Helped me stay organized." },
+]
 
 const translations = {
   en: {
@@ -757,7 +763,7 @@ export default function HomePageClient() {
   const [lang, setLang] = useState<Language>("en")
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">("monthly")
 
-  const [language, setLanguage] = useState<"en" | "es" | "fr" | "de" | "it">("en")
+  const [language, setLanguage] = useState<Language>("en")
   const [theme, setTheme] = useState<"light" | "dark">("light") // Assuming a theme state
 
   // State for review modal
@@ -766,12 +772,12 @@ export default function HomePageClient() {
 
   useEffect(() => {
     // Load language from localStorage or user profile
-    const savedLanguage = localStorage.getItem("userLanguage") as "en" | "es" | "fr" | "de" | "it" | null
+    const savedLanguage = localStorage.getItem("userLanguage") as Language | null
     if (savedLanguage) {
       setLanguage(savedLanguage)
     } else {
       // Try to detect from browser language
-      const browserLang = navigator.language.split("-")[0] as "en" | "es" | "fr" | "de" | "it"
+      const browserLang = navigator.language.split("-")[0] as Language
       if (["en", "es", "fr", "de", "it"].includes(browserLang)) {
         setLanguage(browserLang)
       }
@@ -982,12 +988,6 @@ export default function HomePageClient() {
               <div className="text-8xl opacity-30">📊</div>
               <div
                 className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiHEhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMC
-
-
-
-
-
-
 
 
 
@@ -1272,71 +1272,120 @@ export default function HomePageClient() {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory">
-            {/* Testimonial 1 */}
-            <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-xl">👨‍💼</span>
-                </div>
-                <div>
-                  <div className="font-semibold">John D.</div>
-                  <div className="text-sm text-muted-foreground">{t("testimonial1Role")}</div>
-                </div>
-              </div>
-              <div className="flex gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-primary">
-                    ⭐
-                  </span>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground italic">"{t("testimonial1Text")}"</p>
-            </Card>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                const container = document.getElementById("testimonials-carousel")
+                if (container) {
+                  container.scrollBy({ left: -400, behavior: "smooth" })
+                }
+              }}
+              className="flex-shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+            >
+              ←
+            </button>
 
-            {/* Testimonial 2 */}
-            <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-xl">👩‍💻</span>
+            <div
+              id="testimonials-carousel"
+              className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory flex-1 scroll-smooth"
+            >
+              {/* Testimonial 1 */}
+              <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-xl">👨‍💼</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold">John D.</div>
+                    <div className="text-sm text-muted-foreground">{t("testimonial1Role")}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-semibold">Sarah M.</div>
-                  <div className="text-sm text-muted-foreground">{t("testimonial2Role")}</div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-primary">
+                      ⭐
+                    </span>
+                  ))}
                 </div>
-              </div>
-              <div className="flex gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-primary">
-                    ⭐
-                  </span>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground italic">"{t("testimonial2Text")}"</p>
-            </Card>
+                <p className="text-sm text-muted-foreground italic">"{t("testimonial1Text")}"</p>
+              </Card>
 
-            {/* Testimonial 3 */}
-            <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-xl">👨‍💻</span>
+              {/* Testimonial 2 */}
+              <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-xl">👩‍💻</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold">Sarah M.</div>
+                    <div className="text-sm text-muted-foreground">{t("testimonial2Role")}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="font-semibold">Emma K.</div>
-                  <div className="text-sm text-muted-foreground">{t("testimonial3Role")}</div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-primary">
+                      ⭐
+                    </span>
+                  ))}
                 </div>
-              </div>
-              <div className="flex gap-1 mb-3">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-primary">
-                    ⭐
-                  </span>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
-            </Card>
+                <p className="text-sm text-muted-foreground italic">"{t("testimonial2Text")}"</p>
+              </Card>
 
-            <UserReviews isDarkMode={theme === "dark"} isCarouselMode={true} />
+              {/* Testimonial 3 */}
+              <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-xl">👨‍💻</span>
+                  </div>
+                  <div>
+                    <div className="font-semibold">Emma K.</div>
+                    <div className="text-sm text-muted-foreground">{t("testimonial3Role")}</div>
+                  </div>
+                </div>
+                <div className="flex gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <span key={i} className="text-primary">
+                      ⭐
+                    </span>
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
+              </Card>
+
+              {userReviews.map((review) => (
+                <Card key={review.id} className="glass-card p-6 flex-shrink-0 w-96 snap-center">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-xl">⭐</span>
+                    </div>
+                    <div>
+                      <div className="font-semibold">{review.name}</div>
+                      <div className="text-sm text-muted-foreground">{review.title}</div>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 mb-3">
+                    {[...Array(review.rating)].map((_, i) => (
+                      <span key={i} className="text-primary">
+                        ⭐
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground italic">"{review.comment}"</p>
+                </Card>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                const container = document.getElementById("testimonials-carousel")
+                if (container) {
+                  container.scrollBy({ left: 400, behavior: "smooth" })
+                }
+              }}
+              className="flex-shrink-0 p-2 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors"
+            >
+              →
+            </button>
           </div>
 
           <div className="flex justify-center mt-12">
