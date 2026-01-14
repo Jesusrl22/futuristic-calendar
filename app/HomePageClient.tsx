@@ -1287,7 +1287,7 @@ export default function HomePageClient() {
 
             <div
               id="testimonials-carousel"
-              className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory flex-1 scroll-smooth"
+              className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory flex-1 scroll-smooth scrollbar-hide"
             >
               {/* Testimonial 1 */}
               <Card className="glass-card p-6 flex-shrink-0 w-96 snap-center">

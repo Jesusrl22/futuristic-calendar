@@ -97,6 +97,16 @@
   .border-border {
     border-color: hsl(var(--border));
   }
+
+  /* Hide scrollbar for carousels while keeping scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
 }
 
 /* Custom neon-tech styles with glow effects */
