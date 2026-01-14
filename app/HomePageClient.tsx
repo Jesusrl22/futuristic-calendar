@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import CookieBanner from "@/components/cookie-banner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { UserReviews } from "@/components/user-reviews" // Changed to named import
 
 const translations = {
   en: {
@@ -990,7 +991,8 @@ export default function HomePageClient() {
 
 
 
-                    0IEwgMCA0MCAwIDEwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTg0LDI1NSw3OCwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAl"
+                    0IEwgMCA0MC
+                    0IDEwIiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMTg0LDI1NSw3OCwwLjEpIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAl"
               />
             </div>
           </div>
@@ -1266,7 +1268,7 @@ export default function HomePageClient() {
           <p className="text-muted-foreground">{t("testimonialsDesc")}</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-16">
           {/* Testimonial 1 */}
           <Card className="glass-card p-6">
             <div className="flex items-center gap-3 mb-4">
@@ -1330,6 +1332,8 @@ export default function HomePageClient() {
             <p className="text-sm text-muted-foreground italic">"{t("testimonial3Text")}"</p>
           </Card>
         </div>
+
+        <UserReviews isDarkMode={theme === "dark"} />
 
         <div className="flex justify-center mt-12">
           <Card
