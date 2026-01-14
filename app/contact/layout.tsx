@@ -6,13 +6,12 @@ import { Mail } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useRouter } from "next/navigation"
 
-export default function ContactPage() {
+export default function ContactPageClient() {
   const router = useRouter()
   const { t } = useTranslation()
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -21,7 +20,7 @@ export default function ContactPage() {
             </div>
             <span className="font-semibold text-lg">Future Task</span>
           </Link>
-          <Button variant="outline" onClick={() => router.push("/")} className="neon-glow-hover">
+          <Button variant="outline" onClick={() => router.push("/")}>
             {t("back")}
           </Button>
         </div>
@@ -57,7 +56,6 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Support categories */}
         <div className="mt-12 grid md:grid-cols-2 gap-6">
           <div className="glass-card border border-primary/20 rounded-lg p-6">
             <h3 className="font-semibold mb-2">{t("technical_support")}</h3>
@@ -76,17 +74,11 @@ export default function ContactPage() {
 
           <div className="glass-card border border-primary/20 rounded-lg p-6">
             <h3 className="font-semibold mb-2">{t("privacy_data")}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t("privacy_data_description")}{" "}
-              <Link href="/privacy" className="text-primary hover:underline">
-                {t("footer_privacy")}
-              </Link>
-            </p>
+            <p className="text-sm text-muted-foreground">{t("privacy_data_description", { link: "/privacy" })}</p>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="border-t border-border/50 mt-20">
         <div className="container mx-auto px-4 py-8">
           <p className="text-center text-sm text-muted-foreground">© 2025 Future Task. {t("all_rights_reserved")}</p>
