@@ -17,6 +17,8 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const reviewsPerPage = 9
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,13 +35,18 @@ export default function ReviewsPage() {
     try {
       const response = await fetch("/api/reviews?limit=1000")
       const data = await response.json()
-      setReviews(data || [])
+      setReviews(data.reviews || [])
+      setCurrentPage(1)
     } catch (error) {
       console.error("[v0] Error loading reviews:", error)
     } finally {
       setLoading(false)
     }
   }
+
+  const totalPages = Math.ceil(reviews.length / reviewsPerPage)
+  const startIndex = (currentPage - 1) * reviewsPerPage
+  const paginatedReviews = reviews.slice(startIndex, startIndex + reviewsPerPage)
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,29 +92,46 @@ export default function ReviewsPage() {
         {loading ? (
           <div className="text-center py-12">{t("loading")}</div>
         ) : reviews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reviews.map((review: any) => (
-              <Card key={review.id} className="glass-card p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="font-semibold">{review.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(review.created_at).toLocaleDateString()}
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {paginatedReviews.map((review: any) => (
+                <Card key={review.id} className="glass-card p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <div className="font-semibold">{review.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {[...Array(review.rating)].map((_, i) => (
+                        <span key={i} className="text-primary">
+                          ⭐
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <span key={i} className="text-primary">
-                        ⭐
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <h3 className="font-bold mb-2">{review.title}</h3>
-                <p className="text-sm text-muted-foreground">{review.comment}</p>
-              </Card>
-            ))}
-          </div>
+                  <h3 className="font-bold mb-2">{review.title}</h3>
+                  <p className="text-sm text-muted-foreground">{review.comment}</p>
+                </Card>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 mb-8">
+                {[...Array(totalPages)].map((_, i) => (
+                  <Button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    variant={currentPage === i + 1 ? "default" : "outline"}
+                    className="w-10 h-10 p-0"
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-12">
             <p className="text-muted-foreground mb-6">{t("noReviews")}</p>
