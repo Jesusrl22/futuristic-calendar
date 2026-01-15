@@ -185,6 +185,7 @@ export const translations = {
     task_completion_rate: "Task Completion Rate",
     average_focus_time: "Average Focus Time",
     notes_created: "Notes Created",
+    totalReviews: "Total Reviews",
 
     // Subscription translations
     cancel_subscription_description: "Confirm cancel subscription? You will lose monthly credits.",
@@ -480,6 +481,7 @@ export const translations = {
     task_completion_rate: "Tasa de Finalización de Tareas",
     average_focus_time: "Tiempo de Enfoque Promedio",
     notes_created: "Notas Creadas",
+    totalReviews: "Total de Reseñas",
 
     // Subscription translations
     cancel_subscription_description: "¿Confirmar cancelar suscripción? Perderás los créditos mensuales.",
@@ -763,6 +765,7 @@ export const translations = {
     task_completion_rate: "Taux de Réalisation des Tâches",
     average_focus_time: "Temps de Concentration Moyen",
     notes_created: "Notes Créées",
+    totalReviews: "Total des Avis",
 
     // Subscription translations
     cancel_subscription_description: "Confirmer l'annulation de l'abonnement? Vous perdrez les crédits mensuels.",
@@ -1009,6 +1012,7 @@ export const translations = {
     task_completion_rate: "Aufgabenabschlussquote",
     average_focus_time: "Durchschnittliche Fokuszeit",
     notes_created: "Notizen Erstellt",
+    totalReviews: "Gesamtzahl der Bewertungen",
 
     // Subscription translations
     cancel_subscription_description: "Abonnement kündigen bestätigen? Sie verlieren Ihre monatlichen Credits.",
@@ -1255,6 +1259,7 @@ export const translations = {
     task_completion_rate: "Tasso di Completamento delle Attività",
     average_focus_time: "Tempo Medio di Concentrazione",
     notes_created: "Note Create",
+    totalReviews: "Recensioni Totali",
 
     // Subscription translations
     cancel_subscription_description: "Confermare l'annullamento dell'abbonamento? Perderai i crediti mensili.",
