@@ -293,6 +293,14 @@ export const translations = {
     noReviews: "No reviews yet. Be the first to share your experience!",
     beFirst: "Be the First",
     viewAllReviews: "View All Reviews",
+    welcome: "Welcome",
+    productivity_overview: "Here's your productivity overview",
+    quick_actions: "Quick Actions",
+    create_task: "Create Task",
+    start_pomodoro: "Start Pomodoro",
+    ask_ai: "Ask AI",
+    locked: "Locked",
+    upgrade_or_buy_credit_packs: "Upgrade your plan or buy credit packs to use AI",
   },
 
   es: {
@@ -577,6 +585,14 @@ export const translations = {
     noReviews: "Sin reseñas aún. ¡Sé el primero en compartir tu experiencia!",
     beFirst: "Sé el Primero",
     viewAllReviews: "Ver Todas las Reseñas",
+    welcome: "Bienvenido",
+    productivity_overview: "Aquí está tu resumen de productividad",
+    quick_actions: "Acciones Rápidas",
+    create_task: "Crear Tarea",
+    start_pomodoro: "Iniciar Pomodoro",
+    ask_ai: "Pregunta a la IA",
+    locked: "Bloqueado",
+    upgrade_or_buy_credit_packs: "Actualiza tu plan o compra paquetes de créditos para usar IA",
   },
 
   fr: {
@@ -863,6 +879,14 @@ export const translations = {
     noReviews: "Pas d'avis pour le moment. Soyez le premier à partager votre expérience!",
     beFirst: "Soyez le Premier",
     viewAllReviews: "Voir Tous les Avis",
+    welcome: "Bienvenue",
+    productivity_overview: "Voici votre aperçu de productivité",
+    quick_actions: "Actions Rapides",
+    create_task: "Créer une Tâche",
+    start_pomodoro: "Démarrer Pomodoro",
+    ask_ai: "Demander à l'IA",
+    locked: "Verrouillé",
+    upgrade_or_buy_credit_packs: "Mettez à niveau votre plan ou achetez des forfaits de crédits pour utiliser l'IA",
   },
 
   de: {
@@ -1110,6 +1134,14 @@ export const translations = {
     noReviews: "Noch keine Bewertungen. Seien Sie der Erste, der Ihre Erfahrung teilt!",
     beFirst: "Seien Sie der Erste",
     viewAllReviews: "Alle Bewertungen Anzeigen",
+    welcome: "Willkommen",
+    productivity_overview: "Hier ist dein Produktivitätsübersicht",
+    quick_actions: "Schnelle Aktionen",
+    create_task: "Aufgabe Erstellen",
+    start_pomodoro: "Pomodoro Starten",
+    ask_ai: "Frag die KI",
+    locked: "Gesperrt",
+    upgrade_or_buy_credit_packs: "Aktualisiere deinen Plan oder kaufe Kreditpakete um KI zu nutzen",
   },
 
   it: {
@@ -1357,6 +1389,14 @@ export const translations = {
     noReviews: "Nessuna recensione per il momento. Sii il primo a condividere la tua esperienza!",
     beFirst: "Sii il Primo",
     viewAllReviews: "Visualizza Tutte le Recensioni",
+    welcome: "Benvenuto",
+    productivity_overview: "Ecco la tua panoramica sulla produttività",
+    quick_actions: "Azioni Rapide",
+    create_task: "Crea Attività",
+    start_pomodoro: "Avvia Pomodoro",
+    ask_ai: "Chiedi all'IA",
+    locked: "Bloccato",
+    upgrade_or_buy_credit_packs: "Aggiorna il tuo piano o acquista pacchetti di crediti per utilizzare l'IA",
   },
 }
 
