@@ -14,7 +14,9 @@ export function ThemeLoader() {
       pathname === "/blog" ||
       pathname === "/login" ||
       pathname === "/signup" ||
-      pathname === "/admin"
+      pathname === "/admin" ||
+      pathname === "/contact" ||
+      pathname === "/reviews"
 
     if (isPublicPage) {
       applyTheme("default")
