@@ -1553,7 +1553,7 @@ export default function HomePageClient() {
 
             <div className="flex gap-4 justify-center">
               <Button variant="outline" onClick={() => router.push("/reviews")} className="neon-glow-hover">
-                {t("viewAllReviews")}
+                {t("view_all_reviews")}
               </Button>
               <Button onClick={() => setShowReviewModal(true)} className="neon-glow-hover">
                 {t("addReview")}
