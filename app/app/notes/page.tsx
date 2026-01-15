@@ -112,7 +112,7 @@ export default function NotesPage() {
   }
 
   if (!canAccessFeature(subscriptionTier, "notes")) {
-    return <UpgradeModal feature="Notes" requiredPlan="premium" />
+    return <UpgradeModal feature={t("notes")} requiredPlan="premium" />
   }
 
   return (

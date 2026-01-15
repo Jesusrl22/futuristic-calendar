@@ -131,7 +131,7 @@ export default function TeamsPage() {
                 <Input
                   value={newTeamName}
                   onChange={(e) => setNewTeamName(e.target.value)}
-                  placeholder="My Awesome Team"
+                  placeholder={t("team_placeholder")}
                 />
               </div>
               <div>

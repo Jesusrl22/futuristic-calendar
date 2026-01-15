@@ -136,7 +136,7 @@ export default function WishlistPage() {
   }
 
   if (!canAccessFeature(subscriptionTier, "wishlist")) {
-    return <UpgradeModal feature="Wishlist" requiredPlan="premium" />
+    return <UpgradeModal feature={t("wishlist")} requiredPlan="premium" />
   }
 
   return (

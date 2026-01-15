@@ -81,7 +81,7 @@ export default function StatsPage() {
   }
 
   if (!canAccessStatistics(userTier)) {
-    return <UpgradeModal feature="Statistics" requiredPlan="pro" />
+    return <UpgradeModal feature={t("statistics")} requiredPlan="pro" />
   }
 
   return (
