@@ -5,10 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Mail } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function ContactPage() {
   const router = useRouter()
   const { t } = useTranslation()
+
+  useEffect(() => {
+    const htmlElement = document.documentElement
+    if (!htmlElement.classList.contains("dark")) {
+      htmlElement.classList.add("dark")
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-background">
