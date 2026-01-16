@@ -287,12 +287,20 @@ export default function SettingsPage() {
           <span className="text-primary neon-text">{t("settings")}</span>
         </h1>
 
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="general">{t("general")}</TabsTrigger>
-            <TabsTrigger value="theme">{t("theme")}</TabsTrigger>
-            <TabsTrigger value="notifications">{t("notifications")}</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="general" className="space-y-6">
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="grid w-full min-w-[400px] md:min-w-0 grid-cols-3 mb-6">
+              <TabsTrigger value="general" className="text-xs md:text-sm">
+                {t("general_settings")}
+              </TabsTrigger>
+              <TabsTrigger value="theme" className="text-xs md:text-sm">
+                {t("theme_settings")}
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs md:text-sm">
+                {t("notifications_settings")}
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="general">
             <Card className="glass-card p-4 sm:p-6 neon-glow">

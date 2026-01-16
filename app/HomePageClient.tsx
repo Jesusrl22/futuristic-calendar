@@ -456,7 +456,7 @@ const translations = {
     proStatistics: "Statistiques et analyses",
     proCustomTheme: "Créateur de thèmes personnalisés",
     proAllThemes: "Tous les 15 thèmes + personnalisés",
-    proAchievements: "Tous les logros",
+    proAchievements: "Tous les achievements",
     proUnlimitedTeams: "Collaboration d'équipe illimitée",
     proTeamStats: "Statistiques d'équipe",
     premium: "Premium",
@@ -1599,13 +1599,13 @@ export default function HomePageClient() {
       </section>
 
       {/* Blog Section */}
-      <section id="blog" className="container mx-auto px-4 py-20 bg-secondary/20">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">{t("blogTitle")}</h2>
-          <p className="text-muted-foreground">{t("blogDesc")}</p>
+      <section id="blog" className="container mx-auto px-4 py-12 md:py-20 bg-secondary/20">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl md:text-4xl font-bold mb-4">{t("blogTitle")}</h2>
+          <p className="text-sm md:text-base text-muted-foreground">{t("blogDesc")}</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {/* Blog Post 1 - Pomodoro Technique */}
           <Link href="/blog/pomodoro-technique">
             <Card className="glass-card overflow-hidden neon-glow-hover transition-all duration-300 cursor-pointer group">
@@ -1687,9 +1687,9 @@ export default function HomePageClient() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 mt-20">
-        <div className="container mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+      <footer className="border-t border-border/50 mt-12 md:mt-20">
+        <div className="container mx-auto px-4 py-8 md:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -1754,9 +1754,9 @@ export default function HomePageClient() {
             </div>
           </div>
 
-          <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-muted-foreground">{t("footer_copyright")}</p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="border-t border-border/50 pt-6 md:pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs md:text-sm text-muted-foreground text-center md:text-left">{t("footer_copyright")}</p>
+            <div className="flex gap-4 md:gap-6 text-xs md:text-sm text-muted-foreground">
               <Link href="/terms" className="hover:text-foreground transition-colors">
                 {t("footer_terms_short")}
               </Link>
