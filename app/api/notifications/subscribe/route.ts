@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
       {
         user_id: user.id,
         endpoint,
-        p256dh: keys.p256dh,
-        auth: keys.auth,
+        p256dh_key: keys.p256dh,
+        auth_key: keys.auth,
         user_agent: request.headers.get("user-agent") || "",
         last_used_at: new Date().toISOString(),
       },
