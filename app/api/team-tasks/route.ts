@@ -100,14 +100,15 @@ export async function POST(request: Request) {
         .eq("id", taskData.assigned_to)
         .single()
 
-      if (assignedUser) {
+      if (assignedUser && taskData.assigned_to !== user.id) {
         const { data: creator } = await serviceSupabase.from("users").select("name").eq("id", user.id).single()
 
         // Send notification to assigned user
-        await fetch("/api/notifications/send-now", {
+        await fetch("https://" + request.headers.get("host") + "/api/notifications/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            userId: taskData.assigned_to,
             title: `Nueva tarea asignada`,
             body: `${creator?.name || "Un miembro"} te asignó: ${taskData.title}`,
             type: "task_assigned",
@@ -179,7 +180,7 @@ export async function PATCH(request: Request) {
 
     if (error) throw error
 
-    if (updates.assigned_to && updates.assigned_to !== previousTask?.assigned_to) {
+    if (updates.assigned_to && updates.assigned_to !== previousTask?.assigned_to && updates.assigned_to !== user.id) {
       const { data: assignedUser } = await serviceSupabase
         .from("users")
         .select("email, name")
@@ -190,10 +191,11 @@ export async function PATCH(request: Request) {
         const { data: creator } = await serviceSupabase.from("users").select("name").eq("id", user.id).single()
 
         // Send notification to newly assigned user
-        await fetch("/api/notifications/send-now", {
+        await fetch("https://" + request.headers.get("host") + "/api/notifications/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            userId: updates.assigned_to,
             title: `Tarea reasignada`,
             body: `${creator?.name || "Un miembro"} te asignó: ${previousTask?.title || "Tarea"}`,
             type: "task_assigned",
