@@ -87,4 +87,43 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   console.log("[v0] Service Worker activated")
   event.waitUntil(clients.claim())
+
+  // Register background sync for checking pending notifications
+  if (self.registration && "sync" in self.registration) {
+    console.log("[v0] Registering background sync")
+    self.registration.sync.register("check-notifications").catch((err) => {
+      console.log("[v0] Background sync registration failed:", err)
+    })
+  }
+})
+
+// Background sync for checking notifications periodically (mobile)
+self.addEventListener("sync", (event) => {
+  console.log("[v0] Background sync event:", event.tag)
+  if (event.tag === "check-notifications") {
+    event.waitUntil(
+      fetch("/api/notifications/pending")
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("[v0] Pending notifications:", data)
+          if (data.notifications && Array.isArray(data.notifications)) {
+            data.notifications.forEach((notif) => {
+              self.registration.showNotification(notif.title || "Notificación", {
+                body: notif.message || "Nueva notificación",
+                icon: "/favicon.jpg",
+                badge: "/favicon.jpg",
+                tag: notif.id || "notification-" + Date.now(),
+                requireInteraction: true,
+                data: {
+                  url: "/app",
+                  type: notif.type || "notification",
+                  id: notif.id,
+                },
+              })
+            })
+          }
+        })
+        .catch((err) => console.error("[v0] Notification check failed:", err)),
+    )
+  }
 })

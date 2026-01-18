@@ -7,6 +7,16 @@
   "background_color": "#000000",
   "theme_color": "#8b5cf6",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["productivity"],
+  "screenshots": [
+    {
+      "src": "/favicon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    }
+  ],
   "icons": [
     {
       "src": "/favicon.ico",
@@ -16,7 +26,8 @@
     {
       "src": "/favicon.jpg",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     },
     {
       "src": "/apple-touch-icon.jpg",
@@ -25,6 +36,7 @@
     }
   ],
   "permissions": [
-    "notifications"
+    "notifications",
+    "background_sync"
   ]
 }

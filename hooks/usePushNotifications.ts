@@ -101,6 +101,17 @@ export function usePushNotifications() {
       }
 
       setIsSubscribed(true)
+      
+      // Register background sync for periodic notification checks (mobile)
+      if (registration && "sync" in registration) {
+        try {
+          await registration.sync.register("check-notifications")
+          console.log("[v0] Background sync registered for mobile")
+        } catch (err) {
+          console.log("[v0] Background sync registration not available:", err)
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Push notifications enabled successfully",
