@@ -20,14 +20,6 @@ async function getUserIdFromRequest(request: Request): Promise<string | null> {
 
 export async function GET(request: Request) {
   try {
-    // Check if user is admin
-    const { isAdmin } = await import("@/lib/security")
-    const isAdminUser = await isAdmin(request)
-    
-    if (!isAdminUser) {
-      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 })
-    }
-
     const userId = (await getUserIdFromRequest(request)) || request.headers.get("x-forwarded-for") || "anonymous"
     const rateLimitResult = await rateLimit(userId, "admin")
 
@@ -115,14 +107,6 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    // Check if user is admin
-    const { isAdmin } = await import("@/lib/security")
-    const isAdminUser = await isAdmin(request)
-    
-    if (!isAdminUser) {
-      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 })
-    }
-
     const userId = (await getUserIdFromRequest(request)) || request.headers.get("x-forwarded-for") || "anonymous"
     const rateLimitResult = await rateLimit(userId, "admin")
 
@@ -209,14 +193,6 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    // Check if user is admin
-    const { isAdmin } = await import("@/lib/security")
-    const isAdminUser = await isAdmin(request)
-    
-    if (!isAdminUser) {
-      return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 })
-    }
-
     const userId = (await getUserIdFromRequest(request)) || request.headers.get("x-forwarded-for") || "anonymous"
     const rateLimitResult = await rateLimit(userId, "admin")
 
