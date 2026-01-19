@@ -8,9 +8,32 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Starting signup for:", email, "with name:", name)
 
-    if (!name || name.trim() === "") {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 })
+    // Import security utilities
+    const { isValidEmail, isStrongPassword, isValidName, sanitizeInput } = await import("@/lib/security")
+
+    // Validate inputs
+    if (!email || typeof email !== "string" || !password || typeof password !== "string" || !name || typeof name !== "string") {
+      return NextResponse.json({ error: "Email, password, and name are required" }, { status: 400 })
     }
+
+    // Validate email format
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 })
+    }
+
+    // Validate name
+    if (!isValidName(name)) {
+      return NextResponse.json({ error: "Invalid name format. Use only letters, spaces, hyphens, and apostrophes" }, { status: 400 })
+    }
+
+    // Validate password strength
+    const passwordCheck = isStrongPassword(password)
+    if (!passwordCheck.valid) {
+      return NextResponse.json({ error: passwordCheck.message }, { status: 400 })
+    }
+
+    // Sanitize name input
+    const sanitizedName = sanitizeInput(name)
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -38,7 +61,7 @@ export async function POST(request: Request) {
         password,
         email_confirm: true,
         user_metadata: {
-          name: name,
+          name: sanitizedName,
         },
       })
 
@@ -56,7 +79,7 @@ export async function POST(request: Request) {
     const { error: profileError } = await supabase.from("users").insert({
       id: userId,
       email: email,
-      name: name,
+      name: sanitizedName,
       subscription_tier: "free",
       subscription_plan: "free",
       plan: "free",
@@ -83,7 +106,7 @@ export async function POST(request: Request) {
 
     try {
       const { sendWelcomeEmail } = await import("@/lib/email")
-      await sendWelcomeEmail(email, name)
+      await sendWelcomeEmail(email, sanitizedName)
       console.log("[SERVER][v0] Welcome email sent successfully")
     } catch (emailError: any) {
       console.warn("[SERVER][v0] Failed to send welcome email:", emailError.message)

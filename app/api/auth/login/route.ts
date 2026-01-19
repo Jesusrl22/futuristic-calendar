@@ -6,6 +6,17 @@ export async function POST(request: Request) {
   try {
     const { email, password } = await request.json()
 
+    // Validate inputs
+    if (!email || typeof email !== "string" || !password || typeof password !== "string") {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+    }
+
+    // Validate email format
+    const { isValidEmail } = await import("@/lib/security")
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Invalid email format" }, { status: 400 })
+    }
+
     const identifier = email || request.headers.get("x-forwarded-for") || "anonymous"
     const rateLimitResult = await rateLimit(identifier, "auth")
 
