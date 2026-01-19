@@ -8,15 +8,15 @@ export async function middleware(request: NextRequest) {
   // Content Security Policy (CSP) - Protects against XSS, clickjacking, and data injection
   const cspHeader = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.vercel-analytics.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.vercel-analytics.com https://www.paypal.com https://www.paypalobjects.com https://js.stripe.com https://adsterra.com https://ads.adsterra.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.paypalobjects.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
     "media-src 'self' https: blob:",
-    "connect-src 'self' https: wss:",
+    "connect-src 'self' https: wss: blob:",
     "object-src 'none'",
     "base-uri 'self'",
-    "frame-src 'none'",
+    "frame-src 'self' https://www.paypal.com https://js.stripe.com https://adsterra.com",
     "frame-ancestors 'none'",
     "upgrade-insecure-requests",
   ].join("; ")
