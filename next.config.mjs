@@ -8,13 +8,6 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    domains: [],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.vercel.app',
-      },
-    ],
   },
   serverExternalPackages: ['@upstash/redis'],
 
@@ -37,9 +30,6 @@ const nextConfig = {
     }
     return config
   },
-
-  // Security: Disable X-Powered-By header
-  poweredByHeader: false,
 }
 
 export default nextConfig
