@@ -4,5 +4,47 @@
       "path": "/api/cron/check-expired-subscriptions",
       "schedule": "0 0 * * *"
     }
+  ],
+  "buildCommand": "pnpm run build",
+  "devCommand": "pnpm run dev",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "framework": "nextjs",
+  "nodeVersion": "20.x",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-DNS-Prefetch-Control",
+          "value": "off"
+        },
+        {
+          "key": "X-Download-Options",
+          "value": "noopen"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
+        },
+        {
+          "key": "Expect-CT",
+          "value": "max-age=86400, enforce"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/wp-admin",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/wp-login.php",
+      "destination": "/",
+      "permanent": true
+    }
   ]
 }
