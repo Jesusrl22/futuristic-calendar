@@ -7,6 +7,8 @@ import { AdsterraBanner } from "@/components/adsterra-banner"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useTranslation } from "@/hooks/useTranslation"
+import { StreaksWidget } from "@/components/streaks-widget"
+import { AIQuickActions } from "@/components/ai-quick-actions"
 
 export default function AppPage() {
   const { t } = useTranslation()
@@ -196,6 +198,12 @@ export default function AppPage() {
               </Card>
             </div>
           ))}
+        </div>
+
+        {/* New: Progress & AI Widgets */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <StreaksWidget />
+          <AIQuickActions />
         </div>
 
         {/* Quick Actions */}

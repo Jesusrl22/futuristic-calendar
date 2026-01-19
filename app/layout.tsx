@@ -66,6 +66,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Future Task" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          type="text/javascript"
+          src="//widget.trustpilot.com/bootstrap/v5/tp.widget.bootstrap.min.js"
+          async
+        />
       </head>
       <body className="font-sans antialiased">
         <ThemeLoader />

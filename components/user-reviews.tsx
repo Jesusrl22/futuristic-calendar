@@ -1,23 +1,13 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
+import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ChevronLeft, ChevronRight, Send, Loader2 } from "lucide-react"
+import { ExternalLink, Star, Loader2, Send, ChevronLeft, ChevronRight } from "lucide-react"
 import { useTranslation } from "@/lib/use-translation"
-
-interface Review {
-  id: string
-  name: string
-  rating: number
-  title?: string
-  comment: string
-  helpful_count: number
-  created_at: string
-}
+import { TrustpilotCarousel, TrustpilotMiniWidget } from "@/components/trustpilot-widget"
+import { useLanguage } from "@/contexts/language-context"
 
 interface UserReviewsProps {
   isDarkMode?: boolean
@@ -25,255 +15,85 @@ interface UserReviewsProps {
 
 export function UserReviews({ isDarkMode = false }: UserReviewsProps) {
   const t = useTranslation()
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [currentPage, setCurrentPage] = useState(0)
-  const reviewsPerPage = 6
+  const { language } = useLanguage()
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    rating: 5,
-    title: "",
-    comment: "",
-  })
-
-  useEffect(() => {
-    fetchReviews()
-  }, [])
-
-  const fetchReviews = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch("/api/reviews?limit=100&sortBy=rating")
-      const data = await response.json()
-      setReviews(data.reviews || [])
-      setCurrentPage(0)
-    } catch (error) {
-      console.error("[v0] Error fetching reviews:", error)
-    } finally {
-      setLoading(false)
+  // Get Trustpilot URL based on language
+  const getTrustpilotUrl = () => {
+    const localeMap: Record<string, string> = {
+      es: "es",
+      en: "www",
+      fr: "fr",
+      de: "de",
+      it: "it",
+      pt: "pt",
+      ru: "ru",
+      zh: "cn",
+      ja: "jp",
+      ko: "kr",
     }
+    const subdomain = localeMap[language] || "www"
+    return `https://${subdomain}.trustpilot.com/review/future-task.com`
   }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!formData.name || !formData.email || !formData.comment) {
-      alert(t("please_fill_required_fields") || "Please fill all required fields")
-      return
-    }
-
-    try {
-      setSubmitting(true)
-      const response = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) throw new Error("Failed to submit review")
-
-      setFormData({ name: "", email: "", rating: 5, title: "", comment: "" })
-      setShowForm(false)
-      fetchReviews()
-    } catch (error) {
-      console.error("[v0] Error submitting review:", error)
-      alert(t("failed_submit_review") || "Failed to submit review")
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-1">
-        {[...Array(5)].map((_, i) => (
-          <span key={i} className={i < rating ? "text-primary text-lg" : "text-muted-foreground/30 text-lg"}>
-            ★
-          </span>
-        ))}
-      </div>
-    )
-  }
-
-  const paginatedReviews = reviews.slice(currentPage * reviewsPerPage, (currentPage + 1) * reviewsPerPage)
-  const totalPages = Math.ceil(reviews.length / reviewsPerPage)
-  const hasNextPage = currentPage < totalPages - 1
-  const hasPrevPage = currentPage > 0
 
   return (
     <section className="container mx-auto px-4 py-20">
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold mb-4">{t("user_reviews_title") || "User Reviews"}</h2>
-        <p className="text-muted-foreground">{t("user_reviews_description") || "What our users say"}</p>
+        <p className="text-muted-foreground mb-6">{t("verifiedReviewsTrustpilot") || "Verified reviews from Trustpilot"}</p>
+        
+        {/* Trustpilot Rating Widget */}
+        <div className="max-w-md mx-auto mb-8">
+          <TrustpilotMiniWidget />
+        </div>
       </div>
 
-      {/* Review Form Modal */}
-      {showForm && (
-        <Card className="glass-card p-6 max-w-2xl mx-auto border border-primary/20">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                placeholder={t("your_name") || "Your Name"}
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                className="bg-secondary/50 border-primary/30 focus:border-primary"
-              />
-              <Input
-                placeholder={t("your_email") || "Your Email"}
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-                className="bg-secondary/50 border-primary/30 focus:border-primary"
-              />
+      {/* Trustpilot Reviews Carousel */}
+      <div className="mb-12">
+        <TrustpilotCarousel />
+      </div>
+
+      {/* CTA Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12">
+        {/* View All Reviews */}
+        <Card className="glass-card p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+              <Star className="w-6 h-6 text-primary" />
             </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-semibold">
-                {t("rating") || "Rating"}: {formData.rating} {t("stars") || "stars"}
-              </label>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, rating: star })}
-                    className="hover:scale-110 transition-transform text-4xl"
-                  >
-                    <span className={star <= formData.rating ? "text-primary" : "text-muted-foreground/30"}>★</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Input
-              placeholder={t("review_title_optional") || "Review Title (Optional)"}
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="bg-secondary/50 border-primary/30 focus:border-primary"
-            />
-
-            <Textarea
-              placeholder={t("share_your_thoughts") || "Share your thoughts..."}
-              value={formData.comment}
-              onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-              rows={4}
-              required
-              className="bg-secondary/50 border-primary/30 focus:border-primary resize-none"
-            />
-
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
-                {t("cancel") || "Cancel"}
-              </Button>
-              <Button type="submit" disabled={submitting} className="bg-primary hover:bg-primary/90">
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("submitting") || "Submitting..."}
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    {t("submit_review") || "Submit Review"}
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
+            <h3 className="text-lg font-semibold">{t("viewAllReviews") || "View All Reviews"}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t("viewAllReviewsDescription") || "See all verified reviews from our users on Trustpilot"}
+            </p>
+            <Button
+              onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
+              className="bg-primary hover:bg-primary/90 w-full"
+            >
+              {t("seeAllReviews") || "See All Reviews"}
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </Card>
-      )}
 
-      {/* Reviews Carousel */}
-      {loading ? (
-        <div className="text-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-        </div>
-      ) : reviews.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>{t("no_reviews_yet") || "No reviews yet. Be the first to share!"}</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* Existing reviews carousel */}
-          <div className="flex gap-6 overflow-x-auto pb-4 max-w-6xl mx-auto">
-            {reviews.slice(currentPage * reviewsPerPage, (currentPage + 1) * reviewsPerPage).map((review) => (
-              <Card
-                key={review.id}
-                className="glass-card p-6 flex flex-col border border-primary/10 hover:border-primary/30 transition-colors flex-shrink-0 w-full md:w-80"
-              >
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 font-bold text-primary">
-                    {review.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="flex-grow min-w-0">
-                    <h3 className="font-semibold truncate">{review.name}</h3>
-                    {review.title && <p className="text-sm text-muted-foreground line-clamp-1">{review.title}</p>}
-                  </div>
-                </div>
-
-                <div className="mb-3">{renderStars(review.rating)}</div>
-
-                <p className="flex-grow mb-3 text-sm text-muted-foreground italic line-clamp-4">"{review.comment}"</p>
-
-                <div className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</div>
-              </Card>
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-8">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0}
-                className="hover:bg-primary/20"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-
-              <div className="text-sm text-muted-foreground">
-                {t("showing") || "Showing"} {currentPage * reviewsPerPage + 1}-
-                {Math.min((currentPage + 1) * reviewsPerPage, reviews.length)} {t("of") || "of"} {reviews.length}{" "}
-                {t("reviews") || "reviews"}
-              </div>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages - 1}
-                className="hover:bg-primary/20"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
+        {/* Write a Review */}
+        <Card className="glass-card p-6 border border-primary/20 hover:border-primary/40 transition-colors">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto">
+              <ExternalLink className="w-6 h-6 text-primary" />
             </div>
-          )}
-
-          <div className="flex justify-center mt-12">
-            <Card className="glass-card p-6 w-full max-w-md border border-primary/20 hover:border-primary/40 transition-colors">
-              <div className="text-center space-y-4">
-                <p className="text-lg font-semibold">{t("share_your_review") || "Share Your Review"}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t("user_reviews_description") || "Share your experience with us"}
-                </p>
-                <Button
-                  onClick={() => setShowForm(!showForm)}
-                  className="bg-primary hover:bg-primary/90 text-white w-full"
-                >
-                  {t("write_review") || "Write a Review"}
-                </Button>
-              </div>
-            </Card>
+            <h3 className="text-lg font-semibold">{t("writeReview") || "Write a Review"}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t("writeReviewDescription") || "Share your experience with Future Task on Trustpilot"}
+            </p>
+            <Button
+              onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
+              className="bg-primary hover:bg-primary/90 w-full"
+            >
+              {t("writeYourReview") || "Write Your Review"}
+              <ExternalLink className="ml-2 h-4 w-4" />
+            </Button>
           </div>
-        </div>
-      )}
+        </Card>
+      </div>
     </section>
   )
 }
