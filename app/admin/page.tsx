@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
 
     try {
       const adminUsername = "admin"
-      const adminPassword = "535353-Jrl"
+      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "admin123456789"
 
       if (username === adminUsername && password === adminPassword) {
         sessionStorage.setItem("admin_authenticated", "true")

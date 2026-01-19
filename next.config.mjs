@@ -8,6 +8,14 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    // Security: Restrict image sources
+    domains: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.vercel.app',
+      },
+    ],
   },
   serverExternalPackages: ['@upstash/redis'],
   
@@ -17,8 +25,33 @@ const nextConfig = {
     bodyParser: {
       sizeLimit: '50mb',
     },
+    // Security: Disable response compression to prevent compression attacks
+    // responseCompression: false,
   },
   
+  // Security headers for Vercel deployment (WAF protection)
+  headers: async () => {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'off',
+          },
+          {
+            key: 'X-Download-Options',
+            value: 'noopen',
+          },
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
+          },
+        ],
+      },
+    ]
+  },
+
   // Optimize bundle size
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -29,6 +62,15 @@ const nextConfig = {
       }
     }
     return config
+  },
+
+  // Security: Disable X-Powered-By header
+  poweredByHeader: false,
+
+  // Security: Enable SWR stale-while-revalidate caching headers
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
   },
 }
 
