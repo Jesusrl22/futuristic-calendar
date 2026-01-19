@@ -46,6 +46,18 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][API] Login successful for user:", loginData.user.id)
 
+    // Check if email is confirmed
+    if (!loginData.user.email_confirmed_at) {
+      console.log("[SERVER][API] Email not confirmed for user:", loginData.user.email)
+      return NextResponse.json(
+        { 
+          error: "Email not verified", 
+          message: "Please confirm your email address before logging in. Check your inbox for the confirmation link." 
+        },
+        { status: 403 },
+      )
+    }
+
     const profileCheckResponse = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${loginData.user.id}&select=id`,
       {
