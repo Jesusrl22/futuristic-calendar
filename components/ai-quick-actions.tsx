@@ -5,41 +5,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Sparkles, CalendarPlus, ListTodo, BookOpen, Brain, Zap } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner"
+import { useTranslation } from "@/hooks/useTranslation"
+import { toast } from "react-toastify"
 
 export function AIQuickActions() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [loading, setLoading] = useState<string | null>(null)
 
   const quickActions = [
     {
       id: "plan-day",
-      title: "Plan My Day",
-      description: "AI creates a personalized schedule based on your tasks",
+      title: t("plan_my_day"),
+      description: t("plan_my_day_description"),
       icon: CalendarPlus,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
     },
     {
       id: "prioritize-tasks",
-      title: "Prioritize Tasks",
-      description: "AI organizes your tasks by importance and urgency",
+      title: t("prioritize_tasks"),
+      description: t("prioritize_tasks_description"),
       icon: ListTodo,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
     {
       id: "study-plan",
-      title: "Create Study Plan",
-      description: "Generate a custom study schedule for your goals",
+      title: t("create_study_plan"),
+      description: t("create_study_plan_description"),
       icon: BookOpen,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
     {
       id: "summarize-notes",
-      title: "Summarize Notes",
-      description: "AI summarizes your latest notes into key points",
+      title: t("summarize_notes"),
+      description: t("summarize_notes_description"),
       icon: Brain,
       color: "text-orange-500",
       bgColor: "bg-orange-500/10",

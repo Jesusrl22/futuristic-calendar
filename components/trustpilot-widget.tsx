@@ -179,6 +179,43 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
     return `https://${subdomain}.trustpilot.com/review/future-task.com`
   }
 
+  // Translations for each language
+  const translations: Record<string, Record<string, string>> = {
+    es: {
+      viewReviews: "Ver Todas las Reviews",
+      viewReviewsDesc: "Descubre qué dicen nuestros usuarios en Trustpilot",
+      writeReview: "Escribe tu Reseña",
+      writeReviewDesc: "Comparte tu experiencia con Future Task",
+    },
+    en: {
+      viewReviews: "View All Reviews",
+      viewReviewsDesc: "Discover what our users say on Trustpilot",
+      writeReview: "Write Your Review",
+      writeReviewDesc: "Share your experience with Future Task",
+    },
+    fr: {
+      viewReviews: "Voir Tous les Avis",
+      viewReviewsDesc: "Découvrez ce que nos utilisateurs disent sur Trustpilot",
+      writeReview: "Écrivez Votre Avis",
+      writeReviewDesc: "Partagez votre expérience avec Future Task",
+    },
+    de: {
+      viewReviews: "Alle Bewertungen Ansehen",
+      viewReviewsDesc: "Erfahren Sie, was unsere Benutzer auf Trustpilot sagen",
+      writeReview: "Schreiben Sie Ihre Bewertung",
+      writeReviewDesc: "Teilen Sie Ihre Erfahrung mit Future Task",
+    },
+    it: {
+      viewReviews: "Vedi Tutte le Recensioni",
+      viewReviewsDesc: "Scopri cosa dicono i nostri utenti su Trustpilot",
+      writeReview: "Scrivi la Tua Recensione",
+      writeReviewDesc: "Condividi la tua esperienza con Future Task",
+    },
+  }
+
+  const lang = locale || "es"
+  const trans = translations[lang] || translations.es
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
       {/* View All Reviews */}
@@ -188,16 +225,16 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
             <Star className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold">Ver Todas las Reviews</h3>
+            <h3 className="text-base sm:text-lg font-semibold">{trans.viewReviews}</h3>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Descubre qué dicen nuestros usuarios en Trustpilot
+              {trans.viewReviewsDesc}
             </p>
           </div>
           <Button
             onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
             className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
           >
-            Ver Reviews
+            {trans.viewReviews}
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -210,16 +247,16 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
             <ExternalLink className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold">Escribe tu Reseña</h3>
+            <h3 className="text-base sm:text-lg font-semibold">{trans.writeReview}</h3>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Comparte tu experiencia con Future Task
+              {trans.writeReviewDesc}
             </p>
           </div>
           <Button
             onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
             className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
           >
-            Escribir Reseña
+            {trans.writeReview}
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
         </div>
