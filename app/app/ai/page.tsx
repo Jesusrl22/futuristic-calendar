@@ -147,12 +147,14 @@ const AIPage = () => {
             messages,
             mode: aiMode,
           })
+          // Set as current conversation if it's new
+          setCurrentConversationId(conversationId)
         }
 
         setConversations(updated)
       }
     } catch (error) {
-      console.error("Error saving conversation:", error)
+      console.error("[v0] Error saving conversation:", error)
     }
   }
 
@@ -509,6 +511,21 @@ const AIPage = () => {
 
     loadInitialData()
   }, [])
+
+  // Load conversation from URL parameter if present
+  useEffect(() => {
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "")
+    const conversationId = params.get("conversation")
+    
+    if (conversationId && conversations.length > 0) {
+      const conv = conversations.find((c) => c.id === conversationId)
+      if (conv) {
+        setCurrentConversationId(conversationId)
+        setMessages(conv.messages || [])
+        setAiMode(conv.mode)
+      }
+    }
+  }, [conversations])
 
   return (
     <div className="flex h-screen flex-col bg-background md:flex-row">

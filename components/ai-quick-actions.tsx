@@ -7,6 +7,12 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "@/hooks/useTranslation"
 import { toast } from "react-toastify"
+import { createBrowserClient } from "@supabase/ssr"
+
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+)
 
 export function AIQuickActions() {
   const router = useRouter()
@@ -62,31 +68,66 @@ export function AIQuickActions() {
         "summarize-notes": "Summarize my 5 most recent notes into bullet points with key takeaways.",
       }
 
+      const session = await supabase.auth.getSession()
+      if (!session.data.session?.access_token) {
+        toast.error("Please sign in to use AI features")
+        setLoading(null)
+        return
+      }
+
+      const userLanguage = typeof window !== "undefined" ? localStorage.getItem("language") || "en" : "en"
+
       const response = await fetch("/api/ai-chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.data.session.access_token}`,
+        },
         body: JSON.stringify({
           message: prompts[actionId],
-          conversationId: null,
+          language: userLanguage,
+          mode: "chat",
+          systemPrompt: "You are a helpful AI assistant. Provide clear, concise answers.",
         }),
       })
 
-      if (!response.ok) throw new Error("AI action failed")
-
-      const reader = response.body?.getReader()
-      if (!reader) throw new Error("No reader available")
-
-      let aiResponse = ""
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        aiResponse += decoder.decode(value)
+      if (!response.ok) {
+        if (response.status === 402) {
+          toast.error("Insufficient AI credits. Please upgrade your plan.")
+        } else {
+          throw new Error("AI action failed")
+        }
+        setLoading(null)
+        return
       }
 
-      // Navigate to AI page with result
-      router.push(`/app/ai?result=${encodeURIComponent(aiResponse)}`)
+      const data = await response.json()
+      const aiResponse = data.response
+
+      // Save to conversations
+      const conversationId = `quick-${actionId}-${Date.now()}`
+      const messages = [
+        { role: "user", content: prompts[actionId] },
+        { role: "assistant", content: aiResponse },
+      ]
+
+      // Save to database
+      await fetch("/api/ai-conversations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.data.session.access_token}`,
+        },
+        body: JSON.stringify({
+          id: conversationId,
+          title: `${actionId.replace(/-/g, " ")} - ${new Date().toLocaleDateString()}`,
+          messages: messages,
+          mode: "chat",
+        }),
+      })
+
+      // Navigate to AI page with the conversation
+      router.push(`/app/ai?conversation=${conversationId}`)
       toast.success("AI action completed!")
     } catch (error) {
       console.error("[v0] Quick action error:", error)
