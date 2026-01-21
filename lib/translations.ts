@@ -356,6 +356,8 @@ export const translations = {
     create_study_plan_description: "Generate a custom study schedule for your goals",
     summarize_notes: "Summarize Notes",
     summarize_notes_description: "AI summarizes your latest notes into key points",
+    ai_quick_actions_title: "AI Quick Actions",
+    ai_quick_actions_description: "One-click AI assistance for common tasks",
   },
 
   es: {
@@ -715,6 +717,10 @@ export const translations = {
     create_study_plan_description: "Genera un horario de estudio personalizado para tus objetivos",
     summarize_notes: "Resumir Notas",
     summarize_notes_description: "La IA resume tus notas recientes en puntos clave",
+    ai_quick_actions_title: "Acciones Rápidas de IA",
+    ai_quick_actions_description: "Asistencia de IA con un clic para tareas comunes",
+    
+    // Additional improvements
   },
 
   fr: {
@@ -1713,14 +1719,8 @@ export const translations = {
     create_study_plan_description: "Générez un programme d'étude personnalisé pour vos objectifs",
     summarize_notes: "Résumer les Notes",
     summarize_notes_description: "L'IA résume vos notes récentes en points clés",
-    locked: "Verrouillé",
-    error: "Erreur",
-    loading: "Chargement...",
-    cancel: "Annuler",
-    save: "Enregistrer",
-    plan_free: "Gratuit",
-    plan_premium: "Premium",
-    plan_pro: "Pro",
+    ai_quick_actions_title: "Actions Rapides IA",
+    ai_quick_actions_description: "Assistance IA en un clic pour les tâches courantes",
   },
 
   de: {
@@ -1784,14 +1784,8 @@ export const translations = {
     create_study_plan_description: "Generieren Sie einen benutzerdefinierten Lernplan für Ihre Ziele",
     summarize_notes: "Notizen Zusammenfassen",
     summarize_notes_description: "KI fasst Ihre letzten Notizen in Schlüsselpunkte zusammen",
-    locked: "Gesperrt",
-    error: "Fehler",
-    loading: "Wird geladen...",
-    cancel: "Abbrechen",
-    save: "Speichern",
-    plan_free: "Kostenlos",
-    plan_premium: "Premium",
-    plan_pro: "Pro",
+    ai_quick_actions_title: "Schnelle KI-Aktionen",
+    ai_quick_actions_description: "Einklick-KI-Unterstützung für häufige Aufgaben",
   },
 
   it: {
@@ -1855,14 +1849,8 @@ export const translations = {
     create_study_plan_description: "Genera un programma di studio personalizzato per i tuoi obiettivi",
     summarize_notes: "Riassumi Note",
     summarize_notes_description: "L'IA riassume le tue note recenti nei punti chiave",
-    locked: "Bloccato",
-    error: "Errore",
-    loading: "Caricamento...",
-    cancel: "Annulla",
-    save: "Salva",
-    plan_free: "Gratuito",
-    plan_premium: "Premium",
-    plan_pro: "Pro",
+    ai_quick_actions_title: "Azioni Rapide IA",
+    ai_quick_actions_description: "Assistenza IA con un clic per attività comuni",
   },
 }
 

@@ -97,34 +97,36 @@ export function AIQuickActions() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-purple-500" />
-          AI Quick Actions
+    <Card className="glass-card border-primary/20 hover:border-primary/40 transition-colors">
+      <CardHeader className="pb-3 sm:pb-4">
+        <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+          <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
+          {t("ai_quick_actions_title")}
         </CardTitle>
-        <CardDescription>One-click AI assistance for common tasks</CardDescription>
+        <CardDescription className="text-xs sm:text-sm">
+          {t("ai_quick_actions_description")}
+        </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-3">
+      <CardContent className="space-y-2">
         {quickActions.map((action) => (
           <Button
             key={action.id}
             variant="outline"
-            className="h-auto p-4 justify-start bg-transparent"
+            className="h-auto p-3 sm:p-4 justify-start bg-transparent hover:bg-muted/50 transition-colors w-full"
             onClick={() => handleQuickAction(action.id)}
             disabled={loading === action.id}
           >
-            <div className={`p-2 rounded-lg ${action.bgColor} mr-3`}>
-              <action.icon className={`h-5 w-5 ${action.color}`} />
+            <div className={`p-2 rounded-lg ${action.bgColor} mr-3 flex-shrink-0`}>
+              <action.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${action.color}`} />
             </div>
-            <div className="text-left flex-1">
-              <div className="font-medium">{action.title}</div>
-              <div className="text-xs text-muted-foreground">{action.description}</div>
+            <div className="text-left flex-1 min-w-0">
+              <div className="font-medium text-sm sm:text-base truncate">{action.title}</div>
+              <div className="text-xs text-muted-foreground line-clamp-1">{action.description}</div>
             </div>
             {loading === action.id ? (
-              <Zap className="h-4 w-4 animate-spin" />
+              <Zap className="h-4 w-4 animate-spin ml-2 flex-shrink-0 text-purple-500" />
             ) : (
-              <Zap className="h-4 w-4 text-muted-foreground" />
+              <Zap className="h-4 w-4 text-muted-foreground ml-2 flex-shrink-0" />
             )}
           </Button>
         ))}
