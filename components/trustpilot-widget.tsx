@@ -2,6 +2,9 @@
 
 import { useEffect } from "react"
 import { useLanguage } from "@/contexts/language-context"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { ExternalLink, Star } from "lucide-react"
 
 interface TrustpilotWidgetProps {
   templateId?: string
@@ -107,7 +110,7 @@ export function TrustpilotMiniWidget() {
   )
 }
 
-// Reviews carousel widget
+// Reviews carousel widget - improved responsive design
 export function TrustpilotCarousel() {
   const { language } = useLanguage()
 
@@ -136,21 +139,91 @@ export function TrustpilotCarousel() {
   }, [language])
 
   return (
-    <div
-      id="trustpilot-carousel"
-      className="trustpilot-widget"
-      data-locale={getTrustpilotLocale(language)}
-      data-template-id="54ad5defc6454f065c28af8b"
-      data-businessunit-id="63a5f4eee19b8abb0b35f82f"
-      data-style-height="240px"
-      data-style-width="100%"
-      data-theme="light"
-      data-stars="4,5"
-      data-review-languages={language}
-    >
-      <a href="https://www.trustpilot.com/review/future-task.com" target="_blank" rel="noopener">
-        Trustpilot
-      </a>
+    <Card className="glass-card p-6 sm:p-8 border border-primary/20 hover:border-primary/40 transition-colors">
+      <div
+        id="trustpilot-carousel"
+        className="trustpilot-widget w-full"
+        data-locale={getTrustpilotLocale(language)}
+        data-template-id="54ad5defc6454f065c28af8b"
+        data-businessunit-id="63a5f4eee19b8abb0b35f82f"
+        data-style-height="auto"
+        data-style-width="100%"
+        data-theme="light"
+        data-stars="4,5"
+        data-review-languages={language}
+      >
+        <a href="https://www.trustpilot.com/review/future-task.com" target="_blank" rel="noopener">
+          Trustpilot
+        </a>
+      </div>
+    </Card>
+  )
+}
+
+// Featured reviews CTA section
+export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
+  const getTrustpilotUrl = () => {
+    const localeMap: Record<string, string> = {
+      es: "es",
+      en: "www",
+      fr: "fr",
+      de: "de",
+      it: "it",
+      pt: "pt",
+      ru: "ru",
+      zh: "cn",
+      ja: "jp",
+      ko: "kr",
+    }
+    const subdomain = localeMap[locale] || "www"
+    return `https://${subdomain}.trustpilot.com/review/future-task.com`
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
+      {/* View All Reviews */}
+      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group cursor-pointer">
+        <div className="text-center space-y-3 sm:space-y-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
+            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-semibold">Ver Todas las Reviews</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Descubre qué dicen nuestros usuarios en Trustpilot
+            </p>
+          </div>
+          <Button
+            onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
+            className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
+          >
+            Ver Reviews
+            <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </Card>
+
+      {/* Write a Review */}
+      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group cursor-pointer">
+        <div className="text-center space-y-3 sm:space-y-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
+            <ExternalLink className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-semibold">Escribe tu Reseña</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Comparte tu experiencia con Future Task
+            </p>
+          </div>
+          <Button
+            onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
+            className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
+          >
+            Escribir Reseña
+            <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      </Card>
     </div>
   )
 }
