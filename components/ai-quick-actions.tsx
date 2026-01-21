@@ -6,7 +6,7 @@ import { Sparkles, CalendarPlus, ListTodo, BookOpen, Brain, Zap } from "lucide-r
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "@/hooks/useTranslation"
-import { toast } from "react-toastify"
+import { useToast } from "@/hooks/use-toast"
 import { createBrowserClient } from "@supabase/ssr"
 
 const supabase = createBrowserClient(
@@ -17,6 +17,7 @@ const supabase = createBrowserClient(
 export function AIQuickActions() {
   const router = useRouter()
   const { t } = useTranslation()
+  const { toast } = useToast()
   const [loading, setLoading] = useState<string | null>(null)
 
   const quickActions = [
@@ -70,18 +71,22 @@ export function AIQuickActions() {
 
       const session = await supabase.auth.getSession()
       if (!session.data.session?.access_token) {
-        toast.error("Please sign in to use AI features")
+        toast({
+          title: "Error",
+          description: "Please sign in to use AI features",
+          variant: "destructive",
+        })
         setLoading(null)
         return
       }
 
       const userLanguage = typeof window !== "undefined" ? localStorage.getItem("language") || "en" : "en"
 
+      // Send to AI chat endpoint - it will read the token from cookies automatically
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.data.session.access_token}`,
         },
         body: JSON.stringify({
           message: prompts[actionId],
@@ -93,9 +98,14 @@ export function AIQuickActions() {
 
       if (!response.ok) {
         if (response.status === 402) {
-          toast.error("Insufficient AI credits. Please upgrade your plan.")
+          toast({
+            title: "Error",
+            description: "Insufficient AI credits. Please upgrade your plan.",
+            variant: "destructive",
+          })
         } else {
-          throw new Error("AI action failed")
+          const errorData = await response.json()
+          throw new Error(errorData.error || "AI action failed")
         }
         setLoading(null)
         return
@@ -111,8 +121,8 @@ export function AIQuickActions() {
         { role: "assistant", content: aiResponse },
       ]
 
-      // Save to database
-      await fetch("/api/ai-conversations", {
+      // Save to database with Authorization header
+      const saveResponse = await fetch("/api/ai-conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,12 +136,23 @@ export function AIQuickActions() {
         }),
       })
 
+      if (!saveResponse.ok) {
+        console.error("[v0] Failed to save conversation:", saveResponse.status)
+      }
+
       // Navigate to AI page with the conversation
       router.push(`/app/ai?conversation=${conversationId}`)
-      toast.success("AI action completed!")
+      toast({
+        title: "Success",
+        description: "AI action completed! Navigating to AI page...",
+      })
     } catch (error) {
       console.error("[v0] Quick action error:", error)
-      toast.error("Failed to complete AI action")
+      toast({
+        title: "Error",
+        description: "Failed to complete AI action",
+        variant: "destructive",
+      })
     } finally {
       setLoading(null)
     }
