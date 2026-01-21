@@ -39,10 +39,19 @@ export function TrustpilotWidget({
   }
 
   useEffect(() => {
-    // Load Trustpilot widgets when component mounts or language changes
-    if (typeof window !== "undefined" && (window as any).Trustpilot) {
-      (window as any).Trustpilot.loadFromElement(document.getElementById("trustpilot-widget"), true)
+    // Wait for Trustpilot script to load
+    const checkAndLoad = () => {
+      if (typeof window !== "undefined" && (window as any).Trustpilot) {
+        const element = document.getElementById("trustpilot-widget")
+        if (element) {
+          ;(window as any).Trustpilot.loadFromElement(element, true)
+        }
+      } else {
+        setTimeout(checkAndLoad, 500)
+      }
     }
+    
+    checkAndLoad()
   }, [language])
 
   return (
@@ -87,9 +96,19 @@ export function TrustpilotMiniWidget() {
   }
 
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).Trustpilot) {
-      (window as any).Trustpilot.loadFromElement(document.getElementById("trustpilot-mini"), true)
+    // Wait for Trustpilot script to load
+    const checkAndLoad = () => {
+      if (typeof window !== "undefined" && (window as any).Trustpilot) {
+        const element = document.getElementById("trustpilot-mini")
+        if (element) {
+          ;(window as any).Trustpilot.loadFromElement(element, true)
+        }
+      } else {
+        setTimeout(checkAndLoad, 500)
+      }
     }
+    
+    checkAndLoad()
   }, [language])
 
   return (
@@ -133,9 +152,20 @@ export function TrustpilotCarousel() {
   }
 
   useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).Trustpilot) {
-      (window as any).Trustpilot.loadFromElement(document.getElementById("trustpilot-carousel"), true)
+    // Wait for Trustpilot script to load
+    const checkAndLoad = () => {
+      if (typeof window !== "undefined" && (window as any).Trustpilot) {
+        const element = document.getElementById("trustpilot-carousel")
+        if (element) {
+          ;(window as any).Trustpilot.loadFromElement(element, true)
+        }
+      } else {
+        // Retry after a delay if Trustpilot not loaded yet
+        setTimeout(checkAndLoad, 500)
+      }
     }
+    
+    checkAndLoad()
   }, [language])
 
   return (
@@ -231,7 +261,11 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
             </p>
           </div>
           <Button
-            onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              window.open(getTrustpilotUrl(), "_blank")
+            }}
             className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
           >
             {trans.viewReviews}
@@ -253,7 +287,11 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
             </p>
           </div>
           <Button
-            onClick={() => window.open(getTrustpilotUrl(), "_blank", "noopener,noreferrer")}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault()
+              window.open(getTrustpilotUrl(), "_blank")
+            }}
             className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
           >
             {trans.writeReview}
