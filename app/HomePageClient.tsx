@@ -1552,9 +1552,14 @@ export default function HomePageClient() {
             </div>
 
             <div className="flex gap-4 justify-center">
-              <Button variant="outline" onClick={() => router.push("/reviews")} className="neon-glow-hover">
+              <a
+                href={`https://${language === "es" ? "es" : language === "fr" ? "fr" : language === "de" ? "de" : language === "it" ? "it" : "www"}.trustpilot.com/review/future-task.com`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-8 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 neon-glow-hover"
+              >
                 {t("view_all_reviews")}
-              </Button>
+              </a>
               <Button onClick={() => setShowReviewModal(true)} className="neon-glow-hover">
                 {t("addReview")}
               </Button>
