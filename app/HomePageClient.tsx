@@ -224,6 +224,7 @@ const translations = {
     submit_review: "Submit Review",
     all_reviews: "All Reviews",
     addReview: "Add Review", // Added for the new button
+    seeAndWriteReviews: "View & Write Reviews",
     footer_description: "Smart task management with AI-powered assistance for enhanced productivity.",
     footer_product: "Product",
     footer_legal: "Legal",
@@ -391,6 +392,7 @@ const translations = {
     submit_review: "Enviar reseña",
     all_reviews: "Todas las reseñas",
     addReview: "Agregar Reseña", // Added for the new button
+    seeAndWriteReviews: "Ver y Escribir Reseñas",
     footer_description: "Gestión inteligente de tareas con asistencia impulsada por IA para una mayor productividad.",
     footer_product: "Producto",
     footer_legal: "Legal",
@@ -559,6 +561,7 @@ const translations = {
     submit_review: "Soumettre l'avis",
     all_reviews: "Tous les avis",
     addReview: "Ajouter un Avis", // Added for the new button
+    seeAndWriteReviews: "Voir et Écrire des Avis",
     footer_description: "Gestion intelligente des tâches avec assistance IA pour une productivité accrue.",
     footer_product: "Produit",
     footer_legal: "Légal",
@@ -728,6 +731,7 @@ const translations = {
     submit_review: "Bewertung absenden",
     all_reviews: "Alle Bewertungen",
     addReview: "Bewertung Hinzufügen", // Added for the new button
+    seeAndWriteReviews: "Bewertungen Ansehen & Schreiben",
     footer_description:
       "Intelligentes Aufgabenmanagement mit KI-gestützter Unterstützung für verbesserte Produktivität.",
     footer_product: "Produkt",
@@ -897,6 +901,7 @@ const translations = {
     submit_review: "Invia recensione",
     all_reviews: "Tutte le recensioni",
     addReview: "Aggiungi Recensione", // Added for the new button
+    seeAndWriteReviews: "Visualizza e Scrivi Recensioni",
     footer_description: "Gestione attività intelligente con assistenza AI per una maggiore produttività.",
     footer_product: "Prodotto",
     footer_legal: "Legale",
@@ -1558,7 +1563,7 @@ export default function HomePageClient() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground px-8 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 neon-glow-hover"
               >
-                {t("seeAllReviews")} / {t("writeYourReview")}
+                {t("seeAndWriteReviews")}
               </a>
             </div>
           </div>

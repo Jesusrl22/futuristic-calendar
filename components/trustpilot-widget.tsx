@@ -3,6 +3,7 @@
 import React from "react"
 import { useEffect } from "react"
 import { useLanguage } from "@/contexts/language-context"
+import { useTranslation } from "@/hooks/useTranslation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, Star } from "lucide-react"
@@ -194,6 +195,7 @@ export function TrustpilotCarousel() {
 // Featured reviews CTA section
 export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
   const { language } = useLanguage()
+  const { t } = useTranslation()
 
   const getTrustpilotUrl = (lang: string) => {
     const localeMap: Record<string, string> = {
@@ -212,32 +214,7 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
     return `https://${subdomain}.trustpilot.com/review/future-task.com`
   }
 
-  // Translations for each language
-  const translations: Record<string, Record<string, string>> = {
-    es: {
-      seeAndWrite: "Ver y Escribir Reseñas",
-      description: "Descubre qué dicen nuestros usuarios o comparte tu experiencia en Trustpilot",
-    },
-    en: {
-      seeAndWrite: "View & Write Reviews",
-      description: "Discover what our users say or share your experience on Trustpilot",
-    },
-    fr: {
-      seeAndWrite: "Voir et Écrire des Avis",
-      description: "Découvrez ce que nos utilisateurs disent ou partagez votre expérience sur Trustpilot",
-    },
-    de: {
-      seeAndWrite: "Bewertungen Ansehen & Schreiben",
-      description: "Erfahren Sie, was unsere Benutzer sagen, oder teilen Sie Ihre Erfahrung auf Trustpilot",
-    },
-    it: {
-      seeAndWrite: "Visualizza e Scrivi Recensioni",
-      description: "Scopri cosa dicono i nostri utenti o condividi la tua esperienza su Trustpilot",
-    },
-  }
-
   const lang = locale || language
-  const trans = translations[lang] || translations.es
 
   return (
     <a
@@ -252,13 +229,13 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
             <Star className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg sm:text-2xl font-semibold">{trans.seeAndWrite}</h3>
+            <h3 className="text-lg sm:text-2xl font-semibold">{t("seeAndWriteReviews")}</h3>
             <p className="text-sm sm:text-base text-muted-foreground mt-2">
-              {trans.description}
+              {t("seeAndWriteReviewsDescription")}
             </p>
           </div>
           <div className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg inline-flex items-center justify-center gap-2 transition-all text-sm sm:text-base font-medium group-hover:shadow-lg">
-            {trans.seeAndWrite}
+            {t("seeAndWriteReviews")}
             <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         </div>

@@ -293,6 +293,10 @@ export const translations = {
     noReviews: "No reviews yet. Be the first to share your experience!",
     beFirst: "Be the First",
     viewAllReviews: "View All Reviews",
+    seeAndWriteReviews: "View & Write Reviews",
+    writeYourReview: "Write Your Review",
+    seeAllReviews: "See All Reviews",
+    seeAndWriteReviewsDescription: "Discover what our users say or share your experience on Trustpilot",
     welcome: "Welcome",
     productivity_overview: "Here's your productivity overview",
     quick_actions: "Quick Actions",
@@ -654,6 +658,10 @@ export const translations = {
     noReviews: "Sin reseñas aún. ¡Sé el primero en compartir tu experiencia!",
     beFirst: "Sé el Primero",
     viewAllReviews: "Ver Todas las Reseñas",
+    seeAndWriteReviews: "Ver y Escribir Reseñas",
+    writeYourReview: "Escribe tu Reseña",
+    seeAllReviews: "Ver Todas las Reseñas",
+    seeAndWriteReviewsDescription: "Descubre qué dicen nuestros usuarios o comparte tu experiencia en Trustpilot",
     welcome: "Bienvenido",
     productivity_overview: "Aquí está tu resumen de productividad",
     quick_actions: "Acciones Rápidas",
@@ -1709,6 +1717,11 @@ export const translations = {
     viewAllReviewsDescription: "Voir tous les avis vérifiés de nos utilisateurs sur Trustpilot",
     writeYourReview: "Écrivez Votre Avis",
     writeReviewDescription: "Partagez votre expérience avec Future Task sur Trustpilot",
+    seeAndWriteReviews: "Voir et Écrire des Avis",
+    allReviews: "Tous les Avis",
+    addReview: "Ajouter un Avis",
+    viewAllReviews: "Voir Tous les Avis",
+    seeAndWriteReviewsDescription: "Découvrez ce que nos utilisateurs disent ou partagez votre expérience sur Trustpilot",
     
     // AI Quick Actions
     plan_my_day: "Planifiez Ma Journée",
@@ -1774,6 +1787,11 @@ export const translations = {
     viewAllReviewsDescription: "Alle verifizierten Bewertungen unserer Benutzer auf Trustpilot anzeigen",
     writeYourReview: "Schreiben Sie Ihre Bewertung",
     writeReviewDescription: "Teilen Sie Ihre Erfahrung mit Future Task auf Trustpilot",
+    seeAndWriteReviews: "Bewertungen Ansehen & Schreiben",
+    allReviews: "Alle Bewertungen",
+    addReview: "Bewertung Hinzufügen",
+    viewAllReviews: "Alle Bewertungen anzeigen",
+    seeAndWriteReviewsDescription: "Erfahren Sie, was unsere Benutzer sagen, oder teilen Sie Ihre Erfahrung auf Trustpilot",
     
     // AI Quick Actions
     plan_my_day: "Planen Sie Meinen Tag",
@@ -1839,6 +1857,11 @@ export const translations = {
     viewAllReviewsDescription: "Vedi tutte le recensioni verificate dei nostri utenti su Trustpilot",
     writeYourReview: "Scrivi la Tua Recensione",
     writeReviewDescription: "Condividi la tua esperienza con Future Task su Trustpilot",
+    seeAndWriteReviews: "Visualizza e Scrivi Recensioni",
+    allReviews: "Tutte le Recensioni",
+    addReview: "Aggiungi Recensione",
+    viewAllReviews: "Visualizza Tutte le Recensioni",
+    seeAndWriteReviewsDescription: "Scopri cosa dicono i nostri utenti o condividi la tua esperienza su Trustpilot",
     
     // AI Quick Actions
     plan_my_day: "Pianifica la Mia Giornata",
