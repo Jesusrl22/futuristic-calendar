@@ -212,58 +212,27 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
     return `https://${subdomain}.trustpilot.com/review/future-task.com`
   }
 
-  const handleOpenTrustpilot = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    const url = getTrustpilotUrl(language)
-    console.log("[v0] Opening Trustpilot with URL:", url)
-    
-    // Try window.open first
-    const win = window.open(url, "_blank", "noopener,noreferrer")
-    if (!win) {
-      // Fallback: use link navigation
-      console.log("[v0] window.open failed, using fallback")
-      const link = document.createElement("a")
-      link.href = url
-      link.target = "_blank"
-      link.rel = "noopener noreferrer"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }
-
   // Translations for each language
   const translations: Record<string, Record<string, string>> = {
     es: {
-      viewReviews: "Ver Todas las Reviews",
-      viewReviewsDesc: "Descubre qué dicen nuestros usuarios en Trustpilot",
-      writeReview: "Escribe tu Reseña",
-      writeReviewDesc: "Comparte tu experiencia con Future Task",
+      seeAndWrite: "Ver y Escribir Reseñas",
+      description: "Descubre qué dicen nuestros usuarios o comparte tu experiencia en Trustpilot",
     },
     en: {
-      viewReviews: "View All Reviews",
-      viewReviewsDesc: "Discover what our users say on Trustpilot",
-      writeReview: "Write Your Review",
-      writeReviewDesc: "Share your experience with Future Task",
+      seeAndWrite: "View & Write Reviews",
+      description: "Discover what our users say or share your experience on Trustpilot",
     },
     fr: {
-      viewReviews: "Voir Tous les Avis",
-      viewReviewsDesc: "Découvrez ce que nos utilisateurs disent sur Trustpilot",
-      writeReview: "Écrivez Votre Avis",
-      writeReviewDesc: "Partagez votre expérience avec Future Task",
+      seeAndWrite: "Voir et Écrire des Avis",
+      description: "Découvrez ce que nos utilisateurs disent ou partagez votre expérience sur Trustpilot",
     },
     de: {
-      viewReviews: "Alle Bewertungen Ansehen",
-      viewReviewsDesc: "Erfahren Sie, was unsere Benutzer auf Trustpilot sagen",
-      writeReview: "Schreiben Sie Ihre Bewertung",
-      writeReviewDesc: "Teilen Sie Ihre Erfahrung mit Future Task",
+      seeAndWrite: "Bewertungen Ansehen & Schreiben",
+      description: "Erfahren Sie, was unsere Benutzer sagen, oder teilen Sie Ihre Erfahrung auf Trustpilot",
     },
     it: {
-      viewReviews: "Vedi Tutte le Recensioni",
-      viewReviewsDesc: "Scopri cosa dicono i nostri utenti su Trustpilot",
-      writeReview: "Scrivi la Tua Recensione",
-      writeReviewDesc: "Condividi la tua esperienza con Future Task",
+      seeAndWrite: "Visualizza e Scrivi Recensioni",
+      description: "Scopri cosa dicono i nostri utenti o condividi la tua esperienza su Trustpilot",
     },
   }
 
@@ -271,54 +240,29 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
   const trans = translations[lang] || translations.es
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
-      {/* View All Reviews */}
-      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group">
-        <a
-          href={getTrustpilotUrl(lang)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-center space-y-3 sm:space-y-4"
-        >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
-            <Star className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+    <a
+      href={getTrustpilotUrl(lang)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block w-full"
+    >
+      <Card className="glass-card p-6 sm:p-8 border border-primary/20 hover:border-primary/40 transition-all duration-300 group cursor-pointer">
+        <div className="text-center space-y-4 sm:space-y-6">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
+            <Star className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-semibold">{trans.viewReviews}</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {trans.viewReviewsDesc}
+            <h3 className="text-lg sm:text-2xl font-semibold">{trans.seeAndWrite}</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mt-2">
+              {trans.description}
             </p>
           </div>
-          <div className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 sm:px-6 sm:py-3 rounded-md w-full text-sm sm:text-base transition-all inline-flex items-center justify-center gap-2">
-            {trans.viewReviews}
-            <ExternalLink className="h-4 w-4" />
+          <div className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 sm:px-8 py-3 sm:py-4 rounded-lg inline-flex items-center justify-center gap-2 transition-all text-sm sm:text-base font-medium group-hover:shadow-lg">
+            {trans.seeAndWrite}
+            <ExternalLink className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-        </a>
+        </div>
       </Card>
-
-      {/* Write a Review */}
-      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group">
-        <a
-          href={getTrustpilotUrl(lang)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-center space-y-3 sm:space-y-4"
-        >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
-            <ExternalLink className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-semibold">{trans.writeReview}</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              {trans.writeReviewDesc}
-            </p>
-          </div>
-          <div className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 sm:px-6 sm:py-3 rounded-md w-full text-sm sm:text-base transition-all inline-flex items-center justify-center gap-2">
-            {trans.writeReview}
-            <ExternalLink className="h-4 w-4" />
-          </div>
-        </a>
-      </Card>
-    </div>
+    </a>
   )
 }
