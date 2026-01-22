@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { useEffect } from "react"
 import { useLanguage } from "@/contexts/language-context"
 import { Card } from "@/components/ui/card"
@@ -192,7 +193,9 @@ export function TrustpilotCarousel() {
 
 // Featured reviews CTA section
 export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
-  const getTrustpilotUrl = () => {
+  const { language } = useLanguage()
+
+  const getTrustpilotUrl = (lang: string) => {
     const localeMap: Record<string, string> = {
       es: "es",
       en: "www",
@@ -205,8 +208,29 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
       ja: "jp",
       ko: "kr",
     }
-    const subdomain = localeMap[locale] || "www"
+    const subdomain = localeMap[lang] || "www"
     return `https://${subdomain}.trustpilot.com/review/future-task.com`
+  }
+
+  const handleOpenTrustpilot = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const url = getTrustpilotUrl(language)
+    console.log("[v0] Opening Trustpilot with URL:", url)
+    
+    // Try window.open first
+    const win = window.open(url, "_blank", "noopener,noreferrer")
+    if (!win) {
+      // Fallback: use link navigation
+      console.log("[v0] window.open failed, using fallback")
+      const link = document.createElement("a")
+      link.href = url
+      link.target = "_blank"
+      link.rel = "noopener noreferrer"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
   }
 
   // Translations for each language
@@ -243,14 +267,19 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
     },
   }
 
-  const lang = locale || "es"
+  const lang = locale || language
   const trans = translations[lang] || translations.es
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full">
       {/* View All Reviews */}
-      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group cursor-pointer">
-        <div className="text-center space-y-3 sm:space-y-4">
+      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group">
+        <a
+          href={getTrustpilotUrl(lang)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center space-y-3 sm:space-y-4"
+        >
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
             <Star className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
@@ -260,23 +289,21 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
               {trans.viewReviewsDesc}
             </p>
           </div>
-          <Button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              window.open(getTrustpilotUrl(), "_blank")
-            }}
-            className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
-          >
+          <div className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 sm:px-6 sm:py-3 rounded-md w-full text-sm sm:text-base transition-all inline-flex items-center justify-center gap-2">
             {trans.viewReviews}
-            <ExternalLink className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+            <ExternalLink className="h-4 w-4" />
+          </div>
+        </a>
       </Card>
 
       {/* Write a Review */}
-      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group cursor-pointer">
-        <div className="text-center space-y-3 sm:space-y-4">
+      <Card className="glass-card p-4 sm:p-6 border border-primary/20 hover:border-primary/40 transition-all duration-300 group">
+        <a
+          href={getTrustpilotUrl(lang)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center space-y-3 sm:space-y-4"
+        >
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto group-hover:bg-primary/30 transition-colors">
             <ExternalLink className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </div>
@@ -286,18 +313,11 @@ export function TrustpilotCTA({ locale = "es" }: { locale?: string }) {
               {trans.writeReviewDesc}
             </p>
           </div>
-          <Button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault()
-              window.open(getTrustpilotUrl(), "_blank")
-            }}
-            className="bg-primary hover:bg-primary/90 w-full text-sm sm:text-base transition-all"
-          >
+          <div className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 sm:px-6 sm:py-3 rounded-md w-full text-sm sm:text-base transition-all inline-flex items-center justify-center gap-2">
             {trans.writeReview}
-            <ExternalLink className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+            <ExternalLink className="h-4 w-4" />
+          </div>
+        </a>
       </Card>
     </div>
   )
