@@ -32,17 +32,29 @@ export function HelpChatbot() {
   }
 
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      const welcomeMessage: ChatMessage = {
-        id: "welcome",
-        type: "assistant",
-        content: t("help_chatbot_welcome"),
-        timestamp: new Date(),
+    if (isOpen) {
+      // Si hay mensajes, actualiza el primer mensaje de bienvenida si es del asistente
+      if (messages.length > 0 && messages[0].id === "welcome") {
+        setMessages([
+          {
+            ...messages[0],
+            content: t("help_chatbot_welcome"),
+          },
+          ...messages.slice(1),
+        ])
+      } else if (messages.length === 0) {
+        // Si no hay mensajes, crea el mensaje de bienvenida
+        const welcomeMessage: ChatMessage = {
+          id: "welcome",
+          type: "assistant",
+          content: t("help_chatbot_welcome"),
+          timestamp: new Date(),
+        }
+        setMessages([welcomeMessage])
       }
-      setMessages([welcomeMessage])
     }
     scrollToBottom()
-  }, [isOpen, t])
+  }, [isOpen, language, t])
 
   const handleSendMessage = async () => {
     if (!input.trim()) return
