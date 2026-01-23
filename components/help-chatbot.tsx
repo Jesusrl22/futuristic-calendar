@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { MessageCircle, X, Send } from "lucide-react"
 import { useLanguage } from "@/contexts/language-context"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -25,36 +25,39 @@ export function HelpChatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [welcomeShown, setWelcomeShown] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
+  // Cuando se abre el chatbot, mostrar mensaje de bienvenida
   useEffect(() => {
-    if (isOpen) {
-      // Si hay mensajes, actualiza el primer mensaje de bienvenida si es del asistente
-      if (messages.length > 0 && messages[0].id === "welcome") {
-        setMessages([
-          {
-            ...messages[0],
-            content: t("help_chatbot_welcome"),
-          },
-          ...messages.slice(1),
-        ])
-      } else if (messages.length === 0) {
-        // Si no hay mensajes, crea el mensaje de bienvenida
-        const welcomeMessage: ChatMessage = {
-          id: "welcome",
-          type: "assistant",
-          content: t("help_chatbot_welcome"),
-          timestamp: new Date(),
-        }
-        setMessages([welcomeMessage])
+    if (isOpen && !welcomeShown) {
+      const welcomeMessage: ChatMessage = {
+        id: "welcome",
+        type: "assistant",
+        content: t("help_chatbot_welcome"),
+        timestamp: new Date(),
       }
+      setMessages([welcomeMessage])
+      setWelcomeShown(true)
     }
-    scrollToBottom()
-  }, [isOpen, language, t])
+  }, [isOpen, t])
+
+  // Cuando cambia el idioma, actualizar solo el mensaje de bienvenida
+  useEffect(() => {
+    if (messages.length > 0 && messages[0].id === "welcome" && welcomeShown) {
+      setMessages((prev) => [
+        {
+          ...prev[0],
+          content: t("help_chatbot_welcome"),
+        },
+        ...prev.slice(1),
+      ])
+    }
+  }, [language])
 
   const handleSendMessage = async () => {
     if (!input.trim()) return
