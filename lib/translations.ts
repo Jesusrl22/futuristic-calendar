@@ -362,6 +362,8 @@ export const translations = {
     summarize_notes_description: "AI summarizes your latest notes into key points",
     ai_quick_actions_title: "AI Quick Actions",
     ai_quick_actions_description: "One-click AI assistance for common tasks",
+    help_chatbot_related_questions: "Related questions:",
+    help_chatbot_need_more_help: "Need more help? Write to:",
   },
 
   es: {
@@ -727,8 +729,8 @@ export const translations = {
     summarize_notes_description: "La IA resume tus notas recientes en puntos clave",
     ai_quick_actions_title: "Acciones Rápidas de IA",
     ai_quick_actions_description: "Asistencia de IA con un clic para tareas comunes",
-    
-    // Additional improvements
+    help_chatbot_related_questions: "Preguntas relacionadas:",
+    help_chatbot_need_more_help: "¿Necesitas más ayuda? Escribe a:",
   },
 
   fr: {
@@ -1734,6 +1736,8 @@ export const translations = {
     summarize_notes_description: "L'IA résume vos notes récentes en points clés",
     ai_quick_actions_title: "Actions Rapides IA",
     ai_quick_actions_description: "Assistance IA en un clic pour les tâches courantes",
+    help_chatbot_related_questions: "Questions connexes:",
+    help_chatbot_need_more_help: "Besoin d'aide supplémentaire? Écrivez à:",
   },
 
   de: {
@@ -1804,6 +1808,8 @@ export const translations = {
     summarize_notes_description: "KI fasst Ihre letzten Notizen in Schlüsselpunkte zusammen",
     ai_quick_actions_title: "Schnelle KI-Aktionen",
     ai_quick_actions_description: "Einklick-KI-Unterstützung für häufige Aufgaben",
+    help_chatbot_related_questions: "Verwandte Fragen:",
+    help_chatbot_need_more_help: "Brauchst du weitere Hilfe? Schreib an:",
   },
 
   it: {
@@ -1874,6 +1880,8 @@ export const translations = {
     summarize_notes_description: "L'IA riassume le tue note recenti nei punti chiave",
     ai_quick_actions_title: "Azioni Rapide IA",
     ai_quick_actions_description: "Assistenza IA con un clic per attività comuni",
+    help_chatbot_related_questions: "Domande correlate:",
+    help_chatbot_need_more_help: "Hai bisogno di altro aiuto? Scrivi a:",
   },
 }
 

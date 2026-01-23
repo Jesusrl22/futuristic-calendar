@@ -146,15 +146,7 @@ export function HelpChatbot() {
                   {message.suggestions && message.suggestions.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs opacity-75 font-semibold">
-                        {language === "es"
-                          ? "Preguntas relacionadas:"
-                          : language === "fr"
-                            ? "Questions connexes:"
-                            : language === "de"
-                              ? "Verwandte Fragen:"
-                              : language === "it"
-                                ? "Domande correlate:"
-                                : "Related questions:"}
+                        {t("help_chatbot_related_questions")}
                       </p>
                       {message.suggestions.map((suggestion) => (
                         <button
@@ -171,15 +163,7 @@ export function HelpChatbot() {
                   {message.contact_email && (
                     <div className="mt-3 pt-3 border-t border-secondary/20">
                       <p className="text-xs opacity-75">
-                        {language === "es"
-                          ? "¿Necesitas más ayuda? Escribe a:"
-                          : language === "fr"
-                            ? "Besoin d'aide supplémentaire? Écrivez à:"
-                            : language === "de"
-                              ? "Brauchst du weitere Hilfe? Schreib an:"
-                              : language === "it"
-                                ? "Hai bisogno di altro aiuto? Scrivi a:"
-                                : "Need more help? Write to:"}
+                        {t("help_chatbot_need_more_help")}
                       </p>
                       <p className="text-xs font-semibold select-all cursor-text bg-background/50 px-2 py-1 rounded border border-border/50 mt-2">
                         {message.contact_email}
