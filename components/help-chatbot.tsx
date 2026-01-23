@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { MessageCircle, X, Send } from "lucide-react"
 import { useLanguage } from "@/contexts/language-context"
-import { translations } from "@/lib/translations"
+import { useTranslation } from "@/hooks/useTranslation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -19,8 +19,7 @@ interface ChatMessage {
 
 export function HelpChatbot() {
   const { language } = useLanguage()
-  const t = (key: string) =>
-    translations[language as keyof typeof translations]?.[key as keyof typeof translations.en] || key
+  const { t } = useTranslation()
 
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
