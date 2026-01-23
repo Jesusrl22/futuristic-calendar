@@ -42,7 +42,7 @@ export function HelpChatbot() {
       setMessages([welcomeMessage])
     }
     scrollToBottom()
-  }, [isOpen, messages]) // Removed t from dependencies
+  }, [isOpen, t])
 
   const handleSendMessage = async () => {
     if (!input.trim()) return

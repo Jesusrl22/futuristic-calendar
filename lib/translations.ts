@@ -364,6 +364,10 @@ export const translations = {
     ai_quick_actions_description: "One-click AI assistance for common tasks",
     help_chatbot_related_questions: "Related questions:",
     help_chatbot_need_more_help: "Need more help? Write to:",
+    help_chatbot_title: "Help & Support",
+    help_chatbot_welcome: "Hi! I'm your assistant. How can I help you today?",
+    help_chatbot_input: "Ask a question...",
+    help_chatbot_error: "An error occurred. Please try again.",
   },
 
   es: {
@@ -731,6 +735,10 @@ export const translations = {
     ai_quick_actions_description: "Asistencia de IA con un clic para tareas comunes",
     help_chatbot_related_questions: "Preguntas relacionadas:",
     help_chatbot_need_more_help: "¿Necesitas más ayuda? Escribe a:",
+    help_chatbot_title: "Ayuda y Soporte",
+    help_chatbot_welcome: "¡Hola! Soy tu asistente. ¿Cómo puedo ayudarte hoy?",
+    help_chatbot_input: "Haz una pregunta...",
+    help_chatbot_error: "Ocurrió un error. Por favor, intenta de nuevo.",
   },
 
   fr: {
@@ -1738,6 +1746,10 @@ export const translations = {
     ai_quick_actions_description: "Assistance IA en un clic pour les tâches courantes",
     help_chatbot_related_questions: "Questions connexes:",
     help_chatbot_need_more_help: "Besoin d'aide supplémentaire? Écrivez à:",
+    help_chatbot_title: "Aide et Support",
+    help_chatbot_welcome: "Bonjour! Je suis votre assistant. Comment puis-je vous aider?",
+    help_chatbot_input: "Poser une question...",
+    help_chatbot_error: "Une erreur s'est produite. Veuillez réessayer.",
   },
 
   de: {
@@ -1810,6 +1822,10 @@ export const translations = {
     ai_quick_actions_description: "Einklick-KI-Unterstützung für häufige Aufgaben",
     help_chatbot_related_questions: "Verwandte Fragen:",
     help_chatbot_need_more_help: "Brauchst du weitere Hilfe? Schreib an:",
+    help_chatbot_title: "Hilfe & Support",
+    help_chatbot_welcome: "Hallo! Ich bin dein Assistent. Wie kann ich dir heute helfen?",
+    help_chatbot_input: "Stelle eine Frage...",
+    help_chatbot_error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
   },
 
   it: {
@@ -1882,6 +1898,10 @@ export const translations = {
     ai_quick_actions_description: "Assistenza IA con un clic per attività comuni",
     help_chatbot_related_questions: "Domande correlate:",
     help_chatbot_need_more_help: "Hai bisogno di altro aiuto? Scrivi a:",
+    help_chatbot_title: "Aiuto e Supporto",
+    help_chatbot_welcome: "Ciao! Sono il tuo assistente. Come posso aiutarti oggi?",
+    help_chatbot_input: "Fai una domanda...",
+    help_chatbot_error: "Si è verificato un errore. Per favore riprova.",
   },
 }
 
