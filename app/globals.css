@@ -1,101 +1,147 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Neon-tech theme: black graphite background with neon green accents */
+  --background: hsl(0 0% 5%);
+  --foreground: hsl(84 100% 85%);
+  --card: hsl(0 0% 8%);
+  --card-foreground: hsl(84 100% 85%);
+  --popover: hsl(0 0% 8%);
+  --popover-foreground: hsl(84 100% 85%);
+  --primary: hsl(84 100% 65%);
+  --primary-foreground: hsl(0 0% 5%);
+  --secondary: hsl(0 0% 15%);
+  --secondary-foreground: hsl(84 100% 85%);
+  --muted: hsl(0 0% 15%);
+  --muted-foreground: hsl(0 0% 60%);
+  --accent: hsl(84 100% 65%);
+  --accent-foreground: hsl(0 0% 5%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 20%);
+  --input: hsl(0 0% 20%);
+  --ring: hsl(84 100% 65%);
+  --chart-1: hsl(84 100% 65%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(200 70% 50%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+  --radius: 0.75rem;
+  --sidebar-background: hsl(0 0% 5%);
+  --sidebar-foreground: hsl(84 100% 85%);
+  --sidebar-primary: hsl(84 100% 65%);
+  --sidebar-primary-foreground: hsl(0 0% 5%);
+  --sidebar-accent: hsl(0 0% 15%);
+  --sidebar-accent-foreground: hsl(84 100% 85%);
+  --sidebar-border: hsl(0 0% 20%);
+  --sidebar-ring: hsl(84 100% 65%);
+  --sidebar: var(--sidebar-background); /* Add new sidebar variable, mapping to existing background */
 }
 
-@layer base {
-  :root {
-    --font-sans: var(--font-geist-sans);
-    --font-mono: var(--font-geist-mono);
-
-    /* Neon-tech theme: black graphite background with neon green accents */
-    --background: 0 0% 5%;
-    --foreground: 84 100% 85%;
-    --card: 0 0% 8%;
-    --card-foreground: 84 100% 85%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 84 100% 85%;
-    --primary: 84 100% 65%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 84 100% 85%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 84 100% 65%;
-    --accent-foreground: 0 0% 5%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 84 100% 65%;
-    --chart-1: 84 100% 65%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 200 70% 50%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --radius: 0.75rem;
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 84 100% 85%;
-    --sidebar-primary: 84 100% 65%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 84 100% 85%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 84 100% 65%;
-  }
-
-  .dark {
-    --background: 0 0% 5%;
-    --foreground: 84 100% 85%;
-    --card: 0 0% 8%;
-    --card-foreground: 84 100% 85%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 84 100% 85%;
-    --primary: 84 100% 65%;
-    --primary-foreground: 0 0% 5%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 84 100% 85%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 84 100% 65%;
-    --accent-foreground: 0 0% 5%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 84 100% 65%;
-    --chart-1: 84 100% 65%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 200 70% 50%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 84 100% 85%;
-    --sidebar-primary: 84 100% 65%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 84 100% 85%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 84 100% 65%;
-  }
+.dark {
+  --background: hsl(0 0% 5%);
+  --foreground: hsl(84 100% 85%);
+  --card: hsl(0 0% 8%);
+  --card-foreground: hsl(84 100% 85%);
+  --popover: hsl(0 0% 8%);
+  --popover-foreground: hsl(84 100% 85%);
+  --primary: hsl(84 100% 65%);
+  --primary-foreground: hsl(0 0% 5%);
+  --secondary: hsl(0 0% 15%);
+  --secondary-foreground: hsl(84 100% 85%);
+  --muted: hsl(0 0% 15%);
+  --muted-foreground: hsl(0 0% 60%);
+  --accent: hsl(84 100% 65%);
+  --accent-foreground: hsl(0 0% 5%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 20%);
+  --input: hsl(0 0% 20%);
+  --ring: hsl(84 100% 65%);
+  --chart-1: hsl(84 100% 65%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(200 70% 50%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+  --sidebar-background: hsl(0 0% 5%);
+  --sidebar-foreground: hsl(84 100% 85%);
+  --sidebar-primary: hsl(84 100% 65%);
+  --sidebar-primary-foreground: hsl(0 0% 5%);
+  --sidebar-accent: hsl(0 0% 15%);
+  --sidebar-accent-foreground: hsl(84 100% 85%);
+  --sidebar-border: hsl(0 0% 20%);
+  --sidebar-ring: hsl(84 100% 65%);
+  --sidebar: var(--sidebar-background); /* Add new sidebar variable, mapping to existing background */
 }
 
-@layer base {
-  /* Removed @apply border-border that was causing error */
+@theme inline { /* Changed from @theme to @theme inline as per diff */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar); /* Added sidebar as per diff */
+  --color-sidebar-background: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius: var(--radius);
+  --radius-sm: calc(var(--radius) - 4px); /* Added radius variants from diff */
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base { /* Added new @layer base as per diff */
+  * {
+    @apply border-border outline-ring/50;
+  }
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Adding border-border as explicit utility class */
 @layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* The body definition here is redundant with the new @layer base, removing it */
+  /* body {
+    @apply bg-background text-foreground;
+  } */
+
   .border-border {
-    border-color: hsl(var(--border));
+    border-color: var(--border);
   }
 
   /* Hide scrollbar for carousels while keeping scroll functionality */

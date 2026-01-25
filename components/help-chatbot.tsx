@@ -44,20 +44,16 @@ export function HelpChatbot() {
       setMessages([welcomeMessage])
       setWelcomeShown(true)
     }
-  }, [isOpen, t])
+  }, [isOpen, welcomeShown, language])
 
-  // Cuando cambia el idioma, actualizar solo el mensaje de bienvenida
+  // Cuando cambia el idioma, actualizar el mensaje de bienvenida
   useEffect(() => {
-    if (messages.length > 0 && messages[0].id === "welcome" && welcomeShown) {
-      setMessages((prev) => [
-        {
-          ...prev[0],
-          content: t("help_chatbot_welcome"),
-        },
-        ...prev.slice(1),
-      ])
+    if (messages.length > 0 && messages[0].id === "welcome") {
+      // Actualizar el contenido del mensaje de bienvenida con el nuevo idioma
+      const updatedMessage = { ...messages[0], content: t("help_chatbot_welcome") }
+      setMessages([updatedMessage, ...messages.slice(1)])
     }
-  }, [language])
+  }, [language, t])
 
   const handleSendMessage = async () => {
     if (!input.trim()) return
