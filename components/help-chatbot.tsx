@@ -44,16 +44,16 @@ export function HelpChatbot() {
       setMessages([welcomeMessage])
       setWelcomeShown(true)
     }
-  }, [isOpen, welcomeShown, language])
+  }, [isOpen, welcomeShown])
 
   // Cuando cambia el idioma, actualizar el mensaje de bienvenida
   useEffect(() => {
-    if (messages.length > 0 && messages[0].id === "welcome") {
+    if (messages.length > 0 && messages[0].id === "welcome" && welcomeShown) {
       // Actualizar el contenido del mensaje de bienvenida con el nuevo idioma
       const updatedMessage = { ...messages[0], content: t("help_chatbot_welcome") }
       setMessages([updatedMessage, ...messages.slice(1)])
     }
-  }, [language, t])
+  }, [language])
 
   const handleSendMessage = async () => {
     if (!input.trim()) return
@@ -128,7 +128,7 @@ export function HelpChatbot() {
       </button>
 
       {isOpen && (
-        <Card className="fixed bottom-24 right-6 z-40 w-96 h-[500px] flex flex-col shadow-xl border border-border bg-card dark:bg-card">
+        <Card className="fixed bottom-24 right-6 z-40 w-96 h-[500px] flex flex-col shadow-xl border border-border bg-card">
           <div className="bg-primary text-primary-foreground p-4 rounded-t-lg flex items-center justify-between">
             <h3 className="font-semibold">{t("help_chatbot_title") || "Help & Support"}</h3>
             <button
