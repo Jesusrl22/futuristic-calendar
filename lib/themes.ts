@@ -279,6 +279,15 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     root.style.setProperty("--foreground", "0 0% 98%")
     root.style.setProperty("--card", "0 0% 12%")
     root.style.setProperty("--card-foreground", "0 0% 98%")
+    root.style.setProperty("--popover", "0 0% 12%")
+    root.style.setProperty("--popover-foreground", "0 0% 98%")
+    root.style.setProperty("--primary-foreground", "0 0% 8%")
+    root.style.setProperty("--accent-foreground", "0 0% 8%")
+    root.style.setProperty("--destructive", "0 84.2% 60.2%")
+    root.style.setProperty("--destructive-foreground", "0 0% 98%")
+    root.style.setProperty("--border", "0 0% 20%")
+    root.style.setProperty("--input", "0 0% 20%")
+    root.style.setProperty("--ring", primaryHSL)
 
     localStorage.setItem("theme", "custom")
     localStorage.setItem("customPrimary", customPrimary)
@@ -289,22 +298,20 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
   const theme = allThemes.find((t) => t.id === themeId)
   if (!theme) {
     // Fallback to default theme if not found
-    root.setAttribute("data-theme", "neon-tech")
+    root.setAttribute("data-theme", "default")
     const defaultTheme = allThemes.find((t) => t.id === "default")
     if (defaultTheme) {
-      root.style.setProperty("--primary", defaultTheme.primary)
-      root.style.setProperty("--accent", defaultTheme.primary)
-      root.style.setProperty("--secondary", defaultTheme.secondary)
-      root.style.setProperty("--muted", defaultTheme.secondary)
-      root.style.setProperty("--background", defaultTheme.background)
-      root.style.setProperty("--foreground", defaultTheme.foreground)
-      root.style.setProperty("--card", defaultTheme.card)
-      root.style.setProperty("--card-foreground", defaultTheme.cardForeground)
+      applyThemeVars(root, defaultTheme)
     }
     return
   }
 
   root.setAttribute("data-theme", themeId)
+  applyThemeVars(root, theme)
+  localStorage.setItem("theme", themeId)
+}
+
+function applyThemeVars(root: HTMLElement, theme: Theme) {
   root.style.setProperty("--primary", theme.primary)
   root.style.setProperty("--accent", theme.primary)
   root.style.setProperty("--secondary", theme.secondary)
@@ -313,6 +320,13 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
   root.style.setProperty("--foreground", theme.foreground)
   root.style.setProperty("--card", theme.card)
   root.style.setProperty("--card-foreground", theme.cardForeground)
-
-  localStorage.setItem("theme", themeId)
+  root.style.setProperty("--popover", theme.card)
+  root.style.setProperty("--popover-foreground", theme.cardForeground)
+  root.style.setProperty("--primary-foreground", theme.background)
+  root.style.setProperty("--accent-foreground", theme.background)
+  root.style.setProperty("--destructive", "0 84.2% 60.2%")
+  root.style.setProperty("--destructive-foreground", theme.foreground)
+  root.style.setProperty("--border", theme.secondary)
+  root.style.setProperty("--input", theme.secondary)
+  root.style.setProperty("--ring", theme.primary)
 }
