@@ -266,8 +266,8 @@ function hexToHSL(hex: string): string {
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
 
-  // Remove all theme classes
-  root.classList.forEach((className) => {
+  // Remove all existing theme classes
+  Array.from(root.classList).forEach((className) => {
     if (className.startsWith("theme-")) {
       root.classList.remove(className)
     }
@@ -278,10 +278,10 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
 
     root.classList.add("theme-neon-tech")
-    root.style.setProperty("--primary", primaryHSL)
-    root.style.setProperty("--accent", primaryHSL)
-    root.style.setProperty("--secondary", secondaryHSL)
-    root.style.setProperty("--muted", secondaryHSL)
+    root.style.setProperty("--color-primary", primaryHSL)
+    root.style.setProperty("--color-accent", primaryHSL)
+    root.style.setProperty("--color-secondary", secondaryHSL)
+    root.style.setProperty("--color-muted", secondaryHSL)
 
     localStorage.setItem("theme", "custom")
     localStorage.setItem("customPrimary", customPrimary)
@@ -294,4 +294,6 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
   root.removeAttribute("data-theme")
 
   localStorage.setItem("theme", themeId)
+  
+  console.log("[v0] Theme applied:", themeClass, "Classes:", root.className)
 }
