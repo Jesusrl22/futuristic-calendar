@@ -266,28 +266,22 @@ function hexToHSL(hex: string): string {
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
 
+  // Remove all theme classes
+  root.classList.forEach((className) => {
+    if (className.startsWith("theme-")) {
+      root.classList.remove(className)
+    }
+  })
+
   if (themeId === "custom" && customPrimary && customSecondary) {
     const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
 
-    root.setAttribute("data-theme", "custom")
+    root.classList.add("theme-neon-tech")
     root.style.setProperty("--primary", primaryHSL)
     root.style.setProperty("--accent", primaryHSL)
     root.style.setProperty("--secondary", secondaryHSL)
     root.style.setProperty("--muted", secondaryHSL)
-    root.style.setProperty("--background", "0 0% 8%")
-    root.style.setProperty("--foreground", "0 0% 98%")
-    root.style.setProperty("--card", "0 0% 12%")
-    root.style.setProperty("--card-foreground", "0 0% 98%")
-    root.style.setProperty("--popover", "0 0% 12%")
-    root.style.setProperty("--popover-foreground", "0 0% 98%")
-    root.style.setProperty("--primary-foreground", "0 0% 8%")
-    root.style.setProperty("--accent-foreground", "0 0% 8%")
-    root.style.setProperty("--destructive", "0 84.2% 60.2%")
-    root.style.setProperty("--destructive-foreground", "0 0% 98%")
-    root.style.setProperty("--border", "0 0% 20%")
-    root.style.setProperty("--input", "0 0% 20%")
-    root.style.setProperty("--ring", primaryHSL)
 
     localStorage.setItem("theme", "custom")
     localStorage.setItem("customPrimary", customPrimary)
@@ -295,38 +289,9 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     return
   }
 
-  const theme = allThemes.find((t) => t.id === themeId)
-  if (!theme) {
-    // Fallback to default theme if not found
-    root.setAttribute("data-theme", "default")
-    const defaultTheme = allThemes.find((t) => t.id === "default")
-    if (defaultTheme) {
-      applyThemeVars(root, defaultTheme)
-    }
-    return
-  }
+  const themeClass = `theme-${themeId}`
+  root.classList.add(themeClass)
+  root.removeAttribute("data-theme")
 
-  root.setAttribute("data-theme", themeId)
-  applyThemeVars(root, theme)
   localStorage.setItem("theme", themeId)
-}
-
-function applyThemeVars(root: HTMLElement, theme: Theme) {
-  root.style.setProperty("--primary", theme.primary)
-  root.style.setProperty("--accent", theme.primary)
-  root.style.setProperty("--secondary", theme.secondary)
-  root.style.setProperty("--muted", theme.secondary)
-  root.style.setProperty("--background", theme.background)
-  root.style.setProperty("--foreground", theme.foreground)
-  root.style.setProperty("--card", theme.card)
-  root.style.setProperty("--card-foreground", theme.cardForeground)
-  root.style.setProperty("--popover", theme.card)
-  root.style.setProperty("--popover-foreground", theme.cardForeground)
-  root.style.setProperty("--primary-foreground", theme.background)
-  root.style.setProperty("--accent-foreground", theme.background)
-  root.style.setProperty("--destructive", "0 84.2% 60.2%")
-  root.style.setProperty("--destructive-foreground", theme.foreground)
-  root.style.setProperty("--border", theme.secondary)
-  root.style.setProperty("--input", theme.secondary)
-  root.style.setProperty("--ring", theme.primary)
 }
