@@ -12,8 +12,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get user stats
-    const { data: userData, error: userError } = await supabase
+    // Use service role client to bypass RLS for admin query
+    const adminSupabase = await createClient({ admin: true })
+
+    // Get user stats using admin client to avoid RLS infinite recursion
+    const { data: userData, error: userError } = await adminSupabase
       .from("users")
       .select("current_streak, longest_streak, last_activity_date, total_tasks_completed, total_study_hours")
       .eq("id", user.id)
@@ -49,7 +52,7 @@ export async function GET(request: NextRequest) {
       weekTasks: weekTasks || 0,
     })
   } catch (error: any) {
-    console.error("[v0] Error fetching streaks:", error)
+    console.error("[v0] Error fetching streaks:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
@@ -68,8 +71,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, value } = body // type: 'task' | 'study', value: hours for study
 
+    // Use admin client to bypass RLS
+    const adminSupabase = await createClient({ admin: true })
+
     // Get current user data
-    const { data: userData, error: fetchError } = await supabase
+    const { data: userData, error: fetchError } = await adminSupabase
       .from("users")
       .select("current_streak, longest_streak, last_activity_date, total_tasks_completed, total_study_hours")
       .eq("id", user.id)
@@ -113,7 +119,7 @@ export async function POST(request: NextRequest) {
       updates.total_study_hours = (userData?.total_study_hours || 0) + parseFloat(value)
     }
 
-    const { error: updateError } = await supabase.from("users").update(updates).eq("id", user.id)
+    const { error: updateError } = await adminSupabase.from("users").update(updates).eq("id", user.id)
 
     if (updateError) throw updateError
 
@@ -123,7 +129,7 @@ export async function POST(request: NextRequest) {
       message: "Streak updated successfully",
     })
   } catch (error: any) {
-    console.error("[v0] Error updating streak:", error)
+    console.error("[v0] Error updating streak:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
