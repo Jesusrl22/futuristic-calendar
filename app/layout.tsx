@@ -72,7 +72,7 @@ export default function RootLayout({
           async
         />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased bg-background text-foreground">
         <ThemeLoader />
         <Script
           async
