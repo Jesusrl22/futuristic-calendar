@@ -270,6 +270,7 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
 
+    root.setAttribute("data-theme", "custom")
     root.style.setProperty("--primary", primaryHSL)
     root.style.setProperty("--accent", primaryHSL)
     root.style.setProperty("--secondary", secondaryHSL)
@@ -287,9 +288,23 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
 
   const theme = allThemes.find((t) => t.id === themeId)
   if (!theme) {
+    // Fallback to default theme if not found
+    root.setAttribute("data-theme", "neon-tech")
+    const defaultTheme = allThemes.find((t) => t.id === "default")
+    if (defaultTheme) {
+      root.style.setProperty("--primary", defaultTheme.primary)
+      root.style.setProperty("--accent", defaultTheme.primary)
+      root.style.setProperty("--secondary", defaultTheme.secondary)
+      root.style.setProperty("--muted", defaultTheme.secondary)
+      root.style.setProperty("--background", defaultTheme.background)
+      root.style.setProperty("--foreground", defaultTheme.foreground)
+      root.style.setProperty("--card", defaultTheme.card)
+      root.style.setProperty("--card-foreground", defaultTheme.cardForeground)
+    }
     return
   }
 
+  root.setAttribute("data-theme", themeId)
   root.style.setProperty("--primary", theme.primary)
   root.style.setProperty("--accent", theme.primary)
   root.style.setProperty("--secondary", theme.secondary)

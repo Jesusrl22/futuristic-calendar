@@ -54,7 +54,7 @@ The application has been audited for security vulnerabilities. Overall security 
 ### 1. Row Level Security (RLS) - CRITICAL
 **Action Required:** Verify RLS policies are enabled on ALL Supabase tables
 
-```sql
+\`\`\`sql
 -- Verify RLS is enabled for all tables
 SELECT schemaname, tablename, rowsecurity 
 FROM pg_tables 
@@ -78,14 +78,14 @@ CREATE POLICY "Users can update own data" ON users
 -- Tasks policy example
 CREATE POLICY "Users can manage own tasks" ON tasks
   FOR ALL USING (auth.uid() = user_id);
-```
+\`\`\`
 
 ### 2. Rate Limiting
 **Priority:** Medium
 **Current State:** No rate limiting detected
 **Recommendation:** Add rate limiting to prevent abuse
 
-```typescript
+\`\`\`typescript
 // Suggested implementation using Vercel Edge Config or Upstash
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
@@ -98,14 +98,14 @@ const ratelimit = new Ratelimit({
 // Apply to sensitive endpoints (login, signup, AI chat)
 const { success } = await ratelimit.limit(userIP)
 if (!success) return new Response("Too many requests", { status: 429 })
-```
+\`\`\`
 
 ### 3. Content Security Policy (CSP)
 **Priority:** Medium
 **Current State:** No CSP headers detected
 **Recommendation:** Add CSP headers in `next.config.mjs`
 
-```javascript
+\`\`\`javascript
 const nextConfig = {
   async headers() {
     return [
@@ -140,7 +140,7 @@ const nextConfig = {
     ]
   }
 }
-```
+\`\`\`
 
 ### 4. CSRF Protection
 **Priority:** Low (mitigated by SameSite cookies)
@@ -151,13 +151,13 @@ const nextConfig = {
 **Priority:** Low
 **Recommendation:** Ensure error messages don't leak sensitive information
 
-```typescript
+\`\`\`typescript
 // Good - Generic error
 return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
 // Bad - Information leakage
 return NextResponse.json({ error: "User john@example.com not found" }, { status: 404 })
-```
+\`\`\`
 
 ### 6. Logging & Monitoring
 **Priority:** Medium
@@ -172,7 +172,7 @@ return NextResponse.json({ error: "User john@example.com not found" }, { status:
 **Current State:** Webhook signature verification should be implemented
 **Recommendation:** Verify PayPal webhook signatures
 
-```typescript
+\`\`\`typescript
 // In app/api/paypal/webhook/route.ts
 import crypto from 'crypto'
 
@@ -191,7 +191,7 @@ function verifyWebhookSignature(headers, body) {
     
   return transmissionSig === expectedSig
 }
-```
+\`\`\`
 
 ### 8. Database Backup Strategy
 **Priority:** High
@@ -208,7 +208,7 @@ Add additional security headers:
 **Priority:** Medium
 **Recommendation:** Log all admin actions for audit trail
 
-```typescript
+\`\`\`typescript
 // Add to admin routes
 await supabase.from('admin_audit_log').insert({
   admin_id: userId,
@@ -218,7 +218,7 @@ await supabase.from('admin_audit_log').insert({
   ip_address: request.headers.get('x-forwarded-for'),
   timestamp: new Date().toISOString()
 })
-```
+\`\`\`
 
 ---
 

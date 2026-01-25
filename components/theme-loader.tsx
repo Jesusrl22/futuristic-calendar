@@ -19,7 +19,7 @@ export function ThemeLoader() {
       pathname === "/reviews"
 
     if (isPublicPage) {
-      applyTheme("default")
+      applyTheme("neon-tech")
       setIsInitialized(true)
       return
     }
@@ -29,7 +29,7 @@ export function ThemeLoader() {
         const response = await fetch("/api/settings")
         if (response.ok) {
           const data = await response.json()
-          const dbTheme = data.profile?.theme || "default"
+          const dbTheme = data.profile?.theme || "neon-tech"
 
           let customPrimaryDB = null
           let customSecondaryDB = null
@@ -72,7 +72,7 @@ export function ThemeLoader() {
             applyTheme(dbTheme)
           }
         } else {
-          const savedTheme = localStorage.getItem("theme") || "default"
+          const savedTheme = localStorage.getItem("theme") || "neon-tech"
           const customPrimary = localStorage.getItem("customPrimary")
           const customSecondary = localStorage.getItem("customSecondary")
 
@@ -83,7 +83,8 @@ export function ThemeLoader() {
           }
         }
       } catch (error) {
-        const savedTheme = localStorage.getItem("theme") || "default"
+        console.log("[v0] Error loading theme:", error)
+        const savedTheme = localStorage.getItem("theme") || "neon-tech"
         const customPrimary = localStorage.getItem("customPrimary")
         const customSecondary = localStorage.getItem("customSecondary")
 
