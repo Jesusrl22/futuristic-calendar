@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Default theme colors - Neon Tech */
 @theme {
   --radius: 0.75rem;
   --color-background: 0 0% 8%;
@@ -38,6 +39,329 @@
   --color-sidebar-border: 0 0% 20%;
   --color-sidebar-ring: 180 100% 50%;
   --color-sidebar: 0 0% 8%;
+}
+
+:root {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Theme selectors for Tailwind v4 - overriding @theme defaults */
+@layer theme {
+  /* Neon Tech theme */
+  html.theme-neon-tech {
+    --color-background: 0 0% 8%;
+    --color-foreground: 180 100% 95%;
+    --color-card: 0 0% 12%;
+    --color-card-foreground: 180 100% 95%;
+    --color-popover: 0 0% 12%;
+    --color-popover-foreground: 180 100% 95%;
+    --color-primary: 180 100% 50%;
+    --color-primary-foreground: 0 0% 8%;
+    --color-secondary: 280 80% 60%;
+    --color-secondary-foreground: 180 100% 95%;
+    --color-muted: 280 80% 60%;
+    --color-muted-foreground: 180 100% 95%;
+    --color-accent: 180 100% 50%;
+    --color-accent-foreground: 0 0% 8%;
+    --color-border: 0 0% 20%;
+    --color-input: 0 0% 20%;
+    --color-ring: 180 100% 50%;
+  }
+
+  /* Default Dark theme */
+  html.theme-default {
+    --color-background: 0 0% 5%;
+    --color-foreground: 84 100% 85%;
+    --color-card: 0 0% 10%;
+    --color-card-foreground: 84 100% 85%;
+    --color-popover: 0 0% 10%;
+    --color-popover-foreground: 84 100% 85%;
+    --color-primary: 84 100% 65%;
+    --color-primary-foreground: 0 0% 5%;
+    --color-secondary: 84 60% 45%;
+    --color-secondary-foreground: 84 100% 85%;
+    --color-muted: 84 60% 45%;
+    --color-muted-foreground: 0 0% 60%;
+    --color-accent: 84 100% 65%;
+    --color-accent-foreground: 0 0% 5%;
+    --color-border: 0 0% 20%;
+    --color-input: 0 0% 20%;
+    --color-ring: 84 100% 65%;
+  }
+
+  /* Light Mode */
+  html.theme-light-mode {
+    --color-background: 0 0% 100%;
+    --color-foreground: 0 0% 10%;
+    --color-card: 0 0% 95%;
+    --color-card-foreground: 0 0% 10%;
+    --color-popover: 0 0% 95%;
+    --color-popover-foreground: 0 0% 10%;
+    --color-primary: 210 70% 50%;
+    --color-primary-foreground: 0 0% 100%;
+    --color-secondary: 210 50% 70%;
+    --color-secondary-foreground: 0 0% 10%;
+    --color-muted: 210 50% 70%;
+    --color-muted-foreground: 0 0% 40%;
+    --color-accent: 210 70% 50%;
+    --color-accent-foreground: 0 0% 100%;
+    --color-border: 0 0% 90%;
+    --color-input: 0 0% 90%;
+    --color-ring: 210 70% 50%;
+  }
+
+  /* Ocean Blue */
+  html.theme-ocean-blue {
+    --color-background: 215 30% 15%;
+    --color-foreground: 210 40% 98%;
+    --color-card: 215 25% 20%;
+    --color-card-foreground: 210 40% 98%;
+    --color-popover: 215 25% 20%;
+    --color-popover-foreground: 210 40% 98%;
+    --color-primary: 210 80% 55%;
+    --color-primary-foreground: 215 30% 15%;
+    --color-secondary: 200 60% 45%;
+    --color-secondary-foreground: 210 40% 98%;
+    --color-muted: 200 60% 45%;
+    --color-muted-foreground: 210 30% 65%;
+    --color-accent: 210 80% 55%;
+    --color-accent-foreground: 215 30% 15%;
+    --color-border: 215 25% 25%;
+    --color-input: 215 25% 25%;
+    --color-ring: 210 80% 55%;
+  }
+
+  /* Forest Green */
+  html.theme-forest-green {
+    --color-background: 140 20% 12%;
+    --color-foreground: 140 30% 95%;
+    --color-card: 140 20% 18%;
+    --color-card-foreground: 140 30% 95%;
+    --color-popover: 140 20% 18%;
+    --color-popover-foreground: 140 30% 95%;
+    --color-primary: 140 60% 50%;
+    --color-primary-foreground: 140 20% 12%;
+    --color-secondary: 130 50% 40%;
+    --color-secondary-foreground: 140 30% 95%;
+    --color-muted: 130 50% 40%;
+    --color-muted-foreground: 140 20% 60%;
+    --color-accent: 140 60% 50%;
+    --color-accent-foreground: 140 20% 12%;
+    --color-border: 140 20% 22%;
+    --color-input: 140 20% 22%;
+    --color-ring: 140 60% 50%;
+  }
+
+  /* Pink Blossom */
+  html.theme-pink-blossom {
+    --color-background: 330 15% 96%;
+    --color-foreground: 330 30% 15%;
+    --color-card: 330 20% 92%;
+    --color-card-foreground: 330 30% 15%;
+    --color-popover: 330 20% 92%;
+    --color-popover-foreground: 330 30% 15%;
+    --color-primary: 330 75% 65%;
+    --color-primary-foreground: 330 15% 96%;
+    --color-secondary: 340 65% 55%;
+    --color-secondary-foreground: 330 30% 15%;
+    --color-muted: 340 65% 55%;
+    --color-muted-foreground: 330 30% 40%;
+    --color-accent: 330 75% 65%;
+    --color-accent-foreground: 330 15% 96%;
+    --color-border: 330 20% 88%;
+    --color-input: 330 20% 88%;
+    --color-ring: 330 75% 65%;
+  }
+
+  /* Sunset Orange */
+  html.theme-sunset-orange {
+    --color-background: 25 30% 12%;
+    --color-foreground: 25 40% 98%;
+    --color-card: 25 25% 18%;
+    --color-card-foreground: 25 40% 98%;
+    --color-popover: 25 25% 18%;
+    --color-popover-foreground: 25 40% 98%;
+    --color-primary: 25 95% 60%;
+    --color-primary-foreground: 25 30% 12%;
+    --color-secondary: 10 90% 55%;
+    --color-secondary-foreground: 25 40% 98%;
+    --color-muted: 10 90% 55%;
+    --color-muted-foreground: 25 30% 60%;
+    --color-accent: 25 95% 60%;
+    --color-accent-foreground: 25 30% 12%;
+    --color-border: 25 25% 25%;
+    --color-input: 25 25% 25%;
+    --color-ring: 25 95% 60%;
+  }
+
+  /* Purple Haze */
+  html.theme-purple-haze {
+    --color-background: 270 30% 12%;
+    --color-foreground: 270 30% 98%;
+    --color-card: 270 25% 18%;
+    --color-card-foreground: 270 30% 98%;
+    --color-popover: 270 25% 18%;
+    --color-popover-foreground: 270 30% 98%;
+    --color-primary: 270 80% 65%;
+    --color-primary-foreground: 270 30% 12%;
+    --color-secondary: 290 70% 55%;
+    --color-secondary-foreground: 270 30% 98%;
+    --color-muted: 290 70% 55%;
+    --color-muted-foreground: 270 20% 60%;
+    --color-accent: 270 80% 65%;
+    --color-accent-foreground: 270 30% 12%;
+    --color-border: 270 25% 25%;
+    --color-input: 270 25% 25%;
+    --color-ring: 270 80% 65%;
+  }
+
+  /* Cyber Pink */
+  html.theme-cyber-pink {
+    --color-background: 330 20% 10%;
+    --color-foreground: 330 30% 98%;
+    --color-card: 330 15% 15%;
+    --color-card-foreground: 330 30% 98%;
+    --color-popover: 330 15% 15%;
+    --color-popover-foreground: 330 30% 98%;
+    --color-primary: 330 85% 65%;
+    --color-primary-foreground: 330 20% 10%;
+    --color-secondary: 200 80% 60%;
+    --color-secondary-foreground: 330 30% 98%;
+    --color-muted: 200 80% 60%;
+    --color-muted-foreground: 330 20% 60%;
+    --color-accent: 330 85% 65%;
+    --color-accent-foreground: 330 20% 10%;
+    --color-border: 330 15% 20%;
+    --color-input: 330 15% 20%;
+    --color-ring: 330 85% 65%;
+  }
+
+  /* Mint Fresh */
+  html.theme-mint-fresh {
+    --color-background: 160 25% 12%;
+    --color-foreground: 160 30% 98%;
+    --color-card: 160 20% 18%;
+    --color-card-foreground: 160 30% 98%;
+    --color-popover: 160 20% 18%;
+    --color-popover-foreground: 160 30% 98%;
+    --color-primary: 160 70% 55%;
+    --color-primary-foreground: 160 25% 12%;
+    --color-secondary: 180 60% 50%;
+    --color-secondary-foreground: 160 30% 98%;
+    --color-muted: 180 60% 50%;
+    --color-muted-foreground: 160 20% 60%;
+    --color-accent: 160 70% 55%;
+    --color-accent-foreground: 160 25% 12%;
+    --color-border: 160 20% 22%;
+    --color-input: 160 20% 22%;
+    --color-ring: 160 70% 55%;
+  }
+
+  /* Aurora Borealis */
+  html.theme-aurora-borealis {
+    --color-background: 200 30% 10%;
+    --color-foreground: 180 40% 98%;
+    --color-card: 200 25% 15%;
+    --color-card-foreground: 180 40% 98%;
+    --color-popover: 200 25% 15%;
+    --color-popover-foreground: 180 40% 98%;
+    --color-primary: 180 85% 55%;
+    --color-primary-foreground: 200 30% 10%;
+    --color-secondary: 280 75% 60%;
+    --color-secondary-foreground: 180 40% 98%;
+    --color-muted: 280 75% 60%;
+    --color-muted-foreground: 180 30% 60%;
+    --color-accent: 180 85% 55%;
+    --color-accent-foreground: 200 30% 10%;
+    --color-border: 200 25% 20%;
+    --color-input: 200 25% 20%;
+    --color-ring: 180 85% 55%;
+  }
+
+  /* Golden Hour */
+  html.theme-golden-hour {
+    --color-background: 40 25% 12%;
+    --color-foreground: 45 30% 98%;
+    --color-card: 40 20% 18%;
+    --color-card-foreground: 45 30% 98%;
+    --color-popover: 40 20% 18%;
+    --color-popover-foreground: 45 30% 98%;
+    --color-primary: 45 95% 65%;
+    --color-primary-foreground: 40 25% 12%;
+    --color-secondary: 35 90% 60%;
+    --color-secondary-foreground: 45 30% 98%;
+    --color-muted: 35 90% 60%;
+    --color-muted-foreground: 40 20% 60%;
+    --color-accent: 45 95% 65%;
+    --color-accent-foreground: 40 25% 12%;
+    --color-border: 40 20% 22%;
+    --color-input: 40 20% 22%;
+    --color-ring: 45 95% 65%;
+  }
+
+  /* Deep Ocean */
+  html.theme-deep-ocean {
+    --color-background: 210 40% 8%;
+    --color-foreground: 200 30% 98%;
+    --color-card: 210 35% 12%;
+    --color-card-foreground: 200 30% 98%;
+    --color-popover: 210 35% 12%;
+    --color-popover-foreground: 200 30% 98%;
+    --color-primary: 200 85% 50%;
+    --color-primary-foreground: 210 40% 8%;
+    --color-secondary: 220 75% 45%;
+    --color-secondary-foreground: 200 30% 98%;
+    --color-muted: 220 75% 45%;
+    --color-muted-foreground: 200 20% 60%;
+    --color-accent: 200 85% 50%;
+    --color-accent-foreground: 210 40% 8%;
+    --color-border: 210 35% 18%;
+    --color-input: 210 35% 18%;
+    --color-ring: 200 85% 50%;
+  }
+
+  /* Lavender Dreams */
+  html.theme-lavender-dreams {
+    --color-background: 270 25% 12%;
+    --color-foreground: 280 20% 98%;
+    --color-card: 270 20% 18%;
+    --color-card-foreground: 280 20% 98%;
+    --color-popover: 270 20% 18%;
+    --color-popover-foreground: 280 20% 98%;
+    --color-primary: 280 70% 70%;
+    --color-primary-foreground: 270 25% 12%;
+    --color-secondary: 260 60% 65%;
+    --color-secondary-foreground: 280 20% 98%;
+    --color-muted: 260 60% 65%;
+    --color-muted-foreground: 270 20% 60%;
+    --color-accent: 280 70% 70%;
+    --color-accent-foreground: 270 25% 12%;
+    --color-border: 270 20% 22%;
+    --color-input: 270 20% 22%;
+    --color-ring: 280 70% 70%;
+  }
+
+  /* Fire & Ember */
+  html.theme-fire-ember {
+    --color-background: 10 30% 10%;
+    --color-foreground: 15 30% 98%;
+    --color-card: 10 25% 15%;
+    --color-card-foreground: 15 30% 98%;
+    --color-popover: 10 25% 15%;
+    --color-popover-foreground: 15 30% 98%;
+    --color-primary: 15 95% 65%;
+    --color-primary-foreground: 10 30% 10%;
+    --color-secondary: 0 90% 60%;
+    --color-secondary-foreground: 15 30% 98%;
+    --color-muted: 0 90% 60%;
+    --color-muted-foreground: 10 20% 60%;
+    --color-accent: 15 95% 65%;
+    --color-accent-foreground: 10 30% 10%;
+    --color-border: 10 25% 20%;
+    --color-input: 10 25% 20%;
+    --color-ring: 15 95% 65%;
+  }
 }
 
 :root {
