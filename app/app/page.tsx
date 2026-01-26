@@ -10,6 +10,8 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { StreaksWidget } from "@/components/streaks-widget"
 import { AIQuickActions } from "@/components/ai-quick-actions"
 import { TimezoneDisplay } from "@/components/timezone-display"
+import { StatCard } from "@/components/stat-card"
+import { Insights } from "@/components/insights"
 
 export default function AppPage() {
   const { t } = useTranslation()
@@ -178,34 +180,94 @@ export default function AppPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid with Improved Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {statCards.map((stat) => (
-            <div key={stat.title}>
-              <Card
-                className={`glass-card p-6 neon-glow-hover transition-all duration-300 group ${
-                  stat.noCredits ? "cursor-pointer" : ""
-                }`}
-                onClick={() => {
-                  if (stat.noCredits) {
-                    window.location.href = "/app/subscription"
-                  }
-                }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <stat.icon className={`w-8 h-8 ${stat.color} group-hover:scale-110 transition-transform`} />
-                  {stat.noCredits && (
-                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">{t("locked")}</span>
-                  )}
-                </div>
-                <h3 className="text-3xl font-bold mb-1">{stat.value}</h3>
-                <p className="text-sm text-muted-foreground">{stat.title}</p>
-                <p className={`text-xs mt-1 ${stat.noCredits ? "text-primary font-medium" : "text-muted-foreground"}`}>
-                  {stat.subtitle}
-                </p>
-              </Card>
-            </div>
-          ))}
+          <StatCard
+            title={t("tasks")}
+            value={stats.tasks}
+            icon={<CheckSquare className="w-6 h-6" />}
+            color="text-blue-500"
+            trend={{ value: 12, direction: "up" }}
+          />
+          <StatCard
+            title={t("notes")}
+            value={stats.notes}
+            icon={<FileText className="w-6 h-6" />}
+            color="text-purple-500"
+            trend={{ value: 8, direction: "up" }}
+          />
+          <StatCard
+            title={t("pomodoros")}
+            value={stats.pomodoro}
+            icon={<Timer className="w-6 h-6" />}
+            color="text-orange-500"
+            trend={{ value: 5, direction: "up" }}
+          />
+          <StatCard
+            title={t("ai_credits")}
+            value={totalCredits}
+            icon={<Zap className="w-6 h-6" />}
+            color="text-primary"
+            subtitle={
+              totalCredits > 0
+                ? `${stats.monthlyCredits} ${t("monthly")} · ${stats.purchasedCredits} ${t("purchased")}`
+                : t("upgrade_or_buy_credit_packs")
+            }
+            locked={!hasCredits}
+            onClick={() => {
+              if (!hasCredits) {
+                window.location.href = "/app/subscription"
+              }
+            }}
+          />
+        </div>
+
+        {/* Insights & Progress Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <Insights
+              title="Performance Analytics"
+              subtitle="Your activity breakdown"
+              items={[
+                {
+                  label: "Tasks Completed",
+                  value: stats.tasks,
+                  color: "#3b82f6",
+                  percentage: Math.round((stats.tasks / Math.max(stats.tasks + stats.notes + stats.pomodoro, 1)) * 100),
+                },
+                {
+                  label: "Notes Created",
+                  value: stats.notes,
+                  color: "#a855f7",
+                  percentage: Math.round((stats.notes / Math.max(stats.tasks + stats.notes + stats.pomodoro, 1)) * 100),
+                },
+                {
+                  label: "Pomodoros Done",
+                  value: stats.pomodoro,
+                  color: "#f97316",
+                  percentage: Math.round((stats.pomodoro / Math.max(stats.tasks + stats.notes + stats.pomodoro, 1)) * 100),
+                },
+              ]}
+              mainLabel="Overall"
+            />
+          </div>
+
+          {/* Productivity Score */}
+          <div className="space-y-4">
+            <Insights
+              title="Productivity"
+              items={[
+                {
+                  label: "Focus Time",
+                  value: stats.pomodoro * 25,
+                  color: "#84cc16",
+                  percentage: Math.min(Math.round((stats.pomodoro / 10) * 100), 100),
+                },
+              ]}
+              mainValue={Math.min(Math.round((stats.pomodoro / 10) * 100), 100) + "%"}
+              mainLabel="This Month"
+            />
+          </div>
         </div>
 
         {/* New: Progress & AI Widgets */}
