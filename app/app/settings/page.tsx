@@ -564,68 +564,6 @@ export default function SettingsPage() {
   )
 }
 
-
-export default function SettingsPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const { language: globalLanguage, setLanguage: setGlobalLanguage } = useLanguage()
-  const {
-    isSupported: notificationsSupported,
-    isSubscribed,
-    isLoading: notificationsLoading,
-    enableNotifications,
-    disableNotifications,
-  } = usePushNotifications()
-
-  const [profile, setProfile] = useState<ProfileType>({
-    email: "",
-    theme: "default",
-    language: globalLanguage,
-    notifications: true,
-    timezone: "UTC",
-    plan: "free",
-    customPrimary: "#7c3aed",
-    customSecondary: "#ec4899",
-    pomodoroWorkDuration: 25,
-    pomodoroBreakDuration: 5,
-    pomodoroLongBreakDuration: 15,
-  })
-  const [loading, setLoading] = useState(false)
-  const [isInitialLoad, setIsInitialLoad] = useState(true)
-  const [availableThemes, setAvailableThemes] = useState<Theme[]>([])
-  const [showCustom, setShowCustom] = useState(false)
-  const { t } = useTranslation()
-
-  useEffect(() => {
-    fetchProfile()
-  }, [])
-
-  useEffect(() => {
-    const themes = getThemesByTier(profile.plan)
-    setAvailableThemes(themes)
-    setShowCustom(canUseCustomTheme(profile.plan))
-  }, [profile.plan])
-
-  useEffect(() => {
-    if (isInitialLoad) {
-      return
-    }
-
-    const timer = setTimeout(() => {
-      if (profile.theme === "custom") {
-        applyTheme("custom", profile.customPrimary, profile.customSecondary)
-      } else {
-        applyTheme(profile.theme)
-      }
-    }, 0)
-
-    return () => clearTimeout(timer)
-  }, [profile.theme, profile.customPrimary, profile.customSecondary, isInitialLoad])
-
-  const fetchProfile = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch("/api/settings")
       const settingsData = await response.json()
 
       const savedTheme = localStorage.getItem("theme") || "default"
