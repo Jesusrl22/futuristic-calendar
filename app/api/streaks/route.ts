@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
@@ -12,11 +12,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Use service role client to bypass RLS for admin query
-    const adminSupabase = await createClient({ admin: true })
+    // Use service role client to bypass RLS for reading user stats
+    const serviceSupabase = await createServiceRoleClient()
 
-    // Get user stats using admin client to avoid RLS infinite recursion
-    const { data: userData, error: userError } = await adminSupabase
+    // Get user stats using service role to avoid RLS infinite recursion
+    const { data: userData, error: userError } = await serviceSupabase
       .from("users")
       .select("current_streak, longest_streak, last_activity_date, total_tasks_completed, total_study_hours")
       .eq("id", user.id)
@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, value } = body // type: 'task' | 'study', value: hours for study
 
-    // Use admin client to bypass RLS
-    const adminSupabase = await createClient({ admin: true })
+    // Use service role client to bypass RLS
+    const serviceSupabase = await createServiceRoleClient()
 
     // Get current user data
-    const { data: userData, error: fetchError } = await adminSupabase
+    const { data: userData, error: fetchError } = await serviceSupabase
       .from("users")
       .select("current_streak, longest_streak, last_activity_date, total_tasks_completed, total_study_hours")
       .eq("id", user.id)
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       updates.total_study_hours = (userData?.total_study_hours || 0) + parseFloat(value)
     }
 
-    const { error: updateError } = await adminSupabase.from("users").update(updates).eq("id", user.id)
+    const { error: updateError } = await serviceSupabase.from("users").update(updates).eq("id", user.id)
 
     if (updateError) throw updateError
 
