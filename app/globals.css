@@ -5,27 +5,27 @@
 
 @theme {
   --radius: 0.75rem;
-  --color-background: 0 0% 8%;
-  --color-foreground: 180 100% 95%;
-  --color-card: 0 0% 12%;
-  --color-card-foreground: 180 100% 95%;
-  --color-popover: 0 0% 12%;
-  --color-popover-foreground: 180 100% 95%;
-  --color-primary: 180 100% 50%;
-  --color-primary-foreground: 0 0% 8%;
-  --color-secondary: 280 80% 60%;
-  --color-secondary-foreground: 180 100% 95%;
-  --color-muted: 280 80% 60%;
-  --color-muted-foreground: 180 100% 95%;
-  --color-accent: 180 100% 50%;
-  --color-accent-foreground: 0 0% 8%;
+  --color-background: 0 0% 3%;
+  --color-foreground: 0 0% 98%;
+  --color-card: 0 0% 8%;
+  --color-card-foreground: 0 0% 98%;
+  --color-popover: 0 0% 8%;
+  --color-popover-foreground: 0 0% 98%;
+  --color-primary: 85 98% 51%;
+  --color-primary-foreground: 0 0% 3%;
+  --color-secondary: 180 100% 50%;
+  --color-secondary-foreground: 0 0% 3%;
+  --color-muted: 0 0% 30%;
+  --color-muted-foreground: 0 0% 98%;
+  --color-accent: 85 98% 51%;
+  --color-accent-foreground: 0 0% 3%;
   --color-destructive: 0 84.2% 60.2%;
-  --color-destructive-foreground: 180 100% 95%;
-  --color-border: 0 0% 20%;
-  --color-input: 0 0% 20%;
-  --color-ring: 180 100% 50%;
-  --color-chart-1: 180 100% 50%;
-  --color-chart-2: 280 80% 60%;
+  --color-destructive-foreground: 0 0% 98%;
+  --color-border: 0 0% 15%;
+  --color-input: 0 0% 15%;
+  --color-ring: 85 98% 51%;
+  --color-chart-1: 85 98% 51%;
+  --color-chart-2: 180 100% 50%;
   --color-chart-3: 30 80% 55%;
   --color-chart-4: 200 70% 50%;
   --color-chart-5: 340 75% 55%;
@@ -92,28 +92,23 @@ html[data-theme="light-mode"] {
 
 html[data-theme="neon-tech"] {
   color-scheme: dark;
-  --color-background: 0 0% 8%;
-  --color-foreground: 180 100% 95%;
-  --color-card: 0 0% 12%;
-  --color-card-foreground: 180 100% 95%;
-  --color-popover: 0 0% 12%;
-  --color-popover-foreground: 180 100% 95%;
-  --color-primary: 180 100% 50%;
-  --color-primary-foreground: 0 0% 8%;
-  --color-secondary: 280 80% 60%;
-  --color-secondary-foreground: 180 100% 95%;
-  --color-muted: 280 80% 60%;
-  --color-muted-foreground: 180 100% 95%;
-  --color-accent: 180 100% 50%;
-  --color-accent-foreground: 0 0% 8%;
-  --color-border: 0 0% 20%;
-  --color-input: 0 0% 20%;
-  --color-ring: 180 100% 50%;
-  --color-chart-1: 180 100% 50%;
-  --color-chart-2: 280 80% 60%;
-  --color-chart-3: 30 80% 55%;
-  --color-chart-4: 200 70% 50%;
-  --color-chart-5: 340 75% 55%;
+  --color-background: 0 0% 3%;
+  --color-foreground: 0 0% 98%;
+  --color-card: 0 0% 8%;
+  --color-card-foreground: 0 0% 98%;
+  --color-popover: 0 0% 8%;
+  --color-popover-foreground: 0 0% 98%;
+  --color-primary: 85 98% 51%;
+  --color-primary-foreground: 0 0% 3%;
+  --color-secondary: 180 100% 50%;
+  --color-secondary-foreground: 0 0% 3%;
+  --color-muted: 0 0% 30%;
+  --color-muted-foreground: 0 0% 98%;
+  --color-accent: 85 98% 51%;
+  --color-accent-foreground: 0 0% 3%;
+  --color-border: 0 0% 15%;
+  --color-input: 0 0% 15%;
+  --color-ring: 85 98% 51%;
 }
 
 html[data-theme="forest-green"] {

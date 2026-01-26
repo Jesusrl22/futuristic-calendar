@@ -9,6 +9,7 @@ import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
 import { useTranslation } from "@/hooks/useTranslation"
 import { StreaksWidget } from "@/components/streaks-widget"
 import { AIQuickActions } from "@/components/ai-quick-actions"
+import { TimezoneDisplay } from "@/components/timezone-display"
 
 export default function AppPage() {
   const { t } = useTranslation()
@@ -151,23 +152,30 @@ export default function AppPage() {
         {user?.subscription_tier === "free" && <div className="mb-6">{/* Removing desktop banner import */}</div>}
 
         <div className="mb-6 md:mb-8">
-          <h2 className="text-xl md:text-3xl font-bold mb-2">
-            {t("welcome")}, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
-          </h2>
-          <p className="text-sm md:text-base text-muted-foreground">
-            {t("productivity_overview")} ·
-            <span
-              className={`ml-2 font-medium ${
-                user?.subscription_tier === "pro"
-                  ? "text-yellow-500"
-                  : user?.subscription_tier === "premium"
-                    ? "text-purple-500"
-                    : "text-gray-500"
-              }`}
-            >
-              {user?.subscription_tier?.toUpperCase() || t("free_plan")}
-            </span>
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-xl md:text-3xl font-bold mb-2">
+                {t("welcome")}, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground">
+                {t("productivity_overview")} ·
+                <span
+                  className={`ml-2 font-medium ${
+                    user?.subscription_tier === "pro"
+                      ? "text-yellow-500"
+                      : user?.subscription_tier === "premium"
+                        ? "text-purple-500"
+                        : "text-gray-500"
+                  }`}
+                >
+                  {user?.subscription_tier?.toUpperCase() || t("free_plan")}
+                </span>
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0">
+              <TimezoneDisplay />
+            </div>
+          </div>
         </div>
 
         {/* Stats Grid */}
