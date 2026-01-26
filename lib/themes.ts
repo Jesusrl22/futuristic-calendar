@@ -266,23 +266,30 @@ function hexToHSL(hex: string): string {
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
 
-  if (themeId === "custom" && customPrimary && customSecondary) {
-    const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
-    const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
+  if ((themeId.startsWith("custom-") || customPrimary || customSecondary) && customPrimary && customSecondary) {
+    root.setAttribute("data-theme", themeId)
+    root.style.setProperty("--primary", customPrimary)
+    root.style.setProperty("--secondary", customSecondary)
 
-    root.setAttribute("data-theme", "custom")
-    root.style.setProperty("--color-primary", primaryHSL)
-    root.style.setProperty("--color-accent", primaryHSL)
-    root.style.setProperty("--color-secondary", secondaryHSL)
-    root.style.setProperty("--color-muted", secondaryHSL)
+    localStorage.setItem("theme", themeId)
+    if (customPrimary) localStorage.setItem("customPrimary", customPrimary)
+    if (customSecondary) localStorage.setItem("customSecondary", customSecondary)
 
-    localStorage.setItem("theme", "custom")
-    localStorage.setItem("customPrimary", customPrimary)
-    localStorage.setItem("customSecondary", customSecondary)
+    console.log("[v0] Custom theme applied:", themeId, customPrimary, customSecondary)
     return
   }
 
-  root.setAttribute("data-theme", themeId)
+  const theme = allThemes.find((t) => t.id === themeId)
+  if (theme) {
+    root.setAttribute("data-theme", themeId)
+    root.style.setProperty("--primary", theme.primary)
+    root.style.setProperty("--secondary", theme.secondary)
+    root.style.setProperty("--background", theme.background)
+    root.style.setProperty("--foreground", theme.foreground)
+    root.style.setProperty("--card", theme.card)
+    root.style.setProperty("--card-foreground", theme.cardForeground)
+  }
+
   localStorage.setItem("theme", themeId)
   console.log("[v0] Theme applied:", themeId)
 }
