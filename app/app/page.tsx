@@ -142,175 +142,275 @@ export default function AppPage() {
   ]
 
   return (
-    <div className="p-4 md:p-8">
-      <h1 className="hidden md:block text-2xl md:text-4xl font-bold mb-6 md:mb-8">
-        <span className="text-primary neon-text">{t("dashboard")}</span>
-      </h1>
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      {/* Header */}
+      <div className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12a9 9 0 016-8.486M6 12a6 6 0 1112 0m-12 0a6 6 0 0112 0m-12 0A9 9 0 1015.486 6M6 12a6 6 0 1012 0" />
+        </svg>
+        <span>Dashboard</span>
+      </div>
 
+      {/* Page Title */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2">Overview</h1>
+        <p className="text-muted-foreground">Monitor key metrics and manage your platform</p>
+      </div>
+
+      {/* Ad Banners */}
       <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
       <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mb-6" />
 
-      <div>
-        {user?.subscription_tier === "free" && <div className="mb-6">{/* Removing desktop banner import */}</div>}
-
-        <div className="mb-6 md:mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-xl md:text-3xl font-bold mb-2">
-                {t("welcome")}, <span className="text-primary neon-text">{user?.name || user?.email?.split("@")[0]}</span>
-              </h2>
-              <p className="text-sm md:text-base text-muted-foreground">
-                {t("productivity_overview")} ·
-                <span
-                  className={`ml-2 font-medium ${
-                    user?.subscription_tier === "pro"
-                      ? "text-yellow-500"
-                      : user?.subscription_tier === "premium"
-                        ? "text-purple-500"
-                        : "text-gray-500"
-                  }`}
-                >
-                  {user?.subscription_tier?.toUpperCase() || t("free_plan")}
-                </span>
-              </p>
-            </div>
-            <div className="mt-4 md:mt-0">
-              <TimezoneDisplay />
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid with Improved Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title={t("tasks")}
-            value={stats.tasks}
-            icon={<CheckSquare className="w-6 h-6" />}
-            color="text-blue-500"
-            trend={{ value: 12, direction: "up" }}
-          />
-          <StatCard
-            title={t("notes")}
-            value={stats.notes}
-            icon={<FileText className="w-6 h-6" />}
-            color="text-purple-500"
-            trend={{ value: 8, direction: "up" }}
-          />
-          <StatCard
-            title={t("pomodoros")}
-            value={stats.pomodoro}
-            icon={<Timer className="w-6 h-6" />}
-            color="text-orange-500"
-            trend={{ value: 5, direction: "up" }}
-          />
-          <StatCard
-            title={t("ai_credits")}
-            value={totalCredits}
-            icon={<Zap className="w-6 h-6" />}
-            color="text-primary"
-            subtitle={
-              totalCredits > 0
-                ? `${stats.monthlyCredits} ${t("monthly")} · ${stats.purchasedCredits} ${t("purchased")}`
-                : t("upgrade_or_buy_credit_packs")
-            }
-            locked={!hasCredits}
-            onClick={() => {
-              if (!hasCredits) {
-                window.location.href = "/app/subscription"
-              }
-            }}
-          />
-        </div>
-
-        {/* Insights & Progress Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <Insights
-              title="Performance Analytics"
-              subtitle="Your activity breakdown"
-              items={[
-                {
-                  label: "Tasks Completed",
-                  value: stats.tasks,
-                  color: "#3b82f6",
-                  percentage: Math.round((stats.tasks / Math.max(stats.tasks + stats.notes + stats.pomodoro, 1)) * 100),
-                },
-                {
-                  label: "Notes Created",
-                  value: stats.notes,
-                  color: "#a855f7",
-                  percentage: Math.round((stats.notes / Math.max(stats.tasks + stats.notes + stats.pomodoro, 1)) * 100),
-                },
-                {
-                  label: "Pomodoros Done",
-                  value: stats.pomodoro,
-                  color: "#f97316",
-                  percentage: Math.round((stats.pomodoro / Math.max(stats.tasks + stats.notes + stats.pomodoro, 1)) * 100),
-                },
-              ]}
-              mainLabel="Overall"
-            />
-          </div>
-
-          {/* Productivity Score */}
-          <div className="space-y-4">
-            <Insights
-              title="Productivity"
-              items={[
-                {
-                  label: "Focus Time",
-                  value: stats.pomodoro * 25,
-                  color: "#84cc16",
-                  percentage: Math.min(Math.round((stats.pomodoro / 10) * 100), 100),
-                },
-              ]}
-              mainValue={Math.min(Math.round((stats.pomodoro / 10) * 100), 100) + "%"}
-              mainLabel="This Month"
-            />
-          </div>
-        </div>
-
-        {/* New: Progress & AI Widgets */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <StreaksWidget />
-          <AIQuickActions />
-        </div>
-
-        {/* Quick Actions */}
-        <div>
-          <Card className="glass-card p-4 md:p-8 neon-glow">
-            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">{t("quick_actions")}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-              {[
-                { title: t("create_task"), href: "/app/tasks", icon: "📝" },
-                { title: t("start_pomodoro"), href: "/app/pomodoro", icon: "⏱️" },
-                { title: t("ask_ai"), href: "/app/ai", icon: "🤖" },
-              ].map((action) => (
-                <a
-                  key={action.title}
-                  href={action.href}
-                  className="p-4 md:p-6 rounded-lg bg-secondary/50 hover:bg-secondary transition-all duration-300 cursor-pointer group border border-border/50 hover:border-primary/50"
-                >
-                  <div className="text-3xl md:text-4xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                    {action.icon}
-                  </div>
-                  <h3 className="font-semibold text-sm md:text-base">{action.title}</h3>
-                </a>
-              ))}
+      {/* Main Grid: Welcome Section + Insights */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Welcome Section - Left Side */}
+        <div className="lg:col-span-2">
+          <Card className="bg-card border border-border/50 p-8 rounded-2xl">
+            <div className="grid grid-cols-2 gap-8">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Hope you're well, {user?.name?.split(" ")[0] || "Demo"}</h2>
+                <p className="text-sm text-muted-foreground mb-6">Ready to make today productive! 🚀</p>
+                <div className="text-6xl font-bold text-primary mb-2">
+                  {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                </div>
+              </div>
+              <div className="flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-2">☁️</div>
+                  <div className="text-3xl font-bold mb-2">17°C</div>
+                  <div className="text-sm text-muted-foreground">Light rain</div>
+                  <div className="text-xs text-muted-foreground mt-2">Los Angeles</div>
+                  <div className="text-xs text-muted-foreground">Saturday, {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
+                </div>
+              </div>
             </div>
           </Card>
         </div>
 
-        {user?.subscription_tier === "free" && (
-          <div className="mt-6">
-            <AdsterraNativeBanner
-              containerId="container-105a3c31d27607df87969077c87047d4"
-              scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
-              className="mt-6"
-            />
-            <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mt-6" />
+        {/* Insights - Right Side */}
+        <div>
+          <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full">
+            <h3 className="text-lg font-bold mb-4">Insights</h3>
+            <p className="text-xs text-muted-foreground mb-6">Performance analytics</p>
+            
+            <div className="space-y-4 mb-6">
+              <button className="w-full px-4 py-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 text-sm font-medium transition-colors">
+                Performance
+              </button>
+              <button className="w-full px-4 py-2 rounded-lg bg-transparent hover:bg-secondary/50 text-sm font-medium transition-colors border border-border/50">
+                Trends
+              </button>
+            </div>
+
+            <div className="flex justify-center mb-6">
+              <div className="relative w-32 h-32">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--primary))" strokeWidth="8" strokeDasharray="226.19" strokeDashoffset="0" />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold">85%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-primary"></div>
+                  <span className="text-muted-foreground">Task Completion</span>
+                </div>
+                <span className="text-primary font-semibold">85%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
+                  <span className="text-muted-foreground">User Engagement</span>
+                </div>
+                <span className="text-secondary font-semibold">84%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: "hsl(30, 80%, 55%)"}}></div>
+                  <span className="text-muted-foreground">Response Time</span>
+                </div>
+                <span className="font-semibold">78%</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Stats Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total Projects */}
+        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
+              <CheckSquare className="w-5 h-5 text-secondary" />
+            </div>
+            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
           </div>
-        )}
+          <div className="text-3xl font-bold mb-1">{stats.tasks}</div>
+          <div className="text-sm text-muted-foreground mb-2">Total Projects</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-primary">↑ +3</span>
+            <span className="text-xs text-muted-foreground">This month</span>
+          </div>
+        </Card>
+
+        {/* Avg. Response Time */}
+        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
+              <Timer className="w-5 h-5 text-secondary" />
+            </div>
+            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
+          </div>
+          <div className="text-3xl font-bold mb-1">32 min</div>
+          <div className="text-sm text-muted-foreground mb-2">Avg. Response Time</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">→ 0%</span>
+            <span className="text-xs text-muted-foreground">This month</span>
+          </div>
+        </Card>
+
+        {/* Active Users */}
+        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-primary" />
+            </div>
+            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
+          </div>
+          <div className="text-3xl font-bold mb-1">1,847</div>
+          <div className="text-sm text-muted-foreground mb-2">Active Users</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-primary">↑ +12%</span>
+            <span className="text-xs text-muted-foreground">This month</span>
+          </div>
+        </Card>
+
+        {/* Task Completion */}
+        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
+              <Zap className="w-5 h-5 text-secondary" />
+            </div>
+            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
+          </div>
+          <div className="text-3xl font-bold mb-1">78%</div>
+          <div className="text-sm text-muted-foreground mb-2">Task Completion</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-primary">↑ +5%</span>
+            <span className="text-xs text-muted-foreground">This month</span>
+          </div>
+        </Card>
+      </div>
+
+      {/* Bottom Grid: Quick Tasks + Calendar */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Quick Tasks */}
+        <Card className="bg-card border border-border/50 p-6 rounded-2xl">
+          <h3 className="text-lg font-bold mb-1">Quick Tasks</h3>
+          <p className="text-xs text-muted-foreground mb-6">Manage your daily tasks</p>
+          
+          <div className="flex gap-4 mb-6">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 text-sm font-medium transition-colors">
+              <div className="w-4 h-4 rounded border border-muted-foreground"></div>
+              Active (3)
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 text-sm font-medium transition-colors">
+              <div className="w-4 h-4 rounded border border-primary/60 bg-primary/20"></div>
+              Completed (3)
+            </button>
+          </div>
+
+          <div className="space-y-3 mb-6">
+            {["test", "Set up repository structure", "Draft project requirements"].map((task, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors">
+                <input type="checkbox" className="w-4 h-4 rounded" />
+                <span className="text-sm">{task}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <input 
+              placeholder="Add a quick task..." 
+              className="flex-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            />
+            <button className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium">+</button>
+          </div>
+        </Card>
+
+        {/* Calendar */}
+        <Card className="bg-card border border-border/50 p-6 rounded-2xl">
+          <h3 className="text-lg font-bold mb-1">Calendar</h3>
+          <p className="text-xs text-muted-foreground mb-4">Saturday, {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <button className="p-1 hover:bg-secondary/50 rounded">←</button>
+              <span className="font-semibold">November 2025</span>
+              <button className="p-1 hover:bg-secondary/50 rounded">→</button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 text-center text-xs">
+              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => (
+                <div key={day} className="text-muted-foreground font-medium">{day}</div>
+              ))}
+              {Array.from({length: 35}, (_, i) => {
+                const date = i - 5;
+                const isCurrentDay = date === 15;
+                return (
+                  <button
+                    key={i}
+                    className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                      isCurrentDay 
+                        ? "bg-primary text-primary-foreground"
+                        : date > 0 && date <= 30
+                        ? "hover:bg-secondary/50"
+                        : "text-muted-foreground/50"
+                    }`}
+                  >
+                    {date > 0 && date <= 30 ? date : ""}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Revenue Analytics */}
+      <Card className="bg-card border border-border/50 p-6 rounded-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-lg font-bold">Revenue Analytics</h3>
+            <p className="text-xs text-muted-foreground">Revenue breakdown by category</p>
+          </div>
+          <button className="px-4 py-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-sm font-medium transition-colors">
+            This Quarter ▼
+          </button>
+        </div>
+        
+        <div className="h-48 flex items-end justify-around gap-4 px-4">
+          {[60, 45, 30].map((height, i) => (
+            <div key={i} className="flex flex-col items-center gap-2">
+              <div className="w-12 rounded-t-lg bg-gradient-to-b from-primary to-primary/50" style={{height: `${height}%`}}></div>
+              <span className="text-xs text-muted-foreground">${(30 + i * 15).toFixed(0)}k</span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Additional Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <StreaksWidget />
+        <AIQuickActions />
       </div>
     </div>
   )
