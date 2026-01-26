@@ -41,10 +41,31 @@ export async function GET() {
 
     if (!response.ok) {
       console.error("[v0] Profile API - Fetch failed:", response.status)
+      // Check if it's a rate limit or other error
+      const contentType = response.headers.get("content-type")
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: "Too many requests, please try again later" },
+          { status: 429 },
+        )
+      }
       return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 })
     }
 
-    const users = await response.json()
+    // Safely parse JSON response
+    let users
+    try {
+      const contentType = response.headers.get("content-type")
+      if (contentType && contentType.includes("application/json")) {
+        users = await response.json()
+      } else {
+        console.error("[v0] Profile API - Invalid content type:", contentType)
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+    } catch (parseError) {
+      console.error("[v0] Profile API - Failed to parse JSON:", parseError)
+      return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+    }
 
     if (!users || users.length === 0) {
       console.error("[v0] Profile API - User not found")

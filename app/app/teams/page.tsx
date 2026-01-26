@@ -43,6 +43,11 @@ export default function TeamsPage() {
       if (response.ok) {
         const data = await response.json()
         setUserPlan(data.subscription_tier || "free")
+      } else if (response.status === 429) {
+        console.warn("Rate limited, retrying in 5 seconds...")
+        setTimeout(() => fetchUserPlan(), 5000)
+      } else {
+        console.error("Error fetching user plan:", response.status)
       }
     } catch (error) {
       console.error("Error fetching user plan:", error)
