@@ -1128,10 +1128,10 @@ export default function HomePageClient() {
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">{t("heroDesc")}</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/signup">
-              <Button size="lg" className="neon-glow-hover group">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/50 hover:shadow-xl hover:shadow-primary/60 transition-all duration-300 group font-semibold text-lg px-8">
                 {t("startNow")}
                 <svg
-                  className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1141,7 +1141,7 @@ export default function HomePageClient() {
               </Button>
             </Link>
             <Link href="#features">
-              <Button size="lg" variant="outline" className="neon-glow-hover bg-transparent">
+              <Button size="lg" variant="outline" className="border-2 border-primary/60 text-primary hover:bg-primary/10 rounded-xl shadow-md hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 font-semibold text-lg px-8">
                 {t("learnMore")}
               </Button>
             </Link>
@@ -1165,10 +1165,10 @@ export default function HomePageClient() {
           ].map((feature, i) => (
             <Card
               key={i}
-              className="glass-card p-6 neon-glow-hover transition-all duration-300 cursor-pointer group h-full"
+              className="bg-card border border-border hover:border-primary/60 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 cursor-pointer group h-full"
             >
-              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{feature.icon}</div>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <div className="text-4xl mb-4 group-hover:scale-110 transition-transform drop-shadow-lg">{feature.icon}</div>
+              <h3 className="text-lg font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">{feature.title}</h3>
               <p className="text-sm text-muted-foreground">{feature.desc}</p>
             </Card>
           ))}
@@ -1177,29 +1177,29 @@ export default function HomePageClient() {
 
       {/* Dashboard Preview */}
       <section id="dashboard" className="container mx-auto px-4 py-20">
-        <Card className="glass-card p-8 neon-glow">
+        <Card className="bg-card border border-border p-8 rounded-2xl shadow-xl">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold">{t("powerfulDashboard")}</h2>
-              <p className="text-muted-foreground">{t("dashboardDesc")}</p>
+              <h2 className="text-3xl font-bold text-foreground">{t("powerfulDashboard")}</h2>
+              <p className="text-muted-foreground text-lg">{t("dashboardDesc")}</p>
               <div className="space-y-3 pt-4">
                 {[
                   { label: t("tasksCompleted"), value: "156", change: "+12.5%" },
                   { label: t("productivity"), value: "94%", change: "+8.3%" },
                   { label: t("timeSaved"), value: "24h", change: "+15.2%" },
                 ].map((stat, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-                    <span className="text-sm text-muted-foreground">{stat.label}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{stat.value}</span>
-                      <span className="text-xs text-primary">{stat.change}</span>
+                  <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-primary/10 border border-primary/30 hover:border-primary/60 hover:shadow-md hover:shadow-primary/20 transition-all duration-300">
+                    <span className="text-sm font-medium text-foreground">{stat.label}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-lg">{stat.value}</span>
+                      <span className="text-sm font-semibold text-primary bg-primary/20 px-2 py-1 rounded-md">{stat.change}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="relative h-[300px] rounded-lg bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 flex items-center justify-center">
-              <div className="text-8xl opacity-30">📊</div>
+            <div className="relative h-[300px] rounded-xl bg-gradient-to-br from-primary/20 via-secondary/10 to-transparent border-2 border-primary/40 flex items-center justify-center overflow-hidden">
+              <div className="text-8xl opacity-40">📊</div>
               <div
                 className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiHEhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGg``ZD0iTSAxMC
 

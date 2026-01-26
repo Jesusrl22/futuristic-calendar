@@ -1,3 +1,4 @@
+/* Updated: 2026-01-26 - Fixed neon effects */
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -11,23 +12,23 @@
   --color-card-foreground: 0 0% 98%;
   --color-popover: 0 0% 8%;
   --color-popover-foreground: 0 0% 98%;
-  --color-primary: 85 98% 51%;
+  --color-primary: 84 100% 65%;
   --color-primary-foreground: 0 0% 3%;
   --color-secondary: 180 100% 50%;
   --color-secondary-foreground: 0 0% 3%;
-  --color-muted: 0 0% 30%;
-  --color-muted-foreground: 0 0% 98%;
-  --color-accent: 85 98% 51%;
+  --color-muted: 0 0% 20%;
+  --color-muted-foreground: 0 0% 70%;
+  --color-accent: 84 100% 65%;
   --color-accent-foreground: 0 0% 3%;
   --color-destructive: 0 84.2% 60.2%;
   --color-destructive-foreground: 0 0% 98%;
-  --color-border: 0 0% 15%;
-  --color-input: 0 0% 15%;
-  --color-ring: 85 98% 51%;
-  --color-chart-1: 85 98% 51%;
+  --color-border: 0 0% 20%;
+  --color-input: 0 0% 12%;
+  --color-ring: 84 100% 65%;
+  --color-chart-1: 84 100% 65%;
   --color-chart-2: 180 100% 50%;
-  --color-chart-3: 30 80% 55%;
-  --color-chart-4: 200 70% 50%;
+  --color-chart-3: 280 80% 60%;
+  --color-chart-4: 30 95% 60%;
   --color-chart-5: 340 75% 55%;
 }
 
@@ -36,43 +37,49 @@
   body {
     @apply bg-background text-foreground;
   }
+}
 
-  /* Smooth transitions */
-  * {
-    @apply transition-colors duration-200;
-  }
-
+@layer components {
   /* Cards */
   .card {
-    @apply bg-card border border-border/50 rounded-lg;
+    @apply bg-card border border-border rounded-lg shadow-md;
   }
 
   /* Buttons */
   .btn-primary {
-    @apply bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-all duration-300 shadow-lg shadow-primary/30;
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium shadow-lg shadow-primary/40 hover:shadow-xl hover:shadow-primary/50;
   }
 
-  /* Neon Glow Effects */
+  /* Neon Glow Effects - v2 */
   .neon-glow {
-    @apply border-primary/40 shadow-lg shadow-primary/20;
+    border-color: hsl(var(--primary) / 0.6);
+    box-shadow: 0 10px 15px -3px hsl(var(--primary) / 0.3), 0 4px 6px -4px hsl(var(--primary) / 0.3);
   }
 
   .neon-glow-hover {
-    @apply hover:border-primary/60 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+  
+  .neon-glow-hover:hover {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 20px 25px -5px hsl(var(--primary) / 0.4), 0 8px 10px -6px hsl(var(--primary) / 0.4);
   }
 
   .neon-text {
-    @apply text-primary font-bold;
+    color: hsl(var(--primary));
+    font-weight: 700;
   }
 
   /* Glass effect */
   .glass-card {
-    @apply bg-card/50 backdrop-blur-sm border border-border/30;
+    @apply bg-card/80 backdrop-blur-md border border-primary/20;
   }
 
   /* Stat cards */
   .stat-card {
-    @apply bg-card border border-border/50 rounded-lg p-6 hover:border-primary/50 transition-all duration-300;
+    @apply bg-card border border-border/80 rounded-lg p-6 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20;
   }
 }
 
@@ -139,17 +146,22 @@ html[data-theme="neon-tech"] {
   --color-card-foreground: 0 0% 98%;
   --color-popover: 0 0% 8%;
   --color-popover-foreground: 0 0% 98%;
-  --color-primary: 85 98% 51%;
+  --color-primary: 84 100% 65%;
   --color-primary-foreground: 0 0% 3%;
   --color-secondary: 180 100% 50%;
   --color-secondary-foreground: 0 0% 3%;
-  --color-muted: 0 0% 30%;
-  --color-muted-foreground: 0 0% 98%;
-  --color-accent: 85 98% 51%;
+  --color-muted: 0 0% 20%;
+  --color-muted-foreground: 0 0% 70%;
+  --color-accent: 84 100% 65%;
   --color-accent-foreground: 0 0% 3%;
-  --color-border: 0 0% 15%;
-  --color-input: 0 0% 15%;
-  --color-ring: 85 98% 51%;
+  --color-border: 0 0% 20%;
+  --color-input: 0 0% 12%;
+  --color-ring: 84 100% 65%;
+  --color-chart-1: 84 100% 65%;
+  --color-chart-2: 180 100% 50%;
+  --color-chart-3: 280 80% 60%;
+  --color-chart-4: 30 95% 60%;
+  --color-chart-5: 340 75% 55%;
 }
 
 html[data-theme="forest-green"] {
