@@ -23,6 +23,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/hooks/useTranslation"
+import { StreaksWidget } from "@/components/streaks-widget"
+import { SectionHeader } from "@/components/section-header"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "@/components/ui/use-toast"
@@ -418,14 +420,14 @@ export default function TasksPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-      <div>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
-          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">{t("tasks")}</span>
-          </h1>
+      <SectionHeader
+        title={t("tasks")}
+        subtitle={t("manage_tasks")}
+        icon={CheckSquare}
+        action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="neon-glow-hover w-full md:w-auto">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-lg shadow-primary/30 w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 {t("newTask")}
               </Button>
@@ -523,7 +525,8 @@ export default function TasksPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
+        }
+      />
 
         <div className="mb-6">
           <div className="relative">

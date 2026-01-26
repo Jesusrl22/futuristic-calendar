@@ -31,10 +31,51 @@
   --color-chart-5: 340 75% 55%;
 }
 
-:root {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Global Styles - Neon Tech Theme */
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Smooth transitions */
+  * {
+    @apply transition-colors duration-200;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-card border border-border/50 rounded-lg;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-medium transition-all duration-300 shadow-lg shadow-primary/30;
+  }
+
+  /* Neon Glow Effects */
+  .neon-glow {
+    @apply border-primary/40 shadow-lg shadow-primary/20;
+  }
+
+  .neon-glow-hover {
+    @apply hover:border-primary/60 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300;
+  }
+
+  .neon-text {
+    @apply text-primary font-bold;
+  }
+
+  /* Glass effect */
+  .glass-card {
+    @apply bg-card/50 backdrop-blur-sm border border-border/30;
+  }
+
+  /* Stat cards */
+  .stat-card {
+    @apply bg-card border border-border/50 rounded-lg p-6 hover:border-primary/50 transition-all duration-300;
+  }
 }
+
 
 /* Theme Selectors - These override the @theme defaults */
 
