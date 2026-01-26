@@ -122,13 +122,13 @@ export default function AppPage() {
   const hasCredits = totalCredits > 0
 
   const statCards = [
-    { title: t("tasks"), value: stats.tasks, icon: CheckSquare, color: "text-blue-500" },
-    { title: t("notes"), value: stats.notes, icon: FileText, color: "text-purple-500" },
-    { title: t("pomodoros"), value: stats.pomodoro, icon: Timer, color: "text-orange-500" },
+    { title: t("tasks"), value: stats.tasks, icon: <CheckSquare className="w-6 h-6" />, color: "text-blue-500" },
+    { title: t("notes"), value: stats.notes, icon: <FileText className="w-6 h-6" />, color: "text-purple-500" },
+    { title: t("pomodoros"), value: stats.pomodoro, icon: <Timer className="w-6 h-6" />, color: "text-orange-500" },
     {
       title: t("ai_credits"),
       value: hasCredits ? totalCredits : 0,
-      icon: Zap,
+      icon: <Zap className="w-6 h-6" />,
       color: "text-primary",
       subtitle: hasCredits
         ? stats.monthlyCredits > 0 && stats.purchasedCredits > 0
