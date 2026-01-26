@@ -1,36 +1,76 @@
-/* Updated: 2026-01-26 - Fixed neon effects */
-@import "tailwindcss";
-@import "tw-animate-css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@custom-variant dark (&:is(.dark *));
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-@theme {
-  --radius: 0.75rem;
-  --color-background: 0 0% 3%;
-  --color-foreground: 0 0% 98%;
-  --color-card: 0 0% 8%;
-  --color-card-foreground: 0 0% 98%;
-  --color-popover: 0 0% 8%;
-  --color-popover-foreground: 0 0% 98%;
-  --color-primary: 84 100% 65%;
-  --color-primary-foreground: 0 0% 3%;
-  --color-secondary: 180 100% 50%;
-  --color-secondary-foreground: 0 0% 3%;
-  --color-muted: 0 0% 20%;
-  --color-muted-foreground: 0 0% 70%;
-  --color-accent: 84 100% 65%;
-  --color-accent-foreground: 0 0% 3%;
-  --color-destructive: 0 84.2% 60.2%;
-  --color-destructive-foreground: 0 0% 98%;
-  --color-border: 0 0% 20%;
-  --color-input: 0 0% 12%;
-  --color-ring: 84 100% 65%;
-  --color-chart-1: 84 100% 65%;
-  --color-chart-2: 180 100% 50%;
-  --color-chart-3: 280 80% 60%;
-  --color-chart-4: 30 95% 60%;
-  --color-chart-5: 340 75% 55%;
+  body {
+    background-color: #030304;
+    color: #fafafa;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
 }
+
+@layer components {
+  .card {
+    background-color: #141417;
+    border-color: #333333;
+    border-width: 1px;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .neon-glow {
+    border-color: rgba(163, 230, 53, 0.6);
+    box-shadow: 0 10px 15px -3px rgba(163, 230, 53, 0.3);
+  }
+
+  .neon-glow-hover {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  .neon-glow-hover:hover {
+    border-color: #a3e635;
+    box-shadow: 0 20px 25px -5px rgba(163, 230, 53, 0.4);
+  }
+
+  .neon-text {
+    color: #a3e635;
+    font-weight: 700;
+  }
+
+  .glass-card {
+    background-color: rgba(20, 20, 23, 0.8);
+    backdrop-filter: blur(12px);
+    border-color: rgba(163, 230, 53, 0.2);
+    border-width: 1px;
+  }
+
+  .stat-card {
+    background-color: #141417;
+    border-color: rgba(51, 51, 51, 0.8);
+    border-width: 1px;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  .stat-card:hover {
+    border-color: rgba(163, 230, 53, 0.6);
+    box-shadow: 0 10px 15px -3px rgba(163, 230, 53, 0.2);
+  }
+}
+
+
+
 
 /* Global Styles - Neon Tech Theme */
 @layer base {
