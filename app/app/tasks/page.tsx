@@ -27,9 +27,7 @@ import { StreaksWidget } from "@/components/streaks-widget"
 import { SectionHeader } from "@/components/section-header"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
-import { toast } from "@/components/ui/use-toast"
-
-const supabase = createClient()
+import { useToast } from "@/hooks/use-toast"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -58,6 +56,8 @@ export default function TasksPage() {
   const [isCreating, setIsCreating] = useState(false)
   const { language } = useLanguage()
   const { t } = useTranslation(language)
+  const { toast } = useToast()
+  const supabase = createClient()
 
   const [draggedTask, setDraggedTask] = useState<string | null>(null)
   const [dragOverTask, setDragOverTask] = useState<string | null>(null)
