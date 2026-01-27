@@ -78,7 +78,6 @@ export async function PATCH(request: Request) {
     const {
       theme,
       theme_preference,
-      custom_themes,
       language,
       timezone,
       pomodoro_work_duration,
@@ -104,9 +103,6 @@ export async function PATCH(request: Request) {
     if (theme !== undefined) updates.theme = theme
     if (theme_preference !== undefined) {
       updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
-    }
-    if (custom_themes !== undefined) {
-      updates.custom_themes = custom_themes ? JSON.stringify(custom_themes) : null
     }
     if (language !== undefined) updates.language = language
     if (timezone !== undefined) updates.timezone = timezone
