@@ -149,7 +149,9 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: profile.theme,
-          custom_themes: profile.customThemes,
+          theme_preference: JSON.stringify({
+            customThemes: profile.customThemes,
+          }),
           language: profile.language,
           timezone: detectedTimezone,
           pomodoro_work_duration: profile.pomodoroWorkDuration,
@@ -224,7 +226,9 @@ export default function SettingsPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          custom_themes: updatedThemes,
+          theme_preference: JSON.stringify({
+            customThemes: updatedThemes,
+          }),
         }),
       })
 
@@ -253,7 +257,9 @@ export default function SettingsPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          custom_themes: updatedThemes,
+          theme_preference: JSON.stringify({
+            customThemes: updatedThemes,
+          }),
           theme: profile.theme === themeId ? "default" : profile.theme,
         }),
       })
