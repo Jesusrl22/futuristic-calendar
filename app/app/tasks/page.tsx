@@ -64,23 +64,30 @@ export default function TasksPage() {
 
   useEffect(() => {
     fetchTasks()
+    fetchTimezone()
+  }, [])
 
-    const fetchTimezone = async () => {
-      const { data } = await supabase
-        .from("users")
-        .select("timezone")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single()
-
-      if (data?.timezone) {
-        setUserTimezone(data.timezone)
+  const fetchTimezone = async () => {
+    try {
+      const response = await fetch("/api/settings")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.profile?.timezone) {
+          setUserTimezone(data.profile.timezone)
+        } else {
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+          setUserTimezone(detectedTimezone)
+        }
       } else {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
         setUserTimezone(detectedTimezone)
       }
+    } catch (error) {
+      console.error("Error fetching timezone:", error)
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      setUserTimezone(detectedTimezone)
     }
-    fetchTimezone()
-  }, [])
+  }
 
   const fetchTasks = async () => {
     try {
