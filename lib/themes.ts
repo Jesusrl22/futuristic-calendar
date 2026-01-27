@@ -268,26 +268,31 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
 
   if ((themeId.startsWith("custom-") || customPrimary || customSecondary) && customPrimary && customSecondary) {
     root.setAttribute("data-theme", themeId)
-    root.style.setProperty("--primary", customPrimary)
-    root.style.setProperty("--secondary", customSecondary)
+    
+    // Convert hex to HSL if needed
+    const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
+    const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
+    
+    root.style.setProperty("--color-primary", primaryHSL)
+    root.style.setProperty("--color-secondary", secondaryHSL)
 
     localStorage.setItem("theme", themeId)
     if (customPrimary) localStorage.setItem("customPrimary", customPrimary)
     if (customSecondary) localStorage.setItem("customSecondary", customSecondary)
 
-    console.log("[v0] Custom theme applied:", themeId, customPrimary, customSecondary)
+    console.log("[v0] Custom theme applied:", themeId, primaryHSL, secondaryHSL)
     return
   }
 
   const theme = allThemes.find((t) => t.id === themeId)
   if (theme) {
     root.setAttribute("data-theme", themeId)
-    root.style.setProperty("--primary", theme.primary)
-    root.style.setProperty("--secondary", theme.secondary)
-    root.style.setProperty("--background", theme.background)
-    root.style.setProperty("--foreground", theme.foreground)
-    root.style.setProperty("--card", theme.card)
-    root.style.setProperty("--card-foreground", theme.cardForeground)
+    root.style.setProperty("--color-primary", theme.primary)
+    root.style.setProperty("--color-secondary", theme.secondary)
+    root.style.setProperty("--color-background", theme.background)
+    root.style.setProperty("--color-foreground", theme.foreground)
+    root.style.setProperty("--color-card", theme.card)
+    root.style.setProperty("--color-card-foreground", theme.cardForeground)
   }
 
   localStorage.setItem("theme", themeId)
