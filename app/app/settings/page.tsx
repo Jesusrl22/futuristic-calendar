@@ -94,13 +94,12 @@ export default function SettingsPage() {
                 .trim()
                 .replace(/[\s\-_]/g, "")
 
+        // Load customThemes from localStorage
         let customThemes: CustomTheme[] = []
-        if (settingsData.profile.custom_themes) {
+        const savedThemes = localStorage.getItem("customThemes")
+        if (savedThemes) {
           try {
-            customThemes =
-              typeof settingsData.profile.custom_themes === "string"
-                ? JSON.parse(settingsData.profile.custom_themes)
-                : settingsData.profile.custom_themes
+            customThemes = JSON.parse(savedThemes)
           } catch (e) {
             customThemes = []
           }
@@ -144,14 +143,14 @@ export default function SettingsPage() {
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
+      // Save customThemes to localStorage only
+      localStorage.setItem("customThemes", JSON.stringify(profile.customThemes))
+
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: profile.theme,
-          theme_preference: JSON.stringify({
-            customThemes: profile.customThemes,
-          }),
           language: profile.language,
           timezone: detectedTimezone,
           pomodoro_work_duration: profile.pomodoroWorkDuration,
@@ -220,17 +219,9 @@ export default function SettingsPage() {
 
     setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
 
-    // Save to database
+    // Save customThemes to localStorage only
     try {
-      await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme_preference: JSON.stringify({
-            customThemes: updatedThemes,
-          }),
-        }),
-      })
+      localStorage.setItem("customThemes", JSON.stringify(updatedThemes))
 
       if (profile.theme === theme.id) {
         applyTheme(theme.id, theme.primary, theme.secondary)
@@ -251,18 +242,9 @@ export default function SettingsPage() {
       applyTheme("default")
     }
 
-    // Save to database
+    // Save customThemes to localStorage only
     try {
-      await fetch("/api/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme_preference: JSON.stringify({
-            customThemes: updatedThemes,
-          }),
-          theme: profile.theme === themeId ? "default" : profile.theme,
-        }),
-      })
+      localStorage.setItem("customThemes", JSON.stringify(updatedThemes))
     } catch (error) {
       console.error("Error deleting custom theme:", error)
       throw error
