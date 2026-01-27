@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import crypto from "crypto"
 
 export async function POST(request: Request) {
   try {
@@ -12,48 +11,22 @@ export async function POST(request: Request) {
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-    // First, check if user exists
-    const { data: users } = await supabase.from("users").select("id, name").eq("email", email.toLowerCase()).single()
+    // Use Supabase native password reset flow
+    const { error } = await supabase.auth.admin.generateLink({
+      type: "recovery",
+      email: email.toLowerCase(),
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset`,
+      },
+    })
 
-    if (!users) {
-      // Don't reveal if email exists (security best practice)
-      return NextResponse.json({
-        success: true,
-        message: "If an account with that email exists, we've sent password reset instructions.",
-      })
+    if (error) {
+      console.error("[SERVER] Password reset error:", error)
     }
 
-    // Generate reset token
-    const resetToken = crypto.randomUUID()
-    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    console.log("[SERVER] Password reset link generated for:", email)
 
-    // Store reset token in a temporary table or auth metadata
-    const { error: tokenError } = await supabase
-      .from("password_reset_tokens")
-      .insert({
-        email: email.toLowerCase(),
-        token: resetToken,
-        expires_at: tokenExpiry.toISOString(),
-      })
-      .select()
-
-    if (tokenError) {
-      console.error("[SERVER] Error storing reset token:", tokenError)
-      return NextResponse.json({
-        success: true,
-        message: "If an account with that email exists, we've sent password reset instructions.",
-      })
-    }
-
-    // Create reset link
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"}/reset-password?token=${resetToken}`
-
-    // Send email using SMTP
-    const { sendPasswordResetEmail } = await import("@/lib/email")
-    await sendPasswordResetEmail(email, resetLink, users.name)
-
-    console.log("[SERVER] Password reset email sent successfully")
-
+    // Always return success for security (don't reveal if email exists)
     return NextResponse.json({
       success: true,
       message: "If an account with that email exists, we've sent password reset instructions.",
