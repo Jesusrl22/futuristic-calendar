@@ -161,82 +161,73 @@ export default function AppPage() {
       <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
       <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mb-6" />
 
-      {/* Main Grid: Welcome Section + Insights */}
+      {/* Main Grid: Welcome Section + Stats Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Welcome Section - Left Side */}
         <div className="lg:col-span-2">
           <Card className="bg-card border border-border/50 p-8 rounded-2xl">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <h2 className="text-2xl font-bold mb-2">Hope you're well, {user?.name?.split(" ")[0] || "Demo"}</h2>
-                <p className="text-sm text-muted-foreground mb-6">Ready to make today productive! 🚀</p>
+                <h2 className="text-2xl font-bold mb-2">Hola, {user?.name?.split(" ")[0] || "Usuario"}</h2>
+                <p className="text-sm text-muted-foreground mb-6">¡Bienvenido a tu dashboard de productividad!</p>
                 <div className="text-6xl font-bold text-primary mb-2">
-                  {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                  {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
+                </p>
               </div>
               <div className="flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-6xl mb-2">☁️</div>
-                  <div className="text-3xl font-bold mb-2">17°C</div>
-                  <div className="text-sm text-muted-foreground">Light rain</div>
-                  <div className="text-xs text-muted-foreground mt-2">Los Angeles</div>
-                  <div className="text-xs text-muted-foreground">Saturday, {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</div>
+                  <div className="text-6xl mb-4">📊</div>
+                  <div className="text-2xl font-bold mb-2">{stats.tasks + stats.notes + stats.pomodoro}</div>
+                  <div className="text-sm text-muted-foreground">Actividades hoy</div>
+                  <div className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/50">
+                    Mantén el ritmo productivo
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Insights - Right Side */}
+        {/* Quick Stats - Right Side */}
         <div>
           <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full">
-            <h3 className="text-lg font-bold mb-4">Insights</h3>
-            <p className="text-xs text-muted-foreground mb-6">Performance analytics</p>
+            <h3 className="text-lg font-bold mb-4">Resumen</h3>
+            <p className="text-xs text-muted-foreground mb-6">Tu actividad de hoy</p>
             
-            <div className="space-y-4 mb-6">
-              <button className="w-full px-4 py-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 text-sm font-medium transition-colors">
-                Performance
-              </button>
-              <button className="w-full px-4 py-2 rounded-lg bg-transparent hover:bg-secondary/50 text-sm font-medium transition-colors border border-border/50">
-                Trends
-              </button>
-            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="w-4 h-4 text-blue-500" />
+                  <span className="text-sm text-muted-foreground">Tareas</span>
+                </div>
+                <span className="text-lg font-bold text-blue-500">{stats.tasks}</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-purple-500/10">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  <span className="text-sm text-muted-foreground">Notas</span>
+                </div>
+                <span className="text-lg font-bold text-purple-500">{stats.notes}</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10">
+                <div className="flex items-center gap-2">
+                  <Timer className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm text-muted-foreground">Pomodoros</span>
+                </div>
+                <span className="text-lg font-bold text-orange-500">{stats.pomodoro}</span>
+              </div>
 
-            <div className="flex justify-center mb-6">
-              <div className="relative w-32 h-32">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--primary))" strokeWidth="8" strokeDasharray="226.19" strokeDashoffset="0" />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold">85%</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 mt-4 pt-4 border-t border-border/50">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-primary"></div>
-                  <span className="text-muted-foreground">Task Completion</span>
+                  <Zap className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-muted-foreground">Créditos IA</span>
                 </div>
-                <span className="text-primary font-semibold">85%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-muted-foreground">User Engagement</span>
-                </div>
-                <span className="text-secondary font-semibold">84%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: "hsl(30, 80%, 55%)"}}></div>
-                  <span className="text-muted-foreground">Response Time</span>
-                </div>
-                <span className="font-semibold">78%</span>
+                <span className="text-lg font-bold text-primary">{stats.monthlyCredits + stats.purchasedCredits}</span>
               </div>
             </div>
           </Card>
@@ -245,173 +236,48 @@ export default function AppPage() {
 
       {/* Stats Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Total Projects */}
-        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-              <CheckSquare className="w-5 h-5 text-secondary" />
-            </div>
-            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
-          </div>
-          <div className="text-3xl font-bold mb-1">{stats.tasks}</div>
-          <div className="text-sm text-muted-foreground mb-2">Total Projects</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-primary">↑ +3</span>
-            <span className="text-xs text-muted-foreground">This month</span>
-          </div>
-        </Card>
-
-        {/* Avg. Response Time */}
-        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-              <Timer className="w-5 h-5 text-secondary" />
-            </div>
-            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
-          </div>
-          <div className="text-3xl font-bold mb-1">32 min</div>
-          <div className="text-sm text-muted-foreground mb-2">Avg. Response Time</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">→ 0%</span>
-            <span className="text-xs text-muted-foreground">This month</span>
-          </div>
-        </Card>
-
-        {/* Active Users */}
-        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
-            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
-          </div>
-          <div className="text-3xl font-bold mb-1">1,847</div>
-          <div className="text-sm text-muted-foreground mb-2">Active Users</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-primary">↑ +12%</span>
-            <span className="text-xs text-muted-foreground">This month</span>
-          </div>
-        </Card>
-
-        {/* Task Completion */}
-        <Card className="bg-card border border-border/50 p-6 rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all">
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-secondary" />
-            </div>
-            <button className="text-muted-foreground hover:text-foreground text-2xl">⋮</button>
-          </div>
-          <div className="text-3xl font-bold mb-1">78%</div>
-          <div className="text-sm text-muted-foreground mb-2">Task Completion</div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-primary">↑ +5%</span>
-            <span className="text-xs text-muted-foreground">This month</span>
-          </div>
-        </Card>
+        <StatCard 
+          title={t("tasks")} 
+          value={stats.tasks} 
+          icon={<CheckSquare className="w-6 h-6" />} 
+          color="text-blue-500"
+        />
+        <StatCard 
+          title={t("notes")} 
+          value={stats.notes} 
+          icon={<FileText className="w-6 h-6" />} 
+          color="text-purple-500"
+        />
+        <StatCard 
+          title={t("pomodoros")} 
+          value={stats.pomodoro} 
+          icon={<Timer className="w-6 h-6" />} 
+          color="text-orange-500"
+        />
+        <StatCard 
+          title={t("ai_credits")} 
+          value={totalCredits} 
+          icon={<Zap className="w-6 h-6" />} 
+          color="text-primary"
+          subtitle={`${stats.monthlyCredits} ${t("monthly")}`}
+        />
       </div>
 
-      {/* Bottom Grid: Quick Tasks + Calendar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Quick Tasks */}
-        <Card className="bg-card border border-border/50 p-6 rounded-2xl">
-          <h3 className="text-lg font-bold mb-1">Quick Tasks</h3>
-          <p className="text-xs text-muted-foreground mb-6">Manage your daily tasks</p>
-          
-          <div className="flex gap-4 mb-6">
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 text-sm font-medium transition-colors">
-              <div className="w-4 h-4 rounded border border-muted-foreground"></div>
-              Active (3)
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/30 hover:bg-muted/50 text-sm font-medium transition-colors">
-              <div className="w-4 h-4 rounded border border-primary/60 bg-primary/20"></div>
-              Completed (3)
-            </button>
-          </div>
-
-          <div className="space-y-3 mb-6">
-            {["test", "Set up repository structure", "Draft project requirements"].map((task, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 hover:bg-secondary/20 transition-colors">
-                <input type="checkbox" className="w-4 h-4 rounded" />
-                <span className="text-sm">{task}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <input 
-              placeholder="Add a quick task..." 
-              className="flex-1 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <button className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium">+</button>
-          </div>
-        </Card>
-
-        {/* Calendar */}
-        <Card className="bg-card border border-border/50 p-6 rounded-2xl">
-          <h3 className="text-lg font-bold mb-1">Calendar</h3>
-          <p className="text-xs text-muted-foreground mb-4">Saturday, {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <button className="p-1 hover:bg-secondary/50 rounded">←</button>
-              <span className="font-semibold">November 2025</span>
-              <button className="p-1 hover:bg-secondary/50 rounded">→</button>
-            </div>
-
-            <div className="grid grid-cols-7 gap-2 text-center text-xs">
-              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(day => (
-                <div key={day} className="text-muted-foreground font-medium">{day}</div>
-              ))}
-              {Array.from({length: 35}, (_, i) => {
-                const date = i - 5;
-                const isCurrentDay = date === 15;
-                return (
-                  <button
-                    key={i}
-                    className={`p-2 rounded-lg text-sm font-medium transition-all ${
-                      isCurrentDay 
-                        ? "bg-primary text-primary-foreground"
-                        : date > 0 && date <= 30
-                        ? "hover:bg-secondary/50"
-                        : "text-muted-foreground/50"
-                    }`}
-                  >
-                    {date > 0 && date <= 30 ? date : ""}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Revenue Analytics */}
-      <Card className="bg-card border border-border/50 p-6 rounded-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-bold">Revenue Analytics</h3>
-            <p className="text-xs text-muted-foreground">Revenue breakdown by category</p>
-          </div>
-          <button className="px-4 py-2 rounded-lg bg-secondary/20 hover:bg-secondary/30 text-sm font-medium transition-colors">
-            This Quarter ▼
-          </button>
+      {/* Bottom Section: Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* AI Quick Actions */}
+        <div className="lg:col-span-2">
+          <AIQuickActions />
         </div>
-        
-        <div className="h-48 flex items-end justify-around gap-4 px-4">
-          {[60, 45, 30].map((height, i) => (
-            <div key={i} className="flex flex-col items-center gap-2">
-              <div className="w-12 rounded-t-lg bg-gradient-to-b from-primary to-primary/50" style={{height: `${height}%`}}></div>
-              <span className="text-xs text-muted-foreground">${(30 + i * 15).toFixed(0)}k</span>
-            </div>
-          ))}
-        </div>
-      </Card>
 
-      {/* Additional Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-        <StreaksWidget />
-        <AIQuickActions />
+        {/* Streaks Widget */}
+        <div>
+          <StreaksWidget />
+        </div>
       </div>
+
+      {/* Final Ad Banner */}
+      <AdsterraNativeBanner adKey="8afc8d7c671ba4c7dae868da0d2bbea98" width={728} height={90} className="mb-6" />
     </div>
   )
 }
