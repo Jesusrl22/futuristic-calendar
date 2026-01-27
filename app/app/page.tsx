@@ -161,7 +161,7 @@ export default function AppPage() {
       <AdsterraBanner adKey="dd82d93d86b369641ec4dd731423cb09" width={728} height={90} className="mb-6" />
       <AdsterraMobileBanner adKey="5fedd77c571ac1a4c2ea68ca3d2bca98" width={320} height={50} className="mb-6" />
 
-      {/* Main Grid: Welcome Section + Stats Summary */}
+      {/* Main Grid: Welcome Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Welcome Section - Left Side */}
         <div className="lg:col-span-2">
@@ -179,9 +179,9 @@ export default function AppPage() {
               </div>
               <div className="flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-6xl mb-4">📊</div>
-                  <div className="text-2xl font-bold mb-2">{stats.tasks + stats.notes + stats.pomodoro}</div>
-                  <div className="text-sm text-muted-foreground">Actividades hoy</div>
+                  <div className="text-6xl mb-4">🎯</div>
+                  <div className="text-2xl font-bold mb-2">{stats.tasks}</div>
+                  <div className="text-sm text-muted-foreground">Tareas por completar</div>
                   <div className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/50">
                     Mantén el ritmo productivo
                   </div>
@@ -191,76 +191,22 @@ export default function AppPage() {
           </Card>
         </div>
 
-        {/* Quick Stats - Right Side */}
+        {/* Credits Card - Right Side */}
         <div>
-          <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full">
-            <h3 className="text-lg font-bold mb-4">Resumen</h3>
-            <p className="text-xs text-muted-foreground mb-6">Tu actividad de hoy</p>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
-                <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm text-muted-foreground">Tareas</span>
-                </div>
-                <span className="text-lg font-bold text-blue-500">{stats.tasks}</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 rounded-lg bg-purple-500/10">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-purple-500" />
-                  <span className="text-sm text-muted-foreground">Notas</span>
-                </div>
-                <span className="text-lg font-bold text-purple-500">{stats.notes}</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10">
-                <div className="flex items-center gap-2">
-                  <Timer className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm text-muted-foreground">Pomodoros</span>
-                </div>
-                <span className="text-lg font-bold text-orange-500">{stats.pomodoro}</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10 mt-4 pt-4 border-t border-border/50">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">Créditos IA</span>
-                </div>
-                <span className="text-lg font-bold text-primary">{stats.monthlyCredits + stats.purchasedCredits}</span>
+          <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-2">Créditos IA</h3>
+              <div className="text-4xl font-bold text-primary mb-2">{totalCredits}</div>
+              <p className="text-xs text-muted-foreground">Disponibles este mes</p>
+            </div>
+            <div className="mt-6 pt-6 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Plan: <strong>{user?.subscription_tier?.toUpperCase()}</strong></span>
+                <Zap className="w-4 h-4 text-primary" />
               </div>
             </div>
           </Card>
         </div>
-      </div>
-
-      {/* Stats Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          title={t("tasks")} 
-          value={stats.tasks} 
-          icon={<CheckSquare className="w-6 h-6" />} 
-          color="text-blue-500"
-        />
-        <StatCard 
-          title={t("notes")} 
-          value={stats.notes} 
-          icon={<FileText className="w-6 h-6" />} 
-          color="text-purple-500"
-        />
-        <StatCard 
-          title={t("pomodoros")} 
-          value={stats.pomodoro} 
-          icon={<Timer className="w-6 h-6" />} 
-          color="text-orange-500"
-        />
-        <StatCard 
-          title={t("ai_credits")} 
-          value={totalCredits} 
-          icon={<Zap className="w-6 h-6" />} 
-          color="text-primary"
-          subtitle={`${stats.monthlyCredits} ${t("monthly")}`}
-        />
       </div>
 
       {/* Bottom Section: Widgets */}
