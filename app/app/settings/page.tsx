@@ -248,6 +248,16 @@ export default function SettingsPage() {
   }
 
   const handleThemeSave = async (theme: CustomTheme) => {
+    // Check if user is PRO
+    if (profile.plan !== "pro") {
+      toast({
+        title: "error",
+        description: "Custom themes are only available for PRO users",
+        variant: "destructive",
+      })
+      return
+    }
+
     const updatedThemes = profile.customThemes.some((t) => t.id === theme.id)
       ? profile.customThemes.map((t) => (t.id === theme.id ? theme : t))
       : [...profile.customThemes, theme]
@@ -268,6 +278,16 @@ export default function SettingsPage() {
   }
 
   const handleThemeDelete = async (themeId: string) => {
+    // Check if user is PRO
+    if (profile.plan !== "pro") {
+      toast({
+        title: "error",
+        description: "Custom themes are only available for PRO users",
+        variant: "destructive",
+      })
+      return
+    }
+
     const updatedThemes = profile.customThemes.filter((t) => t.id !== themeId)
     setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
 
