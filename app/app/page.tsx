@@ -153,8 +153,6 @@ export default function AppPage() {
 
       {/* Page Title */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Overview</h1>
-        <p className="text-muted-foreground">Monitor key metrics and manage your platform</p>
       </div>
 
       {/* Ad Banners */}
