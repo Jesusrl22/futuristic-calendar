@@ -76,6 +76,13 @@ export async function GET() {
     }
 
     const user = users[0]
+    
+    // FREE users should have 0 credits
+    if (user.subscription_tier === "free" || !user.subscription_tier) {
+      user.ai_credits = 0
+      user.ai_credits_purchased = 0
+    }
+    
     console.log("[v0] Profile API - User data:", {
       subscription_plan: user.subscription_plan,
       subscription_tier: user.subscription_tier,
