@@ -358,10 +358,10 @@ export default function SettingsPage() {
 
                 <div className="flex gap-2 justify-end border-t pt-4 mt-4">
                   <Button variant="outline" onClick={() => router.push("/app")}>
-                    Cancel
+                    {t("cancel")}
                   </Button>
                   <Button onClick={handleSave} disabled={loading} className="gap-2">
-                    {loading ? "Saving..." : "Save Changes"}
+                    {loading ? `${t("loading")}...` : t("save_settings")}
                   </Button>
                 </div>
               </div>
@@ -436,17 +436,17 @@ export default function SettingsPage() {
                       onThemeDelete={handleThemeDelete}
                       onThemeSelect={(theme) => handleThemeChange(theme.id)}
                       selectedThemeId={profile.theme}
-                      maxThemes={5}
+                      maxThemes={profile.plan === "pro" ? 20 : 5}
                     />
                   </div>
                 )}
 
                 <div className="flex gap-2 justify-end border-t pt-4">
                   <Button variant="outline" onClick={() => router.push("/app")}>
-                    Cancel
+                    {t("cancel")}
                   </Button>
                   <Button onClick={handleSave} disabled={loading} className="gap-2">
-                    {loading ? "Saving..." : "Save Changes"}
+                    {loading ? `${t("loading")}...` : t("save_settings")}
                   </Button>
                 </div>
               </div>
