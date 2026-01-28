@@ -63,14 +63,14 @@ Supported languages:
 
 1. Click on the **Confirm Signup** template
 2. In the "Redirect URL" field, enter:
-   ```
+   \`\`\`
    https://yourdomain.com/auth/confirm?token={{ .Token }}&lang={{ .UserLanguage }}
-   ```
+   \`\`\`
    
    Or if using custom SMTP:
-   ```
+   \`\`\`
    https://yourdomain.com/auth/confirm?token=[TOKEN]&lang=[USER_LANGUAGE]
-   ```
+   \`\`\`
 
 3. The template will automatically send users to this URL with the token
 
@@ -78,9 +78,9 @@ Supported languages:
 
 1. Click on the **Reset Password** template
 2. In the "Redirect URL" field, enter:
-   ```
+   \`\`\`
    https://yourdomain.com/auth/reset?token={{ .Token }}&lang={{ .UserLanguage }}
-   ```
+   \`\`\`
 
 3. Click **Save**
 
@@ -88,7 +88,7 @@ Supported languages:
 
 In your signup API route (`/app/api/auth/signup/route.ts`), the language is stored in user metadata:
 
-```typescript
+\`\`\`typescript
 const { data: authData, error: authError } = await supabase.auth.admin.createUser({
   email,
   password,
@@ -98,7 +98,7 @@ const { data: authData, error: authError } = await supabase.auth.admin.createUse
     language: userLanguage, // This is sent with the email
   },
 })
-```
+\`\`\`
 
 The `language` from `user_metadata` will be passed as the `lang` parameter in the email links.
 
@@ -108,9 +108,9 @@ The `language` from `user_metadata` will be passed as the `lang` parameter in th
 
 The email template pages automatically detect the language from the URL parameter:
 
-```typescript
+\`\`\`typescript
 const lang = (searchParams.lang || "en") as LanguageCode
-```
+\`\`\`
 
 ### Translation System
 
@@ -127,12 +127,12 @@ Each page includes complete translations for all supported languages. The transl
 
 Make sure these are set in your `.env.local`:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-```
+\`\`\`
 
 ## Testing
 
@@ -192,7 +192,7 @@ If you want to use custom email templates instead of Supabase's built-in ones:
 
 ### Setup Email Templates (Admin Only)
 
-```
+\`\`\`
 POST /api/admin/setup-email-templates
 Headers:
   x-admin-secret: [ADMIN_SECRET]
@@ -203,7 +203,7 @@ Response:
   "templates": { ... },
   "instructions": { ... }
 }
-```
+\`\`\`
 
 ## Additional Resources
 

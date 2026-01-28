@@ -142,24 +142,29 @@ export default function SettingsPage() {
     setLoading(true)
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      console.log("[v0] Settings - handleSave started with theme:", profile.theme)
 
       // Save customThemes to localStorage only
       localStorage.setItem("customThemes", JSON.stringify(profile.customThemes))
 
+      const payload = {
+        theme: profile.theme,
+        language: profile.language,
+        timezone: detectedTimezone,
+        pomodoro_work_duration: profile.pomodoroWorkDuration,
+        pomodoro_break_duration: profile.pomodoroBreakDuration,
+        pomodoro_long_break_duration: profile.pomodoroLongBreakDuration,
+      }
+      console.log("[v0] Settings - Sending payload:", payload)
+
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme: profile.theme,
-          language: profile.language,
-          timezone: detectedTimezone,
-          pomodoro_work_duration: profile.pomodoroWorkDuration,
-          pomodoro_break_duration: profile.pomodoroBreakDuration,
-          pomodoro_long_break_duration: profile.pomodoroLongBreakDuration,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const result = await response.json()
+      console.log("[v0] Settings - Response OK:", response.ok, "Result:", result)
 
       if (response.ok && result.success) {
         localStorage.setItem("timezone", detectedTimezone)
@@ -171,8 +176,10 @@ export default function SettingsPage() {
         // Apply the theme
         const customTheme = profile.customThemes.find((t) => t.id === profile.theme)
         if (customTheme) {
+          console.log("[v0] Settings - Applying custom theme:", profile.theme)
           applyTheme(profile.theme, customTheme.primary, customTheme.secondary)
         } else {
+          console.log("[v0] Settings - Applying standard theme:", profile.theme)
           applyTheme(profile.theme)
         }
 
@@ -181,6 +188,7 @@ export default function SettingsPage() {
           description: "Settings saved successfully",
         })
       } else {
+        console.error("[v0] Settings - Save failed:", result)
         toast({
           title: "error",
           description: result.error || "Failed to save settings",
@@ -188,7 +196,7 @@ export default function SettingsPage() {
         })
       }
     } catch (error) {
-      console.error("Error saving settings:", error)
+      console.error("[v0] Settings - Error saving settings:", error)
       toast({
         title: "error",
         description: "Failed to save settings",
