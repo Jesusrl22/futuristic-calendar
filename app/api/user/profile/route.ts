@@ -56,10 +56,13 @@ export async function GET() {
     let users
     try {
       const contentType = response.headers.get("content-type")
-      if (contentType && contentType.includes("application/json")) {
-        users = await response.json()
+      // Try to parse JSON regardless of content-type header
+      // (some responses may not include the header but are still JSON)
+      const text = await response.text()
+      if (text) {
+        users = JSON.parse(text)
       } else {
-        console.error("[v0] Profile API - Invalid content type:", contentType)
+        console.error("[v0] Profile API - Empty response body")
         return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
       }
     } catch (parseError) {
