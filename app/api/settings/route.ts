@@ -70,10 +70,12 @@ export async function PATCH(request: Request) {
     const accessToken = cookieStore.get("sb-access-token")?.value
 
     if (!accessToken) {
+      console.error("[v0] Settings PATCH - No access token")
       return NextResponse.json({ error: "Unauthorized - No access token" }, { status: 401 })
     }
 
     const body = await request.json()
+    console.log("[v0] Settings PATCH - Received body:", body)
 
     const {
       theme,
@@ -94,13 +96,18 @@ export async function PATCH(request: Request) {
 
     if (!userResponse.ok) {
       const errorText = await userResponse.text()
+      console.error("[v0] Settings PATCH - Auth failed:", errorText)
       return NextResponse.json({ error: "Failed to authenticate", details: errorText }, { status: 401 })
     }
 
     const user = await userResponse.json()
+    console.log("[v0] Settings PATCH - User ID:", user.id)
 
     const updates: any = { updated_at: new Date().toISOString() }
-    if (theme !== undefined) updates.theme = theme
+    if (theme !== undefined) {
+      updates.theme = theme
+      console.log("[v0] Settings PATCH - Setting theme to:", theme)
+    }
     if (theme_preference !== undefined) {
       updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
     }
@@ -109,6 +116,8 @@ export async function PATCH(request: Request) {
     if (pomodoro_work_duration !== undefined) updates.pomodoro_work_duration = pomodoro_work_duration
     if (pomodoro_break_duration !== undefined) updates.pomodoro_break_duration = pomodoro_break_duration
     if (pomodoro_long_break_duration !== undefined) updates.pomodoro_long_break_duration = pomodoro_long_break_duration
+
+    console.log("[v0] Settings PATCH - Updates to apply:", updates)
 
     const updateResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${user.id}`, {
       method: "PATCH",
@@ -123,6 +132,7 @@ export async function PATCH(request: Request) {
 
     if (!updateResponse.ok) {
       const errorText = await updateResponse.text()
+      console.error("[v0] Settings PATCH - Update failed:", errorText)
       return NextResponse.json(
         {
           error: "Failed to update settings",
@@ -134,9 +144,11 @@ export async function PATCH(request: Request) {
     }
 
     const updatedUser = await updateResponse.json()
+    console.log("[v0] Settings PATCH - Successfully updated user:", updatedUser)
 
     return NextResponse.json({ success: true, user: updatedUser[0] || updatedUser })
   } catch (error: any) {
+    console.error("[v0] Settings PATCH - Error:", error)
     return NextResponse.json(
       {
         error: "Failed to update settings",

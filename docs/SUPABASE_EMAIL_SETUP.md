@@ -22,15 +22,15 @@ Cuando intentas usar "Olvidé mi contraseña" o confirmar la cuenta, Supabase ne
 2. Busca la sección **"Redirect URL"** o **"Link"**
 3. Copia y pega esta URL exactamente:
 
-```
+\`\`\`
 http://localhost:3000/auth/confirm?token={{ .ConfirmationURL }}
-```
+\`\`\`
 
 O si ya tienes un dominio en producción:
 
-```
+\`\`\`
 https://tudominio.com/auth/confirm?token={{ .ConfirmationURL }}
-```
+\`\`\`
 
 4. Haz clic en **"Save Template"** o **"Update"**
 
@@ -42,15 +42,15 @@ https://tudominio.com/auth/confirm?token={{ .ConfirmationURL }}
 2. Busca la sección **"Redirect URL"**
 3. Copia y pega esta URL exactamente:
 
-```
+\`\`\`
 http://localhost:3000/auth/reset?token={{ .RecoveryURL }}
-```
+\`\`\`
 
 O en producción:
 
-```
+\`\`\`
 https://tudominio.com/auth/reset?token={{ .RecoveryURL }}
-```
+\`\`\`
 
 4. Haz clic en **"Save Template"** o **"Update"**
 
@@ -116,7 +116,7 @@ Si no configuras nada personalizado, Supabase usa su propio servidor. Esto funci
 ### Problema 2: Template URLs Incorrectas
 
 **Revisa:**
-```
+\`\`\`
 Authentication → Email Templates
 
 Confirm Signup → Redirect URL debe ser:
@@ -124,7 +124,7 @@ http://localhost:3000/auth/confirm?token={{ .ConfirmationURL }}
 
 Reset Password → Redirect URL debe ser:
 http://localhost:3000/auth/reset?token={{ .RecoveryURL }}
-```
+\`\`\`
 
 ### Problema 3: SMTP No Funciona
 
@@ -142,16 +142,16 @@ http://localhost:3000/auth/reset?token={{ .RecoveryURL }}
 ## URLs Correctas para tu Aplicación
 
 Cuando estés en desarrollo:
-```
+\`\`\`
 Confirm Signup: http://localhost:3000/auth/confirm?token={{ .ConfirmationURL }}
 Reset Password: http://localhost:3000/auth/reset?token={{ .RecoveryURL }}
-```
+\`\`\`
 
 Cuando despliegues a producción:
-```
+\`\`\`
 Confirm Signup: https://tudominio.com/auth/confirm?token={{ .ConfirmationURL }}
 Reset Password: https://tudominio.com/auth/reset?token={{ .RecoveryURL }}
-```
+\`\`\`
 
 ## Ejemplos de Proveedores SMTP
 

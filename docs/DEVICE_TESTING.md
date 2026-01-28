@@ -29,12 +29,12 @@
 
 ## Tamaños de Pantalla Clave para Testear
 
-```
+\`\`\`
 - Mobile: 375px (iPhone SE), 393px (Pixel 5), 428px (iPhone 14 Pro Max)
 - Tablet: 768px (iPad), 820px (iPad Pro)
 - Desktop: 1024px, 1366px, 1920px
 - Ultra-wide: 2560px
-```
+\`\`\`
 
 ## Checklist de Testing para Temas
 
@@ -69,13 +69,13 @@
 
 Abre la consola (F12) y verifica:
 
-```javascript
+\`\`\`javascript
 // Verificar que las variables CSS estén definidas
 const style = getComputedStyle(document.documentElement);
 console.log('Primary:', style.getPropertyValue('--color-primary'));
 console.log('Background:', style.getPropertyValue('--color-background'));
 console.log('Theme:', document.documentElement.getAttribute('data-theme'));
-```
+\`\`\`
 
 ## Test de Rendimiento
 
