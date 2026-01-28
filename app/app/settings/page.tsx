@@ -199,7 +199,7 @@ export default function SettingsPage() {
     }
   }
 
-  const handleThemeChange = (themeId: string) => {
+  const handleThemeChange = async (themeId: string) => {
     // Update profile state
     setProfile((prev) => {
       const updated = { ...prev, theme: themeId }
@@ -218,14 +218,33 @@ export default function SettingsPage() {
       return updated
     })
 
-    // Save theme to database immediately
-    fetch("/api/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ theme: themeId }),
-    }).catch((error) => {
+    // Save theme to database immediately - wait for response
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: themeId }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error("[v0] Error saving theme to database:", error)
+        toast({
+          title: "error",
+          description: "Failed to save theme",
+          variant: "destructive",
+        })
+      } else {
+        console.log("[v0] Theme saved to database:", themeId)
+      }
+    } catch (error) {
       console.error("[v0] Error saving theme to database:", error)
-    })
+      toast({
+        title: "error",
+        description: "Failed to save theme",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleThemeSave = async (theme: CustomTheme) => {
@@ -436,7 +455,7 @@ export default function SettingsPage() {
                       onThemeDelete={handleThemeDelete}
                       onThemeSelect={(theme) => handleThemeChange(theme.id)}
                       selectedThemeId={profile.theme}
-                      maxThemes={profile.plan === "pro" ? 20 : 5}
+                      maxThemes={5}
                     />
                   </div>
                 )}
