@@ -31,14 +31,12 @@ export function ThemeLoader() {
           const data = await response.json()
           const dbTheme = data.profile?.theme || "neon-tech"
 
-          // Get custom themes from database
+          // Get custom themes from localStorage
           let customThemes = []
-          if (data.profile?.custom_themes) {
+          const savedThemes = localStorage.getItem("customThemes")
+          if (savedThemes) {
             try {
-              customThemes =
-                typeof data.profile.custom_themes === "string"
-                  ? JSON.parse(data.profile.custom_themes)
-                  : data.profile.custom_themes
+              customThemes = JSON.parse(savedThemes)
             } catch (e) {
               customThemes = []
             }

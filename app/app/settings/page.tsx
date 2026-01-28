@@ -217,6 +217,15 @@ export default function SettingsPage() {
       
       return updated
     })
+
+    // Save theme to database immediately
+    fetch("/api/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ theme: themeId }),
+    }).catch((error) => {
+      console.error("[v0] Error saving theme to database:", error)
+    })
   }
 
   const handleThemeSave = async (theme: CustomTheme) => {
@@ -345,51 +354,6 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground mt-1">
                     {t("current_time")}: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
-                </div>
-
-                <div className="border-t pt-4 mt-6">
-                  <h3 className="font-semibold mb-4">Pomodoro Settings</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                      <Label className="text-sm">Work Duration (min)</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="60"
-                        value={profile.pomodoroWorkDuration}
-                        onChange={(e) =>
-                          setProfile({ ...profile, pomodoroWorkDuration: Number(e.target.value) })
-                        }
-                        className="bg-secondary/50 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Break Duration (min)</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="30"
-                        value={profile.pomodoroBreakDuration}
-                        onChange={(e) =>
-                          setProfile({ ...profile, pomodoroBreakDuration: Number(e.target.value) })
-                        }
-                        className="bg-secondary/50 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm">Long Break (min)</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="60"
-                        value={profile.pomodoroLongBreakDuration}
-                        onChange={(e) =>
-                          setProfile({ ...profile, pomodoroLongBreakDuration: Number(e.target.value) })
-                        }
-                        className="bg-secondary/50 text-sm"
-                      />
-                    </div>
-                  </div>
                 </div>
 
                 <div className="flex gap-2 justify-end border-t pt-4 mt-4">
