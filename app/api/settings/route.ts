@@ -104,7 +104,10 @@ export async function PATCH(request: Request) {
     console.log("[v0] Settings PATCH - User ID:", user.id)
 
     const updates: any = { updated_at: new Date().toISOString() }
-    if (theme !== undefined) updates.theme_preference = theme
+    if (theme !== undefined) {
+      updates.theme = theme
+      console.log("[v0] Settings PATCH - Setting theme to:", theme)
+    }
     if (theme_preference !== undefined) {
       updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
     }
