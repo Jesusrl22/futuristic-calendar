@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useToast } from "@/hooks/use-toast"
 import { getThemesByTier, canUseCustomTheme, applyTheme, type Theme } from "@/lib/themes"
+import { CustomThemeManager, type CustomTheme } from "@/components/custom-theme-manager"
 import { Badge } from "@/components/ui/badge"
 import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
 import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
@@ -21,8 +23,7 @@ import type { Language } from "@/lib/translations"
 type ProfileType = {
   email: string
   theme: string
-  customPrimary: string
-  customSecondary: string
+  customThemes: CustomTheme[]
   language: Language
   notifications: boolean
   timezone: string
@@ -47,12 +48,11 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<ProfileType>({
     email: "",
     theme: "default",
+    customThemes: [],
     language: globalLanguage,
     notifications: true,
     timezone: "UTC",
     plan: "free",
-    customPrimary: "#7c3aed",
-    customSecondary: "#ec4899",
     pomodoroWorkDuration: 25,
     pomodoroBreakDuration: 5,
     pomodoroLongBreakDuration: 15,
@@ -60,7 +60,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
   const [availableThemes, setAvailableThemes] = useState<Theme[]>([])
-  const [showCustom, setShowCustom] = useState(false)
+  const [showCustomThemes, setShowCustomThemes] = useState(false)
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -70,32 +70,14 @@ export default function SettingsPage() {
   useEffect(() => {
     const themes = getThemesByTier(profile.plan)
     setAvailableThemes(themes)
-    setShowCustom(canUseCustomTheme(profile.plan))
+    setShowCustomThemes(canUseCustomTheme(profile.plan))
   }, [profile.plan])
-
-  useEffect(() => {
-    if (isInitialLoad) {
-      return
-    }
-
-    const timer = setTimeout(() => {
-      if (profile.theme === "custom") {
-        applyTheme("custom", profile.customPrimary, profile.customSecondary)
-      } else {
-        applyTheme(profile.theme)
-      }
-    }, 0)
-
-    return () => clearTimeout(timer)
-  }, [profile.theme, profile.customPrimary, profile.customSecondary, isInitialLoad])
 
   const fetchProfile = async () => {
     setLoading(true)
     try {
       const response = await fetch("/api/settings")
       const settingsData = await response.json()
-
-      const savedTheme = localStorage.getItem("theme") || "default"
 
       if (settingsData?.profile) {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -112,11 +94,21 @@ export default function SettingsPage() {
                 .trim()
                 .replace(/[\s\-_]/g, "")
 
+        // Load customThemes from localStorage
+        let customThemes: CustomTheme[] = []
+        const savedThemes = localStorage.getItem("customThemes")
+        if (savedThemes) {
+          try {
+            customThemes = JSON.parse(savedThemes)
+          } catch (e) {
+            customThemes = []
+          }
+        }
+
         const newProfile: ProfileType = {
           email: settingsData.email || "",
-          theme: settingsData.profile.theme || savedTheme || "default",
-          customPrimary: settingsData.profile.customPrimary || localStorage.getItem("customPrimary") || "#7c3aed",
-          customSecondary: settingsData.profile.customSecondary || localStorage.getItem("customSecondary") || "#ec4899",
+          theme: settingsData.profile.theme || "default",
+          customThemes: customThemes,
           language: settingsData.profile.language || localStorage.getItem("language") || globalLanguage,
           notifications: true,
           timezone: settingsData.profile.timezone || detectedTimezone,
@@ -126,21 +118,21 @@ export default function SettingsPage() {
           plan: plan,
         }
 
-        if (newProfile.customPrimary) {
-          localStorage.setItem("customPrimary", newProfile.customPrimary)
-        }
-        if (newProfile.customSecondary) {
-          localStorage.setItem("customSecondary", newProfile.customSecondary)
-        }
-
-        if (settingsData.profile.theme && settingsData.profile.theme !== savedTheme) {
-          localStorage.setItem("theme", newProfile.theme)
-        }
-
         setProfile(newProfile)
         setIsInitialLoad(false)
+
+        // Apply the saved theme
+        if (newProfile.customThemes.some((t) => t.id === newProfile.theme)) {
+          const customTheme = newProfile.customThemes.find((t) => t.id === newProfile.theme)
+          if (customTheme) {
+            applyTheme(newProfile.theme, customTheme.primary, customTheme.secondary)
+          }
+        } else {
+          applyTheme(newProfile.theme)
+        }
       }
     } catch (error) {
+      console.error("Error fetching profile:", error)
     } finally {
       setLoading(false)
     }
@@ -151,20 +143,14 @@ export default function SettingsPage() {
     try {
       const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-      const themePreference =
-        profile.theme === "custom"
-          ? {
-              customPrimary: profile.customPrimary || "#7c3aed",
-              customSecondary: profile.customSecondary || "#ec4899",
-            }
-          : null
+      // Save customThemes to localStorage only
+      localStorage.setItem("customThemes", JSON.stringify(profile.customThemes))
 
       const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           theme: profile.theme,
-          theme_preference: themePreference,
           language: profile.language,
           timezone: detectedTimezone,
           pomodoro_work_duration: profile.pomodoroWorkDuration,
@@ -176,21 +162,16 @@ export default function SettingsPage() {
       const result = await response.json()
 
       if (response.ok && result.success) {
-        localStorage.setItem("notifications", profile.notifications.toString())
         localStorage.setItem("timezone", detectedTimezone)
         localStorage.setItem("language", profile.language)
         localStorage.setItem("theme", profile.theme)
 
         setGlobalLanguage(profile.language)
 
-        if (profile.theme === "custom") {
-          const primaryColor = profile.customPrimary || "#7c3aed"
-          const secondaryColor = profile.customSecondary || "#ec4899"
-          localStorage.setItem("customPrimary", primaryColor)
-          localStorage.setItem("customSecondary", secondaryColor)
-          setTimeout(() => {
-            applyTheme("custom", primaryColor, secondaryColor)
-          }, 0)
+        // Apply the theme
+        const customTheme = profile.customThemes.find((t) => t.id === profile.theme)
+        if (customTheme) {
+          applyTheme(profile.theme, customTheme.primary, customTheme.secondary)
         } else {
           applyTheme(profile.theme)
         }
@@ -218,40 +199,111 @@ export default function SettingsPage() {
     }
   }
 
-  const handleThemeChange = (themeId: string) => {
-    setProfile((prev) => ({ ...prev, theme: themeId }))
-
-    setTimeout(() => {
+  const handleThemeChange = async (themeId: string) => {
+    // Update profile state
+    setProfile((prev) => {
+      const updated = { ...prev, theme: themeId }
       localStorage.setItem("theme", themeId)
 
-      if (themeId === "custom" && profile.customPrimary && profile.customSecondary) {
-        localStorage.setItem("customPrimary", profile.customPrimary)
-        localStorage.setItem("customSecondary", profile.customSecondary)
-      } else if (themeId !== "custom") {
-        localStorage.removeItem("customPrimary")
-        localStorage.removeItem("customSecondary")
+      // Apply theme immediately with current custom themes
+      const customTheme = updated.customThemes.find((t) => t.id === themeId)
+      if (customTheme) {
+        applyTheme(themeId, customTheme.primary, customTheme.secondary)
+        console.log("[v0] Custom theme selected:", themeId)
+      } else {
+        applyTheme(themeId)
+        console.log("[v0] Standard theme selected:", themeId)
       }
-    }, 0)
+      
+      return updated
+    })
+
+    // Save theme to database immediately - wait for response
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ theme: themeId }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error("[v0] Error saving theme to database:", error)
+        toast({
+          title: "error",
+          description: "Failed to save theme",
+          variant: "destructive",
+        })
+      } else {
+        console.log("[v0] Theme saved to database:", themeId)
+      }
+    } catch (error) {
+      console.error("[v0] Error saving theme to database:", error)
+      toast({
+        title: "error",
+        description: "Failed to save theme",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleCustomColorChange = (type: "primary" | "secondary", value: string) => {
-    const updatedProfile = {
-      ...profile,
-      [type === "primary" ? "customPrimary" : "customSecondary"]: value,
+  const handleThemeSave = async (theme: CustomTheme) => {
+    // Check if user is PRO
+    if (profile.plan !== "pro") {
+      toast({
+        title: "error",
+        description: "Custom themes are only available for PRO users",
+        variant: "destructive",
+      })
+      return
     }
-    setProfile(updatedProfile)
 
-    setTimeout(() => {
-      const primary = type === "primary" ? value : updatedProfile.customPrimary || "#84cc16"
-      const secondary = type === "secondary" ? value : updatedProfile.customSecondary || "#3b82f6"
+    const updatedThemes = profile.customThemes.some((t) => t.id === theme.id)
+      ? profile.customThemes.map((t) => (t.id === theme.id ? theme : t))
+      : [...profile.customThemes, theme]
 
-      localStorage.setItem("customPrimary", primary)
-      localStorage.setItem("customSecondary", secondary)
+    setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
 
-      if (profile.theme === "custom") {
-        applyTheme("custom", primary, secondary)
+    // Save customThemes to localStorage only
+    try {
+      localStorage.setItem("customThemes", JSON.stringify(updatedThemes))
+
+      if (profile.theme === theme.id) {
+        applyTheme(theme.id, theme.primary, theme.secondary)
       }
-    }, 0)
+    } catch (error) {
+      console.error("Error saving custom theme:", error)
+      throw error
+    }
+  }
+
+  const handleThemeDelete = async (themeId: string) => {
+    // Check if user is PRO
+    if (profile.plan !== "pro") {
+      toast({
+        title: "error",
+        description: "Custom themes are only available for PRO users",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const updatedThemes = profile.customThemes.filter((t) => t.id !== themeId)
+    setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
+
+    // If deleted theme was selected, switch to default
+    if (profile.theme === themeId) {
+      setProfile((prev) => ({ ...prev, theme: "default" }))
+      applyTheme("default")
+    }
+
+    // Save customThemes to localStorage only
+    try {
+      localStorage.setItem("customThemes", JSON.stringify(updatedThemes))
+    } catch (error) {
+      console.error("Error deleting custom theme:", error)
+      throw error
+    }
   }
 
   const handleNotificationToggle = async (enabled: boolean) => {
@@ -342,6 +394,15 @@ export default function SettingsPage() {
                     {t("current_time")}: {new Date().toLocaleString("en-US", { timeZone: profile.timezone })}
                   </p>
                 </div>
+
+                <div className="flex gap-2 justify-end border-t pt-4 mt-4">
+                  <Button variant="outline" onClick={() => router.push("/app")}>
+                    {t("cancel")}
+                  </Button>
+                  <Button onClick={handleSave} disabled={loading} className="gap-2">
+                    {loading ? `${t("loading")}...` : t("save_settings")}
+                  </Button>
+                </div>
               </div>
             </Card>
           </TabsContent>
@@ -349,7 +410,7 @@ export default function SettingsPage() {
           <TabsContent value="theme">
             <Card className="glass-card p-4 sm:p-6 neon-glow">
               <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">{t("theme_settings")}</h2>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
                   <Label className="text-sm">{t("theme")}</Label>
                   <Select value={profile.theme} onValueChange={handleThemeChange}>
@@ -377,19 +438,26 @@ export default function SettingsPage() {
                           </div>
                         </SelectItem>
                       ))}
-                      {showCustom && (
-                        <SelectItem value="custom">
+                      {profile.customThemes.map((theme) => (
+                        <SelectItem key={theme.id} value={theme.id}>
                           <div className="flex items-center gap-2 text-sm">
                             <div className="flex gap-1">
-                              <div className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20 bg-gradient-to-r from-purple-500 to-pink-500" />
+                              <div
+                                className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20"
+                                style={{ backgroundColor: theme.primary }}
+                              />
+                              <div
+                                className="w-3 h-3 md:w-4 md:h-4 rounded border border-white/20"
+                                style={{ backgroundColor: theme.secondary }}
+                              />
                             </div>
-                            {t("custom_theme")}
+                            {theme.name}
                             <Badge variant="outline" className="text-xs bg-primary/20">
-                              PRO
+                              CUSTOM
                             </Badge>
                           </div>
                         </SelectItem>
-                      )}
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -399,37 +467,27 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                {profile.theme === "custom" && showCustom && (
-                  <div className="space-y-4 mt-4 p-3 sm:p-4 border rounded-lg">
-                    <p className="text-xs sm:text-sm text-muted-foreground">{t("custom_theme_description")}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="customPrimary" className="text-sm">
-                          {t("primary_color")}
-                        </Label>
-                        <Input
-                          id="customPrimary"
-                          type="color"
-                          value={profile.customPrimary || "#84cc16"}
-                          onChange={(e) => handleCustomColorChange("primary", e.target.value)}
-                          className="h-10 w-full"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="customSecondary" className="text-sm">
-                          {t("secondary_color")}
-                        </Label>
-                        <Input
-                          id="customSecondary"
-                          type="color"
-                          value={profile.customSecondary || "#3b82f6"}
-                          onChange={(e) => handleCustomColorChange("secondary", e.target.value)}
-                          className="h-10 w-full"
-                        />
-                      </div>
-                    </div>
+                {showCustomThemes && (
+                  <div className="border-t pt-6">
+                    <CustomThemeManager
+                      themes={profile.customThemes}
+                      onThemeSave={handleThemeSave}
+                      onThemeDelete={handleThemeDelete}
+                      onThemeSelect={(theme) => handleThemeChange(theme.id)}
+                      selectedThemeId={profile.theme}
+                      maxThemes={5}
+                    />
                   </div>
                 )}
+
+                <div className="flex gap-2 justify-end border-t pt-4">
+                  <Button variant="outline" onClick={() => router.push("/app")}>
+                    {t("cancel")}
+                  </Button>
+                  <Button onClick={handleSave} disabled={loading} className="gap-2">
+                    {loading ? `${t("loading")}...` : t("save_settings")}
+                  </Button>
+                </div>
               </div>
             </Card>
           </TabsContent>
@@ -486,13 +544,11 @@ export default function SettingsPage() {
 
         {profile.plan === "free" && (
           <div className="mt-6">
-            {/* Desktop native banner - only shows on desktop */}
             <AdsterraNativeBanner
               containerId="container-105a3c31d27607df87969077c87047d4"
               scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
               className="hidden md:block"
             />
-            {/* Mobile banner - only shows on mobile */}
             <AdsterraMobileBanner
               adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
               width={320}

@@ -4,11 +4,15 @@ import { NextRequest, NextResponse } from "next/server"
 import webpush from "web-push"
 
 // Configure web-push with VAPID keys
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || "mailto:support@futuretask.app",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-)
+if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  console.error("[v0] VAPID keys are not configured. Push notifications will not work.")
+} else {
+  webpush.setVapidDetails(
+    "mailto:support@futuretask.app",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  )
+}
 
 export async function POST(request: NextRequest) {
   try {

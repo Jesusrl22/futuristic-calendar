@@ -264,40 +264,81 @@ function hexToHSL(hex: string): string {
 }
 
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
-  const root = document.documentElement
+  // Only execute on client-side
+  if (typeof document === "undefined") {
+    console.log("[v0] applyTheme called on server, skipping")
+    return
+  }
 
-  if (themeId === "custom" && customPrimary && customSecondary) {
+  const root = document.documentElement
+  
+  if (!root) {
+    console.error("[v0] Could not find document root")
+    return
+  }
+
+  if ((themeId.startsWith("custom-") || customPrimary || customSecondary) && customPrimary && customSecondary) {
+    // Remove attribute first to force update
+    root.removeAttribute("data-theme")
+    
+    // Convert hex to HSL if needed
     const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
+    
+    // Force reflow to ensure changes apply
+    void root.offsetHeight
+    
+    // Set all CSS variables for custom theme
+    root.style.setProperty("--color-primary", primaryHSL)
+    root.style.setProperty("--color-secondary", secondaryHSL)
+    // Also set derived colors
+    root.style.setProperty("--color-primary-foreground", "0 0% 5%")
+    root.style.setProperty("--color-secondary-foreground", "0 0% 5%")
+    root.style.setProperty("--color-accent", primaryHSL)
+    root.style.setProperty("--color-accent-foreground", "0 0% 5%")
 
-    root.style.setProperty("--primary", primaryHSL)
-    root.style.setProperty("--accent", primaryHSL)
-    root.style.setProperty("--secondary", secondaryHSL)
-    root.style.setProperty("--muted", secondaryHSL)
-    root.style.setProperty("--background", "0 0% 8%")
-    root.style.setProperty("--foreground", "0 0% 98%")
-    root.style.setProperty("--card", "0 0% 12%")
-    root.style.setProperty("--card-foreground", "0 0% 98%")
+    // Set the attribute after styles
+    root.setAttribute("data-theme", themeId)
 
-    localStorage.setItem("theme", "custom")
-    localStorage.setItem("customPrimary", customPrimary)
-    localStorage.setItem("customSecondary", customSecondary)
+    localStorage.setItem("theme", themeId)
+    if (customPrimary) localStorage.setItem("customPrimary", customPrimary)
+    if (customSecondary) localStorage.setItem("customSecondary", customSecondary)
+
+    console.log("[v0] Custom theme applied:", themeId, primaryHSL, secondaryHSL)
     return
   }
 
   const theme = allThemes.find((t) => t.id === themeId)
-  if (!theme) {
-    return
+  if (theme) {
+    // Force theme change by resetting
+    root.removeAttribute("data-theme")
+    
+    // Force reflow
+    void root.offsetHeight
+    
+    // Set all CSS variables
+    root.style.setProperty("--color-background", theme.background)
+    root.style.setProperty("--color-foreground", theme.foreground)
+    root.style.setProperty("--color-card", theme.card)
+    root.style.setProperty("--color-card-foreground", theme.cardForeground)
+    root.style.setProperty("--color-primary", theme.primary)
+    root.style.setProperty("--color-primary-foreground", theme.primaryForeground)
+    root.style.setProperty("--color-secondary", theme.secondary)
+    root.style.setProperty("--color-secondary-foreground", theme.secondaryForeground)
+    root.style.setProperty("--color-muted", theme.muted)
+    root.style.setProperty("--color-muted-foreground", theme.mutedForeground)
+    root.style.setProperty("--color-accent", theme.accent)
+    root.style.setProperty("--color-accent-foreground", theme.accentForeground)
+    root.style.setProperty("--color-border", theme.border)
+    root.style.setProperty("--color-input", theme.input)
+    root.style.setProperty("--color-ring", theme.ring)
+    
+    // Set the attribute after styles
+    root.setAttribute("data-theme", themeId)
+    console.log("[v0] Theme applied:", themeId)
+  } else {
+    console.warn("[v0] Theme not found:", themeId)
   }
-
-  root.style.setProperty("--primary", theme.primary)
-  root.style.setProperty("--accent", theme.primary)
-  root.style.setProperty("--secondary", theme.secondary)
-  root.style.setProperty("--muted", theme.secondary)
-  root.style.setProperty("--background", theme.background)
-  root.style.setProperty("--foreground", theme.foreground)
-  root.style.setProperty("--card", theme.card)
-  root.style.setProperty("--card-foreground", theme.cardForeground)
 
   localStorage.setItem("theme", themeId)
 }

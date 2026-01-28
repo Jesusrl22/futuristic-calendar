@@ -19,8 +19,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const userId = getUserIdFromToken(accessToken)
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?order=display_order.asc,created_at.desc`,
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&order=display_order.asc,created_at.desc`,
       {
         headers: {
           apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

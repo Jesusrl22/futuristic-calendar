@@ -19,7 +19,7 @@ export function ThemeLoader() {
       pathname === "/reviews"
 
     if (isPublicPage) {
-      applyTheme("default")
+      applyTheme("neon-tech")
       setIsInitialized(true)
       return
     }
@@ -31,67 +31,39 @@ export function ThemeLoader() {
           const data = await response.json()
           const dbTheme = data.profile?.theme || "default"
 
-          let customPrimaryDB = null
-          let customSecondaryDB = null
+          console.log("[v0] ThemeLoader - Fetched theme from API:", dbTheme)
 
-          if (data.profile?.theme_preference) {
-            let themePreference = data.profile.theme_preference
-
-            if (typeof themePreference === "string") {
-              try {
-                themePreference = JSON.parse(themePreference)
-              } catch (e) {
-                themePreference = null
-              }
+          // Get custom themes from localStorage
+          let customThemes = []
+          const savedThemes = localStorage.getItem("customThemes")
+          if (savedThemes) {
+            try {
+              customThemes = JSON.parse(savedThemes)
+            } catch (e) {
+              customThemes = []
             }
-
-            if (themePreference?.customPrimary) {
-              customPrimaryDB = themePreference.customPrimary
-            }
-            if (themePreference?.customSecondary) {
-              customSecondaryDB = themePreference.customSecondary
-            }
-          }
-
-          if (!customPrimaryDB && data.profile?.customPrimary) {
-            customPrimaryDB = data.profile.customPrimary
-          }
-          if (!customSecondaryDB && data.profile?.customSecondary) {
-            customSecondaryDB = data.profile.customSecondary
           }
 
           localStorage.setItem("theme", dbTheme)
 
-          if (dbTheme === "custom" && customPrimaryDB && customSecondaryDB) {
-            localStorage.setItem("customPrimary", customPrimaryDB)
-            localStorage.setItem("customSecondary", customSecondaryDB)
-            applyTheme("custom", customPrimaryDB, customSecondaryDB)
+          // Check if the theme is a custom theme
+          const customTheme = customThemes.find((t: any) => t.id === dbTheme)
+          if (customTheme) {
+            console.log("[v0] ThemeLoader - Applying custom theme:", dbTheme)
+            applyTheme(dbTheme, customTheme.primary, customTheme.secondary)
           } else {
-            localStorage.removeItem("customPrimary")
-            localStorage.removeItem("customSecondary")
+            console.log("[v0] ThemeLoader - Applying standard theme:", dbTheme)
             applyTheme(dbTheme)
           }
         } else {
+          console.log("[v0] ThemeLoader - API failed, using localStorage")
           const savedTheme = localStorage.getItem("theme") || "default"
-          const customPrimary = localStorage.getItem("customPrimary")
-          const customSecondary = localStorage.getItem("customSecondary")
-
-          if (savedTheme === "custom" && customPrimary && customSecondary) {
-            applyTheme("custom", customPrimary, customSecondary)
-          } else {
-            applyTheme(savedTheme)
-          }
-        }
-      } catch (error) {
-        const savedTheme = localStorage.getItem("theme") || "default"
-        const customPrimary = localStorage.getItem("customPrimary")
-        const customSecondary = localStorage.getItem("customSecondary")
-
-        if (savedTheme === "custom" && customPrimary && customSecondary) {
-          applyTheme("custom", customPrimary, customSecondary)
-        } else {
           applyTheme(savedTheme)
         }
+      } catch (error) {
+        console.log("[v0] ThemeLoader - Error loading theme:", error)
+        const savedTheme = localStorage.getItem("theme") || "default"
+        applyTheme(savedTheme)
       } finally {
         setIsInitialized(true)
       }

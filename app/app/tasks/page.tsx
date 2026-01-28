@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit, GripVertical } from "lucide-react"
+import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
@@ -23,11 +23,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/hooks/useTranslation"
+import { StreaksWidget } from "@/components/streaks-widget"
+import { SectionHeader } from "@/components/section-header"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
-import { toast } from "@/components/ui/use-toast"
-
-const supabase = createClient()
+import { useToast } from "@/hooks/use-toast"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -56,29 +56,38 @@ export default function TasksPage() {
   const [isCreating, setIsCreating] = useState(false)
   const { language } = useLanguage()
   const { t } = useTranslation(language)
+  const { toast } = useToast()
+  const supabase = createClient()
 
   const [draggedTask, setDraggedTask] = useState<string | null>(null)
   const [dragOverTask, setDragOverTask] = useState<string | null>(null)
 
   useEffect(() => {
     fetchTasks()
+    fetchTimezone()
+  }, [])
 
-    const fetchTimezone = async () => {
-      const { data } = await supabase
-        .from("users")
-        .select("timezone")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single()
-
-      if (data?.timezone) {
-        setUserTimezone(data.timezone)
+  const fetchTimezone = async () => {
+    try {
+      const response = await fetch("/api/settings")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.profile?.timezone) {
+          setUserTimezone(data.profile.timezone)
+        } else {
+          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+          setUserTimezone(detectedTimezone)
+        }
       } else {
         const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
         setUserTimezone(detectedTimezone)
       }
+    } catch (error) {
+      console.error("Error fetching timezone:", error)
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      setUserTimezone(detectedTimezone)
     }
-    fetchTimezone()
-  }, [])
+  }
 
   const fetchTasks = async () => {
     try {
@@ -418,14 +427,14 @@ export default function TasksPage() {
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-      <div>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
-          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">{t("tasks")}</span>
-          </h1>
+      <SectionHeader
+        title={t("tasks")}
+        subtitle={t("manage_tasks")}
+        icon={CheckSquare}
+        action={
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="neon-glow-hover w-full md:w-auto">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-lg shadow-primary/30 w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 {t("newTask")}
               </Button>
@@ -523,111 +532,199 @@ export default function TasksPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        }
+      />
+
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+          <Input
+            placeholder={t("searchTasks")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-secondary/50"
+          />
         </div>
+      </div>
 
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              placeholder={t("searchTasks")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-secondary/50"
-            />
-          </div>
-        </div>
+      <Tabs value={filter} onValueChange={setFilter} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
+          <TabsTrigger value="active">{t("activeTasks")}</TabsTrigger>
+          <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
+        </TabsList>
 
-        <Tabs value={filter} onValueChange={setFilter} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
-            <TabsTrigger value="active">{t("activeTasks")}</TabsTrigger>
-            <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={filter} className="space-y-4">
-            {filteredTasks.length === 0 ? (
-              <Card className="glass-card p-12 text-center">
-                <p className="text-muted-foreground">{t("noTasksFound")}</p>
-              </Card>
-            ) : (
-              <>
-                {filteredTasks.map((task: any) => (
-                  <div
-                    key={task.id}
-                    draggable={!task.completed}
-                    onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
-                    onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, task.id, task.completed)}
-                    onDragEnd={handleDragEnd}
-                    className={`
-                      ${!task.completed ? "cursor-move" : "cursor-default"}
-                      ${draggedTask === task.id ? "opacity-50" : ""}
-                      ${dragOverTask === task.id ? "border-primary border-2" : ""}
-                    `}
-                  >
-                    <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
-                      <div className="flex items-center gap-4">
-                        {!task.completed && <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => toggleTask(task.id, task.completed)}
-                          className="flex-shrink-0"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3
-                            className={`font-semibold text-sm md:text-base break-words ${task.completed ? "line-through text-muted-foreground" : ""}`}
-                          >
-                            {task.title}
-                          </h3>
-                          {task.description && (
-                            <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {task.description}
-                            </p>
+        <TabsContent value={filter} className="space-y-4">
+          {filteredTasks.length === 0 ? (
+            <Card className="glass-card p-12 text-center">
+              <p className="text-muted-foreground">{t("noTasksFound")}</p>
+            </Card>
+          ) : (
+            <>
+              {filteredTasks.map((task: any) => (
+                <div
+                  key={task.id}
+                  draggable={!task.completed}
+                  onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
+                  onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, task.id, task.completed)}
+                  onDragEnd={handleDragEnd}
+                  className={`
+                    ${!task.completed ? "cursor-move" : "cursor-default"}
+                    ${draggedTask === task.id ? "opacity-50" : ""}
+                    ${dragOverTask === task.id ? "border-primary border-2" : ""}
+                  `}
+                >
+                  <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
+                    <div className="flex items-center gap-4">
+                      {!task.completed && <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
+                      <Checkbox
+                        checked={task.completed}
+                        onCheckedChange={() => toggleTask(task.id, task.completed)}
+                        className="flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className={`font-semibold text-sm md:text-base break-words ${task.completed ? "line-through text-muted-foreground" : ""}`}
+                        >
+                          {task.title}
+                        </h3>
+                        {task.description && (
+                          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {task.description}
+                          </p>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
+                          {task.priority && (
+                            <span className={`text-[10px] md:text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                              {t(task.priority)}
+                            </span>
                           )}
-                          <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
-                            {task.priority && (
-                              <span className={`text-[10px] md:text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                                {t(task.priority)}
-                              </span>
-                            )}
-                            {task.category && (
-                              <span className="text-[10px] md:text-xs text-muted-foreground">{t(task.category)}</span>
-                            )}
-                            {task.due_date && (
-                              <span className="text-[10px] md:text-xs text-muted-foreground">
-                                {t("due")}: {formatTaskDateTime(task.due_date)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 md:h-10 md:w-10"
-                            onClick={() => openEditDialog(task)}
-                          >
-                            <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 md:h-10 md:w-10"
-                            onClick={() => deleteTask(task.id)}
-                          >
-                            <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-destructive" />
-                          </Button>
+                          {task.category && (
+                            <span className="text-[10px] md:text-xs text-muted-foreground">{t(task.category)}</span>
+                          )}
+                          {task.due_date && (
+                            <span className="text-[10px] md:text-xs text-muted-foreground">
+                              {t("due")}: {formatTaskDateTime(task.due_date)}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    </Card>
-                  </div>
-                ))}
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+                      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 md:h-10 md:w-10"
+                          onClick={() => openEditDialog(task)}
+                        >
+                          <Edit className="w-3 h-3 md:w-4 md:h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 md:h-10 md:w-10"
+                          onClick={() => deleteTask(task.id)}
+                        >
+                          <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ))}
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit Task Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("editTask")}</DialogTitle>
+            <DialogDescription>{t("update_task_details")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">{t("title")} *</Label>
+              <Input
+                id="edit-title"
+                placeholder={t("title") + "..."}
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">{t("description")}</Label>
+              <Textarea
+                id="edit-description"
+                placeholder={t("description") + "..."}
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-priority">{t("priority")}</Label>
+                <Select value={editForm.priority} onValueChange={(value) => setEditForm({ ...editForm, priority: value })}>
+                  <SelectTrigger id="edit-priority">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="high">{t("high")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-category">{t("category")}</Label>
+                <Select value={editForm.category} onValueChange={(value) => setEditForm({ ...editForm, category: value })}>
+                  <SelectTrigger id="edit-category">
+                    <SelectValue placeholder={t("category")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal">{t("personal")}</SelectItem>
+                    <SelectItem value="work">{t("work")}</SelectItem>
+                    <SelectItem value="study">{t("study")}</SelectItem>
+                    <SelectItem value="health">{t("health")}</SelectItem>
+                    <SelectItem value="finance">{t("finance")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-due_date">{t("dueDate")}</Label>
+                <Input
+                  id="edit-due_date"
+                  type="date"
+                  value={editForm.due_date}
+                  onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-due_time">{t("dueTime")}</Label>
+                <Input
+                  id="edit-due_time"
+                  type="time"
+                  value={editForm.due_time}
+                  onChange={(e) => setEditForm({ ...editForm, due_time: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating}>
+              {t("cancel")}
+            </Button>
+            <Button onClick={updateTask} disabled={isCreating}>
+              {isCreating ? t("updating") : t("updateTask")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

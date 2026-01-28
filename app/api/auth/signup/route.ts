@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     }
 
     let userId = existingUser?.id
+    const language = "es" // Default language, can be passed from request if needed
 
     // Create user in auth if doesn't exist
     if (!userId) {
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
         email_confirm: false,
         user_metadata: {
           name: name,
+          language: language,
         },
       })
 

@@ -41,10 +41,34 @@ export async function GET() {
 
     if (!response.ok) {
       console.error("[v0] Profile API - Fetch failed:", response.status)
+      // Check if it's a rate limit or other error
+      const contentType = response.headers.get("content-type")
+      if (response.status === 429) {
+        return NextResponse.json(
+          { error: "Too many requests, please try again later" },
+          { status: 429 },
+        )
+      }
       return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 })
     }
 
-    const users = await response.json()
+    // Safely parse JSON response
+    let users
+    try {
+      const contentType = response.headers.get("content-type")
+      // Try to parse JSON regardless of content-type header
+      // (some responses may not include the header but are still JSON)
+      const text = await response.text()
+      if (text) {
+        users = JSON.parse(text)
+      } else {
+        console.error("[v0] Profile API - Empty response body")
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+    } catch (parseError) {
+      console.error("[v0] Profile API - Failed to parse JSON:", parseError)
+      return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+    }
 
     if (!users || users.length === 0) {
       console.error("[v0] Profile API - User not found")
@@ -52,6 +76,13 @@ export async function GET() {
     }
 
     const user = users[0]
+    
+    // FREE users should have 0 credits
+    if (user.subscription_tier === "free" || !user.subscription_tier) {
+      user.ai_credits = 0
+      user.ai_credits_purchased = 0
+    }
+    
     console.log("[v0] Profile API - User data:", {
       subscription_plan: user.subscription_plan,
       subscription_tier: user.subscription_tier,
