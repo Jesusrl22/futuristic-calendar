@@ -265,16 +265,22 @@ function hexToHSL(hex: string): string {
 
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
   const root = document.documentElement
+  
+  if (!root) {
+    console.error("[v0] Could not find document root")
+    return
+  }
 
   if ((themeId.startsWith("custom-") || customPrimary || customSecondary) && customPrimary && customSecondary) {
-    root.setAttribute("data-theme", themeId)
+    // Remove attribute first to force update
+    root.removeAttribute("data-theme")
     
     // Convert hex to HSL if needed
     const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
     
-    // Force update by removing and re-adding the attribute
-    root.removeAttribute("data-theme")
+    // Force reflow to ensure changes apply
+    void root.offsetHeight
     
     // Set all CSS variables for custom theme
     root.style.setProperty("--color-primary", primaryHSL)
@@ -301,6 +307,9 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     // Force theme change by resetting
     root.removeAttribute("data-theme")
     
+    // Force reflow
+    void root.offsetHeight
+    
     // Set all CSS variables
     root.style.setProperty("--color-background", theme.background)
     root.style.setProperty("--color-foreground", theme.foreground)
@@ -320,8 +329,10 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     
     // Set the attribute after styles
     root.setAttribute("data-theme", themeId)
+    console.log("[v0] Theme applied:", themeId)
+  } else {
+    console.warn("[v0] Theme not found:", themeId)
   }
 
   localStorage.setItem("theme", themeId)
-  console.log("[v0] Theme applied:", themeId)
 }

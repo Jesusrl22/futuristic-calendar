@@ -29,7 +29,9 @@ export function ThemeLoader() {
         const response = await fetch("/api/settings")
         if (response.ok) {
           const data = await response.json()
-          const dbTheme = data.profile?.theme || "neon-tech"
+          const dbTheme = data.profile?.theme || "default"
+
+          console.log("[v0] ThemeLoader - Fetched theme from API:", dbTheme)
 
           // Get custom themes from localStorage
           let customThemes = []
@@ -47,17 +49,20 @@ export function ThemeLoader() {
           // Check if the theme is a custom theme
           const customTheme = customThemes.find((t: any) => t.id === dbTheme)
           if (customTheme) {
+            console.log("[v0] ThemeLoader - Applying custom theme:", dbTheme)
             applyTheme(dbTheme, customTheme.primary, customTheme.secondary)
           } else {
+            console.log("[v0] ThemeLoader - Applying standard theme:", dbTheme)
             applyTheme(dbTheme)
           }
         } else {
-          const savedTheme = localStorage.getItem("theme") || "neon-tech"
+          console.log("[v0] ThemeLoader - API failed, using localStorage")
+          const savedTheme = localStorage.getItem("theme") || "default"
           applyTheme(savedTheme)
         }
       } catch (error) {
-        console.log("[v0] Error loading theme:", error)
-        const savedTheme = localStorage.getItem("theme") || "neon-tech"
+        console.log("[v0] ThemeLoader - Error loading theme:", error)
+        const savedTheme = localStorage.getItem("theme") || "default"
         applyTheme(savedTheme)
       } finally {
         setIsInitialized(true)
