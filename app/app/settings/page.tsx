@@ -200,16 +200,23 @@ export default function SettingsPage() {
   }
 
   const handleThemeChange = (themeId: string) => {
-    setProfile((prev) => ({ ...prev, theme: themeId }))
-    localStorage.setItem("theme", themeId)
+    // Update profile state
+    setProfile((prev) => {
+      const updated = { ...prev, theme: themeId }
+      localStorage.setItem("theme", themeId)
 
-    // Apply theme immediately
-    const customTheme = profile.customThemes.find((t) => t.id === themeId)
-    if (customTheme) {
-      applyTheme(themeId, customTheme.primary, customTheme.secondary)
-    } else {
-      applyTheme(themeId)
-    }
+      // Apply theme immediately with current custom themes
+      const customTheme = updated.customThemes.find((t) => t.id === themeId)
+      if (customTheme) {
+        applyTheme(themeId, customTheme.primary, customTheme.secondary)
+        console.log("[v0] Custom theme selected:", themeId)
+      } else {
+        applyTheme(themeId)
+        console.log("[v0] Standard theme selected:", themeId)
+      }
+      
+      return updated
+    })
   }
 
   const handleThemeSave = async (theme: CustomTheme) => {
