@@ -273,8 +273,20 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     const primaryHSL = customPrimary.startsWith("#") ? hexToHSL(customPrimary) : customPrimary
     const secondaryHSL = customSecondary.startsWith("#") ? hexToHSL(customSecondary) : customSecondary
     
+    // Force update by removing and re-adding the attribute
+    root.removeAttribute("data-theme")
+    
+    // Set all CSS variables for custom theme
     root.style.setProperty("--color-primary", primaryHSL)
     root.style.setProperty("--color-secondary", secondaryHSL)
+    // Also set derived colors
+    root.style.setProperty("--color-primary-foreground", "0 0% 5%")
+    root.style.setProperty("--color-secondary-foreground", "0 0% 5%")
+    root.style.setProperty("--color-accent", primaryHSL)
+    root.style.setProperty("--color-accent-foreground", "0 0% 5%")
+
+    // Set the attribute after styles
+    root.setAttribute("data-theme", themeId)
 
     localStorage.setItem("theme", themeId)
     if (customPrimary) localStorage.setItem("customPrimary", customPrimary)
@@ -286,13 +298,28 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
 
   const theme = allThemes.find((t) => t.id === themeId)
   if (theme) {
-    root.setAttribute("data-theme", themeId)
-    root.style.setProperty("--color-primary", theme.primary)
-    root.style.setProperty("--color-secondary", theme.secondary)
+    // Force theme change by resetting
+    root.removeAttribute("data-theme")
+    
+    // Set all CSS variables
     root.style.setProperty("--color-background", theme.background)
     root.style.setProperty("--color-foreground", theme.foreground)
     root.style.setProperty("--color-card", theme.card)
     root.style.setProperty("--color-card-foreground", theme.cardForeground)
+    root.style.setProperty("--color-primary", theme.primary)
+    root.style.setProperty("--color-primary-foreground", theme.primaryForeground)
+    root.style.setProperty("--color-secondary", theme.secondary)
+    root.style.setProperty("--color-secondary-foreground", theme.secondaryForeground)
+    root.style.setProperty("--color-muted", theme.muted)
+    root.style.setProperty("--color-muted-foreground", theme.mutedForeground)
+    root.style.setProperty("--color-accent", theme.accent)
+    root.style.setProperty("--color-accent-foreground", theme.accentForeground)
+    root.style.setProperty("--color-border", theme.border)
+    root.style.setProperty("--color-input", theme.input)
+    root.style.setProperty("--color-ring", theme.ring)
+    
+    // Set the attribute after styles
+    root.setAttribute("data-theme", themeId)
   }
 
   localStorage.setItem("theme", themeId)
