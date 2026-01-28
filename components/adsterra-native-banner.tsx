@@ -4,12 +4,13 @@ import { useEffect, useState, useRef } from "react"
 import { useMediaQuery } from "@/hooks/use-mobile"
 
 interface AdsterraNativeBannerProps {
-  containerId: string
-  scriptSrc: string
+  adKey: string
+  width: number
+  height: number
   className?: string
 }
 
-export function AdsterraNativeBanner({ containerId, scriptSrc, className = "" }: AdsterraNativeBannerProps) {
+export function AdsterraNativeBanner({ adKey, width, height, className = "" }: AdsterraNativeBannerProps) {
   const [userTier, setUserTier] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const adContainerRef = useRef<HTMLDivElement>(null)
@@ -44,20 +45,19 @@ export function AdsterraNativeBanner({ containerId, scriptSrc, className = "" }:
       const script = document.createElement("script")
       script.async = true
       script.setAttribute("data-cfasync", "false")
-      script.src = scriptSrc
+      script.src = `//cdn.adsterra.com/js/adserving.js`
+      script.setAttribute("data-ad-slot", adKey)
       adContainerRef.current.appendChild(script)
     }
-  }, [loading, userTier, scriptSrc, isMobile])
+  }, [loading, userTier, adKey, isMobile])
 
-  if (loading || userTier !== "free" || isMobile) {
+  if (loading || userTier !== "free") {
     return null
   }
 
   return (
-    <div className={`w-full flex justify-center my-4 ${className}`}>
-      <div ref={adContainerRef}>
-        <div id={containerId}></div>
-      </div>
+    <div ref={adContainerRef} className={`flex justify-center ${className}`}>
+      <div style={{ width: `${width}px`, minHeight: `${height}px` }} />
     </div>
   )
 }
