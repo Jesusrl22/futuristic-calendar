@@ -264,6 +264,12 @@ function hexToHSL(hex: string): string {
 }
 
 export function applyTheme(themeId: string, customPrimary?: string, customSecondary?: string) {
+  // Only execute on client-side
+  if (typeof document === "undefined") {
+    console.log("[v0] applyTheme called on server, skipping")
+    return
+  }
+
   const root = document.documentElement
   
   if (!root) {
