@@ -319,6 +319,8 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
 
   const theme = allThemes.find((t) => t.id === themeId)
   if (theme) {
+    console.log("[v0] Found theme:", themeId, theme)
+    
     // Force theme change by resetting
     root.removeAttribute("data-theme")
     
@@ -342,9 +344,16 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     root.style.setProperty("--color-input", theme.input || theme.card)
     root.style.setProperty("--color-ring", theme.ring || theme.primary)
     
+    console.log("[v0] CSS variables set for theme:", {
+      primary: theme.primary,
+      background: theme.background,
+      foreground: theme.foreground
+    })
+    
     // Set the attribute after styles
     root.setAttribute("data-theme", themeId)
     console.log("[v0] Theme applied:", themeId)
+    console.log("[v0] Root element styles:", root.getAttribute("style"))
   } else {
     console.warn("[v0] Theme not found:", themeId)
   }
