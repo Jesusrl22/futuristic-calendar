@@ -26,7 +26,7 @@ export function ThemeLoader() {
       pathname?.startsWith("/invite/")
 
     if (isPublicPage) {
-      applyTheme("neon-tech")
+      applyTheme("default")
       setIsInitialized(true)
       return
     }
@@ -36,7 +36,7 @@ export function ThemeLoader() {
         const response = await fetch("/api/settings")
         if (response.ok) {
           const data = await response.json()
-          const dbTheme = data.profile?.theme || "neon-tech"
+          const dbTheme = data.profile?.theme || "default"
 
           // Get custom themes from localStorage
           let customThemes = []
@@ -59,11 +59,11 @@ export function ThemeLoader() {
             applyTheme(dbTheme)
           }
         } else {
-          const savedTheme = localStorage.getItem("theme") || "neon-tech"
+          const savedTheme = localStorage.getItem("theme") || "default"
           applyTheme(savedTheme)
         }
       } catch (error) {
-        const savedTheme = localStorage.getItem("theme") || "neon-tech"
+        const savedTheme = localStorage.getItem("theme") || "default"
         applyTheme(savedTheme)
       } finally {
         setIsInitialized(true)
