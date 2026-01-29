@@ -5,11 +5,20 @@ export interface Theme {
   name: string
   tier: ThemeTier
   primary: string // Main accent color
+  primaryForeground?: string // Primary foreground (defaults to text)
   secondary: string // Secondary accent
+  secondaryForeground?: string // Secondary foreground (defaults to text)
   background: string // Main background
   foreground: string // Main text color
   card: string // Card background
   cardForeground: string // Card text color
+  muted?: string // Muted backgrounds
+  mutedForeground?: string // Muted text
+  accent?: string // Accent color
+  accentForeground?: string // Accent foreground
+  border?: string // Border color
+  input?: string // Input field color
+  ring?: string // Focus ring color
   description: string
 }
 
@@ -322,16 +331,16 @@ export function applyTheme(themeId: string, customPrimary?: string, customSecond
     root.style.setProperty("--color-card", theme.card)
     root.style.setProperty("--color-card-foreground", theme.cardForeground)
     root.style.setProperty("--color-primary", theme.primary)
-    root.style.setProperty("--color-primary-foreground", theme.primaryForeground)
+    root.style.setProperty("--color-primary-foreground", theme.primaryForeground || theme.foreground)
     root.style.setProperty("--color-secondary", theme.secondary)
-    root.style.setProperty("--color-secondary-foreground", theme.secondaryForeground)
-    root.style.setProperty("--color-muted", theme.muted)
-    root.style.setProperty("--color-muted-foreground", theme.mutedForeground)
-    root.style.setProperty("--color-accent", theme.accent)
-    root.style.setProperty("--color-accent-foreground", theme.accentForeground)
-    root.style.setProperty("--color-border", theme.border)
-    root.style.setProperty("--color-input", theme.input)
-    root.style.setProperty("--color-ring", theme.ring)
+    root.style.setProperty("--color-secondary-foreground", theme.secondaryForeground || theme.foreground)
+    root.style.setProperty("--color-muted", theme.muted || "0 0% 45%")
+    root.style.setProperty("--color-muted-foreground", theme.mutedForeground || theme.foreground)
+    root.style.setProperty("--color-accent", theme.accent || theme.primary)
+    root.style.setProperty("--color-accent-foreground", theme.accentForeground || theme.foreground)
+    root.style.setProperty("--color-border", theme.border || theme.card)
+    root.style.setProperty("--color-input", theme.input || theme.card)
+    root.style.setProperty("--color-ring", theme.ring || theme.primary)
     
     // Set the attribute after styles
     root.setAttribute("data-theme", themeId)
