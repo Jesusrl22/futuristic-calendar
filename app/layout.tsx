@@ -72,7 +72,7 @@ export default function RootLayout({
           async
         />
       </head>
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body className="font-sans antialiased" style={{ backgroundColor: 'hsl(var(--color-background))', color: 'hsl(var(--color-foreground))' }}>
         <ThemeLoader />
         <Script
           async
