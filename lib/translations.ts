@@ -107,6 +107,12 @@ export const translations = {
     days: "Days",
     weeklyGoal: "Weekly Goal",
     priority_high: "Priority High",
+    copy: "Copy",
+    addTask: "Add Task",
+    myTasks: "My Tasks",
+    newTask: "New Task",
+    day: "Day",
+    priority_medium: "Priority Medium",
 
     // Additional updates
     task_saved_successfully: "Task saved successfully!",
@@ -488,6 +494,12 @@ export const translations = {
     days: "Días",
     weeklyGoal: "Objetivo Semanal",
     priority_high: "Prioridad Alta",
+    copy: "Copiar",
+    addTask: "Agregar Tarea",
+    myTasks: "Mis Tareas",
+    newTask: "Nueva Tarea",
+    day: "Día",
+    priority_medium: "Prioridad Media",
 
     // Actualizaciones adicionales
     task_saved_successfully: "¡Tarea guardada exitosamente!",
@@ -862,6 +874,19 @@ export const translations = {
     edit: "Modifier",
     delete: "Supprimer",
     actions: "Actions",
+    activity: "Activité",
+    today: "Aujourd'hui",
+    notes: "Notes",
+    totalCompleted: "Total Complété",
+    days: "Jours",
+    weeklyGoal: "Objectif Hebdomadaire",
+    priority_high: "Priorité Haute",
+    copy: "Copier",
+    addTask: "Ajouter Tâche",
+    myTasks: "Mes Tâches",
+    newTask: "Nouvelle Tâche",
+    day: "Jour",
+    priority_medium: "Priorité Moyenne",
 
     // Additional updates
     task_saved_successfully: "Tâche enregistrée avec succès!",

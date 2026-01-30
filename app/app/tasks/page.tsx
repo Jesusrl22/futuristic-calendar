@@ -359,44 +359,65 @@ export default function TasksPage() {
     })
   }
 
-  // Check if task is scheduled for a specific day
-  const isTaskScheduledForDay = (taskId: string, day: string) => {
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task || !task.scheduled_days) return false
-    return task.scheduled_days.includes(day)
+  // Get tasks for a specific day
+  const getTasksForDay = (day: string) => {
+    return filteredTasks.filter((task: any) => {
+      if (!task.due_date) return false
+      return task.due_date.substring(8, 10) === day // Compare day of month
+    })
   }
 
-  // Toggle task for a specific day
-  const toggleTaskForDay = async (taskId: string, day: string) => {
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task) return
-
-    const scheduledDays = task.scheduled_days || []
-    const updated = scheduledDays.includes(day)
-      ? scheduledDays.filter((d: string) => d !== day)
-      : [...scheduledDays, day]
-
-    try {
-      const response = await fetch(`/api/tasks`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: taskId,
-          scheduled_days: updated,
-        }),
-      })
-
-      if (response.ok) {
-        setTasks(tasks.map((t) => (t.id === taskId ? { ...t, scheduled_days: updated } : t)))
-      }
-    } catch (error) {
-      console.error("Error updating task:", error)
+  // Add task for a specific day
+  const addTaskForDay = (day: string) => {
+    const weekDays = getWeekDays()
+    const selectedDay = weekDays.find(d => d.date === day)
+    if (selectedDay) {
+      setNewTask({ ...newTask, due_date: `2025-01-${day}` })
+      setIsDialogOpen(true)
     }
   }
 
-  // Get completed count
-  const getCompletedCount = () => {
-    return filteredTasks.filter((t: any) => t.completed).length
+  // Copy task to other days
+  const copyTaskToOtherDays = async (task: any, currentDay: string) => {
+    const weekDays = getWeekDays()
+    const daysToSelect = weekDays.filter(d => d.date !== currentDay)
+    
+    if (daysToSelect.length === 0) return
+
+    // Create copies for selected days
+    const selectedDays = daysToSelect.map(d => d.date)
+    
+    for (const day of selectedDays) {
+      try {
+        const newTaskData = {
+          user_id: task.user_id,
+          title: task.title,
+          description: task.description,
+          priority: task.priority,
+          category: task.category,
+          due_date: `2025-01-${day}`,
+          completed: false,
+        }
+
+        const response = await fetch("/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newTaskData),
+        })
+
+        if (response.ok) {
+          const createdTask = await response.json()
+          setTasks([...tasks, createdTask])
+        }
+      } catch (error) {
+        console.error(`Error copying task to day ${day}:`, error)
+      }
+    }
+
+    toast({
+      title: "Éxito",
+      description: `Tarea copiada a ${selectedDays.length} días`,
+    })
   }
 
   const formatTaskDateTime = (dateString: string) => {
@@ -630,7 +651,14 @@ export default function TasksPage() {
         }
       />
 
-      <div className="mb-6">
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold neon-text">{t("myTasks")}</h1>
+          <Button onClick={() => setIsDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
+            <Plus className="h-4 w-4" />
+            {t("newTask")}
+          </Button>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
@@ -642,118 +670,111 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* WEEK PLANNER VIEW */}
-      <div className="space-y-6">
-        {filteredTasks.length === 0 ? (
-          <Card className="glass-card p-12 text-center">
-            <p className="text-muted-foreground">{t("noTasksFound")}</p>
-          </Card>
-        ) : (
-          <>
-            <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-primary/10 border-b border-border/50">
-                    <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
-                      {t("task")} / {t("activity")}
-                    </th>
-                    {getWeekDays().map((day) => (
-                      <th key={day.date} className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]">
-                        <div className="text-xs font-medium">{day.dayName}</div>
-                        <div className="text-xs text-muted-foreground">{day.date}</div>
-                      </th>
-                    ))}
-                    <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground min-w-[150px]">
-                      {t("notes")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/30">
-                  {filteredTasks.map((task: any) => (
-                    <tr key={task.id} className="hover:bg-primary/5 transition-colors">
-                      {/* Task Name */}
-                      <td className="px-4 py-4 border-r border-border/30">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTask(task.id, task.completed)}
-                            />
-                            <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                              {task.title}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-2 ml-6">
-                            {task.category && (
-                              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
-                                {t(task.category)}
-                              </span>
-                            )}
-                            {task.priority === "high" && (
-                              <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-semibold flex items-center gap-1">
-                                <span>⚠</span> {t("priority_high")}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Days of week with checkboxes */}
-                      {getWeekDays().map((day) => (
-                        <td key={day.date} className="px-4 py-4 text-center border-r border-border/30">
-                          <Checkbox
-                            checked={isTaskScheduledForDay(task.id, day.date)}
-                            onCheckedChange={() => toggleTaskForDay(task.id, day.date)}
-                            className="mx-auto"
-                          />
-                        </td>
-                      ))}
-
-                      {/* Notes/Additional Info */}
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground truncate">
-                            {task.description || task.due_date ? formatTaskDateTime(task.due_date) : ""}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 hover:bg-primary/10"
-                            onClick={() => openEditDialog(task)}
-                            title={t("edit")}
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => deleteTask(task.id)}
-                            title={t("delete")}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Summary Section */}
-            <div className="bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
+      {/* WEEKLY PLANNER BY DAY */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {getWeekDays().map((day) => (
+          <div key={day.date} className="border border-border/50 rounded-lg bg-background/30 overflow-hidden">
+            {/* Day Header */}
+            <div className="bg-primary/10 border-b border-border/30 px-6 py-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
-                <span className="text-lg font-bold text-primary">{getCompletedCount()} / {filteredTasks.length} {t("days")}</span>
-              </div>
-              <div className="pt-4 border-t border-border/30 flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">¡Sigue así! 🚀</span>
-                <span className="text-xs font-semibold text-primary">{t("weeklyGoal")}: 5x {t("week")}</span>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground">{day.dayName}</h2>
+                  <p className="text-sm text-muted-foreground">{t("day")} {day.date}</p>
+                </div>
+                <span className="text-2xl font-bold text-primary">{getTasksForDay(day.date).length}</span>
               </div>
             </div>
-          </>
-        )}
+
+            {/* Tasks for this day */}
+            <div className="divide-y divide-border/30 max-h-96 overflow-y-auto">
+              {getTasksForDay(day.date).length === 0 ? (
+                <div className="px-6 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">{t("noTasksFound")}</p>
+                </div>
+              ) : (
+                getTasksForDay(day.date).map((task: any) => (
+                  <div key={task.id} className="px-6 py-4 hover:bg-primary/5 transition-colors">
+                    <div className="space-y-3">
+                      {/* Task Header with Checkbox */}
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={task.completed}
+                          onCheckedChange={() => toggleTask(task.id, task.completed)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`text-sm font-medium break-words ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {task.title}
+                          </h3>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Task metadata */}
+                      <div className="flex flex-wrap gap-2 ml-6">
+                        {task.category && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
+                            {t(task.category)}
+                          </span>
+                        )}
+                        {task.priority === "high" && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-semibold">
+                            ⚠ {t("priority_high")}
+                          </span>
+                        )}
+                        {task.priority === "medium" && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                            {t("priority_medium")}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 ml-6">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs hover:bg-primary/10"
+                          onClick={() => openEditDialog(task)}
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          {t("edit")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs hover:bg-primary/10"
+                          onClick={() => copyTaskToOtherDays(task, day.date)}
+                        >
+                          📋 {t("copy")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => deleteTask(task.id)}
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          {t("delete")}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add task button for this day */}
+            <button
+              onClick={() => addTaskForDay(day.date)}
+              className="w-full px-6 py-3 text-sm text-primary hover:bg-primary/10 transition-colors border-t border-border/30 font-medium"
+            >
+              + {t("addTask")}
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Edit Task Dialog */}
