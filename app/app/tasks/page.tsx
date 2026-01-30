@@ -338,43 +338,58 @@ export default function TasksPage() {
     }
   }
 
-  // Get week days for the planner
-  const getWeekDays = () => {
-    const today = new Date()
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1) // Monday
-
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(startOfWeek)
-      date.setDate(startOfWeek.getDate() + i)
-      
-      const dayName = date.toLocaleDateString("es-ES", { weekday: "short" }).toUpperCase()
-      const dayNum = String(date.getDate()).padStart(2, "0")
-      
-      return {
-        date: dayNum,
-        dayName,
-        fullDate: date.toISOString().split("T")[0],
-      }
-    })
-  }
-
   // Get tasks for a specific day
   const getTasksForDay = (day: string) => {
     return filteredTasks.filter((task: any) => {
       if (!task.due_date) return false
-      return task.due_date.substring(8, 10) === day // Compare day of month
+      return task.due_date.substring(8, 10) === day
     })
+  }
+
+  // Check if task is assigned to a specific day
+  const isTaskForDay = (taskId: string, day: string) => {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task || !task.due_date) return false
+    return task.due_date.substring(8, 10) === day
+  }
+
+  // Toggle task for a specific day (updates due_date)
+  const toggleTaskForDay = async (taskId: string, day: string) => {
+    const task = tasks.find((t) => t.id === taskId)
+    if (!task) return
+
+    // If task is already for this day, remove it (set to no date)
+    // Otherwise, set it to this day
+    const isCurrentlyForDay = task.due_date && task.due_date.substring(8, 10) === day
+
+    try {
+      const newDueDate = isCurrentlyForDay ? null : `2025-01-${day}`
+
+      const response = await fetch("/api/tasks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: taskId,
+          due_date: newDueDate,
+        }),
+      })
+
+      if (response.ok) {
+        setTasks(
+          tasks.map((t) =>
+            t.id === taskId ? { ...t, due_date: newDueDate } : t
+          )
+        )
+      }
+    } catch (error) {
+      console.error("Error updating task date:", error)
+    }
   }
 
   // Add task for a specific day
   const addTaskForDay = (day: string) => {
-    const weekDays = getWeekDays()
-    const selectedDay = weekDays.find(d => d.date === day)
-    if (selectedDay) {
-      setNewTask({ ...newTask, due_date: `2025-01-${day}` })
-      setIsDialogOpen(true)
-    }
+    setNewTask({ ...newTask, due_date: `2025-01-${day}` })
+    setIsDialogOpen(true)
   }
 
   // Copy task to other days
@@ -384,7 +399,6 @@ export default function TasksPage() {
     
     if (daysToSelect.length === 0) return
 
-    // Create copies for selected days
     const selectedDays = daysToSelect.map(d => d.date)
     
     for (const day of selectedDays) {
@@ -670,49 +684,50 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* WEEKLY PLANNER BY DAY */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {getWeekDays().map((day) => (
-          <div key={day.date} className="border border-border/50 rounded-lg bg-background/30 overflow-hidden">
-            {/* Day Header */}
-            <div className="bg-primary/10 border-b border-border/30 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-foreground">{day.dayName}</h2>
-                  <p className="text-sm text-muted-foreground">{t("day")} {day.date}</p>
-                </div>
-                <span className="text-2xl font-bold text-primary">{getTasksForDay(day.date).length}</span>
-              </div>
-            </div>
-
-            {/* Tasks for this day */}
-            <div className="divide-y divide-border/30 max-h-96 overflow-y-auto">
-              {getTasksForDay(day.date).length === 0 ? (
-                <div className="px-6 py-8 text-center">
-                  <p className="text-sm text-muted-foreground">{t("noTasksFound")}</p>
-                </div>
-              ) : (
-                getTasksForDay(day.date).map((task: any) => (
-                  <div key={task.id} className="px-6 py-4 hover:bg-primary/5 transition-colors">
-                    <div className="space-y-3">
-                      {/* Task Header with Checkbox */}
-                      <div className="flex items-start gap-3">
+      {/* TABLA SEMANAL TIPO EXCEL */}
+      {filteredTasks.length === 0 ? (
+        <Card className="glass-card p-12 text-center">
+          <p className="text-muted-foreground">{t("noTasksFound")}</p>
+        </Card>
+      ) : (
+        <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-primary/10 border-b border-border/50">
+                <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[200px]">
+                  {t("task")} / {t("activity")}
+                </th>
+                {getWeekDays().map((day) => (
+                  <th
+                    key={day.date}
+                    className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]"
+                  >
+                    <div className="font-medium">{day.dayName}</div>
+                    <div className="text-xs text-muted-foreground">{day.date}</div>
+                  </th>
+                ))}
+                <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground min-w-[150px]">
+                  {t("notes")}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/30">
+              {filteredTasks.map((task: any) => (
+                <tr key={task.id} className="hover:bg-primary/5 transition-colors">
+                  {/* Task Name Column */}
+                  <td className="px-4 py-4 border-r border-border/30">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
                         <Checkbox
                           checked={task.completed}
                           onCheckedChange={() => toggleTask(task.id, task.completed)}
-                          className="mt-1"
                         />
-                        <div className="flex-1 min-w-0">
-                          <h3 className={`text-sm font-medium break-words ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                            {task.title}
-                          </h3>
-                          {task.description && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
-                          )}
-                        </div>
+                        <span
+                          className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                        >
+                          {task.title}
+                        </span>
                       </div>
-
-                      {/* Task metadata */}
                       <div className="flex flex-wrap gap-2 ml-6">
                         {task.category && (
                           <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
@@ -724,58 +739,72 @@ export default function TasksPage() {
                             ⚠ {t("priority_high")}
                           </span>
                         )}
-                        {task.priority === "medium" && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
-                            {t("priority_medium")}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 ml-6">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs hover:bg-primary/10"
-                          onClick={() => openEditDialog(task)}
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          {t("edit")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs hover:bg-primary/10"
-                          onClick={() => copyTaskToOtherDays(task, day.date)}
-                        >
-                          📋 {t("copy")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 text-xs hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => deleteTask(task.id)}
-                        >
-                          <Trash2 className="h-3 w-3 mr-1" />
-                          {t("delete")}
-                        </Button>
                       </div>
                     </div>
-                  </div>
-                ))
-              )}
-            </div>
+                  </td>
 
-            {/* Add task button for this day */}
-            <button
-              onClick={() => addTaskForDay(day.date)}
-              className="w-full px-6 py-3 text-sm text-primary hover:bg-primary/10 transition-colors border-t border-border/30 font-medium"
-            >
-              + {t("addTask")}
-            </button>
+                  {/* Checkboxes for each day */}
+                  {getWeekDays().map((day) => (
+                    <td
+                      key={day.date}
+                      className="px-4 py-4 text-center border-r border-border/30"
+                    >
+                      <Checkbox
+                        checked={isTaskForDay(task.id, day.date)}
+                        onCheckedChange={() => toggleTaskForDay(task.id, day.date)}
+                        className="mx-auto"
+                      />
+                    </td>
+                  ))}
+
+                  {/* Notes/Actions Column */}
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground truncate">
+                        {task.description ? task.description.substring(0, 30) + "..." : ""}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 hover:bg-primary/10"
+                        onClick={() => openEditDialog(task)}
+                        title={t("edit")}
+                      >
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => deleteTask(task.id)}
+                        title={t("delete")}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Summary Section */}
+      {filteredTasks.length > 0 && (
+        <div className="mt-6 bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
+            <span className="text-lg font-bold text-primary">
+              {filteredTasks.filter((t: any) => t.completed).length} / {filteredTasks.length}
+            </span>
           </div>
-        ))}
-      </div>
+          <div className="pt-4 border-t border-border/30 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">¡Sigue así! 🚀</span>
+            <span className="text-xs font-semibold text-primary">{t("weeklyGoal")}: 5x {t("week")}</span>
+          </div>
+        </div>
+      )}
 
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
