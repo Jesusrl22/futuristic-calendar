@@ -598,109 +598,125 @@ export default function TasksPage() {
               <p className="text-muted-foreground">{t("noTasksFound")}</p>
             </Card>
           ) : (
-            <div className="border border-border/50 rounded-lg overflow-x-auto bg-background/30">
-              {/* Table Header */}
-              <div className="grid grid-cols-[40px_1fr_120px_100px_140px_80px] gap-0 bg-primary/10 border-b border-border/50 sticky top-0 min-w-full">
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center border-r border-border/30"></div>
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30">{t("title")}</div>
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30 text-center">{t("category")}</div>
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30 text-center">{t("priority")}</div>
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30 text-center">{t("dueDate")}</div>
-                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center">{t("actions")}</div>
-              </div>
+            <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-primary/10 border-b border-border/50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground w-12 border-r border-border/30">
+                      <CheckSquare className="h-4 w-4" />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[250px]">
+                      {t("title")}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[120px]">
+                      {t("category")}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]">
+                      {t("priority")}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[140px]">
+                      {t("dueDate")}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground w-32">
+                      {t("actions")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {filteredTasks.map((task: any) => (
+                    <tr
+                      key={task.id}
+                      draggable={!task.completed}
+                      onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
+                      onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, task.id, task.completed)}
+                      onDragEnd={handleDragEnd}
+                      className={`hover:bg-primary/5 transition-colors ${draggedTask === task.id ? "opacity-50 bg-primary/10" : ""} ${dragOverTask === task.id ? "bg-primary/15" : ""} ${!task.completed ? "cursor-move" : "cursor-default"}`}
+                    >
+                      {/* Checkbox */}
+                      <td className="px-4 py-3 text-center border-r border-border/30">
+                        <div className="flex items-center justify-center gap-2">
+                          {!task.completed && (
+                            <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
+                          )}
+                          <Checkbox
+                            checked={task.completed}
+                            onCheckedChange={() => toggleTask(task.id, task.completed)}
+                          />
+                        </div>
+                      </td>
 
-              {/* Table Body */}
-              <div className="divide-y divide-border/30">
-                {filteredTasks.map((task: any) => (
-                  <div
-                    key={task.id}
-                    draggable={!task.completed}
-                    onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
-                    onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, task.id, task.completed)}
-                    onDragEnd={handleDragEnd}
-                    className={`grid grid-cols-[40px_1fr_120px_100px_140px_80px] gap-0 hover:bg-primary/5 transition-colors min-w-full ${draggedTask === task.id ? "opacity-50" : ""} ${dragOverTask === task.id ? "bg-primary/10" : ""} ${!task.completed ? "cursor-move" : "cursor-default"}`}
-                  >
-                    {/* Checkbox & Drag Handle */}
-                    <div className="px-4 py-4 flex items-center justify-center gap-2 border-r border-border/30">
-                      {!task.completed && (
-                        <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
-                      )}
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => toggleTask(task.id, task.completed)}
-                        className="flex-shrink-0"
-                      />
-                    </div>
-
-                    {/* Title */}
-                    <div className="px-4 py-4 border-r border-border/30 flex items-center">
-                      <span className={`text-sm break-words ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                        {task.title}
-                      </span>
-                    </div>
-
-                    {/* Category */}
-                    <div className="px-4 py-4 border-r border-border/30 flex items-center justify-center">
-                      {task.category && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
-                          {t(task.category)}
+                      {/* Title */}
+                      <td className="px-4 py-3 border-r border-border/30">
+                        <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
+                          {task.title}
                         </span>
-                      )}
-                    </div>
+                      </td>
 
-                    {/* Priority */}
-                    <div className="px-4 py-4 border-r border-border/30 flex items-center justify-center">
-                      {task.priority && (
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getPriorityColor(task.priority)} ${getPriorityBgColor(task.priority)}`}>
-                          {t(task.priority)}
-                        </span>
-                      )}
-                    </div>
+                      {/* Category */}
+                      <td className="px-4 py-3 text-center border-r border-border/30">
+                        {task.category && (
+                          <span className="inline-flex text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
+                            {t(task.category)}
+                          </span>
+                        )}
+                      </td>
 
-                    {/* Due Date */}
-                    <div className="px-4 py-4 border-r border-border/30 flex items-center justify-center">
-                      {task.due_date && (
-                        <span className="text-xs text-muted-foreground">
-                          {formatTaskDateTime(task.due_date)}
-                        </span>
-                      )}
-                    </div>
+                      {/* Priority */}
+                      <td className="px-4 py-3 text-center border-r border-border/30">
+                        {task.priority && (
+                          <span className={`inline-flex text-xs font-semibold px-2 py-1 rounded-full ${getPriorityColor(task.priority)} ${getPriorityBgColor(task.priority)} border`}>
+                            {t(task.priority)}
+                          </span>
+                        )}
+                      </td>
 
-                    {/* Actions */}
-                    <div className="px-4 py-4 flex items-center justify-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:text-primary hover:bg-primary/10"
-                        onClick={() => addTaskToCalendar(task)}
-                        title={t("dueDate")}
-                      >
-                        <Calendar className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-primary/10"
-                        onClick={() => openEditDialog(task)}
-                        title={t("edit")}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => deleteTask(task.id)}
-                        title={t("delete")}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      {/* Due Date */}
+                      <td className="px-4 py-3 text-center border-r border-border/30">
+                        {task.due_date && (
+                          <span className="text-xs text-muted-foreground">
+                            {formatTaskDateTime(task.due_date)}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:text-primary hover:bg-primary/10"
+                            onClick={() => addTaskToCalendar(task)}
+                            title={t("calendar")}
+                          >
+                            <Calendar className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-primary/10"
+                            onClick={() => openEditDialog(task)}
+                            title={t("edit")}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteTask(task.id)}
+                            title={t("delete")}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </TabsContent>
