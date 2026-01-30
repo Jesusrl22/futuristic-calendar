@@ -329,6 +329,19 @@ export default function TasksPage() {
     }
   }
 
+  const getPriorityBgColor = (priority: string) => {
+    switch (priority) {
+      case "high":
+        return "bg-red-500/10 border-red-500/30"
+      case "medium":
+        return "bg-yellow-500/10 border-yellow-500/30"
+      case "low":
+        return "bg-green-500/10 border-green-500/30"
+      default:
+        return "bg-muted/10 border-muted/30"
+    }
+  }
+
   const formatTaskDateTime = (dateString: string) => {
     // Parse ISO string directly to avoid timezone conversion issues
     const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
@@ -579,95 +592,116 @@ export default function TasksPage() {
           <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={filter} className="space-y-4">
+        <TabsContent value={filter} className="w-full">
           {filteredTasks.length === 0 ? (
             <Card className="glass-card p-12 text-center">
               <p className="text-muted-foreground">{t("noTasksFound")}</p>
             </Card>
           ) : (
-            <>
-              {filteredTasks.map((task: any) => (
-                <div
-                  key={task.id}
-                  draggable={!task.completed}
-                  onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
-                  onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, task.id, task.completed)}
-                  onDragEnd={handleDragEnd}
-                  className={`
-                    ${!task.completed ? "cursor-move" : "cursor-default"}
-                    ${draggedTask === task.id ? "opacity-50" : ""}
-                    ${dragOverTask === task.id ? "border-primary border-2" : ""}
-                  `}
-                >
-                  <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      {!task.completed && <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
+            <div className="border border-border/50 rounded-lg overflow-x-auto bg-background/30">
+              {/* Table Header */}
+              <div className="grid grid-cols-[40px_1fr_120px_100px_140px_80px] gap-0 bg-primary/10 border-b border-border/50 sticky top-0 min-w-full">
+                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center border-r border-border/30"></div>
+                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30">{t("title")}</div>
+                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30 text-center">{t("category")}</div>
+                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30 text-center">{t("priority")}</div>
+                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground border-r border-border/30 text-center">{t("dueDate")}</div>
+                <div className="px-4 py-3 text-xs font-semibold text-muted-foreground text-center">{t("actions")}</div>
+              </div>
+
+              {/* Table Body */}
+              <div className="divide-y divide-border/30">
+                {filteredTasks.map((task: any) => (
+                  <div
+                    key={task.id}
+                    draggable={!task.completed}
+                    onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
+                    onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, task.id, task.completed)}
+                    onDragEnd={handleDragEnd}
+                    className={`grid grid-cols-[40px_1fr_120px_100px_140px_80px] gap-0 hover:bg-primary/5 transition-colors min-w-full ${draggedTask === task.id ? "opacity-50" : ""} ${dragOverTask === task.id ? "bg-primary/10" : ""} ${!task.completed ? "cursor-move" : "cursor-default"}`}
+                  >
+                    {/* Checkbox & Drag Handle */}
+                    <div className="px-4 py-4 flex items-center justify-center gap-2 border-r border-border/30">
+                      {!task.completed && (
+                        <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
+                      )}
                       <Checkbox
                         checked={task.completed}
                         onCheckedChange={() => toggleTask(task.id, task.completed)}
                         className="flex-shrink-0"
                       />
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={`font-semibold text-sm md:text-base break-words ${task.completed ? "line-through text-muted-foreground" : ""}`}
-                        >
-                          {task.title}
-                        </h3>
-                        {task.description && (
-                          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
-                          {task.priority && (
-                            <span className={`text-[10px] md:text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                              {t(task.priority)}
-                            </span>
-                          )}
-                          {task.category && (
-                            <span className="text-[10px] md:text-xs text-muted-foreground">{t(task.category)}</span>
-                          )}
-                          {task.due_date && (
-                            <span className="text-[10px] md:text-xs text-muted-foreground">
-                              {t("due")}: {formatTaskDateTime(task.due_date)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 md:h-10 md:w-10 hover:text-primary"
-                          onClick={() => addTaskToCalendar(task)}
-                          title="Agregar al calendario"
-                        >
-                          <Calendar className="w-3 h-3 md:w-4 md:h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 md:h-10 md:w-10"
-                          onClick={() => openEditDialog(task)}
-                        >
-                          <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 md:h-10 md:w-10"
-                          onClick={() => deleteTask(task.id)}
-                        >
-                          <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-destructive" />
-                        </Button>
-                      </div>
                     </div>
-                  </Card>
-                </div>
-              ))}
-            </>
+
+                    {/* Title */}
+                    <div className="px-4 py-4 border-r border-border/30 flex items-center">
+                      <span className={`text-sm break-words ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {task.title}
+                      </span>
+                    </div>
+
+                    {/* Category */}
+                    <div className="px-4 py-4 border-r border-border/30 flex items-center justify-center">
+                      {task.category && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
+                          {t(task.category)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Priority */}
+                    <div className="px-4 py-4 border-r border-border/30 flex items-center justify-center">
+                      {task.priority && (
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${getPriorityColor(task.priority)} ${getPriorityBgColor(task.priority)}`}>
+                          {t(task.priority)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Due Date */}
+                    <div className="px-4 py-4 border-r border-border/30 flex items-center justify-center">
+                      {task.due_date && (
+                        <span className="text-xs text-muted-foreground">
+                          {formatTaskDateTime(task.due_date)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="px-4 py-4 flex items-center justify-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:text-primary hover:bg-primary/10"
+                        onClick={() => addTaskToCalendar(task)}
+                        title={t("dueDate")}
+                      >
+                        <Calendar className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:bg-primary/10"
+                        onClick={() => openEditDialog(task)}
+                        title={t("edit")}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => deleteTask(task.id)}
+                        title={t("delete")}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </TabsContent>
       </Tabs>

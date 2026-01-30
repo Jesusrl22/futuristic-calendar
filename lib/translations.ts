@@ -97,6 +97,9 @@ export const translations = {
     enter_title: "Enter title",
     save: "Save",
     cancel: "Cancel",
+    edit: "Edit",
+    delete: "Delete",
+    actions: "Actions",
 
     // Additional updates
     task_saved_successfully: "Task saved successfully!",
@@ -468,6 +471,9 @@ export const translations = {
     enter_title: "Ingresa el título",
     save: "Guardar",
     cancel: "Cancelar",
+    edit: "Editar",
+    delete: "Eliminar",
+    actions: "Acciones",
 
     // Actualizaciones adicionales
     task_saved_successfully: "¡Tarea guardada exitosamente!",
@@ -839,6 +845,9 @@ export const translations = {
     enter_title: "Entrez le titre",
     save: "Enregistrer",
     cancel: "Annuler",
+    edit: "Modifier",
+    delete: "Supprimer",
+    actions: "Actions",
 
     // Additional updates
     task_saved_successfully: "Tâche enregistrée avec succès!",
