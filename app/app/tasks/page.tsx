@@ -32,7 +32,6 @@ import { useToast } from "@/hooks/use-toast"
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [filter, setFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
@@ -310,10 +309,7 @@ export default function TasksPage() {
   }
 
   const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter =
-      filter === "all" || (filter === "active" && !task.completed) || (filter === "completed" && task.completed)
-    return matchesSearch && matchesFilter
+    return task.title.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
   const getPriorityColor = (priority: string) => {
@@ -646,243 +642,96 @@ export default function TasksPage() {
         </div>
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
-          <TabsTrigger value="today">{t("today")}</TabsTrigger>
-          <TabsTrigger value="week">{t("week")}</TabsTrigger>
-          <TabsTrigger value="month">{t("month")}</TabsTrigger>
-          <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
-        </TabsList>
-
-        {/* WEEK VIEW */}
-        <TabsContent value="week" className="w-full">
-          <div className="space-y-6">
-            {filteredTasks.length === 0 ? (
-              <Card className="glass-card p-12 text-center">
-                <p className="text-muted-foreground">{t("noTasksFound")}</p>
-              </Card>
-            ) : (
-              <>
-                <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-primary/10 border-b border-border/50">
-                        <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
-                          {t("task")} / {t("activity")}
-                        </th>
-                        {getWeekDays().map((day) => (
-                          <th key={day.date} className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]">
-                            <div className="text-xs font-medium">{day.dayName}</div>
-                            <div className="text-xs text-muted-foreground">{day.date}</div>
-                          </th>
-                        ))}
-                        <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground min-w-[150px]">
-                          {t("notes")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/30">
-                      {filteredTasks.map((task: any) => (
-                        <tr key={task.id} className="hover:bg-primary/5 transition-colors">
-                          {/* Task Name */}
-                          <td className="px-4 py-4 border-r border-border/30">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Checkbox
-                                  checked={task.completed}
-                                  onCheckedChange={() => toggleTask(task.id, task.completed)}
-                                />
-                                <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                                  {task.title}
-                                </span>
-                              </div>
-                              <div className="flex flex-wrap gap-2 ml-6">
-                                {task.category && (
-                                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
-                                    {t(task.category)}
-                                  </span>
-                                )}
-                                {task.priority === "high" && (
-                                  <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-semibold flex items-center gap-1">
-                                    <span>⚠</span> {t("priority_high")}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Days of week with checkboxes */}
-                          {getWeekDays().map((day) => (
-                            <td key={day.date} className="px-4 py-4 text-center border-r border-border/30">
-                              <Checkbox
-                                checked={isTaskScheduledForDay(task.id, day.date)}
-                                onCheckedChange={() => toggleTaskForDay(task.id, day.date)}
-                                className="mx-auto"
-                              />
-                            </td>
-                          ))}
-
-                          {/* Notes/Additional Info */}
-                          <td className="px-4 py-4">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground truncate">
-                                {task.description || task.due_date ? formatTaskDateTime(task.due_date) : ""}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-primary/10"
-                                onClick={() => openEditDialog(task)}
-                                title={t("edit")}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => deleteTask(task.id)}
-                                title={t("delete")}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Summary Section */}
-                <div className="bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
-                    <span className="text-lg font-bold text-primary">{getCompletedCount()} / {filteredTasks.length} {t("days")}</span>
-                  </div>
-                  <div className="pt-4 border-t border-border/30 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">¡Sigue así! 🚀</span>
-                    <span className="text-xs font-semibold text-primary">{t("weeklyGoal")}: 5x {t("week")}</span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </TabsContent>
-
-        {/* OTHER VIEWS */}
-        <TabsContent value={filter} className="w-full">
-          {filteredTasks.length === 0 ? (
-            <Card className="glass-card p-12 text-center">
-              <p className="text-muted-foreground">{t("noTasksFound")}</p>
-            </Card>
-          ) : (
+      {/* WEEK PLANNER VIEW */}
+      <div className="space-y-6">
+        {filteredTasks.length === 0 ? (
+          <Card className="glass-card p-12 text-center">
+            <p className="text-muted-foreground">{t("noTasksFound")}</p>
+          </Card>
+        ) : (
+          <>
             <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-primary/10 border-b border-border/50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground w-12 border-r border-border/30">
-                      <CheckSquare className="h-4 w-4" />
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
+                      {t("task")} / {t("activity")}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[250px]">
-                      {t("title")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[120px]">
-                      {t("category")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]">
-                      {t("priority")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[140px]">
-                      {t("dueDate")}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-muted-foreground w-32">
-                      {t("actions")}
+                    {getWeekDays().map((day) => (
+                      <th key={day.date} className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]">
+                        <div className="text-xs font-medium">{day.dayName}</div>
+                        <div className="text-xs text-muted-foreground">{day.date}</div>
+                      </th>
+                    ))}
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground min-w-[150px]">
+                      {t("notes")}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
                   {filteredTasks.map((task: any) => (
-                    <tr
-                      key={task.id}
-                      className={`hover:bg-primary/5 transition-colors`}
-                    >
-                      {/* Checkbox */}
-                      <td className="px-4 py-3 text-center border-r border-border/30">
-                        <div className="flex items-center justify-center gap-2">
-                          {!task.completed && (
-                            <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
-                          )}
-                          <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={() => toggleTask(task.id, task.completed)}
-                          />
+                    <tr key={task.id} className="hover:bg-primary/5 transition-colors">
+                      {/* Task Name */}
+                      <td className="px-4 py-4 border-r border-border/30">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => toggleTask(task.id, task.completed)}
+                            />
+                            <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                              {task.title}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2 ml-6">
+                            {task.category && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
+                                {t(task.category)}
+                              </span>
+                            )}
+                            {task.priority === "high" && (
+                              <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-semibold flex items-center gap-1">
+                                <span>⚠</span> {t("priority_high")}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Title */}
-                      <td className="px-4 py-3 border-r border-border/30">
-                        <span className={`text-sm ${task.completed ? "line-through text-muted-foreground" : "text-foreground font-medium"}`}>
-                          {task.title}
-                        </span>
-                      </td>
+                      {/* Days of week with checkboxes */}
+                      {getWeekDays().map((day) => (
+                        <td key={day.date} className="px-4 py-4 text-center border-r border-border/30">
+                          <Checkbox
+                            checked={isTaskScheduledForDay(task.id, day.date)}
+                            onCheckedChange={() => toggleTaskForDay(task.id, day.date)}
+                            className="mx-auto"
+                          />
+                        </td>
+                      ))}
 
-                      {/* Category */}
-                      <td className="px-4 py-3 text-center border-r border-border/30">
-                        {task.category && (
-                          <span className="inline-flex text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
-                            {t(task.category)}
+                      {/* Notes/Additional Info */}
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground truncate">
+                            {task.description || task.due_date ? formatTaskDateTime(task.due_date) : ""}
                           </span>
-                        )}
-                      </td>
-
-                      {/* Priority */}
-                      <td className="px-4 py-3 text-center border-r border-border/30">
-                        {task.priority && (
-                          <span className={`inline-flex text-xs font-semibold px-2 py-1 rounded-full ${getPriorityColor(task.priority)} ${getPriorityBgColor(task.priority)} border`}>
-                            {t(task.priority)}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Due Date */}
-                      <td className="px-4 py-3 text-center border-r border-border/30">
-                        {task.due_date && (
-                          <span className="text-xs text-muted-foreground">
-                            {formatTaskDateTime(task.due_date)}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 hover:text-primary hover:bg-primary/10"
-                            onClick={() => addTaskToCalendar(task)}
-                            title={t("calendar")}
-                          >
-                            <Calendar className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-primary/10"
+                            className="h-7 w-7 hover:bg-primary/10"
                             onClick={() => openEditDialog(task)}
                             title={t("edit")}
                           >
-                            <Edit className="w-4 h-4" />
+                            <Edit className="w-3 h-3" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
+                            className="h-7 w-7 hover:text-destructive hover:bg-destructive/10"
                             onClick={() => deleteTask(task.id)}
                             title={t("delete")}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </td>
@@ -891,9 +740,21 @@ export default function TasksPage() {
                 </tbody>
               </table>
             </div>
-          )}
-        </TabsContent>
-      </Tabs>
+
+            {/* Summary Section */}
+            <div className="bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
+                <span className="text-lg font-bold text-primary">{getCompletedCount()} / {filteredTasks.length} {t("days")}</span>
+              </div>
+              <div className="pt-4 border-t border-border/30 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">¡Sigue así! 🚀</span>
+                <span className="text-xs font-semibold text-primary">{t("weeklyGoal")}: 5x {t("week")}</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
