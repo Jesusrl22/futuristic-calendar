@@ -85,14 +85,15 @@ export default function StatsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div>
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-4xl font-bold">
+    <div className="p-4 md:p-8">
+      <div className="space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <h1 className="text-3xl md:text-4xl font-bold">
             <span className="text-primary neon-text">{t("your_statistics")}</span>
           </h1>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant={timeRange === "day" ? "default" : "outline"}
               onClick={() => setTimeRange("day")}
@@ -117,7 +118,8 @@ export default function StatsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             {
               title: t("total_tasks"),
@@ -147,25 +149,27 @@ export default function StatsPage() {
               border: "border-primary/30",
               text: "text-primary",
             },
-          ].map((stat, i) => (
+          ].map((stat) => (
             <div key={stat.title}>
               <Card
-                className={`glass-card p-6 border-2 ${stat.border} bg-gradient-to-br ${stat.gradient} hover:scale-105 transition-transform duration-300`}
+                className={`glass-card p-4 md:p-6 border-2 ${stat.border} bg-gradient-to-br ${stat.gradient} hover:scale-105 transition-transform duration-300`}
               >
-                <h3 className="text-sm text-muted-foreground mb-2">{stat.title}</h3>
-                <p className={`text-3xl font-bold ${stat.text}`}>{stat.value}</p>
+                <h3 className="text-xs md:text-sm text-muted-foreground mb-2">{stat.title}</h3>
+                <p className={`text-2xl md:text-3xl font-bold ${stat.text}`}>{stat.value}</p>
               </Card>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card className="glass-card p-6 border-2 border-primary/30">
-            <h2 className="text-xl font-bold mb-6">{t("activity_over_time")}</h2>
+        {/* Charts and Insights Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Chart Card */}
+          <Card className="glass-card p-4 md:p-6 border-2 border-primary/30">
+            <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">{t("activity_over_time")}</h2>
             <Tabs defaultValue="tasks">
-              <TabsList className="mb-4">
-                <TabsTrigger value="tasks">{t("tasks")}</TabsTrigger>
-                <TabsTrigger value="pomodoro">{t("pomodoro")}</TabsTrigger>
+              <TabsList className="mb-4 w-full">
+                <TabsTrigger value="tasks" className="flex-1">{t("tasks")}</TabsTrigger>
+                <TabsTrigger value="pomodoro" className="flex-1">{t("pomodoro")}</TabsTrigger>
               </TabsList>
               <TabsContent value="tasks">
                 <ResponsiveContainer width="100%" height={250}>
@@ -212,15 +216,17 @@ export default function StatsPage() {
             </Tabs>
           </Card>
 
-          <Card className="glass-card p-6 border-2 border-primary/30">
-            <h2 className="text-xl font-bold mb-6">{t("productivity_insights")}</h2>
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">{t("task_completion_rate")}</span>
-                  <span className="text-sm font-semibold text-primary">{completionRate}%</span>
+          {/* Insights Card */}
+          <Card className="glass-card p-4 md:p-6 border-2 border-primary/30">
+            <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6">{t("productivity_insights")}</h2>
+            <div className="space-y-4 md:space-y-6">
+              {/* Task Completion Rate */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs md:text-sm text-muted-foreground font-medium">{t("task_completion_rate")}</span>
+                  <span className="text-sm md:text-base font-bold text-primary">{completionRate}%</span>
                 </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div className="h-2.5 bg-secondary/50 rounded-full overflow-hidden border border-border/50">
                   <div
                     style={{ width: `${completionRate}%` }}
                     className="h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-1000"
@@ -228,24 +234,39 @@ export default function StatsPage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
-                  <span className="text-sm">{t("average_focus_time")}</span>
-                  <span className="font-semibold text-primary">
-                    {timeRange === "day"
-                      ? `${stats.totalFocusTime}h`
-                      : timeRange === "week"
-                        ? `${Math.round((stats.totalFocusTime / 7) * 10) / 10}h/day`
-                        : `${Math.round((stats.totalFocusTime / 30) * 10) / 10}h/day`}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20">
-                  <span className="text-sm">{t("total_pomodoros")}</span>
-                  <span className="font-semibold text-purple-400">{stats.totalPomodoro}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20">
-                  <span className="text-sm">{t("notes_created")}</span>
-                  <span className="font-semibold text-blue-400">{stats.totalNotes}</span>
+              {/* Statistics Table */}
+              <div className="border border-border/50 rounded-lg overflow-hidden bg-background/30">
+                <div className="divide-y divide-border/50">
+                  <div className="grid grid-cols-2 bg-primary/10 border-b border-border/50">
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-muted-foreground">
+                      Métrica
+                    </div>
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-muted-foreground text-right">
+                      Valor
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 hover:bg-primary/5 transition-colors">
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm">{t("average_focus_time")}</div>
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-primary text-right">
+                      {timeRange === "day"
+                        ? `${stats.totalFocusTime}h`
+                        : timeRange === "week"
+                          ? `${Math.round((stats.totalFocusTime / 7) * 10) / 10}h/day`
+                          : `${Math.round((stats.totalFocusTime / 30) * 10) / 10}h/day`}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 hover:bg-primary/5 transition-colors border-t border-border/50">
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm">{t("total_pomodoros")}</div>
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-purple-400 text-right">
+                      {stats.totalPomodoro}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 hover:bg-primary/5 transition-colors border-t border-border/50">
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm">{t("notes_created")}</div>
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-blue-400 text-right">
+                      {stats.totalNotes}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

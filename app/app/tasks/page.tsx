@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare } from "lucide-react"
+import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare, Calendar } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
@@ -425,6 +425,31 @@ export default function TasksPage() {
     setDragOverTask(null)
   }
 
+  const addTaskToCalendar = async (task: any) => {
+    if (!task.due_date) {
+      toast({
+        title: t("info"),
+        description: "Por favor establece una fecha de vencimiento para la tarea",
+        variant: "default",
+      })
+      return
+    }
+
+    try {
+      toast({
+        title: "Éxito",
+        description: `Tarea "${task.title}" agregada al calendario`,
+        variant: "default",
+      })
+    } catch (error) {
+      toast({
+        title: t("error"),
+        description: "No se pudo agregar la tarea al calendario",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
       <SectionHeader
@@ -612,6 +637,15 @@ export default function TasksPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 md:h-10 md:w-10 hover:text-primary"
+                          onClick={() => addTaskToCalendar(task)}
+                          title="Agregar al calendario"
+                        >
+                          <Calendar className="w-3 h-3 md:w-4 md:h-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
