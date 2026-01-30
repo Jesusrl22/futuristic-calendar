@@ -100,6 +100,13 @@ export const translations = {
     edit: "Edit",
     delete: "Delete",
     actions: "Actions",
+    activity: "Activity",
+    today: "Today",
+    notes: "Notes",
+    totalCompleted: "Total Completed",
+    days: "Days",
+    weeklyGoal: "Weekly Goal",
+    priority_high: "Priority High",
 
     // Additional updates
     task_saved_successfully: "Task saved successfully!",
@@ -474,6 +481,13 @@ export const translations = {
     edit: "Editar",
     delete: "Eliminar",
     actions: "Acciones",
+    activity: "Actividad",
+    today: "Hoy",
+    notes: "Notas",
+    totalCompleted: "Total Completado",
+    days: "Días",
+    weeklyGoal: "Objetivo Semanal",
+    priority_high: "Prioridad Alta",
 
     // Actualizaciones adicionales
     task_saved_successfully: "¡Tarea guardada exitosamente!",
