@@ -392,6 +392,27 @@ export default function TasksPage() {
     setIsDialogOpen(true)
   }
 
+  // Get week days for the planner
+  const getWeekDays = () => {
+    const today = new Date()
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1) // Monday
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(startOfWeek)
+      date.setDate(startOfWeek.getDate() + i)
+      
+      const dayName = date.toLocaleDateString("es-ES", { weekday: "short" }).toUpperCase()
+      const dayNum = String(date.getDate()).padStart(2, "0")
+      
+      return {
+        date: dayNum,
+        dayName,
+        fullDate: date.toISOString().split("T")[0],
+      }
+    })
+  }
+
   // Copy task to other days
   const copyTaskToOtherDays = async (task: any, currentDay: string) => {
     const weekDays = getWeekDays()
