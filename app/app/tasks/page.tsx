@@ -683,62 +683,80 @@ export default function TasksPage() {
               <p className="text-muted-foreground">{t("noTasksFound")}</p>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {getTodayTasks().map((task: any) => (
-                <div
-                  key={task.id}
-                  className="border border-border/50 rounded-lg p-4 bg-background/30 hover:bg-primary/5 transition-colors"
-                >
-                  <div className="flex items-start gap-4">
-                    {/* Checkbox */}
-                    <Checkbox
-                      checked={task.completed}
-                      onCheckedChange={() => toggleTask(task.id, task.completed)}
-                      className="mt-1"
-                    />
+            <>
+              <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-primary/10 border-b border-border/50">
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
+                        {t("task")} / {t("activity")}
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[90px]">
+                        <div className="font-medium">{getTodayDayName()}</div>
+                        <div className="text-xs text-muted-foreground">{getTodayDate()}</div>
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground min-w-[80px]">
+                        {t("actions")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/30">
+                    {getTodayTasks().map((task: any) => (
+                      <tr key={task.id} className="hover:bg-primary/5 transition-colors">
+                        {/* Task Name Column */}
+                        <td className="px-4 py-4 border-r border-border/30">
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => toggleTask(task.id, task.completed)}
+                            />
+                            <span
+                              className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                            >
+                              {task.title}
+                            </span>
+                          </div>
+                        </td>
 
-                    {/* Task Content */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                        {task.title}
-                      </h3>
+                        {/* Checkbox for today */}
+                        <td className="px-4 py-4 text-center border-r border-border/30">
+                          <Checkbox
+                            checked={isTaskForDay(task.id, getTodayDate())}
+                            onCheckedChange={() => toggleTaskForDay(task.id, getTodayDate())}
+                            className="mx-auto"
+                          />
+                        </td>
 
-                      {/* Priority Badge */}
-                      <div className="mt-2 flex items-center gap-2">
-                        {task.priority && (
-                          <span className={`inline-flex text-xs font-semibold px-2 py-1 rounded-full border ${getPriorityBgColor(task.priority)} ${getPriorityColor(task.priority)}`}>
-                            {t(task.priority)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                        {/* Actions Column */}
+                        <td className="px-4 py-4 text-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:text-destructive hover:bg-destructive/10 inline-flex"
+                            onClick={() => deleteTask(task.id)}
+                            title={t("delete")}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-                    {/* Delete Button */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => deleteTask(task.id)}
-                      title={t("delete")}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+              {/* Today Summary */}
+              {getTodayTasks().length > 0 && (
+                <div className="mt-6 bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
+                    <span className="text-lg font-bold text-primary">
+                      {getTodayTasks().filter((t: any) => t.completed).length} / {getTodayTasks().length}
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* Today Summary */}
-          {getTodayTasks().length > 0 && (
-            <div className="bg-background/40 border border-border/30 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
-                <span className="text-lg font-bold text-primary">
-                  {getTodayTasks().filter((t: any) => t.completed).length} / {getTodayTasks().length}
-                </span>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </TabsContent>
 
