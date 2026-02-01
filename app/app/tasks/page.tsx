@@ -1,5 +1,9 @@
 "use client"
 
+// Task Management Page - Updated Design
+// Views: Today (Checkbox | Task | Priority | Time | Status | Actions)
+//        Week (7-day calendar grid with task assignments)
+
 import { DialogTrigger } from "@/components/ui/dialog"
 
 import type React from "react"
