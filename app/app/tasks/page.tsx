@@ -868,6 +868,7 @@ export default function TasksPage() {
       </Dialog>
 
       {/* Edit Task Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("editTask")}</DialogTitle>
