@@ -36,6 +36,7 @@ export default function TasksPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
+  const [inlineNewTask, setInlineNewTask] = useState("") // For inline row input
   const [userTimezone, setUserTimezone] = useState<string>("UTC")
   const [editForm, setEditForm] = useState({
     title: "",
@@ -208,6 +209,45 @@ export default function TasksPage() {
       })
     } finally {
       setIsCreating(false)
+    }
+  }
+
+  // Create task from inline input
+  const createTaskFromInline = async (taskTitle: string, dayDate?: string) => {
+    if (!taskTitle.trim()) return
+
+    try {
+      const dueDate = dayDate ? `2025-01-${dayDate}` : null
+
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: taskTitle.trim(),
+          description: "",
+          priority: "medium",
+          category: null,
+          due_date: dueDate,
+          completed: false,
+          status: "todo",
+        }),
+      })
+
+      if (response.ok) {
+        setInlineNewTask("")
+        fetchTasks()
+        toast({
+          title: "Éxito",
+          description: "Tarea creada exitosamente",
+        })
+      }
+    } catch (error) {
+      console.error("Error creating task from inline:", error)
+      toast({
+        title: t("error"),
+        description: t("failed_create_task"),
+        variant: "destructive",
+      })
     }
   }
 
@@ -741,6 +781,36 @@ export default function TasksPage() {
                         </td>
                       </tr>
                     ))}
+                    {/* Inline Add New Task Row */}
+                    <tr className="bg-primary/5 border-t-2 border-primary/30">
+                      <td className="px-4 py-3 border-r border-border/30">
+                        <Input
+                          placeholder="Escribe una nueva tarea..."
+                          value={inlineNewTask}
+                          onChange={(e) => setInlineNewTask(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              createTaskFromInline(inlineNewTask, getTodayDate())
+                            }
+                          }}
+                          className="text-sm h-8"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-center border-r border-border/30">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => createTaskFromInline(inlineNewTask, getTodayDate())}
+                          className="h-7 text-xs hover:bg-primary/10"
+                          disabled={!inlineNewTask.trim()}
+                        >
+                          +
+                        </Button>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs text-muted-foreground">Agregar</span>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -831,6 +901,38 @@ export default function TasksPage() {
                         </td>
                       </tr>
                     ))}
+                    {/* Inline Add New Task Row */}
+                    <tr className="bg-primary/5 border-t-2 border-primary/30">
+                      <td className="px-4 py-3 border-r border-border/30">
+                        <Input
+                          placeholder="Escribe una nueva tarea..."
+                          value={inlineNewTask}
+                          onChange={(e) => setInlineNewTask(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              createTaskFromInline(inlineNewTask)
+                            }
+                          }}
+                          className="text-sm h-8"
+                        />
+                      </td>
+                      {getWeekDays().map((day) => (
+                        <td key={day.date} className="px-4 py-3 text-center border-r border-border/30">
+                          <span className="text-xs text-muted-foreground">-</span>
+                        </td>
+                      ))}
+                      <td className="px-4 py-3 text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => createTaskFromInline(inlineNewTask)}
+                          className="h-7 text-xs hover:bg-primary/10"
+                          disabled={!inlineNewTask.trim()}
+                        >
+                          +
+                        </Button>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
