@@ -728,14 +728,22 @@ export default function TasksPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-primary/10 border-b border-border/50">
-                      <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
-                        {t("task")} / {t("activity")}
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-12">
+                        ✔
                       </th>
-                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[90px]">
-                        <div className="font-medium">{getTodayDayName()}</div>
-                        <div className="text-xs text-muted-foreground">{getTodayDate()}</div>
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[200px]">
+                        {t("task")}
                       </th>
-                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground min-w-[80px]">
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]">
+                        {t("priority")}
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[80px]">
+                        {t("time")}
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[80px]">
+                        {t("status")}
+                      </th>
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground min-w-[60px]">
                         {t("actions")}
                       </th>
                     </tr>
@@ -743,31 +751,46 @@ export default function TasksPage() {
                   <tbody className="divide-y divide-border/30">
                     {getTodayTasks().map((task: any) => (
                       <tr key={task.id} className="hover:bg-primary/5 transition-colors">
-                        {/* Task Name Column */}
-                        <td className="px-4 py-4 border-r border-border/30">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTask(task.id, task.completed)}
-                            />
-                            <span
-                              className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
-                            >
-                              {task.title}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Checkbox for today */}
+                        {/* Checkbox Column */}
                         <td className="px-4 py-4 text-center border-r border-border/30">
                           <Checkbox
-                            checked={isTaskForDay(task.id, getTodayDate())}
-                            onCheckedChange={() => toggleTaskForDay(task.id, getTodayDate())}
+                            checked={task.completed}
+                            onCheckedChange={() => toggleTask(task.id, task.completed)}
                             className="mx-auto"
                           />
                         </td>
 
-                        {/* Actions Column */}
+                        {/* Task Name Column */}
+                        <td className="px-4 py-4 border-r border-border/30">
+                          <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {task.title}
+                          </span>
+                        </td>
+
+                        {/* Priority Column */}
+                        <td className="px-4 py-4 text-center border-r border-border/30">
+                          {task.priority && (
+                            <span className={`inline-flex text-xs font-semibold px-2 py-1 rounded-full border ${getPriorityBgColor(task.priority)}`}>
+                              {t(task.priority)}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Time Column (due_time) */}
+                        <td className="px-4 py-4 text-center border-r border-border/30">
+                          <span className="text-xs text-muted-foreground">
+                            {task.due_time ? task.due_time : "-"}
+                          </span>
+                        </td>
+
+                        {/* Status Column */}
+                        <td className="px-4 py-4 text-center border-r border-border/30">
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${task.completed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
+                            {task.completed ? "Hecho" : "Pendiente"}
+                          </span>
+                        </td>
+
+                        {/* Delete Action Column */}
                         <td className="px-4 py-4 text-center">
                           <Button
                             variant="ghost"
@@ -783,9 +806,12 @@ export default function TasksPage() {
                     ))}
                     {/* Inline Add New Task Row */}
                     <tr className="bg-primary/5 border-t-2 border-primary/30">
+                      <td className="px-4 py-3 text-center border-r border-border/30">
+                        <span className="text-xs text-muted-foreground">+</span>
+                      </td>
                       <td className="px-4 py-3 border-r border-border/30">
                         <Input
-                          placeholder="Escribe una nueva tarea..."
+                          placeholder="Nueva tarea..."
                           value={inlineNewTask}
                           onChange={(e) => setInlineNewTask(e.target.value)}
                           onKeyPress={(e) => {
@@ -796,7 +822,10 @@ export default function TasksPage() {
                           className="text-sm h-8"
                         />
                       </td>
-                      <td className="px-4 py-3 text-center border-r border-border/30">
+                      <td className="px-4 py-3 text-center border-r border-border/30">-</td>
+                      <td className="px-4 py-3 text-center border-r border-border/30">-</td>
+                      <td className="px-4 py-3 text-center border-r border-border/30">-</td>
+                      <td className="px-4 py-3 text-center">
                         <Button
                           size="sm"
                           variant="ghost"
@@ -806,9 +835,6 @@ export default function TasksPage() {
                         >
                           +
                         </Button>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="text-xs text-muted-foreground">Agregar</span>
                       </td>
                     </tr>
                   </tbody>
