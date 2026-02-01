@@ -607,71 +607,6 @@ export default function TasksPage() {
                     onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">{t("description")}</Label>
-                  <Textarea
-                    id="description"
-                    placeholder={t("description") + "..."}
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">{t("priority")}</Label>
-                    <Select
-                      value={newTask.priority}
-                      onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
-                    >
-                      <SelectTrigger id="priority">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">{t("low")}</SelectItem>
-                        <SelectItem value="medium">{t("medium")}</SelectItem>
-                        <SelectItem value="high">{t("high")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">{t("category")}</Label>
-                    <Select
-                      value={newTask.category}
-                      onValueChange={(value) => setNewTask({ ...newTask, category: value })}
-                    >
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder={t("category")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="personal">{t("personal")}</SelectItem>
-                        <SelectItem value="work">{t("work")}</SelectItem>
-                        <SelectItem value="study">{t("study")}</SelectItem>
-                        <SelectItem value="health">{t("health")}</SelectItem>
-                        <SelectItem value="finance">{t("finance")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="due_date">{t("dueDate")}</Label>
-                    <Input
-                      id="due_date"
-                      type="date"
-                      value={newTask.due_date}
-                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="due_time">{t("dueTime")}</Label>
-                    <Input
-                      id="due_time"
-                      type="time"
-                      value={newTask.due_time}
-                      onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
-                    />
-                  </div>
-                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
@@ -715,20 +650,20 @@ export default function TasksPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-primary/10 border-b border-border/50">
-                <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[200px]">
+                <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
                   {t("task")} / {t("activity")}
                 </th>
                 {getWeekDays().map((day) => (
                   <th
                     key={day.date}
-                    className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[100px]"
+                    className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[90px]"
                   >
                     <div className="font-medium">{day.dayName}</div>
                     <div className="text-xs text-muted-foreground">{day.date}</div>
                   </th>
                 ))}
-                <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground min-w-[150px]">
-                  {t("notes")}
+                <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground min-w-[80px]">
+                  {t("actions")}
                 </th>
               </tr>
             </thead>
@@ -737,30 +672,12 @@ export default function TasksPage() {
                 <tr key={task.id} className="hover:bg-primary/5 transition-colors">
                   {/* Task Name Column */}
                   <td className="px-4 py-4 border-r border-border/30">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => toggleTask(task.id, task.completed)}
-                        />
-                        <span
-                          className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
-                        >
-                          {task.title}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 ml-6">
-                        {task.category && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/30">
-                            {t(task.category)}
-                          </span>
-                        )}
-                        {task.priority === "high" && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 font-semibold">
-                            ⚠ {t("priority_high")}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                      >
+                        {task.title}
+                      </span>
                     </div>
                   </td>
 
@@ -778,31 +695,17 @@ export default function TasksPage() {
                     </td>
                   ))}
 
-                  {/* Notes/Actions Column */}
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground truncate">
-                        {task.description ? task.description.substring(0, 30) + "..." : ""}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 hover:bg-primary/10"
-                        onClick={() => openEditDialog(task)}
-                        title={t("edit")}
-                      >
-                        <Edit className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 hover:text-destructive hover:bg-destructive/10"
-                        onClick={() => deleteTask(task.id)}
-                        title={t("delete")}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
+                  {/* Actions Column */}
+                  <td className="px-4 py-4 text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 hover:text-destructive hover:bg-destructive/10 inline-flex"
+                      onClick={() => deleteTask(task.id)}
+                      title={t("delete")}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -843,65 +746,6 @@ export default function TasksPage() {
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">{t("description")}</Label>
-              <Textarea
-                id="edit-description"
-                placeholder={t("description") + "..."}
-                value={editForm.description}
-                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-priority">{t("priority")}</Label>
-                <Select value={editForm.priority} onValueChange={(value) => setEditForm({ ...editForm, priority: value })}>
-                  <SelectTrigger id="edit-priority">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">{t("low")}</SelectItem>
-                    <SelectItem value="medium">{t("medium")}</SelectItem>
-                    <SelectItem value="high">{t("high")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-category">{t("category")}</Label>
-                <Select value={editForm.category} onValueChange={(value) => setEditForm({ ...editForm, category: value })}>
-                  <SelectTrigger id="edit-category">
-                    <SelectValue placeholder={t("category")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="personal">{t("personal")}</SelectItem>
-                    <SelectItem value="work">{t("work")}</SelectItem>
-                    <SelectItem value="study">{t("study")}</SelectItem>
-                    <SelectItem value="health">{t("health")}</SelectItem>
-                    <SelectItem value="finance">{t("finance")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-due_date">{t("dueDate")}</Label>
-                <Input
-                  id="edit-due_date"
-                  type="date"
-                  value={editForm.due_date}
-                  onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-due_time">{t("dueTime")}</Label>
-                <Input
-                  id="edit-due_time"
-                  type="time"
-                  value={editForm.due_time}
-                  onChange={(e) => setEditForm({ ...editForm, due_time: e.target.value })}
-                />
-              </div>
             </div>
           </div>
           <DialogFooter>
