@@ -829,10 +829,10 @@ export default function CalendarPage() {
               </div>
             </DialogHeader>
             <div className="space-y-3">
-              {selectedDateTasks.length === 0 ? (
+              {selectedDateEvents.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">{t("noTasksForDay")}</p>
               ) : (
-                selectedDateTasks.map((task) => (
+                selectedDateEvents.map((task) => (
                   <Card key={task.id} className="glass-card p-4">
                     <div className="flex items-start gap-3">
                       <Checkbox checked={task.completed} onCheckedChange={() => toggleTask(task.id, task.completed)} />
