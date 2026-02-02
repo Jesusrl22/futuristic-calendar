@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2, Bell, User, Link, CheckCircle2 } from "@/components/icons"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2, Bell, User, Link, CheckCircle2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/hooks/useTranslation" // Fixed import - useTranslation is in hooks/useTranslation, not lib/translations
