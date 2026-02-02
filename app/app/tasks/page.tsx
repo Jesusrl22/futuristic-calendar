@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare, Calendar } from "lucide-react"
+import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare, Calendar, CheckCircle2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Dialog,
@@ -383,27 +383,56 @@ export default function TasksPage() {
     }
   }
 
-  // Get today's date in the correct format
+  // Get today's date (YYYY-MM-DD format)
   const getTodayDate = () => {
     const today = new Date()
-    const day = String(today.getDate()).padStart(2, "0")
-    return day
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, "0")
+    const date = String(today.getDate()).padStart(2, "0")
+    return `${year}-${month}-${date}`
   }
 
-  // Get tasks for today
+  // Get tasks for today (tasks with due_date = today)
   const getTodayTasks = () => {
-    const todayDay = getTodayDate()
-    return filteredTasks.filter((task: any) => {
-      if (!task.due_date) return false
-      return task.due_date.substring(8, 10) === todayDay
-    })
+    const today = getTodayDate()
+    return filteredTasks.filter((task: any) => task.due_date && task.due_date.startsWith(today))
   }
 
-  // Get today's day name
+  // Get tasks for a specific week (Mon-Sun of current week)
+  const getWeekDays = () => {
+    const today = new Date()
+    const first = today.getDate() - today.getDay()
+    const days = []
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today.setDate(first + i))
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, "0")
+      const day = String(date.getDate()).padStart(2, "0")
+      const dateStr = `${year}-${month}-${day}`
+      days.push({
+        date: dateStr,
+        dayName: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()],
+      })
+    }
+    return days
+  }
+
+  // Get week tasks: tasks whose due_date falls within this week
+  const getWeekTasks = () => {
+    const weekDays = getWeekDays()
+    const weekDateSet = new Set(weekDays.map((d) => d.date))
+    return filteredTasks.filter((task: any) => task.due_date && weekDateSet.has(task.due_date.substring(0, 10)))
+  }
+
+  // Get tasks for a specific date
+  const getTasksForDate = (dateStr: string) => {
+    return filteredTasks.filter((task: any) => task.due_date && task.due_date.startsWith(dateStr))
+  }
+
+  // Get today's day name (e.g., "Monday", "Tuesday", etc.)
   const getTodayDayName = () => {
     const today = new Date()
-    const dayName = today.toLocaleDateString("es-ES", { weekday: "long" }).toUpperCase()
-    return dayName.charAt(0).toUpperCase() + dayName.slice(1)
+    return today.toLocaleDateString("en-US", { weekday: "long" })
   }
 
   // Get tasks for a specific day
@@ -862,7 +891,7 @@ export default function TasksPage() {
 
         {/* SEMANA (WEEK) VIEW */}
         <TabsContent value="week" className="w-full space-y-6">
-          {filteredTasks.length === 0 ? (
+          {getWeekTasks().length === 0 ? (
             <Card className="glass-card p-12 text-center">
               <p className="text-muted-foreground">{t("noTasksFound")}</p>
             </Card>
@@ -873,7 +902,7 @@ export default function TasksPage() {
                   <thead>
                     <tr className="bg-primary/10 border-b border-border/50">
                       <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
-                        {t("task")} / {t("activity")}
+                        {t("task")}
                       </th>
                       {getWeekDays().map((day) => (
                         <th
@@ -890,11 +919,15 @@ export default function TasksPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/30">
-                    {filteredTasks.map((task: any) => (
+                    {getWeekTasks().map((task: any) => (
                       <tr key={task.id} className="hover:bg-primary/5 transition-colors">
                         {/* Task Name Column */}
                         <td className="px-4 py-4 border-r border-border/30">
                           <div className="flex items-center gap-2">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => toggleTask(task.id, task.completed)}
+                            />
                             <span
                               className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
                             >
@@ -903,19 +936,24 @@ export default function TasksPage() {
                           </div>
                         </td>
 
-                        {/* Checkboxes for each day */}
-                        {getWeekDays().map((day) => (
-                          <td
-                            key={day.date}
-                            className="px-4 py-4 text-center border-r border-border/30"
-                          >
-                            <Checkbox
-                              checked={isTaskForDay(task.id, day.date)}
-                              onCheckedChange={() => toggleTaskForDay(task.id, day.date)}
-                              className="mx-auto"
-                            />
-                          </td>
-                        ))}
+                        {/* Show which day this task is assigned to */}
+                        {getWeekDays().map((day) => {
+                          const isAssignedToDay = task.due_date && task.due_date.startsWith(day.date)
+                          return (
+                            <td
+                              key={day.date}
+                              className="px-4 py-4 text-center border-r border-border/30"
+                            >
+                              {isAssignedToDay ? (
+                                <div className="flex items-center justify-center gap-1">
+                                  <CheckCircle2 className="w-4 h-4 text-primary" />
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
+                              )}
+                            </td>
+                          )
+                        })}
 
                         {/* Actions Column */}
                         <td className="px-4 py-4 text-center">
@@ -935,7 +973,7 @@ export default function TasksPage() {
                     <tr className="bg-primary/5 border-t-2 border-primary/30">
                       <td className="px-4 py-3 border-r border-border/30">
                         <Input
-                          placeholder="Escribe una nueva tarea..."
+                          placeholder="Nueva tarea..."
                           value={inlineNewTask}
                           onChange={(e) => setInlineNewTask(e.target.value)}
                           onKeyPress={(e) => {
@@ -968,17 +1006,17 @@ export default function TasksPage() {
               </div>
 
               {/* Summary Section */}
-              {filteredTasks.length > 0 && (
+              {getWeekTasks().length > 0 && (
                 <div className="mt-6 bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
                     <span className="text-lg font-bold text-primary">
-                      {filteredTasks.filter((t: any) => t.completed).length} / {filteredTasks.length}
+                      {getWeekTasks().filter((t: any) => t.completed).length} / {getWeekTasks().length}
                     </span>
                   </div>
                   <div className="pt-4 border-t border-border/30 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">¡Sigue así! 🚀</span>
-                    <span className="text-xs font-semibold text-primary">{t("weeklyGoal")}: 5x {t("week")}</span>
+                    <span className="text-xs text-muted-foreground">Objetivo de la semana</span>
+                    <span className="text-xs font-semibold text-primary">5x {t("week")}</span>
                   </div>
                 </div>
               )}
