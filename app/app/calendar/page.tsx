@@ -9,9 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, ChevronLeft, ChevronRight, Bell, User, MoreVertical, Edit2, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2, Bell, User, MoreVertical } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
-import { useLanguage } from "@/contexts/language-context"
 
 interface Task {
   id: string
@@ -35,9 +34,7 @@ const timeSlots = Array.from({ length: 24 }, (_, i) => {
 })
 
 export default function CalendarPage() {
-  const { language } = useLanguage()
-  const { t } = useTranslation(language)
-  
+  const { t } = useTranslation()
   const [events, setEvents] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [currentDate, setCurrentDate] = useState<Date>(new Date())
@@ -45,6 +42,7 @@ export default function CalendarPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Task | null>(null)
+  const [userPlan, setUserPlan] = useState("pro")
   const [days, setDays] = useState<(Date | null)[]>([])
 
   const [newEvent, setNewEvent] = useState({
