@@ -23,6 +23,8 @@ export default function CalendarPage() {
   const { toast } = useToast()
   const { language } = useLanguage()
   const { t } = useTranslation(language)
+  const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly">("daily") // View mode
+  const [userPlan, setUserPlan] = useState<"free" | "pro" | "premium">("free") // User plan for calendars
   const [currentDate, setCurrentDate] = useState(new Date())
   const [tasks, setTasks] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -342,155 +344,295 @@ export default function CalendarPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="transition-all duration-300">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
-          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">{t("calendar")}</span>
-          </h1>
-          <Button
-            className="neon-glow-hover w-full md:w-auto"
-            onClick={() => {
-              setSelectedDate(new Date())
-              setIsDialogOpen(true)
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t("addTask")}
-          </Button>
+        {/* Header with Title and View Mode Buttons */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">TimeFrame</h1>
+            <p className="text-muted-foreground">{t("myCalendar")}</p>
+            <p className="text-xs text-muted-foreground mt-1">Information designed for accurate insights</p>
+          </div>
+          
+          {/* View Mode Buttons */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "daily" ? "default" : "outline"}
+              onClick={() => setViewMode("daily")}
+              className={viewMode === "daily" ? "bg-primary" : ""}
+            >
+              Daily
+            </Button>
+            <Button
+              variant={viewMode === "weekly" ? "default" : "outline"}
+              onClick={() => setViewMode("weekly")}
+              className={viewMode === "weekly" ? "bg-primary" : ""}
+            >
+              Weekly
+            </Button>
+            <Button
+              variant={viewMode === "monthly" ? "default" : "outline"}
+              onClick={() => setViewMode("monthly")}
+              className={viewMode === "monthly" ? "bg-primary" : ""}
+            >
+              Monthly
+            </Button>
+          </div>
         </div>
 
-        <AdsterraBanner
-          adKey="dd82d93d86b369641ec4dd731423cb09"
-          width={728}
-          height={90}
-          className="mb-6 hidden md:block"
-        />
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar: Mini Calendar + My Calendar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Mini Calendar */}
+            <Card className="glass-card p-4 neon-glow">
+              <div className="flex items-center justify-between mb-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <h2 className="text-lg font-bold">
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </div>
 
-        <AdsterraMobileBanner
-          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
-          width={320}
-          height={50}
-          className="mb-6 block md:hidden"
-        />
+              <div className="grid grid-cols-7 gap-1 mb-4">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                  <div key={day} className="text-center text-xs font-semibold text-muted-foreground p-1">
+                    {day}
+                  </div>
+                ))}
+                {days.map((day, index) => {
+                  if (!day) {
+                    return <div key={`empty-${index}`} className="aspect-square" />
+                  }
 
-        {!notificationEnabled && (
-          <Card className="glass-card p-4 mb-6 border-yellow-500/50">
-            <div className="flex items-center justify-between">
-              <p className="text-sm">{t("enableNotifications")}</p>
-              <Button size="sm" onClick={() => setNotificationEnabled(true)}>
-                {t("enable")}
-              </Button>
-            </div>
-          </Card>
-        )}
+                  const dayTasks = getTasksForDate(day)
+                  const isToday =
+                    day.getDate() === new Date().getDate() &&
+                    day.getMonth() === new Date().getMonth() &&
+                    day.getFullYear() === new Date().getFullYear()
 
-        {notificationEnabled && (
-          <Card className="glass-card p-4 mb-6 border-green-500/50">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-sm text-green-500">{t("notificationsEnabled")}</p>
-            </div>
-          </Card>
-        )}
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className={`aspect-square p-1 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:scale-105 ${
+                        isToday ? "border-primary bg-primary/20 text-primary font-bold" : "border-border/50 hover:bg-secondary/50"
+                      }`}
+                      onClick={() => {
+                        setSelectedDate(day)
+                        setViewMode("daily")
+                      }}
+                    >
+                      {day.getDate()}
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
 
-        <Card className="glass-card p-4 md:p-6 neon-glow">
-          <div className="flex items-center justify-between mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <h2 className="text-xl md:text-2xl font-bold">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+            {/* My Calendar Section */}
+            <Card className="glass-card p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold">{t("myCalendar")}</h3>
+                <Button size="icon" variant="ghost" className="h-6 w-6">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {tasks.slice(0, 3).map((task) => (
+                  <div key={task.id} className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded cursor-pointer">
+                    <Checkbox
+                      checked={task.completed}
+                      onCheckedChange={() => toggleTask(task.id, task.completed)}
+                      className="h-4 w-4"
+                    />
+                    <span className={`text-xs ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                      {task.title.substring(0, 20)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Other Calendar - Only for Pro/Premium */}
+            {(userPlan === "pro" || userPlan === "premium") && (
+              <Card className="glass-card p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold">Team Calendars</h3>
+                  <Button size="icon" variant="ghost" className="h-6 w-6">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">No team calendars yet</p>
+                </div>
+              </Card>
+            )}
           </div>
 
-          <div className="grid grid-cols-7 gap-1 md:gap-2">
-            {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-              <div
-                key={`${day}-${index}`}
-                className="text-center font-semibold text-xs md:text-sm text-muted-foreground p-1 md:p-2"
-              >
-                <span className="md:hidden">{day}</span>
-                <span className="hidden md:inline">
-                  {[t("sun"), t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat")][index]}
-                </span>
-              </div>
-            ))}
-            {days.map((day, index) => {
-              if (!day) {
-                return <div key={`empty-${index}`} className="aspect-square" />
-              }
+          {/* Right Content: Calendar View */}
+          <div className="lg:col-span-3">
+            {viewMode === "daily" && (
+              <Card className="glass-card p-6 neon-glow">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">
+                    {selectedDate ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  </h2>
+                  <Button onClick={() => setIsDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t("addTask")}
+                  </Button>
+                </div>
 
-              const dayTasks = getTasksForDate(day)
-              const isToday =
-                day.getDate() === new Date().getDate() &&
-                day.getMonth() === new Date().getMonth() &&
-                day.getFullYear() === new Date().getFullYear()
-
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={`aspect-square p-1 md:p-2 rounded-lg border cursor-pointer transition-all hover:scale-105 ${
-                    isToday
-                      ? "border-primary bg-primary/10 neon-glow"
-                      : "border-border/50 hover:border-primary/50 hover:bg-secondary/50"
-                  }`}
-                  onClick={() => {
-                    setSelectedDate(day)
-                    if (dayTasks.length > 0) {
-                      setIsViewDialogOpen(true)
-                    } else {
-                      setIsDialogOpen(true)
-                    }
-                  }}
-                >
-                  <div className="text-xs md:text-sm font-semibold mb-1">{day.getDate()}</div>
-                  {dayTasks.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {dayTasks.slice(0, 3).map((task) => (
-                        <div
-                          key={task.id}
-                          className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${
-                            task.priority === "high"
-                              ? "bg-red-500"
-                              : task.priority === "medium"
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
-                          }`}
-                        />
-                      ))}
-                      {dayTasks.length > 3 && (
-                        <div className="text-[10px] md:text-xs text-muted-foreground">+{dayTasks.length - 3}</div>
-                      )}
-                    </div>
+                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  {selectedDateTasks.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">{t("noTasksForDay")}</p>
+                  ) : (
+                    selectedDateTasks.map((task) => (
+                      <Card key={task.id} className="glass-card p-4 hover:bg-primary/5">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={task.completed}
+                            onCheckedChange={() => toggleTask(task.id, task.completed)}
+                          />
+                          <div className="flex-1">
+                            <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
+                              {task.title}
+                            </h3>
+                            {task.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              {task.due_date &&
+                                (() => {
+                                  const isoString = task.due_date
+                                  const match = isoString.match(/T(\d{2}):(\d{2})/)
+                                  if (match) {
+                                    return (
+                                      <span className="text-xs bg-primary/20 px-2 py-1 rounded">
+                                        {match[1]}:{match[2]}
+                                      </span>
+                                    )
+                                  }
+                                  return null
+                                })()}
+                              <Badge
+                                variant="outline"
+                                className={
+                                  task.priority === "high"
+                                    ? "border-red-500 text-red-500"
+                                    : task.priority === "medium"
+                                      ? "border-yellow-500 text-yellow-500"
+                                      : "border-green-500 text-green-500"
+                                }
+                              >
+                                {task.priority}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => {
+                                handleEditTask(task)
+                                setIsEditDialogOpen(true)
+                              }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-red-500 hover:bg-red-500/10"
+                              onClick={() => handleDeleteTask(task.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))
                   )}
                 </div>
-              )
-            })}
+              </Card>
+            )}
+
+            {viewMode === "weekly" && (
+              <Card className="glass-card p-6 neon-glow">
+                <h2 className="text-2xl font-bold mb-6">Weekly View</h2>
+                <p className="text-muted-foreground">Weekly view coming soon...</p>
+              </Card>
+            )}
+
+            {viewMode === "monthly" && (
+              <Card className="glass-card p-6 neon-glow">
+                <div className="grid grid-cols-7 gap-2">
+                  {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                    <div key={`${day}-${index}`} className="text-center font-semibold text-xs text-muted-foreground p-2">
+                      {day}
+                    </div>
+                  ))}
+                  {days.map((day, index) => {
+                    if (!day) {
+                      return <div key={`empty-${index}`} className="aspect-square" />
+                    }
+
+                    const dayTasks = getTasksForDate(day)
+                    const isToday =
+                      day.getDate() === new Date().getDate() &&
+                      day.getMonth() === new Date().getMonth() &&
+                      day.getFullYear() === new Date().getFullYear()
+
+                    return (
+                      <div
+                        key={day.toISOString()}
+                        className={`aspect-square p-2 rounded-lg border cursor-pointer transition-all hover:scale-105 ${
+                          isToday ? "border-primary bg-primary/10 neon-glow" : "border-border/50 hover:bg-secondary/50"
+                        }`}
+                        onClick={() => {
+                          setSelectedDate(day)
+                          setViewMode("daily")
+                        }}
+                      >
+                        <div className="text-xs font-semibold mb-1">{day.getDate()}</div>
+                        {dayTasks.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {dayTasks.slice(0, 2).map((task, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-1.5 h-1.5 rounded-full ${
+                                  task.priority === "high"
+                                    ? "bg-red-500"
+                                    : task.priority === "medium"
+                                      ? "bg-yellow-500"
+                                      : "bg-green-500"
+                                }`}
+                              />
+                            ))}
+                            {dayTasks.length > 2 && (
+                              <span className="text-[10px] text-muted-foreground">+{dayTasks.length - 2}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </Card>
+            )}
           </div>
-        </Card>
-
-        <AdsterraNativeBanner
-          containerId="container-105a3c31d27607df87969077c87047d4"
-          scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
-          className="mt-6 hidden md:block"
-        />
-
-        <AdsterraMobileBanner
-          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
-          width={320}
-          height={50}
-          className="mt-6 block md:hidden"
-        />
+        </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="glass-card max-w-md">
