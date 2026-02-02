@@ -85,12 +85,12 @@ export default function CalendarPage() {
 
   const getEventsForDate = (date: Date) => {
     return events.filter((event) => {
-      if (!task.due_date) return false
-      const taskDate = new Date(task.due_date)
+      if (!event.due_date) return false
+      const eventDate = new Date(event.due_date)
       return (
-        taskDate.getDate() === date.getDate() &&
-        taskDate.getMonth() === date.getMonth() &&
-        taskDate.getFullYear() === date.getFullYear()
+        eventDate.getDate() === date.getDate() &&
+        eventDate.getMonth() === date.getMonth() &&
+        eventDate.getFullYear() === date.getFullYear()
       )
     })
   }
@@ -117,10 +117,10 @@ export default function CalendarPage() {
         // Browser notification - works on desktop and mobile
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification(t("taskReminder"), {
-            body: `${task.title} ${t("startsNow")}`,
+            body: `${event.title} ${t("startsNow")}`,
             icon: "/favicon.ico",
             badge: "/favicon.ico",
-            tag: `task-${taskId}`,
+            tag: `task-${eventId}`,
             requireInteraction: true,
             vibrate: [200, 100, 200],
           })
@@ -181,9 +181,9 @@ export default function CalendarPage() {
           variant: "destructive",
         })
       } else {
-        setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
+        setNewEvent({ title: "", description: "", priority: "medium", category: "personal", time: "" })
         setIsDialogOpen(false)
-        await fetchTasks()
+        await fetchEvents()
         setTimeout(() => checkNotifications(), 500)
       }
     } catch (error) {
@@ -197,7 +197,7 @@ export default function CalendarPage() {
 
   const toggleTask = async (taskId: string, completed: boolean) => {
     try {
-      await fetch("/api/tasks", {
+      await fetch("/api/calendar", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: taskId, completed: !completed }),
@@ -282,7 +282,7 @@ export default function CalendarPage() {
       if (response.ok) {
         fetchEvents()
         setIsEditDialogOpen(false)
-        setEditingTask(null)
+        setEditingEvent(null)
         notifiedEventsRef.current.delete(editingEvent.id)
         setTimeout(() => checkNotifications(), 500)
       } else {
@@ -306,7 +306,7 @@ export default function CalendarPage() {
     const hours = String(taskDate.getHours()).padStart(2, "0")
     const minutes = String(taskDate.getMinutes()).padStart(2, "0")
     const timeValue = `${hours}:${minutes}`
-    setEditingTask({ ...task, time: timeValue })
+    setEditingEvent({ ...task, time: timeValue })
   }
 
   const days = getDaysInMonth(currentDate)
@@ -339,7 +339,7 @@ export default function CalendarPage() {
         }
       }
     }
-  }, [notificationEnabled, tasks, t])
+  }, [notificationEnabled, events, t])
 
   return (
     <div className="min-h-screen p-4 md:p-8">
