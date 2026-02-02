@@ -665,58 +665,6 @@ export default function CalendarPage() {
                 </div>
               </Card>
             )}
-                                  const match = isoString.match(/T(\d{2}):(\d{2})/)
-                                  if (match) {
-                                    return (
-                                      <span className="text-xs bg-primary/20 px-2 py-1 rounded">
-                                        {match[1]}:{match[2]}
-                                      </span>
-                                    )
-                                  }
-                                  return null
-                                })()}
-                              <Badge
-                                variant="outline"
-                                className={
-                                  task.priority === "high"
-                                    ? "border-red-500 text-red-500"
-                                    : task.priority === "medium"
-                                      ? "border-yellow-500 text-yellow-500"
-                                      : "border-green-500 text-green-500"
-                                }
-                              >
-                                {task.priority}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => {
-                                handleEditTask(task)
-                                setIsEditDialogOpen(true)
-                              }}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-red-500 hover:bg-red-500/10"
-                              onClick={() => handleDeleteTask(task.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </Card>
-            )}
 
             {viewMode === "weekly" && (
               <Card className="glass-card p-6 neon-glow">
@@ -728,7 +676,7 @@ export default function CalendarPage() {
             {viewMode === "monthly" && (
               <Card className="glass-card p-6 neon-glow">
                 <div className="grid grid-cols-7 gap-2">
-                  {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
+                  {["L", "M", "X", "J", "V", "S", "D"].map((day, index) => (
                     <div key={`${day}-${index}`} className="text-center font-semibold text-xs text-muted-foreground p-2">
                       {day}
                     </div>
@@ -756,15 +704,15 @@ export default function CalendarPage() {
                         }}
                       >
                         <div className="text-xs font-semibold mb-1">{day.getDate()}</div>
-                    {dayEvents.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {dayEvents.slice(0, 2).map((event, idx) => (
+                        {dayEvents.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {dayEvents.slice(0, 2).map((event, idx) => (
                               <div
                                 key={idx}
                                 className={`w-1.5 h-1.5 rounded-full ${
                                   event.priority === "high"
                                     ? "bg-red-500"
-                                    : task.priority === "medium"
+                                    : event.priority === "medium"
                                       ? "bg-yellow-500"
                                       : "bg-green-500"
                                 }`}
