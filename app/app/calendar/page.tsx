@@ -102,17 +102,17 @@ export default function CalendarPage() {
     const currentHours = now.getHours()
     const currentMinutes = now.getMinutes()
 
-    tasks.forEach((task) => {
-      const taskId = task.id
-      if (notifiedTasksRef.current.has(taskId)) return
+    events.forEach((event) => {
+      const eventId = event.id
+      if (notifiedEventsRef.current.has(eventId)) return
 
-      const taskTime = new Date(task.due_date)
-      const taskHours = taskTime.getHours()
-      const taskMinutes = taskTime.getMinutes()
+      const eventTime = new Date(event.due_date)
+      const eventHours = eventTime.getHours()
+      const eventMinutes = eventTime.getMinutes()
 
       // Notificar cuando la hora y minuto sean exactos
-      if (currentHours === taskHours && currentMinutes === taskMinutes) {
-        notifiedTasksRef.current.add(taskId)
+      if (currentHours === eventHours && currentMinutes === eventMinutes) {
+        notifiedEventsRef.current.add(eventId)
 
         // Browser notification - works on desktop and mobile
         if ("Notification" in window && Notification.permission === "granted") {
@@ -130,7 +130,7 @@ export default function CalendarPage() {
   }
 
   const handleCreateTask = async () => {
-    if (!selectedDate || !newTask.title.trim()) {
+    if (!selectedDate || !newEvent.title.trim()) {
       toast({
         title: t("error"),
         description: t("enterTaskTitle"),
@@ -144,8 +144,8 @@ export default function CalendarPage() {
     const day = String(selectedDate.getDate()).padStart(2, "0")
 
     let dueDate: string
-    if (newTask.time) {
-      const [hours, minutes] = newTask.time.split(":")
+    if (newEvent.time) {
+      const [hours, minutes] = newEvent.time.split(":")
       dueDate = new Date(
         year,
         selectedDate.getMonth(),
@@ -162,10 +162,10 @@ export default function CalendarPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
-          priority: newTask.priority,
-          category: newTask.category,
+      title: newEvent.title,
+      description: newEvent.description,
+      priority: newEvent.priority,
+      category: newEvent.category,
           due_date: dueDate,
           completed: false,
           status: "todo",
@@ -244,7 +244,7 @@ export default function CalendarPage() {
   }
 
   const handleUpdateTask = async () => {
-    if (!editingTask || !editingTask.title.trim()) {
+    if (!editingEvent || !editingEvent.title.trim()) {
       toast({
         title: t("error"),
         description: t("enterTaskTitle"),
@@ -255,13 +255,13 @@ export default function CalendarPage() {
 
     try {
       let dueDate: string
-      if (editingTask.time) {
-        const dueDateTime = new Date(editingTask.due_date)
-        const [hours, minutes] = editingTask.time.split(":")
+    if (editingEvent.time) {
+      const dueDateTime = new Date(editingEvent.due_date)
+      const [hours, minutes] = editingEvent.time.split(":")
         dueDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
         dueDate = dueDateTime.toISOString()
       } else {
-        dueDate = editingTask.due_date
+        dueDate = editingEvent.due_date
       }
 
       const response = await fetch("/api/calendar", {
@@ -270,20 +270,20 @@ export default function CalendarPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: editingTask.id,
-          title: editingTask.title,
-          description: editingTask.description,
-          priority: editingTask.priority,
-          category: editingTask.category,
+        id: editingEvent.id,
+        title: editingEvent.title,
+        description: editingEvent.description,
+        priority: editingEvent.priority,
+        category: editingEvent.category,
           due_date: dueDate,
-          completed: editingTask.completed,
+          completed: editingEvent.completed,
         }),
       })
       if (response.ok) {
         fetchEvents()
         setIsEditDialogOpen(false)
         setEditingTask(null)
-        notifiedTasksRef.current.delete(editingTask.id)
+        notifiedEventsRef.current.delete(editingEvent.id)
         setTimeout(() => checkNotifications(), 500)
       } else {
         toast({
@@ -643,8 +643,8 @@ export default function CalendarPage() {
               <div>
                 <Label>{t("title")}</Label>
                 <Input
-                  value={newTask.title}
-                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
                   placeholder={t("title")}
                   className="bg-secondary/50"
                 />
@@ -652,8 +652,8 @@ export default function CalendarPage() {
               <div>
                 <Label>{t("description")}</Label>
                 <Textarea
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                   placeholder={t("description")}
                   className="bg-secondary/50"
                 />
@@ -662,8 +662,8 @@ export default function CalendarPage() {
                 <Label>{t("time")}</Label>
                 <Input
                   type="time"
-                  value={newTask.time}
-                  onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                  value={newEvent.time}
+                  onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
                   className="bg-secondary/50"
                 />
               </div>
@@ -671,8 +671,8 @@ export default function CalendarPage() {
                 <div>
                   <Label>{t("priority")}</Label>
                   <Select
-                    value={newTask.priority}
-                    onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
+                    value={newEvent.priority}
+                    onValueChange={(value) => setNewEvent({ ...newEvent, priority: value })}
                   >
                     <SelectTrigger className="bg-secondary/50">
                       <SelectValue />
@@ -687,8 +687,8 @@ export default function CalendarPage() {
                 <div>
                   <Label>{t("category")}</Label>
                   <Select
-                    value={newTask.category}
-                    onValueChange={(value) => setNewTask({ ...newTask, category: value })}
+                    value={newEvent.category}
+                    onValueChange={(value) => setNewEvent({ ...newEvent, category: value })}
                   >
                     <SelectTrigger className="bg-secondary/50">
                       <SelectValue />
@@ -806,13 +806,13 @@ export default function CalendarPage() {
             <DialogHeader>
               <DialogTitle>{t("editTask")}</DialogTitle>
             </DialogHeader>
-            {editingTask && (
+            {editingEvent && (
               <div className="space-y-4">
                 <div>
                   <Label>{t("title")}</Label>
                   <Input
-                    value={editingTask.title}
-                    onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
+                    value={editingEvent.title}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
                     placeholder={t("title")}
                     className="bg-secondary/50"
                   />
@@ -820,8 +820,8 @@ export default function CalendarPage() {
                 <div>
                   <Label>{t("description")}</Label>
                   <Textarea
-                    value={editingTask.description || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+                    value={editingEvent.description || ""}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
                     placeholder={t("description")}
                     className="bg-secondary/50"
                   />
@@ -830,16 +830,16 @@ export default function CalendarPage() {
                   <Label>{t("time")}</Label>
                   <Input
                     type="time"
-                    value={editingTask.time || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, time: e.target.value })}
+                    value={editingEvent.time || ""}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, time: e.target.value })}
                     className="bg-secondary/50"
                   />
                 </div>
                 <div>
                   <Label>{t("preview")}</Label>
                   <div className="text-sm text-muted-foreground bg-secondary/50 p-2 rounded">
-                    {editingTask.time ||
-                      new Date(editingTask.due_date).toLocaleTimeString("es-ES", {
+                    {editingEvent.time ||
+                      new Date(editingEvent.due_date).toLocaleTimeString("es-ES", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -849,8 +849,8 @@ export default function CalendarPage() {
                   <div>
                     <Label>{t("priority")}</Label>
                     <Select
-                      value={editingTask.priority}
-                      onValueChange={(value) => setEditingTask({ ...editingTask, priority: value })}
+                      value={editingEvent.priority}
+                      onValueChange={(value) => setEditingEvent({ ...editingEvent, priority: value })}
                     >
                       <SelectTrigger className="bg-secondary/50">
                         <SelectValue />
@@ -865,8 +865,8 @@ export default function CalendarPage() {
                   <div>
                     <Label>{t("category")}</Label>
                     <Select
-                      value={editingTask.category}
-                      onValueChange={(value) => setEditingTask({ ...editingTask, category: value })}
+                      value={editingEvent.category}
+                      onValueChange={(value) => setEditingEvent({ ...editingEvent, category: value })}
                     >
                       <SelectTrigger className="bg-secondary/50">
                         <SelectValue />
@@ -885,7 +885,7 @@ export default function CalendarPage() {
                   <Button onClick={handleUpdateTask} className="flex-1 neon-glow-hover">
                     {t("updateTask")}
                   </Button>
-                  <Button onClick={() => handleDeleteTask(editingTask.id)} variant="destructive" className="flex-1">
+                  <Button onClick={() => handleDeleteTask(editingEvent.id)} variant="destructive" className="flex-1">
                     {t("deleteTask")}
                   </Button>
                 </div>
