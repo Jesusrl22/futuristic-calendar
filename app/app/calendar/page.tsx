@@ -26,18 +26,18 @@ export default function CalendarPage() {
   const [viewMode, setViewMode] = useState<"daily" | "weekly" | "monthly">("daily") // View mode
   const [userPlan, setUserPlan] = useState<"free" | "pro" | "premium">("free") // User plan for calendars
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [events, setEvents] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [editingEvent, setEditingEvent] = useState<Task | null>(null)
   const [notificationEnabled, setNotificationEnabled] = useState<boolean>(false)
-  const tasksRef = useRef<Task[]>([])
+  const eventsRef = useRef<Task[]>([])
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const notifiedTasksRef = useRef<Set<string>>(new Set())
+  const notifiedEventsRef = useRef<Set<string>>(new Set())
 
-  const [newTask, setNewTask] = useState({
+  const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
     priority: "medium",
@@ -46,22 +46,22 @@ export default function CalendarPage() {
   })
 
   useEffect(() => {
-    fetchTasks()
+    fetchEvents()
     setNotificationEnabled(Notification.permission === "granted")
   }, [])
 
-  const fetchTasks = async () => {
+  const fetchEvents = async () => {
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         cache: "no-store",
       })
       const data = await response.json()
-      if (data.tasks) {
-        setTasks(data.tasks)
-        tasksRef.current = data.tasks
+      if (data.events) {
+        setEvents(data.events)
+        eventsRef.current = data.events
       }
     } catch (error) {
-      console.error("Error fetching tasks:", error)
+      console.error("Error fetching calendar events:", error)
     }
   }
 
@@ -83,8 +83,8 @@ export default function CalendarPage() {
     return days
   }
 
-  const getTasksForDate = (date: Date) => {
-    return tasks.filter((task) => {
+  const getEventsForDate = (date: Date) => {
+    return events.filter((event) => {
       if (!task.due_date) return false
       const taskDate = new Date(task.due_date)
       return (
@@ -158,7 +158,7 @@ export default function CalendarPage() {
     }
 
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -202,7 +202,7 @@ export default function CalendarPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: taskId, completed: !completed }),
       })
-      fetchTasks()
+      fetchEvents()
     } catch (error) {
       console.error("Error toggling task:", error)
     }
@@ -214,7 +214,7 @@ export default function CalendarPage() {
     }
 
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: taskId }),
@@ -230,7 +230,7 @@ export default function CalendarPage() {
       } else {
         setIsViewDialogOpen(false)
         setIsEditDialogOpen(false)
-        fetchTasks()
+        fetchEvents()
         // Keep the selected date and the view stays on the day's tasks
       }
     } catch (error) {
@@ -264,7 +264,7 @@ export default function CalendarPage() {
         dueDate = editingTask.due_date
       }
 
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -280,7 +280,7 @@ export default function CalendarPage() {
         }),
       })
       if (response.ok) {
-        fetchTasks()
+        fetchEvents()
         setIsEditDialogOpen(false)
         setEditingTask(null)
         notifiedTasksRef.current.delete(editingTask.id)
@@ -325,7 +325,7 @@ export default function CalendarPage() {
     t("december"),
   ]
 
-  const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : []
+  const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : []
 
   useEffect(() => {
     if (notificationEnabled) {
@@ -415,7 +415,7 @@ export default function CalendarPage() {
                     return <div key={`empty-${index}`} className="aspect-square" />
                   }
 
-                  const dayTasks = getTasksForDate(day)
+                  const dayEvents = getEventsForDate(day)
                   const isToday =
                     day.getDate() === new Date().getDate() &&
                     day.getMonth() === new Date().getMonth() &&
@@ -448,15 +448,15 @@ export default function CalendarPage() {
                 </Button>
               </div>
               <div className="space-y-2">
-                {tasks.slice(0, 3).map((task) => (
-                  <div key={task.id} className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded cursor-pointer">
+                {events.slice(0, 3).map((event) => (
+                  <div key={event.id} className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded cursor-pointer">
                     <Checkbox
-                      checked={task.completed}
-                      onCheckedChange={() => toggleTask(task.id, task.completed)}
+                      checked={event.completed}
+                      onCheckedChange={() => toggleTask(event.id, event.completed)}
                       className="h-4 w-4"
                     />
-                    <span className={`text-xs ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                      {task.title.substring(0, 20)}
+                    <span className={`text-xs ${event.completed ? "line-through text-muted-foreground" : ""}`}>
+                      {event.title.substring(0, 20)}
                     </span>
                   </div>
                 ))}
@@ -494,10 +494,10 @@ export default function CalendarPage() {
                 </div>
 
                 <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                  {selectedDateTasks.length === 0 ? (
+                  {selectedDateEvents.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">{t("noTasksForDay")}</p>
                   ) : (
-                    selectedDateTasks.map((task) => (
+                    selectedDateEvents.map((event) => (
                       <Card key={task.id} className="glass-card p-4 hover:bg-primary/5">
                         <div className="flex items-start gap-3">
                           <Checkbox
@@ -588,7 +588,7 @@ export default function CalendarPage() {
                       return <div key={`empty-${index}`} className="aspect-square" />
                     }
 
-                    const dayTasks = getTasksForDate(day)
+                    const dayEvents = getEventsForDate(day)
                     const isToday =
                       day.getDate() === new Date().getDate() &&
                       day.getMonth() === new Date().getMonth() &&
@@ -606,13 +606,13 @@ export default function CalendarPage() {
                         }}
                       >
                         <div className="text-xs font-semibold mb-1">{day.getDate()}</div>
-                        {dayTasks.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {dayTasks.slice(0, 2).map((task, idx) => (
+                    {dayEvents.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {dayEvents.slice(0, 2).map((event, idx) => (
                               <div
                                 key={idx}
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  task.priority === "high"
+                                  event.priority === "high"
                                     ? "bg-red-500"
                                     : task.priority === "medium"
                                       ? "bg-yellow-500"
@@ -620,8 +620,8 @@ export default function CalendarPage() {
                                 }`}
                               />
                             ))}
-                            {dayTasks.length > 2 && (
-                              <span className="text-[10px] text-muted-foreground">+{dayTasks.length - 2}</span>
+                            {dayEvents.length > 2 && (
+                              <span className="text-[10px] text-muted-foreground">+{dayEvents.length - 2}</span>
                             )}
                           </div>
                         )}
