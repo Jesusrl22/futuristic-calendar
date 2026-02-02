@@ -79,13 +79,20 @@ export default function CalendarPage() {
         cache: "no-store",
         headers: { "Content-Type": "application/json" }
       })
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
-      const data = await response.json()
-      if (data.events) {
-        setEvents(data.events)
+      
+      // If endpoint doesn't exist (404), initialize with empty events
+      if (!response.ok) {
+        console.log("[v0] Calendar API not available, using empty events")
+        setEvents([])
+        return
       }
+      
+      const data = await response.json()
+      setEvents(data.events || [])
     } catch (error) {
       console.error("[v0] Error fetching calendar events:", error)
+      // Gracefully handle API errors by showing empty calendar
+      setEvents([])
     }
   }
 
@@ -145,28 +152,36 @@ export default function CalendarPage() {
   // Toggle event completion
   const toggleEventCompletion = async (eventId: string, completed: boolean) => {
     try {
-      await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: eventId, completed: !completed }),
       })
-      await fetchEvents()
+      
+      if (response.ok) {
+        // Update local state optimistically
+        setEvents(events.map(e => e.id === eventId ? { ...e, completed: !completed } : e))
+      }
     } catch (error) {
-      console.error("Error updating event:", error)
+      console.error("[v0] Error updating event:", error)
     }
   }
 
   // Delete event
   const deleteEvent = async (eventId: string) => {
     try {
-      await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: eventId }),
       })
-      await fetchEvents()
+      
+      if (response.ok) {
+        // Update local state optimistically
+        setEvents(events.filter(e => e.id !== eventId))
+      }
     } catch (error) {
-      console.error("Error deleting event:", error)
+      console.error("[v0] Error deleting event:", error)
     }
   }
 
