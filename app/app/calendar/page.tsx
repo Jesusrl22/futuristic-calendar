@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2, Bell, User, Link, CheckCircle2 } from "@/components/icons"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/hooks/useTranslation" // Fixed import - useTranslation is in hooks/useTranslation, not lib/translations
@@ -342,70 +342,102 @@ export default function CalendarPage() {
   }, [notificationEnabled, tasks, t])
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="min-h-screen p-4 md:p-8">
       <div className="transition-all duration-300">
-        {/* Header with Title and View Mode Buttons */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-primary/30">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">TimeFrame</h1>
-            <p className="text-muted-foreground">{t("myCalendar")}</p>
-            <p className="text-xs text-muted-foreground mt-1">Information designed for accurate insights</p>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded bg-gradient-to-r from-primary to-primary/60 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">⏱</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold">TimeFrame</h1>
+            </div>
           </div>
           
-          {/* View Mode Buttons */}
-          <div className="flex gap-2">
+          {/* Navigation Tabs */}
+          <div className="flex gap-2 md:gap-4 items-center">
             <Button
               variant={viewMode === "daily" ? "default" : "outline"}
               onClick={() => setViewMode("daily")}
-              className={viewMode === "daily" ? "bg-primary" : ""}
+              className={`rounded-full transition-all ${
+                viewMode === "daily" 
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/50" 
+                  : "hover:border-primary/50"
+              }`}
             >
-              Daily
+              Hoy
             </Button>
             <Button
               variant={viewMode === "weekly" ? "default" : "outline"}
               onClick={() => setViewMode("weekly")}
-              className={viewMode === "weekly" ? "bg-primary" : ""}
+              className={`transition-all ${
+                viewMode === "weekly" 
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/50" 
+                  : "hover:text-primary/80"
+              }`}
             >
-              Weekly
+              Semana
             </Button>
             <Button
               variant={viewMode === "monthly" ? "default" : "outline"}
               onClick={() => setViewMode("monthly")}
-              className={viewMode === "monthly" ? "bg-primary" : ""}
+              className={`transition-all ${
+                viewMode === "monthly" 
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/50" 
+                  : "hover:text-primary/80"
+              }`}
             >
-              Monthly
+              Mes
+            </Button>
+            <Button
+              variant="outline"
+              className="transition-all hover:text-primary/80"
+            >
+              Todas
+            </Button>
+            <Button size="icon" variant="ghost" className="relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            </Button>
+            <Button size="icon" variant="ghost" className="rounded-full border border-primary/50 hover:bg-primary/10">
+              <User className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Sidebar: Mini Calendar + My Calendar */}
+          {/* Left Sidebar: Mini Calendar + My Calendar + Team Calendars */}
           <div className="lg:col-span-1 space-y-6">
             {/* Mini Calendar */}
-            <Card className="glass-card p-4 neon-glow">
+            <Card className="glass-card p-5 border-primary/30 neon-glow">
               <div className="flex items-center justify-between mb-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <h2 className="text-lg font-bold">
+                <h2 className="text-lg font-bold text-foreground">
                   {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-primary/20"
+                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-primary/20"
+                    onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+              <div className="grid grid-cols-7 gap-2 mb-4">
+                {["L", "M", "X", "J", "V", "S", "D"].map((day) => (
                   <div key={day} className="text-center text-xs font-semibold text-muted-foreground p-1">
                     {day}
                   </div>
@@ -422,58 +454,88 @@ export default function CalendarPage() {
                     day.getFullYear() === new Date().getFullYear()
 
                   return (
-                    <div
+                    <button
                       key={day.toISOString()}
-                      className={`aspect-square p-1 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:scale-105 ${
-                        isToday ? "border-primary bg-primary/20 text-primary font-bold" : "border-border/50 hover:bg-secondary/50"
-                      }`}
                       onClick={() => {
                         setSelectedDate(day)
                         setViewMode("daily")
                       }}
+                      className={`aspect-square p-1 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:scale-110 ${
+                        isToday 
+                          ? "border-primary bg-primary/20 text-primary font-bold neon-glow" 
+                          : "border-border/50 hover:border-primary/50 hover:bg-primary/10 text-foreground"
+                      }`}
                     >
                       {day.getDate()}
-                    </div>
+                    </button>
                   )
                 })}
               </div>
             </Card>
 
             {/* My Calendar Section */}
-            <Card className="glass-card p-4">
+            <Card className="glass-card p-5 border-primary/30">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold">{t("myCalendar")}</h3>
-                <Button size="icon" variant="ghost" className="h-6 w-6">
-                  <Plus className="w-4 h-4" />
-                </Button>
+                <h3 className="font-bold text-foreground">{t("myCalendar")}</h3>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-primary/20">
+                    <Link className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-primary/20">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {events.slice(0, 3).map((event) => (
-                  <div key={event.id} className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded cursor-pointer">
-                    <Checkbox
-                      checked={event.completed}
-                      onCheckedChange={() => toggleTask(event.id, event.completed)}
-                      className="h-4 w-4"
-                    />
-                    <span className={`text-xs ${event.completed ? "line-through text-muted-foreground" : ""}`}>
-                      {event.title.substring(0, 20)}
-                    </span>
+                  <div 
+                    key={event.id} 
+                    className="flex items-center gap-3 p-2 hover:bg-primary/10 rounded-lg cursor-pointer transition-colors"
+                  >
+                    <div className={`w-2.5 h-2.5 rounded-full ${
+                      event.priority === "high" ? "bg-red-500" :
+                      event.priority === "medium" ? "bg-yellow-500" :
+                      "bg-green-500"
+                    }`}></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">
+                        {event.title.substring(0, 20)}
+                      </p>
+                      {event.due_date && (
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(event.due_date).toLocaleDateString("es-ES", { 
+                            weekday: "short", 
+                            hour: "2-digit", 
+                            minute: "2-digit" 
+                          })}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="w-full text-xs hover:bg-primary/20 text-primary gap-2"
+                  onClick={() => setIsDialogOpen(true)}
+                >
+                  <Plus className="w-3 h-3" />
+                  Añadir Evento
+                </Button>
               </div>
             </Card>
 
-            {/* Other Calendar - Only for Pro/Premium */}
+            {/* Team Calendars - Only for Pro/Premium */}
             {(userPlan === "pro" || userPlan === "premium") && (
-              <Card className="glass-card p-4">
+              <Card className="glass-card p-5 border-primary/30">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold">Team Calendars</h3>
-                  <Button size="icon" variant="ghost" className="h-6 w-6">
+                  <h3 className="font-bold text-foreground">Otro Calendario</h3>
+                  <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-primary/20">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">No team calendars yet</p>
+                  <p className="text-xs text-muted-foreground">Sin calendarios de equipo</p>
                 </div>
               </Card>
             )}
@@ -482,39 +544,127 @@ export default function CalendarPage() {
           {/* Right Content: Calendar View */}
           <div className="lg:col-span-3">
             {viewMode === "daily" && (
-              <Card className="glass-card p-6 neon-glow">
+              <Card className="glass-card p-6 border-primary/30 neon-glow">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">
-                    {selectedDate ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                  </h2>
-                  <Button onClick={() => setIsDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("addTask")}
+                  <div>
+                    <h2 className="text-2xl font-bold text-foreground">
+                      {selectedDate 
+                        ? selectedDate.toLocaleDateString("es-ES", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+                        : new Date().toLocaleDateString("es-ES", { weekday: "long", month: "long", day: "numeric", year: "numeric" })
+                      }
+                    </h2>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedDateEvents.length} {selectedDateEvents.length === 1 ? "evento" : "eventos"} programado{selectedDateEvents.length === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setIsDialogOpen(true)}
+                    className="gap-2 shadow-lg shadow-primary/30"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Añadir Evento
                   </Button>
                 </div>
 
-                <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                <div className="space-y-3 max-h-[600px] overflow-y-auto">
                   {selectedDateEvents.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">{t("noTasksForDay")}</p>
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <p className="text-muted-foreground mb-4">Sin eventos programados</p>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsDialogOpen(true)}
+                        className="gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Crear primer evento
+                      </Button>
+                    </div>
                   ) : (
-                    selectedDateEvents.map((event) => (
-                      <Card key={task.id} className="glass-card p-4 hover:bg-primary/5">
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={task.completed}
-                            onCheckedChange={() => toggleTask(task.id, task.completed)}
-                          />
-                          <div className="flex-1">
-                            <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                              {task.title}
-                            </h3>
-                            {task.description && (
-                              <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
-                            )}
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              {task.due_date &&
-                                (() => {
-                                  const isoString = task.due_date
+                    selectedDateEvents.map((event) => {
+                      const eventTime = event.due_date ? new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) : "-"
+                      const priorityColor = event.priority === "high" ? "border-red-500/50 bg-red-500/10" 
+                        : event.priority === "medium" ? "border-yellow-500/50 bg-yellow-500/10"
+                        : "border-green-500/50 bg-green-500/10"
+                      
+                      return (
+                        <Card 
+                          key={event.id} 
+                          className={`glass-card p-4 border-l-4 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer ${priorityColor}`}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="pt-1">
+                              <Checkbox
+                                checked={event.completed}
+                                onCheckedChange={() => toggleTask(event.id, event.completed)}
+                                className="h-5 w-5"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1">
+                                  <h3 className={`font-semibold text-foreground ${event.completed ? "line-through text-muted-foreground" : ""}`}>
+                                    {event.title}
+                                  </h3>
+                                  {event.description && (
+                                    <p className="text-xs text-muted-foreground mt-1">{event.description}</p>
+                                  )}
+                                </div>
+                                <span className="text-sm font-mono text-primary whitespace-nowrap">{eventTime}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                {event.priority && (
+                                  <Badge 
+                                    variant="outline"
+                                    className={`text-xs ${
+                                      event.priority === "high" ? "border-red-500 text-red-500" :
+                                      event.priority === "medium" ? "border-yellow-500 text-yellow-500" :
+                                      "border-green-500 text-green-500"
+                                    }`}
+                                  >
+                                    {event.priority === "high" ? "Alta" : event.priority === "medium" ? "Media" : "Baja"}
+                                  </Badge>
+                                )}
+                                {event.category && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {event.category}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-primary/20"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setEditingEvent(event)
+                                  setIsEditDialogOpen(true)
+                                }}
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-red-500/20 hover:text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteTask(event.id)
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })
+                  )}
+                </div>
+              </Card>
+            )}
                                   const match = isoString.match(/T(\d{2}):(\d{2})/)
                                   if (match) {
                                     return (
