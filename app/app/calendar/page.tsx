@@ -72,16 +72,20 @@ export default function CalendarPage() {
     setDays(calendarDays)
   }, [currentDate])
 
-  // Fetch events from API
+  // Fetch events from calendar API
   const fetchEvents = async () => {
     try {
-      const response = await fetch("/api/tasks", { cache: "no-store" })
+      const response = await fetch("/api/calendar", { 
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" }
+      })
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
       const data = await response.json()
-      if (data.tasks) {
-        setEvents(data.tasks)
+      if (data.events) {
+        setEvents(data.events)
       }
     } catch (error) {
-      console.error("Error fetching events:", error)
+      console.error("[v0] Error fetching calendar events:", error)
     }
   }
 
@@ -115,7 +119,7 @@ export default function CalendarPage() {
         dueDate.setHours(hours, minutes)
       }
 
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
