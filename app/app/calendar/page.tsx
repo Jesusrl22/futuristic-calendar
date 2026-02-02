@@ -76,22 +76,28 @@ export default function CalendarPage() {
   const fetchEvents = async () => {
     try {
       const response = await fetch("/api/calendar", { 
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" }
+        cache: "no-store"
       })
       
-      // If endpoint doesn't exist (404), initialize with empty events
+      // If endpoint doesn't exist (404) or isn't successful
       if (!response.ok) {
-        console.log("[v0] Calendar API not available, using empty events")
+        console.log("[v0] Calendar API endpoint not available (status: " + response.status + "), using empty events")
+        setEvents([])
+        return
+      }
+      
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type")
+      if (!contentType?.includes("application/json")) {
+        console.log("[v0] Calendar API returned non-JSON response, using empty events")
         setEvents([])
         return
       }
       
       const data = await response.json()
-      setEvents(data.events || [])
+      setEvents(Array.isArray(data.events) ? data.events : [])
     } catch (error) {
-      console.error("[v0] Error fetching calendar events:", error)
-      // Gracefully handle API errors by showing empty calendar
+      console.log("[v0] Calendar API not available, showing empty calendar")
       setEvents([])
     }
   }
