@@ -52,13 +52,13 @@ export default function CalendarPage() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch("/api/calendar", {
+      const response = await fetch("/api/tasks", {
         cache: "no-store",
       })
       const data = await response.json()
-      if (data.events) {
-        setEvents(data.events)
-        eventsRef.current = data.events
+      if (data.tasks) {
+        setEvents(data.tasks)
+        eventsRef.current = data.tasks
       }
     } catch (error) {
       console.error("Error fetching calendar events:", error)
@@ -158,7 +158,7 @@ export default function CalendarPage() {
     }
 
     try {
-      const response = await fetch("/api/calendar", {
+      const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -214,7 +214,7 @@ export default function CalendarPage() {
     }
 
     try {
-      const response = await fetch("/api/calendar", {
+      const response = await fetch("/api/tasks", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: taskId }),
@@ -264,7 +264,7 @@ export default function CalendarPage() {
         dueDate = editingEvent.due_date
       }
 
-      const response = await fetch("/api/calendar", {
+      const response = await fetch("/api/tasks", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
