@@ -370,6 +370,26 @@ export default function TasksPage() {
     }
   }
 
+  const calculateTotalTime = (taskList: any[]) => {
+    let totalMinutes = 0
+    taskList.forEach((task: any) => {
+      if (task.estimated_time) {
+        const match = task.estimated_time.match(/(\d+)\s*(min|h)/)
+        if (match) {
+          const value = parseInt(match[1])
+          const unit = match[2]
+          totalMinutes += unit === "h" ? value * 60 : value
+        }
+      }
+    })
+    
+    if (totalMinutes === 0) return "0 min"
+    if (totalMinutes < 60) return `${totalMinutes} min`
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
+  }
+
   const getPriorityBgColor = (priority: string) => {
     switch (priority) {
       case "high":
@@ -791,15 +811,32 @@ export default function TasksPage() {
                         {/* Time Column (due_time) */}
                         <td className="px-4 py-4 text-center border-r border-border/30">
                           <span className="text-xs text-muted-foreground">
-                            {task.due_time ? task.due_time : "-"}
+                            {task.estimated_time ? `${task.estimated_time}` : "-"}
                           </span>
                         </td>
 
                         {/* Status Column */}
                         <td className="px-4 py-4 text-center border-r border-border/30">
-                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${task.completed ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}>
-                            {task.completed ? "Hecho" : "Pendiente"}
-                          </span>
+                          {task.completed ? (
+                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Completada
+                            </span>
+                          ) : task.progress ? (
+                            <div className="flex flex-col items-center gap-1">
+                              <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-primary rounded-full transition-all" 
+                                  style={{ width: `${task.progress}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">{task.progress}%</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
+                              Pendiente
+                            </span>
+                          )}
                         </td>
 
                         {/* Delete Action Column */}
@@ -857,10 +894,23 @@ export default function TasksPage() {
               {getTodayTasks().length > 0 && (
                 <div className="mt-6 bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
+                    <span className="text-sm font-medium text-muted-foreground">Completadas:</span>
                     <span className="text-lg font-bold text-primary">
                       {getTodayTasks().filter((t: any) => t.completed).length} / {getTodayTasks().length}
                     </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Tiempo total planificado:</span>
+                    <span className="text-lg font-bold text-primary">
+                      {calculateTotalTime(getTodayTasks())}
+                    </span>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-border/30">
+                    <p className="text-xs text-muted-foreground">
+                      ¡Sigue así! 🔥 Tienes todo bajo control.
+                    </p>
                   </div>
                 </div>
               )}
