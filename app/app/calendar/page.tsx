@@ -138,6 +138,14 @@ export default function CalendarPage() {
   const handleUpdateEvent = async () => {
     if (!editingEvent || !editingEvent.title.trim()) return
 
+    // Update due_date with new time if time field changed
+    if (editingEvent.time) {
+      const dueDate = new Date(editingEvent.due_date)
+      const [hours, minutes] = editingEvent.time.split(":")
+      dueDate.setHours(parseInt(hours), parseInt(minutes), 0)
+      editingEvent.due_date = dueDate.toISOString()
+    }
+
     // Update local state immediately
     setEvents(events.map((e) => (e.id === editingEvent.id ? editingEvent : e)))
     setIsEditDialogOpen(false)
@@ -320,6 +328,26 @@ export default function CalendarPage() {
               </Button>
             </div>
           </Card>
+
+          {/* Team Calendars Section */}
+          <Card className="glass-card p-5 border-primary/30">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-foreground">Calendarios de Equipo</h3>
+              <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-primary/20">
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span className="text-xs text-foreground">Equipo Desarrollo</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className="text-xs text-foreground">Equipo Marketing</span>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Main Timeline */}
@@ -411,7 +439,10 @@ export default function CalendarPage() {
                                         size="icon"
                                         className="h-7 w-7 hover:bg-primary/20"
                                         onClick={() => {
-                                          setEditingEvent(event)
+                                          const eventDate = new Date(event.due_date)
+                                          const hours = String(eventDate.getHours()).padStart(2, "0")
+                                          const minutes = String(eventDate.getMinutes()).padStart(2, "0")
+                                          setEditingEvent({ ...event, time: `${hours}:${minutes}` })
                                           setIsEditDialogOpen(true)
                                         }}
                                       >
@@ -491,6 +522,14 @@ export default function CalendarPage() {
             <div className="space-y-4">
               <Input placeholder="Título" value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} />
               <Textarea placeholder="Descripción" value={editingEvent.description || ""} onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })} />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Hora</label>
+                <Input 
+                  type="time" 
+                  value={editingEvent.time || "10:00"} 
+                  onChange={(e) => setEditingEvent({ ...editingEvent, time: e.target.value })} 
+                />
+              </div>
               <Select value={editingEvent.priority} onValueChange={(value: any) => setEditingEvent({ ...editingEvent, priority: value })}>
                 <SelectTrigger>
                   <SelectValue />
