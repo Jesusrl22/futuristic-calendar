@@ -449,10 +449,10 @@ export default function TasksPage() {
     return filteredTasks.filter((task: any) => task.due_date && task.due_date.startsWith(dateStr))
   }
 
-  // Get today's day name (e.g., "Monday", "Tuesday", etc.)
+  // Get today's day name (e.g., "Lunes", "Martes", etc.)
   const getTodayDayName = () => {
     const today = new Date()
-    return today.toLocaleDateString("en-US", { weekday: "long" })
+    return today.toLocaleDateString("es-ES", { weekday: "long" }).charAt(0).toUpperCase() + today.toLocaleDateString("es-ES", { weekday: "long" }).slice(1)
   }
 
   // Get tasks for a specific day
@@ -770,8 +770,9 @@ export default function TasksPage() {
         {/* HOY VIEW */}
         <TabsContent value="today" className="w-full space-y-6">
           <div className="bg-primary/10 border border-primary/30 rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-foreground">{getTodayDayName()}</h2>
-            <p className="text-sm text-muted-foreground">{t("day")} {getTodayDate()}</p>
+            <h2 className="text-2xl font-bold text-foreground">
+              HOY - {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).charAt(0).toUpperCase() + new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).slice(1)}
+            </h2>
           </div>
 
           {getTodayTasks().length === 0 ? (
