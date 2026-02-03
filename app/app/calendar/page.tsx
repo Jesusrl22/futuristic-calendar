@@ -78,17 +78,6 @@ export default function CalendarPage() {
       setEvents([])
     }
   }
-      const contentType = response.headers.get("content-type")
-      if (!contentType?.includes("application/json")) {
-        setEvents([])
-        return
-      }
-      const data = await response.json()
-      setEvents(Array.isArray(data.events) ? data.events : [])
-    } catch {
-      setEvents([])
-    }
-  }
 
   // Fetch teams
   const fetchTeams = async () => {
