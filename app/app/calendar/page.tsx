@@ -559,7 +559,18 @@ export default function CalendarPage() {
                 <SelectItem value="high">Alta</SelectItem>
               </SelectContent>
             </Select>
-            <Input placeholder="Categoría" value={newEvent.category} onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })} />
+            <Select value={newEvent.category} onValueChange={(value: any) => setNewEvent({ ...newEvent, category: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="personal">Personal</SelectItem>
+                <SelectItem value="trabajo">Trabajo</SelectItem>
+                <SelectItem value="reunion">Reunión</SelectItem>
+                <SelectItem value="proyecto">Proyecto</SelectItem>
+                <SelectItem value="otro">Otro</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="flex gap-2">
               <Button onClick={handleAddEvent} className="flex-1">
                 Crear Evento
@@ -598,6 +609,18 @@ export default function CalendarPage() {
                   <SelectItem value="low">Baja</SelectItem>
                   <SelectItem value="medium">Media</SelectItem>
                   <SelectItem value="high">Alta</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={editingEvent.category} onValueChange={(value: any) => setEditingEvent({ ...editingEvent, category: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Personal</SelectItem>
+                  <SelectItem value="trabajo">Trabajo</SelectItem>
+                  <SelectItem value="reunion">Reunión</SelectItem>
+                  <SelectItem value="proyecto">Proyecto</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
                 </SelectContent>
               </Select>
               <div className="flex gap-2">
