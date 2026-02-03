@@ -1,20 +1,12 @@
 "use client"
 
-// Task Management Page - Updated Design
-// Views: Today (Checkbox | Task | Priority | Time | Status | Actions)
-//        Week (7-day calendar grid with task assignments)
-
-import { DialogTrigger } from "@/components/ui/dialog"
-
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare, Calendar, CheckCircle2 } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Search, Trash2, Edit, CheckSquare, CheckCircle2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -22,13 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/hooks/useTranslation"
-import { StreaksWidget } from "@/components/streaks-widget"
-import { SectionHeader } from "@/components/section-header"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -36,64 +25,33 @@ import { useToast } from "@/hooks/use-toast"
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [viewMode, setViewMode] = useState("today") // "today" or "week"
+  const [viewMode, setViewMode] = useState("today")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
-  const [inlineNewTask, setInlineNewTask] = useState("") // For inline row input
-  const [userTimezone, setUserTimezone] = useState<string>("UTC")
-  const [editForm, setEditForm] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    category: "",
-    due_date: "",
-    due_time: "",
-  })
-  const [newTask, setNewTask] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    category: "",
-    due_date: "",
-    due_time: "",
-  })
   const [isCreating, setIsCreating] = useState(false)
   const { language } = useLanguage()
   const { t } = useTranslation(language)
   const { toast } = useToast()
   const supabase = createClient()
 
-  const [draggedTask, setDraggedTask] = useState<string | null>(null)
-  const [dragOverTask, setDragOverTask] = useState<string | null>(null)
+  const [newTask, setNewTask] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    estimated_time: "",
+  })
+
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+    estimated_time: "",
+  })
 
   useEffect(() => {
     fetchTasks()
-    fetchTimezone()
   }, [])
-
-  const fetchTimezone = async () => {
-    try {
-      const response = await fetch("/api/settings")
-      if (response.ok) {
-      const data = await response.json()
-      console.log("[v0] Task creation response:", { ok: response.ok, data })
-        if (data.profile?.timezone) {
-          setUserTimezone(data.profile.timezone)
-        } else {
-          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-          setUserTimezone(detectedTimezone)
-        }
-      } else {
-        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        setUserTimezone(detectedTimezone)
-      }
-    } catch (error) {
-      console.error("Error fetching timezone:", error)
-      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-      setUserTimezone(detectedTimezone)
-    }
-  }
 
   const fetchTasks = async () => {
     try {
@@ -107,16 +65,40 @@ export default function TasksPage() {
     }
   }
 
-  const toggleTask = async (taskId: string, completed: boolean) => {
-    try {
-      await fetch("/api/tasks", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: taskId, completed: !completed }),
+  const createTask = async () => {
+    if (!newTask.title.trim()) {
+      toast({
+        title: t("error"),
+        description: "Por favor ingresa un título",
+        variant: "destructive",
       })
-      fetchTasks()
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTask.title,
+          description: newTask.description,
+          priority: newTask.priority,
+          estimated_time: newTask.estimated_time,
+          completed: false,
+        }),
+      })
+
+      if (response.ok) {
+        setIsDialogOpen(false)
+        setNewTask({ title: "", description: "", priority: "medium", estimated_time: "" })
+        await fetchTasks()
+        toast({ title: "Éxito", description: "Tarea creada" })
+      }
     } catch (error) {
-      console.error("Error toggling task:", error)
+      toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -133,192 +115,35 @@ export default function TasksPage() {
     }
   }
 
-  const createTask = async () => {
-    if (!newTask.title.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterTaskTitle"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsCreating(true)
+  const toggleTask = async (taskId: string, completed: boolean) => {
     try {
-      let dueDate = null
-      if (newTask.due_date) {
-        const [year, month, day] = newTask.due_date.split("-")
-        if (newTask.due_time) {
-          const [hours, minutes] = newTask.due_time.split(":")
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            Number.parseInt(hours),
-            Number.parseInt(minutes),
-            0,
-          )
-          dueDate = localDate.toISOString()
-        } else {
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            23,
-            59,
-            59,
-          )
-          dueDate = localDate.toISOString()
-        }
-      }
-
-      const response = await fetch("/api/tasks", {
-        method: "POST",
+      await fetch("/api/tasks", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
-          priority: newTask.priority,
-          category: newTask.category || null,
-          due_date: dueDate,
-          completed: false,
-          status: "todo",
-        }),
+        body: JSON.stringify({ id: taskId, completed: !completed }),
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast({
-          title: t("error"),
-          description: data.error || t("failed_create_task"),
-          variant: "destructive",
-        })
-        console.log("[v0] Task creation failed with status:", response.status)
-      } else {
-        console.log("[v0] Task created, fetching tasks...")
-        setIsDialogOpen(false)
-        setNewTask({
-          title: "",
-          description: "",
-          priority: "medium",
-          category: "",
-          due_date: "",
-          due_time: "",
-        })
-        await fetchTasks()
-      }
+      fetchTasks()
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("failed_create_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  // Create task from inline input
-  const createTaskFromInline = async (taskTitle: string, dayDate?: string) => {
-    if (!taskTitle.trim()) return
-
-    try {
-      const dueDate = dayDate ? `2025-01-${dayDate}` : null
-
-      const response = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: taskTitle.trim(),
-          description: "",
-          priority: "medium",
-          category: null,
-          due_date: dueDate,
-          completed: false,
-          status: "todo",
-        }),
-      })
-
-      if (response.ok) {
-        setInlineNewTask("")
-        fetchTasks()
-        toast({
-          title: "Éxito",
-          description: "Tarea creada exitosamente",
-        })
-      }
-    } catch (error) {
-      console.error("Error creating task from inline:", error)
-      toast({
-        title: t("error"),
-        description: t("failed_create_task"),
-        variant: "destructive",
-      })
+      console.error("Error toggling task:", error)
     }
   }
 
   const openEditDialog = (task: any) => {
     setEditingTask(task)
-    let dueDate = ""
-    let dueTime = ""
-
-    if (task.due_date) {
-      const isoString = task.due_date
-      dueDate = isoString.slice(0, 10) // YYYY-MM-DD
-      dueTime = isoString.slice(11, 16) // HH:MM
-    }
-
     setEditForm({
       title: task.title,
       description: task.description || "",
       priority: task.priority || "medium",
-      category: task.category || "",
-      due_date: dueDate,
-      due_time: dueTime,
+      estimated_time: task.estimated_time || "",
     })
     setIsEditDialogOpen(true)
   }
 
   const updateTask = async () => {
-    if (!editForm.title.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterTaskTitle"),
-        variant: "destructive",
-      })
-      return
-    }
+    if (!editForm.title.trim()) return
 
     setIsCreating(true)
     try {
-      let dueDate = null
-      if (editForm.due_date) {
-        const [year, month, day] = editForm.due_date.split("-")
-        if (editForm.due_time) {
-          const [hours, minutes] = editForm.due_time.split(":")
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            Number.parseInt(hours),
-            Number.parseInt(minutes),
-            0,
-          )
-          dueDate = localDate.toISOString()
-        } else {
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            23,
-            59,
-            59,
-          )
-          dueDate = localDate.toISOString()
-        }
-      }
-
       const response = await fetch("/api/tasks", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -327,55 +152,34 @@ export default function TasksPage() {
           title: editForm.title,
           description: editForm.description,
           priority: editForm.priority,
-          category: editForm.category || null,
-          due_date: dueDate,
+          estimated_time: editForm.estimated_time,
         }),
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast({
-          title: t("error"),
-          description: data.error || t("failed_update_task"),
-          variant: "destructive",
-        })
-      } else {
+      if (response.ok) {
         setIsEditDialogOpen(false)
-        setEditingTask(null)
-        fetchTasks()
+        await fetchTasks()
+        toast({ title: "Éxito", description: "Tarea actualizada" })
       }
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("failed_update_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
+      toast({ title: t("error"), description: "Error actualizando tarea", variant: "destructive" })
     } finally {
       setIsCreating(false)
     }
   }
 
-  const filteredTasks = tasks.filter((task) => {
-    return task.title.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "text-red-500"
-      case "medium":
-        return "text-yellow-500"
-      case "low":
-        return "text-green-500"
-      default:
-        return "text-muted-foreground"
-    }
+  const getTodayTasks = () => {
+    const today = new Date().toISOString().split("T")[0]
+    return filteredTasks.filter((task) => task.due_date?.startsWith(today))
   }
 
   const calculateTotalTime = (taskList: any[]) => {
     let totalMinutes = 0
-    taskList.forEach((task: any) => {
+    taskList.forEach((task) => {
       if (task.estimated_time) {
         const match = task.estimated_time.match(/(\d+)\s*(min|h)/)
         if (match) {
@@ -385,7 +189,6 @@ export default function TasksPage() {
         }
       }
     })
-    
     if (totalMinutes === 0) return "0 min"
     if (totalMinutes < 60) return `${totalMinutes} min`
     const hours = Math.floor(totalMinutes / 60)
@@ -393,287 +196,7 @@ export default function TasksPage() {
     return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
   }
 
-  const getPriorityBgColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500/10 border-red-500/30"
-      case "medium":
-        return "bg-yellow-500/10 border-yellow-500/30"
-      case "low":
-        return "bg-green-500/10 border-green-500/30"
-      default:
-        return "bg-muted/10 border-muted/30"
-    }
-  }
-
-  // Get today's date (YYYY-MM-DD format)
-  const getTodayDate = () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = String(today.getMonth() + 1).padStart(2, "0")
-    const date = String(today.getDate()).padStart(2, "0")
-    return `${year}-${month}-${date}`
-  }
-
-  // Get tasks for today (tasks with due_date = today)
-  const getTodayTasks = () => {
-    const today = getTodayDate()
-    return filteredTasks.filter((task: any) => task.due_date && task.due_date.startsWith(today))
-  }
-
-  // Get tasks for a specific week (Mon-Sun of current week)
-  const getWeekDays = () => {
-    const today = new Date()
-    const first = today.getDate() - today.getDay()
-    const days = []
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today.setDate(first + i))
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, "0")
-      const day = String(date.getDate()).padStart(2, "0")
-      const dateStr = `${year}-${month}-${day}`
-      days.push({
-        date: dateStr,
-        dayName: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()],
-      })
-    }
-    return days
-  }
-
-  // Get week tasks: tasks whose due_date falls within this week
-  const getWeekTasks = () => {
-    const weekDays = getWeekDays()
-    const weekDateSet = new Set(weekDays.map((d) => d.date))
-    return filteredTasks.filter((task: any) => task.due_date && weekDateSet.has(task.due_date.substring(0, 10)))
-  }
-
-  // Get tasks for a specific date
-  const getTasksForDate = (dateStr: string) => {
-    return filteredTasks.filter((task: any) => task.due_date && task.due_date.startsWith(dateStr))
-  }
-
-  // Get today's day name (e.g., "Lunes", "Martes", etc.)
-  const getTodayDayName = () => {
-    const today = new Date()
-    return today.toLocaleDateString("es-ES", { weekday: "long" }).charAt(0).toUpperCase() + today.toLocaleDateString("es-ES", { weekday: "long" }).slice(1)
-  }
-
-  // Get tasks for a specific day
-  const getTasksForDay = (day: string) => {
-    return filteredTasks.filter((task: any) => {
-      if (!task.due_date) return false
-      return task.due_date.substring(8, 10) === day
-    })
-  }
-
-  // Check if task is assigned to a specific day
-  const isTaskForDay = (taskId: string, day: string) => {
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task || !task.due_date) return false
-    return task.due_date.substring(8, 10) === day
-  }
-
-  // Toggle task for a specific day (updates due_date)
-  const toggleTaskForDay = async (taskId: string, day: string) => {
-    const task = tasks.find((t) => t.id === taskId)
-    if (!task) return
-
-    // If task is already for this day, remove it (set to no date)
-    // Otherwise, set it to this day
-    const isCurrentlyForDay = task.due_date && task.due_date.substring(8, 10) === day
-
-    try {
-      const newDueDate = isCurrentlyForDay ? null : `2025-01-${day}`
-
-      const response = await fetch("/api/tasks", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: taskId,
-          due_date: newDueDate,
-        }),
-      })
-
-      if (response.ok) {
-        setTasks(
-          tasks.map((t) =>
-            t.id === taskId ? { ...t, due_date: newDueDate } : t
-          )
-        )
-      }
-    } catch (error) {
-      console.error("Error updating task date:", error)
-    }
-  }
-
-  // Add task for a specific day
-  const addTaskForDay = (day: string) => {
-    setNewTask({ ...newTask, due_date: `2025-01-${day}` })
-    setIsDialogOpen(true)
-  }
-
-  // Copy task to other days
-  const copyTaskToOtherDays = async (task: any, currentDay: string) => {
-    const weekDays = getWeekDays()
-    const daysToSelect = weekDays.filter(d => d.date !== currentDay)
-    
-    if (daysToSelect.length === 0) return
-
-    const selectedDays = daysToSelect.map(d => d.date)
-    
-    for (const day of selectedDays) {
-      try {
-        const newTaskData = {
-          user_id: task.user_id,
-          title: task.title,
-          description: task.description,
-          priority: task.priority,
-          category: task.category,
-          due_date: `2025-01-${day}`,
-          completed: false,
-        }
-
-        const response = await fetch("/api/tasks", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newTaskData),
-        })
-
-        if (response.ok) {
-          const createdTask = await response.json()
-          setTasks([...tasks, createdTask])
-        }
-      } catch (error) {
-        console.error(`Error copying task to day ${day}:`, error)
-      }
-    }
-
-    toast({
-      title: "Éxito",
-      description: `Tarea copiada a ${selectedDays.length} días`,
-    })
-  }
-
-  const formatTaskDateTime = (dateString: string) => {
-    // Parse ISO string directly to avoid timezone conversion issues
-    const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
-    if (isoMatch) {
-      const [, year, month, day, hours, minutes] = isoMatch
-      return `${day}/${month}/${year} ${hours}:${minutes}`
-    }
-
-    // Fallback: if format is different, parse manually to avoid timezone conversion
-    const match = dateString.match(/(\d{4})-(\d{2})-(\d{2})/)
-    if (match) {
-      const [, year, month, day] = match
-      return `${day}/${month}/${year}`
-    }
-
-    return dateString
-  }
-
-  const handleDragStart = (e: React.DragEvent, taskId: string, isCompleted: boolean) => {
-    if (isCompleted) {
-      e.preventDefault()
-      return
-    }
-    setDraggedTask(taskId)
-    e.dataTransfer.effectAllowed = "move"
-  }
-
-  const handleDragOver = (e: React.DragEvent, taskId: string, isCompleted: boolean) => {
-    e.preventDefault()
-    if (isCompleted || !draggedTask) return
-    setDragOverTask(taskId)
-  }
-
-  const handleDragLeave = () => {
-    setDragOverTask(null)
-  }
-
-  const handleDrop = async (e: React.DragEvent, dropTaskId: string, isCompleted: boolean) => {
-    e.preventDefault()
-    if (!draggedTask || draggedTask === dropTaskId || isCompleted) {
-      setDraggedTask(null)
-      setDragOverTask(null)
-      return
-    }
-
-    // Reorder tasks locally
-    const draggedIndex = filteredTasks.findIndex((t) => t.id === draggedTask)
-    const dropIndex = filteredTasks.findIndex((t) => t.id === dropTaskId)
-
-    const newTasks = [...tasks]
-    const draggedTaskData = newTasks.find((t) => t.id === draggedTask)
-    const dropTaskData = newTasks.find((t) => t.id === dropTaskId)
-
-    if (draggedTaskData && dropTaskData) {
-      const draggedOriginalIndex = newTasks.indexOf(draggedTaskData)
-      const dropOriginalIndex = newTasks.indexOf(dropTaskData)
-
-      newTasks.splice(draggedOriginalIndex, 1)
-      const newDropIndex = newTasks.indexOf(dropTaskData)
-      newTasks.splice(newDropIndex + (draggedIndex > dropIndex ? 0 : 1), 0, draggedTaskData)
-
-      setTasks(newTasks)
-
-      try {
-        const incompleteTasks = newTasks.filter((t) => !t.completed)
-        const taskOrders = incompleteTasks.map((task, index) => ({
-          id: task.id,
-          order: index,
-        }))
-
-        await fetch("/api/tasks/reorder", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ taskOrders }),
-        })
-      } catch (error) {
-        console.error("Failed to save task order:", error)
-        toast({
-          title: t("error"),
-          description: "Failed to save task order",
-          variant: "destructive",
-        })
-      }
-    }
-
-    setDraggedTask(null)
-    setDragOverTask(null)
-  }
-
-  const handleDragEnd = () => {
-    setDraggedTask(null)
-    setDragOverTask(null)
-  }
-
-  const addTaskToCalendar = async (task: any) => {
-    if (!task.due_date) {
-      toast({
-        title: t("info"),
-        description: "Por favor establece una fecha de vencimiento para la tarea",
-        variant: "default",
-      })
-      return
-    }
-
-    try {
-      toast({
-        title: "Éxito",
-        description: `Tarea "${task.title}" agregada al calendario`,
-        variant: "default",
-      })
-    } catch (error) {
-      toast({
-        title: t("error"),
-        description: "No se pudo agregar la tarea al calendario",
-        variant: "destructive",
-      })
-    }
-  }
+  const todayTasks = getTodayTasks()
 
   return (
     <div className="w-full px-6 py-6 space-y-6 h-full overflow-y-auto">
@@ -688,191 +211,236 @@ export default function TasksPage() {
           </div>
           <p className="text-sm text-muted-foreground">manage.tasks</p>
         </div>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg shadow-lg">
               <Plus className="w-4 h-4 mr-2" />
-              {t("newTask")}
+              Nueva Tarea
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t("createNewTask")}</DialogTitle>
-              <DialogDescription>
-                {t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}
-              </DialogDescription>
+              <DialogTitle>Nueva Tarea</DialogTitle>
+              <DialogDescription>Crea una nueva tarea</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="title">{t("title")} *</Label>
+                <Label htmlFor="title">Título *</Label>
                 <Input
                   id="title"
-                  placeholder={t("title") + "..."}
+                  placeholder="Título..."
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                 />
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="estimated_time">Tiempo estimado</Label>
                 <Input
                   id="estimated_time"
                   placeholder="ej: 45 min, 2 h"
-                  value={newTask.estimated_time || ""}
+                  value={newTask.estimated_time}
                   onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
                 />
               </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="priority">{t("priority")}</Label>
+                <Label htmlFor="priority">Prioridad</Label>
                 <select
                   id="priority"
                   className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
-                  value={newTask.priority || "medium"}
+                  value={newTask.priority}
                   onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
                 >
                   <option value="low">Baja</option>
                   <option value="medium">Media</option>
                   <option value="high">Alta</option>
                 </select>
+              </div>
             </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
+                Cancelar
+              </Button>
+              <Button onClick={createTask} disabled={isCreating}>
+                {isCreating ? "Creando..." : "Crear"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+        <Input
+          placeholder="Buscar tareas..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 bg-background/50 border border-border/50"
+        />
+      </div>
+
+      {/* TABS: HOY vs SEMANA */}
+      <div className="space-y-6">
+        <div className="flex gap-4 border-b border-border/30">
+          <button
+            onClick={() => setViewMode("today")}
+            className={`px-6 py-3 font-medium transition-all ${
+              viewMode === "today"
+                ? "text-cyan-400 border-b-2 border-cyan-400"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Hoy
+          </button>
+          <button
+            onClick={() => setViewMode("week")}
+            className={`px-6 py-3 font-medium transition-all ${
+              viewMode === "week"
+                ? "text-cyan-400 border-b-2 border-cyan-400"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Semana
+          </button>
+        </div>
+
+        {/* HOY VIEW */}
+        {viewMode === "today" && (
+          <div className="w-full space-y-6">
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-6">
+              <h2 className="text-2xl font-bold text-foreground">
+                HOY - {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase())}
+              </h2>
+            </div>
+
+            {todayTasks.length === 0 ? (
+              <Card className="glass-card p-12 text-center">
+                <p className="text-muted-foreground">No hay tareas para hoy</p>
+              </Card>
+            ) : (
+              <div className="w-full space-y-4">
+                <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-primary/10 border-b border-border/50">
+                        <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 w-12"></th>
+                        <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 flex-1">
+                          Tarea
+                        </th>
+                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24">
+                          Prioridad
+                        </th>
+                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24">
+                          Tiempo
+                        </th>
+                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-28">
+                          Estado
+                        </th>
+                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground w-16">
+                          Acciones
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                      {todayTasks.map((task: any) => (
+                        <tr key={task.id} className="hover:bg-primary/5 transition-colors">
+                          <td className="px-4 py-4 border-r border-border/30">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => toggleTask(task.id, task.completed)}
+                            />
+                          </td>
+                          <td className="px-4 py-4 border-r border-border/30">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                                  task.priority === "high"
+                                    ? "bg-red-500"
+                                    : task.priority === "medium"
+                                      ? "bg-yellow-500"
+                                      : "bg-green-500"
+                                }`}
+                              />
+                              <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                                {task.title}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-center border-r border-border/30">
+                            {task.priority && (
+                              <span
+                                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                                  task.priority === "high"
+                                    ? "bg-red-500/10 text-red-500 border border-red-500/30"
+                                    : task.priority === "medium"
+                                      ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30"
+                                      : "bg-green-500/10 text-green-500 border border-green-500/30"
+                                }`}
+                              >
+                                {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium">
+                            {task.estimated_time || "-"}
+                          </td>
+                          <td className="px-4 py-4 text-center border-r border-border/30">
+                            <div className="flex items-center justify-center gap-2">
+                              {task.completed ? (
+                                <span className="inline-flex items-center gap-1 text-green-500 text-xs font-medium">
+                                  <CheckCircle2 className="w-4 h-4" /> Completada
+                                </span>
+                              ) : (
+                                <span className="text-yellow-500 text-xs font-medium">● Pendiente</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 hover:bg-primary/20"
+                                onClick={() => openEditDialog(task)}
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500"
+                                onClick={() => deleteTask(task.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="bg-background/40 border border-border/30 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">
+                    Tiempo total planificado: <span className="font-bold text-primary">{calculateTotalTime(todayTasks)}</span>
+                  </p>
+                </div>
+                <div className="bg-background/40 border border-border/30 rounded-lg p-4">
+                  <p className="text-sm">¡Comienza bien el día y completa tus tareas! 🚀</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
         {/* SEMANA VIEW */}
         {viewMode === "week" && (
           <div className="w-full space-y-6">
-            {getWeekTasks().length === 0 ? (
             <Card className="glass-card p-12 text-center">
-              <p className="text-muted-foreground">{t("noTasksFound")}</p>
+              <p className="text-muted-foreground">Vista semanal - Próximamente</p>
             </Card>
-          ) : (
-            <>
-              <div className="w-full overflow-x-auto rounded-lg border border-border/50 bg-background/30">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-primary/10 border-b border-border/50">
-                      <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[220px]">
-                        {t("task")}
-                      </th>
-                      {getWeekDays().map((day) => (
-                        <th
-                          key={day.date}
-                          className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[90px]"
-                        >
-                          <div className="font-medium">{day.dayName}</div>
-                          <div className="text-xs text-muted-foreground">{day.date}</div>
-                        </th>
-                      ))}
-                      <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground min-w-[80px]">
-                        {t("actions")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/30">
-                    {getWeekTasks().map((task: any) => (
-                      <tr key={task.id} className="hover:bg-primary/5 transition-colors">
-                        {/* Task Name Column */}
-                        <td className="px-4 py-4 border-r border-border/30">
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTask(task.id, task.completed)}
-                            />
-                            <span
-                              className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
-                            >
-                              {task.title}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Show which day this task is assigned to */}
-                        {getWeekDays().map((day) => {
-                          const isAssignedToDay = task.due_date && task.due_date.startsWith(day.date)
-                          return (
-                            <td
-                              key={day.date}
-                              className="px-4 py-4 text-center border-r border-border/30"
-                            >
-                              {isAssignedToDay ? (
-                                <div className="flex items-center justify-center gap-1">
-                                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">-</span>
-                              )}
-                            </td>
-                          )
-                        })}
-
-                        {/* Actions Column */}
-                        <td className="px-4 py-4 text-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 hover:text-destructive hover:bg-destructive/10 inline-flex"
-                            onClick={() => deleteTask(task.id)}
-                            title={t("delete")}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                    {/* Inline Add New Task Row */}
-                    <tr className="bg-primary/5 border-t-2 border-primary/30">
-                      <td className="px-4 py-3 border-r border-border/30">
-                        <Input
-                          placeholder="Nueva tarea..."
-                          value={inlineNewTask}
-                          onChange={(e) => setInlineNewTask(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              createTaskFromInline(inlineNewTask)
-                            }
-                          }}
-                          className="text-sm h-8"
-                        />
-                      </td>
-                      {getWeekDays().map((day) => (
-                        <td key={day.date} className="px-4 py-3 text-center border-r border-border/30">
-                          <span className="text-xs text-muted-foreground">-</span>
-                        </td>
-                      ))}
-                      <td className="px-4 py-3 text-center">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => createTaskFromInline(inlineNewTask)}
-                          className="h-7 text-xs hover:bg-primary/10"
-                          disabled={!inlineNewTask.trim()}
-                        >
-                          +
-                        </Button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Summary Section */}
-              {getWeekTasks().length > 0 && (
-                <div className="mt-6 bg-background/40 border border-border/30 rounded-lg p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">{t("totalCompleted")}:</span>
-                    <span className="text-lg font-bold text-primary">
-                      {getWeekTasks().filter((t: any) => t.completed).length} / {getWeekTasks().length}
-                    </span>
-                  </div>
-                  <div className="pt-4 border-t border-border/30 flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Objetivo de la semana</span>
-                    <span className="text-xs font-semibold text-primary">5x {t("week")}</span>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          </div>
         )}
       </div>
 
@@ -880,26 +448,48 @@ export default function TasksPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("editTask")}</DialogTitle>
-            <DialogDescription>{t("update_task_details")}</DialogDescription>
+            <DialogTitle>Editar Tarea</DialogTitle>
+            <DialogDescription>Actualiza los detalles de la tarea</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-title">{t("title")} *</Label>
+              <Label htmlFor="edit-title">Título *</Label>
               <Input
                 id="edit-title"
-                placeholder={t("title") + "..."}
+                placeholder="Título..."
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-estimated_time">Tiempo estimado</Label>
+              <Input
+                id="edit-estimated_time"
+                placeholder="ej: 45 min, 2 h"
+                value={editForm.estimated_time}
+                onChange={(e) => setEditForm({ ...editForm, estimated_time: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-priority">Prioridad</Label>
+              <select
+                id="edit-priority"
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                value={editForm.priority}
+                onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+              </select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating}>
-              {t("cancel")}
+              Cancelar
             </Button>
             <Button onClick={updateTask} disabled={isCreating}>
-              {isCreating ? t("updating") : t("updateTask")}
+              {isCreating ? "Actualizando..." : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>
