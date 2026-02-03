@@ -76,7 +76,8 @@ export default function TasksPage() {
     try {
       const response = await fetch("/api/settings")
       if (response.ok) {
-        const data = await response.json()
+      const data = await response.json()
+      console.log("[v0] Task creation response:", { ok: response.ok, data })
         if (data.profile?.timezone) {
           setUserTimezone(data.profile.timezone)
         } else {
@@ -193,7 +194,9 @@ export default function TasksPage() {
           description: data.error || t("failed_create_task"),
           variant: "destructive",
         })
+        console.log("[v0] Task creation failed with status:", response.status)
       } else {
+        console.log("[v0] Task created, fetching tasks...")
         setIsDialogOpen(false)
         setNewTask({
           title: "",
@@ -203,7 +206,7 @@ export default function TasksPage() {
           due_date: "",
           due_time: "",
         })
-        fetchTasks()
+        await fetchTasks()
       }
     } catch (error) {
       toast({

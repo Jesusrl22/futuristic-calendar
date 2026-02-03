@@ -75,12 +75,13 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const error = await response.json()
-      console.error("[SERVER] Task creation failed:", error)
+      console.error("[v0] Task creation failed:", { status: response.status, error })
       return NextResponse.json({ error: error.message || "Failed to create task" }, { status: response.status })
     }
 
     const task = await response.json()
-    return NextResponse.json({ task })
+    console.log("[v0] Task created successfully:", task)
+    return NextResponse.json(task)
   } catch (error: any) {
     console.error("[SERVER] Task API error:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
