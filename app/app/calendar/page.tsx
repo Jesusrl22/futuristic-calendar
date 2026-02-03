@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ChevronLeft, ChevronRight, Plus, Bell, User, MoreVertical, Edit2, Trash2 } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
+import { useRouter } from "next/navigation"
 
 interface Task {
   id: string
@@ -28,6 +29,7 @@ const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Juli
 const timeSlots = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"))
 
 export default function CalendarPage() {
+  const router = useRouter()
   const { t } = useTranslation()
   const [events, setEvents] = useState<Task[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -155,11 +157,18 @@ export default function CalendarPage() {
       const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tempEvent),
+        body: JSON.stringify({
+          title: newEvent.title,
+          description: newEvent.description,
+          priority: newEvent.priority,
+          category: newEvent.category,
+          due_date: dueDate.toISOString(),
+        }),
       })
       
       if (response.ok) {
         console.log("[v0] Event synced with API")
+        await fetchEvents() // Refresh events from API
       }
     } catch (error) {
       console.log("[v0] API not available, event saved locally")
@@ -192,6 +201,7 @@ export default function CalendarPage() {
 
       if (response.ok) {
         console.log("[v0] Event updated in API")
+        await fetchEvents() // Refresh events from API
       }
     } catch (error) {
       console.log("[v0] API not available, event updated locally")
@@ -376,7 +386,10 @@ export default function CalendarPage() {
                   
                   return (
                     <div key={team.id} className="space-y-2">
-                      <div className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer">
+                      <div 
+                        className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                        onClick={() => router.push(`/app/teams/${team.id}`)}
+                      >
                         <div className={`w-2 h-2 rounded-full ${teamColors[colorIndex]}`}></div>
                         <span className="text-xs font-medium text-foreground">{team.name}</span>
                       </div>
