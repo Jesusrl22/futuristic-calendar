@@ -36,6 +36,8 @@ export default function CalendarPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Task | null>(null)
   const [days, setDays] = useState<(Date | null)[]>([])
+  const [teams, setTeams] = useState<any[]>([])
+  const [teamTasks, setTeamTasks] = useState<{ [teamId: string]: any[] }>({})
 
   const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium" as const, category: "personal", time: "10:00" })
 
@@ -56,6 +58,34 @@ export default function CalendarPage() {
       setEvents(Array.isArray(data.events) ? data.events : [])
     } catch {
       setEvents([])
+    }
+  }
+
+  // Fetch teams
+  const fetchTeams = async () => {
+    try {
+      const response = await fetch("/api/teams", { cache: "no-store" })
+      if (!response.ok) return
+      const data = await response.json()
+      setTeams(data.teams || [])
+      
+      // Fetch tasks for each team
+      if (data.teams && data.teams.length > 0) {
+        const tasksMap: { [teamId: string]: any[] } = {}
+        await Promise.all(
+          data.teams.map(async (team: any) => {
+            const tasksRes = await fetch(`/api/team-tasks?teamId=${team.id}`)
+            if (tasksRes.ok) {
+              const tasksData = await tasksRes.json()
+              // Filter only tasks with due_date
+              tasksMap[team.id] = (tasksData.tasks || []).filter((task: any) => task.due_date)
+            }
+          })
+        )
+        setTeamTasks(tasksMap)
+      }
+    } catch (error) {
+      console.log("[v0] Error fetching teams:", error)
     }
   }
 
@@ -93,6 +123,7 @@ export default function CalendarPage() {
 
   useEffect(() => {
     fetchEvents()
+    fetchTeams()
   }, [])
 
   const selectedDateEvents = getEventsForDate(selectedDate)
@@ -333,19 +364,50 @@ export default function CalendarPage() {
           <Card className="glass-card p-5 border-primary/30">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-foreground">Calendarios de Equipo</h3>
-              <Button size="icon" variant="ghost" className="h-6 w-6 hover:bg-primary/20">
-                <Plus className="w-3 h-3" />
-              </Button>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer">
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span className="text-xs text-foreground">Equipo Desarrollo</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-xs text-foreground">Equipo Marketing</span>
-              </div>
+            <div className="space-y-3">
+              {teams.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Sin equipos</p>
+              ) : (
+                teams.map((team) => {
+                  const tasksWithDate = teamTasks[team.id] || []
+                  const teamColors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"]
+                  const colorIndex = teams.indexOf(team) % teamColors.length
+                  
+                  return (
+                    <div key={team.id} className="space-y-2">
+                      <div className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer">
+                        <div className={`w-2 h-2 rounded-full ${teamColors[colorIndex]}`}></div>
+                        <span className="text-xs font-medium text-foreground">{team.name}</span>
+                      </div>
+                      
+                      {tasksWithDate.length > 0 && (
+                        <div className="ml-4 space-y-1">
+                          {tasksWithDate.slice(0, 3).map((task: any) => (
+                            <div key={task.id} className="flex items-start gap-2 p-1.5 text-xs">
+                              <div className={`w-1.5 h-1.5 rounded-full mt-1 ${teamColors[colorIndex]}`}></div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-foreground truncate">{task.title}</p>
+                                {task.due_date && (
+                                  <p className="text-[10px] text-muted-foreground">
+                                    {new Date(task.due_date).toLocaleDateString("es-ES", { 
+                                      day: "numeric", 
+                                      month: "short" 
+                                    })}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {tasksWithDate.length > 3 && (
+                            <p className="text-[10px] text-muted-foreground ml-4">+{tasksWithDate.length - 3} más</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              )}
             </div>
           </Card>
         </div>
