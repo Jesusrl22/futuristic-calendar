@@ -26,22 +26,37 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch calendar events from calendar_events table
-    const { data: events, error } = await supabase
-      .from("calendar_events")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("due_date", { ascending: true })
+    // Fetch calendar events from calendar_events table with retry logic
+    let retries = 3
+    let lastError: any = null
 
-    if (error) {
-      console.error("[v0] Calendar API - Error fetching events:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    while (retries > 0) {
+      const { data: events, error } = await supabase
+        .from("calendar_events")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("due_date", { ascending: true })
+
+      if (!error) {
+        return NextResponse.json({ events })
+      }
+
+      lastError = error
+      retries--
+
+      // If rate limited, wait before retrying
+      if (error?.message?.includes("Too Many") && retries > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      } else {
+        break
+      }
     }
 
-    return NextResponse.json({ events })
+    console.error("[v0] Calendar API - Error fetching events:", lastError)
+    return NextResponse.json({ events: [], error: lastError?.message || "Failed to fetch events" }, { status: 500 })
   } catch (error: any) {
     console.error("[v0] Calendar API - Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ events: [], error: error.message || "Server error" }, { status: 500 })
   }
 }
 

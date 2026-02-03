@@ -44,14 +44,40 @@ export default function CalendarPage() {
   const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium" as const, category: "personal", time: "10:00" })
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day")
 
-  // Fetch calendar events
-  const fetchEvents = async () => {
+  // Fetch calendar events with retry logic
+  const fetchEvents = async (retryCount = 0) => {
     try {
       const response = await fetch("/api/calendar", { cache: "no-store" })
+      
       if (!response.ok) {
+        console.log("[v0] Calendar API returned status:", response.status)
+        if (response.status === 429 && retryCount < 2) {
+          // Rate limited, retry after delay
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)))
+          return fetchEvents(retryCount + 1)
+        }
         setEvents([])
         return
       }
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType?.includes("application/json")) {
+        console.log("[v0] Calendar API returned non-JSON response")
+        setEvents([])
+        return
+      }
+
+      const data = await response.json()
+      setEvents(Array.isArray(data.events) ? data.events : [])
+    } catch (error: any) {
+      console.log("[v0] Calendar API error:", error.message)
+      if (retryCount < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)))
+        return fetchEvents(retryCount + 1)
+      }
+      setEvents([])
+    }
+  }
       const contentType = response.headers.get("content-type")
       if (!contentType?.includes("application/json")) {
         setEvents([])
