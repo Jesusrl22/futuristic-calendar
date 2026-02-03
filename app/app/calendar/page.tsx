@@ -383,43 +383,17 @@ export default function CalendarPage() {
                 <p className="text-xs text-muted-foreground">Sin equipos</p>
               ) : (
                 teams.map((team) => {
-                  const tasksWithDate = teamTasks[team.id] || []
                   const teamColors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"]
                   const colorIndex = teams.indexOf(team) % teamColors.length
                   
                   return (
-                    <div key={team.id} className="space-y-2">
-                      <div 
-                        className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
-                        onClick={() => router.push(`/app/teams/${team.id}`)}
-                      >
-                        <div className={`w-2 h-2 rounded-full ${teamColors[colorIndex]}`}></div>
-                        <span className="text-xs font-medium text-foreground">{team.name}</span>
-                      </div>
-                      
-                      {tasksWithDate.length > 0 && (
-                        <div className="ml-4 space-y-1">
-                          {tasksWithDate.slice(0, 3).map((task: any) => (
-                            <div key={task.id} className="flex items-start gap-2 p-1.5 text-xs">
-                              <div className={`w-1.5 h-1.5 rounded-full mt-1 ${teamColors[colorIndex]}`}></div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs text-foreground truncate">{task.title}</p>
-                                {task.due_date && (
-                                  <p className="text-[10px] text-muted-foreground">
-                                    {new Date(task.due_date).toLocaleDateString("es-ES", { 
-                                      day: "numeric", 
-                                      month: "short" 
-                                    })}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          {tasksWithDate.length > 3 && (
-                            <p className="text-[10px] text-muted-foreground ml-4">+{tasksWithDate.length - 3} más</p>
-                          )}
-                        </div>
-                      )}
+                    <div 
+                      key={team.id}
+                      className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => router.push(`/app/teams/${team.id}`)}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${teamColors[colorIndex]}`}></div>
+                      <span className="text-xs font-medium text-foreground">{team.name}</span>
                     </div>
                   )
                 })
