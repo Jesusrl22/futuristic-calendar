@@ -26,12 +26,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch calendar events from tasks table with due_date
+    // Fetch calendar events from calendar_events table
     const { data: events, error } = await supabase
-      .from("tasks")
+      .from("calendar_events")
       .select("*")
       .eq("user_id", user.id)
-      .not("due_date", "is", null)
       .order("due_date", { ascending: true })
 
     if (error) {
@@ -71,7 +70,7 @@ export async function POST(request: NextRequest) {
     const { title, description, priority, category, due_date } = body
 
     const { data: event, error } = await supabase
-      .from("tasks")
+      .from("calendar_events")
       .insert({
         user_id: user.id,
         title,
@@ -121,7 +120,7 @@ export async function PUT(request: NextRequest) {
     const { id, title, description, priority, category, due_date } = body
 
     const { data: event, error } = await supabase
-      .from("tasks")
+      .from("calendar_events")
       .update({
         title,
         description,
@@ -170,7 +169,7 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const { id, completed } = body
 
-    const { error } = await supabase.from("tasks").update({ completed }).eq("id", id).eq("user_id", user.id)
+    const { error } = await supabase.from("calendar_events").update({ completed }).eq("id", id).eq("user_id", user.id)
 
     if (error) {
       console.error("[v0] Calendar API - Error toggling event:", error)
@@ -208,7 +207,7 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json()
     const { id } = body
 
-    const { error } = await supabase.from("tasks").delete().eq("id", id).eq("user_id", user.id)
+    const { error } = await supabase.from("calendar_events").delete().eq("id", id).eq("user_id", user.id)
 
     if (error) {
       console.error("[v0] Calendar API - Error deleting event:", error)
