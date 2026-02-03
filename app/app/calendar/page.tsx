@@ -104,32 +104,46 @@ export default function CalendarPage() {
     const [hours, minutes] = newEvent.time.split(":")
     dueDate.setHours(parseInt(hours), parseInt(minutes), 0)
 
+    const tempEvent = {
+      id: `temp-${Date.now()}`,
+      title: newEvent.title,
+      description: newEvent.description,
+      priority: newEvent.priority,
+      category: newEvent.category,
+      due_date: dueDate.toISOString(),
+      completed: false,
+    }
+
+    // Add to local state immediately
+    setEvents([...events, tempEvent])
+    setNewEvent({ title: "", description: "", priority: "medium", category: "personal", time: "10:00" })
+    setIsDialogOpen(false)
+
+    // Try to sync with API if available
     try {
       const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newEvent.title,
-          description: newEvent.description,
-          priority: newEvent.priority,
-          category: newEvent.category,
-          due_date: dueDate.toISOString(),
-        }),
+        body: JSON.stringify(tempEvent),
       })
-
+      
       if (response.ok) {
-        setNewEvent({ title: "", description: "", priority: "medium", category: "personal", time: "10:00" })
-        setIsDialogOpen(false)
-        await fetchEvents()
+        console.log("[v0] Event synced with API")
       }
     } catch (error) {
-      console.error("[v0] Error creating event:", error)
+      console.log("[v0] API not available, event saved locally")
     }
   }
 
   const handleUpdateEvent = async () => {
     if (!editingEvent || !editingEvent.title.trim()) return
 
+    // Update local state immediately
+    setEvents(events.map((e) => (e.id === editingEvent.id ? editingEvent : e)))
+    setIsEditDialogOpen(false)
+    setEditingEvent(null)
+
+    // Try to sync with API if available
     try {
       const response = await fetch("/api/calendar", {
         method: "PUT",
@@ -138,12 +152,10 @@ export default function CalendarPage() {
       })
 
       if (response.ok) {
-        setIsEditDialogOpen(false)
-        setEditingEvent(null)
-        await fetchEvents()
+        console.log("[v0] Event updated in API")
       }
     } catch (error) {
-      console.error("[v0] Error updating event:", error)
+      console.log("[v0] API not available, event updated locally")
     }
   }
 

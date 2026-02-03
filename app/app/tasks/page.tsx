@@ -703,6 +703,30 @@ export default function TasksPage() {
                     onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                   />
                 </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="estimated_time">Tiempo estimado</Label>
+                  <Input
+                    id="estimated_time"
+                    placeholder="ej: 45 min, 2 h"
+                    value={newTask.estimated_time || ""}
+                    onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="priority">{t("priority")}</Label>
+                  <select
+                    id="priority"
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                    value={newTask.priority || "medium"}
+                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                  >
+                    <option value="low">Baja</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                  </select>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
