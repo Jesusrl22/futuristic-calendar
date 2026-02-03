@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ChevronLeft, ChevronRight, Plus, Bell, User, MoreVertical, Edit2, Trash2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useRouter } from "next/navigation"
 
@@ -42,6 +42,7 @@ export default function CalendarPage() {
   const [teamTasks, setTeamTasks] = useState<{ [teamId: string]: any[] }>({})
 
   const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium" as const, category: "personal", time: "10:00" })
+  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day")
 
   // Fetch calendar events
   const fetchEvents = async () => {
@@ -252,24 +253,26 @@ export default function CalendarPage() {
         </div>
 
         <div className="flex gap-2 md:gap-4 items-center">
-          <Button variant="outline" className="rounded-full border-primary/50 text-primary hover:bg-primary/10">
+          <Button 
+            variant={viewMode === "day" ? "outline" : "ghost"}
+            className={viewMode === "day" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
+            onClick={() => setViewMode("day")}
+          >
             Hoy
           </Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary">
+          <Button 
+            variant={viewMode === "week" ? "outline" : "ghost"}
+            className={viewMode === "week" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
+            onClick={() => setViewMode("week")}
+          >
             Semana
           </Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary">
+          <Button 
+            variant={viewMode === "month" ? "outline" : "ghost"}
+            className={viewMode === "month" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
+            onClick={() => setViewMode("month")}
+          >
             Mes
-          </Button>
-          <Button variant="ghost" className="text-foreground hover:text-primary">
-            Todas
-          </Button>
-          <Button size="icon" variant="ghost" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-          </Button>
-          <Button size="icon" variant="ghost" className="rounded-full border border-primary/50 hover:bg-primary/10">
-            <User className="w-5 h-5" />
           </Button>
         </div>
       </div>
@@ -425,132 +428,140 @@ export default function CalendarPage() {
           </Card>
         </div>
 
-        {/* Main Timeline */}
+        {/* Main Content Area */}
         <div className="lg:col-span-3">
-          <Card className="glass-card p-6 border-primary/30 neon-glow">
-            {/* Date Header */}
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
-              <div>
+          {viewMode === "day" && (
+            <Card className="glass-card p-6 border-primary/30 neon-glow">
+              {/* Date Header */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
                 <h2 className="text-2xl font-bold text-primary">
                   {selectedDate.toLocaleDateString("es-ES", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                 </h2>
               </div>
-              <Button variant="ghost" size="icon" className="hover:bg-primary/10">
-                <MoreVertical className="w-5 h-5" />
-              </Button>
-            </div>
 
-            {/* Timeline Container */}
-            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-              {timeSlots.map((hour) => {
-                const hourEvents = selectedDateEvents.filter((event) => {
-                  const eventHour = new Date(event.due_date).getHours()
-                  return eventHour === parseInt(hour)
-                })
+              {/* Daily Timeline */}
+              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                {timeSlots.map((hour) => {
+                  const hourEvents = selectedDateEvents.filter((event) => {
+                    const eventHour = new Date(event.due_date).getHours()
+                    return eventHour === parseInt(hour)
+                  })
 
-                return (
-                  <div key={hour} className="relative">
-                    {/* Time Marker */}
-                    <div className="flex items-start gap-4">
-                      <div className="text-xs font-mono text-muted-foreground pt-1 w-12 text-right">{hour}:00</div>
+                  return (
+                    <div key={hour} className="relative">
+                      <div className="flex items-start gap-4">
+                        <div className="text-xs font-mono text-muted-foreground pt-1 w-12 text-right">{hour}:00</div>
+                        <div className="relative flex-1">
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>
+                          <div className="space-y-2 ml-4 min-h-12">
+                            {hourEvents.map((event) => {
+                              const eventTime = new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+                              const neonColor =
+                                event.priority === "high" ? "border-violet-500/80 bg-violet-500/10" : event.priority === "medium" ? "border-cyan-500/80 bg-cyan-500/10" : "border-green-500/80 bg-green-500/10"
 
-                      {/* Timeline Line */}
-                      <div className="relative flex-1">
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>
-
-                        {/* Events for this hour */}
-                        <div className="space-y-2 ml-4 min-h-12">
-                          {hourEvents.map((event) => {
-                            const eventTime = new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
-                            const neonColor =
-                              event.priority === "high" ? "border-violet-500/80 bg-violet-500/10" : event.priority === "medium" ? "border-cyan-500/80 bg-cyan-500/10" : "border-green-500/80 bg-green-500/10"
-
-                            return (
-                              <Card
-                                key={event.id}
-                                className={`glass-card p-4 border-l-4 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer group ${neonColor}`}
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex items-start gap-3 flex-1">
-                                    <Checkbox
-                                      checked={event.completed}
-                                      onCheckedChange={() => toggleEventCompletion(event.id, event.completed)}
-                                      className="mt-1"
-                                    />
-                                    <div className="flex-1">
-                                      <h4
-                                        className={`font-semibold text-foreground ${
-                                          event.completed ? "line-through text-muted-foreground" : ""
-                                        }`}
-                                      >
-                                        {event.title}
-                                      </h4>
-                                      {event.description && <p className="text-xs text-muted-foreground mt-1">{event.description}</p>}
-                                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                        {event.priority && (
-                                          <Badge
-                                            variant="outline"
-                                            className={`text-xs ${
-                                              event.priority === "high"
-                                                ? "border-red-500 text-red-500"
-                                                : event.priority === "medium"
-                                                  ? "border-yellow-500 text-yellow-500"
-                                                  : "border-green-500 text-green-500"
-                                            }`}
-                                          >
-                                            {event.priority === "high" ? "Alta" : event.priority === "medium" ? "Media" : "Baja"}
-                                          </Badge>
-                                        )}
-                                        {event.category && <Badge variant="secondary" className="text-xs">{event.category}</Badge>}
+                              return (
+                                <Card key={event.id} className={`glass-card p-4 border-l-4 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer group ${neonColor}`}>
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-3 flex-1">
+                                      <Checkbox checked={event.completed} onCheckedChange={() => toggleEventCompletion(event.id, event.completed)} className="mt-1" />
+                                      <div className="flex-1">
+                                        <h4 className={`font-semibold text-foreground ${event.completed ? "line-through text-muted-foreground" : ""}`}>{event.title}</h4>
+                                        {event.description && <p className="text-xs text-muted-foreground mt-1">{event.description}</p>}
+                                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                          {event.priority && (
+                                            <Badge variant="outline" className={`text-xs ${event.priority === "high" ? "border-red-500 text-red-500" : event.priority === "medium" ? "border-yellow-500 text-yellow-500" : "border-green-500 text-green-500"}`}>
+                                              {event.priority === "high" ? "Alta" : event.priority === "medium" ? "Media" : "Baja"}
+                                            </Badge>
+                                          )}
+                                          {event.category && <Badge variant="secondary" className="text-xs">{event.category}</Badge>}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
-
-                                  <div className="flex flex-col items-end gap-2">
-                                    <span className="text-sm font-mono text-primary whitespace-nowrap">{eventTime}</span>
-                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-7 w-7 hover:bg-primary/20"
-                                        onClick={() => {
+                                    <div className="flex flex-col items-end gap-2">
+                                      <span className="text-sm font-mono text-primary whitespace-nowrap">{eventTime}</span>
+                                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/20" onClick={() => {
                                           const eventDate = new Date(event.due_date)
                                           const hours = String(eventDate.getHours()).padStart(2, "0")
                                           const minutes = String(eventDate.getMinutes()).padStart(2, "0")
                                           setEditingEvent({ ...event, time: `${hours}:${minutes}` })
                                           setIsEditDialogOpen(true)
-                                        }}
-                                      >
-                                        <Edit2 className="w-3.5 h-3.5" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500" onClick={() => deleteEvent(event.id)}>
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </Button>
+                                        }}>
+                                          <Edit2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500" onClick={() => deleteEvent(event.id)}>
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </Card>
-                            )
-                          })}
+                                </Card>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-
-              {/* Add Event Button */}
-              <div className="flex items-center gap-4 mt-4">
-                <div className="text-xs font-mono text-muted-foreground pt-1 w-12"></div>
-                <div className="relative flex-1">
-                  <Button variant="outline" className="w-full gap-2 border-dashed hover:bg-primary/10 text-primary" onClick={() => setIsDialogOpen(true)}>
-                    <Plus className="w-4 h-4" />
-                    Añadir Evento
-                  </Button>
-                </div>
+                  )
+                })}
               </div>
-            </div>
-          </Card>
+            </Card>
+          )}
+
+          {viewMode === "week" && (
+            <Card className="glass-card p-6 border-primary/30 neon-glow">
+              <h2 className="text-2xl font-bold text-primary mb-6">Semana</h2>
+              <div className="grid grid-cols-7 gap-2 max-h-[600px] overflow-y-auto">
+                {Array.from({ length: 7 }, (_, i) => {
+                  const date = new Date(selectedDate)
+                  date.setDate(date.getDate() - date.getDay() + i)
+                  const dayEvents = getEventsForDate(date)
+                  
+                  return (
+                    <div key={i} className="border border-primary/30 rounded-lg p-3 min-h-[200px]">
+                      <h3 className="font-bold text-sm text-primary mb-3">{date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}</h3>
+                      <div className="space-y-2">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <div key={event.id} className="text-xs p-2 rounded bg-primary/10 border border-primary/30 hover:bg-primary/20 cursor-pointer transition-colors">
+                            <p className="font-semibold truncate">{event.title}</p>
+                            <p className="text-muted-foreground">{new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && <p className="text-xs text-muted-foreground">+{dayEvents.length - 3} más</p>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )}
+
+          {viewMode === "month" && (
+            <Card className="glass-card p-6 border-primary/30 neon-glow">
+              <h2 className="text-2xl font-bold text-primary mb-6">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
+              <div className="grid grid-cols-7 gap-2">
+                {["L", "M", "X", "J", "V", "S", "D"].map((d) => (
+                  <div key={d} className="text-center font-bold text-sm text-primary p-2">{d}</div>
+                ))}
+                {days.map((day, idx) => {
+                  if (!day) return <div key={`empty-${idx}`} className="aspect-square" />
+                  const dayEvents = getEventsForDate(day)
+                  
+                  return (
+                    <div key={day.toISOString()} className="aspect-square border border-primary/30 rounded-lg p-2 hover:bg-primary/10 cursor-pointer transition-colors">
+                      <p className="font-bold text-sm text-primary">{day.getDate()}</p>
+                      <div className="space-y-0.5 mt-1">
+                        {dayEvents.slice(0, 2).map((e) => (
+                          <p key={e.id} className="text-xs truncate text-muted-foreground">{e.title}</p>
+                        ))}
+                        {dayEvents.length > 2 && <p className="text-xs text-primary">+{dayEvents.length - 2}</p>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )}
         </div>
       </div>
 
