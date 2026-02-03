@@ -813,11 +813,22 @@ export default function TasksPage() {
                           />
                         </td>
 
-                        {/* Task Name Column */}
+                        {/* Task Name Column with colored dot */}
                         <td className="px-4 py-4 border-r border-border/30">
-                          <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                            {task.title}
-                          </span>
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                                task.priority === "high" 
+                                  ? "bg-yellow-500" 
+                                  : task.priority === "medium" 
+                                    ? "bg-cyan-500" 
+                                    : "bg-green-500"
+                              }`}
+                            />
+                            <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                              {task.title}
+                            </span>
+                          </div>
                         </td>
 
                         {/* Priority Column */}
