@@ -39,14 +39,12 @@ export default function TasksPage() {
     title: "",
     description: "",
     priority: "medium",
-    estimated_time: "",
   })
 
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
     priority: "medium",
-    estimated_time: "",
   })
 
   useEffect(() => {
@@ -84,14 +82,13 @@ export default function TasksPage() {
           title: newTask.title,
           description: newTask.description,
           priority: newTask.priority,
-          estimated_time: newTask.estimated_time,
           completed: false,
         }),
       })
 
       if (response.ok) {
         setIsDialogOpen(false)
-        setNewTask({ title: "", description: "", priority: "medium", estimated_time: "" })
+        setNewTask({ title: "", description: "", priority: "medium" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
       }
@@ -134,7 +131,6 @@ export default function TasksPage() {
       title: task.title,
       description: task.description || "",
       priority: task.priority || "medium",
-      estimated_time: task.estimated_time || "",
     })
     setIsEditDialogOpen(true)
   }
@@ -152,7 +148,6 @@ export default function TasksPage() {
           title: editForm.title,
           description: editForm.description,
           priority: editForm.priority,
-          estimated_time: editForm.estimated_time,
         }),
       })
 
@@ -177,24 +172,6 @@ export default function TasksPage() {
     return filteredTasks.filter((task) => task.due_date?.startsWith(today))
   }
 
-  const calculateTotalTime = (taskList: any[]) => {
-    let totalMinutes = 0
-    taskList.forEach((task) => {
-      if (task.estimated_time) {
-        const match = task.estimated_time.match(/(\d+)\s*(min|h)/)
-        if (match) {
-          const value = parseInt(match[1])
-          const unit = match[2]
-          totalMinutes += unit === "h" ? value * 60 : value
-        }
-      }
-    })
-    if (totalMinutes === 0) return "0 min"
-    if (totalMinutes < 60) return `${totalMinutes} min`
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
-  }
 
   const todayTasks = getTodayTasks()
 
@@ -232,15 +209,6 @@ export default function TasksPage() {
                   placeholder="Título..."
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="estimated_time">Tiempo estimado</Label>
-                <Input
-                  id="estimated_time"
-                  placeholder="ej: 45 min, 2 h"
-                  value={newTask.estimated_time}
-                  onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -382,9 +350,6 @@ export default function TasksPage() {
                               </span>
                             )}
                           </td>
-                          <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium">
-                            {task.estimated_time || "-"}
-                          </td>
                           <td className="px-4 py-4 text-center border-r border-border/30">
                             <div className="flex items-center justify-center gap-2">
                               {task.completed ? (
@@ -422,11 +387,6 @@ export default function TasksPage() {
                   </table>
                 </div>
                 <div className="bg-background/40 border border-border/30 rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">
-                    Tiempo total planificado: <span className="font-bold text-primary">{calculateTotalTime(todayTasks)}</span>
-                  </p>
-                </div>
-                <div className="bg-background/40 border border-border/30 rounded-lg p-4">
                   <p className="text-sm">¡Comienza bien el día y completa tus tareas! 🚀</p>
                 </div>
               </div>
@@ -459,15 +419,6 @@ export default function TasksPage() {
                 placeholder="Título..."
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-estimated_time">Tiempo estimado</Label>
-              <Input
-                id="edit-estimated_time"
-                placeholder="ej: 45 min, 2 h"
-                value={editForm.estimated_time}
-                onChange={(e) => setEditForm({ ...editForm, estimated_time: e.target.value })}
               />
             </div>
             <div className="space-y-2">
