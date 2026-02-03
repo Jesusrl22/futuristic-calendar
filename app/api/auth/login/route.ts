@@ -34,7 +34,10 @@ export async function POST(request: Request) {
       }),
     })
 
-    const loginData = await loginResponse.json()
+    const loginData = await loginResponse.json().catch((e) => {
+      console.error("[SERVER][API] Failed to parse login response:", e.message)
+      return { error: "Invalid response from auth server" }
+    })
 
     if (!loginResponse.ok || loginData.error) {
       console.error("[SERVER][API] Login error:", loginData.error?.message || loginData.error_description)
@@ -68,7 +71,10 @@ export async function POST(request: Request) {
       },
     )
 
-    const profiles = await profileCheckResponse.json()
+    const profiles = await profileCheckResponse.json().catch((e) => {
+      console.error("[SERVER][API] Failed to parse profile check response:", e.message)
+      return []
+    })
 
     if (!profiles || profiles.length === 0) {
       console.log("[SERVER][API] Profile not found, creating...")
