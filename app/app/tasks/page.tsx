@@ -676,84 +676,88 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-      <SectionHeader
-        title={t("tasks")}
-        subtitle={t("manage_tasks")}
-        icon={CheckSquare}
-        action={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-lg shadow-primary/30 w-full md:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                {t("newTask")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t("createNewTask")}</DialogTitle>
-                <DialogDescription>
-                  {t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">{t("title")} *</Label>
-                  <Input
-                    id="title"
-                    placeholder={t("title") + "..."}
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="estimated_time">Tiempo estimado</Label>
-                  <Input
-                    id="estimated_time"
-                    placeholder="ej: 45 min, 2 h"
-                    value={newTask.estimated_time || ""}
-                    onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="priority">{t("priority")}</Label>
-                  <select
-                    id="priority"
-                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
-                    value={newTask.priority || "medium"}
-                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                  >
-                    <option value="low">Baja</option>
-                    <option value="medium">Media</option>
-                    <option value="high">Alta</option>
-                  </select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
-                  {t("cancel")}
-                </Button>
-                <Button onClick={createTask} disabled={isCreating}>
-                  {isCreating ? t("creating") : t("createTask")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        }
-      />
-
-      <div className="mb-6 space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <Input
-            placeholder={t("searchTasks")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-secondary/50"
-          />
+    <div className="w-full px-6 py-6 space-y-6 h-full overflow-y-auto">
+      {/* Header with title and action */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/20 p-2 rounded-lg">
+              <CheckSquare className="w-6 h-6 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">Tareas</h1>
+          </div>
+          <p className="text-sm text-muted-foreground">manage.tasks</p>
         </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg shadow-lg">
+              <Plus className="w-4 h-4 mr-2" />
+              {t("newTask")}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t("createNewTask")}</DialogTitle>
+              <DialogDescription>
+                {t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">{t("title")} *</Label>
+                <Input
+                  id="title"
+                  placeholder={t("title") + "..."}
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="estimated_time">Tiempo estimado</Label>
+                <Input
+                  id="estimated_time"
+                  placeholder="ej: 45 min, 2 h"
+                  value={newTask.estimated_time || ""}
+                  onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="priority">{t("priority")}</Label>
+                <select
+                  id="priority"
+                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                  value={newTask.priority || "medium"}
+                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                >
+                  <option value="low">Baja</option>
+                  <option value="medium">Media</option>
+                  <option value="high">Alta</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
+                {t("cancel")}
+              </Button>
+              <Button onClick={createTask} disabled={isCreating}>
+                {isCreating ? t("creating") : t("createTask")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+        <Input
+          placeholder={t("searchTasks")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 bg-background/50 border border-border/50"
+        />
       </div>
 
       {/* TABS: HOY vs SEMANA */}
