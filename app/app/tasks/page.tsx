@@ -742,13 +742,6 @@ export default function TasksPage() {
       />
 
       <div className="mb-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold neon-text">{t("myTasks")}</h1>
-          <Button onClick={() => setIsDialogOpen(true)} className="gap-2 bg-primary hover:bg-primary/90">
-            <Plus className="h-4 w-4" />
-            {t("newTask")}
-          </Button>
-        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
           <Input
