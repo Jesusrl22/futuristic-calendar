@@ -350,8 +350,10 @@ export default function TasksPage() {
                               </span>
                             )}
                           </td>
+                          <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium text-foreground">
+                            45 min
+                          </td>
                           <td className="px-4 py-4 text-center border-r border-border/30">
-                            <div className="flex items-center justify-center gap-2">
                               {task.completed ? (
                                 <span className="inline-flex items-center gap-1 text-green-500 text-xs font-medium">
                                   <CheckCircle2 className="w-4 h-4" /> Completada
@@ -386,7 +388,15 @@ export default function TasksPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-background/40 border border-border/30 rounded-lg p-4">
+                <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Tiempo total planificado: <span className="font-bold text-cyan-400">2 h 15 min</span></p>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <span className="font-semibold">{todayTasks.filter(t => t.completed).length} min completadas</span>
+                  </div>
+                </div>
+                <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
                   <p className="text-sm">¡Comienza bien el día y completa tus tareas! 🚀</p>
                 </div>
               </div>
