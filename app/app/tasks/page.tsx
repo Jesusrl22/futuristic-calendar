@@ -354,6 +354,7 @@ export default function TasksPage() {
                             45 min
                           </td>
                           <td className="px-4 py-4 text-center border-r border-border/30">
+                            <div className="flex items-center justify-center gap-2">
                               {task.completed ? (
                                 <span className="inline-flex items-center gap-1 text-green-500 text-xs font-medium">
                                   <CheckCircle2 className="w-4 h-4" /> Completada
