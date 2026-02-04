@@ -1,16 +1,12 @@
 "use client"
 
-import { DialogTrigger } from "@/components/ui/dialog"
-
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit, GripVertical, CheckSquare } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Search, Trash2, Edit, CheckSquare, CheckCircle2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -18,13 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/hooks/useTranslation"
-import { StreaksWidget } from "@/components/streaks-widget"
-import { SectionHeader } from "@/components/section-header"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -32,85 +25,95 @@ import { useToast } from "@/hooks/use-toast"
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [filter, setFilter] = useState("all")
+  const [viewMode, setViewMode] = useState("today")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<any>(null)
-  const [userTimezone, setUserTimezone] = useState<string>("UTC")
-  const [editForm, setEditForm] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    category: "",
-    due_date: "",
-    due_time: "",
-  })
-  const [newTask, setNewTask] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    category: "",
-    due_date: "",
-    due_time: "",
-  })
   const [isCreating, setIsCreating] = useState(false)
   const { language } = useLanguage()
   const { t } = useTranslation(language)
   const { toast } = useToast()
   const supabase = createClient()
 
-  const [draggedTask, setDraggedTask] = useState<string | null>(null)
-  const [dragOverTask, setDragOverTask] = useState<string | null>(null)
+  const [newTask, setNewTask] = useState({
+    title: "",
+    priority: "medium",
+    time: "",
+  })
+
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    priority: "medium",
+  })
 
   useEffect(() => {
     fetchTasks()
-    fetchTimezone()
   }, [])
-
-  const fetchTimezone = async () => {
-    try {
-      const response = await fetch("/api/settings")
-      if (response.ok) {
-        const data = await response.json()
-        if (data.profile?.timezone) {
-          setUserTimezone(data.profile.timezone)
-        } else {
-          const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-          setUserTimezone(detectedTimezone)
-        }
-      } else {
-        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-        setUserTimezone(detectedTimezone)
-      }
-    } catch (error) {
-      console.error("Error fetching timezone:", error)
-      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-      setUserTimezone(detectedTimezone)
-    }
-  }
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch("/api/tasks")
+      console.log("[v0] Fetching tasks...")
+      const response = await fetch("/api/tasks", { cache: "no-store" })
+      console.log("[v0] Tasks response status:", response.status)
+      
+      if (!response.ok) {
+        console.log("[v0] Tasks response error:", response.status)
+        return
+      }
+      
       const data = await response.json()
+      console.log("[v0] Tasks data received:", data)
       if (data.tasks) {
         setTasks(data.tasks)
       }
-    } catch (error) {
-      console.error("Error fetching tasks:", error)
+    } catch (error: any) {
+      console.error("[v0] Error fetching tasks:", error.message)
     }
   }
 
-  const toggleTask = async (taskId: string, completed: boolean) => {
-    try {
-      await fetch("/api/tasks", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: taskId, completed: !completed }),
+  const createTask = async () => {
+    if (!newTask.title.trim()) {
+      toast({
+        title: t("error"),
+        description: "Por favor ingresa un título",
+        variant: "destructive",
       })
-      fetchTasks()
-    } catch (error) {
-      console.error("Error toggling task:", error)
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      console.log("[v0] Creating task with data:", newTask)
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTask.title,
+          description: newTask.time,
+          priority: newTask.priority,
+          completed: false,
+        }),
+      })
+
+      console.log("[v0] Create task response status:", response.status)
+      
+      if (response.ok) {
+        console.log("[v0] Task created successfully, refreshing list...")
+        setIsDialogOpen(false)
+        setNewTask({ title: "", priority: "medium", time: "" })
+        await fetchTasks()
+        toast({ title: "Éxito", description: "Tarea creada" })
+      } else {
+        const error = await response.json().catch(() => ({}))
+        console.log("[v0] Create task error:", error)
+        toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
+      }
+    } catch (error: any) {
+      console.error("[v0] Exception creating task:", error.message)
+      toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -127,151 +130,34 @@ export default function TasksPage() {
     }
   }
 
-  const createTask = async () => {
-    if (!newTask.title.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterTaskTitle"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsCreating(true)
+  const toggleTask = async (taskId: string, completed: boolean) => {
     try {
-      let dueDate = null
-      if (newTask.due_date) {
-        const [year, month, day] = newTask.due_date.split("-")
-        if (newTask.due_time) {
-          const [hours, minutes] = newTask.due_time.split(":")
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            Number.parseInt(hours),
-            Number.parseInt(minutes),
-            0,
-          )
-          dueDate = localDate.toISOString()
-        } else {
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            23,
-            59,
-            59,
-          )
-          dueDate = localDate.toISOString()
-        }
-      }
-
-      const response = await fetch("/api/tasks", {
-        method: "POST",
+      await fetch("/api/tasks", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
-          priority: newTask.priority,
-          category: newTask.category || null,
-          due_date: dueDate,
-          completed: false,
-          status: "todo",
-        }),
+        body: JSON.stringify({ id: taskId, completed: !completed }),
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast({
-          title: t("error"),
-          description: data.error || t("failed_create_task"),
-          variant: "destructive",
-        })
-      } else {
-        setIsDialogOpen(false)
-        setNewTask({
-          title: "",
-          description: "",
-          priority: "medium",
-          category: "",
-          due_date: "",
-          due_time: "",
-        })
-        fetchTasks()
-      }
+      fetchTasks()
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("failed_create_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
-    } finally {
-      setIsCreating(false)
+      console.error("Error toggling task:", error)
     }
   }
 
   const openEditDialog = (task: any) => {
     setEditingTask(task)
-    let dueDate = ""
-    let dueTime = ""
-
-    if (task.due_date) {
-      const isoString = task.due_date
-      dueDate = isoString.slice(0, 10) // YYYY-MM-DD
-      dueTime = isoString.slice(11, 16) // HH:MM
-    }
-
     setEditForm({
       title: task.title,
       description: task.description || "",
       priority: task.priority || "medium",
-      category: task.category || "",
-      due_date: dueDate,
-      due_time: dueTime,
     })
     setIsEditDialogOpen(true)
   }
 
   const updateTask = async () => {
-    if (!editForm.title.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterTaskTitle"),
-        variant: "destructive",
-      })
-      return
-    }
+    if (!editForm.title.trim()) return
 
     setIsCreating(true)
     try {
-      let dueDate = null
-      if (editForm.due_date) {
-        const [year, month, day] = editForm.due_date.split("-")
-        if (editForm.due_time) {
-          const [hours, minutes] = editForm.due_time.split(":")
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            Number.parseInt(hours),
-            Number.parseInt(minutes),
-            0,
-          )
-          dueDate = localDate.toISOString()
-        } else {
-          const localDate = new Date(
-            Number.parseInt(year),
-            Number.parseInt(month) - 1,
-            Number.parseInt(day),
-            23,
-            59,
-            59,
-          )
-          dueDate = localDate.toISOString()
-        }
-      }
-
       const response = await fetch("/api/tasks", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -280,367 +166,271 @@ export default function TasksPage() {
           title: editForm.title,
           description: editForm.description,
           priority: editForm.priority,
-          category: editForm.category || null,
-          due_date: dueDate,
         }),
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast({
-          title: t("error"),
-          description: data.error || t("failed_update_task"),
-          variant: "destructive",
-        })
-      } else {
+      if (response.ok) {
         setIsEditDialogOpen(false)
-        setEditingTask(null)
-        fetchTasks()
+        await fetchTasks()
+        toast({ title: "Éxito", description: "Tarea actualizada" })
       }
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("failed_update_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
+      toast({ title: t("error"), description: "Error actualizando tarea", variant: "destructive" })
     } finally {
       setIsCreating(false)
     }
   }
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter =
-      filter === "all" || (filter === "active" && !task.completed) || (filter === "completed" && task.completed)
-    return matchesSearch && matchesFilter
-  })
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "text-red-500"
-      case "medium":
-        return "text-yellow-500"
-      case "low":
-        return "text-green-500"
-      default:
-        return "text-muted-foreground"
-    }
+  const getTodayTasks = () => {
+    const today = new Date().toISOString().split("T")[0]
+    return filteredTasks.filter((task) => !task.due_date || task.due_date.startsWith(today))
   }
 
-  const formatTaskDateTime = (dateString: string) => {
-    // Parse ISO string directly to avoid timezone conversion issues
-    const isoMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/)
-    if (isoMatch) {
-      const [, year, month, day, hours, minutes] = isoMatch
-      return `${day}/${month}/${year} ${hours}:${minutes}`
-    }
-
-    // Fallback: if format is different, parse manually to avoid timezone conversion
-    const match = dateString.match(/(\d{4})-(\d{2})-(\d{2})/)
-    if (match) {
-      const [, year, month, day] = match
-      return `${day}/${month}/${year}`
-    }
-
-    return dateString
-  }
-
-  const handleDragStart = (e: React.DragEvent, taskId: string, isCompleted: boolean) => {
-    if (isCompleted) {
-      e.preventDefault()
-      return
-    }
-    setDraggedTask(taskId)
-    e.dataTransfer.effectAllowed = "move"
-  }
-
-  const handleDragOver = (e: React.DragEvent, taskId: string, isCompleted: boolean) => {
-    e.preventDefault()
-    if (isCompleted || !draggedTask) return
-    setDragOverTask(taskId)
-  }
-
-  const handleDragLeave = () => {
-    setDragOverTask(null)
-  }
-
-  const handleDrop = async (e: React.DragEvent, dropTaskId: string, isCompleted: boolean) => {
-    e.preventDefault()
-    if (!draggedTask || draggedTask === dropTaskId || isCompleted) {
-      setDraggedTask(null)
-      setDragOverTask(null)
-      return
-    }
-
-    // Reorder tasks locally
-    const draggedIndex = filteredTasks.findIndex((t) => t.id === draggedTask)
-    const dropIndex = filteredTasks.findIndex((t) => t.id === dropTaskId)
-
-    const newTasks = [...tasks]
-    const draggedTaskData = newTasks.find((t) => t.id === draggedTask)
-    const dropTaskData = newTasks.find((t) => t.id === dropTaskId)
-
-    if (draggedTaskData && dropTaskData) {
-      const draggedOriginalIndex = newTasks.indexOf(draggedTaskData)
-      const dropOriginalIndex = newTasks.indexOf(dropTaskData)
-
-      newTasks.splice(draggedOriginalIndex, 1)
-      const newDropIndex = newTasks.indexOf(dropTaskData)
-      newTasks.splice(newDropIndex + (draggedIndex > dropIndex ? 0 : 1), 0, draggedTaskData)
-
-      setTasks(newTasks)
-
-      try {
-        const incompleteTasks = newTasks.filter((t) => !t.completed)
-        const taskOrders = incompleteTasks.map((task, index) => ({
-          id: task.id,
-          order: index,
-        }))
-
-        await fetch("/api/tasks/reorder", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ taskOrders }),
-        })
-      } catch (error) {
-        console.error("Failed to save task order:", error)
-        toast({
-          title: t("error"),
-          description: "Failed to save task order",
-          variant: "destructive",
-        })
+  const calculateTotalTime = (taskList: any[]) => {
+    let totalMinutes = 0
+    taskList.forEach((task) => {
+      if (task.description) {
+        const match = task.description.match(/(\d+)\s*(min|h|m)/)
+        if (match) {
+          const value = parseInt(match[1])
+          const unit = match[2]
+          if (unit === "h") {
+            totalMinutes += value * 60
+          } else {
+            totalMinutes += value
+          }
+        }
       }
-    }
-
-    setDraggedTask(null)
-    setDragOverTask(null)
+    })
+    if (totalMinutes === 0) return "0 min"
+    if (totalMinutes < 60) return `${totalMinutes} min`
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
   }
 
-  const handleDragEnd = () => {
-    setDraggedTask(null)
-    setDragOverTask(null)
-  }
+  const todayTasks = getTodayTasks()
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-7xl space-y-6">
-      <SectionHeader
-        title={t("tasks")}
-        subtitle={t("manage_tasks")}
-        icon={CheckSquare}
-        action={
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg shadow-lg shadow-primary/30 w-full md:w-auto">
-                <Plus className="w-4 h-4 mr-2" />
-                {t("newTask")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t("createNewTask")}</DialogTitle>
-                <DialogDescription>
-                  {t("add")} {t("newTask").toLowerCase()} {t("tasks").toLowerCase()}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">{t("title")} *</Label>
-                  <Input
-                    id="title"
-                    placeholder={t("title") + "..."}
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">{t("description")}</Label>
-                  <Textarea
-                    id="description"
-                    placeholder={t("description") + "..."}
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="priority">{t("priority")}</Label>
-                    <Select
-                      value={newTask.priority}
-                      onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
-                    >
-                      <SelectTrigger id="priority">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">{t("low")}</SelectItem>
-                        <SelectItem value="medium">{t("medium")}</SelectItem>
-                        <SelectItem value="high">{t("high")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="category">{t("category")}</Label>
-                    <Select
-                      value={newTask.category}
-                      onValueChange={(value) => setNewTask({ ...newTask, category: value })}
-                    >
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder={t("category")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="personal">{t("personal")}</SelectItem>
-                        <SelectItem value="work">{t("work")}</SelectItem>
-                        <SelectItem value="study">{t("study")}</SelectItem>
-                        <SelectItem value="health">{t("health")}</SelectItem>
-                        <SelectItem value="finance">{t("finance")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="due_date">{t("dueDate")}</Label>
-                    <Input
-                      id="due_date"
-                      type="date"
-                      value={newTask.due_date}
-                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="due_time">{t("dueTime")}</Label>
-                    <Input
-                      id="due_time"
-                      type="time"
-                      value={newTask.due_time}
-                      onChange={(e) => setNewTask({ ...newTask, due_time: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
-                  {t("cancel")}
-                </Button>
-                <Button onClick={createTask} disabled={isCreating}>
-                  {isCreating ? t("creating") : t("createTask")}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        }
-      />
-
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-          <Input
-            placeholder={t("searchTasks")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-secondary/50"
-          />
+    <div className="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 h-full overflow-y-auto">
+      {/* Header with title and action */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4">
+        <div className="space-y-1 w-full sm:w-auto">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/20 p-2 rounded-lg">
+              <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t("tasks")}</h1>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t("manage_tasks")}</p>
         </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg shadow-lg w-full sm:w-auto">
+              <Plus className="w-4 h-4 mr-2" />
+              {t("newTask")}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="w-[95vw] max-w-md">
+            <DialogHeader>
+              <DialogTitle>{t("newTask")}</DialogTitle>
+              <DialogDescription>{t("add_new_task")}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">{t("title")} *</Label>
+                <Input
+                  id="title"
+                  placeholder={`${t("title")}...`}
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="priority">{t("priority")}</Label>
+                <select
+                  id="priority"
+                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                  value={newTask.priority}
+                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                >
+                  <option value="low">{t("priority_low")}</option>
+                  <option value="medium">{t("priority_medium")}</option>
+                  <option value="high">{t("priority_high")}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">{t("time")}</Label>
+                <Input
+                  id="time"
+                  placeholder={language === "es" ? "ej: 45 min, 2 h" : "e.g.: 45 min, 2 h"}
+                  value={newTask.time}
+                  onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating} className="w-full sm:w-auto">
+                {t("cancel")}
+              </Button>
+              <Button onClick={createTask} disabled={isCreating} className="w-full sm:w-auto">
+                {isCreating ? `${t("creating")}...` : t("create")}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Tabs value={filter} onValueChange={setFilter} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="all">{t("allTasks")}</TabsTrigger>
-          <TabsTrigger value="active">{t("activeTasks")}</TabsTrigger>
-          <TabsTrigger value="completed">{t("completedTasks")}</TabsTrigger>
-        </TabsList>
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
+        <Input
+          placeholder={`${t("search")} ${t("tasks").toLowerCase()}...`}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 sm:pl-10 bg-background/50 border border-border/50 text-sm sm:text-base"
+        />
+      </div>
 
-        <TabsContent value={filter} className="space-y-4">
-          {filteredTasks.length === 0 ? (
-            <Card className="glass-card p-12 text-center">
-              <p className="text-muted-foreground">{t("noTasksFound")}</p>
-            </Card>
-          ) : (
-            <>
-              {filteredTasks.map((task: any) => (
-                <div
-                  key={task.id}
-                  draggable={!task.completed}
-                  onDragStart={(e) => handleDragStart(e, task.id, task.completed)}
-                  onDragOver={(e) => handleDragOver(e, task.id, task.completed)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, task.id, task.completed)}
-                  onDragEnd={handleDragEnd}
-                  className={`
-                    ${!task.completed ? "cursor-move" : "cursor-default"}
-                    ${draggedTask === task.id ? "opacity-50" : ""}
-                    ${dragOverTask === task.id ? "border-primary border-2" : ""}
-                  `}
-                >
-                  <Card className="glass-card p-4 neon-glow-hover transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      {!task.completed && <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />}
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => toggleTask(task.id, task.completed)}
-                        className="flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={`font-semibold text-sm md:text-base break-words ${task.completed ? "line-through text-muted-foreground" : ""}`}
-                        >
-                          {task.title}
-                        </h3>
-                        {task.description && (
-                          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">
-                            {task.description}
-                          </p>
+      {/* TASKS VIEW */}
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
+            {t("today").toUpperCase()} - {new Date().toLocaleDateString(language === "es" ? "es-ES" : language === "fr" ? "fr-FR" : language === "de" ? "de-DE" : "en-US", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase())}
+          </h2>
+        </div>
+
+        {todayTasks.length === 0 ? (
+          <Card className="glass-card p-8 sm:p-12 text-center">
+            <p className="text-sm sm:text-base text-muted-foreground">{t("no_tasks_today")}</p>
+          </Card>
+        ) : (
+          <div className="w-full space-y-4">
+            <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30 -mx-4 sm:mx-0">
+              <table className="w-full min-w-[800px]">
+                <thead>
+                  <tr className="bg-primary/10 border-b border-border/50">
+                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 w-8 sm:w-12"></th>
+                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[150px]">
+                      {t("task")}
+                    </th>
+                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-20 sm:w-24">
+                      {t("priority")}
+                    </th>
+                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-20 sm:w-24">
+                      {t("time")}
+                    </th>
+                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24 sm:w-28">
+                      {t("status")}
+                    </th>
+                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground w-12 sm:w-16">
+                      {t("actions")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {todayTasks.map((task: any) => (
+                    <tr key={task.id} className="hover:bg-primary/5 transition-colors">
+                      <td className="px-2 sm:px-4 py-3 sm:py-4 border-r border-border/30">
+                        <Checkbox
+                          checked={task.completed}
+                          onCheckedChange={() => toggleTask(task.id, task.completed)}
+                          className="w-4 h-4"
+                        />
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 sm:py-4 border-r border-border/30">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div
+                            className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 ${
+                              task.priority === "high"
+                                ? "bg-red-500"
+                                : task.priority === "medium"
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
+                            }`}
+                          />
+                          <span className={`text-xs sm:text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"} break-words`}>
+                            {task.title}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30">
+                        {task.priority && (
+                          <span
+                            className={`inline-block px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
+                              task.priority === "high"
+                                ? "bg-red-500/10 text-red-500 border border-red-500/30"
+                                : task.priority === "medium"
+                                  ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30"
+                                  : "bg-green-500/10 text-green-500 border border-green-500/30"
+                            }`}
+                          >
+                            {task.priority === "high" ? t("priority_high") : task.priority === "medium" ? t("priority_medium") : t("priority_low")}
+                          </span>
                         )}
-                        <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2">
-                          {task.priority && (
-                            <span className={`text-[10px] md:text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                              {t(task.priority)}
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30 text-xs sm:text-sm font-medium text-foreground">
+                        {task.description || "-"}
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                          {task.completed ? (
+                            <span className="inline-flex items-center gap-1 text-green-500 text-[10px] sm:text-xs font-medium">
+                              <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" /> {t("completed")}
                             </span>
-                          )}
-                          {task.category && (
-                            <span className="text-[10px] md:text-xs text-muted-foreground">{t(task.category)}</span>
-                          )}
-                          {task.due_date && (
-                            <span className="text-[10px] md:text-xs text-muted-foreground">
-                              {t("due")}: {formatTaskDateTime(task.due_date)}
-                            </span>
+                          ) : (
+                            <span className="text-yellow-500 text-[10px] sm:text-xs font-medium">● {t("pending")}</span>
                           )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 md:h-10 md:w-10"
-                          onClick={() => openEditDialog(task)}
-                        >
-                          <Edit className="w-3 h-3 md:w-4 md:h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 md:h-10 md:w-10"
-                          onClick={() => deleteTask(task.id)}
-                        >
-                          <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              ))}
-            </>
-          )}
-        </TabsContent>
-      </Tabs>
+                      </td>
+                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center">
+                        <div className="flex items-center justify-center gap-0.5 sm:gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-primary/20"
+                            onClick={() => openEditDialog(task)}
+                          >
+                            <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-red-500/20 hover:text-red-500"
+                            onClick={() => deleteTask(task.id)}
+                          >
+                            <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="bg-background/40 border border-border/30 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+              <div className="space-y-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">{t("time_planned")}: <span className="font-bold text-cyan-400">{calculateTotalTime(todayTasks)}</span></p>
+              </div>
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                <span className="font-semibold">{todayTasks.filter(t => t.completed).length} {t("completed_count")}</span>
+              </div>
+            </div>
+            <div className="bg-background/40 border border-border/30 rounded-lg p-3 sm:p-4">
+              <p className="text-xs sm:text-sm">{t("motivational_message")}</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] max-w-md">
           <DialogHeader>
             <DialogTitle>{t("editTask")}</DialogTitle>
             <DialogDescription>{t("update_task_details")}</DialogDescription>
@@ -650,77 +440,31 @@ export default function TasksPage() {
               <Label htmlFor="edit-title">{t("title")} *</Label>
               <Input
                 id="edit-title"
-                placeholder={t("title") + "..."}
+                placeholder={`${t("title")}...`}
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">{t("description")}</Label>
-              <Textarea
-                id="edit-description"
-                placeholder={t("description") + "..."}
-                value={editForm.description}
-                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-priority">{t("priority")}</Label>
-                <Select value={editForm.priority} onValueChange={(value) => setEditForm({ ...editForm, priority: value })}>
-                  <SelectTrigger id="edit-priority">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">{t("low")}</SelectItem>
-                    <SelectItem value="medium">{t("medium")}</SelectItem>
-                    <SelectItem value="high">{t("high")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-category">{t("category")}</Label>
-                <Select value={editForm.category} onValueChange={(value) => setEditForm({ ...editForm, category: value })}>
-                  <SelectTrigger id="edit-category">
-                    <SelectValue placeholder={t("category")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="personal">{t("personal")}</SelectItem>
-                    <SelectItem value="work">{t("work")}</SelectItem>
-                    <SelectItem value="study">{t("study")}</SelectItem>
-                    <SelectItem value="health">{t("health")}</SelectItem>
-                    <SelectItem value="finance">{t("finance")}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-due_date">{t("dueDate")}</Label>
-                <Input
-                  id="edit-due_date"
-                  type="date"
-                  value={editForm.due_date}
-                  onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-due_time">{t("dueTime")}</Label>
-                <Input
-                  id="edit-due_time"
-                  type="time"
-                  value={editForm.due_time}
-                  onChange={(e) => setEditForm({ ...editForm, due_time: e.target.value })}
-                />
-              </div>
+              <Label htmlFor="edit-priority">{t("priority")}</Label>
+              <select
+                id="edit-priority"
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                value={editForm.priority}
+                onChange={(e) => setEditForm({ ...editForm, priority: e.target.value })}
+              >
+                <option value="low">{t("priority_low")}</option>
+                <option value="medium">{t("priority_medium")}</option>
+                <option value="high">{t("priority_high")}</option>
+              </select>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={isCreating} className="w-full sm:w-auto">
               {t("cancel")}
             </Button>
-            <Button onClick={updateTask} disabled={isCreating}>
-              {isCreating ? t("updating") : t("updateTask")}
+            <Button onClick={updateTask} disabled={isCreating} className="w-full sm:w-auto">
+              {isCreating ? `${t("updating")}...` : t("save")}
             </Button>
           </DialogFooter>
         </DialogContent>

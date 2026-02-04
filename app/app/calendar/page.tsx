@@ -1,757 +1,648 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { Card } from "@/components/ui/card"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "@/components/icons"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTranslation } from "@/hooks/useTranslation" // Fixed import - useTranslation is in hooks/useTranslation, not lib/translations
-import { useLanguage } from "@/contexts/language-context"
-import { AdsterraBanner } from "@/components/adsterra-banner"
-import { AdsterraNativeBanner } from "@/components/adsterra-native-banner"
-import { AdsterraMobileBanner } from "@/components/adsterra-mobile-banner"
-import { useToast } from "@/components/ui/use-toast"
-import type { Task } from "@/types/task"
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ChevronLeft, ChevronRight, Plus, Edit2, Trash2 } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
+import { useRouter } from "next/navigation"
+
+interface Task {
+  id: string
+  title: string
+  description?: string
+  priority: "low" | "medium" | "high"
+  category: string
+  due_date: string
+  completed: boolean
+  time?: string
+}
+
+const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+
+const timeSlots = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, "0"))
 
 export default function CalendarPage() {
-  const { toast } = useToast()
-  const { language } = useLanguage()
-  const { t } = useTranslation(language)
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const router = useRouter()
+  const { t } = useTranslation()
+  const [events, setEvents] = useState<Task[]>([])
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [currentDate, setCurrentDate] = useState<Date>(new Date())
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [notificationEnabled, setNotificationEnabled] = useState<boolean>(false)
-  const tasksRef = useRef<Task[]>([])
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const notifiedTasksRef = useRef<Set<string>>(new Set())
+  const [editingEvent, setEditingEvent] = useState<Task | null>(null)
+  const [days, setDays] = useState<(Date | null)[]>([])
+  const [teams, setTeams] = useState<any[]>([])
+  const [teamTasks, setTeamTasks] = useState<{ [teamId: string]: any[] }>({})
 
-  const [newTask, setNewTask] = useState({
-    title: "",
-    description: "",
-    priority: "medium",
-    category: "personal",
-    time: "",
-  })
+  const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium" as const, category: "personal", time: "10:00" })
+  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day")
 
-  useEffect(() => {
-    fetchTasks()
-    setNotificationEnabled(Notification.permission === "granted")
-  }, [])
-
-  const fetchTasks = async () => {
+  // Fetch calendar events with retry logic
+  const fetchEvents = async (retryCount = 0) => {
     try {
-      const response = await fetch("/api/tasks", {
-        cache: "no-store",
-      })
+      const response = await fetch("/api/calendar", { cache: "no-store" })
+      
+      if (!response.ok) {
+        console.log("[v0] Calendar API returned status:", response.status)
+        if (response.status === 429 && retryCount < 2) {
+          // Rate limited, retry after delay
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)))
+          return fetchEvents(retryCount + 1)
+        }
+        setEvents([])
+        return
+      }
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType?.includes("application/json")) {
+        console.log("[v0] Calendar API returned non-JSON response")
+        setEvents([])
+        return
+      }
+
       const data = await response.json()
-      if (data.tasks) {
-        setTasks(data.tasks)
-        tasksRef.current = data.tasks
+      setEvents(Array.isArray(data.events) ? data.events : [])
+    } catch (error: any) {
+      console.log("[v0] Calendar API error:", error.message)
+      if (retryCount < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (retryCount + 1)))
+        return fetchEvents(retryCount + 1)
+      }
+      setEvents([])
+    }
+  }
+
+  // Fetch teams
+  const fetchTeams = async () => {
+    try {
+      const response = await fetch("/api/teams", { cache: "no-store" })
+      if (!response.ok) return
+      const data = await response.json()
+      setTeams(data.teams || [])
+      
+      // Fetch tasks for each team
+      if (data.teams && data.teams.length > 0) {
+        const tasksMap: { [teamId: string]: any[] } = {}
+        await Promise.all(
+          data.teams.map(async (team: any) => {
+            const tasksRes = await fetch(`/api/team-tasks?teamId=${team.id}`)
+            if (tasksRes.ok) {
+              const tasksData = await tasksRes.json()
+              // Filter only tasks with due_date
+              tasksMap[team.id] = (tasksData.tasks || []).filter((task: any) => task.due_date)
+            }
+          })
+        )
+        setTeamTasks(tasksMap)
       }
     } catch (error) {
-      console.error("Error fetching tasks:", error)
+      console.log("[v0] Error fetching teams:", error)
     }
   }
 
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
-
-    const days = []
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null)
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i))
-    }
-    return days
-  }
-
-  const getTasksForDate = (date: Date) => {
-    return tasks.filter((task) => {
-      if (!task.due_date) return false
-      const taskDate = new Date(task.due_date)
-      return (
-        taskDate.getDate() === date.getDate() &&
-        taskDate.getMonth() === date.getMonth() &&
-        taskDate.getFullYear() === date.getFullYear()
-      )
-    })
-  }
-
-  const checkNotifications = () => {
-    if (!notificationEnabled) return
-
-    const now = new Date()
-    const currentHours = now.getHours()
-    const currentMinutes = now.getMinutes()
-
-    tasks.forEach((task) => {
-      const taskId = task.id
-      if (notifiedTasksRef.current.has(taskId)) return
-
-      const taskTime = new Date(task.due_date)
-      const taskHours = taskTime.getHours()
-      const taskMinutes = taskTime.getMinutes()
-
-      // Notificar cuando la hora y minuto sean exactos
-      if (currentHours === taskHours && currentMinutes === taskMinutes) {
-        notifiedTasksRef.current.add(taskId)
-
-        // Browser notification - works on desktop and mobile
-        if ("Notification" in window && Notification.permission === "granted") {
-          new Notification(t("taskReminder"), {
-            body: `${task.title} ${t("startsNow")}`,
-            icon: "/favicon.ico",
-            badge: "/favicon.ico",
-            tag: `task-${taskId}`,
-            requireInteraction: true,
-            vibrate: [200, 100, 200],
-          })
-        }
-      }
-    })
-  }
-
-  const handleCreateTask = async () => {
-    if (!selectedDate || !newTask.title.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterTaskTitle"),
-        variant: "destructive",
+  // Get events for selected date
+  const getEventsForDate = (date: Date) => {
+    return events
+      .filter((event) => {
+        if (!event.due_date) return false
+        const eventDate = new Date(event.due_date)
+        return (
+          eventDate.getDate() === date.getDate() &&
+          eventDate.getMonth() === date.getMonth() &&
+          eventDate.getFullYear() === date.getFullYear()
+        )
       })
-      return
+      .sort((a, b) => (a.due_date || "").localeCompare(b.due_date || ""))
+  }
+
+  // Generate calendar days
+  useEffect(() => {
+    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+    const daysArray: (Date | null)[] = []
+
+    for (let i = 0; i < firstDay.getDay(); i++) daysArray.push(null)
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      daysArray.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i))
     }
 
-    const year = selectedDate.getFullYear()
-    const month = String(selectedDate.getMonth() + 1).padStart(2, "0")
-    const day = String(selectedDate.getDate()).padStart(2, "0")
+    setDays(daysArray)
+    if (!selectedDate || selectedDate.getMonth() !== currentDate.getMonth()) {
+      setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1))
+    }
+  }, [currentDate])
 
-    let dueDate: string
-    if (newTask.time) {
-      const [hours, minutes] = newTask.time.split(":")
-      dueDate = new Date(
-        year,
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        Number.parseInt(hours),
-        Number.parseInt(minutes),
-      ).toISOString()
-    } else {
-      dueDate = new Date(year, selectedDate.getMonth(), selectedDate.getDate(), 23, 59).toISOString()
+  useEffect(() => {
+    fetchEvents()
+    fetchTeams()
+  }, [])
+
+  const selectedDateEvents = getEventsForDate(selectedDate)
+
+  const handleAddEvent = async () => {
+    if (!newEvent.title.trim()) return
+
+    const dueDate = new Date(selectedDate)
+    const [hours, minutes] = newEvent.time.split(":")
+    dueDate.setHours(parseInt(hours), parseInt(minutes), 0)
+
+    const tempEvent = {
+      id: `temp-${Date.now()}`,
+      title: newEvent.title,
+      description: newEvent.description,
+      priority: newEvent.priority,
+      category: newEvent.category,
+      due_date: dueDate.toISOString(),
+      completed: false,
     }
 
+    // Add to local state immediately
+    setEvents([...events, tempEvent])
+    setNewEvent({ title: "", description: "", priority: "medium", category: "personal", time: "10:00" })
+    setIsDialogOpen(false)
+
+    // Try to sync with API if available
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: newTask.title,
-          description: newTask.description,
-          priority: newTask.priority,
-          category: newTask.category,
-          due_date: dueDate,
-          completed: false,
-          status: "todo",
+          title: newEvent.title,
+          description: newEvent.description,
+          priority: newEvent.priority,
+          category: newEvent.category,
+          due_date: dueDate.toISOString(),
         }),
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        toast({
-          title: t("error"),
-          description: data.error || t("failed_create_task"),
-          variant: "destructive",
-        })
-      } else {
-        setNewTask({ title: "", description: "", priority: "medium", category: "personal", time: "" })
-        setIsDialogOpen(false)
-        await fetchTasks()
-        setTimeout(() => checkNotifications(), 500)
+      
+      if (response.ok) {
+        console.log("[v0] Event synced with API")
+        await fetchEvents() // Refresh events from API
       }
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("failed_create_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
+      console.log("[v0] API not available, event saved locally")
     }
   }
 
-  const toggleTask = async (taskId: string, completed: boolean) => {
+  const handleUpdateEvent = async () => {
+    if (!editingEvent || !editingEvent.title.trim()) return
+
+    // Update due_date with new time if time field changed
+    if (editingEvent.time) {
+      const dueDate = new Date(editingEvent.due_date)
+      const [hours, minutes] = editingEvent.time.split(":")
+      dueDate.setHours(parseInt(hours), parseInt(minutes), 0)
+      editingEvent.due_date = dueDate.toISOString()
+    }
+
+    // Update local state immediately
+    setEvents(events.map((e) => (e.id === editingEvent.id ? editingEvent : e)))
+    setIsEditDialogOpen(false)
+    setEditingEvent(null)
+
+    // Try to sync with API if available
     try {
-      await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingEvent),
+      })
+
+      if (response.ok) {
+        console.log("[v0] Event updated in API")
+        await fetchEvents() // Refresh events from API
+      }
+    } catch (error) {
+      console.log("[v0] API not available, event updated locally")
+    }
+  }
+
+  const toggleEventCompletion = async (eventId: string, completed: boolean) => {
+    try {
+      const response = await fetch("/api/calendar", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: taskId, completed: !completed }),
+        body: JSON.stringify({ id: eventId, completed: !completed }),
       })
-      fetchTasks()
+
+      if (response.ok) {
+        setEvents(events.map((e) => (e.id === eventId ? { ...e, completed: !completed } : e)))
+      }
     } catch (error) {
-      console.error("Error toggling task:", error)
+      console.error("[v0] Error updating event:", error)
     }
   }
 
-  const handleDeleteTask = async (taskId: string) => {
-    if (!confirm(t("deleteConfirm"))) {
-      return
-    }
-
+  const deleteEvent = async (eventId: string) => {
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: taskId }),
+        body: JSON.stringify({ id: eventId }),
       })
 
-      if (!response.ok) {
-        const data = await response.json()
-        toast({
-          title: t("error"),
-          description: data.error || t("failed_delete_task"),
-          variant: "destructive",
-        })
-      } else {
-        setIsViewDialogOpen(false)
-        setIsEditDialogOpen(false)
-        fetchTasks()
-        // Keep the selected date and the view stays on the day's tasks
-      }
-    } catch (error) {
-      console.error("Error deleting task:", error)
-      toast({
-        title: t("error"),
-        description: t("failed_delete_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleUpdateTask = async () => {
-    if (!editingTask || !editingTask.title.trim()) {
-      toast({
-        title: t("error"),
-        description: t("enterTaskTitle"),
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      let dueDate: string
-      if (editingTask.time) {
-        const dueDateTime = new Date(editingTask.due_date)
-        const [hours, minutes] = editingTask.time.split(":")
-        dueDateTime.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0)
-        dueDate = dueDateTime.toISOString()
-      } else {
-        dueDate = editingTask.due_date
-      }
-
-      const response = await fetch("/api/tasks", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: editingTask.id,
-          title: editingTask.title,
-          description: editingTask.description,
-          priority: editingTask.priority,
-          category: editingTask.category,
-          due_date: dueDate,
-          completed: editingTask.completed,
-        }),
-      })
       if (response.ok) {
-        fetchTasks()
-        setIsEditDialogOpen(false)
-        setEditingTask(null)
-        notifiedTasksRef.current.delete(editingTask.id)
-        setTimeout(() => checkNotifications(), 500)
-      } else {
-        toast({
-          title: t("error"),
-          description: t("failed_update_task"),
-          variant: "destructive",
-        })
+        setEvents(events.filter((e) => e.id !== eventId))
       }
     } catch (error) {
-      toast({
-        title: t("error"),
-        description: t("failed_update_task") + ". " + t("please_try_again"),
-        variant: "destructive",
-      })
+      console.error("[v0] Error deleting event:", error)
     }
   }
-
-  const handleEditTask = (task: Task) => {
-    const taskDate = new Date(task.due_date)
-    const hours = String(taskDate.getHours()).padStart(2, "0")
-    const minutes = String(taskDate.getMinutes()).padStart(2, "0")
-    const timeValue = `${hours}:${minutes}`
-    setEditingTask({ ...task, time: timeValue })
-  }
-
-  const days = getDaysInMonth(currentDate)
-  const monthNames = [
-    t("january"),
-    t("february"),
-    t("march"),
-    t("april"),
-    t("may"),
-    t("june"),
-    t("july"),
-    t("august"),
-    t("september"),
-    t("october"),
-    t("november"),
-    t("december"),
-  ]
-
-  const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : []
-
-  useEffect(() => {
-    if (notificationEnabled) {
-      checkIntervalRef.current = setInterval(() => {
-        checkNotifications()
-      }, 5000)
-
-      return () => {
-        if (checkIntervalRef.current) {
-          clearInterval(checkIntervalRef.current)
-        }
-      }
-    }
-  }, [notificationEnabled, tasks, t])
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="transition-all duration-300">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 md:mb-8">
-          <h1 className="hidden md:block text-2xl md:text-4xl font-bold">
-            <span className="text-primary neon-text">{t("calendar")}</span>
-          </h1>
-          <Button
-            className="neon-glow-hover w-full md:w-auto"
-            onClick={() => {
-              setSelectedDate(new Date())
-              setIsDialogOpen(true)
-            }}
+    <div className="min-h-screen p-4 md:p-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-primary/30">
+        <h1 className="text-2xl sm:text-3xl font-bold">{t("calendar")}</h1>
+
+        <div className="flex gap-2 md:gap-4 items-center">
+          <Button 
+            variant={viewMode === "day" ? "outline" : "ghost"}
+            className={viewMode === "day" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
+            onClick={() => setViewMode("day")}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            {t("addTask")}
+            {t("today")}
+          </Button>
+          <Button 
+            variant={viewMode === "week" ? "outline" : "ghost"}
+            className={viewMode === "week" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
+            onClick={() => setViewMode("week")}
+          >
+            {t("week")}
+          </Button>
+          <Button 
+            variant={viewMode === "month" ? "outline" : "ghost"}
+            className={viewMode === "month" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
+            onClick={() => setViewMode("month")}
+          >
+            {t("month")}
           </Button>
         </div>
+      </div>
 
-        <AdsterraBanner
-          adKey="dd82d93d86b369641ec4dd731423cb09"
-          width={728}
-          height={90}
-          className="mb-6 hidden md:block"
-        />
-
-        <AdsterraMobileBanner
-          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
-          width={320}
-          height={50}
-          className="mb-6 block md:hidden"
-        />
-
-        {!notificationEnabled && (
-          <Card className="glass-card p-4 mb-6 border-yellow-500/50">
-            <div className="flex items-center justify-between">
-              <p className="text-sm">{t("enableNotifications")}</p>
-              <Button size="sm" onClick={() => setNotificationEnabled(true)}>
-                {t("enable")}
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {notificationEnabled && (
-          <Card className="glass-card p-4 mb-6 border-green-500/50">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <p className="text-sm text-green-500">{t("notificationsEnabled")}</p>
-            </div>
-          </Card>
-        )}
-
-        <Card className="glass-card p-4 md:p-6 neon-glow">
-          <div className="flex items-center justify-between mb-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <h2 className="text-xl md:text-2xl font-bold">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-7 gap-1 md:gap-2">
-            {["S", "M", "T", "W", "T", "F", "S"].map((day, index) => (
-              <div
-                key={`${day}-${index}`}
-                className="text-center font-semibold text-xs md:text-sm text-muted-foreground p-1 md:p-2"
-              >
-                <span className="md:hidden">{day}</span>
-                <span className="hidden md:inline">
-                  {[t("sun"), t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat")][index]}
-                </span>
-              </div>
-            ))}
-            {days.map((day, index) => {
-              if (!day) {
-                return <div key={`empty-${index}`} className="aspect-square" />
-              }
-
-              const dayTasks = getTasksForDate(day)
-              const isToday =
-                day.getDate() === new Date().getDate() &&
-                day.getMonth() === new Date().getMonth() &&
-                day.getFullYear() === new Date().getFullYear()
-
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={`aspect-square p-1 md:p-2 rounded-lg border cursor-pointer transition-all hover:scale-105 ${
-                    isToday
-                      ? "border-primary bg-primary/10 neon-glow"
-                      : "border-border/50 hover:border-primary/50 hover:bg-secondary/50"
-                  }`}
-                  onClick={() => {
-                    setSelectedDate(day)
-                    if (dayTasks.length > 0) {
-                      setIsViewDialogOpen(true)
-                    } else {
-                      setIsDialogOpen(true)
-                    }
-                  }}
-                >
-                  <div className="text-xs md:text-sm font-semibold mb-1">{day.getDate()}</div>
-                  {dayTasks.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {dayTasks.slice(0, 3).map((task) => (
-                        <div
-                          key={task.id}
-                          className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${
-                            task.priority === "high"
-                              ? "bg-red-500"
-                              : task.priority === "medium"
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
-                          }`}
-                        />
-                      ))}
-                      {dayTasks.length > 3 && (
-                        <div className="text-[10px] md:text-xs text-muted-foreground">+{dayTasks.length - 3}</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-
-        <AdsterraNativeBanner
-          containerId="container-105a3c31d27607df87969077c87047d4"
-          scriptSrc="//pl28151206.effectivegatecpm.com/105a3c31d27607df87969077c87047d4/invoke.js"
-          className="mt-6 hidden md:block"
-        />
-
-        <AdsterraMobileBanner
-          adKey="5fedd77c571ac1a4c2ea68ca3d2bca98"
-          width={320}
-          height={50}
-          className="mt-6 block md:hidden"
-        />
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="glass-card max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t("createNewTask")}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label>{t("title")}</Label>
-                <Input
-                  value={newTask.title}
-                  onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  placeholder={t("title")}
-                  className="bg-secondary/50"
-                />
-              </div>
-              <div>
-                <Label>{t("description")}</Label>
-                <Textarea
-                  value={newTask.description}
-                  onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                  placeholder={t("description")}
-                  className="bg-secondary/50"
-                />
-              </div>
-              <div>
-                <Label>{t("time")}</Label>
-                <Input
-                  type="time"
-                  value={newTask.time}
-                  onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
-                  className="bg-secondary/50"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{t("priority")}</Label>
-                  <Select
-                    value={newTask.priority}
-                    onValueChange={(value) => setNewTask({ ...newTask, priority: value })}
-                  >
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">{t("low")}</SelectItem>
-                      <SelectItem value="medium">{t("medium")}</SelectItem>
-                      <SelectItem value="high">{t("high")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>{t("category")}</Label>
-                  <Select
-                    value={newTask.category}
-                    onValueChange={(value) => setNewTask({ ...newTask, category: value })}
-                  >
-                    <SelectTrigger className="bg-secondary/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="personal">{t("personal")}</SelectItem>
-                      <SelectItem value="work">{t("work")}</SelectItem>
-                      <SelectItem value="study">{t("study")}</SelectItem>
-                      <SelectItem value="health">{t("health")}</SelectItem>
-                      <SelectItem value="finance">{t("finance")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Button onClick={handleCreateTask} className="w-full neon-glow-hover">
-                {t("createTask")}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="glass-card max-w-2xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle>
-                  {t("tasksFor")}{" "}
-                  {selectedDate?.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                </DialogTitle>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left Sidebar */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Mini Calendar */}
+          <Card className="glass-card p-5 border-primary/30 neon-glow">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h3>
+              <div className="flex gap-2">
                 <Button
-                  size="sm"
-                  onClick={() => {
-                    setIsViewDialogOpen(false)
-                    setIsDialogOpen(true)
-                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-primary/20"
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t("addTask")}
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 hover:bg-primary/20"
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))}
+                >
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-            </DialogHeader>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 mb-4">
+              {["L", "M", "X", "J", "V", "S", "D"].map((day) => (
+                <div key={day} className="text-center text-xs font-semibold text-muted-foreground p-1">
+                  {day}
+                </div>
+              ))}
+              {days.map((day, index) => {
+                if (!day) return <div key={`empty-${index}`} className="aspect-square" />
+
+                const isToday =
+                  day.getDate() === new Date().getDate() &&
+                  day.getMonth() === new Date().getMonth() &&
+                  day.getFullYear() === new Date().getFullYear()
+
+                const isSelected = day.getDate() === selectedDate.getDate() && day.getMonth() === selectedDate.getMonth()
+
+                return (
+                  <button
+                    key={day.toISOString()}
+                    onClick={() => setSelectedDate(day)}
+                    className={`aspect-square p-1 rounded-lg border text-xs font-semibold cursor-pointer transition-all hover:scale-110 ${
+                      isSelected ? "border-primary bg-primary/20 text-primary font-bold neon-glow" : isToday ? "border-primary/50 bg-primary/10" : "border-border/50 hover:border-primary/50"
+                    }`}
+                  >
+                    {day.getDate()}
+                  </button>
+                )
+              })}
+            </div>
+          </Card>
+
+          {/* Events List */}
+          <Card className="glass-card p-5 border-primary/30">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-foreground">Mi Calendario</h3>
+            </div>
             <div className="space-y-3">
-              {selectedDateTasks.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">{t("noTasksForDay")}</p>
+              {selectedDateEvents.slice(0, 3).map((event) => (
+                <div key={event.id} className="flex items-start gap-3 p-2 hover:bg-primary/10 rounded-lg transition-colors">
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
+                      event.priority === "high" ? "bg-red-500" : event.priority === "medium" ? "bg-yellow-500" : "bg-cyan-500"
+                    }`}
+                  ></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs hover:bg-primary/20 text-primary justify-start gap-2 mt-2"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Plus className="w-3 h-3" />
+                Añadir Evento
+              </Button>
+            </div>
+          </Card>
+
+          {/* Team Calendars Section */}
+          <Card className="glass-card p-5 border-primary/30">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-foreground">Calendarios de Equipo</h3>
+            </div>
+            <div className="space-y-3">
+              {teams.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Sin equipos</p>
               ) : (
-                selectedDateTasks.map((task) => (
-                  <Card key={task.id} className="glass-card p-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox checked={task.completed} onCheckedChange={() => toggleTask(task.id, task.completed)} />
-                      <div className="flex-1">
-                        <h3 className={`font-semibold ${task.completed ? "line-through text-muted-foreground" : ""}`}>
-                          {task.title}
-                        </h3>
-                        {task.description && <p className="text-sm text-muted-foreground mt-1">{task.description}</p>}
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge
-                            variant="outline"
-                            className={
-                              task.priority === "high"
-                                ? "border-red-500 text-red-500"
-                                : task.priority === "medium"
-                                  ? "border-yellow-500 text-yellow-500"
-                                  : "border-green-500 text-green-500"
-                            }
-                          >
-                            {task.priority}
-                          </Badge>
-                          <Badge variant="outline">{task.category}</Badge>
-                          {task.due_date &&
-                            (() => {
-                              const isoString = task.due_date
-                              const match = isoString.match(/T(\d{2}):(\d{2})/)
-                              if (match) {
-                                return (
-                                  <span className="text-xs text-muted-foreground">
-                                    {match[1]}:{match[2]}
-                                  </span>
-                                )
-                              }
-                              return null
-                            })()}
+                teams.map((team) => {
+                  const teamColors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"]
+                  const colorIndex = teams.indexOf(team) % teamColors.length
+                  
+                  return (
+                    <div 
+                      key={team.id}
+                      className="flex items-center gap-2 p-2 hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                      onClick={() => router.push(`/app/teams/${team.id}`)}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${teamColors[colorIndex]}`}></div>
+                      <span className="text-xs font-medium text-foreground">{team.name}</span>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="lg:col-span-3">
+          {viewMode === "day" && (
+            <Card className="glass-card p-6 border-primary/30 neon-glow">
+              {/* Date Header */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
+                <h2 className="text-2xl font-bold text-primary">
+                  {selectedDate.toLocaleDateString("es-ES", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                </h2>
+              </div>
+
+              {/* Daily Timeline */}
+              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                {timeSlots.map((hour) => {
+                  const hourEvents = selectedDateEvents.filter((event) => {
+                    const eventHour = new Date(event.due_date).getHours()
+                    return eventHour === parseInt(hour)
+                  })
+
+                  return (
+                    <div key={hour} className="relative">
+                      <div className="flex items-start gap-4">
+                        <div className="text-xs font-mono text-muted-foreground pt-1 w-12 text-right">{hour}:00</div>
+                        <div className="relative flex-1">
+                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>
+                          <div className="space-y-2 ml-4 min-h-12">
+                            {hourEvents.map((event) => {
+                              const eventTime = new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+                              const neonColor =
+                                event.priority === "high" ? "border-violet-500/80 bg-violet-500/10" : event.priority === "medium" ? "border-cyan-500/80 bg-cyan-500/10" : "border-green-500/80 bg-green-500/10"
+
+                              return (
+                                <Card key={event.id} className={`glass-card p-4 border-l-4 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer group ${neonColor}`}>
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex items-start gap-3 flex-1">
+                                      <Checkbox checked={event.completed} onCheckedChange={() => toggleEventCompletion(event.id, event.completed)} className="mt-1" />
+                                      <div className="flex-1">
+                                        <h4 className={`font-semibold text-foreground ${event.completed ? "line-through text-muted-foreground" : ""}`}>{event.title}</h4>
+                                        {event.description && <p className="text-xs text-muted-foreground mt-1">{event.description}</p>}
+                                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                          {event.priority && (
+                                            <Badge variant="outline" className={`text-xs ${event.priority === "high" ? "border-red-500 text-red-500" : event.priority === "medium" ? "border-yellow-500 text-yellow-500" : "border-green-500 text-green-500"}`}>
+                                              {event.priority === "high" ? "Alta" : event.priority === "medium" ? "Media" : "Baja"}
+                                            </Badge>
+                                          )}
+                                          {event.category && <Badge variant="secondary" className="text-xs">{event.category}</Badge>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                      <span className="text-sm font-mono text-primary whitespace-nowrap">{eventTime}</span>
+                                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/20" onClick={() => {
+                                          const eventDate = new Date(event.due_date)
+                                          const hours = String(eventDate.getHours()).padStart(2, "0")
+                                          const minutes = String(eventDate.getMinutes()).padStart(2, "0")
+                                          setEditingEvent({ ...event, time: `${hours}:${minutes}` })
+                                          setIsEditDialogOpen(true)
+                                        }}>
+                                          <Edit2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500" onClick={() => deleteEvent(event.id)}>
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </Card>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            handleEditTask(task)
-                            setIsViewDialogOpen(false)
-                            setIsEditDialogOpen(true)
-                          }}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )}
+
+          {viewMode === "week" && (
+            <Card className="glass-card p-6 border-primary/30 neon-glow">
+              <h2 className="text-2xl font-bold text-primary mb-6">Semana</h2>
+              <div className="grid grid-cols-7 gap-2 max-h-[600px] overflow-y-auto">
+                {Array.from({ length: 7 }, (_, i) => {
+                  const date = new Date(selectedDate)
+                  date.setDate(date.getDate() - date.getDay() + i)
+                  const dayEvents = getEventsForDate(date)
+                  
+                  return (
+                    <div key={i} className="border border-primary/30 rounded-lg p-3 min-h-[200px]">
+                      <h3 className="font-bold text-sm text-primary mb-3">{date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}</h3>
+                      <div className="space-y-2">
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <div key={event.id} className="text-xs p-2 rounded bg-primary/10 border border-primary/30 hover:bg-primary/20 cursor-pointer transition-colors">
+                            <p className="font-semibold truncate">{event.title}</p>
+                            <p className="text-muted-foreground">{new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && <p className="text-xs text-muted-foreground">+{dayEvents.length - 3} más</p>}
                       </div>
                     </div>
-                  </Card>
-                ))
-              )}
+                  )
+                })}
+              </div>
+            </Card>
+          )}
+
+          {viewMode === "month" && (
+            <Card className="glass-card p-6 border-primary/30 neon-glow">
+              <h2 className="text-2xl font-bold text-primary mb-6">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
+              <div className="grid grid-cols-7 gap-2">
+                {["L", "M", "X", "J", "V", "S", "D"].map((d) => (
+                  <div key={d} className="text-center font-bold text-sm text-primary p-2">{d}</div>
+                ))}
+                {days.map((day, idx) => {
+                  if (!day) return <div key={`empty-${idx}`} className="aspect-square" />
+                  const dayEvents = getEventsForDate(day)
+                  
+                  return (
+                    <div key={day.toISOString()} className="aspect-square border border-primary/30 rounded-lg p-2 hover:bg-primary/10 cursor-pointer transition-colors">
+                      <p className="font-bold text-sm text-primary">{day.getDate()}</p>
+                      <div className="space-y-0.5 mt-1">
+                        {dayEvents.slice(0, 2).map((e) => (
+                          <p key={e.id} className="text-xs truncate text-muted-foreground">{e.title}</p>
+                        ))}
+                        {dayEvents.length > 2 && <p className="text-xs text-primary">+{dayEvents.length - 2}</p>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Add Event Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="glass-card">
+          <DialogHeader>
+            <DialogTitle>Nuevo Evento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input placeholder="Título del evento" value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} />
+            <Textarea placeholder="Descripción (opcional)" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} />
+            <Input type="time" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} />
+            <Select value={newEvent.priority} onValueChange={(value: any) => setNewEvent({ ...newEvent, priority: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Baja</SelectItem>
+                <SelectItem value="medium">Media</SelectItem>
+                <SelectItem value="high">Alta</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={newEvent.category} onValueChange={(value: any) => setNewEvent({ ...newEvent, category: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="personal">Personal</SelectItem>
+                <SelectItem value="trabajo">Trabajo</SelectItem>
+                <SelectItem value="reunion">Reunión</SelectItem>
+                <SelectItem value="proyecto">Proyecto</SelectItem>
+                <SelectItem value="otro">Otro</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-2">
+              <Button onClick={handleAddEvent} className="flex-1">
+                Crear Evento
+              </Button>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Event Dialog */}
+      {editingEvent && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="glass-card">
+            <DialogHeader>
+              <DialogTitle>Editar Evento</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Input placeholder="Título" value={editingEvent.title} onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} />
+              <Textarea placeholder="Descripción" value={editingEvent.description || ""} onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })} />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Hora</label>
+                <Input 
+                  type="time" 
+                  value={editingEvent.time || "10:00"} 
+                  onChange={(e) => setEditingEvent({ ...editingEvent, time: e.target.value })} 
+                />
+              </div>
+              <Select value={editingEvent.priority} onValueChange={(value: any) => setEditingEvent({ ...editingEvent, priority: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baja</SelectItem>
+                  <SelectItem value="medium">Media</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={editingEvent.category} onValueChange={(value: any) => setEditingEvent({ ...editingEvent, category: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Personal</SelectItem>
+                  <SelectItem value="trabajo">Trabajo</SelectItem>
+                  <SelectItem value="reunion">Reunión</SelectItem>
+                  <SelectItem value="proyecto">Proyecto</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2">
+                <Button onClick={handleUpdateEvent} className="flex-1">
+                  Guardar
+                </Button>
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="flex-1">
+                  Cancelar
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
-
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="glass-card max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t("editTask")}</DialogTitle>
-            </DialogHeader>
-            {editingTask && (
-              <div className="space-y-4">
-                <div>
-                  <Label>{t("title")}</Label>
-                  <Input
-                    value={editingTask.title}
-                    onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
-                    placeholder={t("title")}
-                    className="bg-secondary/50"
-                  />
-                </div>
-                <div>
-                  <Label>{t("description")}</Label>
-                  <Textarea
-                    value={editingTask.description || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
-                    placeholder={t("description")}
-                    className="bg-secondary/50"
-                  />
-                </div>
-                <div>
-                  <Label>{t("time")}</Label>
-                  <Input
-                    type="time"
-                    value={editingTask.time || ""}
-                    onChange={(e) => setEditingTask({ ...editingTask, time: e.target.value })}
-                    className="bg-secondary/50"
-                  />
-                </div>
-                <div>
-                  <Label>{t("preview")}</Label>
-                  <div className="text-sm text-muted-foreground bg-secondary/50 p-2 rounded">
-                    {editingTask.time ||
-                      new Date(editingTask.due_date).toLocaleTimeString("es-ES", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>{t("priority")}</Label>
-                    <Select
-                      value={editingTask.priority}
-                      onValueChange={(value) => setEditingTask({ ...editingTask, priority: value })}
-                    >
-                      <SelectTrigger className="bg-secondary/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">{t("low")}</SelectItem>
-                        <SelectItem value="medium">{t("medium")}</SelectItem>
-                        <SelectItem value="high">{t("high")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>{t("category")}</Label>
-                    <Select
-                      value={editingTask.category}
-                      onValueChange={(value) => setEditingTask({ ...editingTask, category: value })}
-                    >
-                      <SelectTrigger className="bg-secondary/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="personal">{t("personal")}</SelectItem>
-                        <SelectItem value="work">{t("work")}</SelectItem>
-                        <SelectItem value="study">{t("study")}</SelectItem>
-                        <SelectItem value="health">{t("health")}</SelectItem>
-                        <SelectItem value="finance">{t("finance")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleUpdateTask} className="flex-1 neon-glow-hover">
-                    {t("updateTask")}
-                  </Button>
-                  <Button onClick={() => handleDeleteTask(editingTask.id)} variant="destructive" className="flex-1">
-                    {t("deleteTask")}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+      )}
     </div>
   )
 }
