@@ -393,6 +393,17 @@ export const translations = {
     help_chatbot_welcome: "Hi! I'm your assistant. How can I help you today?",
     help_chatbot_input: "Ask a question...",
     help_chatbot_error: "An error occurred. Please try again.",
+    
+    // Task page translations
+    priority: "Priority",
+    priority_low: "Low",
+    search: "Search",
+    no_tasks_today: "No tasks for today",
+    time_planned: "Total time planned",
+    completed_count: "completed",
+    motivational_message: "Start your day well and complete your tasks!",
+    completed: "Completed",
+    pending: "Pending",
   },
 
   es: {
@@ -789,6 +800,17 @@ export const translations = {
     help_chatbot_welcome: "¡Hola! Soy tu asistente. ¿Cómo puedo ayudarte hoy?",
     help_chatbot_input: "Haz una pregunta...",
     help_chatbot_error: "Ocurrió un error. Por favor, intenta de nuevo.",
+    
+    // Task page translations
+    priority: "Prioridad",
+    priority_low: "Baja",
+    search: "Buscar",
+    no_tasks_today: "No hay tareas para hoy",
+    time_planned: "Tiempo total planificado",
+    completed_count: "completadas",
+    motivational_message: "¡Comienza bien el día y completa tus tareas!",
+    completed: "Completada",
+    pending: "Pendiente",
   },
 
   fr: {
