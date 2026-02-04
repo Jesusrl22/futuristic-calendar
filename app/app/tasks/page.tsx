@@ -289,120 +289,120 @@ export default function TasksPage() {
           </Card>
         ) : (
           <div className="w-full space-y-4">
-                <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-primary/10 border-b border-border/50">
-                        <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 w-12"></th>
-                        <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 flex-1">
-                          Tarea
-                        </th>
-                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24">
-                          Prioridad
-                        </th>
-                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24">
-                          Tiempo
-                        </th>
-                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-28">
-                          Estado
-                        </th>
-                        <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground w-16">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/30">
-                      {todayTasks.map((task: any) => (
-                        <tr key={task.id} className="hover:bg-primary/5 transition-colors">
-                          <td className="px-4 py-4 border-r border-border/30">
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTask(task.id, task.completed)}
-                            />
-                          </td>
-                          <td className="px-4 py-4 border-r border-border/30">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                                  task.priority === "high"
-                                    ? "bg-red-500"
-                                    : task.priority === "medium"
-                                      ? "bg-yellow-500"
-                                      : "bg-green-500"
-                                }`}
-                              />
-                              <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                                {task.title}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-center border-r border-border/30">
-                            {task.priority && (
-                              <span
-                                className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                                  task.priority === "high"
-                                    ? "bg-red-500/10 text-red-500 border border-red-500/30"
-                                    : task.priority === "medium"
-                                      ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30"
-                                      : "bg-green-500/10 text-green-500 border border-green-500/30"
-                                }`}
-                              >
-                                {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium text-foreground">
-                            {task.description || "-"}
-                          </td>
-                          <td className="px-4 py-4 text-center border-r border-border/30">
-                            <div className="flex items-center justify-center gap-2">
-                              {task.completed ? (
-                                <span className="inline-flex items-center gap-1 text-green-500 text-xs font-medium">
-                                  <CheckCircle2 className="w-4 h-4" /> Completada
-                                </span>
-                              ) : (
-                                <span className="text-yellow-500 text-xs font-medium">● Pendiente</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-primary/20"
-                                onClick={() => openEditDialog(task)}
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500"
-                                onClick={() => deleteTask(task.id)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Tiempo total planificado: <span className="font-bold text-cyan-400">2 h 15 min</span></p>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="font-semibold">{todayTasks.filter(t => t.completed).length} min completadas</span>
-                  </div>
-                </div>
-                <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
-                  <p className="text-sm">¡Comienza bien el día y completa tus tareas! 🚀</p>
-                </div>
+            <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-primary/10 border-b border-border/50">
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 w-12"></th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 flex-1">
+                      Tarea
+                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24">
+                      Prioridad
+                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24">
+                      Tiempo
+                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-28">
+                      Estado
+                    </th>
+                    <th className="px-4 py-4 text-center text-xs font-semibold text-muted-foreground w-16">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/30">
+                  {todayTasks.map((task: any) => (
+                    <tr key={task.id} className="hover:bg-primary/5 transition-colors">
+                      <td className="px-4 py-4 border-r border-border/30">
+                        <Checkbox
+                          checked={task.completed}
+                          onCheckedChange={() => toggleTask(task.id, task.completed)}
+                        />
+                      </td>
+                      <td className="px-4 py-4 border-r border-border/30">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                              task.priority === "high"
+                                ? "bg-red-500"
+                                : task.priority === "medium"
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
+                            }`}
+                          />
+                          <span className={`text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                            {task.title}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center border-r border-border/30">
+                        {task.priority && (
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                              task.priority === "high"
+                                ? "bg-red-500/10 text-red-500 border border-red-500/30"
+                                : task.priority === "medium"
+                                  ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30"
+                                  : "bg-green-500/10 text-green-500 border border-green-500/30"
+                            }`}
+                          >
+                            {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium text-foreground">
+                        {task.description || "-"}
+                      </td>
+                      <td className="px-4 py-4 text-center border-r border-border/30">
+                        <div className="flex items-center justify-center gap-2">
+                          {task.completed ? (
+                            <span className="inline-flex items-center gap-1 text-green-500 text-xs font-medium">
+                              <CheckCircle2 className="w-4 h-4" /> Completada
+                            </span>
+                          ) : (
+                            <span className="text-yellow-500 text-xs font-medium">● Pendiente</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-primary/20"
+                            onClick={() => openEditDialog(task)}
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500"
+                            onClick={() => deleteTask(task.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Tiempo total planificado: <span className="font-bold text-cyan-400">2 h 15 min</span></p>
               </div>
-            )}
+              <div className="text-sm text-muted-foreground">
+                <span className="font-semibold">{todayTasks.filter(t => t.completed).length} min completadas</span>
+              </div>
+            </div>
+            <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
+              <p className="text-sm">¡Comienza bien el día y completa tus tareas! 🚀</p>
+            </div>
+          </div>
+        )}
         </div>
       </div>
 
