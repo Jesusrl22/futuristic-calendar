@@ -37,8 +37,8 @@ export default function TasksPage() {
 
   const [newTask, setNewTask] = useState({
     title: "",
-    description: "",
     priority: "medium",
+    time: "",
   })
 
   const [editForm, setEditForm] = useState({
@@ -90,7 +90,7 @@ export default function TasksPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: newTask.title,
-          description: newTask.description,
+          description: newTask.time,
           priority: newTask.priority,
           completed: false,
         }),
@@ -101,7 +101,7 @@ export default function TasksPage() {
       if (response.ok) {
         console.log("[v0] Task created successfully, refreshing list...")
         setIsDialogOpen(false)
-        setNewTask({ title: "", description: "", priority: "medium" })
+        setNewTask({ title: "", priority: "medium", time: "" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
       } else {
@@ -242,6 +242,15 @@ export default function TasksPage() {
                   <option value="high">Alta</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="time">Tiempo estimado</Label>
+                <Input
+                  id="time"
+                  placeholder="ej: 45 min, 2 h, 1:30 h"
+                  value={newTask.time}
+                  onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
@@ -266,44 +275,18 @@ export default function TasksPage() {
         />
       </div>
 
-      {/* TABS: HOY vs SEMANA */}
+      {/* TASKS VIEW */}
       <div className="space-y-6">
-        <div className="flex gap-4 border-b border-border/30">
-          <button
-            onClick={() => setViewMode("today")}
-            className={`px-6 py-3 font-medium transition-all ${
-              viewMode === "today"
-                ? "text-cyan-400 border-b-2 border-cyan-400"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Hoy
-          </button>
-          <button
-            onClick={() => setViewMode("week")}
-            className={`px-6 py-3 font-medium transition-all ${
-              viewMode === "week"
-                ? "text-cyan-400 border-b-2 border-cyan-400"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Semana
-          </button>
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-6">
+          <h2 className="text-2xl font-bold text-foreground">
+            HOY - {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase())}
+          </h2>
         </div>
 
-        {/* HOY VIEW */}
-        {viewMode === "today" && (
-          <div className="w-full space-y-6">
-            <div className="bg-primary/10 border border-primary/30 rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-foreground">
-                HOY - {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase())}
-              </h2>
-            </div>
-
-            {todayTasks.length === 0 ? (
-              <Card className="glass-card p-12 text-center">
-                <p className="text-muted-foreground">No hay tareas para hoy</p>
-              </Card>
+        {todayTasks.length === 0 ? (
+          <Card className="glass-card p-12 text-center">
+            <p className="text-muted-foreground">No hay tareas para hoy</p>
+          </Card>
             ) : (
               <div className="w-full space-y-4">
                 <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30">
@@ -369,7 +352,7 @@ export default function TasksPage() {
                             )}
                           </td>
                           <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium text-foreground">
-                            {task.estimated_time || "-"}
+                            {task.description || "-"}
                           </td>
                           <td className="px-4 py-4 text-center border-r border-border/30">
                             <div className="flex items-center justify-center gap-2">
@@ -421,60 +404,7 @@ export default function TasksPage() {
               </div>
             )}
           </div>
-        )}
-
-        {/* SEMANA VIEW */}
-        {viewMode === "week" && (
-          <div className="w-full space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
-              {Array.from({ length: 7 }).map((_, index) => {
-                const date = new Date()
-                date.setDate(date.getDate() + (index - date.getDay()))
-                const dateStr = date.toISOString().split("T")[0]
-                const dayTasks = tasks.filter((task) => task.due_date === dateStr)
-                const dayName = date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })
-                
-                return (
-                  <div key={dateStr} className="border border-border/30 rounded-lg p-4 bg-background/40 space-y-3">
-                    <div className="font-semibold text-sm text-cyan-400">{dayName}</div>
-                    {dayTasks.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">Sin tareas</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {dayTasks.map((task) => (
-                          <div key={task.id} className="flex items-start gap-2 p-2 bg-background/30 rounded text-xs">
-                            <Checkbox
-                              checked={task.completed}
-                              onCheckedChange={() => toggleTask(task.id, task.completed)}
-                              className="mt-0.5"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className={`font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                                {task.title}
-                              </p>
-                              {task.estimated_time && (
-                                <p className="text-muted-foreground text-xs">{task.estimated_time}</p>
-                              )}
-                            </div>
-                            <div
-                              className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${
-                                task.priority === "high"
-                                  ? "bg-red-500"
-                                  : task.priority === "medium"
-                                    ? "bg-yellow-500"
-                                    : "bg-green-500"
-                              }`}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Edit Task Dialog */}
