@@ -187,7 +187,7 @@ export default function TasksPage() {
 
   const getTodayTasks = () => {
     const today = new Date().toISOString().split("T")[0]
-    return filteredTasks.filter((task) => task.due_date?.startsWith(today))
+    return filteredTasks.filter((task) => !task.due_date || task.due_date.startsWith(today))
   }
 
 
