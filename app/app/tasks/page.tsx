@@ -39,6 +39,8 @@ export default function TasksPage() {
     title: "",
     description: "",
     priority: "medium",
+    estimated_time: "",
+    due_date: "",
   })
 
   const [editForm, setEditForm] = useState({
@@ -92,6 +94,8 @@ export default function TasksPage() {
           title: newTask.title,
           description: newTask.description,
           priority: newTask.priority,
+          estimated_time: newTask.estimated_time,
+          due_date: newTask.due_date,
           completed: false,
         }),
       })
@@ -101,7 +105,7 @@ export default function TasksPage() {
       if (response.ok) {
         console.log("[v0] Task created successfully, refreshing list...")
         setIsDialogOpen(false)
-        setNewTask({ title: "", description: "", priority: "medium" })
+        setNewTask({ title: "", description: "", priority: "medium", estimated_time: "", due_date: "" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
       } else {
@@ -242,6 +246,24 @@ export default function TasksPage() {
                   <option value="high">Alta</option>
                 </select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="estimated_time">Tiempo estimado</Label>
+                <Input
+                  id="estimated_time"
+                  placeholder="ej: 45 min, 2 h"
+                  value={newTask.estimated_time}
+                  onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="due_date">Fecha</Label>
+                <Input
+                  id="due_date"
+                  type="date"
+                  value={newTask.due_date}
+                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isCreating}>
@@ -369,7 +391,7 @@ export default function TasksPage() {
                             )}
                           </td>
                           <td className="px-4 py-4 text-center border-r border-border/30 text-sm font-medium text-foreground">
-                            45 min
+                            {task.estimated_time || "-"}
                           </td>
                           <td className="px-4 py-4 text-center border-r border-border/30">
                             <div className="flex items-center justify-center gap-2">
@@ -426,9 +448,53 @@ export default function TasksPage() {
         {/* SEMANA VIEW */}
         {viewMode === "week" && (
           <div className="w-full space-y-6">
-            <Card className="glass-card p-12 text-center">
-              <p className="text-muted-foreground">Vista semanal - Próximamente</p>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
+              {Array.from({ length: 7 }).map((_, index) => {
+                const date = new Date()
+                date.setDate(date.getDate() + (index - date.getDay()))
+                const dateStr = date.toISOString().split("T")[0]
+                const dayTasks = tasks.filter((task) => task.due_date === dateStr)
+                const dayName = date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })
+                
+                return (
+                  <div key={dateStr} className="border border-border/30 rounded-lg p-4 bg-background/40 space-y-3">
+                    <div className="font-semibold text-sm text-cyan-400">{dayName}</div>
+                    {dayTasks.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Sin tareas</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {dayTasks.map((task) => (
+                          <div key={task.id} className="flex items-start gap-2 p-2 bg-background/30 rounded text-xs">
+                            <Checkbox
+                              checked={task.completed}
+                              onCheckedChange={() => toggleTask(task.id, task.completed)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                                {task.title}
+                              </p>
+                              {task.estimated_time && (
+                                <p className="text-muted-foreground text-xs">{task.estimated_time}</p>
+                              )}
+                            </div>
+                            <div
+                              className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${
+                                task.priority === "high"
+                                  ? "bg-red-500"
+                                  : task.priority === "medium"
+                                    ? "bg-yellow-500"
+                                    : "bg-green-500"
+                              }`}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
