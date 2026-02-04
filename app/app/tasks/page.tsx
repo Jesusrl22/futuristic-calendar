@@ -190,6 +190,28 @@ export default function TasksPage() {
     return filteredTasks.filter((task) => !task.due_date || task.due_date.startsWith(today))
   }
 
+  const calculateTotalTime = (taskList: any[]) => {
+    let totalMinutes = 0
+    taskList.forEach((task) => {
+      if (task.description) {
+        const match = task.description.match(/(\d+)\s*(min|h|m)/)
+        if (match) {
+          const value = parseInt(match[1])
+          const unit = match[2]
+          if (unit === "h") {
+            totalMinutes += value * 60
+          } else {
+            totalMinutes += value
+          }
+        }
+      }
+    })
+    if (totalMinutes === 0) return "0 min"
+    if (totalMinutes < 60) return `${totalMinutes} min`
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
+  }
 
   const todayTasks = getTodayTasks()
 
@@ -392,10 +414,10 @@ export default function TasksPage() {
             </div>
             <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Tiempo total planificado: <span className="font-bold text-cyan-400">2 h 15 min</span></p>
+                <p className="text-sm text-muted-foreground">Tiempo total planificado: <span className="font-bold text-cyan-400">{calculateTotalTime(todayTasks)}</span></p>
               </div>
               <div className="text-sm text-muted-foreground">
-                <span className="font-semibold">{todayTasks.filter(t => t.completed).length} min completadas</span>
+                <span className="font-semibold">{todayTasks.filter(t => t.completed).length} completadas</span>
               </div>
             </div>
             <div className="bg-background/40 border border-border/30 rounded-lg p-4 flex items-center justify-between">
