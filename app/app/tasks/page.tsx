@@ -226,7 +226,7 @@ export default function TasksPage() {
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t("tasks")}</h1>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground">manage.tasks</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{t("manage_tasks")}</p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
