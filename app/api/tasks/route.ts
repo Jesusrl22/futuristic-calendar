@@ -16,14 +16,17 @@ export async function GET() {
     const accessToken = cookieStore.get("sb-access-token")?.value
 
     if (!accessToken) {
+      console.log("[v0] Tasks GET: No access token")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const userId = getUserIdFromToken(accessToken)
     if (!userId) {
+      console.log("[v0] Tasks GET: Invalid token")
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
     }
 
+    console.log("[v0] Tasks GET: Fetching tasks for user:", userId)
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&order=display_order.asc,created_at.desc`,
       {
@@ -34,9 +37,15 @@ export async function GET() {
       },
     )
 
+    if (!response.ok) {
+      console.log("[v0] Tasks GET: Supabase error:", response.status)
+    }
+
     const tasks = await response.json()
+    console.log("[v0] Tasks GET: Retrieved", Array.isArray(tasks) ? tasks.length : 'unknown', "tasks")
     return NextResponse.json({ tasks })
   } catch (error: any) {
+    console.error("[v0] Tasks GET error:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

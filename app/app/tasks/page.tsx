@@ -53,13 +53,22 @@ export default function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch("/api/tasks")
+      console.log("[v0] Fetching tasks...")
+      const response = await fetch("/api/tasks", { cache: "no-store" })
+      console.log("[v0] Tasks response status:", response.status)
+      
+      if (!response.ok) {
+        console.log("[v0] Tasks response error:", response.status)
+        return
+      }
+      
       const data = await response.json()
+      console.log("[v0] Tasks data received:", data)
       if (data.tasks) {
         setTasks(data.tasks)
       }
-    } catch (error) {
-      console.error("Error fetching tasks:", error)
+    } catch (error: any) {
+      console.error("[v0] Error fetching tasks:", error.message)
     }
   }
 
@@ -75,6 +84,7 @@ export default function TasksPage() {
 
     setIsCreating(true)
     try {
+      console.log("[v0] Creating task with data:", newTask)
       const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,13 +96,21 @@ export default function TasksPage() {
         }),
       })
 
+      console.log("[v0] Create task response status:", response.status)
+      
       if (response.ok) {
+        console.log("[v0] Task created successfully, refreshing list...")
         setIsDialogOpen(false)
         setNewTask({ title: "", description: "", priority: "medium" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
+      } else {
+        const error = await response.json().catch(() => ({}))
+        console.log("[v0] Create task error:", error)
+        toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("[v0] Exception creating task:", error.message)
       toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
     } finally {
       setIsCreating(false)
