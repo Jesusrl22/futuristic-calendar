@@ -206,6 +206,27 @@ export const translations = {
     noTeamsFound: "No teams found",
     teamMembers: "members",
     noDescription: "No description",
+    
+    // Notes page
+    organize_notes: "Capture and organize your thoughts",
+    notes_loading: "Loading...",
+    notes_new_note: "New Note",
+    notes_edit_note: "Edit Note",
+    notes_create_note: "Create Note",
+    notes_update_note: "Update Note",
+    notes_title_placeholder: "Note title...",
+    notes_content_placeholder: "Write your note here...",
+    notes_search_placeholder: "Search notes...",
+    notes_no_notes_found: "No notes found",
+    
+    // Wishlist page
+    addWish: "Add to Wishlist",
+    editWish: "Edit Wish",
+    wishTitle: "Item name",
+    wishDescription: "Description (optional)",
+    total_value: "Total Value",
+    all_tasks: "All Items",
+    no_tasks_found: "No items found",
   },
 
   es: {
@@ -680,6 +701,27 @@ export const translations = {
     noTeamsFound: "No se encontraron equipos",
     teamMembers: "miembros",
     noDescription: "Sin descripción",
+    
+    // Notes page
+    organize_notes: "Captura y organiza tus pensamientos",
+    notes_loading: "Cargando...",
+    notes_new_note: "Nueva Nota",
+    notes_edit_note: "Editar Nota",
+    notes_create_note: "Crear Nota",
+    notes_update_note: "Actualizar Nota",
+    notes_title_placeholder: "Título de la nota...",
+    notes_content_placeholder: "Escribe tu nota aquí...",
+    notes_search_placeholder: "Buscar notas...",
+    notes_no_notes_found: "No se encontraron notas",
+    
+    // Wishlist page
+    addWish: "Agregar a Lista de Deseos",
+    editWish: "Editar Deseo",
+    wishTitle: "Nombre del artículo",
+    wishDescription: "Descripción (opcional)",
+    total_value: "Valor Total",
+    all_tasks: "Todos los Artículos",
+    no_tasks_found: "No se encontraron artículos",
   },
 
   fr: {
