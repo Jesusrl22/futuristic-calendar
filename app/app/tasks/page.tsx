@@ -403,7 +403,6 @@ export default function TasksPage() {
             </div>
           </div>
         )}
-        </div>
       </div>
 
       {/* Edit Task Dialog */}
