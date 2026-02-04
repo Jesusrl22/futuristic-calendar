@@ -287,8 +287,8 @@ export default function TasksPage() {
           <Card className="glass-card p-12 text-center">
             <p className="text-muted-foreground">No hay tareas para hoy</p>
           </Card>
-            ) : (
-              <div className="w-full space-y-4">
+        ) : (
+          <div className="w-full space-y-4">
                 <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30">
                   <table className="w-full">
                     <thead>
@@ -403,7 +403,6 @@ export default function TasksPage() {
                 </div>
               </div>
             )}
-          </div>
         </div>
       </div>
 
