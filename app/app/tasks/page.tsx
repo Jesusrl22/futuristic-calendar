@@ -39,8 +39,6 @@ export default function TasksPage() {
     title: "",
     description: "",
     priority: "medium",
-    estimated_time: "",
-    due_date: "",
   })
 
   const [editForm, setEditForm] = useState({
@@ -94,8 +92,6 @@ export default function TasksPage() {
           title: newTask.title,
           description: newTask.description,
           priority: newTask.priority,
-          estimated_time: newTask.estimated_time,
-          due_date: newTask.due_date,
           completed: false,
         }),
       })
@@ -105,7 +101,7 @@ export default function TasksPage() {
       if (response.ok) {
         console.log("[v0] Task created successfully, refreshing list...")
         setIsDialogOpen(false)
-        setNewTask({ title: "", description: "", priority: "medium", estimated_time: "", due_date: "" })
+        setNewTask({ title: "", description: "", priority: "medium" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
       } else {
@@ -245,24 +241,6 @@ export default function TasksPage() {
                   <option value="medium">Media</option>
                   <option value="high">Alta</option>
                 </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="estimated_time">Tiempo estimado</Label>
-                <Input
-                  id="estimated_time"
-                  placeholder="ej: 45 min, 2 h"
-                  value={newTask.estimated_time}
-                  onChange={(e) => setNewTask({ ...newTask, estimated_time: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="due_date">Fecha</Label>
-                <Input
-                  id="due_date"
-                  type="date"
-                  value={newTask.due_date}
-                  onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                />
               </div>
             </div>
             <DialogFooter>
