@@ -260,12 +260,7 @@ export default function CalendarPage() {
     <div className="min-h-screen p-4 md:p-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-primary/30">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded bg-gradient-to-r from-primary to-primary/60 flex items-center justify-center text-white font-bold text-sm">
-            ⏱
-          </div>
-          <h1 className="text-3xl font-bold">FutureTask</h1>
-        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold">{t("calendar")}</h1>
 
         <div className="flex gap-2 md:gap-4 items-center">
           <Button 
@@ -273,26 +268,24 @@ export default function CalendarPage() {
             className={viewMode === "day" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
             onClick={() => setViewMode("day")}
           >
-            Hoy
+            {t("today")}
           </Button>
           <Button 
             variant={viewMode === "week" ? "outline" : "ghost"}
             className={viewMode === "week" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
             onClick={() => setViewMode("week")}
           >
-            Semana
+            {t("week")}
           </Button>
           <Button 
             variant={viewMode === "month" ? "outline" : "ghost"}
             className={viewMode === "month" ? "rounded-full border-primary/50 text-primary hover:bg-primary/10" : "text-foreground hover:text-primary"}
             onClick={() => setViewMode("month")}
           >
-            Mes
+            {t("month")}
           </Button>
         </div>
       </div>
-
-      <h2 className="text-2xl font-bold mb-6">Mi Calendario</h2>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
