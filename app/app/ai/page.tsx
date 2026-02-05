@@ -108,10 +108,13 @@ const AIPage = () => {
 
   const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
-      const session = await supabase.auth.getSession()
-      if (!session.data.session?.access_token) {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData?.session?.access_token) {
         return
       }
+      
+      const session = sessionData.session
 
       const existingConv = conversations.find((c) => c.id === conversationId)
 
@@ -122,7 +125,7 @@ const AIPage = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.data.session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           id: conversationId,
@@ -133,25 +136,28 @@ const AIPage = () => {
       })
 
       if (response.ok) {
-        // Update local conversations list
-        const updated = conversations.map((c) =>
-          c.id === conversationId ? { ...c, title, messages, updated_at: new Date().toISOString(), mode: aiMode } : c,
-        )
-
-        if (!existingConv) {
-          updated.push({
-            id: conversationId,
-            title,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            messages,
-            mode: aiMode,
-          })
-          // Set as current conversation if it's new
-          setCurrentConversationId(conversationId)
+        // Create updated conversation object
+        const updatedConv: Conversation = {
+          id: conversationId,
+          title,
+          created_at: existingConv?.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          messages,
+          mode: aiMode,
         }
 
-        setConversations(updated)
+        // Update local conversations list
+        if (existingConv) {
+          // Update existing conversation
+          const updated = conversations.map((c) =>
+            c.id === conversationId ? updatedConv : c
+          )
+          setConversations(updated)
+        } else {
+          // Add new conversation to the top
+          setConversations([updatedConv, ...conversations])
+          setCurrentConversationId(conversationId)
+        }
       }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
@@ -159,6 +165,11 @@ const AIPage = () => {
   }
 
   const createNewConversation = async () => {
+    // Save current conversation before creating a new one
+    if (currentConversationId && messages.length > 0) {
+      await saveConversation(currentConversationId, messages)
+    }
+
     const newConversation: Conversation = {
       id: Date.now().toString(),
       title: t("new_conversation"),
@@ -167,15 +178,25 @@ const AIPage = () => {
       messages: [],
       mode: aiMode,
     }
+    
+    // Add to local state and save to database
     const updated = [newConversation, ...conversations]
     setConversations(updated)
     setCurrentConversationId(newConversation.id)
     setMessages([])
     setInput("")
     setShowRightSidebar(false)
+    
+    // Save the new empty conversation to database
+    await saveConversation(newConversation.id, [])
   }
 
-  const loadConversation = (conversationId: string) => {
+  const loadConversation = async (conversationId: string) => {
+    // Save current conversation before switching
+    if (currentConversationId && messages.length > 0) {
+      await saveConversation(currentConversationId, messages)
+    }
+
     const conv = conversations.find((c) => c.id === conversationId)
     if (conv) {
       setCurrentConversationId(conversationId)
@@ -253,7 +274,25 @@ const AIPage = () => {
         const assistantMessage: Message = { role: "assistant", content: data.response }
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
-        await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
+        
+        // Create or use existing conversation for file uploads
+        let convId = currentConversationId
+        if (!convId) {
+          // Create new conversation when sending first message
+          convId = Date.now().toString()
+          const newConv: Conversation = {
+            id: convId,
+            title: input?.substring(0, 50) || t("new_conversation"),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            messages: finalMessages,
+            mode: aiMode,
+          }
+          setConversations([newConv, ...conversations])
+          setCurrentConversationId(convId)
+        }
+        await saveConversation(convId, finalMessages)
+        
         setProfileData((prev) => ({
           ...prev,
           monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
@@ -280,7 +319,25 @@ const AIPage = () => {
         const assistantMessage: Message = { role: "assistant", content: data.response }
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
-        await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
+        
+        // Create or use existing conversation for chat
+        let convId = currentConversationId
+        if (!convId) {
+          // Create new conversation when sending first message
+          convId = Date.now().toString()
+          const newConv: Conversation = {
+            id: convId,
+            title: input.substring(0, 50) || t("new_conversation"),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            messages: finalMessages,
+            mode: aiMode,
+          }
+          setConversations([newConv, ...conversations])
+          setCurrentConversationId(convId)
+        }
+        await saveConversation(convId, finalMessages)
+        
         setProfileData((prev) => ({
           ...prev,
           monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
@@ -380,6 +437,8 @@ const AIPage = () => {
         setSaveDescription("")
         setSelectedMessageToSave(null)
         setSaveType(null)
+      } else {
+        toast.error(t("error_saving_task"))
       }
     } catch (error) {
       toast.error(t("error_saving_task"))
@@ -390,7 +449,7 @@ const AIPage = () => {
     if (!saveTitle.trim() || !selectedMessageToSave) return
 
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -399,7 +458,6 @@ const AIPage = () => {
           priority: "medium",
           category: "study",
           due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          completed: false,
         }),
       })
 
@@ -410,6 +468,8 @@ const AIPage = () => {
         setSaveDescription("")
         setSelectedMessageToSave(null)
         setSaveType(null)
+      } else {
+        toast.error(t("error_saving_calendar"))
       }
     } catch (error) {
       toast.error(t("error_saving_calendar"))
@@ -426,12 +486,15 @@ const AIPage = () => {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-        const session = await supabase.auth.getSession()
-        if (!session.data.session?.access_token) return
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !sessionData?.session?.access_token) {
+          return
+        }
 
         const response = await fetch("/api/ai-conversations", {
           headers: {
-            Authorization: `Bearer ${session.data.session.access_token}`,
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
         })
 
@@ -498,11 +561,11 @@ const AIPage = () => {
 
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
-          setProfileData({
-            tier: profile.subscription_tier || "free",
-            monthlyCredits: profile.ai_credits_monthly || 0,
-            purchasedCredits: profile.ai_credits_purchased || 0,
-          })
+      setProfileData({
+        tier: profile.subscription_tier || "free",
+        monthlyCredits: profile.ai_credits || 0,
+        purchasedCredits: profile.ai_credits_purchased || 0,
+      })
         }
       } catch (error) {
         console.error("Error loading initial data:", error)
