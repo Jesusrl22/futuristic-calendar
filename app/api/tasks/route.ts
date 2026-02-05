@@ -97,7 +97,8 @@ export async function POST(request: Request) {
       const protocol = request.headers.get("x-forwarded-proto") || "https"
       const host = request.headers.get("host")
       
-      await fetch(`${protocol}://${host}/api/notifications/send`, {
+      console.log("[v0] Attempting to send notification for new task:", taskData.id)
+      const notifResponse = await fetch(`${protocol}://${host}/api/notifications/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,7 +110,8 @@ export async function POST(request: Request) {
           url: "/app/tasks",
         }),
       })
-      console.log("[v0] Push notification sent for new task")
+      const notifResult = await notifResponse.json()
+      console.log("[v0] Push notification response:", notifResult)
     } catch (notifError) {
       console.error("[v0] Failed to send notification:", notifError)
     }

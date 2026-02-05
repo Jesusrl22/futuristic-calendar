@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { userId, title, body: notificationBody, taskId, type, url } = body
 
+    console.log("[v0] Notification send request:", { userId, title, notificationBody, taskId, type, url })
+
     if (!userId || !title || !notificationBody) {
+      console.error("[v0] Missing required fields:", { userId, title, notificationBody })
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -58,6 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's push subscriptions
+    console.log("[v0] Fetching subscriptions for user:", userId)
     const { data: subscriptions, error } = await supabase
       .from("push_subscriptions")
       .select("*")
@@ -71,7 +75,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log("[v0] Found subscriptions:", subscriptions?.length || 0)
+
     if (!subscriptions || subscriptions.length === 0) {
+      console.warn("[v0] No active subscriptions for user:", userId)
       return NextResponse.json(
         { success: true, message: "No active subscriptions" }
       )
@@ -86,8 +93,11 @@ export async function POST(request: NextRequest) {
       url: url || "/app/tasks",
     })
 
+    console.log("[v0] Sending notification payload:", payload)
+
     const sendPromises = subscriptions.map(async (sub) => {
       try {
+        console.log("[v0] Sending to endpoint:", sub.endpoint.substring(0, 50) + "...")
         await webpush.sendNotification(
           {
             endpoint: sub.endpoint,
@@ -98,11 +108,13 @@ export async function POST(request: NextRequest) {
           },
           payload
         )
+        console.log("[v0] Notification sent successfully to:", sub.endpoint.substring(0, 50) + "...")
         return { success: true, endpoint: sub.endpoint }
       } catch (err) {
         console.error("[v0] Failed to send notification:", err)
         // If subscription is invalid, delete it
         if (err instanceof Error && err.message.includes("410")) {
+          console.log("[v0] Deleting invalid subscription:", sub.endpoint)
           await supabase
             .from("push_subscriptions")
             .delete()
@@ -114,6 +126,8 @@ export async function POST(request: NextRequest) {
 
     const results = await Promise.all(sendPromises)
     const successful = results.filter((r) => r.success).length
+
+    console.log("[v0] Notification results:", { successful, total: subscriptions.length, results })
 
     return NextResponse.json({
       success: true,
