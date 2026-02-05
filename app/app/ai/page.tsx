@@ -260,9 +260,20 @@ const AIPage = () => {
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
         
-        // Ensure we have a conversation ID for file uploads
-        const convId = currentConversationId || Date.now().toString()
-        if (!currentConversationId) {
+        // Create or use existing conversation for file uploads
+        let convId = currentConversationId
+        if (!convId) {
+          // Create new conversation when sending first message
+          convId = Date.now().toString()
+          const newConv: Conversation = {
+            id: convId,
+            title: input?.substring(0, 50) || t("new_conversation"),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            messages: finalMessages,
+            mode: aiMode,
+          }
+          setConversations([newConv, ...conversations])
           setCurrentConversationId(convId)
         }
         await saveConversation(convId, finalMessages)
@@ -294,9 +305,20 @@ const AIPage = () => {
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
         
-        // Ensure we have a conversation ID for chat
-        const convId = currentConversationId || Date.now().toString()
-        if (!currentConversationId) {
+        // Create or use existing conversation for chat
+        let convId = currentConversationId
+        if (!convId) {
+          // Create new conversation when sending first message
+          convId = Date.now().toString()
+          const newConv: Conversation = {
+            id: convId,
+            title: input.substring(0, 50) || t("new_conversation"),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            messages: finalMessages,
+            mode: aiMode,
+          }
+          setConversations([newConv, ...conversations])
           setCurrentConversationId(convId)
         }
         await saveConversation(convId, finalMessages)
