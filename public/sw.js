@@ -9,8 +9,8 @@ self.addEventListener("push", (event) => {
 
     const options = {
       body: data.body || "You have a new notification",
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
+      icon: "/icon-192.jpg",
+      badge: "/icon-192.jpg",
       vibrate: [200, 100, 200],
       tag: "notification-" + (data.taskId || data.type || Date.now()),
       requireInteraction: true,

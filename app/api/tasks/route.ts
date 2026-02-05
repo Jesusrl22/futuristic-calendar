@@ -90,6 +90,30 @@ export async function POST(request: Request) {
 
     const task = await response.json()
     console.log("[v0] Task created successfully:", task)
+    
+    // Send push notification for new task
+    try {
+      const taskData = Array.isArray(task) ? task[0] : task
+      const protocol = request.headers.get("x-forwarded-proto") || "https"
+      const host = request.headers.get("host")
+      
+      await fetch(`${protocol}://${host}/api/notifications/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          title: "Nueva tarea creada",
+          body: taskData.title || "Tienes una nueva tarea",
+          taskId: taskData.id,
+          type: "task",
+          url: "/app/tasks",
+        }),
+      })
+      console.log("[v0] Push notification sent for new task")
+    } catch (notifError) {
+      console.error("[v0] Failed to send notification:", notifError)
+    }
+    
     return NextResponse.json(task)
   } catch (error: any) {
     console.error("[SERVER] Task API error:", error)
