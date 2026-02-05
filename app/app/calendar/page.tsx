@@ -386,6 +386,14 @@ export default function CalendarPage() {
                 <h2 className="text-2xl font-bold text-primary">
                   {selectedDate.toLocaleDateString("es-ES", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                 </h2>
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-primary hover:bg-primary/80 text-primary-foreground"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Añadir Evento
+                </Button>
               </div>
 
               {/* Daily Timeline */}
@@ -458,23 +466,18 @@ export default function CalendarPage() {
           )}
 
           {viewMode === "week" && (
-            <Card className="glass-card p-6 border-primary/30 neon-glow">
-              <h2 className="text-2xl font-bold text-primary mb-6">Semana</h2>
-              <div className="grid grid-cols-7 gap-2 max-h-[600px] overflow-y-auto">
-                {Array.from({ length: 7 }, (_, i) => {
-                  const date = new Date(selectedDate)
-                  date.setDate(date.getDate() - date.getDay() + i)
-                  const dayEvents = getEventsForDate(date)
-                  
-                  return (
-                    <div key={i} className="border border-primary/30 rounded-lg p-3 min-h-[200px]">
-                      <h3 className="font-bold text-sm text-primary mb-3">{date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric" })}</h3>
-                      <div className="space-y-2">
-                        {dayEvents.slice(0, 3).map((event) => (
-                          <div key={event.id} className="text-xs p-2 rounded bg-primary/10 border border-primary/30 hover:bg-primary/20 cursor-pointer transition-colors">
-                            <p className="font-semibold truncate">{event.title}</p>
-                            <p className="text-muted-foreground">{new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
-                          </div>
+            <Card className="glass-card p-6 border-primary/30">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
+                <h2 className="text-2xl font-bold text-primary">Vista Semanal</h2>
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-primary hover:bg-primary/80 text-primary-foreground"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Añadir Evento
+                </Button>
+              </div>
                         ))}
                         {dayEvents.length > 3 && <p className="text-xs text-muted-foreground">+{dayEvents.length - 3} más</p>}
                       </div>
@@ -486,25 +489,18 @@ export default function CalendarPage() {
           )}
 
           {viewMode === "month" && (
-            <Card className="glass-card p-6 border-primary/30 neon-glow">
-              <h2 className="text-2xl font-bold text-primary mb-6">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
-              <div className="grid grid-cols-7 gap-2">
-                {["L", "M", "X", "J", "V", "S", "D"].map((d) => (
-                  <div key={d} className="text-center font-bold text-sm text-primary p-2">{d}</div>
-                ))}
-                {days.map((day, idx) => {
-                  if (!day) return <div key={`empty-${idx}`} className="aspect-square" />
-                  const dayEvents = getEventsForDate(day)
-                  
-                  return (
-                    <div key={day.toISOString()} className="aspect-square border border-primary/30 rounded-lg p-2 hover:bg-primary/10 cursor-pointer transition-colors">
-                      <p className="font-bold text-sm text-primary">{day.getDate()}</p>
-                      <div className="space-y-0.5 mt-1">
-                        {dayEvents.slice(0, 2).map((e) => (
-                          <p key={e.id} className="text-xs truncate text-muted-foreground">{e.title}</p>
-                        ))}
-                        {dayEvents.length > 2 && <p className="text-xs text-primary">+{dayEvents.length - 2}</p>}
-                      </div>
+            <Card className="glass-card p-6 border-primary/30">
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
+                <h2 className="text-2xl font-bold text-primary">Vista Mensual</h2>
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-primary hover:bg-primary/80 text-primary-foreground"
+                  size="sm"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Añadir Evento
+                </Button>
+              </div>
                     </div>
                   )
                 })}
