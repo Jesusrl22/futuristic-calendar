@@ -187,7 +187,12 @@ export default function TasksPage() {
 
   const getTodayTasks = () => {
     const today = new Date().toISOString().split("T")[0]
-    return filteredTasks.filter((task) => !task.due_date || task.due_date.startsWith(today))
+    // Solo mostrar tareas de hoy, excluir tareas sin fecha o del futuro
+    return filteredTasks.filter((task) => {
+      if (!task.due_date) return true // Tareas sin fecha se muestran como tareas de hoy
+      const taskDate = task.due_date.split("T")[0]
+      return taskDate === today // Solo exactamente hoy
+    })
   }
 
   const calculateTotalTime = (taskList: any[]) => {
