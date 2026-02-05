@@ -179,13 +179,17 @@ const AIPage = () => {
   }
 
   const loadConversation = (conversationId: string) => {
+    console.log("[v0] Loading conversation:", conversationId)
     const conv = conversations.find((c) => c.id === conversationId)
     if (conv) {
+      console.log("[v0] Found conversation with", conv.messages?.length || 0, "messages")
       setCurrentConversationId(conversationId)
       setMessages(conv.messages || [])
       setInput("")
       setShowRightSidebar(false)
       setAiMode(conv.mode)
+    } else {
+      console.log("[v0] Conversation not found in list")
     }
   }
 
@@ -397,6 +401,8 @@ const AIPage = () => {
         setSaveDescription("")
         setSelectedMessageToSave(null)
         setSaveType(null)
+      } else {
+        toast.error(t("error_saving_task"))
       }
     } catch (error) {
       toast.error(t("error_saving_task"))
@@ -407,7 +413,7 @@ const AIPage = () => {
     if (!saveTitle.trim() || !selectedMessageToSave) return
 
     try {
-      const response = await fetch("/api/tasks", {
+      const response = await fetch("/api/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -416,7 +422,6 @@ const AIPage = () => {
           priority: "medium",
           category: "study",
           due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          completed: false,
         }),
       })
 
@@ -427,6 +432,8 @@ const AIPage = () => {
         setSaveDescription("")
         setSelectedMessageToSave(null)
         setSaveType(null)
+      } else {
+        toast.error(t("error_saving_calendar"))
       }
     } catch (error) {
       toast.error(t("error_saving_calendar"))
