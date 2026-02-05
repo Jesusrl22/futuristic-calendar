@@ -133,25 +133,28 @@ const AIPage = () => {
       })
 
       if (response.ok) {
-        // Update local conversations list
-        const updated = conversations.map((c) =>
-          c.id === conversationId ? { ...c, title, messages, updated_at: new Date().toISOString(), mode: aiMode } : c,
-        )
-
-        if (!existingConv) {
-          updated.push({
-            id: conversationId,
-            title,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            messages,
-            mode: aiMode,
-          })
-          // Set as current conversation if it's new
-          setCurrentConversationId(conversationId)
+        // Create updated conversation object
+        const updatedConv: Conversation = {
+          id: conversationId,
+          title,
+          created_at: existingConv?.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          messages,
+          mode: aiMode,
         }
 
-        setConversations(updated)
+        // Update local conversations list
+        if (existingConv) {
+          // Update existing conversation
+          const updated = conversations.map((c) =>
+            c.id === conversationId ? updatedConv : c
+          )
+          setConversations(updated)
+        } else {
+          // Add new conversation to the top
+          setConversations([updatedConv, ...conversations])
+          setCurrentConversationId(conversationId)
+        }
       }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
@@ -253,7 +256,14 @@ const AIPage = () => {
         const assistantMessage: Message = { role: "assistant", content: data.response }
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
-        await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
+        
+        // Ensure we have a conversation ID for file uploads
+        const convId = currentConversationId || Date.now().toString()
+        if (!currentConversationId) {
+          setCurrentConversationId(convId)
+        }
+        await saveConversation(convId, finalMessages)
+        
         setProfileData((prev) => ({
           ...prev,
           monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
@@ -280,7 +290,14 @@ const AIPage = () => {
         const assistantMessage: Message = { role: "assistant", content: data.response }
         const finalMessages = [...updatedMessages, assistantMessage]
         setMessages(finalMessages)
-        await saveConversation(currentConversationId || Date.now().toString(), finalMessages)
+        
+        // Ensure we have a conversation ID for chat
+        const convId = currentConversationId || Date.now().toString()
+        if (!currentConversationId) {
+          setCurrentConversationId(convId)
+        }
+        await saveConversation(convId, finalMessages)
+        
         setProfileData((prev) => ({
           ...prev,
           monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,

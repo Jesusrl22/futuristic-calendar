@@ -70,7 +70,6 @@ export function HelpChatbot() {
     setIsLoading(true)
 
     try {
-      console.log("[v0] Sending message:", input)
       const response = await fetch("/api/help-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,14 +79,11 @@ export function HelpChatbot() {
         }),
       })
 
-      console.log("[v0] Response status:", response.status)
-
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const data = await response.json()
-      console.log("[v0] Response data:", data)
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
