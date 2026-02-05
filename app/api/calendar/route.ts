@@ -103,6 +103,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Send push notification for new calendar event
+    try {
+      await fetch(`${request.headers.get("x-forwarded-proto") || "https"}://${request.headers.get("host")}/api/notifications/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          title: "Nuevo evento en calendario",
+          body: title,
+          type: "event",
+          url: "/app/calendar",
+        }),
+      })
+    } catch (notifError) {
+      console.error("[v0] Failed to send notification:", notifError)
+    }
+
     return NextResponse.json({ event })
   } catch (error: any) {
     console.error("[v0] Calendar API - Error:", error)
