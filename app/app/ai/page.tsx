@@ -108,29 +108,24 @@ const AIPage = () => {
 
   const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
-      const session = await supabase.auth.getSession()
-      if (!session.data.session?.access_token) {
-        console.log("[v0] No session token for saving conversation")
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData?.session?.access_token) {
         return
       }
+      
+      const session = sessionData.session
 
       const existingConv = conversations.find((c) => c.id === conversationId)
 
       const userMessage = messages.find((m) => m.role === "user")
       const title = userMessage?.content?.substring(0, 50) || t("new_conversation")
 
-      console.log("[v0] Saving conversation with", messages.length, "messages:", {
-        id: conversationId,
-        title,
-        messagesCount: messages.length,
-        mode: aiMode,
-      })
-
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.data.session.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           id: conversationId,
@@ -141,9 +136,6 @@ const AIPage = () => {
       })
 
       if (response.ok) {
-        const savedData = await response.json()
-        console.log("[v0] Conversation saved successfully:", savedData)
-        
         // Create updated conversation object
         const updatedConv: Conversation = {
           id: conversationId,
@@ -161,17 +153,16 @@ const AIPage = () => {
             c.id === conversationId ? updatedConv : c
           )
           setConversations(updated)
-          console.log("[v0] Updated existing conversation in list")
         } else {
           // Add new conversation to the top
           setConversations([updatedConv, ...conversations])
           setCurrentConversationId(conversationId)
-          console.log("[v0] Added new conversation to list")
         }
-      } else {
-        const errorData = await response.json()
-        console.error("[v0] Failed to save conversation:", response.status, errorData)
       }
+    } catch (error) {
+      console.error("[v0] Error saving conversation:", error)
+    }
+  }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
     }
@@ -195,17 +186,13 @@ const AIPage = () => {
   }
 
   const loadConversation = (conversationId: string) => {
-    console.log("[v0] Loading conversation:", conversationId)
     const conv = conversations.find((c) => c.id === conversationId)
     if (conv) {
-      console.log("[v0] Found conversation with", conv.messages?.length || 0, "messages")
       setCurrentConversationId(conversationId)
       setMessages(conv.messages || [])
       setInput("")
       setShowRightSidebar(false)
       setAiMode(conv.mode)
-    } else {
-      console.log("[v0] Conversation not found in list")
     }
   }
 
@@ -464,16 +451,19 @@ const AIPage = () => {
     profileData.tier !== "free" || profileData.monthlyCredits > 0 || profileData.purchasedCredits > 0
 
   useEffect(() => {
-    const loadConversations = async () => {
-      try {
-        const session = await supabase.auth.getSession()
-        if (!session.data.session?.access_token) return
+  const loadConversations = async () => {
+    try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !sessionData?.session?.access_token) {
+        return
+      }
 
-        const response = await fetch("/api/ai-conversations", {
-          headers: {
-            Authorization: `Bearer ${session.data.session.access_token}`,
-          },
-        })
+      const response = await fetch("/api/ai-conversations", {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+      })
 
         if (response.ok) {
           const data = await response.json()
@@ -542,11 +532,6 @@ const AIPage = () => {
         tier: profile.subscription_tier || "free",
         monthlyCredits: profile.ai_credits || 0,
         purchasedCredits: profile.ai_credits_purchased || 0,
-      })
-      console.log("[v0] Loaded profile credits:", {
-        ai_credits: profile.ai_credits,
-        ai_credits_purchased: profile.ai_credits_purchased,
-        total: (profile.ai_credits || 0) + (profile.ai_credits_purchased || 0),
       })
         }
       } catch (error) {
