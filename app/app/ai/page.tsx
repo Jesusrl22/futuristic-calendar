@@ -110,6 +110,7 @@ const AIPage = () => {
     try {
       const session = await supabase.auth.getSession()
       if (!session.data.session?.access_token) {
+        console.log("[v0] No session token for saving conversation")
         return
       }
 
@@ -117,6 +118,13 @@ const AIPage = () => {
 
       const userMessage = messages.find((m) => m.role === "user")
       const title = userMessage?.content?.substring(0, 50) || t("new_conversation")
+
+      console.log("[v0] Saving conversation with", messages.length, "messages:", {
+        id: conversationId,
+        title,
+        messagesCount: messages.length,
+        mode: aiMode,
+      })
 
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
@@ -133,6 +141,9 @@ const AIPage = () => {
       })
 
       if (response.ok) {
+        const savedData = await response.json()
+        console.log("[v0] Conversation saved successfully:", savedData)
+        
         // Create updated conversation object
         const updatedConv: Conversation = {
           id: conversationId,
@@ -150,11 +161,16 @@ const AIPage = () => {
             c.id === conversationId ? updatedConv : c
           )
           setConversations(updated)
+          console.log("[v0] Updated existing conversation in list")
         } else {
           // Add new conversation to the top
           setConversations([updatedConv, ...conversations])
           setCurrentConversationId(conversationId)
+          console.log("[v0] Added new conversation to list")
         }
+      } else {
+        const errorData = await response.json()
+        console.error("[v0] Failed to save conversation:", response.status, errorData)
       }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
@@ -522,11 +538,16 @@ const AIPage = () => {
 
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
-          setProfileData({
-            tier: profile.subscription_tier || "free",
-            monthlyCredits: profile.ai_credits_monthly || 0,
-            purchasedCredits: profile.ai_credits_purchased || 0,
-          })
+      setProfileData({
+        tier: profile.subscription_tier || "free",
+        monthlyCredits: profile.ai_credits || 0,
+        purchasedCredits: profile.ai_credits_purchased || 0,
+      })
+      console.log("[v0] Loaded profile credits:", {
+        ai_credits: profile.ai_credits,
+        ai_credits_purchased: profile.ai_credits_purchased,
+        total: (profile.ai_credits || 0) + (profile.ai_credits_purchased || 0),
+      })
         }
       } catch (error) {
         console.error("Error loading initial data:", error)
