@@ -165,6 +165,11 @@ const AIPage = () => {
   }
 
   const createNewConversation = async () => {
+    // Save current conversation before creating a new one
+    if (currentConversationId && messages.length > 0) {
+      await saveConversation(currentConversationId, messages)
+    }
+
     const newConversation: Conversation = {
       id: Date.now().toString(),
       title: t("new_conversation"),
@@ -173,15 +178,25 @@ const AIPage = () => {
       messages: [],
       mode: aiMode,
     }
+    
+    // Add to local state and save to database
     const updated = [newConversation, ...conversations]
     setConversations(updated)
     setCurrentConversationId(newConversation.id)
     setMessages([])
     setInput("")
     setShowRightSidebar(false)
+    
+    // Save the new empty conversation to database
+    await saveConversation(newConversation.id, [])
   }
 
-  const loadConversation = (conversationId: string) => {
+  const loadConversation = async (conversationId: string) => {
+    // Save current conversation before switching
+    if (currentConversationId && messages.length > 0) {
+      await saveConversation(currentConversationId, messages)
+    }
+
     const conv = conversations.find((c) => c.id === conversationId)
     if (conv) {
       setCurrentConversationId(conversationId)
@@ -469,19 +484,19 @@ const AIPage = () => {
     profileData.tier !== "free" || profileData.monthlyCredits > 0 || profileData.purchasedCredits > 0
 
   useEffect(() => {
-  const loadConversations = async () => {
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-      
-      if (sessionError || !sessionData?.session?.access_token) {
-        return
-      }
+    const loadConversations = async () => {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError || !sessionData?.session?.access_token) {
+          return
+        }
 
-      const response = await fetch("/api/ai-conversations", {
-        headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-        },
-      })
+        const response = await fetch("/api/ai-conversations", {
+          headers: {
+            Authorization: `Bearer ${sessionData.session.access_token}`,
+          },
+        })
 
         if (response.ok) {
           const data = await response.json()
