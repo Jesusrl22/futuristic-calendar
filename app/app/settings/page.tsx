@@ -272,7 +272,9 @@ export default function SettingsPage() {
 
     setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
 
-    // Save customThemes to localStorage only
+    // [v0] Custom themes are stored in localStorage only (browser-specific)
+    // This means each user's custom themes are private and device-specific
+    // They are NOT synced to the database or shared between devices/browsers
     try {
       localStorage.setItem("customThemes", JSON.stringify(updatedThemes))
 
