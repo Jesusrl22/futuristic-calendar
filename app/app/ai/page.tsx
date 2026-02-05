@@ -163,10 +163,6 @@ const AIPage = () => {
       console.error("[v0] Error saving conversation:", error)
     }
   }
-    } catch (error) {
-      console.error("[v0] Error saving conversation:", error)
-    }
-  }
 
   const createNewConversation = async () => {
     const newConversation: Conversation = {
