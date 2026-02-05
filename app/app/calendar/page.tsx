@@ -478,13 +478,7 @@ export default function CalendarPage() {
                   Añadir Evento
                 </Button>
               </div>
-                        ))}
-                        {dayEvents.length > 3 && <p className="text-xs text-muted-foreground">+{dayEvents.length - 3} más</p>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <p className="text-muted-foreground text-center py-8">Vista semanal en desarrollo</p>
             </Card>
           )}
 
@@ -501,10 +495,7 @@ export default function CalendarPage() {
                   Añadir Evento
                 </Button>
               </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <p className="text-muted-foreground text-center py-8">Vista mensual en desarrollo</p>
             </Card>
           )}
         </div>
