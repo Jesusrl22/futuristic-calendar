@@ -124,38 +124,26 @@ export default function StatsPage() {
             {
               title: t("total_tasks"),
               value: stats.totalTasks,
-              gradient: "from-blue-500/20 to-blue-600/20",
-              border: "border-blue-500/30",
-              text: "text-blue-400",
             },
             {
               title: t("tasks_completed"),
               value: stats.completedTasks,
-              gradient: "from-green-500/20 to-green-600/20",
-              border: "border-green-500/30",
-              text: "text-green-400",
             },
             {
               title: t("total_pomodoros"),
               value: stats.totalPomodoro,
-              gradient: "from-purple-500/20 to-purple-600/20",
-              border: "border-purple-500/30",
-              text: "text-purple-400",
             },
             {
               title: t("focus_time"),
               value: `${stats.totalFocusTime}h`,
-              gradient: "from-primary/20 to-primary/30",
-              border: "border-primary/30",
-              text: "text-primary",
             },
           ].map((stat) => (
             <div key={stat.title}>
               <Card
-                className={`glass-card p-4 md:p-6 border-2 ${stat.border} bg-gradient-to-br ${stat.gradient} hover:scale-105 transition-transform duration-300`}
+                className="glass-card p-4 md:p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 to-primary/20 hover:scale-105 transition-transform duration-300"
               >
                 <h3 className="text-xs md:text-sm text-muted-foreground mb-2">{stat.title}</h3>
-                <p className={`text-2xl md:text-3xl font-bold ${stat.text}`}>{stat.value}</p>
+                <p className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</p>
               </Card>
             </div>
           ))}
@@ -257,13 +245,13 @@ export default function StatsPage() {
                   </div>
                   <div className="grid grid-cols-2 hover:bg-primary/5 transition-colors border-t border-border/50">
                     <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm">{t("total_pomodoros")}</div>
-                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-purple-400 text-right">
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-secondary text-right">
                       {stats.totalPomodoro}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 hover:bg-primary/5 transition-colors border-t border-border/50">
                     <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm">{t("notes_created")}</div>
-                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-blue-400 text-right">
+                    <div className="px-3 py-2 md:px-4 md:py-3 text-xs md:text-sm font-semibold text-foreground text-right">
                       {stats.totalNotes}
                     </div>
                   </div>

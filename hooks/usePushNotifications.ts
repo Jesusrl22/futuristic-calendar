@@ -78,7 +78,7 @@ export function usePushNotifications() {
       console.log("[v0] VAPID Public Key configured:", !!publicKey)
 
       if (!publicKey) {
-        throw new Error("VAPID public key is not configured")
+        throw new Error("Push notifications are not configured on the server. Please contact the administrator to set up VAPID keys.")
       }
 
       const subscription = await subscribeToPushNotifications(publicKey)

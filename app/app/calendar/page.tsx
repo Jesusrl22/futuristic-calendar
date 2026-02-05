@@ -348,39 +348,6 @@ export default function CalendarPage() {
             </div>
           </Card>
 
-          {/* Events List */}
-          <Card className="glass-card p-5 border-primary/30">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-foreground">Mi Calendario</h3>
-            </div>
-            <div className="space-y-3">
-              {selectedDateEvents.slice(0, 3).map((event) => (
-                <div key={event.id} className="flex items-start gap-3 p-2 hover:bg-primary/10 rounded-lg transition-colors">
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
-                      event.priority === "high" ? "bg-red-500" : event.priority === "medium" ? "bg-yellow-500" : "bg-cyan-500"
-                    }`}
-                  ></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground truncate">{event.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs hover:bg-primary/20 text-primary justify-start gap-2 mt-2"
-                onClick={() => setIsDialogOpen(true)}
-              >
-                <Plus className="w-3 h-3" />
-                Añadir Evento
-              </Button>
-            </div>
-          </Card>
-
           {/* Team Calendars Section */}
           <Card className="glass-card p-5 border-primary/30">
             <div className="flex items-center justify-between mb-4">
