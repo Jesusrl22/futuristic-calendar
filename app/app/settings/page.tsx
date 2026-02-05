@@ -94,13 +94,15 @@ export default function SettingsPage() {
                 .trim()
                 .replace(/[\s\-_]/g, "")
 
-        // Load customThemes from localStorage
+        // Load customThemes from database (synced across devices)
         let customThemes: CustomTheme[] = []
-        const savedThemes = localStorage.getItem("customThemes")
-        if (savedThemes) {
+        if (settingsData.profile.custom_themes) {
           try {
-            customThemes = JSON.parse(savedThemes)
+            customThemes = Array.isArray(settingsData.profile.custom_themes)
+              ? settingsData.profile.custom_themes
+              : JSON.parse(settingsData.profile.custom_themes)
           } catch (e) {
+            console.error("[v0] Error parsing custom themes:", e)
             customThemes = []
           }
         }
@@ -272,17 +274,33 @@ export default function SettingsPage() {
 
     setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
 
-    // [v0] Custom themes are stored in localStorage only (browser-specific)
-    // This means each user's custom themes are private and device-specific
-    // They are NOT synced to the database or shared between devices/browsers
+    // [v0] Custom themes are now stored in database and synced across devices
     try {
-      localStorage.setItem("customThemes", JSON.stringify(updatedThemes))
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ custom_themes: updatedThemes }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save custom theme")
+      }
 
       if (profile.theme === theme.id) {
         applyTheme(theme.id, theme.primary, theme.secondary)
       }
+
+      toast({
+        title: t("success"),
+        description: "Custom theme saved successfully",
+      })
     } catch (error) {
-      console.error("Error saving custom theme:", error)
+      console.error("[v0] Error saving custom theme:", error)
+      toast({
+        title: t("error"),
+        description: "Failed to save custom theme",
+        variant: "destructive",
+      })
       throw error
     }
   }
@@ -300,6 +318,17 @@ export default function SettingsPage() {
 
     const updatedThemes = profile.customThemes.filter((t) => t.id !== themeId)
     setProfile((prev) => ({ ...prev, customThemes: updatedThemes }))
+
+    // Save to database
+    try {
+      await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ custom_themes: updatedThemes }),
+      })
+    } catch (error) {
+      console.error("[v0] Error deleting custom theme:", error)
+    }
 
     // If deleted theme was selected, switch to default
     if (profile.theme === themeId) {

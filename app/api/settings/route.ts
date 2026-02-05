@@ -58,6 +58,20 @@ export async function GET() {
       }
     }
 
+    // Parse custom_themes if it exists
+    if (userProfile.custom_themes) {
+      try {
+        userProfile.custom_themes =
+          typeof userProfile.custom_themes === "string"
+            ? JSON.parse(userProfile.custom_themes)
+            : userProfile.custom_themes
+      } catch (e) {
+        userProfile.custom_themes = []
+      }
+    } else {
+      userProfile.custom_themes = []
+    }
+
     return NextResponse.json({ profile: userProfile, email: authUser.email })
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 })
@@ -80,6 +94,7 @@ export async function PATCH(request: Request) {
     const {
       theme,
       theme_preference,
+      custom_themes,
       language,
       timezone,
       pomodoro_work_duration,
@@ -110,6 +125,10 @@ export async function PATCH(request: Request) {
     }
     if (theme_preference !== undefined) {
       updates.theme_preference = theme_preference ? JSON.stringify(theme_preference) : null
+    }
+    if (custom_themes !== undefined) {
+      updates.custom_themes = custom_themes ? JSON.stringify(custom_themes) : null
+      console.log("[v0] Settings PATCH - Saving custom themes:", custom_themes)
     }
     if (language !== undefined) updates.language = language
     if (timezone !== undefined) updates.timezone = timezone
