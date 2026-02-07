@@ -175,43 +175,41 @@ export default function AppPage() {
       {/* Main Grid: Welcome Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Welcome Section - Left Side */}
-        <div className="lg:col-span-2">
-          <Card className="bg-card border border-border/50 p-8 rounded-2xl">
-            <Card className="bg-card border border-border/50 p-6 rounded-2xl">
-              <h2 className="text-2xl font-bold mb-4">Hola, {user?.name?.split(" ")[0] || "Usuario"}</h2>
-              <p className="text-sm text-muted-foreground mb-4">¡Bienvenido a tu dashboard de productividad!</p>
-              <div className="text-5xl font-bold text-primary mb-2">
-                {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
-              </p>
-            </Card>
+        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-card border border-border/50 p-6 rounded-2xl">
+            <h2 className="text-xl font-bold mb-3">{user?.name?.split(" ")[0] || "Usuario"}</h2>
+            <p className="text-xs text-muted-foreground mb-4">Bienvenido a tu dashboard</p>
+            <div className="text-5xl font-bold text-primary mb-2">
+              {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {new Date().toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" })}
+            </p>
+          </Card>
 
-            <Card className="bg-card border border-border/50 p-6 rounded-2xl flex flex-col items-center justify-center">
-              <div className="text-5xl mb-3">🎯</div>
-              <div className="text-4xl font-bold text-primary mb-1">{stats.totalTasks - stats.tasks}</div>
-              <div className="text-sm text-muted-foreground mb-3">Tareas por completar</div>
-              <div className="text-xs text-muted-foreground">
-                {stats.totalTasks > 0 
-                  ? `${Math.round((stats.tasks / stats.totalTasks) * 100)}% completadas`
-                  : "Crea tu primera tarea"
-                }
-              </div>
-            </Card>
+          <Card className="bg-card border border-border/50 p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+            <div className="text-4xl mb-2">🎯</div>
+            <div className="text-3xl font-bold text-primary mb-1">{stats.totalTasks - stats.tasks}</div>
+            <div className="text-xs text-muted-foreground mb-2">Pendientes</div>
+            <div className="text-xs text-muted-foreground pt-2 border-t border-border/50 w-full mt-2">
+              {stats.totalTasks > 0 
+                ? `${Math.round((stats.tasks / stats.totalTasks) * 100)}% hecho`
+                : "Crea tareas"
+              }
+            </div>
           </Card>
         </div>
 
         {/* Credits Card - Right Side */}
         <div>
-          <Card className="bg-card border border-border/50 p-4 rounded-2xl h-full flex flex-col justify-between">
+          <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full flex flex-col justify-between">
             <div>
-              <h3 className="text-lg font-bold mb-3">Créditos IA</h3>
-              <div className="text-4xl font-bold text-primary mb-1">{totalCredits}</div>
-              <p className="text-xs text-muted-foreground mb-4">Disponibles este mes</p>
+              <h3 className="text-lg font-bold mb-4">Créditos IA</h3>
+              <div className="text-3xl font-bold text-primary mb-2">{totalCredits}</div>
+              <p className="text-xs text-muted-foreground mb-4">Disponibles</p>
               
               {/* Progress Bar */}
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
                   <div 
                     className="bg-primary h-full transition-all duration-300"
@@ -228,8 +226,8 @@ export default function AppPage() {
             </div>
             <div className="mt-4 pt-4 border-t border-border/50">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Plan: <strong>{user?.subscription_tier?.toUpperCase()}</strong></span>
-                <Zap className="w-4 h-4 text-primary" />
+                <span className="text-xs text-muted-foreground">Plan: <strong>{user?.subscription_tier?.toUpperCase()}</strong></span>
+                <Zap className="w-3 h-3 text-primary" />
               </div>
             </div>
           </Card>
