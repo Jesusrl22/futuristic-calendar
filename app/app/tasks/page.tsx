@@ -351,17 +351,22 @@ export default function TasksPage() {
                       <td className="px-2 sm:px-4 py-3 sm:py-4 border-r border-border/30">
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div
-                            className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 ${
-                              task.priority === "high"
-                                ? "bg-red-500"
-                                : task.priority === "medium"
-                                  ? "bg-yellow-500"
-                                  : "bg-green-500"
-                            }`}
-                          />
-                          <span className={`text-xs sm:text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"} break-words`}>
-                            {task.title}
-                          </span>
+                      className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 ${
+                        task.priority === "high"
+                          ? "bg-red-500"
+                          : task.priority === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-green-500"
+                      }`}
+                    />
+                    <span
+                      className={`text-xs sm:text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}
+                    >
+                      {task.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({task.priority === "high" ? t("priority_high") : task.priority === "medium" ? t("priority_medium") : t("priority_low")})
+                    </span>
                         </div>
                       </td>
                       <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30">

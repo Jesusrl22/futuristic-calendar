@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Zap, Plus, Trash2, Menu, X, Upload } from "@/components/icons"
 import { useTranslation } from "@/hooks/useTranslation"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "react-toastify"
+import { getAICredits } from "@/lib/subscription"
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-)
+const supabase = createClient()
+
+// Generate UUID v4
+const generateUUID = () => {
+  return crypto.randomUUID()
+}
 
 interface Message {
   role: string
@@ -58,6 +61,10 @@ const AIPage = () => {
     monthlyCredits: 0,
     purchasedCredits: 0,
   })
+
+  // Calculate max credits based on tier
+  const maxMonthlyCredits = getAICredits(profileData.tier as "free" | "premium" | "pro")
+  const totalMaxCredits = maxMonthlyCredits + profileData.purchasedCredits
 
   const SUGGESTED_PROMPTS = {
     chat: [t("study_tips") || "Ask me anything", t("productivity_tips") || "Get productivity advice"],
@@ -108,24 +115,19 @@ const AIPage = () => {
 
   const saveConversation = async (conversationId: string, messages: Message[]) => {
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      console.log("[v0] Attempting to save conversation:", conversationId, "with", messages.length, "messages")
       
-      if (sessionError || !sessionData?.session?.access_token) {
-        return
-      }
-      
-      const session = sessionData.session
-
       const existingConv = conversations.find((c) => c.id === conversationId)
 
       const userMessage = messages.find((m) => m.role === "user")
       const title = userMessage?.content?.substring(0, 50) || t("new_conversation")
 
+      console.log("[v0] Saving conversation with title:", title)
+
       const response = await fetch("/api/ai-conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           id: conversationId,
@@ -136,6 +138,9 @@ const AIPage = () => {
       })
 
       if (response.ok) {
+        const savedData = await response.json()
+        console.log("[v0] Conversation saved successfully:", savedData.id)
+        
         // Create updated conversation object
         const updatedConv: Conversation = {
           id: conversationId,
@@ -153,11 +158,16 @@ const AIPage = () => {
             c.id === conversationId ? updatedConv : c
           )
           setConversations(updated)
+          console.log("[v0] Updated existing conversation in local state")
         } else {
           // Add new conversation to the top
           setConversations([updatedConv, ...conversations])
           setCurrentConversationId(conversationId)
+          console.log("[v0] Added new conversation to local state")
         }
+      } else {
+        const errorText = await response.text()
+        console.error("[v0] Failed to save conversation:", response.status, errorText)
       }
     } catch (error) {
       console.error("[v0] Error saving conversation:", error)
@@ -171,7 +181,7 @@ const AIPage = () => {
     }
 
     const newConversation: Conversation = {
-      id: Date.now().toString(),
+      id: generateUUID(),
       title: t("new_conversation"),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -279,7 +289,7 @@ const AIPage = () => {
         let convId = currentConversationId
         if (!convId) {
           // Create new conversation when sending first message
-          convId = Date.now().toString()
+          convId = generateUUID()
           const newConv: Conversation = {
             id: convId,
             title: input?.substring(0, 50) || t("new_conversation"),
@@ -293,10 +303,16 @@ const AIPage = () => {
         }
         await saveConversation(convId, finalMessages)
         
-        setProfileData((prev) => ({
-          ...prev,
-          monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
-        }))
+        console.log("[v0] Updating credits from response:", data.creditsRemaining, data.remainingMonthlyCredits, data.remainingPurchasedCredits)
+        setProfileData((prev) => {
+          const newData = {
+            ...prev,
+            monthlyCredits: typeof data.remainingMonthlyCredits === "number" ? data.remainingMonthlyCredits : prev.monthlyCredits,
+            purchasedCredits: typeof data.remainingPurchasedCredits === "number" ? data.remainingPurchasedCredits : prev.purchasedCredits,
+          }
+          console.log("[v0] New profile data:", newData)
+          return newData
+        })
         setUploadedFile(null)
         setFilePreviewData(null)
       } else {
@@ -324,7 +340,7 @@ const AIPage = () => {
         let convId = currentConversationId
         if (!convId) {
           // Create new conversation when sending first message
-          convId = Date.now().toString()
+          convId = generateUUID()
           const newConv: Conversation = {
             id: convId,
             title: input.substring(0, 50) || t("new_conversation"),
@@ -338,10 +354,16 @@ const AIPage = () => {
         }
         await saveConversation(convId, finalMessages)
         
-        setProfileData((prev) => ({
-          ...prev,
-          monthlyCredits: typeof data.creditsRemaining === "number" ? data.creditsRemaining : prev.monthlyCredits,
-        }))
+        console.log("[v0] Updating credits from chat response:", data.creditsRemaining, data.remainingMonthlyCredits, data.remainingPurchasedCredits)
+        setProfileData((prev) => {
+          const newData = {
+            ...prev,
+            monthlyCredits: typeof data.remainingMonthlyCredits === "number" ? data.remainingMonthlyCredits : prev.monthlyCredits,
+            purchasedCredits: typeof data.remainingPurchasedCredits === "number" ? data.remainingPurchasedCredits : prev.purchasedCredits,
+          }
+          console.log("[v0] New profile data after chat:", newData)
+          return newData
+        })
       }
     } catch (error) {
       console.error("[v0] Error:", error)
@@ -486,21 +508,16 @@ const AIPage = () => {
   useEffect(() => {
     const loadConversations = async () => {
       try {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+        console.log("[v0] Loading conversations from database...")
         
-        if (sessionError || !sessionData?.session?.access_token) {
-          return
-        }
-
-        const response = await fetch("/api/ai-conversations", {
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-        })
+        const response = await fetch("/api/ai-conversations")
 
         if (response.ok) {
           const data = await response.json()
+          console.log("[v0] Loaded conversations:", data.length)
           setConversations(data)
+        } else {
+          console.error("[v0] Failed to load conversations:", response.status, await response.text())
         }
       } catch (error) {
         console.error("[v0] Error loading conversations:", error)
@@ -535,40 +552,24 @@ const AIPage = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const session = await supabase.auth.getSession()
-        if (!session.data.session?.access_token) {
-          return
-        }
-
-        // Load conversations
-        const convResponse = await fetch("/api/ai-conversations", {
-          headers: {
-            Authorization: `Bearer ${session.data.session.access_token}`,
-          },
-        })
-
-        if (convResponse.ok) {
-          const convData = await convResponse.json()
-          setConversations(convData || [])
-        }
-
+        console.log("[v0] Loading initial AI page data...")
+        
+        // Load profile data
         const profileResponse = await fetch("/api/user/profile", {
           cache: "no-store",
-          headers: {
-            Authorization: `Bearer ${session.data.session.access_token}`,
-          },
         })
 
         if (profileResponse.ok) {
           const profile = await profileResponse.json()
-      setProfileData({
-        tier: profile.subscription_tier || "free",
-        monthlyCredits: profile.ai_credits || 0,
-        purchasedCredits: profile.ai_credits_purchased || 0,
-      })
+          console.log("[v0] Loaded profile data:", profile.ai_credits, profile.ai_credits_purchased)
+          setProfileData({
+            tier: profile.subscription_tier || "free",
+            monthlyCredits: profile.ai_credits || 0,
+            purchasedCredits: profile.ai_credits_purchased || 0,
+          })
         }
       } catch (error) {
-        console.error("Error loading initial data:", error)
+        console.error("[v0] Error loading initial data:", error)
       }
     }
 
@@ -631,19 +632,13 @@ const AIPage = () => {
           <h1 className="text-xl md:text-3xl font-bold truncate">{t("ai_assistant") || "AI Assistant"}</h1>
 
           <div className="flex gap-1 md:gap-2 shrink-0">
-            {monthlyCredits > 0 && (
+            {(profileData.monthlyCredits > 0 || profileData.purchasedCredits > 0) && (
               <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 md:w-4 md:h-4 text-primary" />
-                  <span className="text-xs md:text-sm font-semibold">{monthlyCredits}</span>
-                </div>
-              </Card>
-            )}
-            {purchasedCredits > 0 && (
-              <Card className="glass-card px-1.5 md:px-3 py-1 md:py-2 neon-glow">
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 md:w-4 md:h-4 text-yellow-500" />
-                  <span className="text-xs md:text-sm font-semibold">{purchasedCredits}</span>
+                  <span className="text-xs md:text-sm font-semibold">
+                    {profileData.monthlyCredits + profileData.purchasedCredits}/{totalMaxCredits}
+                  </span>
                 </div>
               </Card>
             )}

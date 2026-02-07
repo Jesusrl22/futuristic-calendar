@@ -27,6 +27,23 @@ export async function GET() {
     }
 
     console.log("[v0] Tasks GET: Fetching tasks for user:", userId)
+    
+    // Call the daily reset function to reset old completed tasks
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/reset_daily_tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({}),
+      })
+      console.log("[v0] Daily task reset function called")
+    } catch (resetError) {
+      console.error("[v0] Failed to call daily reset:", resetError)
+    }
+    
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&order=display_order.asc,created_at.desc`,
       {
@@ -94,11 +111,9 @@ export async function POST(request: Request) {
     // Send push notification for new task
     try {
       const taskData = Array.isArray(task) ? task[0] : task
-      const protocol = request.headers.get("x-forwarded-proto") || "https"
-      const host = request.headers.get("host")
       
       console.log("[v0] Attempting to send notification for new task:", taskData.id)
-      const notifResponse = await fetch(`${protocol}://${host}/api/notifications/send`, {
+      const notifResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"}/api/notifications/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,6 +149,17 @@ export async function PATCH(request: Request) {
 
     const { id, ...updates } = await request.json()
 
+    // If marking task as completed, set completed_at timestamp
+    // If marking as incomplete, clear completed_at
+    const updatedData = {
+      ...updates,
+      ...(updates.completed !== undefined && {
+        completed_at: updates.completed ? new Date().toISOString() : null
+      })
+    }
+
+    console.log("[v0] Updating task:", id, "with data:", updatedData)
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?id=eq.${id}`, {
       method: "PATCH",
       headers: {
@@ -142,7 +168,7 @@ export async function PATCH(request: Request) {
         Authorization: `Bearer ${accessToken}`,
         Prefer: "return=representation",
       },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(updatedData),
     })
 
     const task = await response.json()

@@ -79,7 +79,10 @@ export async function GET(request: Request) {
     const notes = notesRes.ok ? await notesRes.json() : []
     const pomodoro = pomodoroRes.ok ? await pomodoroRes.json() : []
 
-    const totalFocusTimeMinutes = pomodoro.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
+    // Ensure pomodoro is an array
+    const pomodoroArray = Array.isArray(pomodoro) ? pomodoro : []
+
+    const totalFocusTimeMinutes = pomodoroArray.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
     const totalFocusTimeHours = Math.round((totalFocusTimeMinutes / 60) * 10) / 10
 
     const chartData: any[] = []
@@ -95,7 +98,7 @@ export async function GET(request: Request) {
           return taskDate >= hourStart && taskDate <= hourEnd
         }).length
 
-        const pomodoroForHour = pomodoro.filter((p: any) => {
+        const pomodoroForHour = pomodoroArray.filter((p: any) => {
           const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
           return sessionDate >= hourStart && sessionDate <= hourEnd
         }).length
@@ -115,7 +118,7 @@ export async function GET(request: Request) {
           return taskDate >= dayStart && taskDate <= dayEnd
         }).length
 
-        const pomodoroForDay = pomodoro.filter((p: any) => {
+        const pomodoroForDay = pomodoroArray.filter((p: any) => {
           const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
           return sessionDate >= dayStart && sessionDate <= dayEnd
         }).length
@@ -138,7 +141,7 @@ export async function GET(request: Request) {
           return taskDate >= weekStartDate && taskDate <= weekEndDate
         }).length
 
-        const pomodoroForWeek = pomodoro.filter((p: any) => {
+        const pomodoroForWeek = pomodoroArray.filter((p: any) => {
           const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
           return sessionDate >= weekStartDate && sessionDate <= weekEndDate
         }).length
@@ -157,7 +160,7 @@ export async function GET(request: Request) {
       totalTasks: tasksInPeriod.length,
       completedTasks: completed.length,
       totalNotes: notes.length,
-      totalPomodoro: pomodoro.length,
+      totalPomodoro: pomodoroArray.length,
       totalFocusTime: totalFocusTimeHours,
       chartData,
     })

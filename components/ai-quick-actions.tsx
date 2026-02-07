@@ -7,12 +7,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useToast } from "@/hooks/use-toast"
-import { createBrowserClient } from "@supabase/ssr"
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-)
 
 export function AIQuickActions() {
   const router = useRouter()
@@ -69,20 +63,9 @@ export function AIQuickActions() {
         "summarize-notes": "Summarize my 5 most recent notes into bullet points with key takeaways.",
       }
 
-      const session = await supabase.auth.getSession()
-      if (!session.data.session?.access_token) {
-        toast({
-          title: "Error",
-          description: "Please sign in to use AI features",
-          variant: "destructive",
-        })
-        setLoading(null)
-        return
-      }
-
       const userLanguage = typeof window !== "undefined" ? localStorage.getItem("language") || "en" : "en"
 
-      // Send to AI chat endpoint - it will read the token from cookies automatically
+      // Send to AI chat endpoint
       const response = await fetch("/api/ai-chat", {
         method: "POST",
         headers: {
@@ -114,19 +97,18 @@ export function AIQuickActions() {
       const data = await response.json()
       const aiResponse = data.response
 
-      // Save to conversations
-      const conversationId = `quick-${actionId}-${Date.now()}`
+      // Save to conversations with UUID
+      const conversationId = crypto.randomUUID()
       const messages = [
         { role: "user", content: prompts[actionId] },
         { role: "assistant", content: aiResponse },
       ]
 
-      // Save to database with Authorization header
+      // Save to database (authentication handled by cookies)
       const saveResponse = await fetch("/api/ai-conversations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${session.data.session.access_token}`,
         },
         body: JSON.stringify({
           id: conversationId,

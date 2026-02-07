@@ -51,11 +51,20 @@ export default function AppPage() {
 
     checkAuth()
 
-    const interval = setInterval(() => {
+    // Refresh profile every 5 seconds
+    const profileInterval = setInterval(() => {
       fetchUserProfile()
     }, 5000)
 
-    return () => clearInterval(interval)
+    // Refresh stats every 3 seconds to show updated task progress
+    const statsInterval = setInterval(() => {
+      fetchStats()
+    }, 3000)
+
+    return () => {
+      clearInterval(profileInterval)
+      clearInterval(statsInterval)
+    }
   }, [])
 
   const fetchUserProfile = async () => {
@@ -69,13 +78,6 @@ export default function AppPage() {
       })
       if (response.ok) {
         const data = await response.json()
-        console.log("[v0] Full user profile:", data)
-        console.log("[v0] Subscription tier:", data.subscription_tier)
-        console.log("[v0] Credits breakdown:", {
-          monthly: data.ai_credits,
-          purchased: data.ai_credits_purchased,
-          total: (data.ai_credits || 0) + (data.ai_credits_purchased || 0),
-        })
         setUser(data)
         setStats((prev) => ({
           ...prev,
@@ -120,6 +122,15 @@ export default function AppPage() {
 
   const totalCredits = stats.monthlyCredits + stats.purchasedCredits
   const hasCredits = totalCredits > 0
+  
+  // Calculate max credits based on subscription tier
+  const getMaxCredits = () => {
+    if (!user?.subscription_tier) return 500
+    const tiers: { [key: string]: number } = { free: 0, premium: 100, pro: 500 }
+    return tiers[user.subscription_tier] || 500
+  }
+  
+  const maxCredits = getMaxCredits()
 
   const statCards = [
     { title: t("tasks"), value: stats.tasks, icon: <CheckSquare className="w-6 h-6" />, color: "text-blue-500" },
@@ -191,13 +202,29 @@ export default function AppPage() {
 
         {/* Credits Card - Right Side */}
         <div>
-          <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full flex flex-col justify-between">
+          <Card className="bg-card border border-border/50 p-4 rounded-2xl h-full flex flex-col justify-between">
             <div>
-              <h3 className="text-lg font-bold mb-2">Créditos IA</h3>
-              <div className="text-4xl font-bold text-primary mb-2">{totalCredits}</div>
-              <p className="text-xs text-muted-foreground">Disponibles este mes</p>
+              <h3 className="text-lg font-bold mb-3">Créditos IA</h3>
+              <div className="text-4xl font-bold text-primary mb-1">{totalCredits}</div>
+              <p className="text-xs text-muted-foreground mb-4">Disponibles este mes</p>
+              
+              {/* Progress Bar */}
+              <div className="space-y-1.5">
+                <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-primary h-full transition-all duration-300"
+                    style={{ width: `${totalCredits > 0 ? Math.min((totalCredits / maxCredits) * 100, 100) : 0}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{totalCredits}/{maxCredits}</span>
+                  <span>
+                    {totalCredits > 0 ? Math.round((totalCredits / maxCredits) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="mt-6 pt-6 border-t border-border/50">
+            <div className="mt-4 pt-4 border-t border-border/50">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Plan: <strong>{user?.subscription_tier?.toUpperCase()}</strong></span>
                 <Zap className="w-4 h-4 text-primary" />
