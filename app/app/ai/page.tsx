@@ -223,7 +223,7 @@ const AIPage = () => {
 
     try {
       // Delete from database
-      const response = await fetch(`/api/ai-conversations?id=eq.${conversationId}`, {
+      const response = await fetch(`/api/ai-conversations?id=${conversationId}`, {
         method: "DELETE",
       })
 
