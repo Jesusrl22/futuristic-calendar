@@ -221,11 +221,38 @@ const AIPage = () => {
     e.stopPropagation()
     if (!confirm(t("confirm_delete"))) return
 
-    const updated = conversations.filter((c) => c.id !== conversationId)
-    setConversations(updated)
-    if (currentConversationId === conversationId) {
-      setCurrentConversationId(null)
-      setMessages([])
+    try {
+      // Delete from database
+      const response = await fetch(`/api/ai-conversations?id=eq.${conversationId}`, {
+        method: "DELETE",
+      })
+
+      if (response.ok) {
+        // Remove from local state
+        const updated = conversations.filter((c) => c.id !== conversationId)
+        setConversations(updated)
+        if (currentConversationId === conversationId) {
+          setCurrentConversationId(null)
+          setMessages([])
+        }
+        toast({
+          title: "Conversación eliminada",
+          description: "La conversación se ha eliminado correctamente",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar la conversación",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Error deleting conversation:", error)
+      toast({
+        title: "Error",
+        description: "Error al eliminar la conversación",
+        variant: "destructive",
+      })
     }
   }
 

@@ -140,3 +140,52 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to save conversation" }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = await createServiceRoleClient()
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get("sb-access-token")?.value
+
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const userId = getUserIdFromToken(accessToken)
+    if (!userId) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    }
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(accessToken)
+
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const url = new URL(req.url)
+    const id = url.searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing conversation ID" }, { status: 400 })
+    }
+
+    console.log("[v0] Deleting conversation:", id, "for user:", user.id)
+
+    const { error } = await supabase
+      .from("ai_conversations")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id)
+
+    if (error) throw error
+
+    console.log("[v0] Conversation deleted successfully")
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    console.error("[v0] Error deleting conversation:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

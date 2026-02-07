@@ -177,31 +177,28 @@ export default function AppPage() {
         {/* Welcome Section - Left Side */}
         <div className="lg:col-span-2">
           <Card className="bg-card border border-border/50 p-8 rounded-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Hola, {user?.name?.split(" ")[0] || "Usuario"}</h2>
-                <p className="text-sm text-muted-foreground mb-6">¡Bienvenido a tu dashboard de productividad!</p>
-                <div className="text-6xl font-bold text-primary mb-2">
-                  {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
-                </p>
+            <Card className="bg-card border border-border/50 p-6 rounded-2xl">
+              <h2 className="text-2xl font-bold mb-4">Hola, {user?.name?.split(" ")[0] || "Usuario"}</h2>
+              <p className="text-sm text-muted-foreground mb-4">¡Bienvenido a tu dashboard de productividad!</p>
+              <div className="text-5xl font-bold text-primary mb-2">
+                {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
               </div>
-              <div className="flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">🎯</div>
-                  <div className="text-2xl font-bold mb-2">{stats.totalTasks - stats.tasks}</div>
-                  <div className="text-sm text-muted-foreground">Tareas por completar</div>
-                  <div className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/50">
-                    {stats.totalTasks > 0 
-                      ? `${Math.round((stats.tasks / stats.totalTasks) * 100)}% completadas`
-                      : "Crea tu primera tarea"
-                    }
-                  </div>
-                </div>
+              <p className="text-sm text-muted-foreground">
+                {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
+              </p>
+            </Card>
+
+            <Card className="bg-card border border-border/50 p-6 rounded-2xl flex flex-col items-center justify-center">
+              <div className="text-5xl mb-3">🎯</div>
+              <div className="text-4xl font-bold text-primary mb-1">{stats.totalTasks - stats.tasks}</div>
+              <div className="text-sm text-muted-foreground mb-3">Tareas por completar</div>
+              <div className="text-xs text-muted-foreground">
+                {stats.totalTasks > 0 
+                  ? `${Math.round((stats.tasks / stats.totalTasks) * 100)}% completadas`
+                  : "Crea tu primera tarea"
+                }
               </div>
-            </div>
+            </Card>
           </Card>
         </div>
 

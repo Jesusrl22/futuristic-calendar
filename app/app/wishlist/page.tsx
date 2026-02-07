@@ -196,9 +196,9 @@ export default function WishlistPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">{t("low")}</SelectItem>
-                      <SelectItem value="medium">{t("medium")}</SelectItem>
-                      <SelectItem value="high">{t("high")}</SelectItem>
+                      <SelectItem value="low">{t("priority_low")}</SelectItem>
+                      <SelectItem value="medium">{t("priority_medium")}</SelectItem>
+                      <SelectItem value="high">{t("priority_high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -266,9 +266,9 @@ export default function WishlistPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">{t("low")}</SelectItem>
-                      <SelectItem value="medium">{t("medium")}</SelectItem>
-                      <SelectItem value="high">{t("high")}</SelectItem>
+                      <SelectItem value="low">{t("priority_low")}</SelectItem>
+                      <SelectItem value="medium">{t("priority_medium")}</SelectItem>
+                      <SelectItem value="high">{t("priority_high")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -301,7 +301,7 @@ export default function WishlistPage() {
         </Card>
         <Card className="glass-card p-6 neon-glow-hover">
           <h3 className="text-sm text-muted-foreground mb-2">
-            {t("high")} {t("priority")}
+            {t("priority_high")}
           </h3>
           <p className="text-3xl font-bold">{items.filter((i) => i.priority === "high").length}</p>
         </Card>
@@ -311,13 +311,13 @@ export default function WishlistPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="all">{t("all_tasks")}</TabsTrigger>
           <TabsTrigger value="high">
-            {t("high")} {t("priority")}
+            {t("priority_high")}
           </TabsTrigger>
           <TabsTrigger value="medium">
-            {t("medium")} {t("priority")}
+            {t("priority_medium")}
           </TabsTrigger>
           <TabsTrigger value="low">
-            {t("low")} {t("priority")}
+            {t("priority_low")}
           </TabsTrigger>
         </TabsList>
 
