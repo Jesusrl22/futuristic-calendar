@@ -18,6 +18,7 @@ export default function AppPage() {
   const [user, setUser] = useState<any>(null)
   const [stats, setStats] = useState({
     tasks: 0,
+    totalTasks: 0,
     notes: 0,
     pomodoro: 0,
     monthlyCredits: 0,
@@ -100,6 +101,7 @@ export default function AppPage() {
         setStats((prev) => ({
           ...prev,
           tasks: data.completedTasks || 0,
+          totalTasks: data.totalTasks || 0,
           notes: data.totalNotes || 0,
           pomodoro: data.totalPomodoro || 0,
         }))
@@ -189,10 +191,13 @@ export default function AppPage() {
               <div className="flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-6xl mb-4">🎯</div>
-                  <div className="text-2xl font-bold mb-2">{stats.tasks}</div>
+                  <div className="text-2xl font-bold mb-2">{stats.totalTasks - stats.tasks}</div>
                   <div className="text-sm text-muted-foreground">Tareas por completar</div>
                   <div className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border/50">
-                    Mantén el ritmo productivo
+                    {stats.totalTasks > 0 
+                      ? `${Math.round((stats.tasks / stats.totalTasks) * 100)}% completadas`
+                      : "Crea tu primera tarea"
+                    }
                   </div>
                 </div>
               </div>
