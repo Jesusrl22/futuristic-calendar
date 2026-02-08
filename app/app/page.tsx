@@ -174,14 +174,71 @@ export default function AppPage() {
 
       {/* Main Grid: Welcome Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Welcome Section - Left Side */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-card border border-border/50 p-6 rounded-2xl">
-            <h2 className="text-xl font-bold mb-3">{user?.name?.split(" ")[0] || "Usuario"}</h2>
-            <p className="text-xs text-muted-foreground mb-4">Bienvenido a tu dashboard</p>
-            <div className="text-5xl font-bold text-primary mb-2">
-              {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+        {/* Welcome + Tasks Section - Left Side */}
+        <div className="lg:col-span-2">
+          <Card className="bg-card border border-border/50 p-8 rounded-2xl h-full">
+            <div className="grid grid-cols-2 gap-8 h-full">
+              {/* Left: Welcome Info */}
+              <div className="flex flex-col justify-center">
+                <h2 className="text-2xl font-bold mb-3">{user?.name?.split(" ")[0] || "Usuario"}</h2>
+                <p className="text-sm text-muted-foreground mb-6">Bienvenido a tu dashboard</p>
+                <div className="text-5xl font-bold text-primary mb-3">
+                  {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
+                </p>
+              </div>
+
+              {/* Right: Tasks Pending */}
+              <div className="flex flex-col justify-center items-center text-center border-l border-border/50 pl-8">
+                <div className="text-4xl mb-3">🎯</div>
+                <div className="text-4xl font-bold text-primary mb-2">{stats.totalTasks - stats.tasks}</div>
+                <div className="text-sm text-muted-foreground mb-4">Tareas pendientes</div>
+                <div className="text-xs text-muted-foreground pt-4 border-t border-border/50 w-full mt-4">
+                  {stats.totalTasks > 0 
+                    ? `${Math.round((stats.tasks / stats.totalTasks) * 100)}% completadas`
+                    : "Crea tu primera tarea"
+                  }
+                </div>
+              </div>
             </div>
+          </Card>
+        </div>
+
+        {/* Credits Card - Right Side */}
+        <div>
+          <Card className="bg-card border border-border/50 p-6 rounded-2xl h-full flex flex-col justify-between">
+            <div>
+              <h3 className="text-lg font-bold mb-4">Créditos IA</h3>
+              <div className="text-3xl font-bold text-primary mb-2">{totalCredits}</div>
+              <p className="text-xs text-muted-foreground mb-4">Disponibles</p>
+              
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="bg-primary h-full transition-all duration-300"
+                    style={{ width: `${totalCredits > 0 ? Math.min((totalCredits / maxCredits) * 100, 100) : 0}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{totalCredits}/{maxCredits}</span>
+                  <span>
+                    {totalCredits > 0 ? Math.round((totalCredits / maxCredits) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">Plan: <strong>{user?.subscription_tier?.toUpperCase()}</strong></span>
+                <Zap className="w-3 h-3 text-primary" />
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
             <p className="text-xs text-muted-foreground">
               {new Date().toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" })}
             </p>
