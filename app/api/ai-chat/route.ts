@@ -100,8 +100,15 @@ export async function POST(req: NextRequest) {
       prompt: message,
     })
 
+    console.log("[v0] AI Chat response - Credits remaining:", {
+      total: newTotalCredits,
+      monthly: newMonthlyCredits,
+      purchased: newPurchasedCredits,
+    })
+
     return NextResponse.json({
       response: text,
+      creditsRemaining: newMonthlyCredits, // For compatibility with frontend
       remainingCredits: newTotalCredits,
       remainingMonthlyCredits: newMonthlyCredits,
       remainingPurchasedCredits: newPurchasedCredits,

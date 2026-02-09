@@ -97,6 +97,11 @@ export const translations = {
     enter_title: "Enter title",
     save: "Save",
     cancel: "Cancel",
+    
+    // Priority levels
+    priority_low: "Low",
+    priority_medium: "Medium",
+    priority_high: "High",
     edit: "Edit",
     delete: "Delete",
     actions: "Actions",
@@ -330,6 +335,11 @@ export const translations = {
     edit: "Editar",
     delete: "Eliminar",
     actions: "Acciones",
+    
+    // Niveles de prioridad
+    priority_low: "Baja",
+    priority_medium: "Media",
+    priority_high: "Alta",
     activity: "Actividad",
     today: "Hoy",
     notes: "Notas",

@@ -41,7 +41,22 @@ export default function CalendarPage() {
   const [teams, setTeams] = useState<any[]>([])
   const [teamTasks, setTeamTasks] = useState<{ [teamId: string]: any[] }>({})
 
-  const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium" as const, category: "personal", time: "10:00" })
+  // Get current time rounded to next 30 minutes
+  const getCurrentTime = () => {
+    const now = new Date()
+    const minutes = now.getMinutes()
+    const roundedMinutes = minutes < 30 ? "30" : "00"
+    const hours = minutes < 30 ? now.getHours() : (now.getHours() + 1) % 24
+    return `${String(hours).padStart(2, "0")}:${roundedMinutes}`
+  }
+
+  const [newEvent, setNewEvent] = useState({ 
+    title: "", 
+    description: "", 
+    priority: "medium" as const, 
+    category: "personal", 
+    time: getCurrentTime() 
+  })
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day")
 
   // Fetch calendar events with retry logic
@@ -387,7 +402,10 @@ export default function CalendarPage() {
                   {selectedDate.toLocaleDateString("es-ES", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                 </h2>
                 <Button
-                  onClick={() => setIsDialogOpen(true)}
+                  onClick={() => {
+                    setNewEvent(prev => ({ ...prev, time: getCurrentTime() }))
+                    setIsDialogOpen(true)
+                  }}
                   className="bg-primary hover:bg-primary/80 text-primary-foreground"
                   size="sm"
                 >
@@ -470,7 +488,10 @@ export default function CalendarPage() {
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
                 <h2 className="text-2xl font-bold text-primary">Vista Semanal</h2>
                 <Button
-                  onClick={() => setIsDialogOpen(true)}
+                  onClick={() => {
+                    setNewEvent(prev => ({ ...prev, time: getCurrentTime() }))
+                    setIsDialogOpen(true)
+                  }}
                   className="bg-primary hover:bg-primary/80 text-primary-foreground"
                   size="sm"
                 >
@@ -487,7 +508,10 @@ export default function CalendarPage() {
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/20">
                 <h2 className="text-2xl font-bold text-primary">Vista Mensual</h2>
                 <Button
-                  onClick={() => setIsDialogOpen(true)}
+                  onClick={() => {
+                    setNewEvent(prev => ({ ...prev, time: getCurrentTime() }))
+                    setIsDialogOpen(true)
+                  }}
                   className="bg-primary hover:bg-primary/80 text-primary-foreground"
                   size="sm"
                 >

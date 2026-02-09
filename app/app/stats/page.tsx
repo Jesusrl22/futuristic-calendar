@@ -124,18 +124,23 @@ export default function StatsPage() {
             {
               title: t("total_tasks"),
               value: stats.totalTasks,
+              showProgress: false,
             },
             {
               title: t("tasks_completed"),
               value: stats.completedTasks,
+              max: stats.totalTasks,
+              showProgress: stats.totalTasks > 0,
             },
             {
               title: t("total_pomodoros"),
               value: stats.totalPomodoro,
+              showProgress: false,
             },
             {
               title: t("focus_time"),
               value: `${stats.totalFocusTime}h`,
+              showProgress: false,
             },
           ].map((stat) => (
             <div key={stat.title}>
@@ -143,7 +148,22 @@ export default function StatsPage() {
                 className="glass-card p-4 md:p-6 border-2 border-primary/30 bg-gradient-to-br from-primary/10 to-primary/20 hover:scale-105 transition-transform duration-300"
               >
                 <h3 className="text-xs md:text-sm text-muted-foreground mb-2">{stat.title}</h3>
-                <p className="text-2xl md:text-3xl font-bold text-primary">{stat.value}</p>
+                <p className="text-2xl md:text-3xl font-bold text-primary mb-3">{stat.value}</p>
+                
+                {stat.showProgress && stat.max && stat.max > 0 && (
+                  <div className="space-y-2">
+                    <div className="w-full bg-secondary rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="bg-primary h-full transition-all duration-300"
+                        style={{ width: `${Math.min((stat.value / stat.max) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{stat.value}/{stat.max}</span>
+                      <span>{Math.round((stat.value / stat.max) * 100)}%</span>
+                    </div>
+                  </div>
+                )}
               </Card>
             </div>
           ))}

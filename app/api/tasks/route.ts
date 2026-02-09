@@ -27,6 +27,30 @@ export async function GET() {
     }
 
     console.log("[v0] Tasks GET: Fetching tasks for user:", userId)
+    
+    // Call the daily reset function to reset old completed tasks (with error handling for rate limits)
+    try {
+      const resetResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/reset_daily_tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({}),
+      })
+      
+      if (resetResponse.ok) {
+        console.log("[v0] Daily task reset function called successfully")
+      } else if (resetResponse.status === 429) {
+        console.warn("[v0] Daily reset rate limited (429), continuing without reset")
+      } else {
+        console.warn("[v0] Daily reset returned status:", resetResponse.status)
+      }
+    } catch (resetError) {
+      console.warn("[v0] Failed to call daily reset (non-critical):", resetError instanceof Error ? resetError.message : String(resetError))
+    }
+    
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&order=display_order.asc,created_at.desc`,
       {
@@ -39,6 +63,8 @@ export async function GET() {
 
     if (!response.ok) {
       console.log("[v0] Tasks GET: Supabase error:", response.status)
+      const errorText = await response.text()
+      console.log("[v0] Tasks GET: Error response:", errorText.substring(0, 100))
     }
 
     const tasks = await response.json()
@@ -94,11 +120,9 @@ export async function POST(request: Request) {
     // Send push notification for new task
     try {
       const taskData = Array.isArray(task) ? task[0] : task
-      const protocol = request.headers.get("x-forwarded-proto") || "https"
-      const host = request.headers.get("host")
       
       console.log("[v0] Attempting to send notification for new task:", taskData.id)
-      const notifResponse = await fetch(`${protocol}://${host}/api/notifications/send`, {
+      const notifResponse = await fetch("/api/notifications/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,10 +134,14 @@ export async function POST(request: Request) {
           url: "/app/tasks",
         }),
       })
-      const notifResult = await notifResponse.json()
-      console.log("[v0] Push notification response:", notifResult)
+      if (notifResponse.ok) {
+        const notifResult = await notifResponse.json()
+        console.log("[v0] Push notification sent successfully")
+      } else {
+        console.warn("[v0] Notification service returned status:", notifResponse.status)
+      }
     } catch (notifError) {
-      console.error("[v0] Failed to send notification:", notifError)
+      console.warn("[v0] Failed to send notification (non-critical):", notifError)
     }
     
     return NextResponse.json(task)
@@ -134,6 +162,17 @@ export async function PATCH(request: Request) {
 
     const { id, ...updates } = await request.json()
 
+    // If marking task as completed, set completed_at timestamp
+    // If marking as incomplete, clear completed_at
+    const updatedData = {
+      ...updates,
+      ...(updates.completed !== undefined && {
+        completed_at: updates.completed ? new Date().toISOString() : null
+      })
+    }
+
+    console.log("[v0] Updating task:", id, "with data:", updatedData)
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?id=eq.${id}`, {
       method: "PATCH",
       headers: {
@@ -142,7 +181,7 @@ export async function PATCH(request: Request) {
         Authorization: `Bearer ${accessToken}`,
         Prefer: "return=representation",
       },
-      body: JSON.stringify(updates),
+      body: JSON.stringify(updatedData),
     })
 
     const task = await response.json()
