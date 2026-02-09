@@ -28,9 +28,9 @@ export async function GET() {
 
     console.log("[v0] Tasks GET: Fetching tasks for user:", userId)
     
-    // Call the daily reset function to reset old completed tasks
+    // Call the daily reset function to reset old completed tasks (with error handling for rate limits)
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/reset_daily_tasks`, {
+      const resetResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/reset_daily_tasks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -39,9 +39,16 @@ export async function GET() {
         },
         body: JSON.stringify({}),
       })
-      console.log("[v0] Daily task reset function called")
+      
+      if (resetResponse.ok) {
+        console.log("[v0] Daily task reset function called successfully")
+      } else if (resetResponse.status === 429) {
+        console.warn("[v0] Daily reset rate limited (429), continuing without reset")
+      } else {
+        console.warn("[v0] Daily reset returned status:", resetResponse.status)
+      }
     } catch (resetError) {
-      console.error("[v0] Failed to call daily reset:", resetError)
+      console.warn("[v0] Failed to call daily reset (non-critical):", resetError instanceof Error ? resetError.message : String(resetError))
     }
     
     const response = await fetch(
@@ -56,6 +63,8 @@ export async function GET() {
 
     if (!response.ok) {
       console.log("[v0] Tasks GET: Supabase error:", response.status)
+      const errorText = await response.text()
+      console.log("[v0] Tasks GET: Error response:", errorText.substring(0, 100))
     }
 
     const tasks = await response.json()
