@@ -108,7 +108,17 @@ export function usePushNotifications() {
           await registration.sync.register("check-notifications")
           console.log("[v0] Background sync registered for mobile")
         } catch (err) {
-          console.log("[v0] Background sync registration not available:", err)
+          console.log("[v0] Background sync not available:", err)
+        }
+      }
+      
+      // For iOS and PWA compatibility, also request badge permissions
+      if (navigator.permissions && "badge" in navigator) {
+        try {
+          await navigator.permissions.query({ name: "notifications" })
+          console.log("[v0] Notification permissions confirmed")
+        } catch (err) {
+          console.log("[v0] Badge permission query failed:", err)
         }
       }
       

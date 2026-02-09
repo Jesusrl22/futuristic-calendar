@@ -95,7 +95,7 @@ export default function AppPage() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch("/api/stats?range=month")
+      const response = await fetch("/api/stats?range=day")
       if (response.ok) {
         const data = await response.json()
         setStats((prev) => ({
