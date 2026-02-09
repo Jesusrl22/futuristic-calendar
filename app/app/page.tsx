@@ -193,7 +193,7 @@ export default function AppPage() {
               {/* Right: Tasks Pending */}
               <div className="flex flex-col justify-center items-center text-center border-l border-border/50 pl-8">
                 <div className="text-4xl mb-3">🎯</div>
-                <div className="text-4xl font-bold text-primary mb-2">{stats.totalTasks - stats.tasks}</div>
+                <div className="text-4xl font-bold text-primary mb-2">{Math.max(0, stats.totalTasks - stats.tasks)}</div>
                 <div className="text-sm text-muted-foreground mb-4">Tareas pendientes</div>
                 <div className="text-xs text-muted-foreground pt-4 border-t border-border/50 w-full mt-4">
                   {stats.totalTasks > 0 

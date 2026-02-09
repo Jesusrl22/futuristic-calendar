@@ -79,7 +79,10 @@ export async function GET(request: Request) {
     const notes = notesRes.ok ? await notesRes.json() : []
     const pomodoro = pomodoroRes.ok ? await pomodoroRes.json() : []
 
-    // Ensure pomodoro is an array
+    // Ensure all responses are arrays
+    const tasksInPeriodArray = Array.isArray(tasksInPeriod) ? tasksInPeriod : []
+    const completedArray = Array.isArray(completed) ? completed : []
+    const notesArray = Array.isArray(notes) ? notes : []
     const pomodoroArray = Array.isArray(pomodoro) ? pomodoro : []
 
     const totalFocusTimeMinutes = pomodoroArray.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
@@ -93,7 +96,7 @@ export async function GET(request: Request) {
         const hourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 0, 0, 0)
         const hourEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 59, 59, 999)
 
-        const tasksForHour = completed.filter((t: any) => {
+        const tasksForHour = completedArray.filter((t: any) => {
           const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
           return taskDate >= hourStart && taskDate <= hourEnd
         }).length
@@ -113,7 +116,7 @@ export async function GET(request: Request) {
         const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0, 0)
         const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
 
-        const tasksForDay = completed.filter((t: any) => {
+        const tasksForDay = completedArray.filter((t: any) => {
           const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
           return taskDate >= dayStart && taskDate <= dayEnd
         }).length
@@ -136,7 +139,7 @@ export async function GET(request: Request) {
         const weekEndDay = Math.min(currentWeekStart + 6, lastDayOfMonth)
         const weekEndDate = new Date(now.getFullYear(), now.getMonth(), weekEndDay, 23, 59, 59, 999)
 
-        const tasksForWeek = completed.filter((t: any) => {
+        const tasksForWeek = completedArray.filter((t: any) => {
           const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
           return taskDate >= weekStartDate && taskDate <= weekEndDate
         }).length
@@ -157,12 +160,12 @@ export async function GET(request: Request) {
     }
 
     console.log("[v0] Stats - Range:", range, "Start:", startISO, "End:", endISO)
-    console.log("[v0] Stats - Tasks found:", tasksInPeriod.length, "Completed:", completed.length)
+    console.log("[v0] Stats - Tasks found:", tasksInPeriodArray.length, "Completed:", completedArray.length)
 
     return NextResponse.json({
-      totalTasks: tasksInPeriod.length,
-      completedTasks: completed.length,
-      totalNotes: notes.length,
+      totalTasks: tasksInPeriodArray.length,
+      completedTasks: completedArray.length,
+      totalNotes: notesArray.length,
       totalPomodoro: pomodoroArray.length,
       totalFocusTime: totalFocusTimeHours,
       chartData,
