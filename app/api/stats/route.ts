@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const range = searchParams.get("range") || "week"
+    const range = searchParams.get("range") || "day"
     const timezone = searchParams.get("timezone") || "UTC"
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
 
     const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
       fetch(
-        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&created_at=gte.${startISO}&created_at=lte.${endISO}&select=*`,
+        `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.false&created_at=gte.${startISO}&created_at=lte.${endISO}&select=*`,
         { headers },
       ),
       fetch(
@@ -155,6 +155,9 @@ export async function GET(request: Request) {
         currentWeekStart += 7
       }
     }
+
+    console.log("[v0] Stats - Range:", range, "Start:", startISO, "End:", endISO)
+    console.log("[v0] Stats - Tasks found:", tasksInPeriod.length, "Completed:", completed.length)
 
     return NextResponse.json({
       totalTasks: tasksInPeriod.length,
