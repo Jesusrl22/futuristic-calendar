@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       const taskData = Array.isArray(task) ? task[0] : task
       
       console.log("[v0] Attempting to send notification for new task:", taskData.id)
-      const notifResponse = await fetch(`${process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : "http://localhost:3000"}/api/notifications/send`, {
+      const notifResponse = await fetch("/api/notifications/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -125,10 +125,14 @@ export async function POST(request: Request) {
           url: "/app/tasks",
         }),
       })
-      const notifResult = await notifResponse.json()
-      console.log("[v0] Push notification response:", notifResult)
+      if (notifResponse.ok) {
+        const notifResult = await notifResponse.json()
+        console.log("[v0] Push notification sent successfully")
+      } else {
+        console.warn("[v0] Notification service returned status:", notifResponse.status)
+      }
     } catch (notifError) {
-      console.error("[v0] Failed to send notification:", notifError)
+      console.warn("[v0] Failed to send notification (non-critical):", notifError)
     }
     
     return NextResponse.json(task)
