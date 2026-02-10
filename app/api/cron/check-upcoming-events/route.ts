@@ -6,11 +6,26 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function GET(request: NextRequest) {
   try {
-    // Allow both authorized cron requests and public polling from clients
+    // Verify cron secret from Vercel
     const authHeader = request.headers.get("authorization")
-    const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`
+    const cronSecret = process.env.CRON_SECRET
     
-    console.log("[v0] Checking for upcoming events...", { isCronRequest })
+    console.log("[v0] CRON request received")
+    console.log("[v0] CRON_SECRET configured:", !!cronSecret)
+    console.log("[v0] Authorization header present:", !!authHeader)
+
+    // If CRON_SECRET is configured, validate it
+    if (cronSecret) {
+      if (authHeader !== `Bearer ${cronSecret}`) {
+        console.error("[v0] Invalid or missing CRON_SECRET")
+        return NextResponse.json({ error: "Unauthorized - Invalid CRON_SECRET" }, { status: 401 })
+      }
+      console.log("[v0] CRON_SECRET validated successfully")
+    } else {
+      console.warn("[v0] CRON_SECRET not configured - running anyway (development mode)")
+    }
+
+    console.log("[v0] Checking for upcoming events...")
 
     const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -37,7 +52,12 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Found", events?.length || 0, "upcoming events")
 
     if (!events || events.length === 0) {
-      return NextResponse.json({ success: true, notifications: 0, checked: true })
+      return NextResponse.json({ 
+        success: true, 
+        notifications: 0, 
+        checked: true,
+        message: "No upcoming events found"
+      })
     }
 
     // Get notifications that have already been sent (within last 30 minutes to avoid duplicates)
@@ -80,13 +100,14 @@ export async function GET(request: NextRequest) {
             title: "📅 Evento próximo",
             body: `${event.title} en ${minutesUntilEvent} minuto${minutesUntilEvent !== 1 ? "s" : ""}`,
             type: "reminder",
+            eventId: event.id,
             url: "/app/calendar",
           }),
         })
 
         if (!response.ok) {
           const error = await response.text()
-          console.error("[v0] Notification send failed:", error)
+          console.error("[v0] Notification send failed for event", event.id, ":", error)
           failedNotifications.push(event.id)
         } else {
           // Mark notification as sent
@@ -100,7 +121,7 @@ export async function GET(request: NextRequest) {
             console.error("[v0] Failed to mark notification as sent:", insertError)
           } else {
             notificationsSent++
-            console.log("[v0] Sent notification for event:", event.title)
+            console.log("[v0] Successfully sent notification for event:", event.title)
           }
         }
       } catch (error) {
@@ -109,24 +130,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const result = {
       success: true,
       notifications: notificationsSent,
       failed: failedNotifications.length,
       events: events.length,
       checked: true,
-    })
+      timestamp: new Date().toISOString(),
+    }
+
+    console.log("[v0] CRON job completed:", result)
+
+    return NextResponse.json(result)
   } catch (error) {
     console.error("[v0] Cron job error:", error)
-    return NextResponse.json({ error: "Cron job failed", checked: false }, { status: 500 })
+    return NextResponse.json({ 
+      error: "Cron job failed", 
+      checked: false,
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 })
   }
 }
 
 // Also allow POST for client-side polling
 export async function POST(request: NextRequest) {
-  // Redirect to GET
   return GET(request)
-}
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
 }
