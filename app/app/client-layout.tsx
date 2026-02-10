@@ -10,6 +10,7 @@ import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "@/hooks/useTranslation"
 import { ThemeLoader } from "@/components/theme-loader"
+import { useCalendarEventNotifications } from "@/hooks/useCalendarEventNotifications"
 
 export default function ClientLayout({
   children,
@@ -19,6 +20,9 @@ export default function ClientLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const pathname = usePathname()
   const { t } = useTranslation()
+  
+  // Enable calendar event notifications while app is open
+  useCalendarEventNotifications()
 
   const getPageTitle = () => {
     const path = pathname.split("/").pop() || "app"
