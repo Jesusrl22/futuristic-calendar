@@ -13,21 +13,21 @@ Para que las notificaciones de eventos funcionen con la app cerrada, necesitas:
 Tienes dos opciones:
 
 **Opción A: Usar valor predeterminado (fácil)**
-```
+\`\`\`
 cron_calendar_notifications_futuristic_app_2024
-```
+\`\`\`
 
 **Opción B: Generar uno seguro (recomendado)**
 
 Si tienes terminal disponible:
-```bash
+\`\`\`bash
 openssl rand -base64 32
-```
+\`\`\`
 
 Esto genera algo como:
-```
+\`\`\`
 aBc+def/GHIJklMNOPqrstuVWXYZ0123456789==
-```
+\`\`\`
 
 Copia el valor generado.
 
@@ -78,13 +78,13 @@ El cron job saltará la validación de CRON_SECRET si no está configurado, así
 5. Busca logs de: `check-upcoming-events`
 
 Deberías ver logs como:
-```
+\`\`\`
 [v0] CRON request received
 [v0] CRON_SECRET configured: true
 [v0] Checking for upcoming events...
 [v0] Found X upcoming events
 [v0] Sent notification for event: "Mi Evento"
-```
+\`\`\`
 
 ---
 
