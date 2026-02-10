@@ -42,12 +42,12 @@
    - Ejemplo: Si son las 14:30, crea un evento para las 14:45
 
 3. **Observa los logs**:
-   ```
+   \`\`\`
    [v0] Checking for upcoming calendar events...
    [v0] Event check completed: {notifications: 1, ...}
    [v0] Sending notification for event: "Mi Evento"
    [v0] Notification sent successfully to: <endpoint>
-   ```
+   \`\`\`
 
 4. **Recibe la notificación**:
    - Deberías ver un popup en la esquina de tu navegador
@@ -70,7 +70,7 @@
 
 ## 📊 Flujo de Notificaciones
 
-```
+\`\`\`
 1. Usuario abre la app
    ↓
 2. Hook `useCalendarEventNotifications` inicia polling cada 30s
@@ -84,7 +84,7 @@
    → Envía web push a todas las suscripciones del usuario
    ↓
 6. Usuario recibe notificación en tiempo real
-```
+\`\`\`
 
 ---
 
