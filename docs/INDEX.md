@@ -72,41 +72,41 @@
 ### 🎯 FLUJOS PRINCIPALES
 
 #### Flujo: "Olvidé contraseña"
-```
+\`\`\`
 Usuario → Forgot Password → Email con link → Nueva contraseña
 Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 2A
 Testing: /docs/TESTING_GUIDE.md → PARTE 1.2
-```
+\`\`\`
 
 #### Flujo: "Nuevo dispositivo"
-```
+\`\`\`
 Usuario login (IP diferente) → Detecta dispositivo → Email → Link seguridad
 Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 2C
 Testing: /docs/TESTING_GUIDE.md → PARTE 1.3
 Código: /app/api/auth/login/route.ts, /lib/email.tsx
-```
+\`\`\`
 
 #### Flujo: "Comprar suscripción"
-```
+\`\`\`
 Usuario → Upgrade → PayPal → Aprueba → Suscripción activa → Créditos
 Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 3
 Testing: /docs/TESTING_GUIDE.md → PARTE 3.3
-```
+\`\`\`
 
 #### Flujo: "Fallo en pago"
-```
+\`\`\`
 Mes 1: Pago exitoso → Mes 2: PayPal intenta → FALLA → Cancela → Email
 Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 4
 Testing: /docs/TESTING_GUIDE.md → PARTE 3.4
-```
+\`\`\`
 
 #### Flujo: "Notificaciones del calendario"
-```
+\`\`\`
 App abierta → Polling 30s → Evento próximo? → Notificación push
 Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 1
 Testing: /docs/TESTING_GUIDE.md → PARTE 2
 Código: /hooks/useCalendarEventNotifications.ts
-```
+\`\`\`
 
 ---
 
@@ -137,16 +137,16 @@ Código: /hooks/useCalendarEventNotifications.ts
 ### 🌍 AMBIENTE VARIABLES
 
 **Para Testing Local:**
-```env
+\`\`\`env
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=...
 SMTP_PASS=...
 SMTP_FROM=test@tuapp.com
-```
+\`\`\`
 
 **Para Producción (Vercel):**
-```env
+\`\`\`env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=...
@@ -155,7 +155,7 @@ PAYPAL_CLIENT_ID=...
 PAYPAL_CLIENT_SECRET=...
 PAYPAL_WEBHOOK_ID=...
 CRON_SECRET=...
-```
+\`\`\`
 
 Configuración detallada: `/docs/CONFIGURATION_GUIDE.md`
 

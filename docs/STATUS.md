@@ -44,7 +44,7 @@
 
 ### ESTRUCTURA DE CARPETAS
 
-```
+\`\`\`
 proyecto/
 ├── app/
 │   ├── api/
@@ -90,7 +90,7 @@ proyecto/
 │   ├── TESTING_GUIDE.md (🧪)
 │   └── CONFIGURATION_GUIDE.md (⚙️)
 └── vercel.json (⏰ Configurable para Cron Jobs)
-```
+\`\`\`
 
 ---
 
@@ -108,16 +108,16 @@ proyecto/
 ### VARIABLES DE AMBIENTE NECESARIAS
 
 **LOCAL (.env.local):**
-```env
+\`\`\`env
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=...
 SMTP_PASS=...
 SMTP_FROM=test@tuapp.com
-```
+\`\`\`
 
 **VERCEL (Console):**
-```env
+\`\`\`env
 SMTP_HOST=smtp.gmail.com (o SendGrid, Mailgun)
 SMTP_PORT=587
 SMTP_USER=...
@@ -129,14 +129,14 @@ PAYPAL_CLIENT_SECRET=...
 PAYPAL_WEBHOOK_ID=...
 
 CRON_SECRET=... (64 caracteres aleatorios)
-```
+\`\`\`
 
 ---
 
 ### FLUJOS IMPLEMENTADOS
 
 #### Flujo 1: Login con Nuevo Dispositivo
-```
+\`\`\`
 POST /api/auth/login
 ├─ Valida credenciales
 ├─ Obtiene x-forwarded-for (IP actual)
@@ -145,10 +145,10 @@ POST /api/auth/login
 │  ├─ Envía email (si SMTP configurado)
 │  └─ Incluye: Device, Time, IP
 └─ Guarda last_login_ip = IP actual
-```
+\`\`\`
 
 #### Flujo 2: PayPal Webhook (Cancelación)
-```
+\`\`\`
 PayPal → POST /api/paypal/webhook
 ├─ Verifica firma del webhook
 ├─ Event = BILLING.SUBSCRIPTION.CANCELLED?
@@ -160,10 +160,10 @@ PayPal → POST /api/paypal/webhook
    ├─ subscription_plan = "free"
    ├─ ai_credits_monthly = 0
    └─ paypal_subscription_id = null
-```
+\`\`\`
 
 #### Flujo 3: Calendar Notifications (Polling)
-```
+\`\`\`
 App montada → useCalendarEventNotifications()
 ├─ Cada 30 segundos:
 │  ├─ GET /api/cron/check-upcoming-events
@@ -172,14 +172,14 @@ App montada → useCalendarEventNotifications()
 │  │  └─ Envía push notification
 │  └─ Log en console
 └─ Unmount → Limpia intervalo
-```
+\`\`\`
 
 ---
 
 ### DATOS GUARDADOS EN BD
 
 #### Tabla `users` (Nuevas columnas):
-```sql
+\`\`\`sql
 ALTER TABLE users ADD COLUMN (
   last_login_ip VARCHAR(45),      -- IPv4 o IPv6
   last_login_at TIMESTAMP         -- Última vez que hizo login
@@ -188,32 +188,32 @@ ALTER TABLE users ADD COLUMN (
 -- Ejemplo:
 INSERT INTO users (id, email, last_login_ip, last_login_at) VALUES
   ('user-123', 'user@example.com', '192.168.1.100', '2026-02-10 14:30:00');
-```
+\`\`\`
 
 #### Tabla `push_subscriptions`:
-```
+\`\`\`
 push_endpoint: string     -- URL del navegador para enviar notificaciones
 push_p256dh: string       -- Clave de encriptación
 push_auth: string         -- Auth secret
 user_id: uuid            -- Referencia al usuario
-```
+\`\`\`
 
 #### Tabla `calendar_events`:
-```
+\`\`\`
 id: uuid
 user_id: uuid
 title: string
 start_time: timestamp
 end_time: timestamp
 notification_sent: boolean  -- Para evitar duplicados
-```
+\`\`\`
 
 ---
 
 ### API ENDPOINTS
 
 #### Emails
-```
+\`\`\`
 POST /api/auth/forgot-password
 ├─ Request: { email: string }
 └─ Response: { success: boolean }
@@ -221,10 +221,10 @@ POST /api/auth/forgot-password
 POST /api/auth/login
 ├─ Request: { email: string, password: string }
 └─ Response: { user: User, session: Session }
-```
+\`\`\`
 
 #### Pagos
-```
+\`\`\`
 POST /api/paypal/create-order
 ├─ Request: { plan: 'pro'|'premium' }
 └─ Response: { id: string, links: [...] }
@@ -236,10 +236,10 @@ POST /api/paypal/webhook
 POST /api/subscription/cancel
 ├─ Request: { }
 └─ Response: { success: boolean }
-```
+\`\`\`
 
 #### Notificaciones
-```
+\`\`\`
 GET /api/cron/check-upcoming-events
 ├─ Headers: Authorization: Bearer CRON_SECRET (opcional)
 └─ Response: { processed: number, sent: number }
@@ -251,13 +251,13 @@ POST /api/notifications/subscribe
 POST /api/notifications/send
 ├─ Request: { title, body, icon, click_url }
 └─ Response: { sent: number, failed: number }
-```
+\`\`\`
 
 ---
 
 ### TESTING RÁPIDO
 
-```bash
+\`\`\`bash
 # 1. Testear forgot password (local)
 npm run dev
 # Abre http://localhost:3000/forgot-password
@@ -274,7 +274,7 @@ curl http://localhost:3000/api/cron/check-upcoming-events
 
 # 4. Testear PayPal (requiere configuración)
 # Ver: /docs/TESTING_GUIDE.md
-```
+\`\`\`
 
 ---
 

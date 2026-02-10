@@ -5,7 +5,7 @@
 #### ¿Cómo funciona?
 
 **Opción A: Polling en tiempo real (cuando el usuario tiene la app abierta)**
-```
+\`\`\`
 Usuario abre la app → Hook useCalendarEventNotifications se activa
 ↓
 Cada 30 segundos: GET /api/cron/check-upcoming-events
@@ -13,38 +13,38 @@ Cada 30 segundos: GET /api/cron/check-upcoming-events
 Verifica eventos en los próximos 15 minutos
 ↓
 Si encuentra evento próximo → Envía notificación push al usuario
-```
+\`\`\`
 
 **Opción B: Cron Job automático (cuando el usuario está offline)**
-```
+\`\`\`
 Vercel Cron Job (configurable) → GET /api/cron/check-upcoming-events con CRON_SECRET
 ↓
 Verifica TODOS los usuarios
 ↓
 Envía notificaciones push a quienes tengan eventos próximos
-```
+\`\`\`
 
 #### Para activar el Cron Job automático:
 
 1. **Agregar a `vercel.json`:**
-```json
+\`\`\`json
 {
   "crons": [{
     "path": "/api/cron/check-upcoming-events",
     "schedule": "*/5 * * * *"
   }]
 }
-```
+\`\`\`
 
 2. **Generar CRON_SECRET (en Vercel Console):**
    - Dashboard → Settings → Environment Variables
    - Agregar: `CRON_SECRET=<valor-seguro-aleatorio>`
 
 3. **En tu código:**
-```bash
+\`\`\`bash
 curl -X GET "https://tu-app.vercel.app/api/cron/check-upcoming-events" \
   -H "Authorization: Bearer TU_CRON_SECRET"
-```
+\`\`\`
 
 ---
 
@@ -56,7 +56,7 @@ curl -X GET "https://tu-app.vercel.app/api/cron/check-upcoming-events" \
 
 Usa **Supabase Auth nativo** (sin SMTP necesario):
 
-```
+\`\`\`
 Usuario click "Forgot Password" → POST /api/auth/forgot-password
 ↓
 Supabase genera enlace mágico automáticamente
@@ -66,7 +66,7 @@ Supabase envía email con el enlace
 Usuario click en enlace → Redirige a /reset-password
 ↓
 Usuario ingresa nueva contraseña → Se actualiza en Supabase
-```
+\`\`\`
 
 **Estado:** ✅ YA FUNCIONA (Supabase lo hace automáticamente)
 
@@ -76,7 +76,7 @@ Usuario ingresa nueva contraseña → Se actualiza en Supabase
 
 **¿Cómo funciona?**
 
-```
+\`\`\`
 Usuario sign up → POST /api/auth/signup
 ↓
 Se crea usuario en Supabase
@@ -84,7 +84,7 @@ Se crea usuario en Supabase
 Se intenta enviar email de bienvenida (si SMTP está configurado)
 ↓
 Si SMTP falla, no bloquea el signup (el usuario aún se crea)
-```
+\`\`\`
 
 **Para que funcione, necesitas SMTP configurado.**
 
@@ -94,7 +94,7 @@ Si SMTP falla, no bloquea el signup (el usuario aún se crea)
 
 **¿Cómo funciona?**
 
-```
+\`\`\`
 Usuario login con credenciales correctas → POST /api/auth/login
 ↓
 Se valida el email y contraseña
@@ -107,7 +107,7 @@ Si la IP es DIFERENTE a last_login_ip:
   → Incluye: Device Info (User-Agent), Fecha/Hora, IP
 ↓
 Se actualiza last_login_ip y last_login_at en la BD
-```
+\`\`\`
 
 **Email incluye:**
 - Tipo de dispositivo
@@ -123,7 +123,7 @@ Se actualiza last_login_ip y last_login_at en la BD
 **¿Cómo funciona?**
 
 **Escenario 1: Falla de pago en PayPal**
-```
+\`\`\`
 1. Usuario tiene suscripción activa
 2. PayPal intenta cobro mensual → FALLA (tarjeta vencida, sin fondos, etc.)
 3. PayPal envía webhook: BILLING.SUBSCRIPTION.CANCELLED
@@ -132,16 +132,16 @@ Se actualiza last_login_ip y last_login_at en la BD
 6. Envía email: "Tu suscripción ha sido cancelada"
 7. Actualiza BD: subscription_plan = "free", ai_credits_monthly = 0
 8. Usuario sigue pudiendo usar la app versión gratuita
-```
+\`\`\`
 
 **Escenario 2: Usuario cancela manualmente**
-```
+\`\`\`
 1. Usuario en /app/subscription → click "Cancel Subscription"
 2. POST /api/subscription/cancel
 3. Cancela en PayPal API
 4. PayPal envía webhook BILLING.SUBSCRIPTION.CANCELLED
 5. Se ejecuta el mismo flujo anterior
-```
+\`\`\`
 
 **Estado:** ✅ IMPLEMENTADO
 
@@ -151,7 +151,7 @@ Se actualiza last_login_ip y last_login_at en la BD
 
 #### ¿Cómo funciona PayPal en tu app?
 
-```
+\`\`\`
 FLUJO DE SUSCRIPCIÓN
 ═══════════════════
 
@@ -180,7 +180,7 @@ FLUJO DE SUSCRIPCIÓN
    Si ÉXITO: webhook BILLING.SUBSCRIPTION.UPDATED
    ↓
    Si FALLO: webhook BILLING.SUBSCRIPTION.CANCELLED
-```
+\`\`\`
 
 ---
 
@@ -209,25 +209,25 @@ FLUJO DE SUSCRIPCIÓN
 ### 5. CONFIGURACIÓN NECESARIA
 
 #### Para SMTP (emails):
-```env
+\`\`\`env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=tu@gmail.com
 SMTP_PASS=tu-app-password
 SMTP_FROM=noreply@tuapp.com
-```
+\`\`\`
 
 #### Para PayPal:
-```env
+\`\`\`env
 PAYPAL_CLIENT_ID=...
 PAYPAL_CLIENT_SECRET=...
 PAYPAL_WEBHOOK_ID=...
-```
+\`\`\`
 
 #### Para Calendar Notifications (Cron):
-```env
+\`\`\`env
 CRON_SECRET=algo-muy-seguro-aleatorio
-```
+\`\`\`
 
 ---
 
@@ -282,7 +282,7 @@ CRON_SECRET=algo-muy-seguro-aleatorio
 
 ### 9. FLUJO COMPLETO DE UN USUARIO
 
-```
+\`\`\`
 DÍA 1: Registro
 ├─ Usuario signup
 ├─ Email bienvenida (opcional)
@@ -318,4 +318,4 @@ DÍA 65: Fallo de pago
 ├─ EMAIL: "Tu suscripción ha sido cancelada"
 ├─ subscription_plan = "free"
 └─ Usuario puede seguir usando versión free
-```
+\`\`\`

@@ -11,37 +11,37 @@
 - Copia credenciales
 
 **Paso 2: Agregar a `.env.local`**
-```env
+\`\`\`env
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=tu_usuario_mailtrap
 SMTP_PASS=tu_password_mailtrap
 SMTP_FROM=test@tuapp.com
-```
+\`\`\`
 
 **Paso 3: Reinicia la app**
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 ---
 
 #### 1.2 Testing Email de Forgot Password
 
-```bash
+\`\`\`bash
 1. Ve a http://localhost:3000/forgot-password
 2. Ingresa tu email
 3. Revisa en Mailtrap Inbox → Deberías ver el email
 4. Click en el link del email
 5. Ingresa nueva contraseña
 6. Intenta login con nueva contraseña ✅
-```
+\`\`\`
 
 ---
 
 #### 1.3 Testing Email de Nuevo Dispositivo
 
-```bash
+\`\`\`bash
 1. Login desde tu navegador principal
    - IP guardada: la que salga de x-forwarded-for
 
@@ -55,7 +55,7 @@ npm run dev
    ✅ Tipo de dispositivo (User-Agent)
    ✅ Fecha y hora
    ✅ Link para cambiar contraseña
-```
+\`\`\`
 
 **Nota:** En localhost ambas peticiones vienen de 127.0.0.1, así que necesitarás:
 - Proxy o VPN para simular IP diferente, O
@@ -67,7 +67,7 @@ npm run dev
 
 **Opción A: Simulación manual**
 
-```javascript
+\`\`\`javascript
 // En tu console del navegador (F12):
 await fetch('/api/paypal/webhook', {
   method: 'POST',
@@ -80,7 +80,7 @@ await fetch('/api/paypal/webhook', {
     }
   })
 })
-```
+\`\`\`
 
 **Opción B: Usar PayPal Sandbox**
 1. Ve a https://sandbox.paypal.com
@@ -94,35 +94,35 @@ await fetch('/api/paypal/webhook', {
 
 #### 2.1 Crear evento de prueba
 
-```bash
+\`\`\`bash
 1. Login en tu app
 2. Ve a /app/calendar
 3. Crea un evento con time:
    - Ahora: 2:00 PM
    - Evento: "Test event" a las 2:10 PM (10 minutos después)
 4. Guarda el evento
-```
+\`\`\`
 
 #### 2.2 Verificar polling
 
-```bash
+\`\`\`bash
 1. Abre DevTools (F12) → Network tab
 2. Filtra por "/api/cron/check-upcoming-events"
 3. Deberías ver requests cada 30 segundos
 4. Expera a que sea 2:05 PM
 5. En 5-10 segundos deberías ver notificación push
-```
+\`\`\`
 
 #### 2.3 Verificar en consola
 
-```bash
+\`\`\`bash
 1. DevTools → Console
 2. Busca logs: "[useCalendarEventNotifications]"
 3. Deberías ver:
    ✅ Polling iniciado
    ✅ Eventos encontrados
    ✅ Notificaciones enviadas
-```
+\`\`\`
 
 ---
 
@@ -141,10 +141,10 @@ await fetch('/api/paypal/webhook', {
 - Obtén: CLIENT_ID y CLIENT_SECRET
 
 **Paso 3: Agregar a `.env.local`**
-```env
+\`\`\`env
 PAYPAL_CLIENT_ID=tu_sandbox_client_id
 PAYPAL_CLIENT_SECRET=tu_sandbox_secret
-```
+\`\`\`
 
 #### 3.2 Crear cuentas de prueba
 
@@ -164,7 +164,7 @@ En PayPal Developer Dashboard → Sandbox → Accounts:
 
 #### 3.3 Testing de Pago
 
-```bash
+\`\`\`bash
 1. En tu app: Ve a /app/subscription
 2. Click "Upgrade to Pro"
 3. Redirige a PayPal Sandbox
@@ -172,10 +172,10 @@ En PayPal Developer Dashboard → Sandbox → Accounts:
 5. Aprueba el pago
 6. Redirige de vuelta a tu app
 7. Verifica en BD: subscription_plan = "pro"
-```
+\`\`\`
 
 **En tu DB deberías ver:**
-```sql
+\`\`\`sql
 SELECT user_id, subscription_plan, paypal_subscription_id 
 FROM users 
 WHERE email = 'tu-email';
@@ -184,7 +184,7 @@ WHERE email = 'tu-email';
 -- | user_id | subscription_plan | paypal_subscription_id |
 -- |---------|------------------|----------------------|
 -- | xxx     | pro              | I-XXXXXXXXXXXX       |
-```
+\`\`\`
 
 ---
 
@@ -192,7 +192,7 @@ WHERE email = 'tu-email';
 
 **Opción A: Sandbox Environment (Recomendado)**
 
-```bash
+\`\`\`bash
 1. Crea segunda suscripción
 2. En PayPal Sandbox Dashboard
 3. Ve a Accounts → Tu cuenta Vendedor
@@ -203,17 +203,17 @@ WHERE email = 'tu-email';
 8. PayPal envía webhook automáticamente
 9. Verifica email en Mailtrap
 10. Verifica BD: subscription_plan = "free"
-```
+\`\`\`
 
 **Opción B: Usar Mailtrap Webhook Simulator**
 
-```bash
+\`\`\`bash
 1. Mailtrap → Email Testing
 2. Webhooks → Settings
 3. Configura URL: https://tu-app.com/api/paypal/webhook
 4. Simula evento: BILLING.SUBSCRIPTION.CANCELLED
 5. Verifica que tu endpoint lo procesa
-```
+\`\`\`
 
 ---
 
@@ -221,7 +221,7 @@ WHERE email = 'tu-email';
 
 **Verificar que webhooks llegan:**
 
-```javascript
+\`\`\`javascript
 // En tu console (F12):
 // Haz una petición de prueba
 
@@ -241,12 +241,12 @@ fetch('/api/paypal/webhook', {
 })
 .then(r => r.json())
 .then(console.log);
-```
+\`\`\`
 
 **Respuesta esperada:**
-```json
+\`\`\`json
 { "success": true, "processedAt": "2026-02-10T..." }
-```
+\`\`\`
 
 ---
 
@@ -254,7 +254,7 @@ fetch('/api/paypal/webhook', {
 
 #### 4.1 Testing local (sin Vercel)
 
-```bash
+\`\`\`bash
 # Simular cron job
 curl -X GET http://localhost:3000/api/cron/check-upcoming-events \
   -H "Authorization: Bearer test-secret"
@@ -262,11 +262,11 @@ curl -X GET http://localhost:3000/api/cron/check-upcoming-events \
 # Deberías ver:
 # [v0] Is Vercel cron: false
 # [v0] Client-side polling - no CRON_SECRET required
-```
+\`\`\`
 
 #### 4.2 Testing en Vercel
 
-```bash
+\`\`\`bash
 1. Deploya tu app a Vercel
 2. En vercel.json agrega:
 {
@@ -280,13 +280,13 @@ curl -X GET http://localhost:3000/api/cron/check-upcoming-events \
 4. Espera 5 minutos
 5. Verifica logs en Vercel → Function Logs
 6. Deberías ver: "[v0] CRON_SECRET validated successfully"
-```
+\`\`\`
 
 ---
 
 ### PARTE 5: Checklist de Testing
 
-```
+\`\`\`
 EMAILS
 [ ] Forgot password email se envía
 [ ] Email tiene link funcional
@@ -318,7 +318,7 @@ CRON JOB
 [ ] Endpoint valida CRON_SECRET (Vercel)
 [ ] Job ejecuta cada 5 minutos
 [ ] Usuarios sin app abierta reciben notificaciones
-```
+\`\`\`
 
 ---
 
@@ -326,35 +326,35 @@ CRON JOB
 
 #### 6.1 Ver logs de SMTP
 
-```javascript
+\`\`\`javascript
 // En lib/email.tsx, busca:
 console.log("[EMAIL] Sending email to:", email)
 console.error("[EMAIL] Error sending email:", error)
-```
+\`\`\`
 
 #### 6.2 Ver logs de PayPal
 
-```javascript
+\`\`\`javascript
 // En app/api/paypal/webhook/route.ts:
 console.log("[PAYPAL] Webhook received:", eventType)
 console.log("[PAYPAL] Processing subscription...")
-```
+\`\`\`
 
 #### 6.3 Ver logs de Calendar
 
-```javascript
+\`\`\`javascript
 // En hooks/useCalendarEventNotifications.ts:
 console.log("[v0] Calendar polling started")
 console.log("[v0] Found X upcoming events")
-```
+\`\`\`
 
 #### 6.4 Activar debug mode
 
 En tu `.env.local`:
-```env
+\`\`\`env
 DEBUG=*
 LOG_LEVEL=debug
-```
+\`\`\`
 
 ---
 

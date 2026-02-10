@@ -37,7 +37,7 @@
 ### CÓMO FUNCIONA CADA UNO
 
 #### Forgot Password (Contraseña olvidada)
-```
+\`\`\`
 Usuario: "Olvidé contraseña"
 ↓
 Sistema: Supabase envía email con link mágico
@@ -45,10 +45,10 @@ Sistema: Supabase envía email con link mágico
 Usuario: Clickea link → Ingresa contraseña nueva
 ↓
 Listo: Contraseña cambiada ✅
-```
+\`\`\`
 
 #### Nuevo Dispositivo
-```
+\`\`\`
 Usuario: Login desde celular (IP diferente)
 ↓
 Sistema: Compara IP actual con last_login_ip
@@ -56,10 +56,10 @@ Sistema: Compara IP actual con last_login_ip
 Es diferente: Envía email "Nuevo inicio de sesión"
 ↓
 Se guarda: Nueva IP para próximo login
-```
+\`\`\`
 
 #### Suscripción Cancelada
-```
+\`\`\`
 Usuario: Tiene suscripción activa
 ↓
 PayPal: Intenta cobro mensual → FALLA
@@ -69,10 +69,10 @@ PayPal: Cancela suscripción automáticamente
 Sistema: Recibe webhook, envía email, actualiza plan a "free"
 ↓
 Usuario: Puede seguir usando versión gratuita
-```
+\`\`\`
 
 #### Notificaciones Calendario
-```
+\`\`\`
 Usuario abre app: Hook se activa
 ↓
 Cada 30 segundos: Verifica eventos próximos (15 min)
@@ -80,37 +80,37 @@ Cada 30 segundos: Verifica eventos próximos (15 min)
 Si hay evento próximo: Envía notificación push
 ↓
 Usuario recibe: Notificación en navegador/dispositivo
-```
+\`\`\`
 
 ---
 
 ### QUÉ NECESITAS HACER AHORA
 
 #### Opción 1: Testing Local (SIN Pagos)
-```bash
+\`\`\`bash
 1. npm install mailtrap (o SendGrid)
 2. Agregar credenciales SMTP a .env.local
 3. Testear emails localmente
 4. Probar calendar notifications
-```
+\`\`\`
 
 #### Opción 2: Testing Completo (CON Pagos)
-```bash
+\`\`\`bash
 1. Agregar SMTP (Mailtrap o similar)
 2. Crear cuenta en PayPal Developer
 3. Configurar paypal CLIENT_ID y SECRET
 4. Testear flujo completo de pagos
 5. Ver guía en /docs/TESTING_GUIDE.md
-```
+\`\`\`
 
 #### Opción 3: Deploy a Producción
-```bash
+\`\`\`bash
 1. Agregar variables en Vercel Console
 2. Configurar SMTP real (Gmail, SendGrid, etc)
 3. Configurar PayPal credenciales reales
 4. Agregar CRON_SECRET para notificaciones automáticas
 5. Deploy: git push
-```
+\`\`\`
 
 ---
 
@@ -118,7 +118,7 @@ Usuario recibe: Notificación en navegador/dispositivo
 
 Acabo de crear para ti:
 
-```
+\`\`\`
 /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md
 └─ Guía completa de TODO el sistema
    ├─ Cómo funciona cada feature
@@ -137,13 +137,13 @@ Acabo de crear para ti:
 └─ Migración para tracking de logins
    ├─ Crea columnas last_login_ip
    └─ Crea columnas last_login_at
-```
+\`\`\`
 
 ---
 
 ### CÓDIGO QUE MODIFIQUÉ
 
-```
+\`\`\`
 /lib/email.tsx
 ├─ sendWelcomeEmail() - Email bienvenida
 ├─ sendNewDeviceLoginEmail() (NUEVO) - Email dispositivo
@@ -159,13 +159,13 @@ Acabo de crear para ti:
   ├─ Envía email al usuario
   ├─ Actualiza plan a "free"
   └─ Limpia subscription_id
-```
+\`\`\`
 
 ---
 
 ### VARIABLES DE AMBIENTE NECESARIAS
 
-```env
+\`\`\`env
 # SMTP (para emails)
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
@@ -180,7 +180,7 @@ PAYPAL_WEBHOOK_ID=xxx
 
 # Cron Job (para notificaciones automáticas)
 CRON_SECRET=algo-muy-seguro-aleatorio
-```
+\`\`\`
 
 ---
 

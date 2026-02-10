@@ -5,29 +5,29 @@
 #### Opción 1: Gmail (Recomendado para testing)
 
 **Paso 1: Obtener App Password**
-```
+\`\`\`
 1. Ve a: https://myaccount.google.com/security
 2. Busca "Contraseñas de aplicaciones"
 3. Selecciona: Mail + Linux
 4. Copias la contraseña (16 caracteres)
-```
+\`\`\`
 
 **Paso 2: Agregar a Vercel**
-```env
+\`\`\`env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=tu-email@gmail.com
 SMTP_PASS=tu-app-password-16-caracteres
 SMTP_FROM=tu-email@gmail.com
-```
+\`\`\`
 
 **Paso 3: Testear**
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3000/api/auth/signup \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","password":"Test123!"}'
 # Revisa Gmail inbox o spam
-```
+\`\`\`
 
 ---
 
@@ -43,21 +43,21 @@ curl -X POST http://localhost:3000/api/auth/signup \
 - Credenciales SMTP (Integrations → SMTP)
 
 **Paso 3: Agregar a `.env.local` (LOCAL)**
-```env
+\`\`\`env
 SMTP_HOST=smtp.mailtrap.io
 SMTP_PORT=2525
 SMTP_USER=1234567 (número de usuario)
 SMTP_PASS=tu_contraseña
 SMTP_FROM=test@tuapp.com
-```
+\`\`\`
 
 **Paso 4: Testear**
-```bash
+\`\`\`bash
 npm run dev
 # Abre http://localhost:3000/forgot-password
 # Ingresa tu email
 # Revisa Mailtrap dashboard
-```
+\`\`\`
 
 ---
 
@@ -74,13 +74,13 @@ npm run dev
 - Copia la key
 
 **Paso 3: Agregar a Vercel**
-```env
+\`\`\`env
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASS=SG.tu_api_key_larga
 SMTP_FROM=noreply@tuapp.com
-```
+\`\`\`
 
 ---
 
@@ -96,13 +96,13 @@ SMTP_FROM=noreply@tuapp.com
 - Copia Username y Password
 
 **Paso 3: Agregar a Vercel**
-```env
+\`\`\`env
 SMTP_HOST=smtp.mailgun.org
 SMTP_PORT=587
 SMTP_USER=postmaster@tudominio.com
 SMTP_PASS=contraseña_mailgun
 SMTP_FROM=noreply@tudominio.com
-```
+\`\`\`
 
 ---
 
@@ -110,16 +110,16 @@ SMTP_FROM=noreply@tudominio.com
 
 #### Paso 1: Crear Cuenta Desarrollador
 
-```
+\`\`\`
 1. Ve a: https://developer.paypal.com
 2. Sign in o Create Account
 3. Confirma email
 4. Completa perfil básico
-```
+\`\`\`
 
 #### Paso 2: Crear Aplicación
 
-```
+\`\`\`
 Dashboard → Apps & Credentials → Sandbox
 ↓
 Create App
@@ -129,11 +129,11 @@ Nombre: "Future Task Development"
 App Type: Merchant
 ↓
 Create
-```
+\`\`\`
 
 #### Paso 3: Obtener Credenciales
 
-```
+\`\`\`
 En tu app recién creada:
 
 Para Testing:
@@ -141,21 +141,21 @@ Para Testing:
 - Secret (Sandbox)
 
 Copiar valores
-```
+\`\`\`
 
 #### Paso 4: Agregar a Vercel
 
-```env
+\`\`\`env
 PAYPAL_CLIENT_ID=AWOxx_-xxxxxxxxxxxxxxxxxxxxxxxx
 PAYPAL_CLIENT_SECRET=EPOxx_-xxxxxxxxxxxxxxxxxxxxxxxx
 PAYPAL_MODE=sandbox  # Para testing
-```
+\`\`\`
 
 ---
 
 #### Paso 5: Crear Webhook
 
-```
+\`\`\`
 PayPal Sandbox Dashboard → Apps & Credentials → Webhooks
 
 Crear webhook:
@@ -168,13 +168,13 @@ Crear webhook:
   ✅ BILLING.SUBSCRIPTION.EXPIRED
 - Save
 - Copiar WEBHOOK_ID
-```
+\`\`\`
 
 #### Paso 6: Agregar Webhook ID
 
-```env
+\`\`\`env
 PAYPAL_WEBHOOK_ID=tu_webhook_id_aqui
-```
+\`\`\`
 
 ---
 
@@ -182,29 +182,29 @@ PAYPAL_WEBHOOK_ID=tu_webhook_id_aqui
 
 #### Paso 1: Generar CRON_SECRET
 
-```bash
+\`\`\`bash
 # En tu terminal:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # Salida:
 # a4f9c2d8e1b5... (64 caracteres)
-```
+\`\`\`
 
 #### Paso 2: Agregar a Vercel
 
-```
+\`\`\`
 Vercel Console → Project → Settings → Environment Variables
 
 Agregar:
 - Key: CRON_SECRET
 - Value: el valor que generaste
 - Environments: Production (y Preview si quieres)
-```
+\`\`\`
 
 #### Paso 3: Configurar Cron Job
 
 En `vercel.json`:
-```json
+\`\`\`json
 {
   "crons": [
     {
@@ -221,21 +221,21 @@ En `vercel.json`:
     }
   ]
 }
-```
+\`\`\`
 
 #### Paso 4: Deploy
 
-```bash
+\`\`\`bash
 git add -A
 git commit -m "Add cron jobs configuration"
 git push
-```
+\`\`\`
 
 ---
 
 ### ESTRUCTURA COMPLETA DE .env.local
 
-```env
+\`\`\`env
 # ============================================
 # NEXT.JS / APP
 # ============================================
@@ -283,13 +283,13 @@ UPSTASH_REDIS_REST_TOKEN=xxxx
 # ============================================
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=xxxx
 VAPID_PRIVATE_KEY=xxxx
-```
+\`\`\`
 
 ---
 
 ### PASO A PASO: Setup Completo Local
 
-```bash
+\`\`\`bash
 # 1. Clonar repo
 git clone tu-repo
 cd tu-repo
@@ -318,13 +318,13 @@ EOF
 npm run dev
 
 # 6. Testear en http://localhost:3000
-```
+\`\`\`
 
 ---
 
 ### PASO A PASO: Deploy a Vercel
 
-```bash
+\`\`\`bash
 # 1. Push código a GitHub
 git add -A
 git commit -m "Complete notifications system"
@@ -354,13 +354,13 @@ Agregar:
 Vercel → Deployments → Redeploy
 
 # 5. Testear en https://tu-app.vercel.app
-```
+\`\`\`
 
 ---
 
 ### VERIFICACIÓN RÁPIDA
 
-```bash
+\`\`\`bash
 # Verificar SMTP conecta
 curl -X POST http://localhost:3000/api/auth/forgot-password \
   -H "Content-Type: application/json" \
@@ -372,42 +372,42 @@ curl http://localhost:3000/api/cron/check-upcoming-events
 # Verificar PayPal credenciales
 curl -X POST https://api.sandbox.paypal.com/v1/oauth2/token \
   -H "Authorization: Basic $(echo -n 'ID:SECRET' | base64)"
-```
+\`\`\`
 
 ---
 
 ### TROUBLESHOOTING: ¿No funciona?
 
 **SMTP error: "connect ECONNREFUSED"**
-```
+\`\`\`
 Solución: Verifica SMTP_HOST y SMTP_PORT
 - Gmail: smtp.gmail.com:587
 - Mailtrap: smtp.mailtrap.io:2525
 - SendGrid: smtp.sendgrid.net:587
-```
+\`\`\`
 
 **PayPal error: "Unauthorized"**
-```
+\`\`\`
 Solución: Verifica CLIENT_ID y CLIENT_SECRET
 - ¿Copiaste sin espacios?
 - ¿Son sandbox o live?
 - ¿Están en el .env correcto?
-```
+\`\`\`
 
 **Cron Job no ejecuta**
-```
+\`\`\`
 Solución: Verifica en Vercel
 - Settings → Crons (¿está en vercel.json?)
 - Environment Variables → CRON_SECRET (¿existe?)
 - Deploy reciente (¿hiciste push después de cambiar?)
-```
+\`\`\`
 
 **Email nunca llega**
-```
+\`\`\`
 Solución: Revisa orden de prioridad
 1. ¿SMTP_HOST está configurado?
 2. ¿SMTP_PORT es el correcto?
 3. ¿Está en Mailtrap/SendGrid inbox?
 4. ¿Check spam folder?
 5. Ver logs: "[EMAIL] Error sending..."
-```
+\`\`\`
