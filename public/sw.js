@@ -12,7 +12,7 @@ self.addEventListener("push", (event) => {
       icon: "/icon-192.jpg",
       badge: "/icon-192.jpg",
       vibrate: [200, 100, 200],
-      tag: "notification-" + (data.taskId || data.type || Date.now()),
+      tag: "notification-" + (data.eventId || data.taskId || data.type || Date.now()),
       requireInteraction: true,
       actions: [
         {
@@ -25,16 +25,17 @@ self.addEventListener("push", (event) => {
         },
       ],
       data: {
+        eventId: data.eventId,
         taskId: data.taskId,
-        type: data.type || "task",
-        url: data.url || "/app/tasks",
+        type: data.type || "reminder",
+        url: data.url || "/app/calendar",
         timestamp: new Date().toISOString(),
       },
     }
 
     event.waitUntil(
       self.registration
-        .showNotification(data.title || "Future Task", options)
+        .showNotification(data.title || "Reminder", options)
         .catch((error) => console.error("[v0] Error showing notification:", error)),
     )
   } catch (error) {
@@ -45,7 +46,7 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
 
-  const urlToOpen = event.notification.data.url || "/app/tasks"
+  const urlToOpen = event.notification.data.url || "/app/calendar"
 
   event.waitUntil(
     clients
@@ -60,6 +61,7 @@ self.addEventListener("notificationclick", (event) => {
           if (client.url.includes("/app") && "focus" in client) {
             client.postMessage({
               type: "NOTIFICATION_CLICK",
+              eventId: event.notification.data.eventId,
               taskId: event.notification.data.taskId,
               notificationType: event.notification.data.type,
             })
@@ -91,11 +93,35 @@ self.addEventListener("activate", (event) => {
   // Register background sync for checking pending notifications
   if (self.registration && "sync" in self.registration) {
     console.log("[v0] Registering background sync")
-    self.registration.sync.register("check-notifications").catch((err) => {
+    self.registration.sync.register("check-calendar-events").catch((err) => {
       console.log("[v0] Background sync registration failed:", err)
     })
   }
 })
+
+// Handle background sync events
+self.addEventListener("sync", (event) => {
+  if (event.tag === "check-calendar-events") {
+    console.log("[v0] Background sync triggered: checking calendar events")
+    event.waitUntil(checkCalendarEvents())
+  }
+})
+
+async function checkCalendarEvents() {
+  try {
+    const response = await fetch("/api/cron/check-upcoming-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    })
+    const result = await response.json()
+    console.log("[v0] Background sync result:", result)
+    return result
+  } catch (error) {
+    console.error("[v0] Background sync failed:", error)
+    throw error // Re-throw to retry
+  }
+}
+
 
 // Background sync for checking notifications periodically (mobile)
 self.addEventListener("sync", (event) => {
