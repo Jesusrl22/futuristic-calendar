@@ -93,6 +93,32 @@ export async function POST(request: NextRequest) {
         // Subscription cancelled or expired
         const subscriptionId = body.resource?.id
 
+        // Get user info for email
+        const { data: userData } = await supabase
+          .from("users")
+          .select("id, email, name")
+          .eq("paypal_subscription_id", subscriptionId)
+          .single()
+
+        const reason = eventType === "BILLING.SUBSCRIPTION.CANCELLED" 
+          ? "Tu suscripción fue cancelada"
+          : "Tu suscripción ha expirado"
+
+        // Send cancellation email if SMTP is configured
+        if (userData && process.env.SMTP_HOST && process.env.SMTP_PORT) {
+          try {
+            const { sendSubscriptionCancelledEmail } = await import("@/lib/email")
+            await sendSubscriptionCancelledEmail(
+              userData.email,
+              userData.name,
+              reason
+            )
+            console.log("[PAYPAL] Subscription cancellation email sent to:", userData.email)
+          } catch (emailError) {
+            console.error("[PAYPAL] Failed to send cancellation email:", emailError)
+          }
+        }
+
         await supabase
           .from("users")
           .update({

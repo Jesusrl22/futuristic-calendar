@@ -61,6 +61,10 @@ export async function POST(request: Request) {
       )
     }
 
+    // Get user agent to detect new device
+    const userAgent = request.headers.get("user-agent") || "Unknown device"
+    const lastLoginIp = request.headers.get("x-forwarded-for") || "Unknown"
+
     const profileCheckResponse = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${loginData.user.id}&select=id`,
       {
@@ -100,6 +104,54 @@ export async function POST(request: Request) {
       })
 
       console.log("[SERVER][API] Profile created")
+    }
+
+    // Check if this is a new device by comparing IP addresses
+    // Get last login info from database
+    const { data: userData } = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${loginData.user.id}&select=last_login_ip,last_login_at`,
+      {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
+      },
+    ).then((res) => res.json())
+
+    const isNewDevice = userData && userData[0]?.last_login_ip !== lastLoginIp
+    
+    // Send new device login email if configured
+    if (isNewDevice && process.env.SMTP_HOST && process.env.SMTP_PORT) {
+      try {
+        const { sendNewDeviceLoginEmail } = await import("@/lib/email")
+        await sendNewDeviceLoginEmail(
+          loginData.user.email,
+          userData?.[0]?.name,
+          userAgent
+        )
+        console.log("[SERVER][API] New device login email sent")
+      } catch (emailError) {
+        console.error("[SERVER][API] Failed to send new device email:", emailError)
+        // Don't fail the login if email fails
+      }
+    }
+
+    // Update last login info
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/users?id=eq.${loginData.user.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY!}`,
+        },
+        body: JSON.stringify({
+          last_login_ip: lastLoginIp,
+          last_login_at: new Date().toISOString(),
+        }),
+      })
+    } catch (updateError) {
+      console.error("[SERVER][API] Failed to update last login:", updateError)
     }
 
     const cookieStore = await cookies()
