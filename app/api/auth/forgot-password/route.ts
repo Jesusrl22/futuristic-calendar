@@ -9,34 +9,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 })
     }
 
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    console.log("[v0] Forgot password request for:", email)
 
-    // Check if email service is configured
-    const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASSWORD
-    
-    if (!smtpConfigured) {
-      console.error("[v0] SMTP not configured - Password reset emails will not be sent")
-      return NextResponse.json({
-        success: false,
-        error: "Email service is not configured. Please contact the administrator.",
-      }, { status: 503 })
-    }
+    // Use the anonymous client to send the reset link
+    // This triggers Supabase email sending
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-    // Use Supabase native password reset flow
-    const { error } = await supabase.auth.admin.generateLink({
-      type: "recovery",
-      email: email.toLowerCase(),
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/reset`,
-      },
+    // Use resetPasswordForEmail which Supabase will handle
+    const { error } = await supabase.auth.resetPasswordForEmail(email.toLowerCase(), {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password`,
     })
 
     if (error) {
-      console.error("[v0] Password reset error:", error)
-      // Don't reveal if email doesn't exist for security
+      console.error("[v0] Password reset error:", error.message)
+      // Don't reveal if email exists for security
     }
 
-    console.log("[v0] Password reset link generated for:", email)
+    console.log("[v0] Password reset link request sent for:", email)
 
     // Always return success for security (don't reveal if email exists)
     return NextResponse.json({
@@ -44,7 +36,8 @@ export async function POST(request: Request) {
       message: "If an account with that email exists, we've sent password reset instructions.",
     })
   } catch (error: any) {
-    console.error("[v0] Forgot password error:", error)
+    console.error("[v0] Forgot password error:", error.message)
+    // Return success anyway to not leak information
     return NextResponse.json({
       success: true,
       message: "If an account with that email exists, we've sent password reset instructions.",

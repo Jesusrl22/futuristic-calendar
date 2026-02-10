@@ -1,20 +1,47 @@
 ## 📚 Índice de Documentación - Sistema Completo
 
-### 🚀 COMIENZA AQUÍ
+### 🚀 COMIENZA AQUÍ - EMAILS & NOTIFICACIONES
 
-#### Para entender QUÉ cambió:
-→ **Leer: `/docs/QUICK_SUMMARY_ES.md`** (5 minutos)
-- Resumen ejecutivo
-- Qué acabo de agregar
+#### Para configurar EMAILS en 2 minutos:
+→ **Leer: `/docs/EMAIL_SETUP_QUICK.md`** ⚡
+- Setup mínimo
+- TL;DR de pasos
+
+#### Para paso-a-paso CON instrucciones visuales:
+→ **Leer: `/docs/STEP_BY_STEP_VISUAL.md`** 👁️
+- Exactamente dónde clickear en Supabase
+- Qué copiar-pegar
+- Imágenes mentales de cada paso
+
+#### Para guía TÉCNICA COMPLETA:
+→ **Leer: `/docs/SUPABASE_EMAIL_CONFIGURATION.md`** 📚
+- Explicación detallada
+- Templates HTML
+- Troubleshooting completo
+
+#### Para entender QUÉ CAMBIÉ:
+→ **Leer: `/docs/CHANGES_SUMMARY.md`** 🔧
+- Qué archivos modifiqué
+- Flujos antes vs después
+- Razones de cambios
+
+#### Para CHECKLIST FINAL:
+→ **Leer: `/docs/CHECKLIST_FINAL.md`** ✅
 - Estado actual
+- Próximos pasos
+- Debugging
 
-#### Para entender CÓMO funciona TODO:
+---
+
+### 📋 DOCUMENTACIÓN ANTERIOR
+
+#### Para entender el SISTEMA COMPLETO:
 → **Leer: `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md`** (15 minutos)
 - Flujo de cada sistema
 - Arquitectura completa
 - Integración PayPal
 
-#### Para CONFIGURAR todo:
+#### Para CONFIGURACIÓN avanzada:
 → **Leer: `/docs/CONFIGURATION_GUIDE.md`** (20 minutos)
 - Opciones de SMTP (Gmail, Mailtrap, SendGrid, Mailgun)
 - Configuración PayPal paso a paso
@@ -36,213 +63,111 @@
 
 ---
 
-### 📋 GUÍA RÁPIDA POR TAREA
+### 🎯 ELIGE TU RUTA
 
-#### "Quiero testear EMAILS"
-1. Leer: `/docs/CONFIGURATION_GUIDE.md` → SMTP: Opción 1 o 2
-2. Leer: `/docs/TESTING_GUIDE.md` → PARTE 1-4
-3. Ejecutar: Setup Mailtrap
-4. Probar: Forgot password, nuevo dispositivo
+#### "Necesito que funcionen los emails AHORA" (10 min)
+1. Leer: `/docs/STEP_BY_STEP_VISUAL.md`
+2. Sigue los pasos exactos
+3. Copia-pega los templates HTML
+4. Prueba en 10 minutos
 
-#### "Quiero testear PAGOS"
-1. Leer: `/docs/CONFIGURATION_GUIDE.md` → PAYPAL
-2. Leer: `/docs/TESTING_GUIDE.md` → PARTE 3
-3. Crear: PayPal Sandbox account
-4. Probar: Flujo completo de suscripción
+#### "Quiero entender todo antes de configurar" (30 min)
+1. Leer: `/docs/CHANGES_SUMMARY.md`
+2. Leer: `/docs/SUPABASE_EMAIL_CONFIGURATION.md`
+3. Leer: `/docs/CHECKLIST_FINAL.md`
+4. Después configura
 
-#### "Quiero entender NOTIFICACIONES del calendario"
-1. Leer: `/docs/QUICK_SUMMARY_ES.md` → Calendar Notifications
-2. Leer: `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` → PARTE 1
-3. Leer: `/docs/TESTING_GUIDE.md` → PARTE 2
-4. Probar: Crear evento de prueba
-
-#### "Quiero configurar en PRODUCCIÓN"
-1. Leer: `/docs/CONFIGURATION_GUIDE.md` → COMPLETO
-2. Leer: `/docs/CONFIGURATION_GUIDE.md` → PASO A PASO Deploy
-3. Configurar: Variables en Vercel Console
-4. Deploy: git push
-
-#### "Algo NO funciona"
-1. Leer: `/docs/TESTING_GUIDE.md` → PARTE 6 Troubleshooting
-2. Revisar: Logs en console (`[EMAIL]`, `[v0]`, `[PAYPAL]`)
-3. Leer: `/docs/CONFIGURATION_GUIDE.md` → TROUBLESHOOTING
+#### "Los emails no llegan, ¿qué hago?" (debug)
+1. Ve a: `/docs/SUPABASE_EMAIL_CONFIGURATION.md` → "Si los emails NO llegan"
+2. Sigue el checklist de debug
+3. Revisa Supabase dashboard
 
 ---
 
-### 🎯 FLUJOS PRINCIPALES
+### 📁 ARCHIVOS DOCUMENTACIÓN
 
-#### Flujo: "Olvidé contraseña"
-\`\`\`
-Usuario → Forgot Password → Email con link → Nueva contraseña
-Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 2A
-Testing: /docs/TESTING_GUIDE.md → PARTE 1.2
-\`\`\`
+#### 🆕 NUEVOS (Para Emails)
+| Archivo | Tiempo | Propósito |
+|---------|--------|----------|
+| `EMAIL_SETUP_QUICK.md` | 2 min ⚡ | Setup mínimo |
+| `STEP_BY_STEP_VISUAL.md` | 5 min 👁️ | Instrucciones paso-a-paso |
+| `SUPABASE_EMAIL_CONFIGURATION.md` | ∞ ref 📚 | Guía completa + troubleshooting |
+| `CHANGES_SUMMARY.md` | 10 min 🔧 | Qué cambié en el código |
+| `CHECKLIST_FINAL.md` | 3 min ✅ | Verificar estado |
 
-#### Flujo: "Nuevo dispositivo"
-\`\`\`
-Usuario login (IP diferente) → Detecta dispositivo → Email → Link seguridad
-Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 2C
-Testing: /docs/TESTING_GUIDE.md → PARTE 1.3
-Código: /app/api/auth/login/route.ts, /lib/email.tsx
-\`\`\`
-
-#### Flujo: "Comprar suscripción"
-\`\`\`
-Usuario → Upgrade → PayPal → Aprueba → Suscripción activa → Créditos
-Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 3
-Testing: /docs/TESTING_GUIDE.md → PARTE 3.3
-\`\`\`
-
-#### Flujo: "Fallo en pago"
-\`\`\`
-Mes 1: Pago exitoso → Mes 2: PayPal intenta → FALLA → Cancela → Email
-Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 4
-Testing: /docs/TESTING_GUIDE.md → PARTE 3.4
-\`\`\`
-
-#### Flujo: "Notificaciones del calendario"
-\`\`\`
-App abierta → Polling 30s → Evento próximo? → Notificación push
-Documentación: /docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md → PARTE 1
-Testing: /docs/TESTING_GUIDE.md → PARTE 2
-Código: /hooks/useCalendarEventNotifications.ts
-\`\`\`
+#### 📚 EXISTENTES (Sistema completo)
+| Archivo | Propósito | Tiempo |
+|---------|-----------|--------|
+| `/docs/STATUS.md` | Estado actual | 5 min |
+| `/docs/QUICK_SUMMARY_ES.md` | Resumen | 5 min |
+| `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` | Guía técnica | 15 min |
+| `/docs/CONFIGURATION_GUIDE.md` | Setup | 20 min |
+| `/docs/TESTING_GUIDE.md` | Testing | 30 min |
 
 ---
 
-### 📁 ARCHIVOS DOCUMENTO
+### 🔄 FLUJOS
 
-| Archivo | Propósito | Tiempo | Público |
-|---------|-----------|--------|---------|
-| `/docs/STATUS.md` | Estado actual completo | 5 min | ✅ |
-| `/docs/QUICK_SUMMARY_ES.md` | Resumen ejecutivo | 5 min | ✅ |
-| `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` | Guía técnica completa | 15 min | ✅ |
-| `/docs/CONFIGURATION_GUIDE.md` | Setup y variables | 20 min | ✅ |
-| `/docs/TESTING_GUIDE.md` | Testing y debugging | 30 min | ✅ |
-| `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` | Este archivo (índice) | 5 min | ✅ |
+#### Email Confirmación
+```
+Signup → Email confirmación → Clic → /auth/callback → Dashboard ✅
+```
+Documentación: `/docs/STEP_BY_STEP_VISUAL.md` → Prueba Confirmación
 
----
+#### Email Reset Password
+```
+Forgot Password → Email reset → Clic → /reset-password → Dashboard ✅
+```
+Documentación: `/docs/STEP_BY_STEP_VISUAL.md` → Prueba Reset
 
-### 🔧 ARCHIVOS CÓDIGO
+#### Notificaciones Calendario
+```
+App abierta → Polling 30s → Evento próximo? → Notificación push ✅
+```
+Documentación: `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` → PARTE 1
 
-| Archivo | Cambios | Leído |
-|---------|---------|-------|
-| `/lib/email.tsx` | +3 funciones | [ ] |
-| `/app/api/auth/login/route.ts` | +Detección dispositivo | [ ] |
-| `/app/api/paypal/webhook/route.ts` | +Email cancelación | [ ] |
-| `/scripts/018_add_last_login_tracking.sql` | Nuevo script | [ ] |
-
----
-
-### 🌍 AMBIENTE VARIABLES
-
-**Para Testing Local:**
-\`\`\`env
-SMTP_HOST=smtp.mailtrap.io
-SMTP_PORT=2525
-SMTP_USER=...
-SMTP_PASS=...
-SMTP_FROM=test@tuapp.com
-\`\`\`
-
-**Para Producción (Vercel):**
-\`\`\`env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=...
-SMTP_PASS=...
-PAYPAL_CLIENT_ID=...
-PAYPAL_CLIENT_SECRET=...
-PAYPAL_WEBHOOK_ID=...
-CRON_SECRET=...
-\`\`\`
-
-Configuración detallada: `/docs/CONFIGURATION_GUIDE.md`
+#### Pagos PayPal
+```
+Usuario → Upgrade → PayPal → Suscripción activa → Créditos
+```
+Documentación: `/docs/CONFIGURATION_GUIDE.md` → PayPal
 
 ---
 
-### ⏱️ TIMELINE RECOMENDADO
+### 🔧 CAMBIOS EN EL CÓDIGO
 
-**Hoy (30 min):**
-1. Leer: `/docs/QUICK_SUMMARY_ES.md`
-2. Leer: `/docs/STATUS.md`
-3. Entender qué cambió
+**Archivos nuevos:**
+- `/app/auth/callback/page.tsx` - Maneja callbacks de Supabase
 
-**Mañana (1 hora):**
-1. Leer: `/docs/CONFIGURATION_GUIDE.md`
-2. Configurar: SMTP local (Mailtrap)
-3. Testear: Emails localmente
-
-**Semana (2 horas):**
-1. Leer: `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md`
-2. Leer: `/docs/TESTING_GUIDE.md`
-3. Testear: Todo el sistema
-4. Configurar: PayPal (sandbox)
-
-**Producción (1 hora):**
-1. Configurar: SMTP real
-2. Configurar: PayPal real
-3. Agregar: Variables en Vercel
-4. Deploy: git push
+**Archivos modificados:**
+- `/app/api/auth/forgot-password/route.ts` - Usa `resetPasswordForEmail()`
+- `/app/reset-password/page.tsx` - Lee token del fragment
+- `/app/api/notifications/send/route.ts` - Service role auth
+- `/app/app/calendar/page.tsx` - Responsive mobile
 
 ---
 
-### 🆘 SOPORTE RÁPIDO
+### ⏱️ TIMELINE
 
-**"¿Dónde agrego credenciales SMTP?"**
-→ `/docs/CONFIGURATION_GUIDE.md` → SMTP Options
-
-**"¿Cómo testeo PayPal?"**
-→ `/docs/TESTING_GUIDE.md` → PARTE 3
-
-**"¿Qué variables necesito?"**
-→ `/docs/CONFIGURATION_GUIDE.md` → .env.local estructura
-
-**"¿Por qué no recibo email?"**
-→ `/docs/TESTING_GUIDE.md` → TROUBLESHOOTING
-
-**"¿Cómo funciona el nuevo dispositivo?"**
-→ `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` → PARTE 2C
-
-**"¿Cómo cancela PayPal?"**
-→ `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` → PARTE 4
+```
+Email Setup:       5-10 minutos
+Prueba Signup:     3 minutos
+Prueba Reset:      3 minutos
+─────────────────────────────
+TOTAL:            11-16 minutos
+```
 
 ---
 
-### ✅ CHECKLIST DE LECTURA
+### ✅ PRÓXIMO PASO
 
-Marca lo que hayas leído:
+**Elige uno:**
 
-- [ ] Este índice (`/docs/INDEX.md`)
-- [ ] Resumen rápido (`/docs/QUICK_SUMMARY_ES.md`)
-- [ ] Estado actual (`/docs/STATUS.md`)
-- [ ] Notificaciones completo (`/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md`)
-- [ ] Configuración (`/docs/CONFIGURATION_GUIDE.md`)
-- [ ] Testing (`/docs/TESTING_GUIDE.md`)
-
----
-
-### 📞 ¿NECESITAS AYUDA?
-
-1. **Revisar logs**: DevTools Console, busca `[v0]`, `[EMAIL]`, `[PAYPAL]`
-2. **Revisar esta carpeta**: `/docs/` tiene soluciones
-3. **Revisar código**: Cambios están en `lib/email.tsx`, `app/api/auth/login/route.ts`, `app/api/paypal/webhook/route.ts`
-4. **Revisar BD**: `last_login_ip` y `last_login_at` en tabla `users`
-
----
-
-### 🎓 CONCLUSIÓN
-
-**Has ganado:**
-✅ Detección de dispositivos nuevos
-✅ Emails de seguridad
-✅ Notificación automática de cancelación
-✅ Sistema completo de notificaciones del calendario
-✅ Todo documentado y testeado
-
-**Próximo paso:** Lee `/docs/QUICK_SUMMARY_ES.md` y comienza a testear.
+1. ⚡ **Rápido**: Lee `/docs/EMAIL_SETUP_QUICK.md` (2 min)
+2. 👁️ **Visual**: Lee `/docs/STEP_BY_STEP_VISUAL.md` (5 min)
+3. 📚 **Completo**: Lee `/docs/SUPABASE_EMAIL_CONFIGURATION.md` (ref)
 
 ---
 
 *Última actualización: 2026-02-10*
-*Sistema: Completo e implementado*
+*Sistema: Emails y Notificaciones - Implementado ✅*

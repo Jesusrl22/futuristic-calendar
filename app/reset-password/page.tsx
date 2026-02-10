@@ -77,9 +77,8 @@ function ResetPasswordContent() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [language, setLanguage] = useState<keyof typeof translations>("en")
+  const [hasValidToken, setHasValidToken] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const token = searchParams.get("token")
 
   useEffect(() => {
     const savedLang = localStorage.getItem("language") as keyof typeof translations
@@ -95,10 +94,19 @@ function ResetPasswordContent() {
     root.style.setProperty("--card", "0 0% 20%")
     root.style.setProperty("--card-foreground", "0 0% 98%")
 
-    if (!token) {
-      setError("Invalid reset link")
+    // Check if we have a valid recovery token in the URL
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const accessToken = hashParams.get("access_token")
+    const tokenType = hashParams.get("type")
+
+    if (accessToken && tokenType === "recovery") {
+      setHasValidToken(true)
+      console.log("[v0] Valid recovery token found in URL")
+    } else {
+      setError("Invalid or expired reset link")
+      console.log("[v0] No valid recovery token found")
     }
-  }, [token])
+  }, [])
 
   const handleLanguageChange = (lang: keyof typeof translations) => {
     setLanguage(lang)
@@ -122,23 +130,51 @@ function ResetPasswordContent() {
         return
       }
 
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters")
+        setLoading(false)
+        return
+      }
+
+      // Get the session token from URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get("access_token")
+      const tokenType = hashParams.get("type")
+
+      if (!accessToken || tokenType !== "recovery") {
+        setError("Invalid or expired reset link")
+        setLoading(false)
+        return
+      }
+
+      // Import Supabase client
+      const { createClient } = await import("@/lib/supabase/client")
+      const supabase = createClient()
+
+      console.log("[v0] Updating password with access token")
+
+      // Update password using the access token
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to reset password")
+      if (updateError) {
+        console.error("[v0] Password update error:", updateError)
+        setError(updateError.message || "Failed to update password")
+        setLoading(false)
+        return
       }
 
       setSuccess(t.success)
+      console.log("[v0] Password updated successfully")
+      
       setTimeout(() => {
-        router.push("/login")
+        // Clear the hash to remove tokens
+        window.history.replaceState({}, document.title, window.location.pathname)
+        router.push("/app")
       }, 2000)
     } catch (err: any) {
+      console.error("[v0] Reset password error:", err)
       setError(err.message || "An unexpected error occurred")
     } finally {
       setLoading(false)
@@ -235,7 +271,7 @@ function ResetPasswordContent() {
             {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</div>}
             {success && <div className="text-sm text-green-600 bg-green-600/10 p-3 rounded-lg">{success}</div>}
 
-            <Button type="submit" className="w-full neon-glow-hover" disabled={loading || !token}>
+            <Button type="submit" className="w-full neon-glow-hover" disabled={loading || !hasValidToken}>
               {loading ? t.resetting : t.resetPassword}
             </Button>
           </form>
