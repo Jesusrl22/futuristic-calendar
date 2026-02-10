@@ -6,23 +6,28 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret from Vercel
+    // Verify cron secret from Vercel (only required for automated cron jobs)
     const authHeader = request.headers.get("authorization")
     const cronSecret = process.env.CRON_SECRET
+    const userAgent = request.headers.get("user-agent") || ""
+    
+    // Check if this is a Vercel cron request (has user-agent starting with "vercel")
+    const isVercelCron = userAgent.toLowerCase().includes("vercel")
     
     console.log("[v0] CRON request received")
+    console.log("[v0] Is Vercel cron:", isVercelCron)
     console.log("[v0] CRON_SECRET configured:", !!cronSecret)
     console.log("[v0] Authorization header present:", !!authHeader)
 
-    // If CRON_SECRET is configured, validate it
-    if (cronSecret) {
+    // Only require CRON_SECRET for actual Vercel cron requests
+    if (isVercelCron && cronSecret) {
       if (authHeader !== `Bearer ${cronSecret}`) {
-        console.error("[v0] Invalid or missing CRON_SECRET")
+        console.error("[v0] Invalid or missing CRON_SECRET for Vercel cron")
         return NextResponse.json({ error: "Unauthorized - Invalid CRON_SECRET" }, { status: 401 })
       }
       console.log("[v0] CRON_SECRET validated successfully")
-    } else {
-      console.warn("[v0] CRON_SECRET not configured - running anyway (development mode)")
+    } else if (!isVercelCron) {
+      console.log("[v0] Client-side polling - no CRON_SECRET required")
     }
 
     console.log("[v0] Checking for upcoming events...")

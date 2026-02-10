@@ -21,17 +21,17 @@ Esta es la forma más confiable. El servidor verifica eventos periódicamente.
 1. Ve a tu proyecto en Vercel: https://vercel.com/dashboard
 2. Selecciona tu proyecto → Settings → Environment Variables
 3. Añade estas variables (si no las tienes):
-   ```
+   \`\`\`
    CRON_SECRET = tu-secreto-aleatorio-aqui
-   ```
+   \`\`\`
 
 4. En `vercel.json`, el cron job ya está configurado para ejecutarse cada minuto:
-   ```json
+   \`\`\`json
    "crons": [{
      "path": "/api/cron/check-upcoming-events",
      "schedule": "* * * * *"
    }]
-   ```
+   \`\`\`
 
 5. Deploy nuevamente para aplicar los cambios
 
@@ -60,10 +60,10 @@ Crea un webhook que llame a `/api/cron/check-upcoming-events` cada minuto desde 
 ### Verificar que todo funciona
 
 1. **Comprueba que tienes VAPID keys configuradas:**
-   ```
+   \`\`\`
    NEXT_PUBLIC_VAPID_PUBLIC_KEY - debe estar configurada
    VAPID_PRIVATE_KEY - debe estar configurada (solo servidor)
-   ```
+   \`\`\`
 
 2. **En el navegador, abre DevTools → Application → Service Workers**
    - Deberías ver tu Service Worker registrado ✅
