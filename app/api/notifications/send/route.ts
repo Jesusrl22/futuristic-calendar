@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr"
+import { createServerClient, createClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 import webpush from "web-push"
@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user session
+    // For internal API calls (from CRON or server-to-server), use service role key
+    // For client calls, verify the userId matches the authenticated user
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -52,12 +53,41 @@ export async function POST(request: NextRequest) {
       }
     )
 
+    // Try to get authenticated user
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
+    
+    // If calling from internal server (CRON), allow with service role
+    // Otherwise, verify user is authenticated and userId matches
+    if (user) {
+      console.log("[v0] Client-side call from authenticated user:", user.id)
+      if (user.id !== userId) {
+        console.error("[v0] User ID mismatch:", user.id, "vs", userId)
+        return NextResponse.json(
+          { error: "User ID mismatch" },
+          { status: 403 }
+        )
+      }
+    } else {
+      // For server-to-server calls (from CRON), verify with service role
+      const serviceSupabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+        process.env.SUPABASE_SERVICE_ROLE_KEY || ""
       )
+      
+      console.log("[v0] Server-to-server call - verifying userId exists:", userId)
+      const { data: userData, error: userError } = await serviceSupabase
+        .from("users")
+        .select("id")
+        .eq("id", userId)
+        .single()
+      
+      if (userError || !userData) {
+        console.error("[v0] User not found:", userId)
+        return NextResponse.json(
+          { error: "User not found" },
+          { status: 404 }
+        )
+      }
     }
 
     // Get user's push subscriptions

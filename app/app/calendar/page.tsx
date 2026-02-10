@@ -303,9 +303,9 @@ export default function CalendarPage() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
         {/* Left Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-4 md:space-y-6">
           {/* Mini Calendar */}
           <Card className="glass-card p-5 border-primary/30 neon-glow">
             <div className="flex items-center justify-between mb-4">
@@ -415,7 +415,7 @@ export default function CalendarPage() {
               </div>
 
               {/* Daily Timeline */}
-              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+              <div className="space-y-1 md:space-y-2 max-h-[600px] overflow-y-auto pr-2">
                 {timeSlots.map((hour) => {
                   const hourEvents = selectedDateEvents.filter((event) => {
                     const eventHour = new Date(event.due_date).getHours()
@@ -424,24 +424,24 @@ export default function CalendarPage() {
 
                   return (
                     <div key={hour} className="relative">
-                      <div className="flex items-start gap-4">
-                        <div className="text-xs font-mono text-muted-foreground pt-1 w-12 text-right">{hour}:00</div>
-                        <div className="relative flex-1">
+                      <div className="flex items-start gap-2 md:gap-4">
+                        <div className="text-xs font-mono text-muted-foreground pt-1 w-10 md:w-12 text-right flex-shrink-0">{hour}:00</div>
+                        <div className="relative flex-1 min-w-0">
                           <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>
-                          <div className="space-y-2 ml-4 min-h-12">
+                          <div className="space-y-1 md:space-y-2 ml-2 md:ml-4 min-h-12">
                             {hourEvents.map((event) => {
                               const eventTime = new Date(event.due_date).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
                               const neonColor =
                                 event.priority === "high" ? "border-violet-500/80 bg-violet-500/10" : event.priority === "medium" ? "border-cyan-500/80 bg-cyan-500/10" : "border-green-500/80 bg-green-500/10"
 
                               return (
-                                <Card key={event.id} className={`glass-card p-4 border-l-4 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer group ${neonColor}`}>
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-start gap-3 flex-1">
-                                      <Checkbox checked={event.completed} onCheckedChange={() => toggleEventCompletion(event.id, event.completed)} className="mt-1" />
-                                      <div className="flex-1">
-                                        <h4 className={`font-semibold text-foreground ${event.completed ? "line-through text-muted-foreground" : ""}`}>{event.title}</h4>
-                                        {event.description && <p className="text-xs text-muted-foreground mt-1">{event.description}</p>}
+                                <Card key={event.id} className={`glass-card p-2 md:p-4 border-l-4 transition-all hover:shadow-lg hover:shadow-primary/20 cursor-pointer group ${neonColor}`}>
+                                  <div className="flex flex-col md:flex-row items-start justify-between gap-2 md:gap-3">
+                                    <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
+                                      <Checkbox checked={event.completed} onCheckedChange={() => toggleEventCompletion(event.id, event.completed)} className="mt-1 flex-shrink-0" />
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className={`font-semibold text-foreground text-sm md:text-base break-words ${event.completed ? "line-through text-muted-foreground" : ""}`}>{event.title}</h4>
+                                        {event.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{event.description}</p>}
                                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                                           {event.priority && (
                                             <Badge variant="outline" className={`text-xs ${event.priority === "high" ? "border-red-500 text-red-500" : event.priority === "medium" ? "border-yellow-500 text-yellow-500" : "border-green-500 text-green-500"}`}>
@@ -452,20 +452,20 @@ export default function CalendarPage() {
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                      <span className="text-sm font-mono text-primary whitespace-nowrap">{eventTime}</span>
-                                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-primary/20" onClick={() => {
+                                    <div className="flex flex-col items-end gap-2 w-full md:w-auto flex-shrink-0">
+                                      <span className="text-xs md:text-sm font-mono text-primary whitespace-nowrap">{eventTime}</span>
+                                      <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-1">
+                                        <Button variant="ghost" size="icon" className="h-6 md:h-7 w-6 md:w-7 hover:bg-primary/20" onClick={() => {
                                           const eventDate = new Date(event.due_date)
                                           const hours = String(eventDate.getHours()).padStart(2, "0")
                                           const minutes = String(eventDate.getMinutes()).padStart(2, "0")
                                           setEditingEvent({ ...event, time: `${hours}:${minutes}` })
                                           setIsEditDialogOpen(true)
                                         }}>
-                                          <Edit2 className="w-3.5 h-3.5" />
+                                          <Edit2 className="w-3 md:w-3.5 h-3 md:h-3.5" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-red-500/20 hover:text-red-500" onClick={() => deleteEvent(event.id)}>
-                                          <Trash2 className="w-3.5 h-3.5" />
+                                        <Button variant="ghost" size="icon" className="h-6 md:h-7 w-6 md:w-7 hover:bg-red-500/20 hover:text-red-500" onClick={() => deleteEvent(event.id)}>
+                                          <Trash2 className="w-3 md:w-3.5 h-3 md:h-3.5" />
                                         </Button>
                                       </div>
                                     </div>
