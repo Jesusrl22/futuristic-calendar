@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: true, // Allow login immediately (user can verify email later)
+        email_confirm: false, // Require email confirmation before login
         user_metadata: {
           name: name,
           language: language,
@@ -83,53 +83,22 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    // Send verification email
+    // Send verification email - this is the PRIMARY method
     console.log("[SERVER][v0] Sending verification email to:", email)
     try {
-      const { error: emailError } = await supabase.auth.admin.generateLink({
-        type: "signup",
-        email: email,
-        options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
-        },
-      })
-
-      if (emailError) {
-        console.warn("[SERVER][v0] generateLink failed:", emailError.message)
-        // Try alternative method
-        const { error: resendError } = await supabase.auth.resend({
-          type: "signup",
-          email: email,
-          options: {
-            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
-          },
-        })
-        if (resendError) {
-          console.warn("[SERVER][v0] resend also failed:", resendError.message)
-        } else {
-          console.log("[SERVER][v0] Verification email sent via resend()")
-        }
-      } else {
-        console.log("[SERVER][v0] Verification email sent via generateLink()")
-      }
+      const { sendVerificationEmail } = await import("@/lib/email")
+      const result = await sendVerificationEmail(email, name)
+      console.log("[SERVER][v0] Verification email sent successfully via sendVerificationEmail()")
     } catch (emailError: any) {
-      console.warn("[SERVER][v0] Exception sending verification email:", emailError.message)
+      console.error("[SERVER][v0] Failed to send verification email:", emailError.message)
+      // Still proceed - user can resend verification later
     }
 
-    // Try to send welcome email (optional)
-    try {
-      const { sendWelcomeEmail } = await import("@/lib/email")
-      await sendWelcomeEmail(email, name)
-      console.log("[SERVER][v0] Welcome email sent successfully")
-    } catch (emailError: any) {
-      console.warn("[SERVER][v0] Failed to send welcome email:", emailError.message)
-    }
-
-    console.log("[SERVER][v0] User created successfully. Ready to login.")
+    console.log("[SERVER][v0] User created successfully. Email verification sent.")
 
     return NextResponse.json({
       success: true,
-      message: "Account created successfully! You can now login.",
+      message: "Account created successfully! Check your email to verify your account and then login.",
     })
   } catch (error: any) {
     console.error("[SERVER][v0] Signup error:", error)

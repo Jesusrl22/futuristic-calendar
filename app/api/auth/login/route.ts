@@ -49,9 +49,16 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][API] Login successful for user:", loginData.user.id)
 
-    // Note: User can login even without email confirmed
+    // Check if email is confirmed - REQUIRED for security
     if (!loginData.user.email_confirmed_at) {
-      console.log("[SERVER][API] Warning: Email not confirmed for user:", loginData.user.email)
+      console.log("[SERVER][API] Email not confirmed for user:", loginData.user.email)
+      return NextResponse.json(
+        { 
+          error: "email_not_verified",
+          message: "Email not verified. Please check your inbox for the verification link and confirm your email before logging in." 
+        },
+        { status: 403 },
+      )
     }
 
     // Get user agent to detect new device

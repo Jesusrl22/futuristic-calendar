@@ -28,6 +28,10 @@ const translations = {
     continueApp: "Continue to App",
     logoutDifferent: "Logout and Sign In with Different Account",
     forgotPassword: "Forgot password?",
+    emailNotVerified: "Email not verified",
+    emailNotVerifiedMsg: "Please verify your email first. Check your inbox for the verification link.",
+    resendVerification: "Resend Verification Email",
+    resendingEmail: "Sending...",
   },
   es: {
     welcome: "Bienvenido de Nuevo",
@@ -44,6 +48,10 @@ const translations = {
     continueApp: "Continuar a la App",
     logoutDifferent: "Cerrar Sesión para Iniciar con Otra Cuenta",
     forgotPassword: "¿Olvidaste tu contraseña?",
+    emailNotVerified: "Email no verificado",
+    emailNotVerifiedMsg: "Por favor verifica tu email primero. Revisa tu bandeja de entrada para el enlace de verificación.",
+    resendVerification: "Reenviar Email de Verificación",
+    resendingEmail: "Enviando...",
   },
   fr: {
     welcome: "Bienvenue",
@@ -60,6 +68,10 @@ const translations = {
     continueApp: "Continuer vers l'App",
     logoutDifferent: "Déconnexion pour Changer de Compte",
     forgotPassword: "Mot de passe oublié?",
+    emailNotVerified: "Email non vérifié",
+    emailNotVerifiedMsg: "Veuillez d'abord vérifier votre email. Consultez votre boîte de réception pour le lien de vérification.",
+    resendVerification: "Renvoyer l'Email de Vérification",
+    resendingEmail: "Envoi...",
   },
   de: {
     welcome: "Willkommen Zurück",
@@ -76,6 +88,10 @@ const translations = {
     continueApp: "Zur App",
     logoutDifferent: "Abmelden und mit Anderem Konto Anmelden",
     forgotPassword: "Passwort vergessen?",
+    emailNotVerified: "E-Mail nicht bestätigt",
+    emailNotVerifiedMsg: "Bitte bestätigen Sie zunächst Ihre E-Mail. Überprüfen Sie Ihren Posteingang auf den Bestätigungslink.",
+    resendVerification: "Bestätigungsemail erneut senden",
+    resendingEmail: "Wird gesendet...",
   },
   it: {
     welcome: "Bentornato",
@@ -92,6 +108,10 @@ const translations = {
     continueApp: "Continua all'App",
     logoutDifferent: "Esci per Accedere con un Altro Account",
     forgotPassword: "Password dimenticata?",
+    emailNotVerified: "Email non verificata",
+    emailNotVerifiedMsg: "Verifica prima la tua email. Controlla la tua casella di posta per il link di verifica.",
+    resendVerification: "Rinvia Email di Verifica",
+    resendingEmail: "Invio...",
   },
 }
 
@@ -101,6 +121,9 @@ export default function LoginPage() {
   const [hasSession, setHasSession] = useState(false)
   const [language, setLanguage] = useState<keyof typeof translations>("en")
   const [showPassword, setShowPassword] = useState(false)
+  const [emailNotVerified, setEmailNotVerified] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState("")
+  const [resendingEmail, setResendingEmail] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -151,6 +174,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError("")
+    setEmailNotVerified(false)
     setLoading(true)
 
     try {
@@ -167,13 +191,44 @@ export default function LoginPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+        // Check if it's an email verification error
+        if (data.error === "email_not_verified") {
+          setEmailNotVerified(true)
+          setPendingEmail(email)
+          setError(data.message || "Email not verified")
+        } else {
+          throw new Error(data.message || data.error || "Login failed")
+        }
+      } else {
+        window.location.href = "/app"
       }
-
-      window.location.href = "/app"
     } catch (err: any) {
       setError(err.message || "Invalid credentials")
+    } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    if (!pendingEmail) return
+    setResendingEmail(true)
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail }),
+      })
+
+      if (response.ok) {
+        alert(translations[language].resendVerification + " sent!")
+      } else {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to resend email")
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setResendingEmail(false)
     }
   }
 
@@ -294,7 +349,27 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {error && <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</div>}
+            {error && (
+              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            {emailNotVerified && (
+              <div className="text-sm bg-yellow-500/20 border border-yellow-500/50 p-3 rounded-lg space-y-3">
+                <p className="text-yellow-600 dark:text-yellow-400 font-medium">{t.emailNotVerified}</p>
+                <p className="text-yellow-600 dark:text-yellow-400 text-xs">{t.emailNotVerifiedMsg}</p>
+                <Button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendingEmail}
+                  className="w-full text-xs"
+                  variant="outline"
+                >
+                  {resendingEmail ? t.resendingEmail : t.resendVerification}
+                </Button>
+              </div>
+            )}
 
             <Button type="submit" className="w-full neon-glow-hover" disabled={loading}>
               {loading ? t.signingIn : t.signIn}

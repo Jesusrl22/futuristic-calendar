@@ -26,21 +26,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email already verified" }, { status: 400 })
     }
 
-    // Resend verification email
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
-      email: email,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?email=${encodeURIComponent(email)}`,
-      },
-    })
+    // Resend verification email - try our custom method first
+    console.log("[SERVER][v0] Resending verification email to:", email)
+    try {
+      const { sendVerificationEmail } = await import("@/lib/email")
+      const user_data = await supabase.from("users").select("name").eq("id", user.id).single()
+      await sendVerificationEmail(email, user_data.data?.name)
+      console.log("[SERVER][v0] Verification email sent via sendVerificationEmail()")
+    } catch (emailError: any) {
+      console.warn("[SERVER][v0] sendVerificationEmail failed, trying Supabase:", emailError.message)
+      // Fallback to Supabase method
+      const { error: resendError } = await supabase.auth.resend({
+        type: "signup",
+        email: email,
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email?email=${encodeURIComponent(email)}`,
+        },
+      })
 
-    if (resendError) {
-      console.error("[SERVER][v0] Resend verification error:", resendError)
-      return NextResponse.json(
-        { error: "Failed to resend verification email" },
-        { status: 500 }
-      )
+      if (resendError) {
+        console.error("[SERVER][v0] Both email methods failed:", resendError)
+        return NextResponse.json(
+          { error: "Failed to resend verification email" },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json({

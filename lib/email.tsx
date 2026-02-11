@@ -10,7 +10,82 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-export async function sendPasswordResetEmail(email: string, resetLink: string, name?: string) {
+export async function sendVerificationEmail(email: string, name?: string) {
+  const userName = name || email.split("@")[0]
+  const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #84ff65 0%, #65d9ff 100%); padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; }
+          .header h1 { color: white; margin: 0; font-size: 28px; }
+          .content { background: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+          .button { display: inline-block; background: #84ff65; color: #000; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0; }
+          .footer { text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+          .warning { background: #fff3cd; border: 1px solid #ffc107; color: #856404; padding: 12px; border-radius: 4px; margin: 15px 0; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Verifica tu Email</h1>
+          </div>
+          
+          <div class="content">
+            <p>Hola <strong>${userName}</strong>,</p>
+            
+            <p>Gracias por crear una cuenta en Future Task. Para completar tu registro, necesitas verificar tu dirección de correo electrónico.</p>
+            
+            <p>Haz clic en el botón de abajo para verificar tu email:</p>
+            
+            <div style="text-align: center;">
+              <a href="${verificationLink}" class="button">Verificar Email</a>
+            </div>
+            
+            <p>O copia y pega este enlace en tu navegador:</p>
+            <p style="word-break: break-all; background: #f0f0f0; padding: 10px; border-radius: 4px; font-size: 12px;">
+              ${verificationLink}
+            </p>
+            
+            <div class="warning">
+              <strong>Importante:</strong> Este enlace expirará en 24 horas. Si no creaste esta cuenta, por favor ignora este email.
+            </div>
+            
+            <p>Una vez verificado, podrás iniciar sesión con tu email y contraseña.</p>
+            
+            <p>¿Preguntas? Contáctanos en support@example.com</p>
+          </div>
+          
+          <div class="footer">
+            <p>© 2026 Future Task. Todos los derechos reservados.</p>
+            <p>Este es un email automático, por favor no respondas.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || "noreply@example.com",
+      to: email,
+      subject: "Verifica tu email en Future Task",
+      html: htmlContent,
+    })
+    console.log("[EMAIL] Verification email sent successfully to:", email)
+    return { success: true }
+  } catch (error) {
+    console.error("[EMAIL] Error sending verification email:", error)
+    throw error
+  }
+}
+
+
   const userName = name || email.split("@")[0]
 
   const htmlContent = `
