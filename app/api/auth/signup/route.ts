@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: false, // User must verify email
+        email_confirm: true, // Allow login immediately (user can verify email later)
         user_metadata: {
           name: name,
           language: language,
@@ -51,26 +51,6 @@ export async function POST(request: Request) {
 
       userId = authData?.user?.id
       console.log("[SERVER][v0] User created with ID:", userId)
-
-      // Send verification email using Supabase
-      console.log("[SERVER][v0] Sending verification email to:", email)
-      const { error: emailError } = await supabase.auth.admin.generateLink({
-        type: "signup",
-        email: email,
-        options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
-        },
-      })
-
-      if (emailError) {
-        console.error("[SERVER][v0] Verification email failed:", emailError)
-        return NextResponse.json(
-          { error: "User created but verification email failed. Please try 'Resend Verification Email'" },
-          { status: 400 }
-        )
-      }
-
-      console.log("[SERVER][v0] Verification email sent successfully")
     }
 
     // Create profile in users table
@@ -103,27 +83,40 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
-    // Send verification email using Supabase
-    console.log("[SERVER][v0] Sending verification email...")
+    // Send verification email
+    console.log("[SERVER][v0] Sending verification email to:", email)
     try {
-      const { error: emailError } = await supabase.auth.resend({
+      const { error: emailError } = await supabase.auth.admin.generateLink({
         type: "signup",
         email: email,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
         },
       })
 
       if (emailError) {
-        console.warn("[SERVER][v0] Failed to send verification email:", emailError.message)
+        console.warn("[SERVER][v0] generateLink failed:", emailError.message)
+        // Try alternative method
+        const { error: resendError } = await supabase.auth.resend({
+          type: "signup",
+          email: email,
+          options: {
+            emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
+          },
+        })
+        if (resendError) {
+          console.warn("[SERVER][v0] resend also failed:", resendError.message)
+        } else {
+          console.log("[SERVER][v0] Verification email sent via resend()")
+        }
       } else {
-        console.log("[SERVER][v0] Verification email sent successfully")
+        console.log("[SERVER][v0] Verification email sent via generateLink()")
       }
     } catch (emailError: any) {
-      console.warn("[SERVER][v0] Failed to send verification email:", emailError.message)
+      console.warn("[SERVER][v0] Exception sending verification email:", emailError.message)
     }
 
-    // Try to send welcome email as well (optional)
+    // Try to send welcome email (optional)
     try {
       const { sendWelcomeEmail } = await import("@/lib/email")
       await sendWelcomeEmail(email, name)
@@ -132,12 +125,11 @@ export async function POST(request: Request) {
       console.warn("[SERVER][v0] Failed to send welcome email:", emailError.message)
     }
 
-    // Do NOT auto-login - user must verify email first
-    console.log("[SERVER][v0] User created, verification email sent. User must verify to login.")
+    console.log("[SERVER][v0] User created successfully. Ready to login.")
 
     return NextResponse.json({
       success: true,
-      message: "Account created! Please check your email to verify your account.",
+      message: "Account created successfully! You can now login.",
     })
   } catch (error: any) {
     console.error("[SERVER][v0] Signup error:", error)
