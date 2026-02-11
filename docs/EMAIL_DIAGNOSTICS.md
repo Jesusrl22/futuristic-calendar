@@ -24,23 +24,23 @@
 ### Cómo Testear Emails
 
 **Opción 1: Test Manual**
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3000/api/test-email \
   -H "Content-Type: application/json" \
   -d '{"email":"tu@email.com"}'
-```
+\`\`\`
 
 **Opción 2: En el navegador**
 1. Abre DevTools (F12)
 2. Ve a Console
 3. Ejecuta:
-```javascript
+\`\`\`javascript
 fetch('/api/test-email', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email: 'tu@email.com' })
 }).then(r => r.json()).then(console.log)
-```
+\`\`\`
 
 4. Revisa la respuesta y los logs en Vercel
 
@@ -63,7 +63,7 @@ fetch('/api/test-email', {
 
 ### Flujo Actual de Registro
 
-```
+\`\`\`
 Usuario signup
   ↓
 Supabase crea usuario (email_confirm: false)
@@ -77,7 +77,7 @@ Usuario hace clic en email
 Email verificado ✓
   ↓
 Usuario puede iniciar sesión
-```
+\`\`\`
 
 ### Notas
 
