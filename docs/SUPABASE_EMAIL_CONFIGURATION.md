@@ -12,18 +12,18 @@ Ve a tu dashboard de Supabase → **Project Settings** → **Auth** → **URL Co
 ### Configura estas URLs:
 
 1. **Site URL**
-   ```
+   \`\`\`
    https://future-task.com
-   ```
+   \`\`\`
    (O tu dominio actual en desarrollo: `http://localhost:3000`)
 
 2. **Redirect URLs** (copia y pega EXACTAMENTE):
-   ```
+   \`\`\`
    https://future-task.com/auth/callback
    https://future-task.com/reset-password
    http://localhost:3000/auth/callback
    http://localhost:3000/reset-password
-   ```
+   \`\`\`
 
 ---
 
@@ -34,12 +34,12 @@ Ve a tu dashboard de Supabase → **Project Settings** → **Auth** → **URL Co
 Ve a **Auth** → **Email Templates** → **Confirm Signup**
 
 **Asunto:**
-```
+\`\`\`
 Confirma tu cuenta en Future Task
-```
+\`\`\`
 
 **Plantilla HTML:**
-```html
+\`\`\`html
 <html>
   <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -75,7 +75,7 @@ Confirma tu cuenta en Future Task
     </div>
   </body>
 </html>
-```
+\`\`\`
 
 ---
 
@@ -84,12 +84,12 @@ Confirma tu cuenta en Future Task
 Ve a **Auth** → **Email Templates** → **Reset Password**
 
 **Asunto:**
-```
+\`\`\`
 Restablece tu contraseña en Future Task
-```
+\`\`\`
 
 **Plantilla HTML:**
-```html
+\`\`\`html
 <html>
   <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -129,7 +129,7 @@ Restablece tu contraseña en Future Task
     </div>
   </body>
 </html>
-```
+\`\`\`
 
 ---
 

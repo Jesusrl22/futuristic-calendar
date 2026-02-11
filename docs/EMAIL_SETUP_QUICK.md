@@ -5,7 +5,7 @@
 Tu código YA FUNCIONA. Solo debes hacer esto en Supabase:
 
 ### 1. **URLs** (1 minuto)
-```
+\`\`\`
 Project Settings → Auth → URL Configuration
 
 Site URL: https://future-task.com
@@ -13,7 +13,7 @@ Site URL: https://future-task.com
 Redirect URLs:
 https://future-task.com/auth/callback
 https://future-task.com/reset-password
-```
+\`\`\`
 
 ### 2. **Email Provider** (2 minutos)
 - Opción A: **SMTP** (SendGrid/Mailgun) → Mejor
@@ -41,14 +41,14 @@ Ve a Auth → Email Templates
 ## 🎯 Flujos que funcionan:
 
 ### 📝 Registro + Confirmación
-```
+\`\`\`
 Signup → Email confirmación → Clic → /auth/callback → Dashboard
-```
+\`\`\`
 
 ### 🔑 Recuperar Contraseña
-```
+\`\`\`
 Forgot Password → Email reset → Clic → /reset-password → Cambiar → Dashboard
-```
+\`\`\`
 
 ---
 

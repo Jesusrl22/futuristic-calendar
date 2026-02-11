@@ -109,27 +109,27 @@
 ### 🔄 FLUJOS
 
 #### Email Confirmación
-```
+\`\`\`
 Signup → Email confirmación → Clic → /auth/callback → Dashboard ✅
-```
+\`\`\`
 Documentación: `/docs/STEP_BY_STEP_VISUAL.md` → Prueba Confirmación
 
 #### Email Reset Password
-```
+\`\`\`
 Forgot Password → Email reset → Clic → /reset-password → Dashboard ✅
-```
+\`\`\`
 Documentación: `/docs/STEP_BY_STEP_VISUAL.md` → Prueba Reset
 
 #### Notificaciones Calendario
-```
+\`\`\`
 App abierta → Polling 30s → Evento próximo? → Notificación push ✅
-```
+\`\`\`
 Documentación: `/docs/COMPLETE_NOTIFICATIONS_AND_PAYMENTS_GUIDE.md` → PARTE 1
 
 #### Pagos PayPal
-```
+\`\`\`
 Usuario → Upgrade → PayPal → Suscripción activa → Créditos
-```
+\`\`\`
 Documentación: `/docs/CONFIGURATION_GUIDE.md` → PayPal
 
 ---
@@ -149,13 +149,13 @@ Documentación: `/docs/CONFIGURATION_GUIDE.md` → PayPal
 
 ### ⏱️ TIMELINE
 
-```
+\`\`\`
 Email Setup:       5-10 minutos
 Prueba Signup:     3 minutos
 Prueba Reset:      3 minutos
 ─────────────────────────────
 TOTAL:            11-16 minutos
-```
+\`\`\`
 
 ---
 
