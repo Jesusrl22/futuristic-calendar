@@ -49,13 +49,13 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][API] Login successful for user:", loginData.user.id)
 
-    // Check if email is confirmed
+    // Check if email is confirmed - REQUIRED for security
     if (!loginData.user.email_confirmed_at) {
       console.log("[SERVER][API] Email not confirmed for user:", loginData.user.email)
       return NextResponse.json(
         { 
-          error: "Email not verified", 
-          message: "Please confirm your email address before logging in. Check your inbox for the confirmation link." 
+          error: "email_not_verified",
+          message: "Email not verified. Please check your inbox for the verification link and confirm your email before logging in." 
         },
         { status: 403 },
       )
