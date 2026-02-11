@@ -37,7 +37,7 @@ async function resendVerificationEmail() {
         "[v0] This means Supabase CAN generate verification links and should send emails"
       );
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error("[v0] Exception:", err.message);
   }
 }
