@@ -32,22 +32,22 @@
 ## 📊 Comparación: Antes vs Después
 
 ### Confirmación de Email
-```
+\`\`\`
 ANTES: Manual token system → No funcionaba
 AHORA: Supabase native → ✅ Funciona con config
-```
+\`\`\`
 
 ### Reset de Contraseña
-```
+\`\`\`
 ANTES: Token en query + API personalizada
 AHORA: Token en hash + updateUser() de Supabase → ✅ Más seguro
-```
+\`\`\`
 
 ### Notificaciones
-```
+\`\`\`
 ANTES: No podía autenticar del CRON
 AHORA: Service role para server-to-server → ✅ Funciona
-```
+\`\`\`
 
 ---
 
@@ -92,7 +92,7 @@ AHORA: Service role para server-to-server → ✅ Funciona
 ## 🎓 Cómo funciona el flujo
 
 ### Email Confirmación (Signup)
-```
+\`\`\`
 1. Usuario hace signup
 2. Supabase crea usuario + envía email
 3. Email contiene: {{ .ConfirmationURL }}
@@ -100,10 +100,10 @@ AHORA: Service role para server-to-server → ✅ Funciona
 5. Redirecciona a: /auth/callback?code=XXX
 6. Tu app intercambia code por sesión
 7. Redirige a /app (autenticado)
-```
+\`\`\`
 
 ### Email Reset (Forgot Password)
-```
+\`\`\`
 1. Usuario hace forgot-password
 2. Tu API llama: resetPasswordForEmail()
 3. Supabase envía email
@@ -115,7 +115,7 @@ AHORA: Service role para server-to-server → ✅ Funciona
 9. Usuario ingresa nueva contraseña
 10. Llama updateUser({ password })
 11. Redirige a /app
-```
+\`\`\`
 
 ---
 

@@ -122,6 +122,7 @@ export default function AdminDashboardPage() {
       }
       const credits = creditsInfo[newTier as keyof typeof creditsInfo] || "AI credits"
       alert(`User updated successfully!\nPlan: ${newTier.toUpperCase()}\nCredits assigned: ${credits}`)
+      // Stay in admin, don't redirect
     } catch (error) {
       console.error("[v0] Error updating user:", error)
       alert("Error updating user. Please try again.")
@@ -148,12 +149,7 @@ export default function AdminDashboardPage() {
       alert("User deleted successfully!")
       setDeleteDialogOpen(false)
       setUserToDelete(null)
-
-      const currentUserResponse = await fetch("/api/user/profile")
-      if (!currentUserResponse.ok) {
-        // Current user was deleted, redirect to landing
-        window.location.href = "/"
-      }
+      // Stay in admin dashboard, don't redirect
     } catch (error) {
       alert("Error deleting user. Please try again.")
     }

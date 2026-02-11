@@ -7,27 +7,27 @@
 - Selecciona tu proyecto: `futuristic-calendar`
 
 ### 1.2 Project Settings
-```
+\`\`\`
 Dashboard → Project Settings (⚙️ en la esquina)
-```
+\`\`\`
 
 ### 1.3 Auth → URL Configuration
-```
+\`\`\`
 Left sidebar: Auth → URL Configuration
-```
+\`\`\`
 
 ### 1.4 Site URL
-```
+\`\`\`
 Campo: Site URL
 Valor: https://future-task.com
 
 (En desarrollo: http://localhost:3000)
 
 Click: Save
-```
+\`\`\`
 
 ### 1.5 Redirect URLs
-```
+\`\`\`
 Campo: Redirect URLs (con botón +)
 
 Agrega estas URLs:
@@ -37,16 +37,16 @@ Agrega estas URLs:
 ✅ http://localhost:3000/reset-password
 
 Click: Save
-```
+\`\`\`
 
 ---
 
 ## PASO 2: Email Templates (5 minutos)
 
 ### 2.1 Ir a Email Templates
-```
+\`\`\`
 Left sidebar: Auth → Email Templates
-```
+\`\`\`
 
 ### 2.2 Confirm Signup Template
 
@@ -55,13 +55,13 @@ Left sidebar: Auth → Email Templates
 **Llena estos campos:**
 
 1. **Subject (Asunto):**
-```
+\`\`\`
 Confirma tu cuenta en Future Task
-```
+\`\`\`
 
 2. **Template Body:**
 Copia y pega esto:
-```html
+\`\`\`html
 <html>
   <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -89,7 +89,7 @@ Copia y pega esto:
     </div>
   </body>
 </html>
-```
+\`\`\`
 
 **Click:** Save
 
@@ -100,13 +100,13 @@ Copia y pega esto:
 **Llena estos campos:**
 
 1. **Subject (Asunto):**
-```
+\`\`\`
 Restablece tu contraseña en Future Task
-```
+\`\`\`
 
 2. **Template Body:**
 Copia y pega esto:
-```html
+\`\`\`html
 <html>
   <body style="font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -138,7 +138,7 @@ Copia y pega esto:
     </div>
   </body>
 </html>
-```
+\`\`\`
 
 **Click:** Save
 
@@ -147,15 +147,15 @@ Copia y pega esto:
 ## PASO 3: Email Provider (2 minutos)
 
 ### 3.1 Email Configuration
-```
+\`\`\`
 Project Settings → Email
-```
+\`\`\`
 
 ### 3.2 Opción A: SMTP (RECOMENDADO)
 
 **¿Tienes cuenta en SendGrid, Mailgun, o similar?**
 
-```
+\`\`\`
 1. Enable Custom SMTP: ON
 2. SMTP Host: tu-proveedor.com
 3. SMTP Port: 587
@@ -164,17 +164,17 @@ Project Settings → Email
 6. Sender Email: support@future-task.com
 7. Sender Name: Future Task
 8. Click: Save
-```
+\`\`\`
 
 ### 3.2 Opción B: Email Services Supabase
 
 **Si NO tienes SMTP:**
 
-```
+\`\`\`
 1. Email Services: ON
 2. Las confirmaciones funcionarán automáticamente
 3. Limitado pero funciona para beta
-```
+\`\`\`
 
 ---
 
@@ -186,10 +186,10 @@ Project Settings → Email
    (O `http://localhost:3000/signup` en desarrollo)
 
 2. Registrate con tu email real:
-   ```
+   \`\`\`
    Email: tu-email@example.com
    Password: Test1234!
-   ```
+   \`\`\`
 
 3. **Revisa tu email**
    - Mira en INBOX
@@ -210,9 +210,9 @@ Project Settings → Email
 1. Abre: `https://future-task.com/forgot-password`
 
 2. Ingresa tu email:
-   ```
+   \`\`\`
    Email: tu-email@example.com
-   ```
+   \`\`\`
 
 3. **Revisa tu email**
    - Mira en INBOX
@@ -232,7 +232,7 @@ Project Settings → Email
 
 ## ✅ Checklist Final
 
-```
+\`\`\`
 [ ] Site URL configurada
 [ ] Redirect URLs añadidas (4 URLs)
 [ ] Confirm Signup template configurado
@@ -242,7 +242,7 @@ Project Settings → Email
 [ ] Prueba signup: recibí email
 [ ] Prueba forgot: recibí email
 [ ] Ambos flujos funcionan
-```
+\`\`\`
 
 ---
 

@@ -83,60 +83,41 @@ export async function POST(request: Request) {
 
     console.log("[SERVER][v0] Profile created successfully")
 
+    // Send verification email using Supabase
+    console.log("[SERVER][v0] Sending verification email...")
+    try {
+      const { error: emailError } = await supabase.auth.resend({
+        type: "signup",
+        email: email,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
+        },
+      })
+
+      if (emailError) {
+        console.warn("[SERVER][v0] Failed to send verification email:", emailError.message)
+      } else {
+        console.log("[SERVER][v0] Verification email sent successfully")
+      }
+    } catch (emailError: any) {
+      console.warn("[SERVER][v0] Failed to send verification email:", emailError.message)
+    }
+
+    // Try to send welcome email as well (optional)
     try {
       const { sendWelcomeEmail } = await import("@/lib/email")
       await sendWelcomeEmail(email, name)
       console.log("[SERVER][v0] Welcome email sent successfully")
     } catch (emailError: any) {
       console.warn("[SERVER][v0] Failed to send welcome email:", emailError.message)
-      // Don't fail the signup if email fails - user account is created
     }
 
-    // Auto-login
-    console.log("[SERVER][v0] Attempting auto-login...")
-    const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-    })
-
-    if (loginResponse.ok) {
-      const loginData = await loginResponse.json()
-
-      if (loginData.access_token && loginData.refresh_token) {
-        const cookieStore = await cookies()
-
-        cookieStore.set("sb-access-token", loginData.access_token, {
-          path: "/",
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 7,
-        })
-
-        cookieStore.set("sb-refresh-token", loginData.refresh_token, {
-          path: "/",
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 30,
-        })
-
-        console.log("[SERVER][v0] Auto-login successful, cookies set")
-      }
-    } else {
-      console.error("[SERVER][v0] Auto-login failed")
-    }
+    // Do NOT auto-login - user must verify email first
+    console.log("[SERVER][v0] User created, verification email sent. User must verify to login.")
 
     return NextResponse.json({
       success: true,
-      message: "Account created successfully!",
+      message: "Account created! Please check your email to verify your account.",
     })
   } catch (error: any) {
     console.error("[SERVER][v0] Signup error:", error)
