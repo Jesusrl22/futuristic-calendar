@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: false,
+        email_confirm: false, // User must verify email
         user_metadata: {
           name: name,
           language: language,
@@ -48,6 +48,30 @@ export async function POST(request: Request) {
         console.error("[SERVER][v0] Auth creation failed:", authError)
         return NextResponse.json({ error: authError.message }, { status: 400 })
       }
+
+      userId = authData?.user?.id
+      console.log("[SERVER][v0] User created with ID:", userId)
+
+      // Send verification email using Supabase
+      console.log("[SERVER][v0] Sending verification email to:", email)
+      const { error: emailError } = await supabase.auth.admin.generateLink({
+        type: "signup",
+        email: email,
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/callback`,
+        },
+      })
+
+      if (emailError) {
+        console.error("[SERVER][v0] Verification email failed:", emailError)
+        return NextResponse.json(
+          { error: "User created but verification email failed. Please try 'Resend Verification Email'" },
+          { status: 400 }
+        )
+      }
+
+      console.log("[SERVER][v0] Verification email sent successfully")
+    }
 
       userId = authData.user.id
       console.log("[SERVER][v0] User created in auth with ID:", userId)
