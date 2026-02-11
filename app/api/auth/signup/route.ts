@@ -73,10 +73,6 @@ export async function POST(request: Request) {
       console.log("[SERVER][v0] Verification email sent successfully")
     }
 
-      userId = authData.user.id
-      console.log("[SERVER][v0] User created in auth with ID:", userId)
-    }
-
     // Create profile in users table
     console.log("[SERVER][v0] Creating user profile for ID:", userId)
     const { error: profileError } = await supabase.from("users").insert({
