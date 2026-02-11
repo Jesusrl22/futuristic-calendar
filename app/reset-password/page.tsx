@@ -153,7 +153,7 @@ function ResetPasswordContent() {
 
       console.log("[v0] Updating password with access token")
 
-      // Update password using the access token
+      // Update password using the access token from Supabase
       const { error: updateError } = await supabase.auth.updateUser({
         password: password,
       })
@@ -168,10 +168,12 @@ function ResetPasswordContent() {
       setSuccess(t.success)
       console.log("[v0] Password updated successfully")
       
+      // Wait before redirecting
       setTimeout(() => {
-        // Clear the hash to remove tokens
+        // Clear the hash to remove tokens from URL
         window.history.replaceState({}, document.title, window.location.pathname)
-        router.push("/app")
+        // Redirect to login
+        router.push("/login")
       }, 2000)
     } catch (err: any) {
       console.error("[v0] Reset password error:", err)
