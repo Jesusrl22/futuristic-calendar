@@ -10,12 +10,12 @@ Los emails de reseteo de contraseña no se enviaban cuando los usuarios hacían 
 - Supabase manejará automáticamente el envío del email
 - No requiere SMTP personalizado (a menos que lo hayas configurado)
 
-```typescript
+\`\`\`typescript
 // El flujo es:
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
   redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`
 })
-```
+\`\`\`
 
 ### 2. **Página `/reset-password`** ✓
 - Valida que ambas contraseñas coincidan
@@ -23,10 +23,10 @@ const { error } = await supabase.auth.resetPasswordForEmail(email, {
 - Redirige a `/login` después de completar
 - Limpia el hash del URL para remover tokens
 
-```typescript
+\`\`\`typescript
 const { error } = await supabase.auth.updateUser({ password })
 // Si error = null, la contraseña se actualizó en la BD
-```
+\`\`\`
 
 ### 3. **Validación en `/api/auth/login`** ✓
 - Verifica que el email esté confirmado (`email_confirmed_at`)
@@ -40,16 +40,16 @@ const { error } = await supabase.auth.updateUser({ password })
 Ve a tu proyecto en [app.supabase.com](https://app.supabase.com) y completa estos pasos:
 
 ### Paso 1: Email Auth Habilitado
-```
+\`\`\`
 Authentication → Providers → Email
-```
+\`\`\`
 - [ ] El proveedor "Email" está **ON** (verde)
 - [ ] Si ves botones, haz clic en el ícono de engranaje ⚙️
 
 ### Paso 2: Email Templates Configuradas
-```
+\`\`\`
 Authentication → Email Templates
-```
+\`\`\`
 Verifica que estas plantillas existan y estén **habilitadas**:
 - [ ] **Confirm signup** (para verificación inicial)
 - [ ] **Reset Password** (IMPORTANTE para cambiar contraseña)
@@ -63,9 +63,9 @@ En `Authentication → Email Templates → Reset Password`:
 - [ ] Si es una plantilla personalizada, el asunto es claro
 
 ### Paso 4: Verificar SMTP (si lo tienes configurado)
-```
+\`\`\`
 Authentication → Email → SMTP Settings
-```
+\`\`\`
 Si ves aquí un proveedor (SendGrid, Resend, etc):
 - [ ] Host: correcto
 - [ ] Puerto: 587 o 465
@@ -80,7 +80,7 @@ Si no ves SMTP personalizado:
 
 ## 🚀 Flujo Completo de Funcionamiento
 
-```
+\`\`\`
 1. USUARIO → "Olvidé contraseña"
    ↓
 2. FRONTEND → POST /api/auth/forgot-password { email }
@@ -106,17 +106,17 @@ Si no ves SMTP personalizado:
 11. FRONTEND → Redirige a /login
     ↓
 12. USUARIO → Logea con nueva contraseña ✓
-```
+\`\`\`
 
 ---
 
 ## 🧪 Cómo Probar
 
 ### Opción 1: Script automático
-```bash
+\`\`\`bash
 chmod +x scripts/test-password-reset.sh
 bash scripts/test-password-reset.sh test@ejemplo.com
-```
+\`\`\`
 
 ### Opción 2: Manual
 1. Ve a http://localhost:3000/forgot-password
@@ -127,9 +127,9 @@ bash scripts/test-password-reset.sh test@ejemplo.com
 6. Logea con la nueva contraseña
 
 ### Opción 3: Logs en Supabase
-```
+\`\`\`
 Authentication → Logs
-```
+\`\`\`
 Busca eventos recientes:
 - `send_email` = email enviado ✓
 - `update_user` = contraseña actualizada ✓
@@ -174,18 +174,18 @@ Busca eventos recientes:
 
 En tu proyecto de Vercel, asegúrate de tener:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
 NEXT_PUBLIC_APP_URL=http://localhost:3000  # O tu URL de producción
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...  # Para operaciones de admin
-```
+\`\`\`
 
 Verifica:
-```bash
+\`\`\`bash
 # En Vercel Settings → Environment Variables
 vercel env list
-```
+\`\`\`
 
 ---
 
@@ -228,9 +228,9 @@ vercel env list
 Si algo sigue sin funcionar:
 
 1. **Revisa los logs de Supabase:**
-   ```
+   \`\`\`
    Authentication → Logs
-   ```
+   \`\`\`
 
 2. **Abre DevTools:**
    - F12 en el navegador

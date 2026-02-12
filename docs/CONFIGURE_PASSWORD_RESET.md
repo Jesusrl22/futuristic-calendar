@@ -33,11 +33,11 @@ Si tienes SMTP personalizado (SendGrid, Resend, etc):
 ### Paso 3: Prueba el Flujo Completo
 
 1. **Solicitar Reset:**
-   ```bash
+   \`\`\`bash
    curl -X POST http://localhost:3000/api/auth/forgot-password \
      -H "Content-Type: application/json" \
      -d '{"email":"test@example.com"}'
-   ```
+   \`\`\`
 
 2. **Verifica tu consola de Supabase:**
    - Ve a **Logs** → **Auth Logs**
@@ -48,13 +48,13 @@ Si tienes SMTP personalizado (SendGrid, Resend, etc):
 ### Paso 4: Si Aún No Funciona
 
 **Opción A: Verificar logs**
-```sql
+\`\`\`sql
 -- En SQL Editor de Supabase:
 SELECT * FROM auth.audit_log_entries 
 WHERE event = 'mail_send' 
 ORDER BY created_at DESC 
 LIMIT 10;
-```
+\`\`\`
 
 **Opción B: Verificar configuración SMTP**
 - Ve a **Authentication** → **Providers** → **Email**
@@ -70,15 +70,15 @@ LIMIT 10;
 
 En tu Vercel/proyecto, asegúrate de tener:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
 NEXT_PUBLIC_APP_URL=http://localhost:3000  # o tu URL de producción
-```
+\`\`\`
 
 ## Flujo de Funcionamiento
 
-```
+\`\`\`
 Usuario hace clic "Olvidé contraseña"
     ↓
 Ingresa email → POST /api/auth/forgot-password
@@ -102,13 +102,13 @@ Contraseña se actualiza en BD
 Redirige a /login
     ↓
 Usuario puede loguear con nueva contraseña ✓
-```
+\`\`\`
 
 ## Debugging
 
 Si recibes errores, agrega estos logs:
 
-```typescript
+\`\`\`typescript
 // En /app/api/auth/forgot-password/route.ts
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
   redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password`,
@@ -121,7 +121,7 @@ if (error) {
     code: error.code,
   })
 }
-```
+\`\`\`
 
 Si error.code es `"email_disabled"` → Email Auth no está habilitado en Supabase
 Si error.message contiene `SMTP` → Problema con tu proveedor de email

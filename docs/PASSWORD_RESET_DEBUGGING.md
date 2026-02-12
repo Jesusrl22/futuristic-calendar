@@ -5,29 +5,29 @@
 ### 1. Logs en el Navegador (Frontend)
 Abre **DevTools** (F12):
 
-```javascript
+\`\`\`javascript
 // Console → Busca logs con "[v0]"
 [v0] Solicitud de cambio de contraseña para: user@email.com
 [v0] Valid recovery token found in URL
 [v0] Updating password with access token
 [v0] Password updated successfully
-```
+\`\`\`
 
 **Si ves estos logs: ✓ El cambio funcionó**
 
 ### 2. Logs en Supabase Dashboard
 
 **Opción A: Authentication Logs**
-```
+\`\`\`
 Dashboard → Authentication → Logs
-```
+\`\`\`
 Busca eventos como:
 - `send_email` (email enviado)
 - `recover_user` (enlace de recuperación generado)
 - `update_user` (contraseña actualizada)
 
 **Opción B: SQL Query Editor**
-```sql
+\`\`\`sql
 -- En SQL Editor de Supabase:
 SELECT 
   id, 
@@ -39,14 +39,14 @@ FROM auth.audit_log_entries
 WHERE event IN ('send_email', 'recover_user', 'update_user')
 ORDER BY created_at DESC 
 LIMIT 20;
-```
+\`\`\`
 
 **Opción C: Verificar Usuario**
-```
+\`\`\`
 Dashboard → Authentication → Users
 → Busca el email
 → Haz clic en el usuario
-```
+\`\`\`
 Verifica:
 - `email_confirmed_at` = debe tener fecha (no null)
 - `last_password_change` = debe actualizarse al cambiar contraseña
@@ -56,7 +56,7 @@ Verifica:
 ## ❌ Mensajes de Error Comunes
 
 ### Error 1: "Invalid or expired reset link"
-```
+\`\`\`
 Posibles causas:
 1. El token del URL es inválido
 2. El enlace expiró (>24 horas)
@@ -66,10 +66,10 @@ Solución:
 - Solicita un nuevo reset
 - Usa el link dentro de 24 horas
 - Un token solo puede usarse una vez
-```
+\`\`\`
 
 ### Error 2: "Failed to update password"
-```
+\`\`\`
 Posibles causas:
 1. El token es inválido
 2. La sesión de Supabase expiró
@@ -79,10 +79,10 @@ Solución:
 - Recarga la página
 - Solicita un nuevo link de reset
 - Verifica tu conexión a internet
-```
+\`\`\`
 
 ### Error 3: "Passwords do not match"
-```
+\`\`\`
 Posible causa:
 - Las dos contraseñas ingresadas no son idénticas
 
@@ -90,20 +90,20 @@ Solución:
 - Verifica que ambos campos sean exactamente iguales
 - Cuidado con mayúsculas/minúsculas
 - Cuidado con espacios en blanco
-```
+\`\`\`
 
 ### Error 4: "Password must be at least 6 characters"
-```
+\`\`\`
 Posible causa:
 - La contraseña tiene menos de 6 caracteres
 
 Solución:
 - Usa una contraseña más larga (mínimo 6 caracteres)
 - Ejemplo: "Abc123" o "MiContraseña"
-```
+\`\`\`
 
 ### Error 5: "Email not verified" (al intentar loguear)
-```
+\`\`\`
 Posible causa:
 - El usuario nunca confirmó su email
 
@@ -111,10 +111,10 @@ Solución:
 - Revisa el email de confirmación que recibiste
 - Haz clic en el link de confirmación
 - Si no lo tienes, solicita reenvío
-```
+\`\`\`
 
 ### Error 6: "No valid recovery token found"
-```
+\`\`\`
 Posible causa:
 - El URL no contiene el token (access_token)
 - El tipo de token no es "recovery"
@@ -123,10 +123,10 @@ Solución:
 - Copia el URL completo del email
 - Verifica que contenga ?access_token=...&type=recovery
 - No edites el URL
-```
+\`\`\`
 
 ### Error 7: Email no enviado (sin error)
-```
+\`\`\`
 Posible causa:
 1. Email Auth no está habilitado en Supabase
 2. SMTP mal configurado
@@ -136,7 +136,7 @@ Solución:
 - Ve a Authentication → Providers → Email (debe estar ON)
 - Revisa carpeta SPAM
 - Verifica logs de Supabase (Authentication → Logs)
-```
+\`\`\`
 
 ---
 
@@ -144,7 +144,7 @@ Solución:
 
 ### Paso 1: Verificar que el Endpoint Funciona
 
-```bash
+\`\`\`bash
 # En terminal, ejecuta:
 curl -X POST http://localhost:3000/api/auth/forgot-password \
   -H "Content-Type: application/json" \
@@ -152,14 +152,14 @@ curl -X POST http://localhost:3000/api/auth/forgot-password \
 
 # Respuesta esperada:
 # {"success":true,"message":"Si existe una cuenta..."}
-```
+\`\`\`
 
 ### Paso 2: Verificar que Supabase Recibe la Solicitud
 
 En Supabase:
-```
+\`\`\`
 Authentication → Logs
-```
+\`\`\`
 - Busca un evento reciente con tu email
 - Si ves `send_email` = Supabase intentó enviar
 - Si ves error = lee el mensaje de error
@@ -180,7 +180,7 @@ Si no aparece:
 
 Cuando hagas clic en el link del email:
 
-```javascript
+\`\`\`javascript
 // En Console (DevTools F12):
 const url = new URL(window.location.href)
 console.log("Full URL:", url.href)
@@ -188,7 +188,7 @@ console.log("Access Token:", url.hash)
 
 // Deberías ver algo como:
 // #access_token=eyJhbGc...&type=recovery
-```
+\`\`\`
 
 Si falta `access_token` o `type`:
 - El email tiene un problema
@@ -196,20 +196,20 @@ Si falta `access_token` o `type`:
 
 ### Paso 5: Verificar la Actualización de Contraseña
 
-```javascript
+\`\`\`javascript
 // En Console mientras estás en /reset-password:
 // Después de ingresa la contraseña, busca logs:
 console.log("[v0] Updating password with access token")
 console.log("[v0] Password updated successfully")
 // O error:
 console.error("[v0] Password update error:")
-```
+\`\`\`
 
 ### Paso 6: Verificar el Login
 
 Después de que se cambie la contraseña:
 
-```bash
+\`\`\`bash
 # En terminal:
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -220,7 +220,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 # Respuesta esperada (fallo - contraseña vieja):
 # {"error":"Invalid credentials"}
-```
+\`\`\`
 
 ---
 
@@ -264,7 +264,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 En Supabase SQL Editor:
 
-```sql
+\`\`\`sql
 -- Ver todos los usuarios con su estado
 SELECT 
   id,
@@ -297,7 +297,7 @@ SELECT
 FROM auth.users
 WHERE email_confirmed_at IS NULL
 ORDER BY created_at DESC;
-```
+\`\`\`
 
 ---
 
@@ -306,7 +306,7 @@ ORDER BY created_at DESC;
 ### Console (F12)
 Busca mensajes con estos patrones:
 
-```javascript
+\`\`\`javascript
 // Logs esperados:
 "[v0]" // Logs del frontend
 "[SERVER][v0]" // Logs del servidor
@@ -315,12 +315,12 @@ Busca mensajes con estos patrones:
 // Errores esperados:
 "error" // Errores en console
 "Error" // Excepciones de JavaScript
-```
+\`\`\`
 
 ### Network (F12)
 Haz clic en la tab "Network" y busca:
 
-```
+\`\`\`
 POST /api/auth/forgot-password
   Status: 200
   Response: {"success":true}
@@ -328,7 +328,7 @@ POST /api/auth/forgot-password
 POST /api/auth/login
   Status: 200
   Response: {"success":true,"user":{...}}
-```
+\`\`\`
 
 ### Storage (F12)
 En tab "Application" o "Storage", busca cookies:
@@ -342,28 +342,28 @@ Si están presentes después de login: ✓ Sesión activa
 ## 🚨 Casos Extremos
 
 ### El usuario olvidó dos veces el email
-```
+\`\`\`
 Solución:
 1. Genera otro link de reset
 2. El usuario solo puede usar el último link
 3. Todos los links anteriores quedan inválidos
-```
+\`\`\`
 
 ### El usuario cambió de dispositivo
-```
+\`\`\`
 Solución:
 1. El link debe funcionar desde cualquier dispositivo
 2. Si no funciona, verifica que el navegador tenga cookies habilitadas
 3. Intenta en navegación privada/incógnito
-```
+\`\`\`
 
 ### El usuario tiene múltiples emails
-```
+\`\`\`
 Nota:
 - Cada email es una cuenta separada
 - El link solo funciona con el email que solicitó el reset
 - No es posible cambiar email con el link de reset
-```
+\`\`\`
 
 ---
 
@@ -374,9 +374,9 @@ Si nada funciona, prepara esta información:
 1. **Tu email** para probar: _______
 2. **Error exacto** que ves: _______
 3. **Logs de Supabase** (copiar de Authentication → Logs):
-   ```
+   \`\`\`
    [pegar logs aquí]
-   ```
+   \`\`\`
 4. **URL de tu app**: _______
 5. **Ambiente** (dev/staging/production): _______
 

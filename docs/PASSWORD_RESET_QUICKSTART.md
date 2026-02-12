@@ -13,15 +13,15 @@
 Ve a: https://app.supabase.com → Tu Proyecto
 
 ### 2. Habilita Email Auth
-```
+\`\`\`
 Authentication → Providers → Email
-```
+\`\`\`
 **Click el botón para que esté ON (verde)**
 
 ### 3. Verifica Template de Reset
-```
+\`\`\`
 Authentication → Email Templates
-```
+\`\`\`
 Busca "Reset Password" y verifica:
 - [ ] Dice "Enabled" (no "Disabled")
 - [ ] Contiene `{{ .ConfirmationURL }}`
@@ -29,21 +29,21 @@ Busca "Reset Password" y verifica:
 
 ### 4. Verifica Variables de Entorno
 En tu Vercel Project → Settings → Environment Variables:
-```
+\`\`\`
 ✓ NEXT_PUBLIC_SUPABASE_URL
 ✓ NEXT_PUBLIC_SUPABASE_ANON_KEY
 ✓ NEXT_PUBLIC_APP_URL
 ✓ SUPABASE_SERVICE_ROLE_KEY
-```
+\`\`\`
 
 ---
 
 ## 🧪 Prueba en 5 Pasos
 
 ### Paso 1: Ir a Olvidé Contraseña
-```
+\`\`\`
 http://localhost:3000/forgot-password
-```
+\`\`\`
 
 ### Paso 2: Ingresa un Email
 Usa un email real que puedas revisar
@@ -57,11 +57,11 @@ Usa un email real que puedas revisar
 El email debe contener un botón o link que dice "Restablecer Contraseña"
 
 ### Paso 5: Cambia la Contraseña
-```
+\`\`\`
 Nueva contraseña: ______
 Confirmar:        ______
 [Restablecer Contraseña]
-```
+\`\`\`
 
 Si todo funciona:
 - ✓ Verás: "¡Contraseña restablecida!"
@@ -73,29 +73,29 @@ Si todo funciona:
 ## ❌ Si no Funciona
 
 **No recibiste email → Problema 1**
-```
+\`\`\`
 1. Revisa SPAM
 2. Ve a Supabase → Authentication → Providers
 3. Verifica que "Email" esté ON
 4. Si no está: Haz click para habilitarlo
 5. Intenta de nuevo
-```
+\`\`\`
 
 **Recibiste email pero link no funciona → Problema 2**
-```
+\`\`\`
 1. El link tiene una fecha de expiración (24 horas)
 2. No pueden usarse dos veces
 3. Solicita un nuevo link
-```
+\`\`\`
 
 **Cambias contraseña pero no puedes loguear → Problema 3**
-```
+\`\`\`
 1. ¿Estás usando la NUEVA contraseña?
 2. ¿Tu email está confirmado?
 3. Ve a Supabase → Authentication → Users
 4. Busca tu email
 5. ¿Dice "email_confirmed_at"? Si dice "null" = email no confirmado
-```
+\`\`\`
 
 ---
 
@@ -110,7 +110,7 @@ Después de verificar que funciona, lee:
 
 ## 📧 Resumen del Flujo
 
-```
+\`\`\`
 USUARIO:
   1. Hago clic en "Olvidé contraseña"
   2. Ingreso mi email
@@ -127,7 +127,7 @@ SISTEMA:
   4. Token solo puede usarse una vez
   5. Después de usar, actualiza la contraseña en BD
   6. Usuario puede logear inmediatamente ✓
-```
+\`\`\`
 
 ---
 
@@ -143,7 +143,7 @@ SISTEMA:
 
 ## 🆘 Ayuda Rápida
 
-```bash
+\`\`\`bash
 # Ver logs de tu app:
 # F12 en navegador → Console → Busca "[v0]"
 
@@ -157,7 +157,7 @@ curl -X POST http://localhost:3000/api/auth/forgot-password \
 
 # Verifica variable de entorno:
 echo $NEXT_PUBLIC_APP_URL
-```
+\`\`\`
 
 ---
 
