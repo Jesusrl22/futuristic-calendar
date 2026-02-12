@@ -1,14 +1,31 @@
 import nodemailer from "nodemailer"
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number.parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_PORT === "465",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-})
+// Crear transporter solo si las variables están configuradas
+function createTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+    console.error("[EMAIL] Variables SMTP no configuradas")
+    throw new Error("SMTP no configurado. Configura SMTP_HOST, SMTP_USER, SMTP_PASSWORD en las variables de entorno")
+  }
+
+  const config = {
+    host: process.env.SMTP_HOST,
+    port: Number.parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_PORT === "465",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  }
+
+  console.log("[EMAIL] Creando transporter con:", {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    user: config.auth.user?.substring(0, 3) + "***",
+  })
+
+  return nodemailer.createTransport(config)
+}
 
 export async function sendVerificationEmail(email: string, name?: string) {
   const userName = name || email.split("@")[0]
@@ -71,8 +88,9 @@ export async function sendVerificationEmail(email: string, name?: string) {
   `
 
   try {
+    const transporter = createTransporter()
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || "noreply@example.com",
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Verifica tu email en Future Task",
       html: htmlContent,
@@ -141,8 +159,9 @@ export async function sendPasswordResetEmail(email: string, resetLink: string, n
   `
 
   try {
+    const transporter = createTransporter()
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || "noreply@example.com",
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Restablecer tu contraseña",
       html: htmlContent,
@@ -208,8 +227,9 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   `
 
   try {
+    const transporter = createTransporter()
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || "noreply@example.com",
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Bienvenido a Future Task",
       html: htmlContent,
@@ -272,8 +292,9 @@ export async function sendNewDeviceLoginEmail(email: string, name?: string, devi
   `
 
   try {
+    const transporter = createTransporter()
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || "noreply@example.com",
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Nuevo inicio de sesión en tu cuenta",
       html: htmlContent,
@@ -332,8 +353,9 @@ export async function sendSubscriptionCancelledEmail(email: string, name?: strin
   `
 
   try {
+    const transporter = createTransporter()
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || "noreply@example.com",
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Tu suscripción a Future Task ha sido cancelada",
       html: htmlContent,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import nodemailer from "nodemailer"
 import crypto from "crypto"
+import { sendPasswordResetEmail } from "@/lib/email"
 
 export async function POST(request: Request) {
   try {
@@ -62,46 +62,15 @@ export async function POST(request: Request) {
       })
     }
 
-    // Configurar transporte de nodemailer con Zoho
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtp.zoho.eu",
-      port: parseInt(process.env.SMTP_PORT || "465"),
-      secure: true, // SSL
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    })
-
     // Crear URL de reset
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`
 
-    // HTML del email
-    const htmlContent = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Restablecer tu contraseña</h2>
-        <p style="color: #666;">Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para continuar:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Restablecer Contraseña</a>
-        </div>
-        <p style="color: #999; font-size: 12px;">O copia y pega este enlace en tu navegador: ${resetUrl}</p>
-        <p style="color: #999; font-size: 12px;">Este enlace expirará en 1 hora.</p>
-        <p style="color: #999; font-size: 12px;">Si no solicitaste este cambio, ignora este email.</p>
-      </div>
-    `
+    console.log("[v0] Token guardado, enviando email...")
 
-    // Enviar email
+    // Enviar email usando la función de la librería
     try {
-      console.log("[v0] Intentando enviar email a:", email)
-      const info = await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: email,
-        subject: "Restablecer tu contraseña",
-        html: htmlContent,
-        text: `Restablecer tu contraseña: ${resetUrl}`,
-      })
-
-      console.log("[v0] Email de reset enviado exitosamente:", info.messageId)
+      await sendPasswordResetEmail(email, resetUrl)
+      console.log("[v0] Email de reset enviado exitosamente")
 
       return NextResponse.json({
         success: true,
@@ -109,7 +78,6 @@ export async function POST(request: Request) {
       })
     } catch (emailError: any) {
       console.error("[v0] Error al enviar email:", emailError.message)
-      console.error("[v0] Código de error:", emailError.code)
       
       // Aún así retornar éxito por seguridad
       return NextResponse.json({
