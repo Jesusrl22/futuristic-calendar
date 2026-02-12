@@ -6,7 +6,11 @@
     },
     {
       "path": "/api/cron/check-upcoming-events",
-      "schedule": "* * * * *"
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/ai/reset-credits",
+      "schedule": "0 0 1 * *"
     }
   ]
 }
