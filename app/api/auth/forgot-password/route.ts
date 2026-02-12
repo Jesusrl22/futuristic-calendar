@@ -13,10 +13,16 @@ export async function POST(request: Request) {
 
     console.log("[v0] Solicitud de cambio de contraseña para:", email)
 
-    // Crear cliente Supabase
+    // Usar SERVICE_ROLE_KEY para evitar RLS recursion - esto bypasa las políticas RLS
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
     )
 
     // Verificar si el usuario existe
@@ -84,14 +90,6 @@ export async function POST(request: Request) {
       </div>
     `
 
-    // Verificar configuración SMTP
-    console.log("[v0] Configuración SMTP:")
-    console.log("[v0] - Host:", process.env.SMTP_HOST || "smtp.zoho.eu")
-    console.log("[v0] - Port:", process.env.SMTP_PORT || "465")
-    console.log("[v0] - User:", process.env.SMTP_USER ? "[CONFIGURADO]" : "[NO CONFIGURADO]")
-    console.log("[v0] - Password:", process.env.SMTP_PASSWORD ? "[CONFIGURADO]" : "[NO CONFIGURADO]")
-    console.log("[v0] - From:", process.env.SMTP_FROM || process.env.SMTP_USER)
-
     // Enviar email
     try {
       console.log("[v0] Intentando enviar email a:", email)
@@ -112,7 +110,6 @@ export async function POST(request: Request) {
     } catch (emailError: any) {
       console.error("[v0] Error al enviar email:", emailError.message)
       console.error("[v0] Código de error:", emailError.code)
-      console.error("[v0] Stack:", emailError.stack)
       
       // Aún así retornar éxito por seguridad
       return NextResponse.json({
@@ -122,7 +119,6 @@ export async function POST(request: Request) {
     }
   } catch (error: any) {
     console.error("[v0] Error en forgot password:", error.message)
-    console.error("[v0] Stack:", error.stack)
     return NextResponse.json({
       success: true,
       message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
