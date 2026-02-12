@@ -13,10 +13,16 @@ export async function POST(request: Request) {
 
     console.log("[v0] Solicitud de cambio de contraseña para:", email)
 
-    // Crear cliente Supabase
+    // Usar SERVICE_ROLE_KEY para evitar RLS recursion - esto bypasa las políticas RLS
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
     )
 
     // Verificar si el usuario existe
@@ -85,20 +91,32 @@ export async function POST(request: Request) {
     `
 
     // Enviar email
-    const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: email,
-      subject: "Restablecer tu contraseña",
-      html: htmlContent,
-      text: `Restablecer tu contraseña: ${resetUrl}`,
-    })
+    try {
+      console.log("[v0] Intentando enviar email a:", email)
+      const info = await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: email,
+        subject: "Restablecer tu contraseña",
+        html: htmlContent,
+        text: `Restablecer tu contraseña: ${resetUrl}`,
+      })
 
-    console.log("[v0] Email de reset enviado exitosamente:", info.messageId)
+      console.log("[v0] Email de reset enviado exitosamente:", info.messageId)
 
-    return NextResponse.json({
-      success: true,
-      message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
-    })
+      return NextResponse.json({
+        success: true,
+        message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
+      })
+    } catch (emailError: any) {
+      console.error("[v0] Error al enviar email:", emailError.message)
+      console.error("[v0] Código de error:", emailError.code)
+      
+      // Aún así retornar éxito por seguridad
+      return NextResponse.json({
+        success: true,
+        message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
+      })
+    }
   } catch (error: any) {
     console.error("[v0] Error en forgot password:", error.message)
     return NextResponse.json({

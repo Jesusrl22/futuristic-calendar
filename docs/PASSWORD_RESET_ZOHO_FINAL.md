@@ -26,7 +26,7 @@ Se ha implementado un sistema completo de reset de contraseña usando tu servido
 
 Agrega estas en tu proyecto Vercel o en `.env.local`:
 
-```env
+\`\`\`env
 # Configuración SMTP de Zoho
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
@@ -36,7 +36,7 @@ SMTP_FROM=tu_email@tudominio.com
 
 # URL de la app (importante para los links en emails)
 NEXT_PUBLIC_APP_URL=https://tudominio.com
-```
+\`\`\`
 
 ## 📧 ¿Cómo obtener SMTP_PASSWORD?
 
@@ -58,21 +58,21 @@ NEXT_PUBLIC_APP_URL=https://tudominio.com
 4. Deberías recibir el email con el link de reset
 
 ### Opción 2: Desde terminal (si tienes variables de entorno)
-```bash
+\`\`\`bash
 chmod +x scripts/test-zoho-smtp.sh
 ./scripts/test-zoho-smtp.sh
-```
+\`\`\`
 
 ### Opción 3: Con curl
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3000/api/auth/forgot-password \
   -H "Content-Type: application/json" \
   -d '{"email":"usuario@ejemplo.com"}'
-```
+\`\`\`
 
 ## 📧 Flujo Completo de Usuario
 
-```
+\`\`\`
 1. Usuario hace clic en "Olvidé contraseña" (/forgot-password)
    ↓
 2. Ingresa su email registrado
@@ -102,7 +102,7 @@ curl -X POST http://localhost:3000/api/auth/forgot-password \
     - Usuario ve "Éxito"
     ↓
 11. Usuario puede loguearse con nueva contraseña
-```
+\`\`\`
 
 ## 🛡️ Seguridad Implementada
 
