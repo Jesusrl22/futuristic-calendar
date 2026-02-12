@@ -35,7 +35,7 @@ Verifica que tienes estas 6 variables en Vercel > Vars:
 2. Abre > Deployments > Ver logs
 3. Intenta un forgot-password
 4. Mira el output - deberías ver:
-   ```
+   \`\`\`
    [v0] Solicitud de cambio de contraseña para: test@example.com
    [v0] Configuración SMTP:
    [v0] - Host: smtp.zoho.eu
@@ -45,11 +45,11 @@ Verifica que tienes estas 6 variables en Vercel > Vars:
    [v0] - From: tu_email@zoho.com
    [v0] Intentando enviar email a: test@example.com
    [v0] Email de reset enviado exitosamente: <message-id>
-   ```
+   \`\`\`
 
 ### Opción B: Prueba Local (si tienes Node.js)
 
-```bash
+\`\`\`bash
 # 1. Copia estas variables a tu .env.local
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
@@ -60,7 +60,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # 2. Ejecuta el script de prueba
 node scripts/test-email-zoho.js
-```
+\`\`\`
 
 Si ves `[SUCCESS]`, los emails funcionan correctamente.
 

@@ -62,6 +62,26 @@ export async function POST(request: Request) {
       })
     }
 
+    // Verificar que las variables SMTP estén configuradas
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error("[v0] ❌ Variables SMTP no configuradas")
+      console.error("[v0] Necesitas configurar: SMTP_USER, SMTP_PASSWORD, SMTP_HOST, SMTP_PORT, SMTP_FROM")
+      console.error("[v0] Token guardado en DB, pero email NO enviado")
+      
+      // Retornar éxito por seguridad (no revelar que SMTP no está configurado)
+      return NextResponse.json({
+        success: true,
+        message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
+        debug: "SMTP no configurado - revisa las variables de entorno en Vercel",
+      })
+    }
+
+    console.log("[v0] ✓ Variables SMTP configuradas")
+    console.log("[v0] - SMTP_HOST:", process.env.SMTP_HOST || "smtp.zoho.eu")
+    console.log("[v0] - SMTP_PORT:", process.env.SMTP_PORT || "465")
+    console.log("[v0] - SMTP_USER:", process.env.SMTP_USER?.substring(0, 3) + "***")
+    console.log("[v0] - SMTP_FROM:", process.env.SMTP_FROM || process.env.SMTP_USER)
+
     // Configurar transporte de nodemailer con Zoho
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || "smtp.zoho.eu",
@@ -101,20 +121,23 @@ export async function POST(request: Request) {
         text: `Restablecer tu contraseña: ${resetUrl}`,
       })
 
-      console.log("[v0] Email de reset enviado exitosamente:", info.messageId)
+      console.log("[v0] ✅ Email enviado exitosamente!")
+      console.log("[v0] Message ID:", info.messageId)
 
       return NextResponse.json({
         success: true,
         message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
       })
     } catch (emailError: any) {
-      console.error("[v0] Error al enviar email:", emailError.message)
-      console.error("[v0] Código de error:", emailError.code)
+      console.error("[v0] ❌ Error al enviar email:", emailError.message)
+      console.error("[v0] Código:", emailError.code)
+      console.error("[v0] Respuesta SMTP:", emailError.response)
       
       // Aún así retornar éxito por seguridad
       return NextResponse.json({
         success: true,
         message: "Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.",
+        debug: `Error SMTP: ${emailError.message}`,
       })
     }
   } catch (error: any) {
