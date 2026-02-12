@@ -54,7 +54,7 @@ Se reemplazó el sistema de emails de Supabase por **nodemailer + Zoho SMTP**, q
 
 ## 📧 EJEMPLO DE EMAIL QUE RECIBIRAS
 
-```
+\`\`\`
 De: tu_email@tudominio.com
 Asunto: Restablecer tu contraseña
 
@@ -69,14 +69,14 @@ https://tu-dominio.vercel.app/reset-password?token=abc123xyz...
 
 Este enlace expirará en 1 hora.
 Si no solicitaste esto, ignora este email.
-```
+\`\`\`
 
 ---
 
 ## 🧪 TESTS RÁPIDOS
 
 ### Test 1: ¿Está bien configurado?
-```bash
+\`\`\`bash
 # En tu terminal local
 cat > test.json << 'EOF'
 {"email": "test@example.com"}
@@ -84,13 +84,13 @@ EOF
 curl -X POST https://tudominio.vercel.app/api/auth/forgot-password \
   -H "Content-Type: application/json" \
   -d @test.json
-```
+\`\`\`
 
 ### Test 2: Revisa los logs
-```
+\`\`\`
 Vercel Dashboard → Deployments → Functions → Logs
 Busca: [v0] Email de reset enviado exitosamente
-```
+\`\`\`
 
 ---
 

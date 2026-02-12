@@ -4,14 +4,14 @@
 
 Necesitas agregar estas variables en tu proyecto Vercel:
 
-```
+\`\`\`
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
 SMTP_USER=tu_email@tudominio.com
 SMTP_PASSWORD=tu_contraseña_app
 SMTP_FROM=noreply@tudominio.com
 NEXT_PUBLIC_APP_URL=https://tuapp.com
-```
+\`\`\`
 
 ## 🔧 Pasos para Configurar
 
@@ -44,14 +44,14 @@ NEXT_PUBLIC_APP_URL=https://tuapp.com
 
 Crea o actualiza tu archivo `.env.local`:
 
-```
+\`\`\`
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
 SMTP_USER=tu_email@tudominio.com
 SMTP_PASSWORD=tu_contraseña_app
 SMTP_FROM=tu_email@tudominio.com
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+\`\`\`
 
 ## ✅ Verificar la Configuración
 
@@ -66,15 +66,15 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 Cuando se envíe un email, deberías ver algo como:
 
-```
+\`\`\`
 [v0] Email de reset enviado exitosamente: <email-id>
-```
+\`\`\`
 
 Si hay error:
 
-```
+\`\`\`
 [v0] Error en forgot password: [error details]
-```
+\`\`\`
 
 ## 🔍 Troubleshooting
 
@@ -93,7 +93,7 @@ Si hay error:
 
 ## 📧 Flujo Completo
 
-```
+\`\`\`
 1. Usuario hace clic en "Olvidé contraseña"
    ↓
 2. Ingresa su email
@@ -119,7 +119,7 @@ Si hay error:
 12. Token se limpia de la BD
     ↓
 13. Usuario puede hacer login con nueva contraseña
-```
+\`\`\`
 
 ## 🛡️ Seguridad
 
