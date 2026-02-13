@@ -3,14 +3,14 @@
 ## 🚀 Test Rápido
 
 ### 1. Accede a la página de test
-```
+\`\`\`
 https://tu-app.vercel.app/test-config
-```
+\`\`\`
 
 O ejecuta el endpoint directamente:
-```bash
+\`\`\`bash
 curl https://tu-app.vercel.app/api/test-config
-```
+\`\`\`
 
 Esto verificará automáticamente:
 - ✅ Variables de entorno
@@ -31,35 +31,35 @@ Esto verificará automáticamente:
 4. Copia la contraseña generada
 
 #### Paso 2: Configura las variables en Vercel
-```env
+\`\`\`env
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
 SMTP_USER=tu-email@tudominio.com
 SMTP_PASSWORD=la_app_password_que_copiaste
 SMTP_FROM=tu-email@tudominio.com
-```
+\`\`\`
 
 ### Opción 2: Gmail
 
-```env
+\`\`\`env
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_USER=tu-email@gmail.com
 SMTP_PASSWORD=tu_app_password_de_gmail
 SMTP_FROM=tu-email@gmail.com
-```
+\`\`\`
 
 **Nota**: En Gmail necesitas habilitar "App Passwords" en la configuración de seguridad.
 
 ### Opción 3: Outlook/Hotmail
 
-```env
+\`\`\`env
 SMTP_HOST=smtp-mail.outlook.com
 SMTP_PORT=587
 SMTP_USER=tu-email@outlook.com
 SMTP_PASSWORD=tu_contraseña
 SMTP_FROM=tu-email@outlook.com
-```
+\`\`\`
 
 ---
 
@@ -68,12 +68,12 @@ SMTP_FROM=tu-email@outlook.com
 ### Paso 1: Generar VAPID Keys
 
 Ejecuta este comando en tu terminal local:
-```bash
+\`\`\`bash
 npx web-push generate-vapid-keys
-```
+\`\`\`
 
 Obtendrás algo como:
-```
+\`\`\`
 =======================================
 
 Public Key:
@@ -83,15 +83,15 @@ Private Key:
 cqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYq...
 
 =======================================
-```
+\`\`\`
 
 ### Paso 2: Configura las variables en Vercel
 
-```env
+\`\`\`env
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=BNxN8fVYYYqF3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ...
 VAPID_PRIVATE_KEY=cqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYq...
 VAPID_SUBJECT=mailto:support@futuretask.app
-```
+\`\`\`
 
 **Importante**: 
 - La pública debe tener el prefijo `NEXT_PUBLIC_` 
@@ -112,9 +112,9 @@ VAPID_SUBJECT=mailto:support@futuretask.app
    - Deberías recibir un email con el link
 
 3. **Logs**: Revisa los logs en Vercel
-   ```
+   \`\`\`
    [EMAIL] ✓ Email de verificación enviado exitosamente a: email@example.com
-   ```
+   \`\`\`
 
 ### Test de Notificaciones
 
@@ -129,9 +129,9 @@ VAPID_SUBJECT=mailto:support@futuretask.app
 ### Los correos no se envían
 
 **Síntoma**: En los logs ves:
-```
+\`\`\`
 [EMAIL] ❌ Variables SMTP no configuradas
-```
+\`\`\`
 
 **Solución**:
 1. Ve a tu proyecto en Vercel
@@ -148,9 +148,9 @@ VAPID_SUBJECT=mailto:support@futuretask.app
 ### Las notificaciones no llegan
 
 **Síntoma**: En los logs ves:
-```
+\`\`\`
 [WEBPUSH] ❌ VAPID keys no configuradas
-```
+\`\`\`
 
 **Solución**:
 1. Genera las VAPID keys: `npx web-push generate-vapid-keys`
@@ -161,9 +161,9 @@ VAPID_SUBJECT=mailto:support@futuretask.app
 ### Error de autenticación SMTP
 
 **Síntoma**:
-```
+\`\`\`
 [EMAIL] ❌ Error: Invalid login
-```
+\`\`\`
 
 **Soluciones**:
 - **Zoho**: Asegúrate de usar App Password, NO tu contraseña normal
@@ -184,7 +184,7 @@ Cuando ejecutes `/api/test-config`, verás:
 
 ## 🔧 Variables Completas (Resumen)
 
-```env
+\`\`\`env
 # Supabase (REQUERIDO)
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -204,7 +204,7 @@ VAPID_SUBJECT=mailto:support@futuretask.app
 
 # App URL
 NEXT_PUBLIC_APP_URL=https://tu-app.vercel.app
-```
+\`\`\`
 
 ---
 
