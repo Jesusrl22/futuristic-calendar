@@ -1,11 +1,19 @@
 // Server-side function to send push notifications
 import webpush from "web-push"
+import { areVapidKeysConfigured } from "./web-push"
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-)
+// Verificar y configurar VAPID keys
+if (areVapidKeysConfigured()) {
+  const subject = process.env.VAPID_SUBJECT || "mailto:support@futuretask.app"
+  webpush.setVapidDetails(
+    subject,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  )
+  console.log("[WEBPUSH] ✓ VAPID configurado con subject:", subject)
+} else {
+  console.error("[WEBPUSH] ❌ VAPID keys no configuradas - las notificaciones push no funcionarán")
+}
 
 export interface SendNotificationParams {
   title: string
@@ -19,7 +27,19 @@ export async function sendPushNotificationToUser(
   subscriptions: Array<{ endpoint: string; p256dh: string; auth: string }>,
   payload: SendNotificationParams,
 ) {
-  const promises = subscriptions.map((sub) => {
+  if (!areVapidKeysConfigured()) {
+    console.error("[WEBPUSH] ❌ No se pueden enviar notificaciones - VAPID no configurado")
+    return []
+  }
+
+  if (!subscriptions || subscriptions.length === 0) {
+    console.log("[WEBPUSH] ℹ No hay suscripciones para enviar")
+    return []
+  }
+
+  console.log("[WEBPUSH] Enviando notificación a", subscriptions.length, "suscripciones")
+
+  const promises = subscriptions.map(async (sub) => {
     const pushSubscription = {
       endpoint: sub.endpoint,
       keys: {
@@ -28,8 +48,8 @@ export async function sendPushNotificationToUser(
       },
     }
 
-    return webpush
-      .sendNotification(
+    try {
+      await webpush.sendNotification(
         pushSubscription,
         JSON.stringify({
           title: payload.title,
@@ -39,9 +59,13 @@ export async function sendPushNotificationToUser(
           url: payload.url || "/app/tasks",
         }),
       )
-      .catch((error) => {
-        console.error("[v0] Push notification error:", error)
-      })
+      console.log("[WEBPUSH] ✓ Notificación enviada a:", sub.endpoint.substring(0, 50) + "...")
+      return { success: true, endpoint: sub.endpoint }
+    } catch (error: any) {
+      console.error("[WEBPUSH] ❌ Error enviando a:", sub.endpoint.substring(0, 50) + "...")
+      console.error("[WEBPUSH] Error:", error.message)
+      return { success: false, endpoint: sub.endpoint, error: error.message }
+    }
   })
 
   return Promise.allSettled(promises)

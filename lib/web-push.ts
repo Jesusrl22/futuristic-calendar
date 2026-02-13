@@ -1,6 +1,23 @@
 // Web Push configuration and utilities
-export const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BNxN8fVYYYqF3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYqQzQ7F3dXQYQZJ_Hq'
-export const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'cqL8c5Z5xQYqQzQ7F3dXQYQZJ_HqGJJPKqL8c5Z5xQYq'
+
+// Verificar si las VAPID keys están configuradas
+export function areVapidKeysConfigured(): boolean {
+  const hasPublic = !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const hasPrivate = !!process.env.VAPID_PRIVATE_KEY
+  
+  if (!hasPublic || !hasPrivate) {
+    console.error("[WEBPUSH] ❌ VAPID keys no configuradas:")
+    console.error("[WEBPUSH] NEXT_PUBLIC_VAPID_PUBLIC_KEY:", hasPublic ? "✓" : "✗")
+    console.error("[WEBPUSH] VAPID_PRIVATE_KEY:", hasPrivate ? "✓" : "✗")
+    console.error("[WEBPUSH] Para generar keys: npx web-push generate-vapid-keys")
+  }
+  
+  return hasPublic && hasPrivate
+}
+
+// NUNCA usar valores por defecto - deben ser configurados
+export const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+export const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY
 
 export interface PushSubscription {
   endpoint: string

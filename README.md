@@ -27,9 +27,9 @@ Para configurar el sistema de correos y notificaciones, consulta:
 Accede a: `/admin/test-system`
 
 ### Opción 2: API Endpoint
-```bash
+\`\`\`bash
 curl https://tu-app.vercel.app/api/test-system
-```
+\`\`\`
 
 El test verificará automáticamente:
 - ✅ Variables de entorno configuradas
@@ -40,7 +40,7 @@ El test verificará automáticamente:
 
 ## 🔧 Variables de Entorno Requeridas
 
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=tu_url_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
@@ -59,7 +59,7 @@ VAPID_PRIVATE_KEY=tu_clave_privada
 
 # App URL
 NEXT_PUBLIC_APP_URL=https://tu-app.vercel.app
-```
+\`\`\`
 
 ## 📧 Sistema de Correos
 
@@ -80,7 +80,7 @@ Las notificaciones se envían para:
 
 ### Cron Jobs Configurados
 
-```json
+\`\`\`json
 {
   "crons": [
     {
@@ -97,7 +97,7 @@ Las notificaciones se envían para:
     }
   ]
 }
-```
+\`\`\`
 
 ## 🛠️ Tecnologías
 

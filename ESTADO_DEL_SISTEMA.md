@@ -33,28 +33,28 @@
 5. ✅ Subscription Cancelled Email (cancelación)
 
 **Variables requeridas:**
-```env
+\`\`\`env
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
 SMTP_USER=tu-email@tudominio.com
 SMTP_PASSWORD=app_password
 SMTP_FROM=tu-email@tudominio.com
 NEXT_PUBLIC_APP_URL=https://tu-app.vercel.app
-```
+\`\`\`
 
 **Logs de debugging:**
-```
+\`\`\`
 [EMAIL] Creando transporter con: { host, port, secure, user }
 [EMAIL] Verification email sent successfully to: user@example.com
 [EMAIL] ❌ Variables SMTP no configuradas (si falta config)
-```
+\`\`\`
 
 **Test:**
-```bash
+\`\`\`bash
 curl -X POST https://tu-app.vercel.app/api/test-email \
   -H "Content-Type: application/json" \
   -d '{"email": "tu-email@example.com"}'
-```
+\`\`\`
 
 ---
 
@@ -85,16 +85,16 @@ curl -X POST https://tu-app.vercel.app/api/test-email \
 4. ✅ Team Updates (actualizaciones de equipo)
 
 **Variables requeridas:**
-```env
+\`\`\`env
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=BNx...
 VAPID_PRIVATE_KEY=cqL...
-```
+\`\`\`
 
 **Generación de VAPID keys:**
-```bash
+\`\`\`bash
 npm install -g web-push
 web-push generate-vapid-keys
-```
+\`\`\`
 
 **Flujo completo:**
 1. Usuario habilita notificaciones en Settings
@@ -197,7 +197,7 @@ web-push generate-vapid-keys
 - API: `GET https://tu-app.vercel.app/api/test-system`
 
 **Respuesta ejemplo:**
-```json
+\`\`\`json
 {
   "timestamp": "2026-02-12T10:30:00Z",
   "summary": {
@@ -215,7 +215,7 @@ web-push generate-vapid-keys
     "vapid": { ... }
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -239,7 +239,7 @@ web-push generate-vapid-keys
 
 ### Variables de Entorno (Obligatorias)
 
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -258,18 +258,18 @@ VAPID_PRIVATE_KEY=cqL...
 
 # App URL
 NEXT_PUBLIC_APP_URL=https://tu-app.vercel.app
-```
+\`\`\`
 
 ### Variables Opcionales
 
-```env
+\`\`\`env
 # PayPal (si usas pagos)
 NEXT_PUBLIC_PAYPAL_CLIENT_ID=xxx
 PAYPAL_CLIENT_SECRET=xxx
 
 # Cron Secret (para seguridad de cron jobs)
 CRON_SECRET=tu_secreto_aleatorio
-```
+\`\`\`
 
 ---
 
@@ -321,10 +321,10 @@ CRON_SECRET=tu_secreto_aleatorio
 3. Úsalo en SMTP_PASSWORD
 
 ### 3. Generar VAPID Keys
-```bash
+\`\`\`bash
 npm install -g web-push
 web-push generate-vapid-keys
-```
+\`\`\`
 Copia las keys a las variables de Vercel
 
 ### 4. Ejecutar Test del Sistema
@@ -346,10 +346,10 @@ Copia las keys a las variables de Vercel
 ### Problema: Los correos no llegan
 
 **Diagnóstico:**
-```bash
+\`\`\`bash
 # Ver logs en Vercel Functions
 # Buscar: [EMAIL] en los logs
-```
+\`\`\`
 
 **Solución:**
 1. Verifica que SMTP_USER y SMTP_PASSWORD estén correctos
@@ -360,11 +360,11 @@ Copia las keys a las variables de Vercel
 ### Problema: Las notificaciones no funcionan
 
 **Diagnóstico:**
-```javascript
+\`\`\`javascript
 // En Console del navegador:
 console.log('Permission:', Notification.permission)
 navigator.serviceWorker.getRegistration().then(console.log)
-```
+\`\`\`
 
 **Solución:**
 1. Verifica que VAPID keys estén configuradas

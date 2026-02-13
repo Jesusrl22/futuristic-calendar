@@ -84,21 +84,41 @@ export async function POST(request: Request) {
     console.log("[SERVER][v0] Profile created successfully")
 
     // Send verification email - this is the PRIMARY method
-    console.log("[SERVER][v0] Sending verification email to:", email)
+    console.log("[SERVER][v0] Intentando enviar email de verificación a:", email)
+    let emailSent = false
+    let emailError = null
+
     try {
       const { sendVerificationEmail } = await import("@/lib/email")
       const result = await sendVerificationEmail(email, name)
-      console.log("[SERVER][v0] Verification email sent successfully via sendVerificationEmail()")
-    } catch (emailError: any) {
-      console.error("[SERVER][v0] Failed to send verification email:", emailError.message)
-      // Still proceed - user can resend verification later
+      
+      if (result.success) {
+        console.log("[SERVER][v0] ✓ Email de verificación enviado exitosamente")
+        emailSent = true
+      } else {
+        console.error("[SERVER][v0] ❌ No se pudo enviar email:", result.error)
+        emailError = result.error
+      }
+    } catch (error: any) {
+      console.error("[SERVER][v0] ❌ Excepción al enviar email:", error.message)
+      emailError = error.message
     }
 
-    console.log("[SERVER][v0] User created successfully. Email verification sent.")
+    // Construir mensaje de respuesta basado en si el email se envió
+    let message = "Account created successfully!"
+    if (emailSent) {
+      message += " Check your email to verify your account and then login."
+    } else {
+      message += " However, we couldn't send the verification email. You can request a new verification email from the login page."
+      console.warn("[SERVER][v0] ⚠️ Usuario creado pero email no enviado:", emailError)
+    }
+
+    console.log("[SERVER][v0] ✓ Usuario creado exitosamente")
 
     return NextResponse.json({
       success: true,
-      message: "Account created successfully! Check your email to verify your account and then login.",
+      emailSent,
+      message,
     })
   } catch (error: any) {
     console.error("[SERVER][v0] Signup error:", error)
