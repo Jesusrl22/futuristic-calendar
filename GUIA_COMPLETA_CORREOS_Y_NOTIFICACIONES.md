@@ -6,7 +6,7 @@
 
 Configura estas variables en Vercel > Project Settings > Environment Variables:
 
-```env
+\`\`\`env
 # SMTP Configuration (Zoho o tu proveedor SMTP)
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
@@ -16,7 +16,7 @@ SMTP_FROM=tu-email@tudominio.com
 
 # URL de tu aplicación
 NEXT_PUBLIC_APP_URL=https://tu-app.vercel.app
-```
+\`\`\`
 
 ### Configuración de Zoho Mail
 
@@ -43,7 +43,7 @@ El sistema envía 5 tipos de emails automáticos:
 ### Flujo de Correos
 
 #### Registro de Usuario:
-```
+\`\`\`
 Usuario se registra
   → POST /api/auth/signup
     → Crea usuario en Supabase Auth
@@ -53,10 +53,10 @@ Usuario se registra
         → Usuario hace clic en enlace
           → Verifica email en Supabase
             → Envía Welcome Email con sendWelcomeEmail()
-```
+\`\`\`
 
 #### Reset de Contraseña:
-```
+\`\`\`
 Usuario solicita reset
   → POST /api/auth/forgot-password
     → Genera reset_token
@@ -67,13 +67,13 @@ Usuario solicita reset
           → POST /api/auth/reset-password
             → Valida token
             → Actualiza contraseña
-```
+\`\`\`
 
 ### Debugging de Correos
 
 Si los correos no se envían, revisa logs en Vercel:
 
-```bash
+\`\`\`bash
 # Logs esperados al enviar email:
 [EMAIL] Creando transporter con: { host: 'smtp.zoho.eu', port: 465, ... }
 [EMAIL] Verification email sent successfully to: usuario@example.com
@@ -87,17 +87,17 @@ Si los correos no se envían, revisa logs en Vercel:
 
 [EMAIL] ❌ Error al enviar email: connect ETIMEDOUT
 # Solución: Verifica SMTP_HOST y SMTP_PORT
-```
+\`\`\`
 
 ### Test de Correos
 
 Usa el endpoint de prueba:
 
-```bash
+\`\`\`bash
 curl -X POST https://tu-app.vercel.app/api/test-email \
   -H "Content-Type: application/json" \
   -d '{"email": "tu-email@example.com"}'
-```
+\`\`\`
 
 ---
 
@@ -105,22 +105,22 @@ curl -X POST https://tu-app.vercel.app/api/test-email \
 
 ### Variables de Entorno Requeridas
 
-```env
+\`\`\`env
 # VAPID Keys (para Web Push)
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=tu_clave_publica_vapid
 VAPID_PRIVATE_KEY=tu_clave_privada_vapid
 
 # Para generarlas, usa:
 npx web-push generate-vapid-keys
-```
+\`\`\`
 
 ### Configuración de VAPID Keys
 
 1. **Generar claves VAPID**:
-```bash
+\`\`\`bash
 npm install -g web-push
 web-push generate-vapid-keys
-```
+\`\`\`
 
 2. **Agregar a Vercel**:
    - Copia la Public Key → `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
@@ -135,7 +135,7 @@ web-push generate-vapid-keys
 
 ### Flujo de Notificaciones Push
 
-```
+\`\`\`
 Usuario habilita notificaciones en Settings
   → usePushNotifications().enableNotifications()
     → Solicita permiso al navegador (Notification.requestPermission())
@@ -154,7 +154,7 @@ Cuando ocurre evento (tarea próxima, calendario, etc):
             → sw.js muestra notificación al usuario
               → Usuario hace clic en notificación
                 → Abre app en la página correspondiente
-```
+\`\`\`
 
 ### Service Worker (/public/sw.js)
 
@@ -166,7 +166,7 @@ El Service Worker maneja:
 ### Cron Jobs para Notificaciones
 
 #### Check Upcoming Events (cada 5 minutos):
-```
+\`\`\`
 Endpoint: /api/cron/check-upcoming-events
 Trigger: Vercel Cron
 Schedule: */5 * * * * (cada 5 minutos)
@@ -175,30 +175,30 @@ Función:
   → Busca eventos de calendario próximos (15 min antes)
   → Envía notificación push a usuarios con eventos próximos
   → Marca notificaciones como enviadas
-```
+\`\`\`
 
 Configurar en `vercel.json`:
-```json
+\`\`\`json
 {
   "crons": [{
     "path": "/api/cron/check-upcoming-events",
     "schedule": "*/5 * * * *"
   }]
 }
-```
+\`\`\`
 
 ### Debugging de Notificaciones
 
 #### Verificar soporte:
-```javascript
+\`\`\`javascript
 console.log('Service Worker:', 'serviceWorker' in navigator)
 console.log('Push Manager:', 'PushManager' in window)
 console.log('Notification:', 'Notification' in window)
 console.log('Permission:', Notification.permission)
-```
+\`\`\`
 
 #### Logs esperados:
-```
+\`\`\`
 [v0] Starting push notification setup...
 [v0] Notification permission: granted
 [v0] Service Worker registration: [ServiceWorkerRegistration]
@@ -206,16 +206,16 @@ console.log('Permission:', Notification.permission)
 [v0] Push subscription created: true
 [v0] Server response: 200
 [v0] Background sync registered for mobile
-```
+\`\`\`
 
 ### Test de Notificaciones
 
-```bash
+\`\`\`bash
 # Test manual de notificación
 curl -X POST https://tu-app.vercel.app/api/notifications/test \
   -H "Content-Type: application/json" \
   -d '{"userId": "user-id-here", "title": "Test", "message": "Hello!"}'
-```
+\`\`\`
 
 ---
 
@@ -224,14 +224,14 @@ curl -X POST https://tu-app.vercel.app/api/notifications/test \
 ### Problema: Los correos no llegan
 
 **Solución 1: Verifica variables SMTP**
-```bash
+\`\`\`bash
 # En Vercel dashboard, asegúrate que estén todas:
 SMTP_HOST=smtp.zoho.eu
 SMTP_PORT=465
 SMTP_USER=email@tudominio.com
 SMTP_PASSWORD=app_password_aqui
 SMTP_FROM=email@tudominio.com
-```
+\`\`\`
 
 **Solución 2: Revisa logs de Vercel**
 - Ve a Vercel > Project > Functions
@@ -245,25 +245,25 @@ SMTP_FROM=email@tudominio.com
 ### Problema: Las notificaciones no funcionan
 
 **Solución 1: Verifica permisos del navegador**
-```javascript
+\`\`\`javascript
 // En Console del navegador:
 Notification.permission
 // Debe ser "granted"
-```
+\`\`\`
 
 **Solución 2: Verifica VAPID keys**
-```bash
+\`\`\`bash
 # En Vercel, asegúrate que estén:
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=BNx...
 VAPID_PRIVATE_KEY=cqL...
-```
+\`\`\`
 
 **Solución 3: Verifica Service Worker**
-```javascript
+\`\`\`javascript
 // En Console:
 navigator.serviceWorker.getRegistration().then(console.log)
 // Debe mostrar el Service Worker registrado
-```
+\`\`\`
 
 **Solución 4: Prueba manualmente**
 - Ve a Settings en la app
@@ -275,13 +275,13 @@ navigator.serviceWorker.getRegistration().then(console.log)
 ### Problema: Service Worker no se registra
 
 **Solución: Verifica que /public/sw.js existe**
-```bash
+\`\`\`bash
 # Debe estar en:
 /public/sw.js
 
 # Y ser accesible en:
 https://tu-app.vercel.app/sw.js
-```
+\`\`\`
 
 ---
 

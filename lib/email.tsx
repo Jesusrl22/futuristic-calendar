@@ -1,10 +1,27 @@
 import nodemailer from "nodemailer"
 
+// Verificar si SMTP está configurado
+export function isSMTPConfigured(): boolean {
+  return !!(
+    process.env.SMTP_HOST &&
+    process.env.SMTP_USER &&
+    process.env.SMTP_PASSWORD
+  )
+}
+
 // Crear transporter solo si las variables están configuradas
 function createTransporter() {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-    console.error("[EMAIL] Variables SMTP no configuradas")
-    throw new Error("SMTP no configurado. Configura SMTP_HOST, SMTP_USER, SMTP_PASSWORD en las variables de entorno")
+  if (!isSMTPConfigured()) {
+    const error = "SMTP no configurado. Configura SMTP_HOST, SMTP_USER, SMTP_PASSWORD en las variables de entorno"
+    console.error("[EMAIL] ❌", error)
+    console.error("[EMAIL] Variables actuales:", {
+      SMTP_HOST: process.env.SMTP_HOST ? "✓" : "✗",
+      SMTP_PORT: process.env.SMTP_PORT ? "✓" : "✗",
+      SMTP_USER: process.env.SMTP_USER ? "✓" : "✗",
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD ? "✓" : "✗",
+      SMTP_FROM: process.env.SMTP_FROM ? "✓" : "✗",
+    })
+    throw new Error(error)
   }
 
   const config = {
@@ -17,7 +34,7 @@ function createTransporter() {
     },
   }
 
-  console.log("[EMAIL] Creando transporter con:", {
+  console.log("[EMAIL] ✓ Creando transporter con:", {
     host: config.host,
     port: config.port,
     secure: config.secure,
@@ -88,18 +105,33 @@ export async function sendVerificationEmail(email: string, name?: string) {
   `
 
   try {
+    if (!isSMTPConfigured()) {
+      console.error("[EMAIL] ❌ No se puede enviar email - SMTP no configurado")
+      return { 
+        success: false, 
+        error: "SMTP no configurado. Por favor configura las variables de entorno SMTP." 
+      }
+    }
+
     const transporter = createTransporter()
-    await transporter.sendMail({
+    const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Verifica tu email en Future Task",
       html: htmlContent,
     })
-    console.log("[EMAIL] Verification email sent successfully to:", email)
+    
+    console.log("[EMAIL] ✓ Email de verificación enviado exitosamente a:", email)
+    console.log("[EMAIL] Message ID:", result.messageId)
     return { success: true }
-  } catch (error) {
-    console.error("[EMAIL] Error sending verification email:", error)
-    throw error
+  } catch (error: any) {
+    console.error("[EMAIL] ❌ Error enviando email de verificación:", error)
+    console.error("[EMAIL] Error details:", {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+    })
+    return { success: false, error: error.message }
   }
 }
 
@@ -159,18 +191,23 @@ export async function sendPasswordResetEmail(email: string, resetLink: string, n
   `
 
   try {
+    if (!isSMTPConfigured()) {
+      console.error("[EMAIL] ❌ No se puede enviar email - SMTP no configurado")
+      return { success: false, error: "SMTP no configurado" }
+    }
+
     const transporter = createTransporter()
-    await transporter.sendMail({
+    const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Restablecer tu contraseña",
       html: htmlContent,
     })
-    console.log("[EMAIL] Password reset email sent successfully to:", email)
+    console.log("[EMAIL] ✓ Email de reset de contraseña enviado a:", email)
     return { success: true }
-  } catch (error) {
-    console.error("[EMAIL] Error sending password reset email:", error)
-    throw error
+  } catch (error: any) {
+    console.error("[EMAIL] ❌ Error enviando email de reset:", error.message)
+    return { success: false, error: error.message }
   }
 }
 
@@ -227,6 +264,11 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   `
 
   try {
+    if (!isSMTPConfigured()) {
+      console.error("[EMAIL] ❌ No se puede enviar email - SMTP no configurado")
+      return { success: false, error: "SMTP no configurado" }
+    }
+
     const transporter = createTransporter()
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
@@ -234,11 +276,11 @@ export async function sendWelcomeEmail(email: string, name?: string) {
       subject: "Bienvenido a Future Task",
       html: htmlContent,
     })
-    console.log("[EMAIL] Welcome email sent successfully to:", email)
+    console.log("[EMAIL] ✓ Email de bienvenida enviado a:", email)
     return { success: true }
-  } catch (error) {
-    console.error("[EMAIL] Error sending welcome email:", error)
-    throw error
+  } catch (error: any) {
+    console.error("[EMAIL] ❌ Error enviando email de bienvenida:", error.message)
+    return { success: false, error: error.message }
   }
 }
 
@@ -292,6 +334,10 @@ export async function sendNewDeviceLoginEmail(email: string, name?: string, devi
   `
 
   try {
+    if (!isSMTPConfigured()) {
+      return { success: false, error: "SMTP no configurado" }
+    }
+
     const transporter = createTransporter()
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
@@ -299,10 +345,11 @@ export async function sendNewDeviceLoginEmail(email: string, name?: string, devi
       subject: "Nuevo inicio de sesión en tu cuenta",
       html: htmlContent,
     })
+    console.log("[EMAIL] ✓ Email de nuevo dispositivo enviado a:", email)
     return { success: true }
-  } catch (error) {
-    console.error("[EMAIL] Error sending new device login email:", error)
-    throw error
+  } catch (error: any) {
+    console.error("[EMAIL] ❌ Error enviando email de nuevo dispositivo:", error.message)
+    return { success: false, error: error.message }
   }
 }
 
@@ -353,6 +400,10 @@ export async function sendSubscriptionCancelledEmail(email: string, name?: strin
   `
 
   try {
+    if (!isSMTPConfigured()) {
+      return { success: false, error: "SMTP no configurado" }
+    }
+
     const transporter = createTransporter()
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
@@ -360,9 +411,10 @@ export async function sendSubscriptionCancelledEmail(email: string, name?: strin
       subject: "Tu suscripción a Future Task ha sido cancelada",
       html: htmlContent,
     })
+    console.log("[EMAIL] ✓ Email de suscripción cancelada enviado a:", email)
     return { success: true }
-  } catch (error) {
-    console.error("[EMAIL] Error sending subscription cancelled email:", error)
-    throw error
+  } catch (error: any) {
+    console.error("[EMAIL] ❌ Error enviando email de suscripción cancelada:", error.message)
+    return { success: false, error: error.message }
   }
 }
