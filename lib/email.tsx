@@ -2,11 +2,22 @@ import nodemailer from "nodemailer"
 
 // Verificar si SMTP está configurado
 export function isSMTPConfigured(): boolean {
-  return !!(
+  const configured = !!(
     process.env.SMTP_HOST &&
     process.env.SMTP_USER &&
     process.env.SMTP_PASSWORD
   )
+  
+  console.log("[EMAIL] Verificando configuración SMTP:", {
+    SMTP_HOST: !!process.env.SMTP_HOST,
+    SMTP_USER: !!process.env.SMTP_USER,
+    SMTP_PASSWORD: !!process.env.SMTP_PASSWORD,
+    SMTP_PORT: !!process.env.SMTP_PORT,
+    SMTP_FROM: !!process.env.SMTP_FROM,
+    configured,
+  })
+  
+  return configured
 }
 
 // Crear transporter solo si las variables están configuradas
@@ -24,21 +35,22 @@ function createTransporter() {
     throw new Error(error)
   }
 
+  const port = parseInt(process.env.SMTP_PORT || "587", 10)
   const config = {
-    host: process.env.SMTP_HOST,
-    port: Number.parseInt(process.env.SMTP_PORT || "587"),
-    secure: process.env.SMTP_PORT === "465",
+    host: process.env.SMTP_HOST!,
+    port: port,
+    secure: port === 465, // true for 465, false for other ports
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
+      user: process.env.SMTP_USER!,
+      pass: process.env.SMTP_PASSWORD!,
     },
   }
 
-  console.log("[EMAIL] ✓ Creando transporter con:", {
+  console.log("[EMAIL] ✓ Configuración SMTP:", {
     host: config.host,
     port: config.port,
     secure: config.secure,
-    user: config.auth.user?.substring(0, 3) + "***",
+    user: config.auth.user?.substring(0, 5) + "***",
   })
 
   return nodemailer.createTransport(config)
@@ -105,15 +117,28 @@ export async function sendVerificationEmail(email: string, name?: string) {
   `
 
   try {
+    console.log("[EMAIL] Iniciando envío de email de verificación a:", email)
+    
     if (!isSMTPConfigured()) {
-      console.error("[EMAIL] ❌ No se puede enviar email - SMTP no configurado")
+      console.error("[EMAIL] ❌ SMTP no configurado")
       return { 
         success: false, 
-        error: "SMTP no configurado. Por favor configura las variables de entorno SMTP." 
+        error: "SMTP no configurado" 
       }
     }
 
     const transporter = createTransporter()
+    
+    // Verificar conexión antes de enviar
+    console.log("[EMAIL] Verificando conexión SMTP...")
+    try {
+      await transporter.verify()
+      console.log("[EMAIL] ✓ Conexión SMTP verificada")
+    } catch (verifyError: any) {
+      console.error("[EMAIL] ❌ Verificación SMTP fallida:", verifyError.message)
+      return { success: false, error: "Conexión SMTP fallida: " + verifyError.message }
+    }
+    
     const result = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
@@ -121,15 +146,15 @@ export async function sendVerificationEmail(email: string, name?: string) {
       html: htmlContent,
     })
     
-    console.log("[EMAIL] ✓ Email de verificación enviado exitosamente a:", email)
+    console.log("[EMAIL] ✓ Email de verificación enviado exitosamente")
     console.log("[EMAIL] Message ID:", result.messageId)
     return { success: true }
   } catch (error: any) {
-    console.error("[EMAIL] ❌ Error enviando email de verificación:", error)
-    console.error("[EMAIL] Error details:", {
-      message: error.message,
+    console.error("[EMAIL] ❌ Error enviando email de verificación:", error.message)
+    console.error("[EMAIL] Detalles del error:", {
       code: error.code,
       command: error.command,
+      message: error.message,
     })
     return { success: false, error: error.message }
   }
@@ -192,12 +217,13 @@ export async function sendPasswordResetEmail(email: string, resetLink: string, n
 
   try {
     if (!isSMTPConfigured()) {
-      console.error("[EMAIL] ❌ No se puede enviar email - SMTP no configurado")
       return { success: false, error: "SMTP no configurado" }
     }
 
     const transporter = createTransporter()
-    const result = await transporter.sendMail({
+    await transporter.verify()
+    
+    await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
       subject: "Restablecer tu contraseña",
@@ -265,11 +291,12 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 
   try {
     if (!isSMTPConfigured()) {
-      console.error("[EMAIL] ❌ No se puede enviar email - SMTP no configurado")
       return { success: false, error: "SMTP no configurado" }
     }
 
     const transporter = createTransporter()
+    await transporter.verify()
+    
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
