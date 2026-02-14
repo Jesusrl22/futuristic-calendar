@@ -6,7 +6,10 @@ export async function updateSession(request: NextRequest) {
   if (
     request.nextUrl.pathname.startsWith("/api/") ||
     request.nextUrl.pathname.startsWith("/_next/") ||
-    request.nextUrl.pathname.includes(".")
+    request.nextUrl.pathname.includes(".") ||
+    request.nextUrl.pathname === "/email-test" ||
+    request.nextUrl.pathname === "/test-smtp" ||
+    request.nextUrl.pathname === "/test-config"
   ) {
     return response
   }
