@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
 
 export async function GET() {
   const diagnostics = {
@@ -32,8 +33,6 @@ export async function GET() {
   // Try to test the connection
   if (diagnostics.smtp_configured) {
     try {
-      const nodemailer = require('nodemailer')
-      
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number.parseInt(process.env.SMTP_PORT || '587'),
