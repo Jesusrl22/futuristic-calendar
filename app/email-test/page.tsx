@@ -10,6 +10,7 @@ export default function EmailTestPage() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [testType, setTestType] = useState('diagnosis')
+  // Trigger rebuild
 
   const testDiagnosis = async () => {
     setLoading(true)
