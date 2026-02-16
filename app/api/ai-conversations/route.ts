@@ -1,37 +1,14 @@
-import { createServiceRoleClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { type NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-
-function getUserIdFromToken(token: string): string | null {
-  try {
-    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
-    return payload.sub || null
-  } catch {
-    return null
-  }
-}
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = await createServiceRoleClient()
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get("sb-access-token")?.value
-
-    if (!accessToken) {
-      console.log("[v0] AI Conversations GET: No access token")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const userId = getUserIdFromToken(accessToken)
-    if (!userId) {
-      console.log("[v0] AI Conversations GET: Invalid token")
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser(accessToken)
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
       console.log("[v0] AI Conversations GET: User error:", userError)
@@ -44,36 +21,27 @@ export async function GET(req: NextRequest) {
       .eq("user_id", user.id)
       .order("updated_at", { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error("[v0] AI Conversations GET error:", error)
+      throw error
+    }
 
+    console.log("[v0] Loaded", conversations?.length || 0, "conversations")
     return NextResponse.json(conversations || [])
   } catch (error) {
-    console.error("[AI Conversations] Error fetching conversations:", error)
+    console.error("[v0] Error fetching conversations:", error)
     return NextResponse.json([], { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createServiceRoleClient()
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get("sb-access-token")?.value
-
-    if (!accessToken) {
-      console.log("[v0] AI Conversations POST: No access token")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const userId = getUserIdFromToken(accessToken)
-    if (!userId) {
-      console.log("[v0] AI Conversations POST: Invalid token")
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser(accessToken)
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
       console.log("[v0] AI Conversations POST: User error:", userError)
@@ -143,23 +111,12 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = await createServiceRoleClient()
-    const cookieStore = await cookies()
-    const accessToken = cookieStore.get("sb-access-token")?.value
-
-    if (!accessToken) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    const userId = getUserIdFromToken(accessToken)
-    if (!userId) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
-    }
+    const supabase = await createClient()
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser(accessToken)
+    } = await supabase.auth.getUser()
 
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
