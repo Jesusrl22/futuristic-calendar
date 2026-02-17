@@ -8,7 +8,7 @@ Las conversaciones de IA no se estaban mostrando después de recargar la página
 ## Solución Implementada
 
 ### 1. **useEffect de Carga Inicial** (Nuevo)
-```typescript
+\`\`\`typescript
 useEffect(() => {
   const loadConversations = async () => {
     // Carga todas las conversaciones del usuario desde la BD
@@ -16,7 +16,7 @@ useEffect(() => {
   }
   loadConversations()
 }, [])
-```
+\`\`\`
 **Ubicación:** `/app/app/ai/page.tsx` líneas 83-116
 
 **Qué hace:**
@@ -26,14 +26,14 @@ useEffect(() => {
 - Restaura los mensajes, modo (chat/study/analyze) y el título
 
 ### 2. **Auto-Save Debounced** (Nuevo)
-```typescript
+\`\`\`typescript
 useEffect(() => {
   const saveTimer = setTimeout(() => {
     saveConversation(currentConversationId, messages)
   }, 2000) // Espera 2 segundos
   return () => clearTimeout(saveTimer)
 }, [messages, currentConversationId])
-```
+\`\`\`
 **Ubicación:** `/app/app/ai/page.tsx` líneas 117-128
 
 **Qué hace:**
@@ -44,7 +44,7 @@ useEffect(() => {
 ## Flujo de Guardado Completo
 
 ### 1. **Al Enviar un Mensaje**
-```
+\`\`\`
 Usuario envía mensaje
     ↓
 Se agrega a messages[] (local)
@@ -58,10 +58,10 @@ handleSend() llama saveConversation()
 POST a /api/ai-conversations
     ↓
 Base de datos se actualiza
-```
+\`\`\`
 
 ### 2. **Auto-Save (después del último cambio)**
-```
+\`\`\`
 Usuario escribe/recibe mensaje
     ↓
 useEffect detects messages cambió
@@ -71,10 +71,10 @@ Espera 2 segundos (debouncing)
 Si hay más cambios, reinicia el timer
     ↓
 Si pasan 2 segundos sin cambios, guarda
-```
+\`\`\`
 
 ### 3. **Al Recargar la Página**
-```
+\`\`\`
 Componente se monta
     ↓
 useEffect [] se ejecuta
@@ -86,11 +86,11 @@ Conversaciones se cargan en conversations[]
 Conversación más reciente se carga automáticamente
     ↓
 Todos los mensajes restaurados
-```
+\`\`\`
 
 ## Base de Datos - Tabla ai_conversations
 
-```sql
+\`\`\`sql
 ai_conversations {
   id: UUID (PK)
   user_id: UUID (FK)
@@ -100,7 +100,7 @@ ai_conversations {
   created_at: timestamp
   updated_at: timestamp
 }
-```
+\`\`\`
 
 ## API Endpoints
 
@@ -151,7 +151,7 @@ ai_conversations {
 
 Todos los eventos importantes están logged con `[v0]` prefix:
 
-```javascript
+\`\`\`javascript
 [v0] Loading conversations from database
 [v0] Loaded X conversations from database
 [v0] Loaded most recent conversation: UUID
@@ -161,7 +161,7 @@ Todos los eventos importantes están logged con `[v0]` prefix:
 [v0] Auto-saving conversation due to message changes
 [v0] Updated existing conversation in local state
 [v0] Added new conversation to local state
-```
+\`\`\`
 
 ## Archivos Modificados
 - `/app/app/ai/page.tsx` - Agregados 2 nuevos useEffect (carga inicial + auto-save)

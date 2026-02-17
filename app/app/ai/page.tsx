@@ -61,6 +61,7 @@ const AIPage = () => {
     monthlyCredits: 0,
     purchasedCredits: 0,
   })
+  const [isLoadingConversations, setIsLoadingConversations] = useState(true)
 
   // Calculate max credits based on tier
   const maxMonthlyCredits = getAICredits(profileData.tier as "free" | "premium" | "pro")
@@ -108,6 +109,8 @@ const AIPage = () => {
         }
       } catch (error) {
         console.error("[v0] Error loading conversations:", error)
+      } finally {
+        setIsLoadingConversations(false)
       }
     }
 
@@ -674,7 +677,9 @@ const AIPage = () => {
         </Button>
 
         <div className="flex-1 overflow-y-auto space-y-2 border-t border-border/50 pt-4">
-          {conversations.length === 0 ? (
+          {isLoadingConversations ? (
+            <p className="text-sm text-muted-foreground text-center py-4">{t("loading") || "Loading..."}</p>
+          ) : conversations.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">{t("no_conversations")}</p>
           ) : (
             conversations.map((conv) => (
