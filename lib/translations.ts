@@ -211,6 +211,9 @@ export const translations = {
     noTeamsFound: "No teams found",
     teamMembers: "members",
     noDescription: "No description",
+    editTeam: "Edit Team",
+    enterTeamName: "Please enter a team name",
+    saveChanges: "Save Changes",
     
     // Notes page
     organize_notes: "Capture and organize your thoughts",
@@ -703,7 +706,7 @@ export const translations = {
     teamName: "Nombre del Equipo",
     team_placeholder: "Ingresa el nombre del equipo",
     teamDescription: "Descripción del Equipo",
-    whatIsThisTeamAbout: "¿De qué trata este equipo?",
+    whatIsThisTeamAbout: "¿De qué se trata este equipo?",
     teamLimitReached: "Límite de equipos alcanzado",
     freePlanTeamLimit: "El plan gratuito permite 1 equipo. Actualiza a Premium para más.",
     premiumPlanTeamLimit: "El plan Premium permite 5 equipos. Actualiza a Pro para ilimitados.",
@@ -711,6 +714,9 @@ export const translations = {
     noTeamsFound: "No se encontraron equipos",
     teamMembers: "miembros",
     noDescription: "Sin descripción",
+    editTeam: "Editar Equipo",
+    enterTeamName: "Por favor ingresa un nombre para el equipo",
+    saveChanges: "Guardar Cambios",
     
     // Notes page
     organize_notes: "Captura y organiza tus pensamientos",
