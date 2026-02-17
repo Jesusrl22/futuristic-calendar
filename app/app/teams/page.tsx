@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Users, Plus, UserPlus, Crown } from "@/components/icons"
+import { Users, Plus, UserPlus, Crown, Edit, Trash2 } from "@/components/icons"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
@@ -31,6 +31,12 @@ export default function TeamsPage() {
   const [newTeamDescription, setNewTeamDescription] = useState("")
   const [creating, setCreating] = useState(false)
   const [userPlan, setUserPlan] = useState("free")
+  
+  // Edit team state
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ name: "", description: "" })
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     fetchTeams()
@@ -101,6 +107,48 @@ export default function TeamsPage() {
     } finally {
       setCreating(false)
     }
+  }
+
+  const handleEditTeam = async (teamId: string) => {
+    if (!editForm.name.trim()) {
+      alert(t("enterTeamName"))
+      return
+    }
+
+    setUpdating(true)
+    try {
+      const response = await fetch(`/api/teams/${teamId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editForm.name.trim(),
+          description: editForm.description.trim(),
+        }),
+      })
+
+      if (response.ok) {
+        setEditDialogOpen(false)
+        setEditingTeamId(null)
+        await fetchTeams()
+      } else {
+        const data = await response.json()
+        alert(data.error || "Failed to update team")
+      }
+    } catch (error) {
+      console.error("Error updating team:", error)
+      alert("An error occurred")
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const openEditTeamDialog = (team: Team) => {
+    setEditingTeamId(team.id)
+    setEditForm({
+      name: team.name,
+      description: team.description || "",
+    })
+    setEditDialogOpen(true)
   }
 
   const getTeamLimit = () => {
@@ -193,31 +241,86 @@ export default function TeamsPage() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card
-                className="glass-card p-6 neon-glow-hover cursor-pointer transition-all"
-                onClick={() => router.push(`/app/teams/${team.id}`)}
+                className="glass-card p-6 neon-glow-hover transition-all group relative overflow-hidden"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-primary" />
+                <div 
+                  className="cursor-pointer"
+                  onClick={() => router.push(`/app/teams/${team.id}`)}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg truncate">{team.name}</h3>
+                        <p className="text-xs text-muted-foreground">{t(team.role)}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{team.name}</h3>
-                      <p className="text-xs text-muted-foreground">{t(team.role)}</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {team.description || t("noDescription")}
+                  </p>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      <UserPlus className="w-4 h-4" />
+                      <span>
+                        {team.member_count} {t("teamMembers")}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                  {team.description || t("noDescription")}
-                </p>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <UserPlus className="w-4 h-4" />
-                    <span>
-                      {team.member_count} {t("teamMembers")}
-                    </span>
+
+                {(team.role === "owner" || team.role === "admin") && (
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Dialog open={editDialogOpen && editingTeamId === team.id} onOpenChange={setEditDialogOpen}>
+                      <DialogTrigger asChild onClick={(e) => {
+                        e.stopPropagation()
+                        openEditTeamDialog(team)
+                      }}>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+                          title={t("editTeam")}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="w-[90vw] max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>{t("editTeam")}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label>{t("teamName")} *</Label>
+                            <Input
+                              value={editForm.name}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              placeholder={t("teamName")}
+                            />
+                          </div>
+                          <div>
+                            <Label>{t("teamDescription")}</Label>
+                            <Textarea
+                              value={editForm.description}
+                              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                              placeholder={t("teamDescription")}
+                              rows={3}
+                            />
+                          </div>
+                          <Button 
+                            onClick={() => handleEditTeam(team.id)} 
+                            disabled={updating || !editForm.name.trim()} 
+                            className="w-full"
+                          >
+                            {updating ? t("updating") : t("saveChanges")}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
-                </div>
+                )}
               </Card>
             </motion.div>
           ))}
