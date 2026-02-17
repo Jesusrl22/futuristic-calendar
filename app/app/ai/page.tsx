@@ -80,6 +80,52 @@ const AIPage = () => {
     ],
   }
 
+  // Load conversations on mount
+  useEffect(() => {
+    const loadConversations = async () => {
+      try {
+        console.log("[v0] Loading conversations from database")
+        const response = await fetch("/api/ai-conversations", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          console.log("[v0] Loaded", data.length, "conversations from database")
+          setConversations(data)
+          
+          // If there are conversations, load the most recent one
+          if (data.length > 0) {
+            const mostRecent = data[0]
+            setCurrentConversationId(mostRecent.id)
+            setMessages(mostRecent.messages || [])
+            setAiMode(mostRecent.mode || "chat")
+            console.log("[v0] Loaded most recent conversation:", mostRecent.id)
+          }
+        } else {
+          console.warn("[v0] Failed to load conversations:", response.status)
+        }
+      } catch (error) {
+        console.error("[v0] Error loading conversations:", error)
+      }
+    }
+
+    loadConversations()
+  }, [])
+
+  // Auto-save conversation when messages change (debounced)
+  useEffect(() => {
+    if (messages.length === 0 || !currentConversationId) return
+
+    const saveTimer = setTimeout(() => {
+      console.log("[v0] Auto-saving conversation due to message changes")
+      saveConversation(currentConversationId, messages)
+    }, 2000) // Espera 2 segundos después del último cambio
+
+    return () => clearTimeout(saveTimer)
+  }, [messages, currentConversationId])
+
   const compressImage = async (file: File): Promise<string> => {
     if (!file.type.startsWith("image/")) return ""
 

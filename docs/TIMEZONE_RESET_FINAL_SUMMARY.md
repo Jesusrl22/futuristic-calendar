@@ -37,7 +37,7 @@ Se ha implementado un sistema automático que reseteaa las tareas completadas de
   - Retorna JSON con resultados
 
 **Ejemplo de respuesta:**
-```json
+\`\`\`json
 {
   "message": "Successfully reset daily tasks by timezone",
   "result": {
@@ -45,17 +45,17 @@ Se ha implementado un sistema automático que reseteaa las tareas completadas de
     "tasks_reset": 8956
   }
 }
-```
+\`\`\`
 
 ### 3. **CRON Job en Vercel**
 - **Archivo:** `/vercel.json`
 - **Configuración:**
-  ```json
+  \`\`\`json
   {
     "path": "/api/cron/reset-daily-tasks-by-timezone",
     "schedule": "0 * * * *"
   }
-  ```
+  \`\`\`
 - **Frecuencia:** Cada hora (0 minutos de cada hora)
 - **Por qué cada hora:** Para capturar el reset de usuarios en TODAS las zonas horarias
 
@@ -75,14 +75,14 @@ Se ha implementado un sistema automático que reseteaa las tareas completadas de
   - Mensaje educativo sobre el reset
 
 **Uso en la página de configuración:**
-```tsx
+\`\`\`tsx
 import { TimezoneSelect } from "@/components/timezone-selector"
 
 <TimezoneSelect 
   value={profile.timezone}
   onChange={(newTz) => setProfile({...profile, timezone: newTz})}
 />
-```
+\`\`\`
 
 ### 5. **Documentación Completa**
 - **Archivo 1:** `/docs/DAILY_TASKS_TIMEZONE_RESET.md`
@@ -101,7 +101,7 @@ import { TimezoneSelect } from "@/components/timezone-selector"
 
 ## Flujo de Funcionamiento Paso a Paso
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────────────┐
 │ 1. CRON Job se ejecuta cada hora en Vercel                      │
 │    Timestamp: 09:00 UTC → POST /api/cron/reset-daily-tasks     │
@@ -136,7 +136,7 @@ import { TimezoneSelect } from "@/components/timezone-selector"
 │ 5. Retorna estadísticas                                         │
 │    {users_processed: 1243, tasks_reset: 8956}                   │
 └─────────────────────────────────────────────────────────────────┘
-```
+\`\`\`
 
 ---
 
@@ -163,29 +163,29 @@ import { TimezoneSelect } from "@/components/timezone-selector"
 
 Asegúrate de que estas variables estén configuradas en el dashboard de Vercel:
 
-```
+\`\`\`
 CRON_SECRET=<tu-token-aleatorio-seguro>
 NEXT_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<clave-de-servicio>
-```
+\`\`\`
 
 ---
 
 ## Testing & Verificación
 
 ### Test 1: Validar que la función existe
-```sql
+\`\`\`sql
 SELECT function_name 
 FROM information_schema.functions 
 WHERE function_name = 'reset_daily_tasks_by_timezone';
 -- Debe retornar una fila
-```
+\`\`\`
 
 ### Test 2: Ejecutar manualmente
-```bash
+\`\`\`bash
 curl -X POST https://tu-dominio.com/api/cron/reset-daily-tasks-by-timezone \
   -H "Authorization: Bearer $CRON_SECRET"
-```
+\`\`\`
 
 ### Test 3: Verificar logs en Vercel
 1. Ve a Vercel Dashboard → Tu Proyecto
@@ -194,12 +194,12 @@ curl -X POST https://tu-dominio.com/api/cron/reset-daily-tasks-by-timezone \
 4. Revisa la última ejecución
 
 ### Test 4: Verificar ejecución en SQL
-```sql
+\`\`\`sql
 -- Verificar que las tareas se resetearon
 SELECT COUNT(*) FROM tasks 
 WHERE user_id = 'test-user-id' 
 AND completed = false;
-```
+\`\`\`
 
 ---
 
@@ -271,23 +271,23 @@ R: ±5 minutos. Se ejecuta cada hora, así que puede resetear entre 11:55 PM y 1
 Si las tareas no se resetean:
 
 1. **Verifica zona horaria del usuario:**
-   ```sql
+   \`\`\`sql
    SELECT id, email, timezone FROM users WHERE id='user-id';
-   ```
+   \`\`\`
 
 2. **Verifica última ejecución del CRON:**
    - Dashboard de Vercel → Functions → Crons
 
 3. **Revisa logs:**
-   ```bash
+   \`\`\`bash
    curl -X POST https://tu-dominio.com/api/cron/reset-daily-tasks-by-timezone \
      -H "Authorization: Bearer $CRON_SECRET" -v
-   ```
+   \`\`\`
 
 4. **Ejecuta manualmente la función SQL:**
-   ```sql
+   \`\`\`sql
    SELECT * FROM reset_daily_tasks_by_timezone();
-   ```
+   \`\`\`
 
 ---
 

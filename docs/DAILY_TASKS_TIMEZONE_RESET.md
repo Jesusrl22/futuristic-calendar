@@ -34,7 +34,7 @@ El sistema ahora reseteará automáticamente las tareas completadas de cada usua
 
 **Escenario:** Usuario en Nueva York completa una tarea el 15 de febrero a las 11:50 PM EST
 
-```
+\`\`\`
 Hoy en Nueva York: 15 de febrero, 11:50 PM EST
 Hoy en UTC: 16 de febrero, 4:50 AM
 
@@ -42,19 +42,19 @@ Hoy en UTC: 16 de febrero, 4:50 AM
   - La función calcula la fecha en zona horaria del usuario: 16 de febrero
   - Las tareas completadas el 15 de febrero se resetean
   - La tarea que completó el usuario se marca como NO completada
-```
+\`\`\`
 
 ## Configuración Requerida
 
 ### 1. Asignar Zona Horaria a Usuarios
 Cuando un usuario inicia sesión o en su perfil de configuración:
 
-```typescript
+\`\`\`typescript
 await supabase
   .from('users')
   .update({ timezone: 'America/New_York' })
   .eq('id', userId)
-```
+\`\`\`
 
 ### 2. Variables de Entorno
 Necesarias en Vercel:
@@ -64,33 +64,33 @@ Necesarias en Vercel:
 
 ### 3. Configurar CRON en Vercel
 El `vercel.json` ya tiene configurado:
-```json
+\`\`\`json
 {
   "path": "/api/cron/reset-daily-tasks-by-timezone",
   "schedule": "0 * * * *"
 }
-```
+\`\`\`
 
 ## Funciones Auxiliares
 
 ### `should_reset_tasks_for_user(user_id)`
 Verifica si es hora de resetear para un usuario específico (entre 11:55 PM y 12:05 AM en su zona horaria).
 
-```sql
+\`\`\`sql
 SELECT should_reset_tasks_for_user('user-id-here');
-```
+\`\`\`
 
 ## Testing
 
 Para probar manualmente el reset:
 
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3000/api/cron/reset-daily-tasks-by-timezone \
   -H "Authorization: Bearer $CRON_SECRET"
-```
+\`\`\`
 
 Verás una respuesta como:
-```json
+\`\`\`json
 {
   "message": "Successfully reset daily tasks by timezone",
   "result": {
@@ -98,7 +98,7 @@ Verás una respuesta como:
     "tasks_reset": 156
   }
 }
-```
+\`\`\`
 
 ## Rendimiento
 
@@ -118,11 +118,11 @@ Verás una respuesta como:
 
 ### Zona horaria incorrecta
 Actualiza la zona horaria del usuario a un valor válido de IANA:
-```typescript
+\`\`\`typescript
 await supabase
   .from('users')
   .update({ timezone: 'America/Mexico_City' })
   .eq('id', userId)
-```
+\`\`\`
 
 Lista de zonas horarias válidas: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
