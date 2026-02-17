@@ -23,12 +23,12 @@ Se ha implementado un sistema completo de reset automático de tareas diarias qu
 ### 3. **Configuración CRON**
 - **Archivo:** `/vercel.json`
 - **Cambio:** Agregado nuevo CRON job:
-  ```json
+  \`\`\`json
   {
     "path": "/api/cron/reset-daily-tasks-by-timezone",
     "schedule": "0 * * * *"
   }
-  ```
+  \`\`\`
   - Se ejecuta **cada hora** para verificar todos los usuarios
   - Cada usuario solo tendrá sus tareas reseteadas en su zona horaria local
 
@@ -38,7 +38,7 @@ Se ha implementado un sistema completo de reset automático de tareas diarias qu
 
 ## Cómo Funciona
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────┐
 │  CRON Job se ejecuta cada hora (0 * * * *)          │
 └────────────────┬────────────────────────────────────┘
@@ -59,14 +59,14 @@ Se ha implementado un sistema completo de reset automático de tareas diarias qu
 │    3. Reseteaa tareas del día anterior              │
 │  - Retorna: usuarios_procesados, tareas_reset      │
 └─────────────────────────────────────────────────────┘
-```
+\`\`\`
 
 ## Ejemplo Práctico
 
 **Usuario:** María en México (America/Mexico_City)
 **Hora actual:** 15 de febrero, 11:50 PM CST (5:50 AM UTC día 16)
 
-```
+\`\`\`
 Acción: Completa una tarea a las 11:50 PM CST el 15
 ├─ completed_at = 2024-02-15 23:50:00 CST
 └─ La tarea se guardaen base de datos
@@ -77,7 +77,7 @@ La siguiente hora:
 ├─ Calcula fecha local: 16 de febrero a las 1:00 AM CST = 16 de febrero
 ├─ Encuentra tareas completadas el 15 de febrero ✓
 └─ Las reseteaa: completed=false, completed_at=NULL
-```
+\`\`\`
 
 ## Requisitos Configurados
 
@@ -92,7 +92,7 @@ La siguiente hora:
 
 Para verificar que funciona:
 
-```bash
+\`\`\`bash
 # 1. Obtener el CRON_SECRET desde Vercel
 CRON_SECRET="tu-cron-secret"
 
@@ -108,7 +108,7 @@ curl -X POST https://tu-dominio.com/api/cron/reset-daily-tasks-by-timezone \
     "tasks_reset": 156
   }
 }
-```
+\`\`\`
 
 ## Comportamiento Esperado
 
