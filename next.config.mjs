@@ -19,6 +19,30 @@ const nextConfig = {
     },
   },
 
+  // Cache control headers to prevent stale content
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/app/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ]
+  },
+
   // Optimize bundle size
   webpack: (config, { isServer }) => {
     if (!isServer) {
