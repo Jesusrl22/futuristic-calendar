@@ -24,8 +24,18 @@ export async function POST(request: Request) {
       .neq("subscription_tier", "free")
 
     if (fetchError) {
-      console.error("Error fetching expired users:", fetchError)
-      return NextResponse.json({ error: fetchError.message }, { status: 500 })
+      // Handle rate limiting
+      const errorMsg = String(fetchError).toLowerCase()
+      if (errorMsg.includes("429") || errorMsg.includes("too many")) {
+        console.warn("[v0] Rate limited fetching expired users")
+        return NextResponse.json({ 
+          error: "Rate limited", 
+          rateLimit: true,
+          message: "Will retry later"
+        }, { status: 429, headers: { "Retry-After": "60" } })
+      }
+      console.error("[v0] Error fetching expired users:", fetchError)
+      return NextResponse.json({ error: String(fetchError) }, { status: 500 })
     }
 
     if (!expiredUsers || expiredUsers.length === 0) {
@@ -37,7 +47,7 @@ export async function POST(request: Request) {
 
     for (const user of expiredUsers) {
       const purchasedCredits = user.ai_credits_purchased || 0
-      await supabase
+      const { error: updateError } = await supabase
         .from("users")
         .update({
           subscription_tier: "free",
@@ -48,6 +58,10 @@ export async function POST(request: Request) {
           subscription_expires_at: null,
         })
         .eq("id", user.id)
+      
+      if (updateError) {
+        console.error("[v0] Failed to update user", user.id, updateError)
+      }
     }
 
     return NextResponse.json({
@@ -56,7 +70,18 @@ export async function POST(request: Request) {
       users: expiredUsers.map((u) => ({ id: u.id, email: u.email, name: u.name })),
     })
   } catch (error) {
-    console.error("Unexpected error in cron job:", error)
+    console.error("[v0] Unexpected error in cron job:", error)
+    
+    // Check if error is rate limiting
+    const errorMsg = String(error).toLowerCase()
+    if (errorMsg.includes("429") || errorMsg.includes("too many")) {
+      return NextResponse.json({ 
+        error: "Rate limited", 
+        rateLimit: true,
+        message: "Will retry later"
+      }, { status: 429, headers: { "Retry-After": "60" } })
+    }
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
