@@ -21,6 +21,9 @@ interface Team {
   created_at: string
 }
 
+// Force revalidation on every request
+export const revalidate = 0
+
 export default function TeamsPage() {
   const { t } = useTranslation()
   const router = useRouter()
@@ -273,52 +276,18 @@ export default function TeamsPage() {
 
                 {(team.role === "owner" || team.role === "admin") && (
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Dialog open={editDialogOpen && editingTeamId === team.id} onOpenChange={setEditDialogOpen}>
-                      <DialogTrigger asChild onClick={(e) => {
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={(e) => {
                         e.stopPropagation()
                         openEditTeamDialog(team)
-                      }}>
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
-                          title={t("editTeam")}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="w-[90vw] max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>{t("editTeam")}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <Label>{t("teamName")} *</Label>
-                            <Input
-                              value={editForm.name}
-                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                              placeholder={t("teamName")}
-                            />
-                          </div>
-                          <div>
-                            <Label>{t("teamDescription")}</Label>
-                            <Textarea
-                              value={editForm.description}
-                              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                              placeholder={t("teamDescription")}
-                              rows={3}
-                            />
-                          </div>
-                          <Button 
-                            onClick={() => handleEditTeam(team.id)} 
-                            disabled={updating || !editForm.name.trim()} 
-                            className="w-full"
-                          >
-                            {updating ? t("updating") : t("saveChanges")}
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      }}
+                      className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+                      title={t("editTeam")}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
                   </div>
                 )}
               </Card>
@@ -326,6 +295,41 @@ export default function TeamsPage() {
           ))}
         </div>
       )}
+
+      {/* Edit Team Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="w-[90vw] max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("editTeam")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>{t("teamName")} *</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder={t("teamName")}
+              />
+            </div>
+            <div>
+              <Label>{t("teamDescription")}</Label>
+              <Textarea
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                placeholder={t("teamDescription")}
+                rows={3}
+              />
+            </div>
+            <Button 
+              onClick={() => handleEditTeam(editingTeamId || "")} 
+              disabled={updating || !editForm.name.trim()} 
+              className="w-full"
+            >
+              {updating ? t("updating") : t("saveChanges")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

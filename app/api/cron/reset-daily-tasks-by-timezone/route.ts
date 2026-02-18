@@ -21,6 +21,16 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.rpc("reset_daily_tasks_by_timezone")
 
     if (error) {
+      // Handle rate limiting
+      const errorMsg = String(error).toLowerCase()
+      if (errorMsg.includes("429") || errorMsg.includes("too many")) {
+        console.warn("[v0] Rate limited resetting daily tasks")
+        return NextResponse.json({ 
+          error: "Rate limited", 
+          rateLimit: true,
+          message: "Will retry later"
+        }, { status: 429, headers: { "Retry-After": "60" } })
+      }
       console.error("[v0] Error resetting daily tasks:", error)
       throw error
     }
@@ -34,6 +44,17 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("[v0] Error in reset-daily-tasks-by-timezone:", error)
+    
+    // Check if error is rate limiting
+    const errorMsg = String(error).toLowerCase()
+    if (errorMsg.includes("429") || errorMsg.includes("too many")) {
+      return NextResponse.json({ 
+        error: "Rate limited", 
+        rateLimit: true,
+        message: "Will retry later"
+      }, { status: 429, headers: { "Retry-After": "60" } })
+    }
+    
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

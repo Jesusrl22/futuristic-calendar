@@ -54,8 +54,21 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     try {
       console.log("[v0] Fetching tasks...")
-      const response = await fetch("/api/tasks", { cache: "no-store" })
+      const response = await fetch("/api/tasks", { 
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        }
+      })
       console.log("[v0] Tasks response status:", response.status)
+      
+      if (!response.ok && response.status === 429) {
+        console.warn("[v0] Tasks rate limited (429), will retry in 30 seconds")
+        // Set a retry timeout instead of immediately failing
+        setTimeout(fetchTasks, 30000)
+        return
+      }
       
       if (!response.ok) {
         console.log("[v0] Tasks response error:", response.status)

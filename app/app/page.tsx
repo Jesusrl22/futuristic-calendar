@@ -52,15 +52,15 @@ export default function AppPage() {
 
     checkAuth()
 
-    // Refresh profile every 5 seconds
+    // Refresh profile every 60 seconds (was 30s, further reduced to minimize rate limits)
     const profileInterval = setInterval(() => {
       fetchUserProfile()
-    }, 5000)
+    }, 60000)
 
-    // Refresh stats every 3 seconds to show updated task progress
+    // Refresh stats every 60 seconds instead of 15 (drastically reduced to prevent rate limiting)
     const statsInterval = setInterval(() => {
       fetchStats()
-    }, 3000)
+    }, 60000)
 
     return () => {
       clearInterval(profileInterval)
@@ -77,6 +77,13 @@ export default function AppPage() {
           Pragma: "no-cache",
         },
       })
+      
+      // Handle rate limiting
+      if (response.status === 429) {
+        console.warn("[v0] Profile API - Rate limited, will retry later")
+        return
+      }
+      
       if (response.ok) {
         const data = await response.json()
         setUser(data)
@@ -85,6 +92,9 @@ export default function AppPage() {
           monthlyCredits: data.ai_credits || 0,
           purchasedCredits: data.ai_credits_purchased || 0,
         }))
+      } else if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[v0] Profile API error:", response.status, errorText)
       }
     } catch (error) {
       console.error("[v0] Error fetching profile:", error)

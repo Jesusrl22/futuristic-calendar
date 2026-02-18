@@ -14,13 +14,13 @@ No hay headers de cache-control adecuados en las API routes y páginas Server Co
 ## Soluciones Rápidas
 
 ### A. Limpiar Caché del Navegador Inmediatamente
-```
+\`\`\`
 1. En future-task.com: Ctrl+Shift+Delete (Windows) o Cmd+Shift+Delete (Mac)
 2. Selecciona "Caché" y "Cookies"
 3. Selecciona "Todos los tiempos"
 4. Haz clic en "Eliminar datos"
 5. Recarga la página con Ctrl+F5
-```
+\`\`\`
 
 ### B. Forzar Recarga en Vercel
 1. Ve a tu dashboard de Vercel
@@ -30,10 +30,10 @@ No hay headers de cache-control adecuados en las API routes y páginas Server Co
 5. Haz clic en "Redeploy"
 
 ### C. Verificar que los Cambios se Deployaron
-```bash
+\`\`\`bash
 # Verifica en GitHub que los cambios están en la rama correcta
 # La rama actual debe ser: v0/jesusrayaleon1-8276-1e334193
-```
+\`\`\`
 
 ---
 
@@ -42,7 +42,7 @@ No hay headers de cache-control adecuados en las API routes y páginas Server Co
 ### 1. Agregar ISR a Páginas Principales
 
 **Archivo: `/app/page.tsx`**
-```typescript
+\`\`\`typescript
 export const revalidate = 60; // Revalidar cada 60 segundos
 
 import HomePageClient from "./HomePageClient"
@@ -58,7 +58,7 @@ export const metadata = {
 export default function HomePage() {
   return <HomePageClient />
 }
-```
+\`\`\`
 
 ### 2. Configurar Headers de Caché en Middlewares
 
@@ -70,7 +70,7 @@ Agregar headers que prevengan caché en el navegador para rutas dinámicas.
 Crear una ruta para invalidar caché manualmente:
 
 **Crear archivo: `/app/api/revalidate/route.ts`**
-```typescript
+\`\`\`typescript
 import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-```
+\`\`\`
 
 ### 4. Mejor Configuración de Caché en Next.js
 
 **Actualizar: `/next.config.mjs`**
-```javascript
+\`\`\`javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -165,14 +165,14 @@ const nextConfig = {
 }
 
 export default nextConfig
-```
+\`\`\`
 
 ### 5. Agregar Variable de Entorno
 
 En tu dashboard de Vercel, agregar:
-```
+\`\`\`
 REVALIDATE_SECRET=tu-secreto-seguro-aqui
-```
+\`\`\`
 
 ---
 

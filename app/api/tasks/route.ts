@@ -28,28 +28,8 @@ export async function GET() {
 
     console.log("[v0] Tasks GET: Fetching tasks for user:", userId)
     
-    // Call the daily reset function to reset old completed tasks (with error handling for rate limits)
-    try {
-      const resetResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/reset_daily_tasks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({}),
-      })
-      
-      if (resetResponse.ok) {
-        console.log("[v0] Daily task reset function called successfully")
-      } else if (resetResponse.status === 429) {
-        console.warn("[v0] Daily reset rate limited (429), continuing without reset")
-      } else {
-        console.warn("[v0] Daily reset returned status:", resetResponse.status)
-      }
-    } catch (resetError) {
-      console.warn("[v0] Failed to call daily reset (non-critical):", resetError instanceof Error ? resetError.message : String(resetError))
-    }
+    // Skip daily reset during rate limiting to reduce requests
+    // The reset will happen on next successful request or via cron job
     
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&order=display_order.asc,created_at.desc`,
@@ -63,11 +43,49 @@ export async function GET() {
 
     if (!response.ok) {
       console.log("[v0] Tasks GET: Supabase error:", response.status)
+      
+      // Handle rate limiting
+      if (response.status === 429) {
+        console.warn("[v0] Tasks GET: Rate limited (429), returning empty list")
+        // Return empty list instead of error to allow UI to show cached data
+        return NextResponse.json({ tasks: [], rateLimited: true }, { status: 200 })
+      }
+      
       const errorText = await response.text()
       console.log("[v0] Tasks GET: Error response:", errorText.substring(0, 100))
+      
+      // Check if error response contains "Too Many" (rate limit from proxy)
+      if (errorText.includes("Too Many") || errorText.includes("429")) {
+        console.warn("[v0] Tasks GET: Rate limited (proxy), returning empty list")
+        return NextResponse.json({ tasks: [], rateLimited: true }, { status: 200 })
+      }
+      
+      return NextResponse.json({ error: "Failed to fetch tasks", tasks: [] }, { status: 200 })
     }
 
-    const tasks = await response.json()
+    // Safely parse JSON response
+    let tasks
+    try {
+      const text = await response.text()
+      
+      // Check if response is actually JSON (not HTML error page)
+      if (!text || !text.trim().startsWith("[") && !text.trim().startsWith("{")) {
+        console.error("[v0] Tasks GET - Response is not JSON:", text.substring(0, 100))
+        
+        // If response contains "Too Many" or "429", it's a rate limit error
+        if (text.includes("Too Many") || text.includes("429")) {
+          return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+        }
+        
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+      
+      tasks = JSON.parse(text)
+    } catch (parseError) {
+      console.error("[v0] Tasks GET: Failed to parse JSON:", parseError)
+      return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+    }
+    
     console.log("[v0] Tasks GET: Retrieved", Array.isArray(tasks) ? tasks.length : 'unknown', "tasks")
     return NextResponse.json({ tasks })
   } catch (error: any) {
@@ -109,12 +127,47 @@ export async function POST(request: Request) {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      console.error("[v0] Task creation failed:", { status: response.status, error })
-      return NextResponse.json({ error: error.message || "Failed to create task" }, { status: response.status })
+      // Handle rate limiting first
+      if (response.status === 429) {
+        return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+      }
+      
+      // Try to parse error response safely
+      let errorMessage = "Failed to create task"
+      try {
+        const errorText = await response.text()
+        
+        // Check if it's actually JSON
+        if (errorText.trim().startsWith("{")) {
+          const error = JSON.parse(errorText)
+          errorMessage = error.message || errorMessage
+        } else if (errorText.includes("Too Many") || errorText.includes("429")) {
+          return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+        }
+      } catch (parseErr) {
+        // If JSON parsing fails, just use generic message
+        console.error("[v0] Failed to parse task error response:", parseErr)
+      }
+      
+      console.error("[v0] Task creation failed:", { status: response.status })
+      return NextResponse.json({ error: errorMessage }, { status: response.status })
     }
 
-    const task = await response.json()
+    let task
+    try {
+      const text = await response.text()
+      
+      // Check if response is actually JSON
+      if (!text || !text.trim().startsWith("[") && !text.trim().startsWith("{")) {
+        console.error("[v0] Task POST - Response is not JSON:", text.substring(0, 100))
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+      
+      task = JSON.parse(text)
+    } catch (parseError) {
+      console.error("[v0] Task POST: Failed to parse JSON:", parseError)
+      return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+    }
     console.log("[v0] Task created successfully:", task)
     
     // Send push notification for new task

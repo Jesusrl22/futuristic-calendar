@@ -33,7 +33,7 @@
 ### Cómo Funciona
 
 #### Opción 1: Editar Rápido (Desde Listado)
-```
+\`\`\`
 User (Owner/Admin)
   ↓
 Teams Page (/app/teams)
@@ -55,10 +55,10 @@ Supabase actualiza la base de datos
 UI se actualiza automáticamente
   ↓
 Cambios reflejados en todas partes
-```
+\`\`\`
 
 #### Opción 2: Editar Completo (Desde Detalle)
-```
+\`\`\`
 User (Owner/Admin)
   ↓
 Abre un Team específico
@@ -74,7 +74,7 @@ Modifica nombre/descripción
 Clic "Guardar Cambios"
   ↓
 [Mismo flujo que arriba]
-```
+\`\`\`
 
 ---
 

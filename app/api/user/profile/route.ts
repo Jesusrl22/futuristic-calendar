@@ -41,24 +41,43 @@ export async function GET() {
 
     if (!response.ok) {
       console.error("[v0] Profile API - Fetch failed:", response.status)
-      // Check if it's a rate limit or other error
-      const contentType = response.headers.get("content-type")
+      
+      // Handle rate limiting with proper status code
       if (response.status === 429) {
         return NextResponse.json(
           { error: "Too many requests, please try again later" },
-          { status: 429 },
+          { status: 429, headers: { "Retry-After": "60" } },
         )
       }
+      
+      // Handle other HTTP errors
+      if (response.status >= 500) {
+        return NextResponse.json({ error: "Service unavailable" }, { status: 503 })
+      }
+      
       return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 })
     }
 
     // Safely parse JSON response
     let users
     try {
-      const contentType = response.headers.get("content-type")
-      // Try to parse JSON regardless of content-type header
-      // (some responses may not include the header but are still JSON)
       const text = await response.text()
+      
+      // Check if response is actually JSON (not HTML error page)
+      if (!text || !text.trim().startsWith("{") && !text.trim().startsWith("[")) {
+        console.error("[v0] Profile API - Response is not JSON:", text.substring(0, 100))
+        
+        // If response contains "Too Many" or "429", it's a rate limit error
+        if (text.includes("Too Many") || text.includes("429")) {
+          return NextResponse.json(
+            { error: "Too many requests, please try again later" },
+            { status: 429, headers: { "Retry-After": "60" } },
+          )
+        }
+        
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+      
       if (text) {
         users = JSON.parse(text)
       } else {
