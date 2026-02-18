@@ -63,11 +63,46 @@ export async function GET() {
 
     if (!response.ok) {
       console.log("[v0] Tasks GET: Supabase error:", response.status)
+      
+      // Handle rate limiting
+      if (response.status === 429) {
+        return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+      }
+      
       const errorText = await response.text()
       console.log("[v0] Tasks GET: Error response:", errorText.substring(0, 100))
+      
+      // Check if error response contains "Too Many" (rate limit from proxy)
+      if (errorText.includes("Too Many") || errorText.includes("429")) {
+        return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+      }
+      
+      return NextResponse.json({ error: "Failed to fetch tasks" }, { status: response.status })
     }
 
-    const tasks = await response.json()
+    // Safely parse JSON response
+    let tasks
+    try {
+      const text = await response.text()
+      
+      // Check if response is actually JSON (not HTML error page)
+      if (!text || !text.trim().startsWith("[") && !text.trim().startsWith("{")) {
+        console.error("[v0] Tasks GET - Response is not JSON:", text.substring(0, 100))
+        
+        // If response contains "Too Many" or "429", it's a rate limit error
+        if (text.includes("Too Many") || text.includes("429")) {
+          return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+        }
+        
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+      
+      tasks = JSON.parse(text)
+    } catch (parseError) {
+      console.error("[v0] Tasks GET: Failed to parse JSON:", parseError)
+      return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+    }
+    
     console.log("[v0] Tasks GET: Retrieved", Array.isArray(tasks) ? tasks.length : 'unknown', "tasks")
     return NextResponse.json({ tasks })
   } catch (error: any) {
@@ -109,12 +144,47 @@ export async function POST(request: Request) {
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      console.error("[v0] Task creation failed:", { status: response.status, error })
-      return NextResponse.json({ error: error.message || "Failed to create task" }, { status: response.status })
+      // Handle rate limiting first
+      if (response.status === 429) {
+        return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+      }
+      
+      // Try to parse error response safely
+      let errorMessage = "Failed to create task"
+      try {
+        const errorText = await response.text()
+        
+        // Check if it's actually JSON
+        if (errorText.trim().startsWith("{")) {
+          const error = JSON.parse(errorText)
+          errorMessage = error.message || errorMessage
+        } else if (errorText.includes("Too Many") || errorText.includes("429")) {
+          return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+        }
+      } catch (parseErr) {
+        // If JSON parsing fails, just use generic message
+        console.error("[v0] Failed to parse task error response:", parseErr)
+      }
+      
+      console.error("[v0] Task creation failed:", { status: response.status })
+      return NextResponse.json({ error: errorMessage }, { status: response.status })
     }
 
-    const task = await response.json()
+    let task
+    try {
+      const text = await response.text()
+      
+      // Check if response is actually JSON
+      if (!text || !text.trim().startsWith("[") && !text.trim().startsWith("{")) {
+        console.error("[v0] Task POST - Response is not JSON:", text.substring(0, 100))
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+      
+      task = JSON.parse(text)
+    } catch (parseError) {
+      console.error("[v0] Task POST: Failed to parse JSON:", parseError)
+      return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+    }
     console.log("[v0] Task created successfully:", task)
     
     // Send push notification for new task

@@ -61,10 +61,23 @@ export async function GET() {
     // Safely parse JSON response
     let users
     try {
-      const contentType = response.headers.get("content-type")
-      // Try to parse JSON regardless of content-type header
-      // (some responses may not include the header but are still JSON)
       const text = await response.text()
+      
+      // Check if response is actually JSON (not HTML error page)
+      if (!text || !text.trim().startsWith("{") && !text.trim().startsWith("[")) {
+        console.error("[v0] Profile API - Response is not JSON:", text.substring(0, 100))
+        
+        // If response contains "Too Many" or "429", it's a rate limit error
+        if (text.includes("Too Many") || text.includes("429")) {
+          return NextResponse.json(
+            { error: "Too many requests, please try again later" },
+            { status: 429, headers: { "Retry-After": "60" } },
+          )
+        }
+        
+        return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
+      }
+      
       if (text) {
         users = JSON.parse(text)
       } else {
