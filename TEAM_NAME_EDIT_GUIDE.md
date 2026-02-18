@@ -49,15 +49,15 @@ Ya tenemos **dos formas** para cambiar el nombre y descripción de tus equipos:
 - Rol: `owner` o `admin`
 
 **Body:**
-```json
+\`\`\`json
 {
   "name": "Nuevo Nombre del Equipo",
   "description": "Nueva descripción"
 }
-```
+\`\`\`
 
 **Respuesta:**
-```json
+\`\`\`json
 {
   "team": {
     "id": "uuid",
@@ -67,7 +67,7 @@ Ya tenemos **dos formas** para cambiar el nombre y descripción de tus equipos:
     ...
   }
 }
-```
+\`\`\`
 
 ---
 
@@ -119,7 +119,7 @@ Columnas que se actualizan:
 
 ## Flujo de Usuario
 
-```
+\`\`\`
 Usuario (Owner/Admin)
     ↓
     Navega a Teams
@@ -137,7 +137,7 @@ Usuario (Owner/Admin)
     UI actualiza en tiempo real
     ↓
     Cambios reflejados en todas partes
-```
+\`\`\`
 
 ---
 
