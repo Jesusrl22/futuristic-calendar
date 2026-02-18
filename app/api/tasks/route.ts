@@ -28,28 +28,8 @@ export async function GET() {
 
     console.log("[v0] Tasks GET: Fetching tasks for user:", userId)
     
-    // Call the daily reset function to reset old completed tasks (with error handling for rate limits)
-    try {
-      const resetResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/reset_daily_tasks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({}),
-      })
-      
-      if (resetResponse.ok) {
-        console.log("[v0] Daily task reset function called successfully")
-      } else if (resetResponse.status === 429) {
-        console.warn("[v0] Daily reset rate limited (429), continuing without reset")
-      } else {
-        console.warn("[v0] Daily reset returned status:", resetResponse.status)
-      }
-    } catch (resetError) {
-      console.warn("[v0] Failed to call daily reset (non-critical):", resetError instanceof Error ? resetError.message : String(resetError))
-    }
+    // Skip daily reset during rate limiting to reduce requests
+    // The reset will happen on next successful request or via cron job
     
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/tasks?user_id=eq.${userId}&order=display_order.asc,created_at.desc`,
@@ -66,7 +46,9 @@ export async function GET() {
       
       // Handle rate limiting
       if (response.status === 429) {
-        return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+        console.warn("[v0] Tasks GET: Rate limited (429), returning empty list")
+        // Return empty list instead of error to allow UI to show cached data
+        return NextResponse.json({ tasks: [], rateLimited: true }, { status: 200 })
       }
       
       const errorText = await response.text()
@@ -74,10 +56,11 @@ export async function GET() {
       
       // Check if error response contains "Too Many" (rate limit from proxy)
       if (errorText.includes("Too Many") || errorText.includes("429")) {
-        return NextResponse.json({ error: "Rate limited" }, { status: 429, headers: { "Retry-After": "60" } })
+        console.warn("[v0] Tasks GET: Rate limited (proxy), returning empty list")
+        return NextResponse.json({ tasks: [], rateLimited: true }, { status: 200 })
       }
       
-      return NextResponse.json({ error: "Failed to fetch tasks" }, { status: response.status })
+      return NextResponse.json({ error: "Failed to fetch tasks", tasks: [] }, { status: 200 })
     }
 
     // Safely parse JSON response

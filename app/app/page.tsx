@@ -52,15 +52,15 @@ export default function AppPage() {
 
     checkAuth()
 
-    // Refresh profile every 30 seconds instead of 5 (reduce rate limiting)
+    // Refresh profile every 60 seconds (was 30s, further reduced to minimize rate limits)
     const profileInterval = setInterval(() => {
       fetchUserProfile()
-    }, 30000)
+    }, 60000)
 
-    // Refresh stats every 15 seconds instead of 3 (reduce rate limiting)
+    // Refresh stats every 60 seconds instead of 15 (drastically reduced to prevent rate limiting)
     const statsInterval = setInterval(() => {
       fetchStats()
-    }, 15000)
+    }, 60000)
 
     return () => {
       clearInterval(profileInterval)

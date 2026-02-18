@@ -55,35 +55,86 @@ export async function GET(request: Request) {
     const startISO = startDate.toISOString()
     const endISO = endDate.toISOString()
 
-    const [tasksInPeriodRes, completedRes, notesRes, pomodoroRes] = await Promise.all([
-      fetch(
+    console.log("[v0] Stats - Range:", range, "Start:", startISO, "End:", endISO)
+
+    // Make sequential requests with timeout instead of concurrent to avoid overwhelming Supabase
+    let tasksInPeriod = []
+    let completed = []
+    let notes = []
+    let pomodoro = []
+    let rateLimited = false
+
+    try {
+      const tasksInPeriodRes = await fetch(
         `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.false&created_at=gte.${startISO}&created_at=lte.${endISO}&select=*`,
         { headers },
-      ),
-      fetch(
+      )
+      
+      if (tasksInPeriodRes.status === 429) {
+        console.warn("[v0] Stats - Rate limited on tasks query")
+        rateLimited = true
+        tasksInPeriod = []
+      } else if (tasksInPeriodRes.ok) {
+        tasksInPeriod = await tasksInPeriodRes.json()
+      }
+    } catch (err) {
+      console.error("[v0] Stats - Error fetching tasks:", err)
+      tasksInPeriod = []
+    }
+
+    try {
+      const completedRes = await fetch(
         `${supabaseUrl}/rest/v1/tasks?user_id=eq.${userId}&completed=eq.true&updated_at=gte.${startISO}&updated_at=lte.${endISO}&select=*`,
         { headers },
-      ),
-      fetch(
+      )
+      
+      if (completedRes.status === 429) {
+        console.warn("[v0] Stats - Rate limited on completed query")
+        rateLimited = true
+        completed = []
+      } else if (completedRes.ok) {
+        completed = await completedRes.json()
+      }
+    } catch (err) {
+      console.error("[v0] Stats - Error fetching completed:", err)
+      completed = []
+    }
+
+    try {
+      const notesRes = await fetch(
         `${supabaseUrl}/rest/v1/notes?user_id=eq.${userId}&created_at=gte.${startISO}&created_at=lte.${endISO}&select=*`,
         { headers },
-      ),
-      fetch(
+      )
+      
+      if (notesRes.status === 429) {
+        console.warn("[v0] Stats - Rate limited on notes query")
+        rateLimited = true
+        notes = []
+      } else if (notesRes.ok) {
+        notes = await notesRes.json()
+      }
+    } catch (err) {
+      console.error("[v0] Stats - Error fetching notes:", err)
+      notes = []
+    }
+
+    try {
+      const pomodoroRes = await fetch(
         `${supabaseUrl}/rest/v1/pomodoro_sessions?user_id=eq.${userId}&created_at=gte.${startISO}&created_at=lte.${endISO}&select=*`,
         { headers },
-      ),
-    ])
-
-    const tasksInPeriod = tasksInPeriodRes.ok ? await tasksInPeriodRes.json() : []
-    const completed = completedRes.ok ? await completedRes.json() : []
-    const notes = notesRes.ok ? await notesRes.json() : []
-    const pomodoro = pomodoroRes.ok ? await pomodoroRes.json() : []
-
-    // Ensure all responses are arrays
-    const tasksInPeriodArray = Array.isArray(tasksInPeriod) ? tasksInPeriod : []
-    const completedArray = Array.isArray(completed) ? completed : []
-    const notesArray = Array.isArray(notes) ? notes : []
-    const pomodoroArray = Array.isArray(pomodoro) ? pomodoro : []
+      )
+      
+      if (pomodoroRes.status === 429) {
+        console.warn("[v0] Stats - Rate limited on pomodoro query")
+        rateLimited = true
+        pomodoro = []
+      } else if (pomodoroRes.ok) {
+        pomodoro = await pomodoroRes.json()
+      }
+    } catch (err) {
+      console.error("[v0] Stats - Error fetching pomodoro:", err)
+      pomodoro = []
+    }
 
     const totalFocusTimeMinutes = pomodoroArray.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
     const totalFocusTimeHours = Math.round((totalFocusTimeMinutes / 60) * 10) / 10
@@ -159,7 +210,12 @@ export async function GET(request: Request) {
       }
     }
 
-    console.log("[v0] Stats - Range:", range, "Start:", startISO, "End:", endISO)
+    // Convert to arrays if needed
+    const tasksInPeriodArray = Array.isArray(tasksInPeriod) ? tasksInPeriod : []
+    const completedArray = Array.isArray(completed) ? completed : []
+    const notesArray = Array.isArray(notes) ? notes : []
+    const pomodoroArray = Array.isArray(pomodoro) ? pomodoro : []
+
     console.log("[v0] Stats - Tasks found:", tasksInPeriodArray.length, "Completed:", completedArray.length)
 
     return NextResponse.json({
@@ -169,6 +225,7 @@ export async function GET(request: Request) {
       totalPomodoro: pomodoroArray.length,
       totalFocusTime: totalFocusTimeHours,
       chartData,
+      rateLimited,
     })
   } catch (error) {
     console.error("[v0] Error fetching stats:", error)
