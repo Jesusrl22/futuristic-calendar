@@ -91,6 +91,14 @@ const AIPage = () => {
           headers: { "Content-Type": "application/json" },
         })
 
+        // Handle rate limiting
+        if (response.status === 429) {
+          console.warn("[v0] Rate limited loading conversations, will retry in 60s")
+          // Don't throw, just wait and retry
+          setTimeout(loadConversations, 60000)
+          return
+        }
+
         if (response.ok) {
           const data = await response.json()
           console.log("[v0] Loaded", data.length, "conversations from database")
@@ -185,6 +193,12 @@ const AIPage = () => {
           mode: aiMode,
         }),
       })
+
+      // Handle rate limiting
+      if (response.status === 429) {
+        console.warn("[v0] Rate limited saving conversation, will retry later")
+        return
+      }
 
       if (response.ok) {
         const savedData = await response.json()

@@ -15,19 +15,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: conversations, error } = await supabase
-      .from("ai_conversations")
-      .select("id, title, created_at, updated_at, messages, mode")
-      .eq("user_id", user.id)
-      .order("updated_at", { ascending: false })
+    try {
+      const { data: conversations, error } = await supabase
+        .from("ai_conversations")
+        .select("id, title, created_at, updated_at, messages, mode")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
 
-    if (error) {
-      console.error("[v0] AI Conversations GET error:", error)
-      throw error
+      if (error) {
+        // Check if it's a rate limit error
+        if (error.message?.includes("429") || error.message?.includes("Too Many")) {
+          console.warn("[v0] AI Conversations - Rate limited")
+          return NextResponse.json([], { status: 429, headers: { "Retry-After": "60" } })
+        }
+        console.error("[v0] AI Conversations GET error:", error)
+        throw error
+      }
+
+      console.log("[v0] Loaded", conversations?.length || 0, "conversations")
+      return NextResponse.json(conversations || [])
+    } catch (dbError: any) {
+      // Handle database connection errors
+      if (dbError?.message?.includes("429") || dbError?.status === 429) {
+        console.warn("[v0] AI Conversations - Rate limited (catch)")
+        return NextResponse.json([], { status: 429, headers: { "Retry-After": "60" } })
+      }
+      throw dbError
     }
-
-    console.log("[v0] Loaded", conversations?.length || 0, "conversations")
-    return NextResponse.json(conversations || [])
   } catch (error) {
     console.error("[v0] Error fetching conversations:", error)
     return NextResponse.json([], { status: 500 })
