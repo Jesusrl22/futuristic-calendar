@@ -136,7 +136,7 @@ export async function GET(request: Request) {
       pomodoro = []
     }
 
-    const totalFocusTimeMinutes = pomodoroArray.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
+    const totalFocusTimeMinutes = pomodoro.reduce((sum: number, s: any) => sum + (s.duration || 0), 0)
     const totalFocusTimeHours = Math.round((totalFocusTimeMinutes / 60) * 10) / 10
 
     const chartData: any[] = []
@@ -147,12 +147,12 @@ export async function GET(request: Request) {
         const hourStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 0, 0, 0)
         const hourEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), i, 59, 59, 999)
 
-        const tasksForHour = completedArray.filter((t: any) => {
+        const tasksForHour = completed.filter((t: any) => {
           const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
           return taskDate >= hourStart && taskDate <= hourEnd
         }).length
 
-        const pomodoroForHour = pomodoroArray.filter((p: any) => {
+        const pomodoroForHour = pomodoro.filter((p: any) => {
           const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
           return sessionDate >= hourStart && sessionDate <= hourEnd
         }).length
@@ -167,12 +167,12 @@ export async function GET(request: Request) {
         const dayStart = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 0, 0, 0, 0)
         const dayEnd = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate(), 23, 59, 59, 999)
 
-        const tasksForDay = completedArray.filter((t: any) => {
+        const tasksForDay = completed.filter((t: any) => {
           const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
           return taskDate >= dayStart && taskDate <= dayEnd
         }).length
 
-        const pomodoroForDay = pomodoroArray.filter((p: any) => {
+        const pomodoroForDay = pomodoro.filter((p: any) => {
           const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
           return sessionDate >= dayStart && sessionDate <= dayEnd
         }).length
@@ -190,12 +190,12 @@ export async function GET(request: Request) {
         const weekEndDay = Math.min(currentWeekStart + 6, lastDayOfMonth)
         const weekEndDate = new Date(now.getFullYear(), now.getMonth(), weekEndDay, 23, 59, 59, 999)
 
-        const tasksForWeek = completedArray.filter((t: any) => {
+        const tasksForWeek = completed.filter((t: any) => {
           const taskDate = new Date(new Date(t.updated_at).toLocaleString("en-US", { timeZone: timezone }))
           return taskDate >= weekStartDate && taskDate <= weekEndDate
         }).length
 
-        const pomodoroForWeek = pomodoroArray.filter((p: any) => {
+        const pomodoroForWeek = pomodoro.filter((p: any) => {
           const sessionDate = new Date(new Date(p.created_at).toLocaleString("en-US", { timeZone: timezone }))
           return sessionDate >= weekStartDate && sessionDate <= weekEndDate
         }).length
@@ -219,10 +219,10 @@ export async function GET(request: Request) {
     console.log("[v0] Stats - Tasks found:", tasksInPeriodArray.length, "Completed:", completedArray.length)
 
     return NextResponse.json({
-      totalTasks: tasksInPeriodArray.length,
-      completedTasks: completedArray.length,
-      totalNotes: notesArray.length,
-      totalPomodoro: pomodoroArray.length,
+      totalTasks: tasksInPeriod.length,
+      completedTasks: completed.length,
+      totalNotes: notes.length,
+      totalPomodoro: pomodoro.length,
       totalFocusTime: totalFocusTimeHours,
       chartData,
       rateLimited,
