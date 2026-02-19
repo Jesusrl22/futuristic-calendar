@@ -37,6 +37,7 @@ export default function TeamDetailPage() {
   const [teamInviteLink, setTeamInviteLink] = useState<string>("")
   const [inviting, setInviting] = useState(false)
   const [showInviteLink, setShowInviteLink] = useState(false)
+  const [fullInviteUrl, setFullInviteUrl] = useState<string>("")
 
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -91,6 +92,12 @@ export default function TeamDetailPage() {
       setTeamInviteLink(`${baseUrl}/invite/${teamId}`)
     }
   }, [teamId])
+
+  useEffect(() => {
+    if (team?.invite_token && typeof window !== "undefined") {
+      setFullInviteUrl(`${window.location.origin}/app/invite/${team.invite_token}`)
+    }
+  }, [team?.invite_token])
 
   const fetchTeamDetails = async () => {
     try {
@@ -764,12 +771,12 @@ export default function TeamDetailPage() {
               <div className="flex gap-2 flex-col sm:flex-row">
                 <Input 
                   type="text" 
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/app/invite/${team.invite_token}`} 
+                  value={fullInviteUrl} 
                   readOnly 
                   className="flex-1 text-xs sm:text-sm" 
                 />
                 <Button 
-                  onClick={() => copyToClipboard(`${window.location.origin}/app/invite/${team.invite_token}`)} 
+                  onClick={() => copyToClipboard(fullInviteUrl)} 
                   size="sm"
                   className="w-full sm:w-auto"
                 >
