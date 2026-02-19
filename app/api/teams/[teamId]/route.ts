@@ -116,10 +116,11 @@ export async function PATCH(request: Request, { params }: { params: { teamId: st
       .single()
 
     if (updateError) {
+      console.error("[v0] Team update error:", updateError)
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ team })
+    return NextResponse.json(team)
   } catch (error: any) {
     console.error("[v0] Error in team PATCH:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
