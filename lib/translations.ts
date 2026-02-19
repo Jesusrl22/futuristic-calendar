@@ -214,6 +214,8 @@ export const translations = {
     editTeam: "Edit Team",
     enterTeamName: "Please enter a team name",
     saveChanges: "Save Changes",
+    invitationLink: "Invitation Link",
+    shareInvitationLink: "Share this link to invite team members",
     
     // Notes page
     organize_notes: "Capture and organize your thoughts",
@@ -717,6 +719,8 @@ export const translations = {
     editTeam: "Editar Equipo",
     enterTeamName: "Por favor ingresa un nombre para el equipo",
     saveChanges: "Guardar Cambios",
+    invitationLink: "Enlace de Invitación",
+    shareInvitationLink: "Comparte este enlace para invitar a miembros del equipo",
     
     // Notes page
     organize_notes: "Captura y organiza tus pensamientos",
@@ -994,7 +998,26 @@ export const translations = {
     subscription_feature_team_comments: "Commentaires d'Équipe",
     subscription_feature_team_stats: "Statistiques d'Équipe",
 
-    // User Reviews
+    // Teams page
+    createYourFirstTeam: "Créez votre première équipe pour commencer à collaborer",
+    createTeam: "Créer une Équipe",
+    teamName: "Nom de l'Équipe",
+    team_placeholder: "Entrez le nom de l'équipe",
+    teamDescription: "Description de l'Équipe",
+    whatIsThisTeamAbout: "De quoi parle cette équipe?",
+    teamLimitReached: "Limite d'équipe atteinte",
+    freePlanTeamLimit: "Le plan gratuit permet 1 équipe. Mettez à niveau vers Premium pour plus.",
+    premiumPlanTeamLimit: "Le plan Premium permet 5 équipes. Mettez à niveau vers Pro pour illimité.",
+    upgradeToProForUnlimited: "Mettez à niveau vers Pro pour les équipes illimitées",
+    noTeamsFound: "Aucune équipe trouvée",
+    teamMembers: "membres",
+    noDescription: "Pas de description",
+    editTeam: "Modifier l'Équipe",
+    enterTeamName: "Veuillez entrer un nom pour l'équipe",
+    saveChanges: "Enregistrer les Modifications",
+    invitationLink: "Lien d'Invitation",
+    shareInvitationLink: "Partagez ce lien pour inviter des membres de l'équipe",
+
     write_review: "Écrire un Avis",
     your_name: "Votre Nom",
     your_email: "Votre Email",
@@ -1296,6 +1319,26 @@ export const translations = {
     subscription_feature_team_comments: "Team-Kommentare",
     subscription_feature_team_stats: "Team-Statistiken",
 
+    // Teams page
+    createYourFirstTeam: "Erstellen Sie Ihr erstes Team, um mit der Zusammenarbeit zu beginnen",
+    createTeam: "Team Erstellen",
+    teamName: "Teamname",
+    team_placeholder: "Geben Sie den Teamnamen ein",
+    teamDescription: "Teambeschreibung",
+    whatIsThisTeamAbout: "Worum geht es in diesem Team?",
+    teamLimitReached: "Team-Limit erreicht",
+    freePlanTeamLimit: "Der kostenlose Plan erlaubt 1 Team. Aktualisieren Sie auf Premium für mehr.",
+    premiumPlanTeamLimit: "Der Premium-Plan erlaubt 5 Teams. Aktualisieren Sie auf Pro für unbegrenzt.",
+    upgradeToProForUnlimited: "Aktualisieren Sie auf Pro für unbegrenzte Teams",
+    noTeamsFound: "Keine Teams gefunden",
+    teamMembers: "Mitglieder",
+    noDescription: "Keine Beschreibung",
+    editTeam: "Team Bearbeiten",
+    enterTeamName: "Bitte geben Sie einen Teamnamen ein",
+    saveChanges: "Änderungen Speichern",
+    invitationLink: "Einladungslink",
+    shareInvitationLink: "Teilen Sie diesen Link, um Teammitglieder einzuladen",
+
     // User Reviews
     write_review: "Bewertung schreiben",
     your_name: "Ihr Name",
@@ -1592,6 +1635,26 @@ export const translations = {
     subscription_feature_team_calendar: "Calendario Condiviso del Team",
     subscription_feature_team_comments: "Commenti del Team",
     subscription_feature_team_stats: "Statistiche del Team",
+
+    // Teams page
+    createYourFirstTeam: "Crea il tuo primo team per iniziare a collaborare",
+    createTeam: "Crea Team",
+    teamName: "Nome del Team",
+    team_placeholder: "Inserisci il nome del team",
+    teamDescription: "Descrizione del Team",
+    whatIsThisTeamAbout: "Di cosa parla questo team?",
+    teamLimitReached: "Limite di team raggiunto",
+    freePlanTeamLimit: "Il piano gratuito consente 1 team. Aggiorna a Premium per altri.",
+    premiumPlanTeamLimit: "Il piano Premium consente 5 team. Aggiorna a Pro per illimitati.",
+    upgradeToProForUnlimited: "Aggiorna a Pro per team illimitati",
+    noTeamsFound: "Nessun team trovato",
+    teamMembers: "membri",
+    noDescription: "Nessuna descrizione",
+    editTeam: "Modifica Team",
+    enterTeamName: "Inserisci un nome per il team",
+    saveChanges: "Salva Modifiche",
+    invitationLink: "Collegamento di Invito",
+    shareInvitationLink: "Condividi questo collegamento per invitare i membri del team",
 
     // User Reviews
     write_review: "Scrivi una Recensione",
