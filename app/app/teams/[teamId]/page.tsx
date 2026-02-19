@@ -94,8 +94,11 @@ export default function TeamDetailPage() {
   }, [teamId])
 
   useEffect(() => {
-    if (team?.invite_token && typeof window !== "undefined") {
-      setFullInviteUrl(`${window.location.origin}/app/invite/${team.invite_token}`)
+    if (team?.invite_token) {
+      const baseUrl = typeof window !== "undefined" 
+        ? window.location.origin 
+        : process.env.NEXT_PUBLIC_APP_URL || "https://future-task.com"
+      setFullInviteUrl(`${baseUrl}/app/invite/${team.invite_token}`)
     }
   }, [team?.invite_token])
 
@@ -771,7 +774,7 @@ export default function TeamDetailPage() {
               <div className="flex gap-2 flex-col sm:flex-row">
                 <Input 
                   type="text" 
-                  value={fullInviteUrl} 
+                  value={fullInviteUrl || t("loading")} 
                   readOnly 
                   className="flex-1 text-xs sm:text-sm" 
                 />
@@ -779,6 +782,7 @@ export default function TeamDetailPage() {
                   onClick={() => copyToClipboard(fullInviteUrl)} 
                   size="sm"
                   className="w-full sm:w-auto"
+                  disabled={!fullInviteUrl}
                 >
                   {t("copy")}
                 </Button>
