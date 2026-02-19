@@ -317,16 +317,25 @@ export default function TeamDetailPage() {
         }),
       })
 
+      const data = await response.json()
+
       if (response.ok) {
         setEditDialogOpen(false)
-        fetchTeamDetails()
+        setTeam(data)
+        setEditForm({
+          name: data.name,
+          description: data.description || "",
+        })
       } else {
-        const data = await response.json()
         alert(data.error || "Failed to update team")
       }
-    } catch (error) {
-      console.error("Error updating team:", error)
+    } catch (error: any) {
+      console.error("[v0] Error updating team:", error)
       alert("An error occurred")
+    } finally {
+      setUpdating(false)
+    }
+  }
     } finally {
       setUpdating(false)
     }
