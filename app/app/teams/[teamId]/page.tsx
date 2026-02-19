@@ -764,7 +764,7 @@ export default function TeamDetailPage() {
               <div className="flex gap-2 flex-col sm:flex-row">
                 <Input 
                   type="text" 
-                  value={`${window.location.origin}/app/invite/${team.invite_token}`} 
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/app/invite/${team.invite_token}`} 
                   readOnly 
                   className="flex-1 text-xs sm:text-sm" 
                 />
