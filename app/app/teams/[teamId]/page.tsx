@@ -384,6 +384,10 @@ export default function TeamDetailPage() {
   const canManageMembers = team?.role === "owner" || team?.role === "admin"
   const canEditTeam = team?.role === "owner" || team?.role === "admin"
 
+  console.log("[v0] Team data:", team)
+  console.log("[v0] canEditTeam:", canEditTeam)
+  console.log("[v0] canManageMembers:", canManageMembers)
+
   if (loading) {
     return (
       <div className="p-4 md:p-8">
