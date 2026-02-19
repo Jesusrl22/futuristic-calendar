@@ -382,11 +382,7 @@ export default function TeamDetailPage() {
   }
 
   const canManageMembers = team?.role === "owner" || team?.role === "admin"
-  const canEditTeam = team?.role === "owner" || team?.role === "admin"
-
-  console.log("[v0] Team data:", team)
-  console.log("[v0] canEditTeam:", canEditTeam)
-  console.log("[v0] canManageMembers:", canManageMembers)
+  const canEditTeam = true // Todos los miembros pueden editar el equipo
 
   if (loading) {
     return (
@@ -762,7 +758,27 @@ export default function TeamDetailPage() {
         </TabsContent>
 
         <TabsContent value="members" className="mt-4 sm:mt-6 space-y-3 sm:space-y-4">
-          {canManageMembers && <Card className="glass-card p-4">{/* Invite dialog removed */}</Card>}
+          <Card className="glass-card p-4">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm sm:text-base">{t("invitationLink")}</h3>
+              <div className="flex gap-2 flex-col sm:flex-row">
+                <Input 
+                  type="text" 
+                  value={`${window.location.origin}/app/invite/${team.invite_token}`} 
+                  readOnly 
+                  className="flex-1 text-xs sm:text-sm" 
+                />
+                <Button 
+                  onClick={() => copyToClipboard(`${window.location.origin}/app/invite/${team.invite_token}`)} 
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
+                  {t("copy")}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">{t("shareInvitationLink")}</p>
+            </div>
+          </Card>
 
           <div className="grid gap-4">
             {team.members?.map((member: any) => (
