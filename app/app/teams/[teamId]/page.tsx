@@ -336,10 +336,6 @@ export default function TeamDetailPage() {
       setUpdating(false)
     }
   }
-    } finally {
-      setUpdating(false)
-    }
-  }
 
   const handleDeleteTeam = async () => {
     if (!confirm(`${t("confirmDeleteTeam")} "${team.name}"?`)) return
