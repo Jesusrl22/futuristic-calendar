@@ -128,7 +128,7 @@ export async function sendVerificationEmail(email: string, name?: string) {
       }
     }
 
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     
     // Verificar conexión antes de enviar
     console.log("[EMAIL] Verificando conexión SMTP...")
@@ -221,7 +221,7 @@ export async function sendPasswordResetEmail(email: string, resetLink: string, n
       return { success: false, error: "SMTP no configurado" }
     }
 
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     await transporter.verify()
     
     await transporter.sendMail({
@@ -295,7 +295,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
       return { success: false, error: "SMTP no configurado" }
     }
 
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     await transporter.verify()
     
     await transporter.sendMail({
@@ -366,7 +366,7 @@ export async function sendNewDeviceLoginEmail(email: string, name?: string, devi
       return { success: false, error: "SMTP no configurado" }
     }
 
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
@@ -432,7 +432,7 @@ export async function sendSubscriptionCancelledEmail(email: string, name?: strin
       return { success: false, error: "SMTP no configurado" }
     }
 
-    const transporter = createTransporter()
+    const transporter = await createTransporter()
     await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to: email,
