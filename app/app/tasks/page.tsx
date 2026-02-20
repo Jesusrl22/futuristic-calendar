@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Trash2, Edit, CheckSquare, CheckCircle2 } from "lucide-react"
+import { Plus, Search, Trash2, Edit2, CheckSquare, Calendar } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,10 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { useLanguage } from "@/contexts/language-context"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { TaskDayView } from "@/components/TaskDayView"
+import { TaskWeekView } from "@/components/TaskWeekView"
+import { TaskMonthView } from "@/components/TaskMonthView"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<any[]>([])
@@ -53,7 +57,6 @@ export default function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      console.log("[v0] Fetching tasks...")
       const response = await fetch("/api/tasks", { 
         cache: "no-store",
         headers: {
@@ -61,17 +64,14 @@ export default function TasksPage() {
           Pragma: "no-cache",
         }
       })
-      console.log("[v0] Tasks response status:", response.status)
       
       if (!response.ok && response.status === 429) {
-        console.warn("[v0] Tasks rate limited (429), will retry in 30 seconds")
         // Set a retry timeout instead of immediately failing
         setTimeout(fetchTasks, 30000)
         return
       }
       
       if (!response.ok) {
-        console.log("[v0] Tasks response error:", response.status)
         return
       }
       
@@ -97,7 +97,6 @@ export default function TasksPage() {
 
     setIsCreating(true)
     try {
-      console.log("[v0] Creating task with data:", newTask)
       const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -109,21 +108,16 @@ export default function TasksPage() {
         }),
       })
 
-      console.log("[v0] Create task response status:", response.status)
-      
       if (response.ok) {
-        console.log("[v0] Task created successfully, refreshing list...")
         setIsDialogOpen(false)
         setNewTask({ title: "", priority: "medium", time: "" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
       } else {
         const error = await response.json().catch(() => ({}))
-        console.log("[v0] Create task error:", error)
         toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
       }
     } catch (error: any) {
-      console.error("[v0] Exception creating task:", error.message)
       toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
     } finally {
       setIsCreating(false)
@@ -198,40 +192,34 @@ export default function TasksPage() {
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const getTodayTasks = () => {
-    const today = new Date().toISOString().split("T")[0]
-    // Solo mostrar tareas de hoy, excluir tareas sin fecha o del futuro
-    return filteredTasks.filter((task) => {
-      if (!task.due_date) return true // Tareas sin fecha se muestran como tareas de hoy
-      const taskDate = task.due_date.split("T")[0]
-      return taskDate === today // Solo exactamente hoy
-    })
-  }
+  const handleQuickTaskCreate = async (title: string, priority: string, duration?: string) => {
+    if (!title.trim()) return
 
-  const calculateTotalTime = (taskList: any[]) => {
-    let totalMinutes = 0
-    taskList.forEach((task) => {
-      if (task.description) {
-        const match = task.description.match(/(\d+)\s*(min|h|m)/)
-        if (match) {
-          const value = parseInt(match[1])
-          const unit = match[2]
-          if (unit === "h") {
-            totalMinutes += value * 60
-          } else {
-            totalMinutes += value
-          }
-        }
+    setIsCreating(true)
+    try {
+      const today = new Date().toISOString()
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          priority,
+          description: duration || "",
+          completed: false,
+          due_date: today,
+        }),
+      })
+
+      if (response.ok) {
+        await fetchTasks()
+        toast({ title: "Éxito", description: "Tarea creada para hoy" })
       }
-    })
-    if (totalMinutes === 0) return "0 min"
-    if (totalMinutes < 60) return `${totalMinutes} min`
-    const hours = Math.floor(totalMinutes / 60)
-    const minutes = totalMinutes % 60
-    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`
+    } catch (error) {
+      toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
+    } finally {
+      setIsCreating(false)
+    }
   }
-
-  const todayTasks = getTodayTasks()
 
   return (
     <div className="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 h-full overflow-y-auto">
@@ -249,8 +237,8 @@ export default function TasksPage() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg shadow-lg w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
               {t("newTask")}
             </Button>
           </DialogTrigger>
@@ -283,10 +271,10 @@ export default function TasksPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="time">{t("time")}</Label>
+                <Label htmlFor="time">Duración (opcional)</Label>
                 <Input
                   id="time"
-                  placeholder={language === "es" ? "ej: 45 min, 2 h" : "e.g.: 45 min, 2 h"}
+                  placeholder={language === "es" ? "ej: 45 min, 2 h, 30 minutos" : "e.g.: 45 min, 2 h, 30 minutes"}
                   value={newTask.time}
                   onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
                 />
@@ -304,152 +292,60 @@ export default function TasksPage() {
         </Dialog>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
-        <Input
-          placeholder={`${t("search")} ${t("tasks").toLowerCase()}...`}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 sm:pl-10 bg-background/50 border border-border/50 text-sm sm:text-base"
-        />
-      </div>
+      {/* View Mode Tabs */}
+      <Tabs value={viewMode} onValueChange={setViewMode} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-background border border-border rounded-lg">
+          <TabsTrigger value="today" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Hoy
+          </TabsTrigger>
+          <TabsTrigger value="week" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Semana
+          </TabsTrigger>
+          <TabsTrigger value="month" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Mes
+          </TabsTrigger>
+        </TabsList>
 
-      {/* TASKS VIEW */}
-      <div className="space-y-4 sm:space-y-6">
-        <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 sm:p-6">
-          <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-            {t("today").toUpperCase()} - {new Date().toLocaleDateString(language === "es" ? "es-ES" : language === "fr" ? "fr-FR" : language === "de" ? "de-DE" : "en-US", { weekday: "long", day: "numeric", month: "long" }).replace(/^\w/, (c) => c.toUpperCase())}
-          </h2>
-        </div>
+        {/* Today View */}
+        <TabsContent value="today" className="space-y-4 mt-6">
+          <TaskDayView
+            tasks={tasks}
+            onTaskToggle={toggleTask}
+            onTaskDelete={deleteTask}
+            onTaskEdit={openEditDialog}
+            onTaskCreate={handleQuickTaskCreate}
+          />
+        </TabsContent>
 
-        {todayTasks.length === 0 ? (
-          <Card className="glass-card p-8 sm:p-12 text-center">
-            <p className="text-sm sm:text-base text-muted-foreground">{t("no_tasks_today")}</p>
-          </Card>
-        ) : (
-          <div className="w-full space-y-4">
-            <div className="overflow-x-auto rounded-lg border border-border/50 bg-background/30 -mx-4 sm:mx-0">
-              <table className="w-full min-w-[800px]">
-                <thead>
-                  <tr className="bg-primary/10 border-b border-border/50">
-                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 w-8 sm:w-12"></th>
-                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-semibold text-muted-foreground border-r border-border/30 min-w-[150px]">
-                      {t("task")}
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-20 sm:w-24">
-                      {t("priority")}
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-20 sm:w-24">
-                      {t("time")}
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground border-r border-border/30 w-24 sm:w-28">
-                      {t("status")}
-                    </th>
-                    <th className="px-2 sm:px-4 py-3 sm:py-4 text-center text-xs font-semibold text-muted-foreground w-12 sm:w-16">
-                      {t("actions")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/30">
-                  {todayTasks.map((task: any) => (
-                    <tr key={task.id} className="hover:bg-primary/5 transition-colors">
-                      <td className="px-2 sm:px-4 py-3 sm:py-4 border-r border-border/30">
-                        <Checkbox
-                          checked={task.completed}
-                          onCheckedChange={() => toggleTask(task.id, task.completed)}
-                          className="w-4 h-4"
-                        />
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 sm:py-4 border-r border-border/30">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <div
-                      className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full flex-shrink-0 ${
-                        task.priority === "high"
-                          ? "bg-red-500"
-                          : task.priority === "medium"
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                      }`}
-                    />
-                    <span
-                      className={`text-xs sm:text-sm font-medium ${task.completed ? "line-through text-muted-foreground" : ""}`}
-                    >
-                      {task.title}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      ({task.priority === "high" ? t("priority_high") : task.priority === "medium" ? t("priority_medium") : t("priority_low")})
-                    </span>
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30">
-                        {task.priority && (
-                          <span
-                            className={`inline-block px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold ${
-                              task.priority === "high"
-                                ? "bg-red-500/10 text-red-500 border border-red-500/30"
-                                : task.priority === "medium"
-                                  ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/30"
-                                  : "bg-green-500/10 text-green-500 border border-green-500/30"
-                            }`}
-                          >
-                            {task.priority === "high" ? t("priority_high") : task.priority === "medium" ? t("priority_medium") : t("priority_low")}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30 text-xs sm:text-sm font-medium text-foreground">
-                        {task.description || "-"}
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center border-r border-border/30">
-                        <div className="flex items-center justify-center gap-1 sm:gap-2">
-                          {task.completed ? (
-                            <span className="inline-flex items-center gap-1 text-green-500 text-[10px] sm:text-xs font-medium">
-                              <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" /> {t("completed")}
-                            </span>
-                          ) : (
-                            <span className="text-yellow-500 text-[10px] sm:text-xs font-medium">● {t("pending")}</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-2 sm:px-4 py-3 sm:py-4 text-center">
-                        <div className="flex items-center justify-center gap-0.5 sm:gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-primary/20"
-                            onClick={() => openEditDialog(task)}
-                          >
-                            <Edit className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 sm:h-7 sm:w-7 hover:bg-red-500/20 hover:text-red-500"
-                            onClick={() => deleteTask(task.id)}
-                          >
-                            <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="bg-background/40 border border-border/30 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-              <div className="space-y-1">
-                <p className="text-xs sm:text-sm text-muted-foreground">{t("time_planned")}: <span className="font-bold text-cyan-400">{calculateTotalTime(todayTasks)}</span></p>
-              </div>
-              <div className="text-xs sm:text-sm text-muted-foreground">
-                <span className="font-semibold">{todayTasks.filter(t => t.completed).length} {t("completed_count")}</span>
-              </div>
-            </div>
-            <div className="bg-background/40 border border-border/30 rounded-lg p-3 sm:p-4">
-              <p className="text-xs sm:text-sm">{t("motivational_message")}</p>
-            </div>
+        {/* Week View */}
+        <TabsContent value="week" className="space-y-4 mt-6">
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+            <h2 className="text-xl font-bold text-foreground">Vista de Semana</h2>
+            <p className="text-sm text-muted-foreground">Organiza tus tareas por día</p>
           </div>
-        )}
-      </div>
+          <TaskWeekView
+            tasks={tasks}
+            onTaskToggle={toggleTask}
+            onTaskDelete={deleteTask}
+            onTaskEdit={openEditDialog}
+          />
+        </TabsContent>
+
+        {/* Month View */}
+        <TabsContent value="month" className="space-y-4 mt-6">
+          <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+            <h2 className="text-xl font-bold text-foreground">Vista de Mes</h2>
+            <p className="text-sm text-muted-foreground">Visualiza todas tus tareas del mes</p>
+          </div>
+          <TaskMonthView
+            tasks={tasks}
+            onTaskClick={openEditDialog}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Edit Task Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -466,6 +362,17 @@ export default function TasksPage() {
                 placeholder={`${t("title")}...`}
                 value={editForm.title}
                 onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">{t("description")}</Label>
+              <textarea
+                id="edit-description"
+                placeholder={`${t("description")}...`}
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm"
+                rows={3}
               />
             </div>
             <div className="space-y-2">
