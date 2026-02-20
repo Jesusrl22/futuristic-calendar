@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer"
-
 // Verificar si SMTP está configurado
 export function isSMTPConfigured(): boolean {
   const configured = !!(
@@ -21,7 +19,7 @@ export function isSMTPConfigured(): boolean {
 }
 
 // Crear transporter solo si las variables están configuradas
-function createTransporter() {
+async function createTransporter() {
   if (!isSMTPConfigured()) {
     const error = "SMTP no configurado. Configura SMTP_HOST, SMTP_USER, SMTP_PASSWORD en las variables de entorno"
     console.error("[EMAIL] ❌", error)
@@ -34,6 +32,9 @@ function createTransporter() {
     })
     throw new Error(error)
   }
+
+  // Lazy load nodemailer solo cuando se necesita
+  const nodemailer = (await import("nodemailer")).default
 
   const port = parseInt(process.env.SMTP_PORT || "587", 10)
   const config = {
