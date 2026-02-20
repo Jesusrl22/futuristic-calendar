@@ -65,20 +65,20 @@ export function TaskMonthView({ tasks, onTaskClick }: TaskMonthViewProps) {
   const getTaskColor = (priority?: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-700"
+        return "bg-red-950 text-red-400"
       case "medium":
-        return "bg-yellow-100 text-yellow-700"
+        return "bg-yellow-950 text-yellow-300"
       case "low":
-        return "bg-green-100 text-green-700"
+        return "bg-green-950 text-green-400"
       default:
-        return "bg-blue-100 text-blue-700"
+        return "bg-secondary/20 text-secondary-foreground"
     }
   }
 
   return (
     <div className="space-y-4">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200">
+      <div className="flex items-center justify-between bg-card p-4 rounded-lg border border-border">
         <Button
           variant="outline"
           size="sm"
@@ -88,7 +88,7 @@ export function TaskMonthView({ tasks, onTaskClick }: TaskMonthViewProps) {
           <ChevronLeft className="h-4 w-4" />
           Anterior
         </Button>
-        <h2 className="text-xl font-bold capitalize text-center flex-1">
+        <h2 className="text-xl font-bold capitalize text-center flex-1 text-foreground">
           {monthName}
         </h2>
         <Button
@@ -103,11 +103,11 @@ export function TaskMonthView({ tasks, onTaskClick }: TaskMonthViewProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="border border-border rounded-lg overflow-hidden bg-card">
         {/* Days of week header */}
-        <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+        <div className="grid grid-cols-7 border-b border-border bg-primary/10">
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sab", "Dom"].map((day) => (
-            <div key={day} className="p-3 text-center font-semibold text-sm text-gray-600 border-r border-gray-200 last:border-r-0">
+            <div key={day} className="p-3 text-center font-semibold text-sm text-muted-foreground border-r border-border last:border-r-0">
               {day}
             </div>
           ))}
@@ -125,15 +125,15 @@ export function TaskMonthView({ tasks, onTaskClick }: TaskMonthViewProps) {
             return (
               <div
                 key={index}
-                className={`min-h-24 p-2 border-r border-b border-gray-200 last:border-r-0 ${
-                  isCurrentDay ? "bg-blue-50" : "bg-white hover:bg-gray-50"
+                className={`min-h-24 p-2 border-r border-b border-border last:border-r-0 ${
+                  isCurrentDay ? "bg-primary/10" : "bg-card hover:bg-primary/5"
                 } transition-colors cursor-pointer last-row:border-b-0`}
               >
                 {day ? (
                   <div className="h-full flex flex-col">
                     <p
                       className={`text-sm font-semibold mb-1 ${
-                        isCurrentDay ? "text-blue-600" : "text-gray-700"
+                        isCurrentDay ? "text-primary" : "text-foreground"
                       }`}
                     >
                       {day}
@@ -153,14 +153,14 @@ export function TaskMonthView({ tasks, onTaskClick }: TaskMonthViewProps) {
                         </div>
                       ))}
                       {taskList.length > 3 && (
-                        <div className="text-xs px-2 py-1 text-gray-500 font-medium">
+                        <div className="text-xs px-2 py-1 text-muted-foreground font-medium">
                           +{taskList.length - 3} más
                         </div>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 h-full rounded" />
+                  <div className="bg-muted h-full rounded" />
                 )}
               </div>
             )
@@ -169,25 +169,25 @@ export function TaskMonthView({ tasks, onTaskClick }: TaskMonthViewProps) {
       </div>
 
       {/* Summary */}
-      <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="p-4 bg-primary/5 border border-primary/20">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-primary">
               {monthTasks.length}
             </p>
-            <p className="text-sm text-gray-600">Tareas este mes</p>
+            <p className="text-sm text-muted-foreground">Tareas este mes</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold text-green-500">
               {monthTasks.filter((t) => t.completed).length}
             </p>
-            <p className="text-sm text-gray-600">Completadas</p>
+            <p className="text-sm text-muted-foreground">Completadas</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-orange-600">
+            <p className="text-2xl font-bold text-yellow-500">
               {monthTasks.filter((t) => !t.completed).length}
             </p>
-            <p className="text-sm text-gray-600">Pendientes</p>
+            <p className="text-sm text-muted-foreground">Pendientes</p>
           </div>
         </div>
       </Card>

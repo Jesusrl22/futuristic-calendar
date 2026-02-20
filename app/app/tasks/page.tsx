@@ -57,7 +57,6 @@ export default function TasksPage() {
 
   const fetchTasks = async () => {
     try {
-      console.log("[v0] Fetching tasks...")
       const response = await fetch("/api/tasks", { 
         cache: "no-store",
         headers: {
@@ -65,17 +64,14 @@ export default function TasksPage() {
           Pragma: "no-cache",
         }
       })
-      console.log("[v0] Tasks response status:", response.status)
       
       if (!response.ok && response.status === 429) {
-        console.warn("[v0] Tasks rate limited (429), will retry in 30 seconds")
         // Set a retry timeout instead of immediately failing
         setTimeout(fetchTasks, 30000)
         return
       }
       
       if (!response.ok) {
-        console.log("[v0] Tasks response error:", response.status)
         return
       }
       
@@ -101,7 +97,6 @@ export default function TasksPage() {
 
     setIsCreating(true)
     try {
-      console.log("[v0] Creating task with data:", newTask)
       const response = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,21 +108,16 @@ export default function TasksPage() {
         }),
       })
 
-      console.log("[v0] Create task response status:", response.status)
-      
       if (response.ok) {
-        console.log("[v0] Task created successfully, refreshing list...")
         setIsDialogOpen(false)
         setNewTask({ title: "", priority: "medium", time: "" })
         await fetchTasks()
         toast({ title: "Éxito", description: "Tarea creada" })
       } else {
         const error = await response.json().catch(() => ({}))
-        console.log("[v0] Create task error:", error)
         toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
       }
     } catch (error: any) {
-      console.error("[v0] Exception creating task:", error.message)
       toast({ title: t("error"), description: "Error creando tarea", variant: "destructive" })
     } finally {
       setIsCreating(false)
@@ -202,7 +192,7 @@ export default function TasksPage() {
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleQuickTaskCreate = async (title: string, priority: string) => {
+  const handleQuickTaskCreate = async (title: string, priority: string, duration?: string) => {
     if (!title.trim()) return
 
     setIsCreating(true)
@@ -214,6 +204,7 @@ export default function TasksPage() {
         body: JSON.stringify({
           title,
           priority,
+          description: duration || "",
           completed: false,
           due_date: today,
         }),
@@ -246,8 +237,8 @@ export default function TasksPage() {
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold rounded-lg shadow-lg w-full sm:w-auto">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
               {t("newTask")}
             </Button>
           </DialogTrigger>
@@ -280,10 +271,10 @@ export default function TasksPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="time">{t("time")}</Label>
+                <Label htmlFor="time">Duración (opcional)</Label>
                 <Input
                   id="time"
-                  placeholder={language === "es" ? "ej: 45 min, 2 h" : "e.g.: 45 min, 2 h"}
+                  placeholder={language === "es" ? "ej: 45 min, 2 h, 30 minutos" : "e.g.: 45 min, 2 h, 30 minutes"}
                   value={newTask.time}
                   onChange={(e) => setNewTask({ ...newTask, time: e.target.value })}
                 />

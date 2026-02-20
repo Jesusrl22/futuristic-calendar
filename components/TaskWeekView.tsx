@@ -45,13 +45,13 @@ export function TaskWeekView({
   const getPriorityColor = (priority?: string) => {
     switch (priority) {
       case "high":
-        return "text-red-500 bg-red-50"
+        return "text-red-400 bg-red-950"
       case "medium":
-        return "text-yellow-600 bg-yellow-50"
+        return "text-yellow-300 bg-yellow-950"
       case "low":
-        return "text-green-600 bg-green-50"
+        return "text-green-400 bg-green-950"
       default:
-        return "text-gray-500 bg-gray-50"
+        return "text-muted-foreground bg-muted"
     }
   }
 
