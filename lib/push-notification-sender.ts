@@ -1,18 +1,24 @@
 // Server-side function to send push notifications
-import webpush from "web-push"
 import { areVapidKeysConfigured } from "./web-push"
 
-// Verificar y configurar VAPID keys
-if (areVapidKeysConfigured()) {
-  const subject = process.env.VAPID_SUBJECT || "mailto:support@futuretask.app"
-  webpush.setVapidDetails(
-    subject,
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!,
-  )
-  console.log("[WEBPUSH] ✓ VAPID configurado con subject:", subject)
-} else {
-  console.error("[WEBPUSH] ❌ VAPID keys no configuradas - las notificaciones push no funcionarán")
+// Lazy load y configurar webpush solo cuando se necesite
+async function getWebPush() {
+  const webpush = (await import("web-push")).default
+  
+  // Configurar VAPID keys si están disponibles
+  if (areVapidKeysConfigured()) {
+    const subject = process.env.VAPID_SUBJECT || "mailto:support@futuretask.app"
+    webpush.setVapidDetails(
+      subject,
+      process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+      process.env.VAPID_PRIVATE_KEY!,
+    )
+    console.log("[WEBPUSH] ✓ VAPID configurado con subject:", subject)
+  } else {
+    console.error("[WEBPUSH] ❌ VAPID keys no configuradas - las notificaciones push no funcionarán")
+  }
+  
+  return webpush
 }
 
 export interface SendNotificationParams {
@@ -38,6 +44,9 @@ export async function sendPushNotificationToUser(
   }
 
   console.log("[WEBPUSH] Enviando notificación a", subscriptions.length, "suscripciones")
+
+  // Cargar webpush dinámicamente
+  const webpush = await getWebPush()
 
   const promises = subscriptions.map(async (sub) => {
     const pushSubscription = {
